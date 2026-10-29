@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { metersLabel } from "@/lib/study/pipes";
 import { ChevronDown, Copy, FileSpreadsheet, Package2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,8 @@ export function SiteMaterialPanel({ site, journal }: { site: SiteInfo; journal: 
   const usage = materialUsage(journal, site.id, site.shortages, prices);
   if (usage.months.length === 0) return null;
   const pieces = usage.total.reduce((s, f) => s + f.qty, 0);
+  const pipeCm = usage.totalPipes.reduce((s, p) => s + p.cm, 0);
+  const amount = [pieces > 0 && `${pieces} szt.`, pipeCm > 0 && metersLabel(pipeCm)].filter(Boolean).join(" · ");
 
   async function copy() {
     try {
@@ -50,7 +53,7 @@ export function SiteMaterialPanel({ site, journal }: { site: SiteInfo; journal: 
         className="pressable flex w-full items-center gap-2 px-3 py-2.5 text-left coarse:min-h-11">
         <Package2 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <span className="flex-1 text-sm font-semibold">Zużycie materiału</span>
-        <span className="text-xs tabular-nums text-muted-foreground">{pieces} szt.{usage.cost !== null ? ` · ${zl(usage.cost)}` : ""}</span>
+        <span className="text-xs tabular-nums text-muted-foreground">{amount}{usage.cost !== null ? ` · ${zl(usage.cost)}` : ""}</span>
         <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden />
       </button>
       {open && (
@@ -71,6 +74,18 @@ export function SiteMaterialPanel({ site, journal }: { site: SiteInfo; journal: 
                       <Input aria-label={`Cena za sztukę: ${f.name}`} inputMode="decimal" placeholder="zł/szt." className="h-8 w-20 text-right tabular-nums coarse:h-11"
                         key={`${f.name}-${p ?? ""}`} defaultValue={p !== undefined ? String(p).replace(".", ",") : ""}
                         onBlur={(e) => savePrice(f.name, e.target.value)} />
+                    </li>
+                  );
+                })}
+                {m.pipes.map((r) => {
+                  const p = priceOf(prices, r.name);
+                  return (
+                    <li key={`rura-${r.name}`} className="flex items-center gap-2 text-sm">
+                      <span className="min-w-0 flex-1 truncate">{r.name}</span>
+                      <span className="tabular-nums text-muted-foreground">{metersLabel(r.cm)}</span>
+                      <Input aria-label={`Cena za metr: ${r.name}`} inputMode="decimal" placeholder="zł/m" className="h-8 w-20 text-right tabular-nums coarse:h-11"
+                        key={`${r.name}-${p ?? ""}`} defaultValue={p !== undefined ? String(p).replace(".", ",") : ""}
+                        onBlur={(e) => savePrice(r.name, e.target.value)} />
                     </li>
                   );
                 })}

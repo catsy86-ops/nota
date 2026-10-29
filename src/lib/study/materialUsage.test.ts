@@ -52,3 +52,25 @@ describe("zużycie materiału (P2.6)", () => {
     expect(csv).toContain("2026-10;dostawa;Rura PEX 16;50 m;;");
   });
 });
+
+describe("rury w zużyciu materiału (H1.1)", () => {
+  const withPipes = [
+    { ...e("p1", at(10, 3), []), pipes: [{ name: "Rura PEX 16×2", cm: 2000 }] },
+    { ...e("p2", at(10, 9), [{ name: "Kolano 16", qty: 2 }]), pipes: [{ name: "Rura PEX 16×2", cm: 450 }] },
+  ];
+  const prices = { [fittingKey("Rura PEX 16×2")]: 4, [fittingKey("Kolano 16")]: 3 };
+
+  it("rury per miesiąc i w sumie; wartość z ceny za metr", () => {
+    const u = materialUsage(withPipes, "lipowa", [], prices);
+    expect(u.months[0].pipes).toEqual([{ name: "Rura PEX 16×2", cm: 2450 }]);
+    expect(u.totalPipes).toEqual([{ name: "Rura PEX 16×2", cm: 2450 }]);
+    expect(u.cost).toBe(24.5 * 4 + 2 * 3);
+    expect(costOf([], {}, [{ name: "Rura X", cm: 100 }])).toEqual({ cost: null, unpriced: 1 });
+  });
+
+  it("tekst i CSV mają rury w metrach z ceną za metr", () => {
+    const u = materialUsage(withPipes, "lipowa", [], prices);
+    expect(materialText(u, "Lipowa", prices)).toContain("- Rura PEX 16×2: 24,5 m × 4,00 zł/m = 98,00 zł");
+    expect(materialCsv(u, prices)).toContain("rura (m);Rura PEX 16×2;24,50;4,00;98,00");
+  });
+});
