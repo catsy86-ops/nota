@@ -10,6 +10,7 @@
 | Wpis z kształtkami: 5 stuknięć (cel ≤ 3) | `JournalEntrySheet.tsx`, `FittingsFields.tsx` | UX | średnie | S | P1 | częściowo: 4 po H1.5 (pigułki od razu); do 3 trzeba by pigułek kształtek bez otwierania sekcji |
 | Pomocnicze zapisy Yjs jako domknięcia w `createYStudy` | `src/lib/study/yStudy.ts` | struktura | niskie | M | P3 | odłożone (krok 3 planu H0.2, mały zysk) |
 | Importy typu `JournalEntry` przez fasadę `yStudy.ts`; cykl typów `sites.ts` ↔ `yStudy.ts` | `sites.ts`, `entrySheet.ts`, reszta | struktura | niskie | M | P3 | otwarte (krok 6 planu H0.2) |
+| Paczka startowa rośnie od podziału na małe chunki (`pipes`, `fittings` wydzielone przy H1.2: +791 B, 77 → 79 plików) | `vite.config.ts` (manualChunks) | wydajność | niskie | S | P3 | otwarte — rozważyć połączenie małych modułów Pracy z paczki startowej w jeden chunk |
 | Migracja `data.ts` słabo pokryta (59%) | `src/lib/study/data.ts` | brak testów | średnie | S | P2 | w Characterization Backlog |
 
 ## Smell Inventory

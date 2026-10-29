@@ -8,6 +8,9 @@ import { PhotoStrip } from "./PhotoStrip";
 import { PressureTestFields } from "./PressureTestFields";
 import { FittingsFields } from "./FittingsFields";
 import { PipesFields } from "./PipesFields";
+import { applyKit, kitSummary, type Kit } from "@/lib/study/kits";
+import { useKits } from "@/lib/study/kitsStore";
+const KitsDialog = lazy(() => import("./KitsDialog").then((m) => ({ default: m.KitsDialog })));
 import { TEST_TOPICS } from "@/lib/study/pressureTest";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -120,6 +123,18 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const fittingsVisible = fittingsOpen || (form.fittings?.length ?? 0) > 0;
   const [pipesOpen, setPipesOpen] = useState(false);
   const pipesVisible = pipesOpen || (form.pipes?.length ?? 0) > 0;
+  // Zestawy materiału (H1.2): pigułki pod „+ Zestaw”, edycja w osobnym oknie (ładowanym leniwie).
+  const [kitsOpen, setKitsOpen] = useState(false);
+  const [kitsDialogOpen, setKitsDialogOpen] = useState(false);
+  const { kits } = useKits();
+  const addKit = (kit: Kit) => {
+    const f = getForm();
+    patch(applyKit(f.fittings ?? [], f.pipes ?? [], kit));
+    haptic("success");
+    // U góry — na dole leży „Zapisz wpis”.
+    toast.success(`Dodano zestaw: ${kit.name}`, { id: "kit-applied", position: "top-center" });
+    setKitsOpen(false);
+  };
   const [editingSite, setEditingSite] = useState(false);
   /** Budowa w chwili otwarcia pola — dopóki jej nie zmienisz, pigułki pokazują wszystkie ostatnie. */
   const [siteAtOpen, setSiteAtOpen] = useState("");
@@ -798,6 +813,15 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </button>
               <button
                 type="button"
+                aria-expanded={kitsOpen}
+                aria-controls="journal-kits"
+                onClick={() => setKitsOpen((o) => !o)}
+                className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
+              >
+                + Zestaw
+              </button>
+              <button
+                type="button"
                 aria-expanded={topicOpen}
                 aria-controls="journal-topic"
                 onClick={() => setTopicOpen((o) => !o)}
@@ -815,6 +839,32 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               <div id="journal-fittings" className="rounded-card border border-border p-2">
                 <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
               </div>
+            )}
+            {kitsOpen && (
+              <div id="journal-kits" className="space-y-2 rounded-card border border-border p-3" data-testid="journal-kits">
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Zestawy materiału">
+                  {kits.map((kit) => (
+                    <button
+                      key={kit.id}
+                      type="button"
+                      onClick={() => addKit(kit)}
+                      aria-label={`${kit.name}: ${kitSummary(kit)}`}
+                      className="pressable flex flex-col items-start rounded-card bg-muted px-3 py-1.5 text-left hover:bg-primary/10 coarse:min-h-11"
+                    >
+                      <span className="text-sm">{kit.name}</span>
+                      <span className="text-2xs text-muted-foreground">{kitSummary(kit)}</span>
+                    </button>
+                  ))}
+                </div>
+                <button type="button" onClick={() => setKitsDialogOpen(true)} className="pressable text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline coarse:min-h-11">
+                  {kits.length > 0 ? "Zmień zestawy" : "Dodaj zestaw"}
+                </button>
+              </div>
+            )}
+            {kitsDialogOpen && (
+              <Suspense fallback={null}>
+                <KitsDialog open={kitsDialogOpen} onOpenChange={setKitsDialogOpen} fittingHistory={fittingHistory} pipeHistory={pipeHistory} />
+              </Suspense>
             )}
             {pipesVisible && (
               <div id="journal-pipes" className="rounded-card border border-border p-3">
