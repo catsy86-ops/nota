@@ -707,10 +707,10 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   const card = page.getByTestId("site-card");
   await expect(card.getByTestId("site-card-stats")).toContainText("2 wpisy · otwarte: 1 problem");
   await card.getByRole("button", { name: /^Edytuj dane/ }).click();
-  await card.getByLabel("Nazwa").fill("polna 2");
+  await card.getByLabel("Nazwa", { exact: true }).fill("polna 2");
   await expect(card.getByRole("alert")).toHaveText("Jest już budowa „Polna 2”");
   await expect(card.getByRole("button", { name: "Zapisz kartę" })).toBeDisabled();
-  await card.getByLabel("Nazwa").fill("Dom Nowaków");
+  await card.getByLabel("Nazwa", { exact: true }).fill("Dom Nowaków");
   await card.getByLabel("Adres").fill("ul. Lipowa 5, Kraków");
   await card.getByLabel("Inwestor", { exact: true }).fill("Jan Nowak");
   await card.getByRole("button", { name: "Zapisz kartę" }).click();

@@ -83,3 +83,22 @@ describe("punkty w Yjs (H2.1)", () => {
     expect(empty.get("site").points).toHaveLength(1);
   });
 });
+
+describe("zdjęcie punktu (H2.3)", () => {
+  it("podpis: pomieszczenie, typ, wysokość; bez wysokości bez cm", async () => {
+    const { pointCaption } = await import("./points");
+    expect(pointCaption("Łazienka parter", pt())).toBe("Łazienka parter · Umywalka · 58 cm");
+    expect(pointCaption("Kuchnia", pt({ type: "zmywarka", height: undefined }))).toBe("Kuchnia · Zmywarka");
+  });
+
+  it("najnowsze zdjęcie punktu z wpisów", async () => {
+    const { latestPointPhotos } = await import("./points");
+    const m = latestPointPhotos([
+      { at: 1, point: "p1", images: ["a"] },
+      { at: 3, point: "p1", images: ["b", "c"] },
+      { at: 2, point: "p1", images: ["d"] },
+      { at: 4, images: ["e"] },
+    ]);
+    expect([...m]).toEqual([["p1", "c"]]);
+  });
+});

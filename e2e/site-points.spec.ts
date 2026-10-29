@@ -81,3 +81,23 @@ test("usunięcie pomieszczenia z „Cofnij”; własna nazwa; 320 px bez przewij
   await expect(panel.getByTestId("site-room")).toHaveCount(2);
   await expect(panel.getByTestId("site-point")).toHaveCount(3);
 });
+
+// Jednopikselowy PNG — wystarczy, żeby `prepareImage` zapisał zdjęcie.
+const PNG_B64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
+test("zdjęcie punktu: wpis z podpisem i miniatura przy punkcie (H2.3) @mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const card = await openCard(page);
+  const panel = card.getByTestId("site-points");
+  await panel.getByRole("button", { name: /^\+ Łazienka/ }).click();
+
+  const chooser = page.waitForEvent("filechooser");
+  await panel.getByRole("button", { name: "Zdjęcie punktu: Umywalka" }).click();
+  await (await chooser).setFiles({ name: "umywalka.png", mimeType: "image/png", buffer: Buffer.from(PNG_B64, "base64") });
+  await expect(page.getByText("Zdjęcie punktu: Łazienka · Umywalka · 58 cm")).toBeVisible();
+  await expect(panel.getByRole("img", { name: "Ostatnie zdjęcie: Umywalka" })).toBeVisible();
+  await expect(panel.getByRole("img", { name: "Ostatnie zdjęcie: Prysznic" })).toHaveCount(0);
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("study-journal").getByText("Punkt: Łazienka · Umywalka · 58 cm")).toBeVisible();
+});

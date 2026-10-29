@@ -1,9 +1,15 @@
-import { useState } from "react";
-import { Check, ChevronDown, Droplets, Plus, Trash2 } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { Camera, Check, ChevronDown, Droplets, Plus, Trash2 } from "lucide-react";
+import { NoteImage } from "@/components/NoteImage";
+import { prepareImage } from "@/lib/imagePrepare";
+import { imageStore } from "@/lib/imageStore";
+import { addJournalEntry, setSite } from "@/lib/study/store";
+import type { JournalEntry } from "@/lib/study/journalEntry";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
-import { HEIGHT_MAX, pointsProgress, pointStage, pointType, POINT_STEPS, POINT_TYPES, ROOM_NAME_MAX, ROOM_TEMPLATES, sidesLabel, STEP_LABEL, type WaterPoint } from "@/lib/study/points";
+import { HEIGHT_MAX, latestPointPhotos, pointCaption, pointsProgress, pointStage, pointType, POINT_STEPS, POINT_TYPES, ROOM_NAME_MAX, ROOM_TEMPLATES, sidesLabel, STEP_LABEL, type WaterPoint } from "@/lib/study/points";
 import { addPoint, addRoom, removePoint, removeRoom, restoreRoom, savePoint, togglePointStep, useSitePoints } from "@/lib/study/pointsStore";
 import type { SiteInfo } from "@/lib/study/sites";
 
@@ -18,8 +24,41 @@ const nextLabel = (p: WaterPoint) => {
  * i trzy kratki stanu — podejście, próba, biały montaż. Stuknięcie kratki zaznacza ją z wcześniejszymi
  * albo cofa ją z późniejszymi („Cofnij” w dymku). Wysokość startowo z tabeli G-HEAT, do poprawienia.
  */
-export function SitePointsPanel({ site }: { site: SiteInfo }) {
+export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: readonly JournalEntry[] }) {
   const { rooms, points } = useSitePoints(site.id);
+  const photos = useMemo(() => latestPointPhotos(journal), [journal]);
+  // H2.3: jedno ukryte pole aparatu na cały panel; `photoFor` mówi, którego punktu dotyczy zdjęcie.
+  const photoInput = useRef<HTMLInputElement>(null);
+  const photoFor = useRef<{ point: WaterPoint; room: string } | null>(null);
+  const [photoBusy, setPhotoBusy] = useState<string | null>(null);
+
+  function takePhoto(point: WaterPoint, room: string) {
+    photoFor.current = { point, room };
+    photoInput.current?.click();
+  }
+
+  async function savePhoto(file: File) {
+    const target = photoFor.current;
+    if (!target) return;
+    setPhotoBusy(target.point.id);
+    try {
+      const prepared = await prepareImage(file);
+      if (!prepared) { toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB"); return; }
+      const ref = await imageStore.putBlob(prepared);
+      const caption = pointCaption(target.room, target.point);
+      setSite(site.name);
+      if (!addJournalEntry({ kind: "ok", topic: null, text: `Punkt: ${caption}`, images: [ref], captions: { [ref]: caption }, point: target.point.id })) {
+        toast.error("Nie zapisano zdjęcia");
+        return;
+      }
+      haptic("success");
+      toast.success(`Zdjęcie punktu: ${caption}`);
+    } catch {
+      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki." });
+    } finally {
+      setPhotoBusy(null);
+    }
+  }
   /** Rozwinięcie wybrane przez użytkownika; bez wyboru — jedno albo dwa pomieszczenia rozwinięte, więcej zwinięte. */
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [name, setName] = useState("");
@@ -69,6 +108,8 @@ export function SitePointsPanel({ site }: { site: SiteInfo }) {
 
   return (
     <section aria-label="Punkty w pomieszczeniach" data-testid="site-points" className="space-y-2">
+      <input ref={photoInput} type="file" accept="image/*" capture="environment" hidden data-testid="point-photo-input"
+        onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void savePhoto(f); }} />
       <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <Droplets className="h-4 w-4" aria-hidden />Punkty
         {progress.total > 0 && <span className="font-mono tabular-nums normal-case" data-testid="site-points-progress">{progress.done}/{progress.total} gotowe</span>}
@@ -102,6 +143,9 @@ export function SitePointsPanel({ site }: { site: SiteInfo }) {
                     return (
                       <li key={p.id} className="space-y-1" data-testid="site-point">
                         <div className="flex items-center gap-2">
+                          {photos.get(p.id) && (
+                            <NoteImage imageRef={photos.get(p.id)!} alt={`Ostatnie zdjęcie: ${t.label}`} className="size-9 shrink-0 rounded-field object-cover" placeholderClassName="size-9 shrink-0 rounded-field" />
+                          )}
                           <span className="min-w-0 flex-1 truncate text-sm">{t.label}</span>
                           {p.sides.length > 0 && <span className="font-mono text-2xs text-muted-foreground" aria-label={`Strony: ${p.sides.length}`}>{sidesLabel(p.sides)}</span>}
                           <label className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -116,6 +160,11 @@ export function SitePointsPanel({ site }: { site: SiteInfo }) {
                             />
                             cm
                           </label>
+                          <button type="button" onClick={() => takePhoto(p, room.name)} disabled={photoBusy === p.id} aria-label={`Zdjęcie punktu: ${t.label}`}
+                            title="Zdjęcie z podpisem: pomieszczenie, punkt, wysokość"
+                            className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground disabled:opacity-50 coarse:size-11">
+                            <Camera className="h-4 w-4" aria-hidden />
+                          </button>
                           <button type="button" onClick={() => dropPoint(p)} aria-label={`Usuń punkt ${t.label}`}
                             className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
                             <Trash2 className="h-3.5 w-3.5" aria-hidden />

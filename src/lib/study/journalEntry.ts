@@ -60,6 +60,8 @@ export interface JournalEntry {
   stage?: string;
   /** „Tu jestem”: gdzie zapisano wpis (`geo.ts`); tylko po stuknięciu, nie trafia do raportu. */
   geo?: GeoPoint;
+  /** Punkt w pomieszczeniu (`points.ts`, id), którego dotyczy zdjęcie wpisu (H2.3); brak = bez punktu. */
+  point?: string;
 }
 
 /**
@@ -150,6 +152,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(pipes.length ? { pipes } : {}),
     ...(stage ? { stage } : {}),
     ...(geo ? { geo } : {}),
+    ...(typeof e.point === "string" && e.point && e.point.length <= 64 ? { point: e.point } : {}),
   };
 }
 
@@ -164,7 +167,7 @@ export const ORDERED_ENTRY_LISTS = new Set<string>(["images", "fittings"]);
  */
 export const JOURNAL_ENTRY_KEYS: ReadonlySet<string> = new Set([
   "id", "at", "kind", "topic", "text", "site", "siteId", "checked", "images", "captions", "drawnFrom", "recordings",
-  "resolved", "solution", "test", "fittings", "pipes", "stage", "geo", "owner", "due", "after",
+  "resolved", "solution", "test", "fittings", "pipes", "stage", "geo", "owner", "due", "after", "point",
 ]);
 
 /** Oryginały narysowanych zdjęć (H0.1): tylko dla zdjęć ze `images`, oryginał to poprawny, inny klucz. */

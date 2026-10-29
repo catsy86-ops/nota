@@ -280,7 +280,7 @@ export function SiteCardDialog({
               </div>
               {tally && <SiteTallyBar tally={tally} points={sitePointsProgress} />}
               <SiteStagesPanel site={site} />
-              <SitePointsPanel site={site} />
+              <SitePointsPanel site={site} journal={study.journal} />
               <SiteShortagesPanel site={site} />
               <SiteFaultsPanel site={site} journal={study.journal} />
               <SiteMaterialPanel site={site} journal={study.journal} />

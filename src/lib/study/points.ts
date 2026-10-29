@@ -138,3 +138,19 @@ export function pendingAt(points: readonly WaterPoint[], step: PointStep): numbe
 
 /** „Z C K” — krótki opis stron punktu. */
 export const sidesLabel = (sides: readonly PointSide[]) => sides.map((s) => SIDE_SHORT[s]).join(" ");
+
+/** Podpis zdjęcia punktu (H2.3): „Łazienka · Umywalka · 58 cm” — miejsce i wysokość, czyli „gdzie idzie rura”. */
+export function pointCaption(roomName: string, p: Pick<WaterPoint, "type" | "height">): string {
+  return [roomName, pointType(p.type).label, p.height !== undefined ? `${p.height} cm` : ""].filter(Boolean).join(" · ").slice(0, 80);
+}
+
+/** Najnowsze zdjęcie każdego punktu z wpisów dziennika (`JournalEntry.point`): id punktu → klucz zdjęcia. */
+export function latestPointPhotos(journal: readonly { at: number; point?: string; images: readonly string[] }[]): Map<string, string> {
+  const out = new Map<string, { at: number; ref: string }>();
+  for (const e of journal) {
+    if (!e.point || e.images.length === 0) continue;
+    const prev = out.get(e.point);
+    if (!prev || e.at >= prev.at) out.set(e.point, { at: e.at, ref: e.images[e.images.length - 1] });
+  }
+  return new Map([...out].map(([k, v]) => [k, v.ref]));
+}

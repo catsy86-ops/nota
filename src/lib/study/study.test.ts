@@ -743,3 +743,18 @@ describe("rury we wpisie (H1.1)", () => {
     closeJournalSheet();
   });
 });
+
+describe("zdjęcie punktu we wpisie (H2.3)", () => {
+  beforeEach(freshStudy);
+
+  it("wpis pamięta punkt; poprawka w arkuszu go nie kasuje", () => {
+    setSite("Lipowa 5");
+    const e = addJournalEntry({ kind: "ok", topic: null, text: "Punkt: Łazienka · Umywalka · 58 cm", point: "pt-1" }, 1000)!;
+    expect(e.point).toBe("pt-1");
+    openJournalEdit(getStudy().journal[0]);
+    const updated = updateJournalEntry(e.id, { ...getJournalEditForm()!, topic: null, text: "Umywalka, rura w lewo", site: "Lipowa 5" })!;
+    expect(updated.point).toBe("pt-1");
+    expect(getStudy().journal[0].point).toBe("pt-1");
+    closeJournalSheet();
+  });
+});

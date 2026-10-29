@@ -36,6 +36,8 @@ export interface NewJournalEntry {
   stage?: string | null;
   /** „Tu jestem” — lokalizacja wpisu; `null`/brak = bez lokalizacji. Sama nie czyni wpisu niepustym. */
   geo?: GeoPoint | null;
+  /** Punkt w pomieszczeniu (H2.3) — zdjęcie punktu z karty budowy; brak = bez punktu. */
+  point?: string;
 }
 
 /** Wejście z arkusza → pola wpisu przefiltrowane przez materiał; `null` = pusty wpis. */
@@ -84,7 +86,8 @@ export function addJournalEntry(input: NewJournalEntry, now: number = Date.now()
   if (!fields) return null;
   const s = getStudy();
   const { siteId, site, card } = resolveSite(siteDirectoryOf(s), s.site, now);
-  const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, site, ...(siteId ? { siteId } : {}) };
+  const point = typeof input.point === "string" && input.point && input.point.length <= 64 ? input.point : undefined;
+  const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, site, ...(siteId ? { siteId } : {}), ...(point ? { point } : {}) };
   yStudy.addEntry(entry, card);
   return entry;
 }
@@ -104,7 +107,11 @@ export function updateJournalEntry(id: string, input: JournalEdit, now: number =
   // Opis rozwiązania i pola usterki (P2.3: odpowiedzialny, termin, zdjęcia po naprawie) nie są w formularzu
   // arkusza — zostają z zapisanego wpisu, dopóki to problem. Bez tego poprawka tekstu je kasowała.
   const prev = s.journal.find((e) => e.id === id);
-  const kept = fields.kind === "problem" && prev ? { solution: prev.solution, owner: prev.owner, due: prev.due, after: prev.after } : {};
+  const kept = {
+    // Punkt zdjęcia (H2.3) nie jest w formularzu arkusza — zostaje przy każdym rodzaju wpisu.
+    point: prev?.point,
+    ...(fields.kind === "problem" && prev ? { solution: prev.solution, owner: prev.owner, due: prev.due, after: prev.after } : {}),
+  };
   const entry: JournalEntry = {
     id, ...fields, site,
     ...(siteId ? { siteId } : {}),
