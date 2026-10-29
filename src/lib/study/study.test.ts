@@ -12,7 +12,7 @@ import {
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
   updateJournalEntry, setProblemResolved, openProblems, saveSiteCard, setSiteArchived, setDayHours,
   setProblemSolution, JOURNAL_SOLUTION_MAX, setSiteGeo, setSiteStages, markSiteOrdered,
-  siteDirectoryOf, undoSiteOrdered, setSiteShortages,
+  siteDirectoryOf, undoSiteOrdered, setSiteShortages, setProblemFault,
 } from "./store";
 import { resetStudyForTests, yStudy } from "./data";
 import { yjsStore } from "@/lib/yjsStore";
@@ -277,6 +277,28 @@ describe("dziennik z budowy", () => {
 
 describe("dziennik — edycja i problemy", () => {
   beforeEach(freshStudy);
+
+  it("poprawka problemu w arkuszu nie kasuje odpowiedzialnego, terminu i zdjęć po naprawie (P2.3)", () => {
+    setSite("Budowa A");
+    const p = addJournalEntry({ kind: "problem", topic: null, text: "przeciek" }, 1000)!;
+    const after = "b".repeat(64);
+    setProblemFault(p.id, { owner: "Marek", due: "2026-11-02", after: [after] });
+    const e = updateJournalEntry(p.id, { kind: "problem", topic: null, text: "przeciek pod zlewem", at: 1000, site: "Budowa A", resolved: null })!;
+    expect(e).toMatchObject({ text: "przeciek pod zlewem", owner: "Marek", due: "2026-11-02", after: [after] });
+    expect(getStudy().journal[0]).toMatchObject({ owner: "Marek", due: "2026-11-02", after: [after] });
+    // Zmiana rodzaju na inny niż problem zdejmuje pola usterki.
+    expect(updateJournalEntry(p.id, { kind: "ok", topic: null, text: "naprawione", at: 1000, site: "Budowa A", resolved: null })!.owner).toBeUndefined();
+  });
+
+  it("rysunek na zdjęciu: oryginał zostaje przy wpisie po zapisie i edycji (H0.1)", () => {
+    const [drawn, original] = ["d".repeat(64), "c".repeat(64)];
+    const e = addJournalEntry({ kind: "ok", topic: null, text: "podejście", images: [drawn], drawnFrom: { [drawn]: original } }, 1000)!;
+    expect(e.drawnFrom).toEqual({ [drawn]: original });
+    expect(journalImageRefs().has(original)).toBe(true);
+    openJournalEdit(getStudy().journal[0]);
+    expect(getJournalEditForm()!.drawnFrom).toEqual({ [drawn]: original });
+    closeJournalSheet();
+  });
 
   it("wpis „za wczoraj”: podany moment, przyszłość przycięta do teraz", () => {
     const now = 10_000;

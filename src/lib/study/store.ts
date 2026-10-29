@@ -214,6 +214,8 @@ export interface NewJournalEntry {
   images?: string[];
   /** Podpisy zdjęć (ref → tekst); czyszczone przez `cleanEntryParts` (tylko zdjęcia ze `images`). */
   captions?: Record<string, string>;
+  /** Oryginały narysowanych zdjęć (ref rysunku → ref oryginału, H0.1); czyszczone jak podpisy. */
+  drawnFrom?: Record<string, string>;
   /** Nagrania głosowe (załączniki audio); brak = bez nagrań. Nagranie samo wystarcza, by wpis nie był pusty (jak zdjęcie). */
   recordings?: Attachment[];
   /** Moment wpisu („za wczoraj”); brak = teraz. Przyszłość przycina się do teraz. */
@@ -237,6 +239,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     checked: (input.checked ?? []).filter((id) => items.some((c) => c.id === id)),
     images: input.images ?? [],
     captions: input.captions,
+    drawnFrom: input.drawnFrom,
     recordings: input.recordings ?? [],
     test: input.test,
     fittings: input.fittings,
@@ -244,7 +247,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     geo: input.geo,
   });
   if (parts.empty) return null;
-  const { text, checked, images, captions, recordings, test, fittings, stage, geo } = parts;
+  const { text, checked, images, captions, drawnFrom, recordings, test, fittings, stage, geo } = parts;
   return {
     at: typeof input.at === "number" && Number.isFinite(input.at) ? Math.min(input.at, now) : now,
     kind: input.kind,
@@ -253,6 +256,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     checked,
     images,
     ...(Object.keys(captions).length ? { captions } : {}),
+    ...(Object.keys(drawnFrom).length ? { drawnFrom } : {}),
     ...(recordings.length ? { recordings } : {}),
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
@@ -287,13 +291,15 @@ export function updateJournalEntry(id: string, input: JournalEdit, now: number =
   if (!fields) return null;
   const s = getStudy();
   const { siteId, site, card } = resolveSite(siteDirectoryOf(s), input.site, now);
-  // Opis rozwiązania nie jest w formularzu arkusza — zostaje z zapisanego wpisu, dopóki to problem.
-  const prevSolution = s.journal.find((e) => e.id === id)?.solution;
+  // Opis rozwiązania i pola usterki (P2.3: odpowiedzialny, termin, zdjęcia po naprawie) nie są w formularzu
+  // arkusza — zostają z zapisanego wpisu, dopóki to problem. Bez tego poprawka tekstu je kasowała.
+  const prev = s.journal.find((e) => e.id === id);
+  const kept = fields.kind === "problem" && prev ? { solution: prev.solution, owner: prev.owner, due: prev.due, after: prev.after } : {};
   const entry: JournalEntry = {
     id, ...fields, site,
     ...(siteId ? { siteId } : {}),
     ...(fields.kind === "problem" && input.resolved !== null ? { resolved: input.resolved } : {}),
-    ...(fields.kind === "problem" && prevSolution ? { solution: prevSolution } : {}),
+    ...Object.fromEntries(Object.entries(kept).filter(([, v]) => v !== undefined)),
   };
   yStudy.updateEntry(entry, card);
   return entry;

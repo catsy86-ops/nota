@@ -56,7 +56,7 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "recordings" | "test" | "fittings" | "stage" | "geo">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "recordings" | "test" | "fittings" | "stage" | "geo">;
 
 /** Odtwarzacz i nagrywanie leniwie, poza główną paczką (jak w notatkach). */
 const VoiceRecorder = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.VoiceRecorder })));
@@ -264,7 +264,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     else patchJournalDraft({ at: next });
   }
 
-  const { saveCaption, drawing, setDrawing, openDrawing, saveDrawing } = useJournalPhotoEdits({ getForm, patch, setProcessing, setCaptioning, setCaptionDraft });
+  const { saveCaption, drawing, setDrawing, openDrawing, saveDrawing, undoDrawing } = useJournalPhotoEdits({ getForm, patch, setProcessing, setCaptioning, setCaptionDraft });
 
   async function addPhotos(files: File[]) {
     let skipped = 0;
@@ -304,7 +304,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     commitSite();
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, captions: form.captions, recordings: form.recordings, at, test: form.test, fittings: form.fittings, stage: form.stage, geo: form.geo ?? null });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, captions: form.captions, drawnFrom: form.drawnFrom, recordings: form.recordings, at, test: form.test, fittings: form.fittings, stage: form.stage, geo: form.geo ?? null });
     if (entry) freshEntry.id = entry.id;
     if (!entry) {
       haptic("warn");
@@ -334,7 +334,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const prev = study.journal.find((e) => e.id === f.id);
     const demotes = editDemotesTopic({ kind: f.kind, topic: f.topic }, prev, !!f.topic && columnOf(study, f.topic) === "done");
     const saved = updateJournalEntry(f.id, {
-      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, captions: f.captions, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, stage: f.stage, geo: f.geo ?? null,
+      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, captions: f.captions, drawnFrom: f.drawnFrom, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, stage: f.stage, geo: f.geo ?? null,
     });
     if (!saved) {
       haptic("warn");
@@ -746,6 +746,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               captions={getForm().captions}
               onRemoveCaption={(ref) => saveCaption(ref, "")}
               onDraw={(ref) => void openDrawing(ref)}
+              drawnFrom={getForm().drawnFrom}
+              onUndoDrawing={undoDrawing}
               onRemove={(ref) => {
                 const before = getForm().images;
                 patch({ images: before.filter((r) => r !== ref) });

@@ -89,3 +89,22 @@ describe("recordingRefsIn — klucze nagrań dla raportu kopii", () => {
     expect([...recordingRefsIn(doc)]).toEqual([H2]);
   });
 });
+
+describe("journalRefsIn — zdjęcia po naprawie i oryginały rysunków (H0.1)", () => {
+  it("zdjęcia usterki po naprawie i oryginały narysowanych zdjęć są chronione przed sprzątaniem i jadą w kopii", () => {
+    const doc = docWith({ p1: { kind: "problem", images: [H1], after: [H2], drawnFrom: { [H1]: H3 } } });
+    expect([...journalRefsIn(doc)].sort()).toEqual([H1, H2, H3].sort());
+    expect([...journalRefsIn(doc, true)].sort()).toEqual([H1, H2, H3].sort());
+  });
+});
+
+describe("cleanEntry — oryginały narysowanych zdjęć (H0.1)", () => {
+  it("zostają tylko dla zdjęć z wpisu, z poprawnym i innym kluczem", () => {
+    const entry = cleanEntry({ id: "e1", at: 1, kind: "ok", text: "x", images: [H1, H2], drawnFrom: { [H1]: H3, [H2]: H2, [H4]: H1, x: "nie-hash" } })!;
+    expect(entry.drawnFrom).toEqual({ [H1]: H3 });
+  });
+
+  it("bez rysunków pola nie ma, śmieci nic nie psują", () => {
+    expect(cleanEntry({ id: "e1", at: 1, kind: "ok", text: "x", images: [H1], drawnFrom: "x" })!.drawnFrom).toBeUndefined();
+  });
+});

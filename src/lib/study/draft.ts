@@ -19,6 +19,8 @@ export interface JournalDraft {
   images: string[];
   /** Podpisy zdjęć (ref → tekst); starszy szkic dostaje `{}` (`sanitizeDraft`). */
   captions: Record<string, string>;
+  /** Oryginały narysowanych zdjęć (ref rysunku → ref oryginału, H0.1); brak = bez rysunków. */
+  drawnFrom?: Record<string, string>;
   /** Nagrania głosowe (załączniki audio); starszy szkic dostaje pustą listę (`sanitizeDraft`). */
   recordings: Attachment[];
   /** Protokół próby szczelności; `null` = bez próby. */
@@ -47,6 +49,7 @@ export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalD
     checked: parts.checked,
     images: parts.images,
     captions: parts.captions,
+    ...(Object.keys(parts.drawnFrom).length ? { drawnFrom: parts.drawnFrom } : {}),
     recordings: parts.recordings,
     test: parts.test,
     fittings: parts.fittings,

@@ -33,9 +33,12 @@ export function siteDocRefsIn(doc: { getMap(name: string): MapLike }): Set<strin
 export function journalRefsIn(doc: { getMap(name: string): MapLike }, syncable = false): Set<string> {
   const refs = new Set<string>();
   doc.getMap("studyJournal").forEach((e) => {
-    const entry = journalFields(e) as { images?: unknown; recordings?: unknown } | null;
-    const images = entry?.images;
-    if (Array.isArray(images)) for (const r of images) if (typeof r === "string" && isImageRef(r)) refs.add(r);
+    const entry = journalFields(e) as { images?: unknown; after?: unknown; drawnFrom?: unknown; recordings?: unknown } | null;
+    // Zdjęcia wpisu, zdjęcia usterki po naprawie (P2.3) i oryginały narysowanych zdjęć (H0.1).
+    const drawn = entry?.drawnFrom && typeof entry.drawnFrom === "object" ? Object.values(entry.drawnFrom) : [];
+    for (const list of [entry?.images, entry?.after, drawn]) {
+      if (Array.isArray(list)) for (const r of list) if (typeof r === "string" && isImageRef(r)) refs.add(r);
+    }
     // Nagrania (U8): ten sam magazyn; do innego urządzenia jadą jak załączniki do 2 MB.
     if (Array.isArray(entry?.recordings)) {
       for (const r of entry.recordings) {

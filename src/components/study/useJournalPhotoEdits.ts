@@ -11,8 +11,8 @@ export function photoSaveFailed() {
 }
 
 interface JournalPhotoEditsDeps {
-  getForm: () => Pick<JournalDraft, "captions" | "images">;
-  patch: (p: Partial<Pick<JournalDraft, "captions" | "images">>) => void;
+  getForm: () => Pick<JournalDraft, "captions" | "images" | "drawnFrom">;
+  patch: (p: Partial<Pick<JournalDraft, "captions" | "images" | "drawnFrom">>) => void;
   setProcessing: Dispatch<SetStateAction<number>>;
   setCaptioning: (ref: string | null) => void;
   setCaptionDraft: (text: string) => void;
@@ -20,7 +20,7 @@ interface JournalPhotoEditsDeps {
 
 /**
  * Zdjęcia we wpisie budowy (K-…, P6.1): podpis zapisywany w `captions`, rysunek podmienia zdjęcie
- * we wpisie. Wyciągnięte z arkusza wpisu bez zmiany zasad.
+ * we wpisie, a oryginał zostaje w `drawnFrom` (H0.1) do „Cofnij rysunek”.
  */
 export function useJournalPhotoEdits({ getForm, patch, setProcessing, setCaptioning, setCaptionDraft }: JournalPhotoEditsDeps) {
   /**
@@ -48,7 +48,30 @@ export function useJournalPhotoEdits({ getForm, patch, setProcessing, setCaption
     setDrawing({ ref, url: URL.createObjectURL(new Blob([rec.bytes], { type: rec.type })) });
   }
 
-  /** Rysunek na zdjęciu podmienia zdjęcie we wpisie (jak podpis) — oryginał zostaje do odśmiecenia. */
+  /**
+   * Podmienia zdjęcie `from` na `to` we wpisie razem z podpisem. `original` to oryginał, który ma zostać
+   * zapamiętany przy `to` (rysunek); `null` = `to` jest oryginałem (cofnięcie rysunku).
+   */
+  function swapPhoto(from: string, to: string, original: string | null) {
+    const form = getForm();
+    if (!form.images.includes(from)) return;
+    const captions = { ...form.captions };
+    if (captions[from] !== undefined) { captions[to] = captions[from]; delete captions[from]; }
+    const drawnFrom = { ...form.drawnFrom };
+    delete drawnFrom[from];
+    if (original) drawnFrom[to] = original;
+    patch({ images: form.images.map((r) => (r === from ? to : r)), captions, drawnFrom });
+  }
+
+  /** „Cofnij rysunek” (H0.1): wraca oryginał sprzed pierwszego rysowania. */
+  function undoDrawing(ref: string) {
+    const original = getForm().drawnFrom?.[ref];
+    if (!original) return;
+    swapPhoto(ref, original, null);
+    haptic("success");
+  }
+
+  /** Rysunek na zdjęciu podmienia zdjęcie we wpisie; oryginał (sprzed pierwszego rysunku) zostaje w `drawnFrom`. */
   async function saveDrawing(dataUrl: string) {
     const ref = drawing?.ref;
     if (!ref) return;
@@ -58,8 +81,7 @@ export function useJournalPhotoEdits({ getForm, patch, setProcessing, setCaption
       const fitted = await prepareImage(new File([blob], "rysunek.jpg", { type: blob.type || "image/jpeg" }));
       if (!fitted) { toast.error("Nie udało się zapisać rysunku na zdjęciu"); return; }
       const next = await imageStore.putBlob(fitted);
-      const now = getForm().images;
-      if (now.includes(ref)) patch({ images: now.map((r) => (r === ref ? next : r)) });
+      swapPhoto(ref, next, getForm().drawnFrom?.[ref] ?? ref);
       haptic("success");
     } catch {
       photoSaveFailed();
@@ -68,5 +90,5 @@ export function useJournalPhotoEdits({ getForm, patch, setProcessing, setCaption
     }
   }
 
-  return { saveCaption, drawing, setDrawing, openDrawing, saveDrawing };
+  return { saveCaption, drawing, setDrawing, openDrawing, saveDrawing, undoDrawing };
 }

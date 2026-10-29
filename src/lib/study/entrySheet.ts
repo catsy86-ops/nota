@@ -46,7 +46,7 @@ export const closeJournalSheet = () => { editForm = null; set({ open: false, top
 export function openJournalEdit(entry: JournalEntry) {
   editForm = {
     id: entry.id, at: entry.at, kind: entry.kind, topic: entry.topic ?? "", text: entry.text,
-    checked: [...entry.checked], images: [...entry.images], captions: { ...(entry.captions ?? {}) }, recordings: [...(entry.recordings ?? [])], site: entry.site, resolved: entry.resolved ?? null,
+    checked: [...entry.checked], images: [...entry.images], captions: { ...(entry.captions ?? {}) }, drawnFrom: { ...(entry.drawnFrom ?? {}) }, recordings: [...(entry.recordings ?? [])], site: entry.site, resolved: entry.resolved ?? null,
     test: entry.test ?? null,
     fittings: entry.fittings ?? [],
     stage: entry.stage ?? null,
@@ -65,8 +65,11 @@ export function patchJournalEditForm(patch: Partial<JournalEditForm>) {
   emit();
 }
 
-/** Zdjęcia dodane w edycji leżą w `imageStore`, zanim wpis się zapisze — chronione przed odśmiecaniem. */
-export const journalEditImageRefs = (): string[] => editForm?.images ?? [];
+/**
+ * Zdjęcia dodane w edycji leżą w `imageStore`, zanim wpis się zapisze — chronione przed odśmiecaniem.
+ * Razem z oryginałami narysowanych zdjęć (H0.1), żeby „Cofnij rysunek” miało co przywrócić.
+ */
+export const journalEditImageRefs = (): string[] => (editForm ? [...editForm.images, ...Object.values(editForm.drawnFrom ?? {})] : []);
 
 const subscribe = (cb: () => void) => { listeners.add(cb); return () => listeners.delete(cb); };
 

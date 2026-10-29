@@ -33,7 +33,10 @@ export function journalImageRefs(): Set<string> {
   addFrom(journalEditImageRefs());
   try {
     const raw = localStorage.getItem(JOURNAL_DRAFT_KEY);
-    addFrom(raw ? JSON.parse(raw)?.images : null);
+    const draft = raw ? JSON.parse(raw) : null;
+    addFrom(draft?.images);
+    // Oryginały narysowanych zdjęć szkicu (H0.1) — „Cofnij rysunek” je przywraca.
+    addFrom(draft?.drawnFrom && typeof draft.drawnFrom === "object" ? Object.values(draft.drawnFrom) : null);
   } catch {
     /* uszkodzony szkic — szkic wróci pusty */
   }

@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { PenTool, Type, X } from "lucide-react";
+import { PenTool, Type, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NoteImage } from "@/components/NoteImage";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ import { DelayedSpinner } from "@/components/DelayedSpinner";
  */
 const CAPTION_CHIPS = ["Przed zakryciem", "Łazienka", "Kuchnia", "Kotłownia"];
 
-export function PhotoStrip({ images, captions, processing, captioning, captionDraft, onCaptionDraft, onToggleCaption, onCancelCaption, onSubmitCaption, onRemoveCaption, onDraw, onRemove }: {
+export function PhotoStrip({ images, captions, processing, captioning, captionDraft, onCaptionDraft, onToggleCaption, onCancelCaption, onSubmitCaption, onRemoveCaption, onDraw, onUndoDrawing, drawnFrom = {}, onRemove }: {
   images: string[];
   /** Podpisy zdjęć wpisu (ref → tekst); pokazane pod paskiem, wypalane dopiero przy eksporcie. */
   captions: Record<string, string>;
@@ -25,6 +25,9 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
   onSubmitCaption: (ref: string) => void;
   onRemoveCaption: (ref: string) => void;
   onDraw: (ref: string) => void;
+  /** Oryginały narysowanych zdjęć (ref rysunku → oryginał, H0.1); przy takim zdjęciu jest „Cofnij rysunek”. */
+  drawnFrom?: Record<string, string>;
+  onUndoDrawing?: (ref: string) => void;
   onRemove: (ref: string) => void;
 }) {
   return (
@@ -63,6 +66,17 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
               >
                 <PenTool className="h-3.5 w-3.5" aria-hidden />
               </button>
+              {drawnFrom[ref] && onUndoDrawing && (
+                <button
+                  type="button"
+                  onClick={() => onUndoDrawing(ref)}
+                  aria-label={`Cofnij rysunek na zdjęciu ${i + 1}`}
+                  title="Przywróć zdjęcie sprzed rysowania"
+                  className="absolute -left-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full border border-primary bg-card text-foreground shadow-sm coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
+                >
+                  <Undo2 className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              )}
             </li>
           ))}
           {Array.from({ length: processing }, (_, i) => (
