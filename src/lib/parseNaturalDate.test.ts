@@ -122,3 +122,23 @@ describe("parseNaturalDate — tabela z planu Terminów 1.3", () => {
     expect(got ? got.getTime() : null).toBe(expected);
   });
 });
+
+// Q3 (plan FAB): wyrażenia, których wcześniej nie pilnowały testy.
+describe("parseNaturalDate: dzień tygodnia z godziną i dłuższy czas względny (Q3)", () => {
+  // Środa 14.10.2026, 10:00 — „pt” to najbliższy piątek (16.10).
+  const NOW = new Date(2026, 9, 14, 10, 0);
+
+  it("„pt 9:30” to najbliższy piątek o 9:30", () => {
+    const d = parseNaturalDate("pt 9:30", NOW)!;
+    expect([d.getDate(), d.getHours(), d.getMinutes()]).toEqual([16, 9, 30]);
+  });
+
+  it("skrót dnia pasuje tylko do całego wyrazu („ptaszek” to nie piątek)", () => {
+    expect(parseNaturalDate("ptaszek", NOW)).toBeNull();
+  });
+
+  it("„za 90 min” to 90 minut od teraz", () => {
+    const d = parseNaturalDate("za 90 min", NOW)!;
+    expect(d.getTime() - NOW.getTime()).toBe(90 * 60_000);
+  });
+});

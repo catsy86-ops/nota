@@ -6,6 +6,8 @@ const WEEKDAYS: Record<string, number> = {
   "czwartek": 4,
   "piatek": 5,
   "sobota": 6, "sobote": 6,
+  // Skróty z pola terminu (Q3): „pt 9:30”. Dopasowanie tylko na cały wyraz (patrz niżej).
+  "pn": 1, "wt": 2, "sr": 3, "czw": 4, "pt": 5, "sb": 6, "nd": 0,
 };
 
 /** Miesiące w dopełniaczu („12 listopada”), bez polskich znaków (tekst już je zdejmuje). */
@@ -163,7 +165,8 @@ export function parseNaturalDate(input: string, now: Date = new Date()): Date | 
 
   // nazwa dnia tygodnia, np. "poniedzialek 9:00" — najbliższe wystąpienie (jeśli dziś, to za tydzień)
   for (const [name, weekday] of Object.entries(WEEKDAYS)) {
-    if (dayText.startsWith(name)) {
+    // Na cały wyraz: „pt” pasuje do „pt 9:30”, ale nie do „ptaszek”.
+    if (new RegExp(`^${name}(?![a-z])`).test(dayText)) {
       const d = new Date(now);
       const { h, m } = hourFor(9);
       if (nextWeek) {
