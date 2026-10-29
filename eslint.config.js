@@ -83,6 +83,8 @@ export default tseslint.config(
       "src/lib/study/yEntryCheck.ts",
       "src/lib/study/yEntryCheck.test.ts",
       "src/lib/study/yKits.ts",
+      "src/lib/study/yPoints.ts",
+      "src/lib/study/points.test.ts",
       "src/lib/study/kits.test.ts",
       // Cofnij w Grafiku: test na własnym Y.Doc (ten sam wzorzec co pozostałe działy).
       "src/lib/shifts/undo.test.ts",

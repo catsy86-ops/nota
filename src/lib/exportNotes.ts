@@ -141,6 +141,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   await studyReady();
   const { weightDump } = await import("@/lib/weight/store");
   const { kitsDump } = await import("@/lib/study/kitsStore");
+  const { pointsDump } = await import("@/lib/study/pointsStore");
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES);
   const study = yStudy.dump();
   const propDefs = yjsStore.projectPropDefs();
@@ -176,6 +177,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     entryCheck: JSON.stringify(entryCheckDump()),
     // Zestawy materiału (H1.2) — osobna mapa, scalana przy przywracaniu bez nadpisywania.
     kits: JSON.stringify(kitsDump()),
+    // Punkty w pomieszczeniach budów (H2.1) — osobna mapa, scalana bez nadpisywania.
+    points: JSON.stringify(pointsDump()),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
     // Same liczby (bez treści) — okno przywracania mówi, czego w pliku nie ma; zera = nic nie pominięto.
     skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings },
@@ -325,6 +328,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   // Lista przed wejściem: scalanie bez kasowania; uszkodzona sekcja po prostu się pomija.
   if (backup.entryCheck) await import("@/lib/study/entryCheckStore").then((m) => m.mergeEntryCheckDump(JSON.parse(backup.entryCheck!))).catch(() => {});
   if (backup.kits) await import("@/lib/study/kitsStore").then((m) => m.mergeKitsDump(JSON.parse(backup.kits!))).catch(() => {});
+  if (backup.points) await import("@/lib/study/pointsStore").then((m) => m.mergePointsDump(JSON.parse(backup.points!))).catch(() => {});
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
   if (opts.versions && backup.versions) {

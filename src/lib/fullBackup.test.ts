@@ -12,6 +12,7 @@ import { addMeal, dietDump, removeMeal, setDietGoals } from "./diet/store";
 import { addDebt, debtsDump, removeDebt } from "./debts/store";
 import { entryCheckDump, saveEntryCheckItems, resetEntryCheckItems, toggleEntryCheck } from "./study/entryCheckStore";
 import { getKits, removeKit, saveKit } from "./study/kitsStore";
+import { addRoom, getSitePoints, removeRoom } from "./study/pointsStore";
 import { addTrainingEntry, addPlanDay, removeTrainingEntry, trainingDump } from "./training/store";
 import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
@@ -297,6 +298,16 @@ describe("Nauka w pełnej kopii", () => {
     expect(trainingDump().entries).toEqual([]);
     await restoreFullBackup(backup, ALL);
     expect(trainingDump()).toMatchObject({ entries: [{ exerciseId: "triceps-nad-glowa" }], plans: [{ name: "Triceps" }] });
+  });
+
+  it("punkty w pomieszczeniach wracają z kopii (H2.1)", async () => {
+    const room = addRoom("site-1", "", "lazienka")!;
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    removeRoom("site-1", room.id);
+    expect(getSitePoints("site-1").points).toHaveLength(0);
+    await restoreFullBackup(backup, ALL);
+    expect(getSitePoints("site-1").rooms.map((r) => r.name)).toEqual(["Łazienka"]);
+    expect(getSitePoints("site-1").points.map((p) => p.type)).toEqual(["umywalka", "wc-stelaz", "prysznic", "pralka"]);
   });
 
   it("zestawy materiału wracają z kopii (H1.2)", async () => {
