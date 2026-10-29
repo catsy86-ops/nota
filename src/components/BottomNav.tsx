@@ -362,7 +362,7 @@ function QuickTile({ Icon, title, hint, tone, recent = false, onClick }: { Icon:
     <button
       type="button"
       onClick={onClick}
-      className={cn("pressable group relative flex items-center gap-3 rounded-card border bg-card p-3.5 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring", recent ? "border-primary/50 bg-primary/5" : "border-border/60")}
+      className={cn("pressable group relative flex items-center gap-3 rounded-card border bg-card p-3.5 coarse:min-h-14 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring", recent ? "border-primary/50 bg-primary/5" : "border-border/60")}
     >
       {recent && <span className="absolute right-2.5 top-2 rounded-full bg-primary/15 px-2 py-0.5 text-2xs font-semibold text-primary-ink">Ostatnio</span>}
       <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-card transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>

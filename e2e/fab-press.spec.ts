@@ -93,3 +93,21 @@ test("„+” chowa się przy przewijaniu w dół i wraca w górę", async ({ pa
   await page.evaluate(() => window.scrollTo(0, 700));
   await expect(li).toHaveAttribute("data-fab-hidden", "false");
 });
+
+// F1.5: kafle arkusza „Nowa” są co najmniej 44 px wysokie i mają nazwę z opisem.
+test("kafle arkusza „Nowa” mają co najmniej 44 px i opis w nazwie", async ({ page }) => {
+  const fab = await settledFab(page);
+  const box = await fab.boundingBox();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(500);
+  await page.mouse.up();
+  const tiles = page.getByRole("dialog", { name: "Nowa" }).getByRole("group", { name: "Rodzaj nowej notatki" }).locator("button");
+  const n = await tiles.count();
+  expect(n).toBeGreaterThanOrEqual(5);
+  for (let i = 0; i < n; i++) {
+    const h = (await tiles.nth(i).boundingBox())?.height ?? 0;
+    expect(h).toBeGreaterThanOrEqual(44);
+  }
+  await expect(tiles.nth(0)).toContainText("Pusta kartka do pisania");
+});

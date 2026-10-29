@@ -29,7 +29,7 @@ Stan sprawdzony w kodzie na dziś. Nic jeszcze nie zmieniono.
 - **F1.2 (zrobione 2026-10-29)** Kafel „Z przypomnieniem” w arkuszu „Nowa” (`onNew("reminder")`, akcja już istnieje).
 - **F1.3 (zrobione 2026-10-29)** Kafel ostatnio używanego rodzaju wyróżniony i na górze. Zapamiętanie w `localStorage` (`kaczy.fab.last.v1`), błąd odczytu = zwykła kolejność.
 - **F1.4 (zrobione 2026-10-29)** FAB chowa się przy przewijaniu w dół i wraca przy przewijaniu w górę (z redukcją ruchu: bez animacji). Tylko na liście notatek, nie w Kalendarzu ani Grafiku.
-- **F1.5** Kafle w arkuszu co najmniej 44 px (`coarse:min-h-11`), skróty opisane dla czytnika.
+- **F1.5 (zrobione 2026-10-29)** Kafle w arkuszu co najmniej 44 px (`coarse:min-h-11`), skróty opisane dla czytnika.
 
 ### Faza 2: data i godzina terminu (M)
 - **F2.1** Na telefonie picker otwiera się jako dolny arkusz (`Sheet`, ta sama treść co Popover), pełna szerokość, pola ≥44 px. Na komputerze zostaje Popover.
