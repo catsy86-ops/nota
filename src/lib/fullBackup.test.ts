@@ -13,6 +13,7 @@ import { addDebt, debtsDump, removeDebt } from "./debts/store";
 import { entryCheckDump, saveEntryCheckItems, resetEntryCheckItems, toggleEntryCheck } from "./study/entryCheckStore";
 import { getKits, removeKit, saveKit } from "./study/kitsStore";
 import { addRoom, getSitePoints, removeRoom } from "./study/pointsStore";
+import { getSiteBilling, setLump, setPointRate } from "./study/billingStore";
 import { addTrainingEntry, addPlanDay, removeTrainingEntry, trainingDump } from "./training/store";
 import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
@@ -308,6 +309,17 @@ describe("Nauka w pełnej kopii", () => {
     await restoreFullBackup(backup, ALL);
     expect(getSitePoints("site-1").rooms.map((r) => r.name)).toEqual(["Łazienka"]);
     expect(getSitePoints("site-1").points.map((p) => p.type)).toEqual(["umywalka", "wc-stelaz", "prysznic", "pralka"]);
+  });
+
+  it("sposób rozliczenia wraca z kopii (H3.1)", async () => {
+    setPointRate("site-1", "wc-stelaz", 250);
+    setLump("site-1", 8000);
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    setPointRate("site-1", "wc-stelaz", null);
+    setLump("site-1", null);
+    expect(getSiteBilling("site-1").lump).toBeUndefined();
+    await restoreFullBackup(backup, ALL);
+    expect(getSiteBilling("site-1")).toMatchObject({ lump: 8000, typeRates: { "wc-stelaz": 250 } });
   });
 
   it("zestawy materiału wracają z kopii (H1.2)", async () => {

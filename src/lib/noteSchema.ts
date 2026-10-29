@@ -124,6 +124,8 @@ export interface FullBackup {
   kits?: string;
   /** Punkty w pomieszczeniach budów (lib/study/yPoints.ts, JSON); scalane bez nadpisywania (H2.1). */
   points?: string;
+  /** Sposób rozliczenia budów (lib/study/yBilling.ts, JSON); scalany bez nadpisywania (H3.1). */
+  billing?: string;
   /** Grafiki poza głównym (`lib/shifts/schedules.ts`, JSON tablica `{ id, name, data }`); scalane przy przywracaniu. */
   shiftSchedules?: string;
   /**
@@ -167,6 +169,7 @@ export const fullBackupSchema = z.object({
   entryCheck: z.string().optional().catch(undefined),
   kits: z.string().optional().catch(undefined),
   points: z.string().optional().catch(undefined),
+  billing: z.string().optional().catch(undefined),
   shiftSchedules: z.string().optional().catch(undefined),
   attachmentBlobs: z.record(z.string()).optional().catch(undefined),
   skipped: z.object({ tooLarge: z.number(), missing: z.number(), journalPhotos: z.number(), siteDocs: z.number(), recordings: z.number().optional().catch(undefined) }).optional().catch(undefined),

@@ -33,6 +33,7 @@ import { SiteShortagesPanel } from "./SiteShortagesPanel";
 import { SiteFaultsPanel } from "./SiteFaultsPanel";
 import { SiteMaterialPanel } from "./SiteMaterialPanel";
 import { SiteTimePanel } from "./SiteTimePanel";
+import { SiteBillingPanel } from "./SiteBillingPanel";
 import { SiteStorageLine } from "./SiteStorageLine";
 import { StageDots } from "./StageDots";
 import { NoteImage } from "@/components/NoteImage";
@@ -285,6 +286,7 @@ export function SiteCardDialog({
               <SiteFaultsPanel site={site} journal={study.journal} />
               <SiteMaterialPanel site={site} journal={study.journal} />
               {hours && <SiteTimePanel site={site} today={hours.today} monthLabel={new Date(`${hours.today}T12:00`).toLocaleDateString("pl-PL", { month: "long", year: "numeric" })} monthDays={hours.monthDays} />}
+              <SiteBillingPanel site={site} />
               <SiteOrderPanel site={site} />
             </div>
 
