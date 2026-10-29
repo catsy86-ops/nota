@@ -18,7 +18,7 @@ const report: JournalReport = {
   open: [],
   images: [REF_A, REF_B, REF_C],
   captions: {},
-  fittings: [],
+  fittings: [], pipes: [],
   toOrder: [],
   stages: null,
   shortages: [],

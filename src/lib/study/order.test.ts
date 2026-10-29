@@ -61,7 +61,7 @@ describe("siteOrder — kształtki do zamówienia", () => {
 describe("orderText — tekst do wysłania", () => {
   it("wypisuje pozycje i od kiedy liczymy", () => {
     const text = orderText("Dom Kowalski", {
-      items: [{ name: "Kolano 16", qty: 6 }, { name: "Trójnik 16", qty: 1 }],
+      items: [{ name: "Kolano 16", qty: 6 }, { name: "Trójnik 16", qty: 1 }], pipes: [],
       entries: 2,
       since: null,
     });
@@ -74,12 +74,12 @@ describe("orderText — tekst do wysłania", () => {
   });
 
   it("przy zamówieniu podaje datę i liczbę wpisów w liczbie mnogiej", () => {
-    const text = orderText("Dom", { items: [{ name: "Kolano 16", qty: 1 }], entries: 3, since: day(3) });
+    const text = orderText("Dom", { items: [{ name: "Kolano 16", qty: 1 }], pipes: [], entries: 3, since: day(3) });
     expect(text).toContain(`Liczone od ${new Date(day(3)).toLocaleDateString("pl-PL")} (3 wpisów).`);
   });
 
   it("bez pozycji mówi wprost, że nic nie trzeba zamawiać", () => {
-    expect(orderText("Dom", { items: [], entries: 0, since: null })).toBe(
+    expect(orderText("Dom", { items: [], pipes: [], entries: 0, since: null })).toBe(
       "Zamówienie kształtek — Dom\nNic do zamówienia od ostatniego zamówienia.",
     );
   });
@@ -129,5 +129,25 @@ describe("wiadomość do hurtowni: braki i kształtki (1.7 planu Praca 2026-10-2
 
   it("markMissingOrdered zmienia tylko „Brakuje”, z datą zmiany", () => {
     expect(markMissingOrdered(list, 9).map((s) => [s.status, s.changed])).toEqual([["ordered", 9], ["ordered", 9], ["ordered", undefined]]);
+  });
+});
+
+describe("rury w zamówieniu (H1.1)", () => {
+  it("siteOrder sumuje rury od ostatniego zamówienia; wpis z samymi rurami się liczy", () => {
+    const journal = [
+      { ...entry("a", day(10), undefined), pipes: [{ name: "Rura PEX 16×2", cm: 2000 }] },
+      { ...entry("b", day(12), [{ name: "Kolano 16", qty: 2 }]), pipes: [{ name: "rura pex 16×2", cm: 450 }] },
+      { ...entry("c", day(5), undefined), pipes: [{ name: "Rura PVC 110", cm: 300 }] },
+    ];
+    const order = siteOrder(journal, SITE, day(8));
+    expect(order.pipes).toEqual([{ name: "Rura PEX 16×2", cm: 2450 }]);
+    expect(order.entries).toBe(2);
+  });
+
+  it("tekst do hurtowni ma rury w metrach, także bez kształtek i braków", () => {
+    const order = { items: [], pipes: [{ name: "Rura PEX 16×2", cm: 2450 }], entries: 1, since: null };
+    expect(orderText("Dom", order)).toContain("- Rura PEX 16×2: 24,5 m");
+    const missing: Shortage[] = [{ id: "s1", text: "Klej", qty: "1", status: "missing", at: day(1) } as Shortage];
+    expect(supplierOrderText("Dom", order, missing).split("\n")).toEqual(["Zamówienie — Dom", "Braki:", "- Klej: 1", "Rury:", "- Rura PEX 16×2: 24,5 m"]);
   });
 });

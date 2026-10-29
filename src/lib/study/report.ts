@@ -1,5 +1,6 @@
 import { pluralPl } from "@/lib/plural";
 import { fittingsLine, sumFittings, type Fitting } from "./fittings";
+import { metersLabel, pipesLine, sumPipes, type Pipe } from "./pipes";
 import { testLine } from "./pressureTest";
 import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
 import { entryMinutesOn, formatDuration } from "@/lib/shifts/time";
@@ -108,6 +109,8 @@ export interface JournalReport {
   recordings: Attachment[];
   /** Suma kształtek z wpisów raportu, od największej liczby. */
   fittings: Fitting[];
+  /** Suma rur (cm) z wpisów raportu, od najdłuższej (H1.1). */
+  pipes: Pipe[];
   /**
    * Kształtki do zamówienia na tej budowie: zużyte od ostatniego zamówienia (`order.ts`), niezależnie
    * od okresu raportu. Puste dla raportu wszystkich budów i wpisów bez budowy.
@@ -290,6 +293,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
     captions: captionsOf(picked),
     recordings: picked.flatMap((e) => e.recordings ?? []),
     fittings: sumFittings(picked.map((e) => e.fittings)),
+    pipes: sumPipes(picked.map((e) => e.pipes)),
     toOrder: opts.siteId ? siteOrder(journal, opts.siteId, opts.siteCard?.orderedAt).items : [],
     stages: opts.siteId && opts.siteCard?.stages ? opts.siteCard.stages.map((s) => ({ ...s })) : null,
     shortages: opts.siteId ? openShortages(opts.siteCard?.shortages ?? []) : [],
@@ -306,7 +310,8 @@ function entryLine(r: ReportEntry): string {
     (r.entry.recordings?.length ?? 0) > 0 && recordingsPl(r.entry.recordings!.length)].filter(Boolean);
   // Kolejne linie tekstu wcięte — zostają w tym samym punkcie listy.
   const test = r.entry.test ? `\n  ${testLine(r.entry.test)}` : "";
-  const fit = r.entry.fittings?.length ? `\n  Kształtki: ${fittingsLine(r.entry.fittings)}` : "";
+  const fit = (r.entry.fittings?.length ? `\n  Kształtki: ${fittingsLine(r.entry.fittings)}` : "")
+    + (r.entry.pipes?.length ? `\n  Rury: ${pipesLine(r.entry.pipes)}` : "");
   const sol = r.entry.solution ? `\n  Rozwiązanie: ${r.entry.solution}` : "";
   // „Tu jestem”: link do miejsca wpisu (tylko współrzędne — adresu w raporcie nie ma).
   const map = r.entry.geo ? `\n  Mapa (${accuracyLabel(r.entry.geo)}): ${mapsUrl(r.entry.geo)}` : "";
@@ -342,6 +347,10 @@ export function reportBody(r: JournalReport): string {
   if (r.fittings.length > 0) {
     lines.push("", "## Kształtki (suma)");
     for (const f of r.fittings) lines.push(`- ${f.name}: ${f.qty} szt.`);
+  }
+  if (r.pipes.length > 0) {
+    lines.push("", "## Rury (suma)");
+    for (const p of r.pipes) lines.push(`- ${p.name}: ${metersLabel(p.cm)}`);
   }
   if (r.stages && r.stages.length > 0) {
     const p = stageProgress(r.stages);

@@ -5,6 +5,7 @@
 import { Clock, Gauge, MapPin } from "lucide-react";
 import { testLine } from "@/lib/study/pressureTest";
 import { fittingsLine } from "@/lib/study/fittings";
+import { metersLabel, pipesLine } from "@/lib/study/pipes";
 import { accuracyLabel, mapsUrl } from "@/lib/study/geo";
 import { StatusPanel } from "@/components/StatusPanel";
 import { NoteImage } from "@/components/NoteImage";
@@ -78,6 +79,9 @@ export function ReportPaper({ report, print = false }: { report: Report; print?:
                       {r.entry.fittings && r.entry.fittings.length > 0 && (
                         <p className="mt-0.5 text-xs text-muted-foreground" data-report-fittings>Kształtki: {fittingsLine(r.entry.fittings)}</p>
                       )}
+                      {r.entry.pipes && r.entry.pipes.length > 0 && (
+                        <p className="mt-0.5 text-xs text-muted-foreground" data-report-pipes>Rury: {pipesLine(r.entry.pipes)}</p>
+                      )}
                       {r.entry.test && (
                         <p className={cn("mt-0.5 inline-flex items-start gap-1 text-xs font-medium", r.entry.test.ok ? "text-success-ink" : "text-destructive-ink")} data-report-test>
                           <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(r.entry.test)}
@@ -118,6 +122,21 @@ export function ReportPaper({ report, print = false }: { report: Report; print?:
                   </li>
                 ))}
               </ul>
+            </section>
+          )}
+          {report.pipes.length > 0 && (
+            <section className="break-inside-avoid-page pt-3" data-report-pipes-sum>
+              <h3 className="mb-1.5 text-sm font-semibold">Rury (suma)</h3>
+              <table className="w-full max-w-sm text-sm">
+                <tbody>
+                  {report.pipes.map((p) => (
+                    <tr key={p.name} className="border-t border-border/60 first:border-t-0">
+                      <td className="py-0.5 pr-3">{p.name}</td>
+                      <td className="py-0.5 text-right font-mono tabular-nums">{metersLabel(p.cm)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </section>
           )}
           {report.fittings.length > 0 && (

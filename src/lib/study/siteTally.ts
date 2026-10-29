@@ -21,6 +21,6 @@ export function siteTally(site: Pick<SiteInfo, "id" | "stages" | "shortages" | "
     stages: { done, total },
     missing: list.filter((s) => s.status === "missing").length,
     ordered: list.filter((s) => s.status === "ordered").length,
-    order: siteOrder(journal, site.id, site.orderedAt).items.length,
+    order: ((o) => o.items.length + o.pipes.length)(siteOrder(journal, site.id, site.orderedAt)),
   };
 }

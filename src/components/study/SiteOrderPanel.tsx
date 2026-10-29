@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { metersLabel } from "@/lib/study/pipes";
 import { PackageCheck, Copy, Check, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
   const study = useStudy();
   const order = useMemo(() => siteOrder(study.journal, site.id, site.orderedAt), [study.journal, site.id, site.orderedAt]);
   const missing = (site.shortages ?? []).filter((x) => x.status === "missing").length;
-  const empty = order.items.length === 0 && missing === 0;
+  const empty = order.items.length === 0 && order.pipes.length === 0 && missing === 0;
   const text = () => supplierOrderText(site.name, order, site.shortages ?? []);
   const since = site.orderedAt
     ? `od ${new Date(site.orderedAt).toLocaleDateString("pl-PL")} (od ostatniego zamówienia)`
@@ -44,7 +45,7 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
     haptic("success");
     const undo = markSiteOrdered(site.id);
     if (!undo) return;
-    const what = [order.items.length > 0 && "kształtki", missing > 0 && `${missing} ${missing === 1 ? "brak" : "braki"}`].filter(Boolean).join(" i ");
+    const what = [order.items.length > 0 && "kształtki", order.pipes.length > 0 && "rury", missing > 0 && `${missing} ${missing === 1 ? "brak" : "braki"}`].filter(Boolean).join(" i ");
     toastWithUndo(`Zamówione: ${what}`, () => undoSiteOrdered(undo));
   }
 
@@ -60,7 +61,7 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
           <span className="text-muted-foreground"> (lista w „Braki materiału”)</span>
         </p>
       )}
-      {order.items.length === 0 ? (
+      {order.items.length === 0 && order.pipes.length === 0 ? (
         missing === 0 && <p className="text-sm text-muted-foreground">Nic do zamówienia {site.orderedAt ? "od ostatniego zamówienia" : "— na budowie nie zużyto kształtek"}.</p>
       ) : (
         <ul className="space-y-1 text-sm" data-testid="site-order-items">
@@ -68,6 +69,12 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
             <li key={f.name} className="flex items-baseline justify-between gap-3">
               <span className="min-w-0 truncate">{f.name}</span>
               <span className="shrink-0 font-mono tabular-nums">{f.qty} szt.</span>
+            </li>
+          ))}
+          {order.pipes.map((p) => (
+            <li key={`rura-${p.name}`} className="flex items-baseline justify-between gap-3">
+              <span className="min-w-0 truncate">{p.name}</span>
+              <span className="shrink-0 font-mono tabular-nums">{metersLabel(p.cm)}</span>
             </li>
           ))}
         </ul>

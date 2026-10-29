@@ -1,6 +1,7 @@
 import type { JournalEntry } from "./yStudy";
 import { entrySiteId } from "./sites";
 import { sumFittings, type Fitting } from "./fittings";
+import { metersLabel, sumPipes, type Pipe } from "./pipes";
 import { normalizePhone } from "./boss";
 import type { Shortage } from "./shortages";
 
@@ -13,7 +14,9 @@ import type { Shortage } from "./shortages";
 export interface SiteOrder {
   /** Suma sztuk per nazwa, od największej liczby. Pusta = nic do zamówienia. */
   items: Fitting[];
-  /** Wpisy z kształtkami, z których powstała suma. */
+  /** Rury (cm) od ostatniego zamówienia, od najdłuższej (H1.1). Historia zamówień ich nie zapisuje. */
+  pipes: Pipe[];
+  /** Wpisy z kształtkami albo rurami, z których powstała suma. */
   entries: number;
   /** Od kiedy liczymy (ostatnie zamówienie); `null` = od początku budowy. */
   since: number | null;
@@ -21,9 +24,10 @@ export interface SiteOrder {
 
 export function siteOrder(journal: readonly JournalEntry[], siteId: string, orderedAt?: number): SiteOrder {
   const after = orderedAt ?? -Infinity;
-  const picked = journal.filter((e) => entrySiteId(e) === siteId && e.at > after && (e.fittings?.length ?? 0) > 0);
+  const picked = journal.filter((e) => entrySiteId(e) === siteId && e.at > after && ((e.fittings?.length ?? 0) > 0 || (e.pipes?.length ?? 0) > 0));
   return {
     items: sumFittings(picked.map((e) => e.fittings)),
+    pipes: sumPipes(picked.map((e) => e.pipes)),
     entries: picked.length,
     since: orderedAt ?? null,
   };
@@ -35,13 +39,16 @@ export function siteOrder(journal: readonly JournalEntry[], siteId: string, orde
  */
 export function orderText(siteName: string, order: SiteOrder): string {
   const head = `Zamówienie kształtek — ${siteName}`;
-  if (order.items.length === 0) return `${head}\nNic do zamówienia od ostatniego zamówienia.`;
-  const lines = order.items.map((f) => `- ${f.name}: ${f.qty} szt.`);
+  if (order.items.length === 0 && order.pipes.length === 0) return `${head}\nNic do zamówienia od ostatniego zamówienia.`;
+  const lines = [...order.items.map((f) => `- ${f.name}: ${f.qty} szt.`), ...pipeLines(order)];
   const since = order.since === null
     ? "Liczone od początku budowy."
     : `Liczone od ${new Date(order.since).toLocaleDateString("pl-PL")} (${order.entries} ${order.entries === 1 ? "wpis" : "wpisów"}).`;
   return [head, ...lines, since].join("\n");
 }
+
+/** „- Rura PEX 16×2: 24,5 m” — rury w wiadomości do hurtowni. */
+const pipeLines = (order: SiteOrder) => order.pipes.map((p) => `- ${p.name}: ${metersLabel(p.cm)}`);
 
 /**
  * Link „wyślij przez WhatsApp” z tekstem zamówienia. Z numerem hurtowni z karty (U7, 2026-10-20)
@@ -61,6 +68,7 @@ export function supplierOrderText(siteName: string, order: SiteOrder, shortages:
   const missing = shortages.filter((s) => s.status === "missing");
   if (missing.length === 0) return orderText(siteName, order);
   const lines = [`Zamówienie — ${siteName}`, "Braki:", ...missing.map((s) => `- ${s.text}${s.qty ? `: ${s.qty}` : ""}`)];
+  if (order.pipes.length > 0) lines.push("Rury:", ...pipeLines(order));
   if (order.items.length > 0) {
     lines.push("Kształtki:", ...order.items.map((f) => `- ${f.name}: ${f.qty} szt.`));
     lines.push(order.since === null

@@ -279,3 +279,18 @@ describe("nagrania w raporcie (1.10 planu Praca 2026-10-24)", () => {
     expect(r.recordings.map((a) => a.hash)).toEqual(["x", "y"]);
   });
 });
+
+describe("rury w raporcie (H1.1)", () => {
+  it("linia rur przy wpisie i suma w metrach", () => {
+    const at = new Date(2026, 9, 14, 9).getTime();
+    const journal = [
+      e("r1", at, "ok", "Lipowa 5", "Rozprowadzenie", { pipes: [{ name: "Rura PEX 16×2", cm: 2000 }] }),
+      e("r2", at + 3_600_000, "ok", "Lipowa 5", "Podejścia", { pipes: [{ name: "Rura PEX 16×2", cm: 450 }, { name: "Rura PVC 110", cm: 300 }] }),
+    ];
+    const r = buildJournalReport(journal, { siteId: siteKey("Lipowa 5"), from: "2026-10-14", to: "2026-10-14" });
+    expect(r.pipes).toEqual([{ name: "Rura PEX 16×2", cm: 2450 }, { name: "Rura PVC 110", cm: 300 }]);
+    const body = reportBody(r);
+    expect(body).toContain("Rury: Rura PEX 16×2: 4,5 m, Rura PVC 110: 3 m");
+    expect(body).toContain("## Rury (suma)\n- Rura PEX 16×2: 24,5 m\n- Rura PVC 110: 3 m");
+  });
+});
