@@ -516,3 +516,33 @@ describe("egzamin w Yjs", () => {
     expect(Object.keys(study.get().board)).toHaveLength(0);
   });
 });
+
+describe("transakcje zapisu (siatka przed podziałem H0.2)", () => {
+  /** Liczy transakcje dokumentu i zapamiętuje ich originy w trakcie `run`. */
+  function transactions(doc: Y.Doc, run: () => void) {
+    const origins: unknown[] = [];
+    const on = (tr: Y.Transaction) => { if (tr.changed.size > 0) origins.push(tr.origin); };
+    doc.on("afterTransaction", on);
+    run();
+    doc.off("afterTransaction", on);
+    return origins;
+  }
+  const entry = (id: string, over: Partial<JournalEntry> = {}): JournalEntry => ({
+    id, at: 1000, kind: "problem", topic: null, text: "przeciek", site: "Lipowa 5", siteId: "s1", checked: [], images: [], ...over,
+  });
+  const card = { id: "s1", name: "Lipowa 5", address: "", investor: "", created: 1000 };
+
+  it("wpis z nową budową, edycja, usunięcie własnego pytania, zastąpienie i scalenie: po jednej transakcji", () => {
+    const doc = new Y.Doc();
+    const s = createYStudy(doc);
+    expect(transactions(doc, () => s.addEntry(entry("e1"), card))).toEqual(["study"]);
+    expect(transactions(doc, () => s.updateEntry(entry("e1", { text: "przeciek pod zlewem" })))).toEqual(["study"]);
+    s.addCustom({ kind: "item", id: "c-1", topic: "spadki", text: "Spadek 2%" });
+    expect(transactions(doc, () => s.removeCustom("c-1"))).toEqual(["study"]);
+    const dump = s.dump();
+    expect(transactions(doc, () => s.replaceAll(dump))).toHaveLength(1);
+    const other = new Y.Doc();
+    const t = createYStudy(other);
+    expect(transactions(other, () => t.mergeIn(dump, "m1"))).toEqual(["study-migration"]);
+  });
+});
