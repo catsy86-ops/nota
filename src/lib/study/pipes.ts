@@ -67,12 +67,13 @@ export function metersLabel(cm: number): string {
 }
 
 /**
- * Tekst z pola („24,5”, „24.5”, „24,5 m”, „3m”) → centymetry; `null` = nie da się odczytać
+ * Tekst z pola („24,5”, „24.5”, „24,5 m”, „3m”, „24,”) → centymetry; `null` = nie da się odczytać
  * albo długość poza zakresem.
  */
 export function parseMeters(text: string): number | null {
   const t = text.trim().toLowerCase().replace(/\s*m$/, "").replace(",", ".");
-  if (!/^\d+(\.\d+)?$/.test(t)) return null;
+  // Przecinek na końcu („24,”) to stan w trakcie pisania — liczy się jak całe metry, bez komunikatu.
+  if (!/^\d+(\.\d*)?$/.test(t)) return null;
   const cm = Math.round(Number(t) * 100);
   return cm >= 1 && cm <= PIPE_CM_MAX ? cm : null;
 }

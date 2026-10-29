@@ -25,6 +25,7 @@ describe("rury w metrach (H1.1)", () => {
     expect(parseMeters("24,5")).toBe(2450);
     expect(parseMeters("24.5 m")).toBe(2450);
     expect(parseMeters("3m")).toBe(300);
+    expect(parseMeters("24,")).toBe(2400);
     expect(parseMeters("0,004")).toBeNull();
     expect(parseMeters("0")).toBeNull();
     expect(parseMeters("dużo")).toBeNull();

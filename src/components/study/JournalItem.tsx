@@ -1,6 +1,7 @@
 import { lazy, memo, Suspense, useEffect, useState } from "react";
-import { Check, CircleCheck, Flag, Gauge, MapPin, Mic, Package, Pencil, Play, Wrench } from "lucide-react";
+import { Check, CircleCheck, Cylinder, Flag, Gauge, MapPin, Mic, Package, Pencil, Play, Wrench } from "lucide-react";
 import { fittingsLine } from "@/lib/study/fittings";
+import { pipesLine } from "@/lib/study/pipes";
 import { freshEntry } from "@/lib/study/entrySheet";
 import { requestCustomPrefill } from "@/lib/study/customPrefill";
 import { CHIP_ACCENT } from "@/components/ui/chip";
@@ -65,6 +66,11 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
           {e.fittings && e.fittings.length > 0 && (
             <p className="mt-1 inline-flex items-start gap-1.5 text-xs text-muted-foreground" data-testid="journal-fittings">
               <Package className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{fittingsLine(e.fittings)}
+            </p>
+          )}
+          {e.pipes && e.pipes.length > 0 && (
+            <p className="mt-1 flex items-start gap-1.5 text-xs text-muted-foreground" data-testid="journal-pipes">
+              <Cylinder className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{pipesLine(e.pipes)}
             </p>
           )}
           {e.test && (

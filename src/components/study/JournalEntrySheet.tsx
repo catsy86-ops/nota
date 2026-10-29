@@ -7,6 +7,7 @@ import { HeightsButton } from "./HeightsSheet";
 import { PhotoStrip } from "./PhotoStrip";
 import { PressureTestFields } from "./PressureTestFields";
 import { FittingsFields } from "./FittingsFields";
+import { PipesFields } from "./PipesFields";
 import { TEST_TOPICS } from "@/lib/study/pressureTest";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -107,6 +108,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const submittingRef = useRef(false);
   /** Kształtki z poprzednich wpisów — podpowiedzi nazw. */
   const fittingHistory = useMemo(() => study.journal.map((e) => e.fittings), [study.journal]);
+  /** Rury z poprzednich wpisów — podpowiedzi nazw (H1.1). */
+  const pipeHistory = useMemo(() => study.journal.map((e) => e.pipes), [study.journal]);
   /** Zdjęcie, któremu wpisujesz podpis („przed zakryciem”); `null` = pole schowane. */
   const [captioning, setCaptioning] = useState<string | null>(null);
   const [captionDraft, setCaptionDraft] = useState("");
@@ -115,6 +118,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [fittingsOpen, setFittingsOpen] = useState(false);
   const testVisible = testOpen || !!form.test || TEST_TOPICS.has(topic);
   const fittingsVisible = fittingsOpen || (form.fittings?.length ?? 0) > 0;
+  const [pipesOpen, setPipesOpen] = useState(false);
+  const pipesVisible = pipesOpen || (form.pipes?.length ?? 0) > 0;
   const [editingSite, setEditingSite] = useState(false);
   /** Budowa w chwili otwarcia pola — dopóki jej nie zmienisz, pigułki pokazują wszystkie ostatnie. */
   const [siteAtOpen, setSiteAtOpen] = useState("");
@@ -784,6 +789,15 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </button>
               <button
                 type="button"
+                aria-pressed={pipesVisible}
+                aria-controls="journal-pipes"
+                onClick={() => setPipesOpen((o) => !o)}
+                className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
+              >
+                {(form.pipes?.length ?? 0) > 0 ? "✓ " : "+ "}Rury
+              </button>
+              <button
+                type="button"
                 aria-expanded={topicOpen}
                 aria-controls="journal-topic"
                 onClick={() => setTopicOpen((o) => !o)}
@@ -800,6 +814,11 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             {fittingsVisible && (
               <div id="journal-fittings" className="rounded-card border border-border p-2">
                 <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
+              </div>
+            )}
+            {pipesVisible && (
+              <div id="journal-pipes" className="rounded-card border border-border p-3">
+                <PipesFields value={form.pipes ?? []} history={pipeHistory} onChange={(p) => patch({ pipes: p })} />
               </div>
             )}
             {topicOpen && (
