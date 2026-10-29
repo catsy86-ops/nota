@@ -36,6 +36,9 @@ import "./lib/textSize";
 import "./lib/backdrop";
 import "./lib/shape";
 import "./lib/accent";
+// Ramki i poświaty (Wygląd) nakładane już przy starcie, nie dopiero po otwarciu Ustawień.
+import "./lib/frameLook";
+import "./lib/glowLook";
 // Styl na noc (plan motywów 1.4): przełącza styl o zadanej porze, także zaraz po starcie.
 import "./lib/skinSchedule";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";

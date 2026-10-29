@@ -3450,6 +3450,20 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - `src/styles/skins/*.css` — `--border` każdego motywu (poza `odblask.css`) na `var(--frame-mix)`.
 - `src/components/settings/AppearanceSettings.tsx` — sekcja „Ramki” pod „Kształt”.
 
+### Kolor krawędzi i tło kart (2026-10-29)
+- Ustawienia → Wygląd → „Ramki”, pod suwakiem siły: **kolor krawędzi** (Motyw, Grafit, Miedź, Błękit, Zieleń, Fiolet, Róż) i **tło kart** (Motyw, Ciepłe, Miętowe, Błękitne, Lawendowe, Różowe). Tło ma wariant jasny i ciemny, zmienia się razem z motywem.
+- `src/lib/frameLook.ts` — `useFrameLook`, `setFrameColor`, `setFrameSurface`, `borderValue`, `surfaceValue`, `FRAME_COLORS`, `FRAME_SURFACES`; klucz `kaczy.frames.look.v1`. Nakładane inline na `<html>`: `--border` (mieszane przez `--frame-mix`, więc siła z suwaka działa) i `--card`. Obserwator klasy `<html>` przelicza tło po przełączeniu jasny/ciemny.
+- `src/components/settings/FrameLookPicker.tsx` — próbki (`Swatches`, wspólne z poświatą).
+- Kontrast: każde tło sprawdzane testem względem `--card-foreground` w obu motywach (≥ 4,5:1; w praktyce ponad 12:1). Testy: `src/lib/frameLook.test.ts`, e2e `e2e/frame-look.spec.ts`.
+- Ograniczenie: nadpisanie `--card` działa ze wszystkimi skórkami, ale tekst karty liczony jest względem domyślnych barw motywu. Skórka z innym kolorem tekstu na karcie dostaje tło sprawdzone tylko tym testem.
+
+### Poświata (2026-10-29)
+- Ustawienia → Wygląd → „Poświata”: **siła** (Wyłączona, Delikatna 50 %, Zwykła, Mocna ×1,6) i **barwa** (Motyw, Bursztyn, Błękit, Zieleń, Fiolet, Róż). Podgląd pokazuje zaznaczoną notatkę i przycisk „Zapisz” jako prawdziwe elementy.
+- `src/lib/glowLook.ts` — `useGlowLook`, `setGlowStrength`, `setGlowColor`, `fabGlowValue`, `GLOW_STRENGTH`, `GLOW_COLORS`; klucz `kaczy.glow.v1`. Inline na `<html>`: `--glow-mul` (mnożnik halo), `--glow-color` (barwa) i `--glow-primary` (cień przycisków głównych; ustawiany tylko przy zmianie siły albo barwy, domyślnie zostaje cień skórki).
+- `src/index.css` — `note-glow-active` i `note-glow-breathe` używają `var(--glow-color, var(--season-accent))` i mnożą **halo** przez `var(--glow-mul, 1)`. **Obwódka zaznaczenia (2 px) zostaje pełna**, więc przy „Wyłączona” zaznaczona notatka dalej jest widoczna.
+- Zmienne są nakładane przy starcie (`src/main.tsx` importuje `frameLook` i `glowLook`). Wcześniej moduły ładowały się dopiero z Ustawień, więc zapisany wybór nie działał po odświeżeniu. Test: `e2e/look-boot.spec.ts`.
+- Testy: `src/lib/glowLook.test.ts` (mapowanie siły i barwy), `e2e/glow.spec.ts` (zmienne, odświeżenie, powrót do domyślnych).
+
 ### Jak działa i dlaczego
 - Procent ustawia `document.documentElement.style.setProperty("--frame-mix")` (inline na `<html>`), więc wygrywa z każdym motywem bez zmian w jego selektorach. Zmiana przezroczystości nie wymaga osobnej palety.
 - Odblask zostaje pełny, bo to motyw o wysokim kontraście i zmniejszenie ramek łamałoby jego założenie.

@@ -16,6 +16,7 @@ import { Segmented } from "./Segmented";
 import { SkinPicker } from "./SkinPicker";
 import { AccentPicker } from "./AccentPicker";
 import { FrameLookPicker } from "./FrameLookPicker";
+import { GlowPicker } from "./GlowPicker";
 import { FontPicker } from "./FontPicker";
 import { setAppFont, useAppFont } from "@/lib/appFont";
 import { TextSizeControl } from "./TextSizeControl";
@@ -157,6 +158,10 @@ export function AppearanceSettings() {
           <div className="mt-4">
             <FrameLookPicker />
           </div>
+        </Section>
+
+        <Section title="Poświata">
+          <GlowPicker />
         </Section>
 
         <Section title="Tło">

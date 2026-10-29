@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
  * Kolor krawędzi i tło kart w „Ramkach” (Wygląd). Próbki są w stylu wyboru akcentu: kółka 44 px,
  * wybrane z obwódką i znacznikiem. Tło pokazuje wariant dla bieżącego motywu.
  */
-function Swatches<T extends string>({ label, options, value, onPick, swatchOf }: {
+export function Swatches<T extends string>({ label, options, value, onPick, swatchOf }: {
   label: string;
   options: [T, string][];
   value: T;
@@ -56,7 +56,7 @@ export function FrameLookPicker() {
           options={colorOptions}
           value={look.color}
           onPick={setFrameColor}
-          swatchOf={(id) => FRAME_COLORS[id].hex ?? "var(--border)"}
+          swatchOf={(id) => FRAME_COLORS[id].hex ?? "linear-gradient(135deg, var(--border) 50%, var(--muted-foreground) 50%)"}
         />
         <p className="text-xs text-muted-foreground mt-1.5">
           {look.color === "theme" ? "Krawędzie w kolorze motywu." : `Krawędzie w kolorze: ${FRAME_COLORS[look.color].label.toLowerCase()}. Siła ramek zostaje z ustawienia powyżej.`}
