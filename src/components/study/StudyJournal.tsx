@@ -340,7 +340,6 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                       <span className="h-px flex-1 bg-border" aria-hidden />
                     </div>
                   )}
-                  // P6.4: dni poza ekranem nie są malowane ani układane (`content-visibility`); wysokość zarezerwowana, żeby pasek przewijania nie skakał.
                   <section key={d.key} aria-label={d.label} data-journal-day={d.key} className="[content-visibility:auto] [contain-intrinsic-block-size:auto_240px]">
                     <h4 className="scroll-enter sticky top-(--app-header-h,0px) z-raised -mx-1 mb-2 flex items-baseline justify-between gap-2 border-b border-border/60 bg-background/95 px-1 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm transition-[top] duration-300 ease-out motion-reduce:transition-none [html.header-hidden_&]:top-0">
                       <span className="min-w-0 truncate">{d.label}</span>

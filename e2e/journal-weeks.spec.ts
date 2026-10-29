@@ -20,4 +20,6 @@ test("oś dziennika: separatory tygodni z sumą godzin", async ({ page }) => {
   await expect(weeks.first()).toContainText("Tydz. 42");
   await expect(weeks.first()).toContainText("10 h");
   await expect(weeks.nth(1)).toContainText("Tydz. 41");
+  // Komentarz z kodu nie może trafić na ekran jako tekst (błąd z P5.3).
+  await expect(page.getByTestId("study-journal")).not.toContainText("content-visibility");
 });
