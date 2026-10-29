@@ -42,7 +42,7 @@ test("dyktowanie kształtek: kilka pozycji naraz, powtórzona nazwa sumuje sztuk
   // Sekcja kształtek jest zwinięta, dopóki jej nie otworzyć (Etap 3 Praca).
   await sheet.getByRole("button", { name: /^(\+ |✓ )?Kształtki$/ }).click();
 
-  // Pusta lista: mikrofon obok „Dodaj kształtki”.
+  // Pusta lista: mikrofon przy pigułkach katalogu.
   await sheet.getByRole("button", { name: "Dyktuj kształtki" }).click();
   const box = sheet.getByTestId("fittings");
   await expect(box.getByLabel("Kształtka 1: nazwa")).toHaveValue("Kolano 16");

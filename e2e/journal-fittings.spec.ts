@@ -24,9 +24,9 @@ test("kształtki: podpowiedź z poprzednich wpisów, −/+, lista wpisów i suma
   await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
   const sheet = page.getByTestId("journal-entry-sheet");
   await sheet.getByRole("button", { name: /^(\+ |✓ )?Kształtki$/ }).click();
-  await sheet.getByRole("button", { name: "Dodaj kształtki" }).click();
   const box = sheet.getByTestId("fittings");
-  // Pierwsza (pusta) pozycja + podpowiedzi: najpierw nazwy używane wcześniej.
+  // Pusta pozycja („Inna”) + podpowiedzi: najpierw nazwy używane wcześniej.
+  await box.getByRole("button", { name: "Inna" }).click();
   await box.getByRole("button", { name: "Mufa 32" }).click();
   await box.getByLabel("Kształtka 1: nazwa").fill("Kolano 16");
   await box.getByRole("button", { name: "Kolano 16: więcej" }).click();
@@ -34,6 +34,8 @@ test("kształtki: podpowiedź z poprzednich wpisów, −/+, lista wpisów i suma
   await box.getByRole("button", { name: "Mufa 32: więcej" }).click();
   await box.getByRole("button", { name: "Mufa 32: mniej" }).click();
   // Przy 1 sztuce „−” usuwa pozycję.
+  // Katalog (H1.5): średnica 20 w systemie PEX.
+  await box.getByRole("group", { name: "Średnica: PEX" }).getByRole("button", { name: "20" }).click();
   await box.getByRole("button", { name: "Kolano 20" }).click();
   await box.getByRole("button", { name: "Usuń kształtkę Kolano 20" }).click();
   await expect(box.getByTestId("fitting-qty")).toHaveText(["3", "1"]);

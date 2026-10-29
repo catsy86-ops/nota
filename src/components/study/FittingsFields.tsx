@@ -4,11 +4,15 @@ import { toast } from "sonner";
 import { useDictation } from "@/hooks/useDictation";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
-import { FITTING_NAME_MAX, FITTING_QTY_MAX, FITTINGS_MAX, fittingsLine, suggestFittingNames, type Fitting } from "@/lib/study/fittings";
+import { FITTING_NAME_MAX, FITTING_QTY_MAX, FITTINGS_MAX, fittingKey, fittingsLine, sumFittings, suggestFittingNames, type Fitting } from "@/lib/study/fittings";
+import { catalogFittings, useCatalogPrefs } from "@/lib/study/catalog";
+import { SystemPicker } from "./SystemPicker";
 import { mergeFittings, parseSpokenFittings } from "@/lib/study/spokenFittings";
 
 /**
  * Kształtki we wpisie: nazwa (z podpowiedziami z poprzednich wpisów) i liczba sztuk
+ * z pigułek: ostatnio używane i katalog systemu i średnicy (H1.5) — widoczne od razu, bez osobnego
+ * „Dodaj kształtki”. Liczba sztuk
  * z dużymi −/+ pod kciuk. Wiersze w trakcie pisania mogą mieć pustą nazwę — czyści je
  * dopiero zapis wpisu (`cleanFittings` w `entryFields`). Mikrofon dyktuje kilka pozycji
  * naraz („kolano 16 cztery sztuki, trójnik 16 dwa”) — parser w `spokenFittings.ts`.
@@ -19,7 +23,17 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
   // Pisownia nazw do dopasowania dyktowania: wszystkie znane, także już dodane do wpisu.
   const known = useMemo(() => suggestFittingNames(history, []), [history]);
   const setRow = (i: number, patch: Partial<Fitting>) => onChange(value.map((f, j) => (j === i ? { ...f, ...patch } : f)));
-  const add = (name = "") => onChange([...value, { name, qty: 1 }]);
+  const add = (name = "") => {
+    // Ta sama pozycja z pigułki drugi raz dokłada sztukę, zamiast dublować wiersz.
+    const i = name ? value.findIndex((f) => fittingKey(f.name) === fittingKey(name)) : -1;
+    if (i >= 0) { setRow(i, { qty: Math.min(FITTING_QTY_MAX, value[i].qty + 1) }); return; }
+    onChange([...value, { name, qty: 1 }]);
+  };
+  const prefs = useCatalogPrefs();
+  const taken = new Set(value.map((f) => fittingKey(f.name)));
+  const recent = sumFittings(history).map((f) => f.name).filter((n) => !taken.has(fittingKey(n))).slice(0, 4);
+  const shown = new Set([...taken, ...recent.map(fittingKey)]);
+  const catalog = catalogFittings(prefs.system, prefs.size).filter((n) => !shown.has(fittingKey(n)));
 
   // Kilka wyników mowy potrafi przyjść między renderami — lista z refu, żeby żaden nie zginął.
   const valueRef = useRef(value);
@@ -53,26 +67,12 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
     </button>
   );
 
-  if (value.length === 0) {
-    return (
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => add()}
-          className="pressable flex min-w-0 flex-1 items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
-        >
-          <Package className="h-4 w-4 shrink-0" aria-hidden />Dodaj kształtki
-        </button>
-        {mic}
-      </div>
-    );
-  }
   return (
     <fieldset className="min-w-0 space-y-2 rounded-card border border-border p-3" data-testid="fittings">
       <legend className="sr-only">Kształtki</legend>
       <p className="flex items-center gap-2 text-sm font-medium"><Package className="h-4 w-4 text-primary-ink" aria-hidden />Kształtki</p>
       <datalist id={listId}>{names.map((n) => <option key={n} value={n} />)}</datalist>
-      <ul className="space-y-2">
+      {value.length > 0 && <ul className="space-y-2">
         {value.map((f, i) => (
           <li key={i} className="flex items-center gap-1.5">
             <input
@@ -99,19 +99,30 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
             </button>
           </li>
         ))}
-      </ul>
+      </ul>}
       {value.length < FITTINGS_MAX && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <button type="button" onClick={() => add()} className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted coarse:min-h-11 coarse:px-3 coarse:text-sm">
-            <Plus className="h-3.5 w-3.5" aria-hidden />Kolejna
-          </button>
-          {mic}
-          {/* Szybkie pigułki: najczęstsze nazwy jednym stuknięciem. */}
-          {names.slice(0, 4).map((n) => (
-            <button key={n} type="button" onClick={() => add(n)} className="pressable rounded-full bg-muted px-2.5 py-1 text-xs hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm">
-              {n}
+        <div className="space-y-2">
+          {recent.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Ostatnio używane kształtki">
+              {recent.map((n) => (
+                <button key={n} type="button" onClick={() => add(n)} className="pressable rounded-full bg-muted px-2.5 py-1 text-xs hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm">
+                  {n}
+                </button>
+              ))}
+            </div>
+          )}
+          <SystemPicker sizes />
+          <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Kształtki z katalogu">
+            {catalog.map((n) => (
+              <button key={n} type="button" onClick={() => add(n)} className="pressable rounded-full bg-muted px-2.5 py-1 text-xs hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm">
+                {n}
+              </button>
+            ))}
+            <button type="button" onClick={() => add()} className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted coarse:min-h-11 coarse:px-3 coarse:text-sm">
+              <Plus className="h-3.5 w-3.5" aria-hidden />Inna
             </button>
-          ))}
+            {mic}
+          </div>
         </div>
       )}
     </fieldset>

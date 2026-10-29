@@ -2,7 +2,10 @@ import { useId, useMemo, useRef, useState } from "react";
 import { Cylinder, Plus, Trash } from "lucide-react";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
-import { metersLabel, parseMeters, PIPE_NAME_MAX, PIPES_MAX, suggestPipeNames, type Pipe } from "@/lib/study/pipes";
+import { metersLabel, parseMeters, PIPE_NAME_MAX, PIPES_MAX, sumPipes, suggestPipeNames, type Pipe } from "@/lib/study/pipes";
+import { fittingKey } from "@/lib/study/fittings";
+import { catalogPipes, useCatalogPrefs } from "@/lib/study/catalog";
+import { SystemPicker } from "./SystemPicker";
 
 /** Długość z danych do pola: „24,5” (bez jednostki — „m” stoi obok pola). */
 const fieldText = (cm: number) => (cm > 0 ? metersLabel(cm).replace(/ m$/, "") : "");
@@ -18,6 +21,12 @@ export function PipesFields({ value, history, onChange }: { value: Pipe[]; histo
   const names = useMemo(() => suggestPipeNames(history, value.map((p) => p.name)), [history, value]);
   const [texts, setTexts] = useState<string[]>(() => value.map((p) => fieldText(p.cm)));
   const meterRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const prefs = useCatalogPrefs();
+  // Pigułki: ostatnio używane rury, potem katalog wybranego systemu (H1.5); bez już dodanych.
+  const taken = new Set(value.map((p) => fittingKey(p.name)));
+  const recent = sumPipes(history).map((p) => p.name).filter((n) => !taken.has(fittingKey(n))).slice(0, 3);
+  const shown = new Set([...taken, ...recent.map(fittingKey)]);
+  const chipNames = [...recent, ...catalogPipes(prefs.system).filter((n) => !shown.has(fittingKey(n)))];
 
   const setRow = (i: number, patch: Partial<Pipe>) => onChange(value.map((p, j) => (j === i ? { ...p, ...patch } : p)));
   const add = (name = "") => {
@@ -39,7 +48,7 @@ export function PipesFields({ value, history, onChange }: { value: Pipe[]; histo
 
   const chips = value.length < PIPES_MAX && (
     <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Dodaj rurę">
-      {names.slice(0, 6).map((n) => (
+      {chipNames.map((n) => (
         <button key={n} type="button" onClick={() => add(n)} className="pressable rounded-full bg-muted px-2.5 py-1 text-xs hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm">
           {n}
         </button>
@@ -104,6 +113,7 @@ export function PipesFields({ value, history, onChange }: { value: Pipe[]; histo
       {value.some((_, i) => (texts[i] ?? "").trim() !== "" && parseMeters(texts[i]) === null) && (
         <p role="alert" className="text-xs text-destructive-ink">Wpisz metry jak 24, 24,5 albo 3,75.</p>
       )}
+      {value.length < PIPES_MAX && <SystemPicker />}
       {chips}
     </fieldset>
   );

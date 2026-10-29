@@ -39,3 +39,23 @@ test("rura w metrach: 3 stuknięcia od arkusza do zapisu, linia na osi, zła lic
   await expect(sheet).toHaveCount(0);
   await expect(page.getByTestId("journal-pipes").first()).toHaveText("Rura PEX 16×2: 24,5 m");
 });
+
+test("katalog systemów: kanalizacja pokazuje rury PVC, wybór zostaje po odświeżeniu (H1.5) @mobile", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await sheet.getByRole("button", { name: "+ Rury" }).click();
+  const pipes = sheet.getByTestId("pipes");
+  await expect(pipes.getByRole("button", { name: "Rura PEX 16×2" })).toBeVisible();
+  await pipes.getByRole("button", { name: "Kanalizacja (PVC/PP)" }).click();
+  await expect(pipes.getByRole("button", { name: "Rura PEX 16×2" })).toHaveCount(0);
+  await pipes.getByRole("button", { name: "Rura PVC 110" }).click();
+  await pipes.getByLabel("Rura PVC 110: metry").fill("3");
+  await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
+  await expect(page.getByTestId("journal-pipes").first()).toHaveText("Rura PVC 110: 3 m");
+
+  await page.reload();
+  await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
+  await sheet.getByRole("button", { name: "+ Rury" }).click();
+  await expect(sheet.getByTestId("pipes").getByRole("button", { name: "Kanalizacja (PVC/PP)" })).toHaveAttribute("aria-pressed", "true");
+});
