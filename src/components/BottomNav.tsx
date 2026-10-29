@@ -190,11 +190,13 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
             <SheetDescription>Co zapisać? Stuknij „+”, by od razu napisać notatkę.</SheetDescription>
           </SheetHeader>
           <div className="mt-4 grid grid-cols-2 gap-2.5" role="group" aria-label="Rodzaj nowej notatki">
+            {/* Kolejność z planu FAB (D3): notatka, termin, lista, zdjęcie, rysunek, dyktowanie. */}
             <QuickTile Icon={Plus} title="Notatka" hint="Pusta kartka do pisania" tone="primary" onClick={() => { setQuickOpen(false); onNew("note"); }} />
+            <QuickTile Icon={Bell} title="Z przypomnieniem" hint="Notatka z terminem od razu" tone="warning" onClick={() => { setQuickOpen(false); onNew("reminder"); }} />
             <QuickTile Icon={ListChecks} title="Lista zadań" hint="Punkty do odhaczenia" tone="success" onClick={() => { setQuickOpen(false); onNew("list"); }} />
-            {canDictate && <QuickTile Icon={Mic} title="Dyktuj" hint="Mów, a zamienię na tekst" tone="warning" onClick={() => { setQuickOpen(false); onNew("dictate"); }} />}
             <QuickTile Icon={ImagePlus} title="Zdjęcie" hint="Z aparatu albo galerii" tone="primary" onClick={() => { setQuickOpen(false); onNew("image"); }} />
             <QuickTile Icon={PenTool} title="Rysunek" hint="Szkic palcem lub rysikiem" tone="success" onClick={() => { setQuickOpen(false); onNew("draw"); }} />
+            {canDictate && <QuickTile Icon={Mic} title="Dyktuj" hint="Mów, a zamienię na tekst" tone="warning" onClick={() => { setQuickOpen(false); onNew("dictate"); }} />}
           </div>
         </SheetContent>
       </Sheet>

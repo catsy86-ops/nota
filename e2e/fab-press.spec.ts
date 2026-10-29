@@ -38,3 +38,20 @@ test("przytrzymanie dłużej niż 420 ms otwiera arkusz „Nowa”", async ({ pa
   await page.mouse.up();
   await expect(page.getByRole("dialog", { name: "Nowa" })).toBeVisible();
 });
+
+// F1.2: kafel „Z przypomnieniem” w arkuszu „Nowa” otwiera kompozytor z pickerem terminu.
+test("kafel „Z przypomnieniem” otwiera kompozytor z pickerem terminu", async ({ page }) => {
+  const fab = await settledFab(page);
+  const box = await fab.boundingBox();
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(500);
+  await page.mouse.up();
+  const sheet = page.getByRole("dialog", { name: "Nowa" });
+  await expect(sheet).toBeVisible();
+  // Kolejność: notatka, termin, lista…
+  const tiles = sheet.getByRole("group", { name: "Rodzaj nowej notatki" }).locator("button");
+  await expect(tiles.nth(1)).toContainText("Z przypomnieniem");
+  await sheet.getByRole("button", { name: /Z przypomnieniem/ }).click();
+  await expect(page.getByRole("group", { name: "Szybkie terminy" })).toBeVisible();
+});
