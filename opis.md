@@ -3864,4 +3864,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** SVG z ośmioma ścieżkami o `pathLength="1"`; rysowanie to klasa `guide-draw` (ta sama technika co w samouczku), z opóźnieniami z `--d`. Przy ograniczonym ruchu i przy drugim wejściu w sesji logo jest od razu gotowe — flaga `kaczy.logo.drawn.v1` w `sessionStorage`. Gradient z tokenów przez `stop-color: var(--brand-…)`, więc zmiana stylu zmienia kolor logo bez ponownego rysowania. Etykieta dostępności to nadal „NOTKI” (nazwa aplikacji w tytule karty i w testach).
 - **Ograniczenia.** Stare reguły `.notki-glyph`, `.notki-hop`, `.notki-caret` i animacje skórek liczące na litery w nagłówku są już martwe — do usunięcia w osobnym kroku. Przy 390 px logo ma wysokość ok. 1,6 em tekstu nagłówka.
 - **Testy.** E2E: `e2e/brand-notki.spec.ts` (tytuł karty i logo „NOTKI”). Zrzuty nagłówka sprawdzone ręcznie w połowie i na końcu rysowania.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `88499af` (2026-10-30).
