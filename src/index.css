@@ -1203,6 +1203,11 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   --brand-via: #ff8a40;
   --brand-to: #ec5562;
 }
+/* Przycisk „+” (plan motywów 1.6, krok 3): gradient marki; koniec przyciemniony, żeby biała ikona miała kontrast w każdym stylu. */
+.fab-brand {
+  background-color: var(--brand-via);
+  background-image: linear-gradient(155deg, var(--brand-via), color-mix(in srgb, var(--brand-to) 62%, #000));
+}
 html[data-skin="plan"] { --brand-from: #5bc8f5; --brand-via: #2f8fd8; --brand-to: #1d5fa8; }
 html[data-skin="neon"] { --brand-from: #ff47d1; --brand-via: #c77dff; --brand-to: #47e6ff; }
 html[data-skin="zorza"] { --brand-from: #3cf5a6; --brand-via: #5fd0ff; --brand-to: #b58cff; }

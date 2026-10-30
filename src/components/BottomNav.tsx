@@ -170,7 +170,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
                 }}
                 aria-label={view === "study" ? "Nowy wpis z budowy" : "Nowa notatka"}
                 title={view === "study" ? "Nowy wpis z budowy (przytrzymaj: nowa notatka)" : "Nowa notatka (przytrzymaj po więcej)"}
-                className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                className="fab-brand relative w-14 h-14 rounded-full text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 {/* Pierścień postępu (F1.1): rośnie przez 420 ms przytrzymania, zanika przy zwolnieniu. */}
                 <svg aria-hidden viewBox="0 0 68 68" className="pointer-events-none absolute -inset-1.5 size-[calc(100%+12px)] -rotate-90">
