@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("kaczy.tour.seen.v1", "1");
+    (localStorage.setItem("kaczy.tour.seen.v1", "1"), localStorage.setItem("kaczy.appearance.advanced.v1", "1"));
     if (!sessionStorage.getItem("e2e-theme")) {
       sessionStorage.setItem("e2e-theme", "1");
       localStorage.setItem("kaczy-theme", "light");

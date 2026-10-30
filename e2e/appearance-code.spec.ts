@@ -5,7 +5,7 @@ test("kod wyglądu przenosi styl, akcent i kształt do innej przeglądarki", asy
   const a = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
   const pa = await a.newPage();
   await pa.addInitScript(() => {
-    localStorage.setItem("kaczy.tour.seen.v1", "1");
+    (localStorage.setItem("kaczy.tour.seen.v1", "1"), localStorage.setItem("kaczy.appearance.advanced.v1", "1"));
     localStorage.setItem("kaczy.skin.v1", JSON.stringify("kafle"));
     localStorage.setItem("kaczy.accent.v1", JSON.stringify({ kafle: 3 }));
     localStorage.setItem("kaczy.shape.v1", JSON.stringify("soft"));
@@ -20,7 +20,7 @@ test("kod wyglądu przenosi styl, akcent i kształt do innej przeglądarki", asy
 
   const b = await browser.newContext();
   const pb = await b.newPage();
-  await pb.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+  await pb.addInitScript(() => (localStorage.setItem("kaczy.tour.seen.v1", "1"), localStorage.setItem("kaczy.appearance.advanced.v1", "1")));
   await pb.goto("/");
   await expect(pb.locator("html")).toHaveAttribute("data-skin", "zeszyt");
   await pb.getByRole("button", { name: "Ustawienia" }).first().click();

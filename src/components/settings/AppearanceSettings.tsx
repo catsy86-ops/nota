@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast, Bell, BriefcaseBusiness, CalendarRange, Inbox, Sparkles, Waves, Square, SquareRoundCorner, Squircle } from "lucide-react";
+import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast, Bell, BriefcaseBusiness, CalendarRange, CalendarDays, ChevronDown, Flower2, Inbox, Leaf, RotateCcw, Snowflake, Sparkles, Waves, Square, SquareRoundCorner, Squircle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useViewPrefs, setViewPref, resetViewPrefs, changedViewPrefs, VIEW_PREF_LABELS, type Density, type Layout } from "@/lib/viewPrefs";
@@ -24,6 +24,9 @@ import { SKIN_SCHEME } from "@/lib/skins";
 import { trySkin } from "@/lib/skinTry";
 import { NightSkinSettings } from "./NightSkinSettings";
 import { AppearanceCode } from "./AppearanceCode";
+import { AppearancePreview } from "./AppearancePreview";
+import { resetAppearance, applyAppearanceValues } from "@/lib/appearanceCode";
+import { toastWithUndo } from "@/lib/undoToast";
 import { setBackdrop, useBackdrop, type Backdrop } from "@/lib/backdrop";
 import { setShape, useShape, type Shape } from "@/lib/shape";
 import { setFrames, useFrames, type Frames } from "@/lib/frames";
@@ -88,13 +91,22 @@ const motionOptions: { value: MotionMode; label: string; Icon: typeof Sun }[] = 
   { value: "system", label: "System", Icon: Monitor },
 ];
 
-/** Cztery części karty Wygląd (plan motywów 3.4) — kolejność = kolejność na stronie. */
+/**
+ * Części karty Wygląd — kolejność = kolejność na stronie. Plan motywów 2026-10-30 (1.1): „Szybko” to to,
+ * co zmienia się często (styl, jasność, akcent, rozmiar tekstu, tryb budowa); reszta w zwiniętych „Zaawansowanych”.
+ */
 const APPEARANCE_GROUPS = [
-  { id: "wyglad-styl", label: "Styl" },
-  { id: "wyglad-tekst", label: "Tekst" },
+  { id: "wyglad-szybko", label: "Szybko" },
+  { id: "wyglad-zaawansowane", label: "Zaawansowane" },
   { id: "wyglad-uklad", label: "Układ" },
   { id: "wyglad-ruch", label: "Ruch" },
 ] as const;
+
+const ADVANCED_KEY = "kaczy.appearance.advanced.v1";
+const readAdvanced = () => { try { return localStorage.getItem(ADVANCED_KEY) === "1"; } catch { return false; } };
+
+/** Pory roku: ikony zamiast emoji (spójnie z resztą Ustawień). */
+const SEASON_ICON = { auto: CalendarDays, spring: Flower2, summer: Sun, autumn: Leaf, winter: Snowflake } as const;
 
 /** Skok do grupy: przewinięcie karty i fokus na nagłówku (czytnik ekranu ogłasza, gdzie jest). */
 function jumpTo(id: string) {
@@ -110,6 +122,13 @@ export function AppearanceSettings() {
   const settings = useEffectsSettings();
   const prefs = useViewPrefs();
   const [resetOpen, setResetOpen] = useState(false);
+  const [lookResetOpen, setLookResetOpen] = useState(false);
+  const [advanced, setAdvancedState] = useState(readAdvanced);
+  const setAdvanced = (on: boolean) => { setAdvancedState(on); try { localStorage.setItem(ADVANCED_KEY, on ? "1" : "0"); } catch { /* prywatne okno */ } };
+  function resetLook() {
+    const before = resetAppearance();
+    toastWithUndo("Przywrócono domyślny wygląd", () => applyAppearanceValues(before, { replace: true }));
+  }
   const { schemeMode, setMode: setThemeMode, skin } = useTheme();
   const skinScheme = SKIN_SCHEME[skin];
   const hiddenViews = useHiddenViews();
@@ -127,26 +146,74 @@ export function AppearanceSettings() {
     <div className="space-y-8">
       {/* Pasek skoku do grup (plan motywów 3.4): przyklejony u góry przewijanej karty. Kontener ma `pt-3`,
           więc pasek wchodzi w ten margines (`-top-3`, `-mt-3` + `pt-4.5`) — inaczej nad nim prześwituje tekst. */}
-      <nav aria-label="Części Wyglądu" className="sticky -top-3 z-sticky -mx-1 -mt-3 flex gap-1.5 overflow-x-auto bg-background px-1 pb-2 pt-4.5">
+      {/* Podgląd na żywo (1.2) przyklejony razem z paskiem grup: widać skutek każdej zmiany niżej. */}
+      <div className="sticky -top-3 z-sticky -mx-1 -mt-3 space-y-2 bg-background px-1 pb-2 pt-4.5">
+      <nav aria-label="Części Wyglądu" className="flex gap-1.5 overflow-x-auto">
         {APPEARANCE_GROUPS.map((g) => (
           <a
             key={g.id}
             href={`#${g.id}`}
-            onClick={(e) => { e.preventDefault(); jumpTo(g.id); }}
+            onClick={(e) => {
+              e.preventDefault();
+              if (g.id === "wyglad-zaawansowane" && !advanced) { setAdvanced(true); window.requestAnimationFrame(() => jumpTo(g.id)); }
+              else jumpTo(g.id);
+            }}
             className="pressable inline-flex shrink-0 items-center rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 coarse:min-h-11 coarse:px-4 text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >{g.label}</a>
         ))}
       </nav>
+      <AppearancePreview />
+      </div>
 
-      <SettingsGroup id="wyglad-styl" title="Styl">
+      <SettingsGroup id="wyglad-szybko" title="Szybko">
         <Section title="Galeria stylów">
           <SkinPicker value={skin} onChange={trySkin} />
+        </Section>
+
+        <Section title="Jasność">
+          <Segmented label="Jasność" options={themeOptions} value={schemeMode} onChange={setThemeMode} />
+          <p className="text-xs text-muted-foreground mt-1.5">
+            {skin !== "zeszyt"
+              ? `Każdy styl pamięta własną jasność. ${SKIN_META[skin].label} powstał jako ${skinScheme === "dark" ? "ciemny" : "jasny"}.`
+              : schemeMode === "system"
+                ? "Motyw dopasowuje się do ustawień Twojego systemu."
+                : schemeMode === "dark"
+                  ? "Ciemny motyw ułatwia pracę wieczorem."
+                  : "Klasyczny jasny motyw."}
+          </p>
         </Section>
 
         <Section title="Akcent">
           <AccentPicker skin={skin} />
         </Section>
 
+        <Section title="Rozmiar tekstu">
+          <TextSizeControl />
+        </Section>
+
+        <Section title="Tryb budowa: większy tekst i przyciski">
+          <Segmented label="Tryb budowa" options={siteOptions} value={siteMode} onChange={setSiteMode} />
+          <p className="text-xs text-muted-foreground mt-1.5">
+            {siteMode === "auto"
+              ? "Włącza się, gdy system prosi o większy kontrast."
+              : "Do pracy w rękawicach i w słońcu: większy tekst i przyciski, mocniejszy kontrast, gładkie tło, dłuższe „Cofnij”."}
+          </p>
+        </Section>
+      </SettingsGroup>
+
+      <SettingsGroup id="wyglad-zaawansowane" title="Zaawansowane">
+        <button
+          type="button"
+          onClick={() => setAdvanced(!advanced)}
+          aria-expanded={advanced}
+          aria-controls="wyglad-zaawansowane-tresc"
+          className="pressable -mt-2 flex w-full items-center justify-between gap-2 rounded-card border border-border/60 bg-muted/30 px-3 py-2 text-left text-sm coarse:min-h-11"
+        >
+          <span>{advanced ? "Zwiń" : "Pokaż"}: kształt, ramki, poświata, tło, styl na noc, pora roku, krój, kod wyglądu</span>
+          <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", advanced && "rotate-180")} aria-hidden />
+        </button>
+        {advanced && (
+          <div id="wyglad-zaawansowane-tresc" className="space-y-4">
         <Section title="Kształt">
           <Segmented label="Kształt" options={shapeOptions} value={shape} onChange={setShape} />
           <p className="text-xs text-muted-foreground mt-1.5">Zaokrąglenie przycisków, pól, kafli i okien w każdym stylu.</p>
@@ -175,19 +242,6 @@ export function AppearanceSettings() {
           </p>
         </Section>
 
-        <Section title="Jasność">
-          <Segmented label="Jasność" options={themeOptions} value={schemeMode} onChange={setThemeMode} />
-          <p className="text-xs text-muted-foreground mt-1.5">
-            {skin !== "zeszyt"
-              ? `Każdy styl pamięta własną jasność. ${SKIN_META[skin].label} powstał jako ${skinScheme === "dark" ? "ciemny" : "jasny"}.`
-              : schemeMode === "system"
-                ? "Motyw dopasowuje się do ustawień Twojego systemu."
-                : schemeMode === "dark"
-                  ? "Ciemny motyw ułatwia pracę wieczorem."
-                  : "Klasyczny jasny motyw."}
-          </p>
-        </Section>
-
         <Section title="Styl na noc">
           <NightSkinSettings skin={skin} />
         </Section>
@@ -195,7 +249,8 @@ export function AppearanceSettings() {
         <Section title="Motyw pory roku">
           <div className="grid grid-cols-5 gap-2">
             {(["auto", "spring", "summer", "autumn", "winter"] as SeasonPref[]).map((s) => {
-              const meta = s === "auto" ? { label: "Auto", emoji: "🗓️" } : SEASON_META[s];
+              const label = s === "auto" ? "Auto" : SEASON_META[s].label;
+              const Icon = SEASON_ICON[s];
               const active = seasonPref === s;
               return (
                 <button
@@ -209,8 +264,8 @@ export function AppearanceSettings() {
                       : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
                   )}
                 >
-                  <span className="text-lg leading-none" aria-hidden>{meta.emoji}</span>
-                  <span>{meta.label}</span>
+                  <Icon className="size-5" aria-hidden />
+                  <span>{label}</span>
                 </button>
               );
             })}
@@ -229,13 +284,6 @@ export function AppearanceSettings() {
         <Section title="Kod wyglądu">
           <AppearanceCode />
         </Section>
-      </SettingsGroup>
-
-      <SettingsGroup id="wyglad-tekst" title="Tekst">
-        <Section title="Rozmiar tekstu">
-          <TextSizeControl />
-        </Section>
-
         <Section title="Krój tekstu">
           <FontPicker value={appFont} onChange={setAppFont} />
           {skinScheme && appFont !== "default" && (
@@ -243,14 +291,11 @@ export function AppearanceSettings() {
           )}
         </Section>
 
-        <Section title="Tryb budowa: większy tekst i przyciski">
-          <Segmented label="Tryb budowa" options={siteOptions} value={siteMode} onChange={setSiteMode} />
-          <p className="text-xs text-muted-foreground mt-1.5">
-            {siteMode === "auto"
-              ? "Włącza się, gdy system prosi o większy kontrast."
-              : "Do pracy w rękawicach i w słońcu: większy tekst i przyciski, mocniejszy kontrast, gładkie tło, dłuższe „Cofnij”."}
-          </p>
-        </Section>
+          </div>
+        )}
+        <Button variant="outline" size="sm" onClick={() => setLookResetOpen(true)}>
+          <RotateCcw className="size-4" aria-hidden />Przywróć domyślny wygląd
+        </Button>
       </SettingsGroup>
 
       <SettingsGroup id="wyglad-uklad" title="Układ">
@@ -385,6 +430,22 @@ export function AppearanceSettings() {
 
         <EffectsSettings />
       </SettingsGroup>
+
+      <AlertDialog open={lookResetOpen} onOpenChange={setLookResetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Przywrócić domyślny wygląd?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Wrócą: styl Zeszyt, jasność, akcent, kształt, ramki, poświata, tło, krój i rozmiar tekstu, styl na noc,
+              pora roku, tryb budowa i ruch. Notatki, układ widoku i efekty zostają. Zmianę cofniesz z komunikatu.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction onClick={resetLook}>Przywróć</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Reset kasuje ustawienia widoku, nie tylko wygląd — dlatego potwierdzenie mówi, co dokładnie wróci do domyślnych. */}
       <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>

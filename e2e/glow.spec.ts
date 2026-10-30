@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 // Poświaty: siła i barwa w Ustawieniach → Wygląd. Wybór działa na <html> i zostaje po odświeżeniu.
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+  await page.addInitScript(() => (localStorage.setItem("kaczy.tour.seen.v1", "1"), localStorage.setItem("kaczy.appearance.advanced.v1", "1")));
   await page.goto("/");
   await page.getByRole("button", { name: "Ustawienia" }).first().click();
   await page.getByRole("tab", { name: "Wygląd" }).click();

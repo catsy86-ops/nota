@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { decodeAppearance, encodeAppearance } from "@/lib/appearanceCode";
+import { applyAppearanceValues, decodeAppearance, encodeAppearance, resetAppearance, snapshotAppearance } from "@/lib/appearanceCode";
+import { setShape } from "@/lib/shape";
+
+const shapeNow = () => document.documentElement.dataset.shape ?? "normal";
 
 describe("kod wyglądu", () => {
   const stored: Record<string, string> = {
@@ -43,5 +46,28 @@ describe("ramki i poświata w kodzie wyglądu", () => {
     };
     const code = encodeAppearance((k) => store[k] ?? null);
     expect(decodeAppearance(code)).toEqual(store);
+  });
+});
+
+describe("wygląd bez przeładowania (plan motywów 2026-10-30, 1.4)", () => {
+  it("reset wraca do domyślnych, a „Cofnij” przywraca poprzedni stan — magazyny czytają się od razu", () => {
+    localStorage.clear();
+    setShape("soft");
+    localStorage.setItem("kaczy.vault.autolock.v1", "zostaje");
+    expect(snapshotAppearance()).toEqual({ "kaczy.shape.v1": JSON.stringify("soft") });
+    const before = resetAppearance();
+    expect(shapeNow()).toBe("normal");
+    expect(localStorage.getItem("kaczy.shape.v1")).toBeNull();
+    expect(localStorage.getItem("kaczy.vault.autolock.v1")).toBe("zostaje");
+    applyAppearanceValues(before, { replace: true });
+    expect(shapeNow()).toBe("soft");
+  });
+
+  it("bez `replace` brakujące klucze zostają", () => {
+    localStorage.clear();
+    setShape("sharp");
+    applyAppearanceValues({ "kaczy.font.v1": JSON.stringify("literata") }, { replace: false });
+    expect(shapeNow()).toBe("sharp");
+    expect(localStorage.getItem("kaczy.font.v1")).toBe(JSON.stringify("literata"));
   });
 });

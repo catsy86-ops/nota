@@ -1,6 +1,6 @@
 /**
- * Kod wyglądu (plan motywów 3.5): styl, jasność, akcent, kształt, tło, krój, rozmiar tekstu i styl na noc
- * (w tym ramki i poświata) jako jeden krótki tekst do przeniesienia na drugie urządzenie. Dane wyglądu są per urządzenie
+ * Kod wyglądu (plan motywów 3.5): styl, jasność, akcent, kształt, tło, krój, rozmiar tekstu, styl na noc,
+ * ramki, poświata, tryb budowa, ruch i pora roku jako jeden krótki tekst do przeniesienia na drugie urządzenie. Dane wyglądu są per urządzenie
  * (localStorage), nie w Yjs. Odczyt przepuszcza tylko klucze z listy; wartości sprawdzają potem same
  * moduły przy wczytaniu (`merge` w `createPersistedStore`), więc zły kod nie zepsuje ustawień.
  */
@@ -18,6 +18,10 @@ export const APPEARANCE_KEYS = [
   "kaczy.frames.v1",
   "kaczy.frames.look.v1",
   "kaczy.glow.v1",
+  // Plan motywów 2026-10-30 (1.5): tryb budowa, ruch i pora roku też są wyglądem.
+  "kaczy.siteMode.v1",
+  "kaczy.motion.v1",
+  "kaczy.seasonTheme.v1",
 ] as const;
 
 const PREFIX = "NOTKI1-";
@@ -56,4 +60,38 @@ export function decodeAppearance(code: string): Record<string, string> | null {
   } catch {
     return null;
   }
+}
+
+/** Bieżące wartości wyglądu z localStorage (do „Cofnij” i zestawów). */
+export function snapshotAppearance(read: (key: string) => string | null = (k) => localStorage.getItem(k)): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const k of APPEARANCE_KEYS) {
+    const v = read(k);
+    if (v !== null) out[k] = v;
+  }
+  return out;
+}
+
+/**
+ * Ustawia wygląd bez przeładowania (plan motywów 2026-10-30, 1.4–1.5). `replace` — klucze spoza `values`
+ * wracają do domyślnych (usunięcie z localStorage); bez niego zostają. Potem zdarzenie `storage` z `key: null`:
+ * każdy magazyn ustawień (`createPersistedStore`, jasność w `useTheme`) słucha go dla zmian z innej karty
+ * i czyta się od nowa, więc ta sama ścieżka odświeża wygląd w tej karcie.
+ */
+export function applyAppearanceValues(values: Record<string, string>, { replace }: { replace: boolean }): void {
+  try {
+    for (const k of APPEARANCE_KEYS) {
+      const v = values[k];
+      if (typeof v === "string") localStorage.setItem(k, v);
+      else if (replace) localStorage.removeItem(k);
+    }
+  } catch { /* prywatne okno — zostaje, co było */ }
+  window.dispatchEvent(new StorageEvent("storage", { key: null }));
+}
+
+/** Domyślny wygląd; zwraca poprzedni stan do „Cofnij”. */
+export function resetAppearance(): Record<string, string> {
+  const before = snapshotAppearance();
+  applyAppearanceValues({}, { replace: true });
+  return before;
 }
