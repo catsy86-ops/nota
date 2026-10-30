@@ -1,5 +1,5 @@
 import { lazy, memo, Suspense, useEffect, useState } from "react";
-import { Check, CircleCheck, Cylinder, Flag, Gauge, MapPin, Mic, Package, Pencil, Play, Wrench } from "lucide-react";
+import { Check, CircleCheck, Cylinder, Flag, Gauge, MapPin, Mic, Package, Play, Wrench } from "lucide-react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { pipesLine } from "@/lib/study/pipes";
 import { freshEntry } from "@/lib/study/entrySheet";
@@ -14,8 +14,8 @@ import { haptic } from "@/lib/haptics";
 import { topicTitle } from "@/lib/study/content";
 import { JOURNAL_SOLUTION_MAX, setProblemResolved, setProblemSolution, type JournalEntry } from "@/lib/study/store";
 import { entryHeadline, KIND_LABEL, sameJournalEntry } from "@/lib/study/journalView";
-import { openJournalEdit } from "@/lib/study/entrySheet";
 import { KindIcon } from "./JournalEntrySheet";
+import { JournalItemMenu } from "./JournalItemMenu";
 
 const AudioPreview = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.AudioPreview })));
 
@@ -171,15 +171,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
             </ul>
           )}
         </div>
-        <button
-          type="button"
-          onClick={() => openJournalEdit(e)}
-          aria-label="Edytuj wpis"
-          title="Edytuj albo usuń wpis"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground coarse:h-11 coarse:w-11"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
+        <JournalItemMenu entry={e} resolved={resolved} onToggleResolved={toggleResolved} />
       </div>
     </li>
   );

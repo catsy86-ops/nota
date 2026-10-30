@@ -3829,3 +3829,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Reset nie rusza układu widoku, efektów ani ustawień działów. Kod wyglądu zawiera teraz też tryb budowa, ruch i porę roku; starsze kody bez nich działają. „Kod wyglądu” został w Zaawansowanych (przeniesienie do „Kopia i dane” odłożone).
 - **Testy.** Vitest: `src/lib/appearanceCode.test.ts` (reset i „Cofnij” zmieniają wygląd od razu, `replace` false zostawia brakujące klucze). E2E: `e2e/appearance-quick.spec.ts` (zwinięte Zaawansowane i zapamiętanie, podgląd, ikony pór roku, reset i „Cofnij” bez przeładowania); testy ustawień zaawansowanych (`appearance-code`, `frame-look`, `glow`, `night-skin`, `seasons`, `skins`) otwierają sekcję przez `kaczy.appearance.advanced.v1`.
 - **Commit.** `3c22a40` (2026-10-30).
+
+## Dziennik: menu „⋯” przy wpisie (2026-10-30)
+
+- **Co robi.** Zamiast ołówka każdy wpis w dzienniku ma menu „⋯” (Opcje wpisu) z: **Edytuj wpis** (ten sam arkusz co nowy wpis, z możliwością zmiany rodzaju, opisu, zdjęć, budowy i daty), **Oznacz jako rozwiązany** / **Otwórz problem ponownie** (tylko problemy), **Kopiuj tekst**, **Udostępnij** (arkusz udostępniania, bez niego schowek) i **Usuń wpis** z „Cofnij”.
+- **Gdzie.** `src/components/study/JournalItemMenu.tsx` (`JournalItemMenu`), wpięte w `src/components/study/JournalItem.tsx`; tekst wpisu w `src/lib/study/journalView.ts` (`entryShareText`).
+- **Jak działa.** Menu oparte na `DropdownMenu`. Tekst składa się z rodzaju, budowy i daty w pierwszej linii, potem opisu, rozwiązania, kształtek, rur i próby. Data formatowana ręcznie, bo przeglądarki różnie wstawiają spacje w `toLocaleString`. Usunięcie korzysta z istniejących `removeJournalEntry` i `restoreJournalEntry` (jak wcześniej w arkuszu).
+- **Ograniczenia.** Przy kopiowaniu Windows zamienia `\n` na `\r\n`; w testach porównanie normalizuje końce linii. Wpis „Problem (rozwiązany)” w tekście pokazuje status z pola `resolved`.
+- **Testy.** Vitest: `src/lib/study/journalView.test.ts` (`entryShareText`). E2E: `e2e/journal-menu.spec.ts` (rozwiązany, kopiuj, edytuj, usuń i cofnij); `study.spec.ts`, `photo-drawing.spec.ts`, `site-handover.spec.ts` otwierają edycję przez menu.
+- **Commit.** do uzupełnienia (2026-10-30).

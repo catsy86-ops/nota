@@ -80,7 +80,8 @@ test("„Cofnij rysunek” przywraca oryginał zdjęcia, także po zapisie wpisu
   // Zapis wpisu i ponowne otwarcie: oryginał nadal jest przy wpisie.
   await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
   await expect(sheet).toHaveCount(0);
-  await page.getByTestId("study-journal").getByRole("button", { name: "Edytuj wpis" }).first().click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Opcje wpisu" }).first().click();
+  await page.getByRole("menuitem", { name: "Edytuj wpis" }).click();
   await expect(sheet).toBeVisible();
   await sheet.getByRole("button", { name: "Cofnij rysunek na zdjęciu 1" }).click();
   await expect.poll(() => bytesOf(img)).toBe(before);

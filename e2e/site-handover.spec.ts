@@ -118,7 +118,9 @@ test("zapisany wpis ze zdjęciem można przypiąć do etapu w edycji — zdjęci
   await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
   await expect(sheet).toHaveCount(0);
 
-  await page.locator("[data-journal-entry]").filter({ hasText: "Pion przed zakryciem" }).getByRole("button", { name: "Edytuj wpis" }).click();
+  await page.locator("[data-journal-entry]").filter({ hasText: "Pion przed zakryciem" }).getByRole("button", { name: "Opcje wpisu" }).click();
+
+  await page.getByRole("menuitem", { name: "Edytuj wpis" }).click();
   await sheet.getByLabel("Przypnij wpis do etapu").selectOption({ label: "Piony i podejścia kanalizacji" });
   await expect(sheet.getByTestId("journal-entry-stage")).toContainText("Piony i podejścia kanalizacji");
   await sheet.getByRole("button", { name: "Zapisz zmiany" }).click();

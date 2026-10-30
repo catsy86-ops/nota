@@ -323,7 +323,8 @@ test("dziennik: pusty wpis się nie zapisuje, usunięcie wpisu w arkuszu ma Cofn
 
   // Kosza na liście nie ma — usuwa się w arkuszu edycji.
   await expect(page.getByRole("button", { name: "Usuń wpis" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Edytuj wpis" }).click();
+  await page.getByRole("button", { name: "Opcje wpisu" }).click();
+  await page.getByRole("menuitem", { name: "Edytuj wpis" }).click();
   await expect(sheet.getByRole("heading", { name: "Edytuj wpis" })).toBeVisible();
   await sheet.getByRole("button", { name: "Usuń" }).click();
   await expect(sheet).toHaveCount(0);
@@ -360,7 +361,8 @@ test("dziennik: wpis „za wczoraj”, poprawka w arkuszu bez ruszania szkicu, p
   await expect(sheet.getByRole("button", { name: "Kiedy: teraz. Zmień" })).toBeVisible();
   await sheet.getByLabel("Co się dzieje?").fill("Szkic na później");
   await page.keyboard.press("Escape");
-  await entry.getByRole("button", { name: "Edytuj wpis" }).click();
+  await entry.getByRole("button", { name: "Opcje wpisu" }).click();
+  await page.getByRole("menuitem", { name: "Edytuj wpis" }).click();
   await expect(sheet.getByRole("heading", { name: "Edytuj wpis" })).toBeVisible();
   await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("Przeciek na złączce");
   await expect(sheet.getByRole("button", { name: "Kiedy: wczoraj, 16:30. Zmień" })).toBeVisible();
@@ -538,7 +540,8 @@ test("dawny zapis Nauki z localStorage przechodzi do dokumentu raz i bez strat",
   await expect(page.locator("[data-journal-entry]")).toHaveCount(1);
 
   // Usunięty po migracji wpis nie wraca z kopii w localStorage po przeładowaniu.
-  await page.getByRole("button", { name: "Edytuj wpis" }).click();
+  await page.getByRole("button", { name: "Opcje wpisu" }).click();
+  await page.getByRole("menuitem", { name: "Edytuj wpis" }).click();
   await page.getByTestId("journal-entry-sheet").getByRole("button", { name: "Usuń" }).click();
   await expect(page.locator("[data-journal-entry]")).toHaveCount(0);
   await reloadWhenSaved(page);

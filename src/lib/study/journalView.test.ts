@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry } from "./yStudy";
-import { contextSiteName, entryHeadline, filterJournal, NO_FILTER, recentSiteTexts, yesterdaySiteText } from "./journalView";
+import { contextSiteName, entryHeadline, entryShareText, filterJournal, NO_FILTER, recentSiteTexts, yesterdaySiteText } from "./journalView";
 import { siteKey } from "./sites";
 
 const day = (d: number, h = 12) => new Date(2026, 9, d, h).getTime();
@@ -86,5 +86,16 @@ describe("filterJournal: kształtki w wyszukiwaniu (§9 D1)", () => {
     const plain = { ...base, id: "b" } as unknown as JournalEntry;
     const found = filterJournal([withFit, plain], { ...NO_FILTER, query: "kolano" });
     expect(found.map((e) => e.id)).toEqual(["a"]);
+  });
+});
+
+describe("entryShareText (menu ⋯ przy wpisie)", () => {
+  const at = new Date(2026, 9, 22, 9, 5).getTime();
+  it("rodzaj, budowa, data; opis i rozwiązanie", () => {
+    const t = entryShareText({ kind: "problem", at, site: " Lipowa 5 ", text: "Cieknie złączka", solution: "dokręcona", resolved: at });
+    expect(t.split("\n")).toEqual(["Problem (rozwiązany) · Lipowa 5 · 22.10.2026, 09:05", "Cieknie złączka", "Rozwiązanie: dokręcona"]);
+  });
+  it("bez budowy i opisu — sama pierwsza linia", () => {
+    expect(entryShareText({ kind: "note", at, site: "", text: "  " })).toBe("Notatka · 22.10.2026, 09:05");
   });
 });

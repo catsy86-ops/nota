@@ -226,3 +226,22 @@ export function contextSiteName(siteId: string | null, dir: readonly { id: strin
   if (siteId === "") return "";
   return dir.find((x) => x.id === siteId)?.name ?? null;
 }
+
+/**
+ * Wpis jako tekst do skopiowania albo wysłania (menu „⋯” przy wpisie): rodzaj, budowa i data w pierwszej
+ * linii, potem opis, rozwiązanie problemu i materiał.
+ */
+export function entryShareText(e: Pick<JournalEntry, "kind" | "at" | "site" | "text" | "solution" | "resolved" | "fittings" | "pipes" | "test">): string {
+  // Ręcznie, nie `toLocaleString`: przeglądarki różnią się spacjami (twarda, wąska) i tekst wyglądałby różnie.
+  const d = new Date(e.at);
+  const two = (n: number) => String(n).padStart(2, "0");
+  const when = `${two(d.getDate())}.${two(d.getMonth() + 1)}.${d.getFullYear()}, ${two(d.getHours())}:${two(d.getMinutes())}`;
+  const kind = e.kind === "problem" && e.resolved !== undefined ? "Problem (rozwiązany)" : KIND_LABEL[e.kind];
+  const lines = [[kind, e.site.trim(), when].filter(Boolean).join(" · ")];
+  if (e.text.trim()) lines.push(e.text.trim());
+  if (e.solution?.trim()) lines.push(`Rozwiązanie: ${e.solution.trim()}`);
+  if (e.fittings?.length) lines.push(`Kształtki: ${fittingsLine(e.fittings)}`);
+  if (e.pipes?.length) lines.push(`Rury: ${pipesLine(e.pipes)}`);
+  if (e.test) lines.push(`Próba: ${testLine(e.test)}`);
+  return lines.join("\n");
+}
