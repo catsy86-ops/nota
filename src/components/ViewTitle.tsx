@@ -22,7 +22,8 @@ export function ViewTitle({ view, count }: { view: TitleBlockView; count?: numbe
     // Siatka: ozdoba dnia stoi w rzędzie tytułu; na telefonie wiersz daty idzie pod spodem przez całą
     // szerokość (inaczej szersze ozdoby — tabliczka Planu — zawijały datę), od `sm` obok tytułu i daty.
     <header className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4">
-      <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">{TITLES[view]}</h1>
+      {/* `section-title`: podkreślenie piórem w kolorze działu (plan motywów 2.4, CSS w index.css). */}
+      <h1 className="section-title font-display text-3xl font-bold tracking-tight text-foreground">{TITLES[view]}</h1>
       {view === "today" && (
         <div className="col-start-2 row-start-1 sm:row-span-2">
           <Suspense fallback={null}>

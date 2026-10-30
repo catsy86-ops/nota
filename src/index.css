@@ -1543,3 +1543,49 @@ html[data-skin="tablica"] { --sketch-w: 2.4; }
 .nav-active-tile { border-radius: var(--nav-tile-radius, var(--r-card, 0.75rem)); }
 .fab-brand { border-radius: var(--fab-radius, 9999px); }
 
+
+/* Podkreślenie nagłówków działów (plan motywów 2.4): kreska piórem w kolorze działu, dorysowana raz przy
+   wejściu w widok. `.app-title` ma `overflow: hidden` (truncate), więc linia idzie na sam tytuł przez
+   `::after` z `bottom` w ramach jego pudełka — dolna krawędź `h1` dla nagłówka widoku.
+   Kolor z `--sec-*`; Zeszyt i pozostałe style dostają go od razu, bez wpływu na układ. */
+.app-title { position: relative; overflow: visible; }
+.app-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  border-radius: 9999px;
+  background: var(--sec-notes);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: section-rule 0.55s var(--ease-out) 0.05s forwards;
+}
+html[data-view="shifts"] .app-title::after { background: var(--sec-shifts); }
+html[data-view="study"] .app-title::after { background: var(--sec-study); }
+html[data-view="calendar"] .app-title::after { background: var(--sec-calendar); }
+@keyframes section-rule { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .app-title::after { animation: none; transform: scaleX(1); } }
+html[data-motion='reduced'] .app-title::after { animation: none; transform: scaleX(1); }
+
+/* Tytuł działu w bloku widoku (ViewTitle: Dziś, Praca, Grafik) — ta sama kreska co w `.app-title`. */
+.section-title { position: relative; display: inline-block; }
+.section-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.12em;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--sec-notes);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: section-rule 0.6s var(--ease-out) 0.05s forwards;
+}
+html[data-view="today"] .section-title::after { background: var(--sec-notes); }
+html[data-view="study"] .section-title::after { background: var(--sec-study); }
+html[data-view="shifts"] .section-title::after { background: var(--sec-shifts); }
+@media (prefers-reduced-motion: reduce) { .section-title::after { animation: none; transform: scaleX(1); } }
+html[data-motion='reduced'] .section-title::after { animation: none; transform: scaleX(1); }

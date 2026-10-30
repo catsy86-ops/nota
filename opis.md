@@ -3894,3 +3894,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Kafle i Zorza bez własnych okien (zostają domyślne). Wąski krój tytułu w Odblasku i Planie to Barlow Condensed, który jest już w paczce stylu.
 - **Testy.** Vitest: pełny zestaw. E2E: `onboarding`, `guides`, `appearance-quick`, `quick-presets`, `appearance-presets`, `a11y`, `mobile`, `fab-sheets-a11y`, `study`, `journal-menu`. Zrzuty samouczka i powiadomienia w Odblasku, Tablicy i Zeszycie sprawdzone ręcznie; promień powiadomienia sprawdzony obliczonym stylem.
 - **Commit.** `6e0ce3b` (2026-10-30).
+
+## Nagłówki działów: podkreślenie piórem w kolorze działu (Fala 2, 2.4 planu motywów, 2026-10-30)
+
+- **Co robi.** Tytuł każdego działu ma pod sobą kreskę w jego kolorze: Notatki — kolor marki, Grafik — akcent, Praca — kolor ostrzeżenia, Kalendarz — kolor sukcesu. Kreska dorysowuje się raz, przy wejściu w dział. Na Dziś używa koloru Notatek.
+- **Gdzie.** `src/components/ViewTitle.tsx` (klasa `section-title` na `h1` Dziś, Pracy i Grafiku); `src/index.css`: `.section-title::after` i kolory po `html[data-view]`, oraz `.app-title::after` dla nagłówka widoku w `AppHeader` (Notatki, Kalendarz i pozostałe, bez bloku tytułowego).
+- **Jak działa.** Kreska to pseudoelement z `transform: scaleX(0)`, który animacją `section-rule` rośnie do 1 po 0,05 s. Kolor bierze z `--sec-*` (tokeny działów już istnieją w `index.css`). Zmiana widoku zmienia `data-view` i kolor, a animacja startuje przy montowaniu nagłówka.
+- **Ograniczenia.** `.app-title` ma `overflow: hidden` (klasa `truncate`), więc jego kreska siedzi na samym tytule, a nie na całym pudełku. Przy bardzo długich nazwach widoku kreska jest tej samej długości co obcięty tekst. Kreska nie jest w tekście, więc czytnik ekranu jej nie zgłasza (to tylko ozdoba).
+- **Testy.** Vitest: pełny zestaw. E2E: `a11y`, `mobile`, `workday`, `study`, `shifts`, `today-site-card`, `brand-notki`, `touch-targets`. Kreska sprawdzona zrzutem nagłówka Notatek i tytułu Pracy oraz obliczonym stylem pseudoelementu.
+- **Commit.** do uzupełnienia (2026-10-30).
