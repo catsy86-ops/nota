@@ -3970,7 +3970,16 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
   - **Pasek postępu zmiany na Dziś** wygląda jak rura: metalowy przewód, a postęp to jasny pas wody wypełniający go od lewej.
 - **Gdzie.** `src/styles/skins/hydraulika.css` (trzy reguły: pasek postępu `role="progressbar"` + `aria-label="Postęp zmiany"`, `[data-testid="today-progress"]`, obrót `.fab-brand:has([data-pressing="true"]) > span > svg`). Tylko CSS.
 - **Jak działa.** Obrót bierze stan `pressing` z `BottomNav` (atrybut `data-pressing` na pierścieniu przytrzymania), a nie `:active`, bo `:active` nie zapalał się przy testach zdarzeń wskaźnika. Obrót jest pod warunkiem `prefers-reduced-motion: no-preference`.
-- **Ograniczenia.** **Kształtki zamiast ikon działów na pasku** z planu nie są zrobione: wymagają sprite'u SVG (kolano, trójnik, zawór) dla pięciu działów, więc to osobny krok. Pasek wody działa tylko przy aktywnej zmianie na Dziś (tam pojawia się postęp). Nie sprawdziłem go zrzutem, bo test nie ma zaplanowanej zmiany.
+- **Ograniczenia.** Kształtki na pasku zrobione w osobnym kroku (patrz niżej). Pasek wody działa tylko przy aktywnej zmianie na Dziś (tam pojawia się postęp). Nie sprawdziłem go zrzutem, bo test nie ma zaplanowanej zmiany.
 - **Testy.** E2E: `hydraulika-flag` (obrót w czasie przytrzymania, zdarzenia wskaźnika), `skins`, `skin-signatures`, `mobile`, `bottom-slot` (51 testów).
 - **Do sprawdzenia.** Prawdziwe `mouse.down` w emulacji telefonu nie trafia w przycisk „+” (coś leży nad nim). Na prawdziwym dotyku to zwykle nie problem, ale warto to potwierdzić na urządzeniu w QA (4.4).
 - **Commit.** `ef22b09` (2026-10-30).
+
+## Hydraulika: kształtki zamiast ikon na dolnym pasku (Fala 3, 3.1, część 2, 2026-10-30)
+
+- **Co robi.** W Hydraulice ikony na dolnym pasku są rysunkami armatury: **Notatki** — kolano, **Dziś** — trójnik, **slot** (np. Terminy) — zawór. W innych stylach ikony zostają jak były.
+- **Gdzie.** `src/components/skins/FittingIcon.tsx` (`FittingIcon`, trzy kształty w `currentColor`, 24×24), `src/components/BottomNav.tsx` (ikony lucide dostają klasę `nav-lucide`, kształtki `hydro-fitting`; w głównym pasku i przy slocie), `src/styles/skins/hydraulika.css` (przełączanie widoczności).
+- **Jak działa.** Obie ikony są w DOM, a CSS wybiera jedną: w Hydraulice `.nav-lucide` jest ukryta, w pozostałych stylach `.hydro-fitting`. Dzięki temu zmiana stylu nie wymaga ponownego renderowania paska.
+- **Ograniczenia.** Więcej (Ellipsis) zostaje lucide we wszystkich stylach. Trójnik jest mały, przy 20 px czytelny raczej jako „T”. Kształtki są statyczne, bez stanu aktywnego poza pogrubieniem kreski z klasy działu.
+- **Testy.** E2E: `hydraulika-fittings` (w Hydraulice widać kształtki, w Zeszycie lucide), `hydraulika-flag`, `bottom-slot`, `skins`, `mobile`, `touch-targets`, `a11y`.
+- **Commit.** do uzupełnienia (2026-10-30).

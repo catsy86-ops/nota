@@ -205,3 +205,8 @@ html[data-skin="hydraulika"] [data-testid="today-progress"] {
     transform: rotate(90deg);
   }
 }
+
+/* Kształtki zamiast ikon na dolnym pasku (plan motywów 3.1): w Hydraulice ikony lucide znikają, kształtki
+   (`FittingIcon`) się pojawiają. W innych stylach jest odwrotnie — kształtek nie ma. */
+html:not([data-skin="hydraulika"]) .hydro-fitting { display: none; }
+html[data-skin="hydraulika"] .nav-lucide { display: none; }

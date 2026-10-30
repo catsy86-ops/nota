@@ -12,6 +12,7 @@ import { InstallAppButton } from "@/components/InstallAppButton";
 import { ImportExportMenu } from "@/components/ImportExportMenu";
 import { cn } from "@/lib/utils";
 import { sectionIconClass } from "@/lib/sections";
+import { FittingIcon } from "@/components/skins/FittingIcon";
 import { spring } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
@@ -145,7 +146,8 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
           <ul className={cn("relative grid items-end h-[64px] max-w-md mx-auto px-2", showPaletteSlot ? "grid-cols-6" : "grid-cols-5")}>
             {slots.map(({ key, label, Icon }) => (
               <NavItem key={key} active={view === key} label={label} onClick={() => (key === "notes" && view === "notes" ? focusSearch() : onGo(key))}>
-                <Icon className={cn("w-5 h-5", sectionIconClass(key))} />
+                <Icon className={cn("nav-lucide w-5 h-5", sectionIconClass(key))} />
+                <FittingIcon variant={key === "notes" ? "elbow" : key === "today" ? "tee" : "valve"} className={cn("hydro-fitting w-5 h-5", sectionIconClass(key))} />
               </NavItem>
             ))}
 
@@ -200,7 +202,8 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
 
             {[{ key: bottomSlot as View, ...SLOT_META[bottomSlot] }].map(({ key, label, Icon }) => (
               <NavItem key={key} active={view === key} label={label} onClick={() => onGo(key)}>
-                <Icon className="w-5 h-5" />
+                <Icon className="nav-lucide w-5 h-5" />
+                <FittingIcon variant="valve" className="hydro-fitting w-5 h-5" />
               </NavItem>
             ))}
 
