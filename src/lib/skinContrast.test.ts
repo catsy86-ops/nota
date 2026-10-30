@@ -160,3 +160,39 @@ describe("Miedź: gradient przycisku głównego (plan motywów 2026-10-30, 0.1)"
     for (const bg of [p, end]) expect(contrast(rgb(t, "primary-foreground"), oklchToRgb(bg))).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+describe("przycisk „+” w gradiencie marki (plan motywów 1.6): ikona ≥3:1 na obu końcach", () => {
+  const hex = (h: string): [number, number, number] => {
+    const v = h.replace("#", "");
+    const full = v.length === 3 ? v.split("").map((c) => c + c).join("") : v;
+    return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255) as [number, number, number];
+  };
+  /** Tokeny marki dla stylu i schematu, jak w index.css: :root, potem styl, potem styl.dark. */
+  function brand(skin: Skin, scheme: "light" | "dark"): Record<string, string> {
+    const out: Record<string, string> = {};
+    const read = (selector: string) => {
+      const re = new RegExp(`(?:^|\\n)${selector.replace(/[[\]().:"]/g, "\\$&")} \\{([^}]*)\\}`);
+      const m = re.exec(index);
+      if (m) for (const t of m[1]!.matchAll(/--(brand-\w+|fab-shade):\s*(#[0-9a-f]{3,6}|\d+%)/gi)) out[t[1]!] = t[2]!;
+    };
+    read(":root");
+    if (skin !== "zeszyt") read(`html[data-skin="${skin}"]`);
+    if (skin !== "zeszyt" && scheme === "dark") read(`html[data-skin="${skin}"].dark`);
+    return out;
+  }
+  it("przycisk bierze kolor ikony z --brand-ink, nie z --primary-foreground", () => {
+    const rule = index.slice(index.indexOf(".fab-brand {"), index.indexOf("}", index.indexOf(".fab-brand {")));
+    expect(rule).toContain("color: var(--brand-ink)");
+    expect(rule).toContain("var(--fab-shade, 0%)");
+  });
+  it.each(cases)("%s (%s)", (skin, scheme) => {
+    const b = brand(skin, scheme);
+    expect(b["brand-ink"], "brak --brand-ink").toBeDefined();
+    const shade = 1 - (parseFloat(b["fab-shade"] ?? "0") / 100);
+    const icon = hex(b["brand-ink"]!);
+    const ends = [hex(b["brand-via"]!), hex(b["brand-to"]!)].map((c) => c.map((v) => v * shade) as [number, number, number]);
+    for (const [i, bg] of ends.entries()) {
+      expect(contrast(icon, bg), `${skin} ${scheme}: ikona na ${i ? "końcu" : "początku"} gradientu`).toBeGreaterThanOrEqual(3);
+    }
+  });
+});

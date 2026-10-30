@@ -3868,9 +3868,9 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 ## Dolny pasek: przycisk „+” w gradiencie marki (plan motywów 1.6, krok 3, 2026-10-30)
 
-- **Co robi.** Okrągły przycisk „+” na dolnym pasku ma gradient marki (z tokenów `--brand-via` do ciemniejszego `--brand-to`), a nie płaski kolor akcentu. Stuknięcie i przytrzymanie działają jak wcześniej.
-- **Gdzie.** `src/components/BottomNav.tsx` (klasa `fab-brand` na przycisku), `src/index.css` (`.fab-brand`, po blokach tokenów `--brand-*`).
-- **Jak działa.** Klasa ustawia `background-image: linear-gradient(155deg, var(--brand-via), color-mix(in srgb, var(--brand-to) 62%, #000))`. Końcowy kolor przyciemniony o 38% czerni, żeby biała ikona miała kontrast także w jasnych stylach (Neon, Zeszyt). Reguła `button.bg-primary` z Miedzi nie działa już na ten przycisk, bo nie ma już klasy `bg-primary`.
-- **Ograniczenia.** Kontrast sprawdzony zrzutami w sześciu stylach (Zeszyt, Odblask, Tablica, Neon, Miedź, Matryca) i po przyciemnieniu w Neonie i Zeszycie. Brak testu automatycznego kontrastu tego gradientu; to kandydat do `skinContrast.test.ts`.
-- **Testy.** Vitest: pełny zestaw. E2E: `bottom-slot`, `fab-sheets-a11y`, `mobile`, `brand-notki`, `skins`, `a11y`.
+- **Co robi.** Okrągły przycisk „+” na dolnym pasku ma gradient marki stylu, a ikona „+” ma kolor dobrany do tego gradientu: ciemna na jasnych (Zeszyt, Neon, Zorza, Matryca, ciemny Odblask i ciemna Tablica), biała na ciemnych (Plan, Miedź, Hydraulika, Kafle, jasna Tablica), fluo na czarnym jasnym Odblasku. Stuknięcie i przytrzymanie działają jak wcześniej.
+- **Gdzie.** `src/components/BottomNav.tsx` (klasa `fab-brand` na przycisku), `src/index.css` (`.fab-brand`; tokeny `--brand-ink` i `--fab-shade` w blokach `--brand-*` każdego stylu).
+- **Jak działa.** `.fab-brand` ustawia `color: var(--brand-ink)` i gradient od `--brand-via` do `--brand-to`, oba końce przyciemnione o `--fab-shade` (domyślnie 0%, Hydraulika 8%). Pierwsza wersja brała kolor ikony z `--primary-foreground` i przyciemniała koniec o 38% — test kontrastu pokazał 10 kombinacji poniżej 3:1, bo gradient szedł od jasnego do ciemnego i żaden jeden kolor ikony nie pasował. Kolor ikony dobrano liczeniem: dla każdego stylu najmniejsze przyciemnienie dające ≥3:1 z białą albo ciemną ikoną.
+- **Ograniczenia.** Przycisk nie bierze już akcentu stylu (`--primary`) — ma kolor marki. Nowy styl musi dostać `--brand-ink` (test wymaga go dla każdego stylu i schematu).
+- **Testy.** Vitest: `src/lib/skinContrast.test.ts` (ikona ≥3:1 na obu końcach gradientu w 10 stylach × 2 schematach; reguła `.fab-brand` bierze `--brand-ink` i `--fab-shade`). E2E: `bottom-slot`, `fab-sheets-a11y`, `mobile`, `skins`. Zrzuty przycisku w 6 stylach sprawdzone ręcznie.
 - **Commit.** `b936e25` (2026-10-30).
