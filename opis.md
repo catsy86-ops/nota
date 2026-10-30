@@ -3875,3 +3875,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Przycisk nie bierze już akcentu stylu (`--primary`) — ma kolor marki. Nowy styl musi dostać `--brand-ink` (test wymaga go dla każdego stylu i schematu).
 - **Testy.** Vitest: `src/lib/skinContrast.test.ts` (ikona ≥3:1 na obu końcach gradientu w 10 stylach × 2 schematach; reguła `.fab-brand` bierze `--brand-ink` i `--fab-shade`). E2E: `bottom-slot`, `fab-sheets-a11y`, `mobile`, `skins`. Zrzuty przycisku w 6 stylach sprawdzone ręcznie.
 - **Commit.** `b936e25` (2026-10-30).
+
+## Dolny pasek per styl: kształt „+” i znacznik aktywnej pozycji (Fala 2, 2.2 planu motywów, 2026-10-30)
+
+- **Co robi.** Każdy styl może przebrać przycisk „+” i znacznik aktywnej pozycji na dolnym pasku. Odblask ma kwadratowy „+” i prostokątny znacznik (jak tabliczka na budowie), Kafle płytkę z lekko zaokrąglonymi rogami, Hydraulika znacznik jak rurę, Neon rurkę. Zeszyt zostaje jak dotąd (okrąg, zaokrąglony znacznik).
+- **Gdzie.** `src/index.css` (klasy `.nav-active-bar`, `.nav-active-tile`, `.fab-brand` z tokenami `--nav-bar-radius`, `--nav-tile-radius`, `--fab-radius`), `src/components/BottomNav.tsx` (klasy na znaczniku paska i na kafelku aktywnej pozycji), skórki `src/styles/skins/{odblask,kafle,hydraulika,neon}.css`.
+- **Jak działa.** Zaokrąglenia to tokeny z wartością domyślną, więc bez skórki wszystko wygląda jak przed zmianą. Animacja znacznika (`layoutId`) i kolory zostają bez zmian; zmienia się tylko kształt. Przycisk „+” ma `border-radius: var(--fab-radius, 9999px)`.
+- **Ograniczenia.** Kafle i Hydraulika dostały tokeny, ale bez dopracowanych zrzutów — do QA na telefonie. Zmiana kształtu nie zmienia obszaru dotyku (44 px zostaje).
+- **Testy.** E2E: `bottom-slot`, `mobile`, `skins`, `fab-sheets-a11y`, `quick-presets`, `a11y`. Zrzuty paska w 5 stylach sprawdzone ręcznie.
+- **Commit.** do uzupełnienia (2026-10-30).

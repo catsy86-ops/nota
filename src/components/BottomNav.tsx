@@ -313,13 +313,13 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
             <motion.span
               layoutId="bottom-nav-bar"
               aria-hidden
-              className="absolute inset-x-5 -top-3 h-[3px] rounded-b-full bg-primary"
+              className="nav-active-bar absolute inset-x-5 -top-3 h-[3px] rounded-b-full bg-primary"
               transition={spring.snap}
             />
             <motion.span
               layoutId="bottom-nav-active"
               aria-hidden
-              className="absolute inset-x-3 top-1 h-8 rounded-card bg-primary/20"
+              className="nav-active-tile absolute inset-x-3 top-1 h-8 rounded-card bg-primary/20"
               transition={spring.snap}
             />
           </>

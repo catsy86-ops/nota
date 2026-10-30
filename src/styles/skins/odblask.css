@@ -139,3 +139,6 @@ html[data-skin="odblask"] .now-dot::after { opacity: 0; }
 html[data-skin="odblask"] .note-card .note-frame { animation: none; background: var(--foreground); }
 /* Fokus z klawiatury i czytnika: gruba kreska w kolorze tekstu, widoczna na żółtym i na bieli. */
 html[data-skin="odblask"] :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+
+/* Odblask (plan motywów 2.2): kwadratowy „+” i prostokątny znacznik, jak tabliczka na budowie. */
+html[data-skin="odblask"] { --fab-radius: 0.25rem; --nav-bar-radius: 0; --nav-tile-radius: 0; }

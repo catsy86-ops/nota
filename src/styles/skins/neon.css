@@ -143,3 +143,6 @@ html[data-skin="neon"]:not(.dark) h1 {
 html[data-skin="neon"]:not(.dark) .notki-logo {
   filter: drop-shadow(0 0 3px color-mix(in srgb, var(--primary) 45%, transparent));
 }
+
+/* Neon (plan motywów 2.2): znacznik jak rurka (pełne zaokrąglenie), „+” zostaje okrągły. */
+html[data-skin="neon"] { --nav-bar-radius: 9999px; --nav-tile-radius: 9999px; }

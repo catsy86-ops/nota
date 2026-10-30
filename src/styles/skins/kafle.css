@@ -178,3 +178,6 @@ html[data-sig="view"][data-skin="kafle"] .sig-layer::before {
     radial-gradient(50% 45% at 30% 25%, rgb(255 255 255 / 0.9), transparent 70%);
   background-size: 22px 22px;
 }
+
+/* Kafle (plan motywów 2.2): „+” jak płytka — kwadrat z lekko zaokrąglonymi rogami; znacznik to fuga. */
+html[data-skin="kafle"] { --fab-radius: 0.5rem; --nav-bar-radius: 0; --nav-tile-radius: 0.25rem; }

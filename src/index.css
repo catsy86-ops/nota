@@ -1536,3 +1536,9 @@ html[data-skin="hydraulika"] { --sketch-w: 2.6; }
 html[data-skin="odblask"] { --sketch-w: 3; }
 html[data-skin="kafle"] { --sketch-w: 2.4; }
 html[data-skin="tablica"] { --sketch-w: 2.4; }
+
+/* Dolny pasek per styl (plan motywów 2.2): znacznik aktywnej pozycji i kształt przycisku „+” z tokenów.
+   Domyślnie: pasek akcentu na górze, tło pozycji i okrąg. Każdy styl może to przebrać w swojej skórce. */
+.nav-active-bar { border-radius: var(--nav-bar-radius, 9999px); }
+.nav-active-tile { border-radius: var(--nav-tile-radius, var(--radius-card, 0.75rem)); }
+.fab-brand { border-radius: var(--fab-radius, 9999px); }
