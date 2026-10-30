@@ -1,4 +1,6 @@
-﻿import { forwardRef, useEffect, useRef, useState } from "react";
+﻿import { useLongPress } from "@/hooks/useLongPress";
+import { openQuickPresets } from "@/lib/quickPresets";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { m as motion, LayoutGroup } from "framer-motion";
 import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Inbox, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -61,6 +63,9 @@ const SLOT_META: Record<BottomSlotView, { label: string; Icon: typeof Bell }> = 
 export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, onOpenActions, trashCount = 0, inboxCount = 0, dark = false, onToggleTheme, onImport, onGoFilter, search = "" }: BottomNavProps) {
   const { filters } = useSavedFilters();
   const [moreOpen, setMoreOpen] = useState(false);
+  // Przytrzymanie „Tryb ciemny” → szybkie zestawy wyglądu (plan motywów 1.3).
+  // Okienko dopiero po zamknięciu arkusza: arkusz oddaje fokus „Więcej”, a fokus poza okienkiem by je zamknął.
+  const themePress = useLongPress(() => { setMoreOpen(false); window.setTimeout(openQuickPresets, 320); });
   const hiddenViews = useHiddenViews();
   const bottomSlot = useBottomSlot();
   // Długie przytrzymanie „+” otwiera arkusz „Nowa”: lista, dyktowanie, zdjęcie, rysunek.
@@ -270,7 +275,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
           <SheetGroup title="Narzędzia">
             {onOpenActions && <SheetTile Icon={RotateCcwClock} label="Ostatnie akcje" onClick={() => { onOpenActions(); setMoreOpen(false); }} />}
             <SheetTile Icon={CircleQuestionMark} label="Samouczek" onClick={() => { window.dispatchEvent(new CustomEvent("kaczy:tour")); setMoreOpen(false); }} />
-            {onToggleTheme && <SheetTile Icon={dark ? Sun : Moon} label={dark ? "Tryb jasny" : "Tryb ciemny"} onClick={() => { onToggleTheme(); setMoreOpen(false); }} />}
+            {onToggleTheme && <SheetTile Icon={dark ? Sun : Moon} label={dark ? "Tryb jasny" : "Tryb ciemny"} title="Przytrzymaj: zestawy wyglądu" {...themePress.handlers} onClick={() => { if (themePress.shouldSkipClick()) return; onToggleTheme(); setMoreOpen(false); }} />}
             {onImport && (
               <ImportExportMenu onImport={onImport} onDone={() => setMoreOpen(false)} align="start">
                 <SheetTile Icon={FileDown} label="Import / Eksport" />

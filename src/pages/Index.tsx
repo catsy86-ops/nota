@@ -93,6 +93,7 @@ import { TodayCards } from "@/components/review/TodayCards";
 import { OlderDeviceBanner } from "@/components/sync/OlderDeviceBanner";
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
+import { QuickPresetsHost } from "@/components/settings/QuickPresets";
 import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
@@ -1105,6 +1106,7 @@ const Index = () => {
     <Suspense fallback={null}>
       <OnboardingTour />
       <AppearanceLinkImport />
+      <QuickPresetsHost />
     </Suspense>
     {actionsOpen && (
       <Suspense fallback={null}>

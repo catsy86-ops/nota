@@ -19,6 +19,8 @@ import { pluralPl } from "@/lib/plural";
 import { RollingNumber } from "@/components/RollingNumber";
 import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 import { isTitleBlockView } from "@/components/ViewTitle";
+import { useLongPress } from "@/hooks/useLongPress";
+import { openQuickPresets } from "@/lib/quickPresets";
 
 interface AppHeaderProps {
   selectionMode: boolean;
@@ -43,6 +45,8 @@ export function AppHeader({
   selectionMode, sidebarOpen, onToggleSidebar, dark, onToggleTheme,
   view, activeFolder, activeLabel, displayCount, search, onSearchChange, onImport, onOpenSync, onOpenPalette,
 }: AppHeaderProps) {
+  // Przytrzymanie przełącznika jasności → szybkie zestawy wyglądu (plan motywów 1.3).
+  const themePress = useLongPress(openQuickPresets);
   // Stan tutaj, nie w Index: schowanie nagłówka przerysowuje tylko nagłówek, a nie całą stronę z kartami.
   const hideHeader = useHideOnScroll(96);
   const { folders, allLabels } = useNotesContext();
@@ -163,7 +167,9 @@ export function AppHeader({
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={tween.enter}
-                onClick={onToggleTheme}
+                {...themePress.handlers}
+                onClick={() => { if (!themePress.shouldSkipClick()) onToggleTheme(); }}
+                title="Przytrzymaj albo prawy przycisk: zestawy wyglądu"
                 aria-label="Tryb ciemny"
                 aria-pressed={dark}
               >

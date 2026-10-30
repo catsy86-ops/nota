@@ -15,6 +15,8 @@ import { SidebarFolderItem } from "@/components/sidebar/SidebarFolderItem";
 import { SidebarFilterItem } from "@/components/sidebar/SidebarFilterItem";
 import { SidebarAddFolderButton } from "@/components/sidebar/SidebarAddFolderButton";
 import { SidebarRow, SidebarCount } from "@/components/sidebar/SidebarRow";
+import { useLongPress } from "@/hooks/useLongPress";
+import { openQuickPresets } from "@/lib/quickPresets";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { NMonogramLogo } from "@/components/NMonogramLogo";
 import { AnimatedTagline } from "@/components/AnimatedTagline";
@@ -94,6 +96,8 @@ export function AppSidebar({
   sidebarItems, onLogoClick, dark, onToggleTheme, onOpenPalette, onOpenActions,
   onOpenStats, onOpenFocusMode, onSettingsOpenChange,
 }: AppSidebarProps) {
+  // Przytrzymanie „Tryb ciemny” → szybkie zestawy wyglądu (plan motywów 1.3).
+  const themePress = useLongPress(openQuickPresets);
   const [moreOpen, setMoreOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState(readCollapsedGroups);
   const toggleGroup = (key: SidebarGroupKey) => {
@@ -334,8 +338,8 @@ export function AppSidebar({
                 <SidebarRow
                   icon={dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
                   label="Tryb ciemny"
-                  onClick={onToggleTheme}
-                  buttonProps={{ "aria-label": "Tryb ciemny", "aria-pressed": dark }}
+                  onClick={() => { if (!themePress.shouldSkipClick()) onToggleTheme(); }}
+                  buttonProps={{ "aria-label": "Tryb ciemny", "aria-pressed": dark, title: "Przytrzymaj albo prawy przycisk: zestawy wyglądu", ...themePress.handlers }}
                 />
                 <SidebarRow icon={<SettingsIcon className="w-[18px] h-[18px]" />} label="Ustawienia" tipKeys={shortcutFor("Ustawienia")} onClick={() => onSettingsOpenChange(true)} />
                 <SidebarRow
