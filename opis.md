@@ -3983,3 +3983,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Więcej (Ellipsis) zostaje lucide we wszystkich stylach. Trójnik jest mały, przy 20 px czytelny raczej jako „T”. Kształtki są statyczne, bez stanu aktywnego poza pogrubieniem kreski z klasy działu.
 - **Testy.** E2E: `hydraulika-fittings` (w Hydraulice widać kształtki, w Zeszycie lucide), `hydraulika-flag`, `bottom-slot`, `skins`, `mobile`, `touch-targets`, `a11y`.
 - **Commit.** `c439d9c` (2026-10-30).
+
+## Styl na noc wg słońca: wschód i zachód w wybranym mieście (Fala 3, 3.2 planu motywów, 2026-10-30)
+
+- **Co robi.** W Ustawieniach → Wygląd → Styl na noc jest nowa opcja „Wg słońca”: styl nocny włącza się po zachodzie, a dzienny wraca o wschodzie w wybranym mieście (lista: Warszawa, Kraków, Łódź, Wrocław, Poznań, Gdańsk, Szczecin, Lublin, Białystok, Katowice). Miasto wybiera się ręcznie — bez geolokalizacji (decyzja T-5 z rekomendacją planu).
+- **Gdzie.** `src/lib/sun.ts` (`sunTimes`, `isNightAt`, `CITIES`, `cityById`), `src/lib/skinSchedule.ts` (tryb `"sun"`, pole `city`, walidacja w `merge`), `src/components/settings/NightSkinSettings.tsx` (opcja i lista miast).
+- **Jak działa.** Wschód i zachód liczone lokalnie standardową formułą (deklinacja słońca, równanie czasu, kąt godzinny, refrakcja −0,833°). Wynik sprawdzony na Londynie: 03:42 i 20:21 UTC przy danych referencyjnych 03:43 i 20:21, czyli z dokładnością do minuty. Brak sieci i zależności. Noc = po zachodzie albo przed wschodem tego samego dnia kalendarzowego.
+- **Ograniczenia.** Tryb „wg słońca” dotyczy tylko stylu na noc, nie przełącznika jasności (plan dopuszczał oba; zostało przy stylu). Harmonogram sprawdza się przy zmianie stylu i przy starcie — nie ma osobnego zegara, więc przełączenie może nastąpić z opóźnieniem do najbliższego sprawdzenia. Lista miast jest krótka; wpisanie dowolnego miasta wymaga dodania do `CITIES`.
+- **Testy.** Vitest: `src/lib/sun.test.ts` (wschód i zachód w przesilenie i równonoc, Londyn jako punkt odniesienia dla formuły), `src/lib/skinSchedule.test.ts` (tryb `sun`: lato, zima, dwa miasta, nieznane miasto). E2E: `night-skin`, `appearance-code`, `appearance-quick`, `skins`.
+- **Commit.** do uzupełnienia (2026-10-30).

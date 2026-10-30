@@ -1,5 +1,6 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { isSkin, skinStore, type Skin } from "@/lib/skins";
+import { cityById, DEFAULT_CITY, isNightAt } from "@/lib/sun";
 
 /**
  * Styl na noc (plan motywów 1.4): para „styl dzienny / styl nocny”. Wieczorem aplikacja sama przechodzi
@@ -13,14 +14,16 @@ export interface SkinSchedule {
   enabled: boolean;
   day: Skin;
   night: Skin;
-  /** `hours` — od `from` do `to`; `system` — gdy system jest w trybie ciemnym. */
-  mode: "hours" | "system";
+  /** `hours` — od `from` do `to`; `system` — gdy system jest w trybie ciemnym; `sun` — wschód i zachód w `city` (plan motywów 3.2). */
+  mode: "hours" | "system" | "sun";
+  /** Id miasta z `sun.ts`, używany w trybie `sun`. */
+  city: string;
   /** „HH:MM”. */
   from: string;
   to: string;
 }
 
-const DEFAULTS: SkinSchedule = { enabled: false, day: "zeszyt", night: "zorza", mode: "hours", from: "20:00", to: "07:00" };
+const DEFAULTS: SkinSchedule = { enabled: false, day: "zeszyt", night: "zorza", mode: "hours", city: DEFAULT_CITY, from: "20:00", to: "07:00" };
 
 const isTime = (v: unknown): v is string => typeof v === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 
@@ -32,7 +35,8 @@ export const skinScheduleStore = createPersistedStore<SkinSchedule>("kaczy.skinS
       enabled: s.enabled === true,
       day: isSkin(s.day) ? s.day : defaults.day,
       night: isSkin(s.night) ? s.night : defaults.night,
-      mode: s.mode === "system" ? "system" : "hours",
+      mode: s.mode === "system" ? "system" : s.mode === "sun" ? "sun" : "hours",
+      city: typeof s.city === "string" ? cityById(s.city).id : defaults.city,
       from: isTime(s.from) ? s.from : defaults.from,
       to: isTime(s.to) ? s.to : defaults.to,
     };
@@ -52,7 +56,9 @@ export function isNightHours(now: Date, from: string, to: string): boolean {
 
 /** Czy według harmonogramu jest teraz noc. */
 export function isNight(s: SkinSchedule, now: Date, systemDark: boolean): boolean {
-  return s.mode === "system" ? systemDark : isNightHours(now, s.from, s.to);
+  if (s.mode === "system") return systemDark;
+  if (s.mode === "sun") return isNightAt(now, cityById(s.city));
+  return isNightHours(now, s.from, s.to);
 }
 
 /** Czysta decyzja: który styl powinien być teraz (`null`, gdy harmonogram wyłączony). */

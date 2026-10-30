@@ -1,4 +1,5 @@
-import { Clock, Monitor, type LucideIcon } from "lucide-react";
+import { Clock, Monitor, Sunset, type LucideIcon } from "lucide-react";
+import { CITIES } from "@/lib/sun";
 import { SKINS, type Skin } from "@/lib/skins";
 import { SKIN_META } from "@/lib/skinGallery";
 import { setSkinSchedule, skinScheduleStore, type SkinSchedule } from "@/lib/skinSchedule";
@@ -8,6 +9,7 @@ import { ToggleRow } from "./SettingsShared";
 const WHEN: { value: SkinSchedule["mode"]; label: string; Icon: LucideIcon }[] = [
   { value: "system", label: "Z trybem ciemnym", Icon: Monitor },
   { value: "hours", label: "Według godzin", Icon: Clock },
+  { value: "sun", label: "Wg słońca", Icon: Sunset },
 ];
 
 const fieldClass = "h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm text-foreground";
@@ -42,6 +44,14 @@ export function NightSkinSettings({ skin }: { skin: Skin }) {
             </select>
           </label>
           <Segmented label="Kiedy przełączać" options={WHEN} value={s.mode} onChange={(mode) => update({ mode })} />
+          {s.mode === "sun" && (
+            <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+              Miasto (wschód i zachód)
+              <select value={s.city} onChange={(e) => update({ city: e.target.value })} className={fieldClass}>
+                {CITIES.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+          )}
           {s.mode === "hours" && (
             <div className="grid grid-cols-2 gap-2">
               <label className="flex flex-col gap-1 text-xs text-muted-foreground">
