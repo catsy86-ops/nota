@@ -3962,3 +3962,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Dwie sygnatury z planu nie są zrobione: **Kafle** (pusty stan „brakująca płytka”) i **Plan** (puste stany jak rysunek techniczny). Wymagają zmiany rysunku pustych stanów w SVG (`src/lib/emptyGlyphs.ts`), a nie tylko CSS, więc zostawiam je na osobny krok. Neon ma już sygnaturę przypięcia (`data-sig="pin"`), więc jej nie dublowałem.
 - **Testy.** E2E: `skin-signatures`, `note-groups`, `skins`, `glow` (44 testy). Zrzut przypiętej notatki w Zeszycie sprawdzony ręcznie.
 - **Commit.** `ac7cdf8` (2026-10-30).
+
+## Hydraulika jako styl flagowy: pokrętło „+” i poziom wody w rurze (Fala 3, 3.1 planu motywów, 2026-10-30)
+
+- **Co robi.** W stylu Hydraulika:
+  - **„+” na dolnym pasku** obraca się o 90° w czasie przytrzymania (420 ms, potem otwiera się arkusz szybkiego dodawania) i wraca po puszczeniu, jak pokrętło zaworu.
+  - **Pasek postępu zmiany na Dziś** wygląda jak rura: metalowy przewód, a postęp to jasny pas wody wypełniający go od lewej.
+- **Gdzie.** `src/styles/skins/hydraulika.css` (trzy reguły: pasek postępu `role="progressbar"` + `aria-label="Postęp zmiany"`, `[data-testid="today-progress"]`, obrót `.fab-brand:has([data-pressing="true"]) > span > svg`). Tylko CSS.
+- **Jak działa.** Obrót bierze stan `pressing` z `BottomNav` (atrybut `data-pressing` na pierścieniu przytrzymania), a nie `:active`, bo `:active` nie zapalał się przy testach zdarzeń wskaźnika. Obrót jest pod warunkiem `prefers-reduced-motion: no-preference`.
+- **Ograniczenia.** **Kształtki zamiast ikon działów na pasku** z planu nie są zrobione: wymagają sprite'u SVG (kolano, trójnik, zawór) dla pięciu działów, więc to osobny krok. Pasek wody działa tylko przy aktywnej zmianie na Dziś (tam pojawia się postęp). Nie sprawdziłem go zrzutem, bo test nie ma zaplanowanej zmiany.
+- **Testy.** E2E: `hydraulika-flag` (obrót w czasie przytrzymania, zdarzenia wskaźnika), `skins`, `skin-signatures`, `mobile`, `bottom-slot` (51 testów).
+- **Do sprawdzenia.** Prawdziwe `mouse.down` w emulacji telefonu nie trafia w przycisk „+” (coś leży nad nim). Na prawdziwym dotyku to zwykle nie problem, ale warto to potwierdzić na urządzeniu w QA (4.4).
+- **Commit.** do uzupełnienia (2026-10-30).

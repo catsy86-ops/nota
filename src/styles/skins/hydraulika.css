@@ -180,3 +180,28 @@ html[data-skin="hydraulika"] { --nav-bar-radius: 9999px; --nav-tile-radius: 1.25
 
 /* Okna Hydrauliki (plan motywów 2.3): cienka krawędź w kolorze rury, miękki cień. */
 html[data-skin="hydraulika"] { --overlay-border: color-mix(in srgb, var(--primary) 40%, transparent); }
+
+/* Hydraulika — flagowy styl (plan motywów 3.1). Postęp zmiany na Dziś to poziom wody w rurze: rura jak
+   metalowy przewód, woda wypełnia ją od dołu jasnym pasem. Selektor po atrybutach, bo to pasek z
+   `TodayShiftCard` (ten sam `role` i opis co w `NowCard`). */
+html[data-skin="hydraulika"] [role="progressbar"][aria-label="Postęp zmiany"] {
+  height: 0.75rem;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--foreground) 18%, transparent), color-mix(in srgb, var(--foreground) 8%, transparent));
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.3);
+}
+html[data-skin="hydraulika"] [data-testid="today-progress"] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 65%, white), var(--primary));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4);
+}
+
+/* Pokrętło zaworu (plan motywów 3.1): „+” obraca się, gdy palec trzyma przycisk; puszczony wraca. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-skin="hydraulika"] .fab-brand > span > svg {
+    transition: transform 420ms var(--ease-out);
+  }
+  /* Stan z komponentu (`data-pressing` na pierścieniu przytrzymania), nie `:active` — ten nie zawsze się zapala. */
+  html[data-skin="hydraulika"] .fab-brand:has([data-pressing="true"]) > span > svg {
+    transform: rotate(90deg);
+  }
+}
