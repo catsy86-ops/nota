@@ -3961,4 +3961,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Taśma to `::after` karty przypiętej (`[data-pinned]`), wykluczony jest `.note-glow-active`, bo ten pseudoelement jest zajęty przez poświatę aktywnej notatki. Znacznik Tablicy i poświata Neonu nadpisują klasy z 2.2 i 2.7 w tym samym miejscu, więc zmiana kształtu i koloru idzie w jednym pliku.
 - **Ograniczenia.** Dwie sygnatury z planu nie są zrobione: **Kafle** (pusty stan „brakująca płytka”) i **Plan** (puste stany jak rysunek techniczny). Wymagają zmiany rysunku pustych stanów w SVG (`src/lib/emptyGlyphs.ts`), a nie tylko CSS, więc zostawiam je na osobny krok. Neon ma już sygnaturę przypięcia (`data-sig="pin"`), więc jej nie dublowałem.
 - **Testy.** E2E: `skin-signatures`, `note-groups`, `skins`, `glow` (44 testy). Zrzut przypiętej notatki w Zeszycie sprawdzony ręcznie.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `ac7cdf8` (2026-10-30).
