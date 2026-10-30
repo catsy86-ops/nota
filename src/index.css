@@ -1197,6 +1197,24 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   .tagline-char { animation: none; opacity: 1; }
 }
 
+/* ── Logo „notki” (NotkiLogo.tsx, plan motywów 1.6): gradient marki z tokenów, każdy styl przestawia swój ── */
+:root {
+  --brand-from: #ffc247;
+  --brand-via: #ff8a40;
+  --brand-to: #ec5562;
+}
+html[data-skin="plan"] { --brand-from: #5bc8f5; --brand-via: #2f8fd8; --brand-to: #1d5fa8; }
+html[data-skin="neon"] { --brand-from: #ff47d1; --brand-via: #c77dff; --brand-to: #47e6ff; }
+html[data-skin="zorza"] { --brand-from: #3cf5a6; --brand-via: #5fd0ff; --brand-to: #b58cff; }
+html[data-skin="miedz"] { --brand-from: #e9a06a; --brand-via: #c8642e; --brand-to: #7a3418; }
+html[data-skin="matrix"] { --brand-from: #7dff9a; --brand-via: #00ff41; --brand-to: #00b82e; }
+html[data-skin="hydraulika"] { --brand-from: #e8a46a; --brand-via: #d08a4e; --brand-to: #8a4a1e; }
+html[data-skin="odblask"] { --brand-from: #1c1c1c; --brand-via: #161616; --brand-to: #000; }
+html[data-skin="odblask"].dark { --brand-from: #f2ff5c; --brand-via: #e1f23a; --brand-to: #c9dc2a; }
+html[data-skin="kafle"] { --brand-from: #4f7fe0; --brand-via: #2448b8; --brand-to: #1b3a8a; }
+html[data-skin="tablica"] { --brand-from: #3d6150; --brand-via: #2f4a3c; --brand-to: #223a2e; }
+html[data-skin="tablica"].dark { --brand-from: #f2f0e6; --brand-via: #d9e6dc; --brand-to: #bfd3c5; }
+
 /* ── Logo „G” (NotkiLogo.tsx) ───────────────────────────────────────── */
 .notki-logo {
   display: inline-flex;

@@ -3856,3 +3856,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Link zawiera cały kod (ok. kilkaset znaków), więc długi adres. Pytanie o link nie pojawia się, gdy fragment nie jest poprawnym kodem wyglądu. QR nie jest zrobiony (zostaje na później, zgodnie z planem).
 - **Testy.** Vitest: `src/lib/appearanceCode.test.ts` (link wraca z fragmentu; obcy fragment i zły kod odrzucane). E2E: `e2e/appearance-share.spec.ts` (wczytanie kodu bez przeładowania, „Cofnij”; link pyta, „Nie” nic nie zmienia, „Wczytaj wygląd” stosuje).
 - **Commit.** `619d8e7` (2026-10-30).
+
+## Logo „notki” w nagłówku (plan motywów 1.6, decyzja T-9, 2026-10-30)
+
+- **Co robi.** Logo w nagłówku i w pasku bocznym to „notki” pisane długopisem, w gradiencie marki (bursztyn → koral → róż w Zeszycie). Pierwsze wejście w sesji rysuje je kreska po kresce; potem stoi na gotowo. Ten sam rysunek co na ekranie startowym i w samouczku. Znak „N” obok (ikona aplikacji) zostaje bez zmian.
+- **Gdzie.** `src/components/NotkiLogo.tsx` (`NotkiLogo`, `STROKES`, `takeFirstDraw`), tokeny kolorów `--brand-from/via/to` w `src/index.css` (domyślne + po jednym bloku na styl, Odblask i Tablica z wariantem ciemnym), podgląd w `src/components/settings/AppearancePreview.tsx`.
+- **Jak działa.** SVG z ośmioma ścieżkami o `pathLength="1"`; rysowanie to klasa `guide-draw` (ta sama technika co w samouczku), z opóźnieniami z `--d`. Przy ograniczonym ruchu i przy drugim wejściu w sesji logo jest od razu gotowe — flaga `kaczy.logo.drawn.v1` w `sessionStorage`. Gradient z tokenów przez `stop-color: var(--brand-…)`, więc zmiana stylu zmienia kolor logo bez ponownego rysowania. Etykieta dostępności to nadal „NOTKI” (nazwa aplikacji w tytule karty i w testach).
+- **Ograniczenia.** Stare reguły `.notki-glyph`, `.notki-hop`, `.notki-caret` i animacje skórek liczące na litery w nagłówku są już martwe — do usunięcia w osobnym kroku. Przy 390 px logo ma wysokość ok. 1,6 em tekstu nagłówka.
+- **Testy.** E2E: `e2e/brand-notki.spec.ts` (tytuł karty i logo „NOTKI”). Zrzuty nagłówka sprawdzone ręcznie w połowie i na końcu rysowania.
+- **Commit.** do uzupełnienia (2026-10-30).

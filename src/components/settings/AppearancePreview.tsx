@@ -1,3 +1,4 @@
+import { NotkiLogo } from "@/components/NotkiLogo";
 import { Bell, CalendarCheck, NotebookPen, Plus, Search } from "lucide-react";
 
 /**
@@ -14,7 +15,7 @@ export function AppearancePreview() {
       className="relative overflow-hidden rounded-card border border-border bg-background shadow-elevation-1"
     >
       <div className="flex items-center gap-2 border-b border-border/60 bg-card/80 px-2.5 py-1.5">
-        <span className="notki-glyph font-display text-sm font-extrabold tracking-tight">NOTKI</span>
+        <NotkiLogo size="sm" />
         <span className="ml-auto grid size-6 place-items-center rounded-full border border-border/60 text-muted-foreground"><Search className="size-3.5" /></span>
       </div>
       <div className="grid grid-cols-[1fr_auto] items-start gap-2 p-2.5">
