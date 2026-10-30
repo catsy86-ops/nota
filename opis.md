@@ -3982,4 +3982,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Obie ikony są w DOM, a CSS wybiera jedną: w Hydraulice `.nav-lucide` jest ukryta, w pozostałych stylach `.hydro-fitting`. Dzięki temu zmiana stylu nie wymaga ponownego renderowania paska.
 - **Ograniczenia.** Więcej (Ellipsis) zostaje lucide we wszystkich stylach. Trójnik jest mały, przy 20 px czytelny raczej jako „T”. Kształtki są statyczne, bez stanu aktywnego poza pogrubieniem kreski z klasy działu.
 - **Testy.** E2E: `hydraulika-fittings` (w Hydraulice widać kształtki, w Zeszycie lucide), `hydraulika-flag`, `bottom-slot`, `skins`, `mobile`, `touch-targets`, `a11y`.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `c439d9c` (2026-10-30).
