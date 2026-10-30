@@ -3846,4 +3846,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Gotowy zestaw zmienia tylko swoje klucze (`replace: false`), więc akcent, krój i układ zostają. Własny slot zapisuje i przywraca cały wygląd (`replace: true`, klucze spoza zapisu wracają do domyślnych). Zmiana idzie tą samą ścieżką co reset: zapis w localStorage i zdarzenie `storage` — bez przeładowania. Sloty to klucze `kaczy.appearance.slot.N.v1` (per urządzenie).
 - **Ograniczenia.** Dostęp przez przytrzymanie przełącznika jasności w nagłówku (druga część 1.3 z planu) nie jest zrobiony — zestawy są w Ustawieniach. Uszkodzony slot jest traktowany jak pusty.
 - **Testy.** Vitest: `src/lib/appearancePresets.test.ts` (gotowy zestaw zmienia tylko swoje klucze i „Cofnij” wraca; slot zapisuje i przywraca cały wygląd; uszkodzony slot). E2E: `e2e/appearance-presets.spec.ts` (Budowa i „Cofnij”; zapis slotu, reset, przywrócenie slotu).
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `c193b61` (2026-10-30).
