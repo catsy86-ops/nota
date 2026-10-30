@@ -4000,4 +4000,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Skalowanie tylko przy myszy i klawiaturze (`pointer: fine`). Na dotyku `--spacing` zostaje `.25rem`, więc cele dotyku (`coarse:h-11` = 44 px) i układ telefonu się nie zmieniają. Kompakt: 0,2 rem na jednostkę (≈80%), Luźno: 0,3 rem (≈120%).
 - **Ograniczenia.** Gęstość zmienia wszystkie wymiary (także wysokości przycisków na komputerze), więc w Kompakcie elementy są mniejsze; nie każdy widok zrzutowany w tym trybie. Przejścia między widokami (4.3) i QA na telefonie (4.4) nie są zrobione: QA wymaga urządzenia.
 - **Testy.** Vitest: `src/lib/uiDensity.test.ts` (atrybut; klucz w kodzie wyglądu; skalowanie tylko przy `pointer: fine`). E2E: `ui-density` (komputer: `--spacing` zmienione; dotyk: bez zmian), `skin-gallery-more` (Matryca schowana, rozwijana, widoczna gdy wybrana), `skins`, `a11y`, `mobile`, `touch-targets`, `appearance-quick`, `appearance-code`.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `5b7ae58` (2026-10-30).
