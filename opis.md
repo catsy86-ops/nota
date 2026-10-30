@@ -3855,4 +3855,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Wczytanie idzie tą samą ścieżką co reset i zestawy: `applyAppearanceValues` zapisuje klucze i wysyła zdarzenie `storage`, na które słuchają magazyny ustawień. Kod z linku przechodzi przez `decodeAppearance`, więc tylko klucze wyglądu i sprawdzone wartości trafiają do localStorage. Wczytanie kodu nie usuwa kluczy, których kod nie zawiera (`replace: false`), więc wygląd z kodu nakłada się na obecny; reset i zestawy działają inaczej (patrz opis zestawów).
 - **Ograniczenia.** Link zawiera cały kod (ok. kilkaset znaków), więc długi adres. Pytanie o link nie pojawia się, gdy fragment nie jest poprawnym kodem wyglądu. QR nie jest zrobiony (zostaje na później, zgodnie z planem).
 - **Testy.** Vitest: `src/lib/appearanceCode.test.ts` (link wraca z fragmentu; obcy fragment i zły kod odrzucane). E2E: `e2e/appearance-share.spec.ts` (wczytanie kodu bez przeładowania, „Cofnij”; link pyta, „Nie” nic nie zmienia, „Wczytaj wygląd” stosuje).
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `619d8e7` (2026-10-30).
