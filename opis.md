@@ -3940,3 +3940,13 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Zmienia tylko tło strony. Ozdoby stylu (np. siatka papieru) zostają na czarnym tle w tej samej kolorystyce. Nie sprawdzałem kontrastu wszystkich kombinacji z czarnym tłem (to krok z testami kontrastu, do domknięcia z 4.4).
 - **Testy.** Vitest: `src/lib/oled.test.ts` (atrybut na `<html>` przy włączeniu i zdjęcie przy wyłączeniu; klucz w kodzie wyglądu; reguła CSS tylko w ciemnym). E2E: `appearance-code`, `appearance-quick`, `appearance-presets`, `appearance-share`, `skins`. Zrzut Neona w OLED sprawdzony ręcznie.
 - **Commit.** `4cdfc8a` (2026-10-30).
+
+## Wygląd: kolory działów, subtelne albo wyraźne (Fala 3, 3.4 planu motywów, 2026-10-30)
+
+- **Co robi.** Ustawienia → Wygląd → Zaawansowane → „Kolory działów”: **Subtelne** (domyślnie) — cienka kreska pod nagłówkiem działu, stonowana; **Wyraźne** — grubsza i pełna. Kolor każdego działu zostaje ten sam (`--sec-*`).
+- **Gdzie.** `src/lib/sectionColors.ts` (`useSectionColors`, `setSectionColors`; zapis `kaczy.sectionColors.v1`, atrybut `data-sections="bold"` na `<html>`; subtelne to brak atrybutu), import w `src/main.tsx`, przełącznik w `src/components/settings/AppearanceSettings.tsx`, reguły w `src/index.css` (`html:not([data-sections])` i `html[data-sections="bold"]` dla `.section-title` i `.app-title`), klucz w `APPEARANCE_KEYS`.
+- **Jak działa.** Grubość i krycie kreski ustawiają dwie reguły na tym samym selektorze. Kolor bierze z `--sec-*` po `html[data-view]`, jak dotąd.
+- **Zmiana wyglądu domyślnego.** Wcześniej nagłówek `ViewTitle` miał kreskę 3 px w pełnym kolorze. Domyślnie jest teraz subtelna: 2 px, 60% krycia. Kto chce dawnego wyglądu, włącza „Wyraźne”.
+- **Ograniczenia.** Nie zmieniłem znacznika aktywnej pozycji na dolnym pasku (zostaje w kolorze marki) — to osobny wybór. Kolory działów w paskach bocznych bez zmian.
+- **Testy.** Vitest: `src/lib/sectionColors.test.ts` (atrybut na `<html>` przy obu trybach; klucz w kodzie wyglądu; reguła CSS dla wyraźnych). E2E: `section-colors` (przełącznik zmienia atrybut i wraca), `appearance-quick`, `appearance-code`.
+- **Commit.** do uzupełnienia (2026-10-30).

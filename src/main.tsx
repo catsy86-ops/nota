@@ -36,6 +36,7 @@ import "./lib/textSize";
 import "./lib/backdrop";
 import "./lib/shape";
 import "./lib/oled";
+import "./lib/sectionColors";
 import "./lib/accent";
 // Ramki i poświaty (Wygląd) nakładane już przy starcie, nie dopiero po otwarciu Ustawień.
 import "./lib/frameLook";

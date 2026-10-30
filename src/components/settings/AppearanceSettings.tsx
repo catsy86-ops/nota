@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast, Bell, BriefcaseBusiness, CalendarRange, CalendarDays, ChevronDown, Flower2, Inbox, Leaf, RotateCcw, Snowflake, Sparkles, Waves, Square, SquareRoundCorner, Squircle } from "lucide-react";
+import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast, Bell, BriefcaseBusiness, CalendarRange, CalendarDays, ChevronDown, Flower2, Highlighter, Inbox, Leaf, Minus, RotateCcw, Snowflake, Sparkles, Waves, Square, SquareRoundCorner, Squircle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useViewPrefs, setViewPref, resetViewPrefs, changedViewPrefs, VIEW_PREF_LABELS, type Density, type Layout } from "@/lib/viewPrefs";
@@ -26,6 +26,7 @@ import { NightSkinSettings } from "./NightSkinSettings";
 import { AppearanceCode } from "./AppearanceCode";
 import { AppearancePreview } from "./AppearancePreview";
 import { setOled, useOled } from "@/lib/oled";
+import { setSectionColors, useSectionColors, type SectionColors } from "@/lib/sectionColors";
 import { PRESETS, SLOT_COUNT, applyValues, readSlot, saveSlot } from "@/lib/appearancePresets";
 import { resetAppearance, applyAppearanceValues } from "@/lib/appearanceCode";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -79,6 +80,11 @@ const shapeOptions: { value: Shape; label: string; Icon: typeof Sun }[] = [
   { value: "sharp", label: "Ostry", Icon: Square },
   { value: "normal", label: "Zwykły", Icon: SquareRoundCorner },
   { value: "soft", label: "Miękki", Icon: Squircle },
+];
+
+const sectionOptions: { value: SectionColors; label: string; Icon: typeof Sun }[] = [
+  { value: "subtle", label: "Subtelne", Icon: Minus },
+  { value: "bold", label: "Wyraźne", Icon: Highlighter },
 ];
 
 const framesOptions: { value: Frames; label: string; Icon: typeof Sun }[] = [
@@ -153,6 +159,7 @@ export function AppearanceSettings() {
   const { mode: motionMode, reduced: motionReduced, setMode: setMotionMode } = useMotionPref();
   const { pref: seasonPref, season: activeSeason, setPref: setSeasonPref } = useSeasonPref();
   const oled = useOled();
+  const sectionColors = useSectionColors();
 
   return (
     <div className="space-y-8">
@@ -290,6 +297,10 @@ export function AppearanceSettings() {
           </p>
         </Section>
 
+        <Section title="Kolory działów">
+          <Segmented label="Kolory działów" options={sectionOptions} value={sectionColors} onChange={setSectionColors} />
+          <p className="text-xs text-muted-foreground mt-1.5">Kreska pod nagłówkiem każdego działu w jego kolorze. Subtelne — cienka, stonowana; Wyraźne — grubsza i pełna.</p>
+        </Section>
         <ToggleRow label="Czarne tło w ciemnym (OLED)" desc={oled ? "Czarne tło — mniej prądu na ekranie OLED, mocniejszy kontrast na słońcu" : "Tło jak w stylu"} checked={oled} onCheck={setOled} />
         <Section title="Styl na noc">
           <NightSkinSettings skin={skin} />

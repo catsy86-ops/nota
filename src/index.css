@@ -1589,3 +1589,7 @@ html[data-motion='reduced'] .section-title::after { animation: none; transform: 
 /* Czarne tło OLED (plan motywów 3.3): tylko w ciemnym schemacie. Specyficzność wyższa niż tokeny stylów
    (`html[data-skin].dark`), więc działa w każdym stylu; karty zostają rozjaśnione tokenami stylu. */
 html[data-oled="on"][data-skin].dark { --background: #000; }
+
+/* Podkreślenia działów (plan motywów 3.4): subtelne domyślnie, wyraźne po przełączeniu w Wyglądzie. */
+html:not([data-sections]) :is(.section-title, .app-title)::after { height: 2px; opacity: 0.6; }
+html[data-sections="bold"] :is(.section-title, .app-title)::after { height: 3px; opacity: 1; }
