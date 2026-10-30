@@ -497,6 +497,16 @@ const Index = () => {
   const { toggleSelect } = useSelectionGestures({ view, visibleNotesRef, previewId, presentingNoteId, setSelectedIds, lastSelectedRef });
 
   // Czytnik/prezentacja też liczy się jako „otwarcie” (sortowanie „Ostatnio otwierane”).
+  // Kafel → podgląd (plan motywów 4.3): kafel i czytnik dzielą nazwę przejścia `note-shared`, więc kafel „wpływa”
+  // w podgląd. Nazwa wisi na kaflu tylko przez przejście; bez wsparcia, przy ograniczonym ruchu albo bez kafla — od razu.
+  const openPreviewFromCard = useCallback((id: string) => {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
+    const card = document.querySelector<HTMLElement>(`[data-note-id-wrap="${CSS.escape(id)}"]`);
+    if (typeof doc.startViewTransition !== "function" || isMotionReduced() || !card) { showInReader(id, "preview"); return; }
+    card.style.viewTransitionName = "note-shared";
+    const t = doc.startViewTransition(() => flushSync(() => showInReader(id, "preview")));
+    void t.finished.finally(() => { card.style.viewTransitionName = ""; });
+  }, [showInReader]);
   useEffect(() => { if (readerId) markNoteOpened(readerId); }, [readerId]);
 
   // Undo fallbacks so history restored from localStorage stays actionable after reload
@@ -861,7 +871,7 @@ const Index = () => {
                 sortKey={prefs.sortKey}
                 sortDir={prefs.sortDir}
                 selectedIds={selectedIds}
-                onOpen={(id) => showInReader(id, "preview")}
+                onOpen={(id) => openPreviewFromCard(id)}
                 propDefs={propDefs}
                 onUpdate={updateNote}
               />
