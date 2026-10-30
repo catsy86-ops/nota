@@ -3973,4 +3973,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** **Kształtki zamiast ikon działów na pasku** z planu nie są zrobione: wymagają sprite'u SVG (kolano, trójnik, zawór) dla pięciu działów, więc to osobny krok. Pasek wody działa tylko przy aktywnej zmianie na Dziś (tam pojawia się postęp). Nie sprawdziłem go zrzutem, bo test nie ma zaplanowanej zmiany.
 - **Testy.** E2E: `hydraulika-flag` (obrót w czasie przytrzymania, zdarzenia wskaźnika), `skins`, `skin-signatures`, `mobile`, `bottom-slot` (51 testów).
 - **Do sprawdzenia.** Prawdziwe `mouse.down` w emulacji telefonu nie trafia w przycisk „+” (coś leży nad nim). Na prawdziwym dotyku to zwykle nie problem, ale warto to potwierdzić na urządzeniu w QA (4.4).
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `ef22b09` (2026-10-30).
