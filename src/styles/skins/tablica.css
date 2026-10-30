@@ -140,17 +140,6 @@ html[data-skin="tablica"] h2 {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
-/* Dwie warstwy jak w bazowym `.notki-glyph` (błysk + wypełnienie) — inaczej wypełnienie wyjeżdża poza litery. */
-html[data-skin="tablica"] .notki-glyph {
-  background-image:
-    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
-    linear-gradient(170deg, var(--primary), color-mix(in srgb, var(--primary) 70%, black));
-}
-html[data-skin="tablica"].dark .notki-glyph {
-  background-image:
-    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
-    linear-gradient(170deg, var(--foreground), var(--primary));
-}
 html[data-skin="tablica"] .notki-logo { filter: none; }
 
 /* Sygnatury (Faza 2): zapis — ptaszek markerem w rogu; zmiana widoku — przetarcie gąbką. */

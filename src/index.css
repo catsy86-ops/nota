@@ -1223,52 +1223,6 @@ html[data-skin="tablica"].dark { --brand-from: #f2f0e6; --brand-via: #d9e6dc; --
   letter-spacing: 0.02em;
   filter: drop-shadow(0 2px 10px color-mix(in srgb, var(--primary) 35%, transparent));
 }
-.notki-hop { display: inline-block; }
-.notki-glyph {
-  display: inline-block;
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  /* Warstwa 1: błysk przechodzący przez litery; warstwa 2: gradient marki z góry na dół. */
-  background-image:
-    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
-    linear-gradient(170deg, hsl(42 100% 62%), var(--primary) 45%, hsl(28 85% 38%));
-  background-size: 280% 100%, 100% 100%;
-  background-repeat: no-repeat;
-  background-position: 160% 0, 0 0;
-  /* Kilka przebiegów zamiast w nieskończoność: `background-position` maluje co klatkę. */
-  animation: notki-sheen 6s ease-in-out calc(1.1s + var(--i) * 90ms) 3;
-}
-@keyframes notki-sheen {
-  0% { background-position: 160% 0, 0 0; }
-  16%, 100% { background-position: -60% 0, 0 0; }
-}
-.notki-logo:hover .notki-hop {
-  animation: notki-hop 520ms cubic-bezier(.3, 1.6, .5, 1) calc(var(--i) * 45ms);
-}
-@keyframes notki-hop {
-  0%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-0.18em) rotate(-4deg); }
-}
-.notki-caret {
-  display: inline-block;
-  width: 0.09em;
-  height: 0.78em;
-  margin-left: 0.1em;
-  border-radius: 1px;
-  background: var(--accent);
-  opacity: 0;
-  animation: notki-caret 1.1s steps(1, end) 0.6s infinite;
-}
-@keyframes notki-caret {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .notki-glyph, .notki-caret, .notki-logo:hover .notki-hop { animation: none; }
-  .notki-caret { opacity: 1; }
-}
-html[data-motion="reduced"] .notki-caret { opacity: 1; }
 
 /* ── Ruch kart notatek ─────────────────────────────────────────────────── */
 

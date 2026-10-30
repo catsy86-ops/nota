@@ -107,11 +107,6 @@ html[data-skin="miedz"] .sidebar-gradient {
   border-right-color: transparent !important;
   box-shadow: inset -4px 0 0 -1px hsl(21 55% 42%), inset -2px 0 0 -1px hsl(28 70% 70%);
 }
-html[data-skin="miedz"] .notki-glyph {
-  background-image:
-    linear-gradient(105deg, transparent 38%, hsl(36 100% 92% / 0.95) 50%, transparent 62%),
-    linear-gradient(170deg, hsl(28 80% 62%), var(--primary) 50%, hsl(16 60% 28%));
-}
 /* Przycisk główny jak wypolerowana miedź (plan motywów 2026-10-30, 0.1): gradient liczony z `--primary`,
    więc idzie za akcentem i nie obniża kontrastu — jasny schemat: od `--primary` w ciemniejsze (biały tekst
    zyskuje), ciemny: od jaśniejszego do `--primary` (ciemny tekst zyskuje). Odblask po najechaniu tylko

@@ -101,11 +101,6 @@ html[data-skin="plan"] .paper-grid::before {
   -webkit-mask-image: radial-gradient(130% 100% at 50% 30%, #000 50%, rgb(0 0 0 / 0.35) 100%);
   mask-image: radial-gradient(130% 100% at 50% 30%, #000 50%, rgb(0 0 0 / 0.35) 100%);
 }
-html[data-skin="plan"] .notki-glyph {
-  background-image:
-    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
-    linear-gradient(170deg, hsl(0 0% 100%), var(--primary) 70%);
-}
 html[data-skin="plan"] .notki-logo { filter: none; }
 html[data-skin="plan"] h1,
 html[data-skin="plan"] h2 {
@@ -134,8 +129,3 @@ html[data-skin="plan"] .note-card::before {
 }
 
 /* Jasny Plan (4.1): linie kalki biorą granat z `--grid`; logo bez białego początku gradientu (zniknąłby na papierze). */
-html[data-skin="plan"]:not(.dark) .notki-glyph {
-  background-image:
-    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
-    linear-gradient(170deg, oklch(0.35 0.1 255), var(--primary) 70%);
-}
