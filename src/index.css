@@ -98,8 +98,8 @@
     0 0 0 2px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) 90%, transparent),
     0 0 0 6px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(22% * var(--glow-mul, 1)), transparent),
     0 10px 34px -8px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(55% * var(--glow-mul, 1)), transparent);
-  animation: note-glow-breathe 2.8s ease-in-out infinite;
   &::after {
+    animation: note-glow-wash 2.8s ease-in-out infinite;
     content: '';
     position: absolute;
     inset: -1px;
@@ -778,19 +778,10 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
 @keyframes fab-ring-fade { from { opacity: 0; } to { opacity: 1; } }
 html[data-motion="reduced"] .fab-ring[data-pressing="true"] { stroke-dashoffset: 0; animation: fab-ring-fade 420ms linear forwards; }
 
-  @keyframes note-glow-breathe {
-    0%, 100% {
-      box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) 85%, transparent),
-        0 0 0 6px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(18% * var(--glow-mul, 1)), transparent),
-        0 10px 30px -10px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(45% * var(--glow-mul, 1)), transparent);
-    }
-    50% {
-      box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) 100%, transparent),
-        0 0 0 9px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(26% * var(--glow-mul, 1)), transparent),
-        0 14px 40px -8px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(65% * var(--glow-mul, 1)), transparent);
-    }
+  /* Oddech poświaty (plan motywów 2.7): animuje tylko przezroczystość mgiełki, nie box-shadow (koszt na telefonie). */
+  @keyframes note-glow-wash {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
   }
 
   /* Reduced motion: driven by <html data-motion="reduced"> (user setting or OS). */
@@ -1486,6 +1477,11 @@ html[data-motion="reduced"]::view-transition-group(day-active) { animation-durat
   .note-card .note-frame { animation: none !important; }
 }
 html[data-motion="reduced"] .note-card .note-frame { animation: none !important; }
+/* Telefon (plan motywów 2.7): obrót ramki przemalowuje ją co klatkę i zjada baterię przy kilku zaznaczonych
+   notatkach — tu ramka stoi, a zaznaczenie widać z koloru i grubości. */
+@media (pointer: coarse) {
+  .note-card .note-frame { animation: none !important; }
+}
 
 /* P5.3: nagłówki dni na osi dziennika wchodzą przy przewijaniu (animacja sterowana widokiem).
    Tylko gdy przeglądarka to wspiera i ruch nie jest ograniczony — bez tego nagłówek po prostu stoi. */

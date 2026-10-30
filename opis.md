@@ -3921,3 +3921,13 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Nie zrobiłem pozostałych wariantów z planu: kalki i milimetrówki dla Planu (Plan ma już milimetrówkę z 2.5), cegiełki dla ciemnych Kafli, zielonej tablicy jako wyboru. Zeszyt nie dostał wyboru wzoru. Wybór wzoru przez użytkownika nie jest zrobiony — wzór jest stały dla stylu i schematu.
 - **Testy.** Vitest: pełny zestaw. E2E: `skins`, `skin-motion`, `a11y`. Zrzuty jasnej Tablicy i jasnych Kafli sprawdzone ręcznie.
 - **Commit.** `94fcfec` (2026-10-30).
+
+## Wydajność na telefonie: poświata, ramka zaznaczenia i deszcz Matrycy (Fala 2, 2.7 planu motywów, 2026-10-30)
+
+- **Co robi.** Na telefonie aktywna notatka ma stałą poświatę, a zaznaczona notatka stałą ramkę zamiast obracającej się. Na komputerze i w zwykłym trybie wygląd jest jak dotąd (ramka się obraca, poświata oddycha). Matryca reaguje na zmianę „ruch ograniczony” bez przeładowania strony.
+- **Gdzie.** `src/index.css`: `.note-glow-active` (mgiełka `::after` z animacją `note-glow-wash`, usunięty stary `note-glow-breathe`), `@media (pointer: coarse)` dla `.note-frame`. `src/components/skins/MatrixRain.tsx` (licznik `motionTick`, nasłuch zmiany `prefers-reduced-motion` i atrybutu `data-motion`).
+- **Jak działa.** Stary oddech animował `box-shadow` co klatkę, co przemalowuje element. Teraz pierścień jest stały, a mgiełka pod nim pulsuje przez `opacity` (tańsze, bez przemalowań). Obrót ramki animował własność `@property --frame-angle`, co przemalowuje gradient co klatkę; na dotyku ramka stoi. Deszcz czytał ustawienie ruchu tylko przy montowaniu — teraz efekt wznawia się przy zmianie.
+- **Co już było zrobione przed 2.7.** Zorza na telefonie nie ma `filter: blur(36px)` ani dryfu tła (`pointer: coarse` w `zorza.css`), a karta jak szyba z `backdrop-filter` działa tylko na komputerze (`pointer: fine`). Ten punkt planu nic nie wymagał.
+- **Ograniczenia.** Oddech poświaty jest teraz tylko w mgiełce, a pierścień stoi. To mniej wyrazisty efekt niż dawny oddech całej poświaty — świadoma zmiana na rzecz baterii. Nie mierzyłem klatek na prawdziwym telefonie; to zostaje w QA (krok 4.4 planu motywów).
+- **Testy.** Vitest: pełny zestaw. E2E: `glow`, `card-motion`, `skins`, `skin-motion`, `mobile`.
+- **Commit.** do uzupełnienia (2026-10-30).

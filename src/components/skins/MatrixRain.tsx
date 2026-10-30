@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MATRIX_FRAME_MS, MATRIX_GLYPHS, matrixColumns, matrixFontPx } from "./matrixParams";
 
 /**
@@ -22,6 +22,16 @@ const TRAIL = "#00ff41";
 /** `still` — „ciche” tło (plan motywów 1.3): jedna nieruchoma klatka, jak przy ograniczonym ruchu. */
 export default function MatrixRain({ still = false, light = false }: { still?: boolean; /** Jasny schemat Matrycy. */ light?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  // Zmiana ruchu (system albo przełącznik w Ustawieniach) przemontowuje płótno — wtedy efekt czyta ustawienie od nowa.
+  const [motionTick, setMotionTick] = useState(0);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const bump = () => setMotionTick((n) => n + 1);
+    const mo = new MutationObserver(bump);
+    mq.addEventListener("change", bump);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-motion"] });
+    return () => { mq.removeEventListener("change", bump); mo.disconnect(); };
+  }, []);
 
   useEffect(() => {
     const canvas = ref.current;
@@ -147,7 +157,7 @@ export default function MatrixRain({ still = false, light = false }: { still?: b
         window.removeEventListener("pointerout", onPointerOut);
       }
     };
-  }, [still, light]);
+  }, [still, light, motionTick]);
 
   return <canvas ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0" />;
 }
