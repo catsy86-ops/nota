@@ -10,13 +10,17 @@ import { MATRIX_FRAME_MS, MATRIX_GLYPHS, matrixColumns, matrixFontPx } from "./m
  */
 
 const FADE = "rgba(0, 0, 0, 0.09)";
+/** Jasny wariant (plan motywów 2.5): ciemne znaki na jasnym papierze, smuga wygaszana jaśniejszym kolorem. */
+const FADE_LIGHT = "rgba(240, 250, 242, 0.12)";
+const HEAD_LIGHT = "#0b3d1a";
+const TRAIL_LIGHT = "#0f7a2c";
 /** Promień, w którym znaki zbierają się w kursor (px). Tylko myszą — na dotyku nie ma najechania. */
 const GATHER_RADIUS = 150;
 const HEAD = "#d7ffe0";
 const TRAIL = "#00ff41";
 
 /** `still` — „ciche” tło (plan motywów 1.3): jedna nieruchoma klatka, jak przy ograniczonym ruchu. */
-export default function MatrixRain({ still = false }: { still?: boolean }) {
+export default function MatrixRain({ still = false, light = false }: { still?: boolean; /** Jasny schemat Matrycy. */ light?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -62,13 +66,13 @@ export default function MatrixRain({ still = false }: { still?: boolean }) {
     };
 
     const step = () => {
-      ctx.fillStyle = FADE;
+      ctx.fillStyle = light ? FADE_LIGHT : FADE;
       ctx.fillRect(0, 0, width, height);
       for (let i = 0; i < drops.length; i++) {
         const x = i * fontPx;
         const y = drops[i] * fontPx;
         const glyph = MATRIX_GLYPHS[Math.floor(Math.random() * MATRIX_GLYPHS.length)];
-        ctx.fillStyle = HEAD;
+        ctx.fillStyle = light ? HEAD_LIGHT : HEAD;
         // Głowa kolumny blisko kursora ciągnie się w jego stronę: im bliżej, tym mocniej.
         const dx = px - x;
         const dy = py - y;
@@ -80,7 +84,7 @@ export default function MatrixRain({ still = false }: { still?: boolean }) {
           ctx.fillText(glyph, x, y);
         }
         // Ogon tuż za głową: zwykły kolor, nie cień.
-        ctx.fillStyle = TRAIL;
+        ctx.fillStyle = light ? TRAIL_LIGHT : TRAIL;
         ctx.fillText(MATRIX_GLYPHS[Math.floor(Math.random() * MATRIX_GLYPHS.length)], x, y - fontPx);
         // Kolumna po zejściu poza ekran wraca na górę — czasem od razu, czasem później (rozrzut).
         if (y > height && Math.random() > 0.975) drops[i] = 0;
@@ -143,7 +147,7 @@ export default function MatrixRain({ still = false }: { still?: boolean }) {
         window.removeEventListener("pointerout", onPointerOut);
       }
     };
-  }, [still]);
+  }, [still, light]);
 
   return <canvas ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0" />;
 }

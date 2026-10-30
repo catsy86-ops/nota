@@ -136,3 +136,6 @@ html[data-skin="matrix"] { --overlay-border: color-mix(in srgb, var(--primary) 5
 
 /* Powiadomienia Matrycy (plan motywów 2.3): zielona poświata, bez zmiany kształtu. */
 html[data-skin="matrix"] { --toast-shadow: 0 0 16px color-mix(in srgb, var(--primary) 30%, transparent); }
+
+/* Jasna Matryca (plan motywów 2.5): deszcz lżejszy, żeby nie zasłaniał tekstu na jasnym papierze. */
+html[data-skin="matrix"]:not(.dark) .paper-grid canvas { opacity: 0.45; }

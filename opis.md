@@ -3903,3 +3903,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** `.app-title` ma `overflow: hidden` (klasa `truncate`), więc jego kreska siedzi na samym tytule, a nie na całym pudełku. Przy bardzo długich nazwach widoku kreska jest tej samej długości co obcięty tekst. Kreska nie jest w tekście, więc czytnik ekranu jej nie zgłasza (to tylko ozdoba).
 - **Testy.** Vitest: pełny zestaw. E2E: `a11y`, `mobile`, `workday`, `study`, `shifts`, `today-site-card`, `brand-notki`, `touch-targets`. Kreska sprawdzona zrzutem nagłówka Notatek i tytułu Pracy oraz obliczonym stylem pseudoelementu.
 - **Commit.** `2d03a42` (2026-10-30).
+
+## Jasne schematy: Matryca i Plan (Fala 2, 2.5 planu motywów, 2026-10-30)
+
+- **Co robi.** **Matryca jasna** ma deszcz znaków: ciemnozielone znaki na jasnym papierze, lżejsze krycie, żeby nie zasłaniały tekstu. Wcześniej w jasnym była tylko statyczna siatka pasów. **Plan jasny** ma wyraźniejszą siatkę rysunku technicznego. Neon i Zorza jasne bez zmian (tokeny były kompletne, a zrzuty nie pokazały wyraźnej luki).
+- **Gdzie.** `src/components/skins/MatrixRain.tsx` (parametr `light`, kolory `FADE_LIGHT`, `HEAD_LIGHT`, `TRAIL_LIGHT`; efekt zależy od `[still, light]`), `src/components/PaperBackdrop.tsx` (deszcz montowany w obu schematach Matrycy, `light={!dark}`), `src/styles/skins/matrix.css` (krycie płótna w jasnym), `src/styles/skins/plan.css` (siatka w jasnym).
+- **Jak działa.** Ciemny wariant deszczu jest bez zmian (domyślne `light=false`). Klucz montowania to `${backdrop}-${dark ? "d" : "l"}`, więc przejście między schematami przemontowuje płótno z właściwą paletą.
+- **Ograniczenia.** Deszcz w jasnym to ten sam koszt co w ciemnym (płótno, do 24 klatek/s), a ograniczony ruch i tryb „ciche” działają tak samo. Neon i Zorza jasne nie dostały jeszcze poświaty w tle (rozważane, nie zrobione).
+- **Testy.** Vitest: pełny zestaw. E2E: `skins`, `skin-motion`, `a11y`, `mobile`. Zrzuty jasnych wariantów Matrycy, Planu, Neonu i Zorzy sprawdzone ręcznie.
+- **Commit.** do uzupełnienia (2026-10-30).

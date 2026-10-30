@@ -40,9 +40,10 @@ export function PaperBackdrop() {
     >
       {/* Tabliczka rysunkowa: napis zależy od widoku (`html[data-view]`, styl w `index.css`). */}
       <span className="paper-stamp" />
-      {skin === "matrix" && dark && backdrop !== "plain" && (
+      {/* Deszcz w obu schematach Matrycy (plan motywów 2.5): jasny ma ciemne znaki na papierze. */}
+      {skin === "matrix" && backdrop !== "plain" && (
         <Suspense fallback={null}>
-          <MatrixRain key={backdrop} still={backdrop === "quiet"} />
+          <MatrixRain key={`${backdrop}-${dark ? "d" : "l"}`} still={backdrop === "quiet"} light={!dark} />
         </Suspense>
       )}
       {/* Warstwa sygnałów zapisu i zmiany widoku (fala Zorzy, skan Matrycy, pieczątka Zeszytu, linia wymiarowa
