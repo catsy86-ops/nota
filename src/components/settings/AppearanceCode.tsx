@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { decodeAppearance, encodeAppearance } from "@/lib/appearanceCode";
+import { applyAppearanceValues, appearanceLink, decodeAppearance, encodeAppearance, snapshotAppearance } from "@/lib/appearanceCode";
+import { shareOrCopy } from "@/lib/shareOrCopy";
+import { toastWithUndo } from "@/lib/undoToast";
 
 const read = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 
 /**
- * Kod wyglądu (plan motywów 3.5): skopiuj na jednym urządzeniu, wklej na drugim. Wczytanie zapisuje
- * ustawienia i odświeża aplikację — moduły wyglądu czytają je przy starcie i same sprawdzają wartości.
+ * Kod wyglądu (plan motywów 3.5, 1.5): skopiuj na jednym urządzeniu, wklej na drugim, albo wyślij link
+ * `#wyglad=NOTKI1-…`. Wczytanie stosuje wygląd od razu (bez przeładowania) i daje „Cofnij”.
  */
 export function AppearanceCode() {
   const [code, setCode] = useState("");
@@ -22,25 +24,35 @@ export function AppearanceCode() {
       toast("Skopiuj kod z pola poniżej");
     }
   };
+  const share = async () => {
+    const value = encodeAppearance(read);
+    const outcome = await shareOrCopy({ title: "Wygląd NOTKI", text: appearanceLink(value, window.location.origin) });
+    if (outcome === "copied") toast.success("Skopiowano link do wyglądu");
+    else if (outcome === "failed") toast.error("Nie udało się udostępnić ani skopiować");
+  };
   const load = () => {
     const values = decodeAppearance(code);
     if (!values) {
       toast.error("To nie jest kod wyglądu. Kod zaczyna się od „NOTKI1-”.");
       return;
     }
+    const before = snapshotAppearance();
     try {
-      for (const [k, v] of Object.entries(values)) localStorage.setItem(k, v);
+      applyAppearanceValues(values, { replace: false });
     } catch {
       toast.error("Nie udało się zapisać wyglądu w tej przeglądarce.");
       return;
     }
-    toast.success("Wczytano wygląd — odświeżam");
-    window.setTimeout(() => window.location.reload(), 600);
+    setCode("");
+    toastWithUndo("Wczytano wygląd", () => applyAppearanceValues(before, { replace: true }));
   };
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground -mt-1">Styl, jasność, akcent, kształt, tło, krój i rozmiar tekstu jako jeden kod — do przeniesienia na inne urządzenie.</p>
-      <Button type="button" variant="outline" size="sm" className="coarse:h-11" onClick={copy}>Kopiuj kod wyglądu</Button>
+      <p className="text-xs text-muted-foreground -mt-1">Styl, jasność, akcent, kształt, ramki, poświata, tło, krój, rozmiar tekstu, tryb budowa, ruch i pora roku jako jeden kod — do przeniesienia na inne urządzenie.</p>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" size="sm" className="coarse:h-11" onClick={copy}>Kopiuj kod wyglądu</Button>
+        <Button type="button" variant="outline" size="sm" className="coarse:h-11" onClick={share}>Udostępnij link</Button>
+      </div>
       <div className="flex gap-2">
         <label className="sr-only" htmlFor="appearance-code">Kod wyglądu</label>
         <input

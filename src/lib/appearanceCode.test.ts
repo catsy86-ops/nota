@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyAppearanceValues, decodeAppearance, encodeAppearance, resetAppearance, snapshotAppearance } from "@/lib/appearanceCode";
+import { appearanceLink, applyAppearanceValues, codeFromHash, decodeAppearance, encodeAppearance, resetAppearance, snapshotAppearance } from "@/lib/appearanceCode";
 import { setShape } from "@/lib/shape";
 
 const shapeNow = () => document.documentElement.dataset.shape ?? "normal";
@@ -69,5 +69,16 @@ describe("wygląd bez przeładowania (plan motywów 2026-10-30, 1.4)", () => {
     applyAppearanceValues({ "kaczy.font.v1": JSON.stringify("literata") }, { replace: false });
     expect(shapeNow()).toBe("sharp");
     expect(localStorage.getItem("kaczy.font.v1")).toBe(JSON.stringify("literata"));
+  });
+});
+
+describe("link z kodem wyglądu (plan motywów 1.5)", () => {
+  it("link zawiera kod i wraca z fragmentu adresu; obcy fragment i zły kod są odrzucane", () => {
+    const code = encodeAppearance((k) => (k === "kaczy.skin.v1" ? JSON.stringify("neon") : null));
+    const link = appearanceLink(code, "https://notki.example/");
+    expect(link.startsWith("https://notki.example/#wyglad=")).toBe(true);
+    expect(codeFromHash(new URL(link).hash)).toBe(code);
+    expect(codeFromHash("#inne=1")).toBeNull();
+    expect(codeFromHash("#wyglad=nie-kod")).toBeNull();
   });
 });

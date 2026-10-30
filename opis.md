@@ -3847,3 +3847,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Dostęp przez przytrzymanie przełącznika jasności w nagłówku (druga część 1.3 z planu) nie jest zrobiony — zestawy są w Ustawieniach. Uszkodzony slot jest traktowany jak pusty.
 - **Testy.** Vitest: `src/lib/appearancePresets.test.ts` (gotowy zestaw zmienia tylko swoje klucze i „Cofnij” wraca; slot zapisuje i przywraca cały wygląd; uszkodzony slot). E2E: `e2e/appearance-presets.spec.ts` (Budowa i „Cofnij”; zapis slotu, reset, przywrócenie slotu).
 - **Commit.** `c193b61` (2026-10-30).
+
+## Wygląd: kod i link wyglądu bez przeładowania (Fala 1, 1.5 planu motywów, 2026-10-30)
+
+- **Co robi.** W Ustawienia → Wygląd → Zaawansowane, w „Kod wyglądu”, są trzy sposoby przeniesienia wyglądu: **Kopiuj kod wyglądu**, **Udostępnij link** (arkusz udostępniania, bez niego schowek) i **Wczytaj** kod wklejony w pole. Wczytanie stosuje wygląd od razu, bez odświeżania aplikacji, i daje komunikat „Cofnij”. Link `<adres>/#wyglad=NOTKI1-…` po otwarciu pyta „Wczytać wygląd z linku?”: „Nie, zostaw” nic nie zmienia, „Wczytaj wygląd” stosuje go z „Cofnij”. Fragment znika z adresu po pytaniu.
+- **Gdzie.** `src/lib/appearanceCode.ts` (`appearanceLink`, `codeFromHash`, obok `applyAppearanceValues`), `src/components/settings/AppearanceCode.tsx`, `src/components/settings/AppearanceLinkImport.tsx` (pytanie o link, montowane w `src/pages/Index.tsx` obok samouczka).
+- **Jak działa.** Wczytanie idzie tą samą ścieżką co reset i zestawy: `applyAppearanceValues` zapisuje klucze i wysyła zdarzenie `storage`, na które słuchają magazyny ustawień. Kod z linku przechodzi przez `decodeAppearance`, więc tylko klucze wyglądu i sprawdzone wartości trafiają do localStorage. Wczytanie kodu nie usuwa kluczy, których kod nie zawiera (`replace: false`), więc wygląd z kodu nakłada się na obecny; reset i zestawy działają inaczej (patrz opis zestawów).
+- **Ograniczenia.** Link zawiera cały kod (ok. kilkaset znaków), więc długi adres. Pytanie o link nie pojawia się, gdy fragment nie jest poprawnym kodem wyglądu. QR nie jest zrobiony (zostaje na później, zgodnie z planem).
+- **Testy.** Vitest: `src/lib/appearanceCode.test.ts` (link wraca z fragmentu; obcy fragment i zły kod odrzucane). E2E: `e2e/appearance-share.spec.ts` (wczytanie kodu bez przeładowania, „Cofnij”; link pyta, „Nie” nic nie zmienia, „Wczytaj wygląd” stosuje).
+- **Commit.** do uzupełnienia (2026-10-30).

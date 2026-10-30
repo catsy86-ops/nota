@@ -95,3 +95,17 @@ export function resetAppearance(): Record<string, string> {
   applyAppearanceValues({}, { replace: true });
   return before;
 }
+
+/** Adres z kodem wyglądu: `<adres>/#wyglad=NOTKI1-…` (plan motywów 1.5). */
+export function appearanceLink(code: string, origin: string): string {
+  return `${origin.replace(/\/$/, "")}/#wyglad=${encodeURIComponent(code)}`;
+}
+
+/** Kod wyglądu z fragmentu adresu (`#wyglad=…`); `null`, gdy adres go nie ma albo to nie kod. */
+export function codeFromHash(hash: string): string | null {
+  const m = /^#wyglad=([^&]+)/.exec(hash);
+  if (!m) return null;
+  let code: string;
+  try { code = decodeURIComponent(m[1]!); } catch { return null; }
+  return decodeAppearance(code) ? code : null;
+}
