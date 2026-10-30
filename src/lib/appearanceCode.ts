@@ -22,6 +22,8 @@ export const APPEARANCE_KEYS = [
   "kaczy.siteMode.v1",
   "kaczy.motion.v1",
   "kaczy.seasonTheme.v1",
+  // Czarne tło w ciemnym (plan motywów 3.3).
+  "kaczy.oled.v1",
 ] as const;
 
 const PREFIX = "NOTKI1-";

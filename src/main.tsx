@@ -35,6 +35,7 @@ import "./lib/textSize";
 // Tło, kształt i akcent (plan motywów 1.3, 1.2, 1.1) — atrybuty na <html> przed pierwszym malowaniem.
 import "./lib/backdrop";
 import "./lib/shape";
+import "./lib/oled";
 import "./lib/accent";
 // Ramki i poświaty (Wygląd) nakładane już przy starcie, nie dopiero po otwarciu Ustawień.
 import "./lib/frameLook";

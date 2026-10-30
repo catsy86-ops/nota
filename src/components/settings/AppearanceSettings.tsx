@@ -25,6 +25,7 @@ import { trySkin } from "@/lib/skinTry";
 import { NightSkinSettings } from "./NightSkinSettings";
 import { AppearanceCode } from "./AppearanceCode";
 import { AppearancePreview } from "./AppearancePreview";
+import { setOled, useOled } from "@/lib/oled";
 import { PRESETS, SLOT_COUNT, applyValues, readSlot, saveSlot } from "@/lib/appearancePresets";
 import { resetAppearance, applyAppearanceValues } from "@/lib/appearanceCode";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -151,6 +152,7 @@ export function AppearanceSettings() {
   const frames = useFrames();
   const { mode: motionMode, reduced: motionReduced, setMode: setMotionMode } = useMotionPref();
   const { pref: seasonPref, season: activeSeason, setPref: setSeasonPref } = useSeasonPref();
+  const oled = useOled();
 
   return (
     <div className="space-y-8">
@@ -288,6 +290,7 @@ export function AppearanceSettings() {
           </p>
         </Section>
 
+        <ToggleRow label="Czarne tło w ciemnym (OLED)" desc={oled ? "Czarne tło — mniej prądu na ekranie OLED, mocniejszy kontrast na słońcu" : "Tło jak w stylu"} checked={oled} onCheck={setOled} />
         <Section title="Styl na noc">
           <NightSkinSettings skin={skin} />
         </Section>

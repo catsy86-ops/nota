@@ -3931,3 +3931,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Oddech poświaty jest teraz tylko w mgiełce, a pierścień stoi. To mniej wyrazisty efekt niż dawny oddech całej poświaty — świadoma zmiana na rzecz baterii. Nie mierzyłem klatek na prawdziwym telefonie; to zostaje w QA (krok 4.4 planu motywów).
 - **Testy.** Vitest: pełny zestaw. E2E: `glow`, `card-motion`, `skins`, `skin-motion`, `mobile`.
 - **Commit.** `f40a2bf` (2026-10-30).
+
+## Wygląd: czarne tło OLED w ciemnym schemacie (Fala 3, 3.3 planu motywów, 2026-10-30)
+
+- **Co robi.** Ustawienia → Wygląd → Zaawansowane → „Czarne tło w ciemnym (OLED)”. Włączone: w ciemnym schemacie każdego stylu tło strony jest czarne. Karty, przyciski i pola zostają rozjaśnione tokenami stylu, więc nadal się odróżniają. Oszczędza prąd na ekranach OLED, a na słońcu poprawia kontrast kart.
+- **Gdzie.** `src/lib/oled.ts` (`useOled`, `setOled`, `oledOn`; zapis `kaczy.oled.v1`, atrybut `data-oled` na `<html>`), import w `src/main.tsx`, przełącznik w `src/components/settings/AppearanceSettings.tsx`, reguła w `src/index.css` (`html[data-oled="on"][data-skin].dark { --background: #000; }`), klucz w `APPEARANCE_KEYS` (kod wyglądu i reset go obejmują).
+- **Jak działa.** Reguła ma specyficzność wyższą niż tokeny stylu (`html[data-skin].dark`), więc nadpisuje tylko `--background` i działa we wszystkich stylach. W jasnym schemacie nic się nie zmienia.
+- **Ograniczenia.** Zmienia tylko tło strony. Ozdoby stylu (np. siatka papieru) zostają na czarnym tle w tej samej kolorystyce. Nie sprawdzałem kontrastu wszystkich kombinacji z czarnym tłem (to krok z testami kontrastu, do domknięcia z 4.4).
+- **Testy.** Vitest: `src/lib/oled.test.ts` (atrybut na `<html>` przy włączeniu i zdjęcie przy wyłączeniu; klucz w kodzie wyglądu; reguła CSS tylko w ciemnym). E2E: `appearance-code`, `appearance-quick`, `appearance-presets`, `appearance-share`, `skins`. Zrzut Neona w OLED sprawdzony ręcznie.
+- **Commit.** do uzupełnienia (2026-10-30).

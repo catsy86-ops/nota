@@ -1585,3 +1585,7 @@ html[data-view="study"] .section-title::after { background: var(--sec-study); }
 html[data-view="shifts"] .section-title::after { background: var(--sec-shifts); }
 @media (prefers-reduced-motion: reduce) { .section-title::after { animation: none; transform: scaleX(1); } }
 html[data-motion='reduced'] .section-title::after { animation: none; transform: scaleX(1); }
+
+/* Czarne tło OLED (plan motywów 3.3): tylko w ciemnym schemacie. Specyficzność wyższa niż tokeny stylów
+   (`html[data-skin].dark`), więc działa w każdym stylu; karty zostają rozjaśnione tokenami stylu. */
+html[data-oled="on"][data-skin].dark { --background: #000; }
