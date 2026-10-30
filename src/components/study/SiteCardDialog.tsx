@@ -286,7 +286,7 @@ export function SiteCardDialog({
               <SiteFaultsPanel site={site} journal={study.journal} />
               <SiteMaterialPanel site={site} journal={study.journal} />
               {hours && <SiteTimePanel site={site} today={hours.today} monthLabel={new Date(`${hours.today}T12:00`).toLocaleDateString("pl-PL", { month: "long", year: "numeric" })} monthDays={hours.monthDays} />}
-              <SiteBillingPanel site={site} />
+              <SiteBillingPanel site={site} hours={hours?.total} />
               <SiteOrderPanel site={site} />
             </div>
 

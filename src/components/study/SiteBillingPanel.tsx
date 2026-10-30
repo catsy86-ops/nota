@@ -10,6 +10,7 @@ import { POINT_TYPES } from "@/lib/study/points";
 import { siteStages } from "@/lib/study/stages";
 import { setSiteRate } from "@/lib/study/store";
 import { SITE_RATE_MAX, type SiteInfo } from "@/lib/study/sites";
+import { SiteBillingDues } from "./SiteBillingDues";
 
 /** Pole kwoty: zapis przy wyjściu z pola; pusty tekst usuwa, zły tekst wraca do poprzedniej wartości. */
 function AmountField({ label, value, onSave, placeholder, unit = "zł" }: {
@@ -48,10 +49,10 @@ function AmountField({ label, value, onSave, placeholder, unit = "zł" }: {
 
 /**
  * H3.1 Sposób rozliczenia budowy w karcie: godziny (stawka karty), od punktu (stawka domyślna
- * i na typ punktu, H-4) i ryczałt (za całość i za etapy). Sposoby można łączyć. Liczenie
- * należności to H3.2 — tu tylko ustawienia i linia podsumowania w nagłówku.
+ * i na typ punktu, H-4) i ryczałt (za całość i za etapy). Sposoby można łączyć. Nad ustawieniami
+ * należności (H3.2, `SiteBillingDues`) — po ustawieniu stawek do panelu wraca się po „Zostało do zapłaty”.
  */
-export function SiteBillingPanel({ site }: { site: SiteInfo }) {
+export function SiteBillingPanel({ site, hours }: { site: SiteInfo; /** Godziny budowy do dziś (karta). */ hours?: { minutes: number; unsplit: number } }) {
   const billing = useSiteBilling(site.id);
   const { points } = useSitePoints(site.id);
   const [open, setOpen] = useState(false);
@@ -84,6 +85,8 @@ export function SiteBillingPanel({ site }: { site: SiteInfo }) {
 
       {open && (
         <div id={`billing-${site.id}`} className="space-y-3 border-t border-dashed border-border px-3 pb-3 pt-2.5">
+          <SiteBillingDues site={site} billing={billing} hours={hours} points={points} />
+          <h4 className="border-t border-dashed border-border pt-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jak jesteś rozliczany</h4>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="Sposób rozliczenia">
             {BILLING_MODES.map((m) => (
               <button key={m} type="button" onClick={() => flip(m)} aria-pressed={on(m)}

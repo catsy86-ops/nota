@@ -75,3 +75,41 @@ test("stawka godzinowa z panelu rozliczenia; 320 px bez przewijania w bok @mobil
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(wide, "przewijanie w bok przy 320 px").toBe(false);
 });
+
+test("należności (H3.2): ryczałt i odhaczony etap, zaliczka, zostało, cofnięcie usunięcia, tekst @mobile", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const { card, panel } = await openBilling(page);
+  const dues = panel.getByTestId("billing-dues");
+  await expect(dues.getByText("Nic jeszcze nie naliczone")).toBeVisible();
+
+  await panel.getByRole("button", { name: "Ryczałt", exact: true }).click();
+  await amount(panel, "Za całą budowę (zł)", "8000");
+  await amount(panel, "Rozprowadzenie wody (zł)", "1500");
+  await expect(dues.getByTestId("billing-accrued")).toHaveText("8000 zł");
+  await card.getByTestId("site-stages").getByRole("checkbox", { name: /Rozprowadzenie wody/ }).click();
+  await expect(dues.getByTestId("billing-accrued")).toHaveText("9500 zł");
+
+  await dues.getByRole("button", { name: "Wpłata (zaliczka)" }).click();
+  await dues.getByLabel("Kwota wpłaty (zł)").fill("3 000");
+  await dues.getByLabel("Notatka do wpłaty").fill("zaliczka gotówką");
+  await dues.getByRole("button", { name: "Zapisz wpłatę" }).click();
+  await expect(dues.getByTestId("billing-due")).toHaveText(/Zostało do zapłaty\s*6500 zł/);
+
+  await dues.getByRole("button", { name: "Usuń wpłatę 3000 zł z 22.10.2026" }).click();
+  await expect(dues.getByTestId("billing-due")).toHaveText(/9500 zł/);
+  await page.getByRole("button", { name: "Cofnij" }).click();
+  await expect(dues.getByTestId("billing-due")).toHaveText(/6500 zł/);
+
+  // Bez Web Share tekst idzie do schowka.
+  await page.evaluate(() => { Object.defineProperty(navigator, "share", { value: undefined, configurable: true }); });
+  await dues.getByRole("button", { name: "Tekst" }).click();
+  await expect(page.getByText("Skopiowano — wklej szefowi na WhatsAppie")).toBeVisible();
+  const text = await page.evaluate(() => navigator.clipboard.readText());
+  expect(text).toContain("*Zostało do zapłaty: 6500 zł*");
+  expect(text).toContain("• 22.10.2026: 3000 zł (zaliczka gotówką)");
+
+  await page.reload();
+  const again = await openBilling(page);
+  await expect(again.panel.getByTestId("billing-due")).toHaveText(/6500 zł/);
+});
