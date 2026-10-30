@@ -3902,4 +3902,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Kreska to pseudoelement z `transform: scaleX(0)`, który animacją `section-rule` rośnie do 1 po 0,05 s. Kolor bierze z `--sec-*` (tokeny działów już istnieją w `index.css`). Zmiana widoku zmienia `data-view` i kolor, a animacja startuje przy montowaniu nagłówka.
 - **Ograniczenia.** `.app-title` ma `overflow: hidden` (klasa `truncate`), więc jego kreska siedzi na samym tytule, a nie na całym pudełku. Przy bardzo długich nazwach widoku kreska jest tej samej długości co obcięty tekst. Kreska nie jest w tekście, więc czytnik ekranu jej nie zgłasza (to tylko ozdoba).
 - **Testy.** Vitest: pełny zestaw. E2E: `a11y`, `mobile`, `workday`, `study`, `shifts`, `today-site-card`, `brand-notki`, `touch-targets`. Kreska sprawdzona zrzutem nagłówka Notatek i tytułu Pracy oraz obliczonym stylem pseudoelementu.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `2d03a42` (2026-10-30).
