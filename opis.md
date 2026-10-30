@@ -3939,4 +3939,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Reguła ma specyficzność wyższą niż tokeny stylu (`html[data-skin].dark`), więc nadpisuje tylko `--background` i działa we wszystkich stylach. W jasnym schemacie nic się nie zmienia.
 - **Ograniczenia.** Zmienia tylko tło strony. Ozdoby stylu (np. siatka papieru) zostają na czarnym tle w tej samej kolorystyce. Nie sprawdzałem kontrastu wszystkich kombinacji z czarnym tłem (to krok z testami kontrastu, do domknięcia z 4.4).
 - **Testy.** Vitest: `src/lib/oled.test.ts` (atrybut na `<html>` przy włączeniu i zdjęcie przy wyłączeniu; klucz w kodzie wyglądu; reguła CSS tylko w ciemnym). E2E: `appearance-code`, `appearance-quick`, `appearance-presets`, `appearance-share`, `skins`. Zrzut Neona w OLED sprawdzony ręcznie.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `4cdfc8a` (2026-10-30).
