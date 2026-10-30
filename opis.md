@@ -3912,3 +3912,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Deszcz w jasnym to ten sam koszt co w ciemnym (płótno, do 24 klatek/s), a ograniczony ruch i tryb „ciche” działają tak samo. Neon i Zorza jasne nie dostały jeszcze poświaty w tle (rozważane, nie zrobione).
 - **Testy.** Vitest: pełny zestaw. E2E: `skins`, `skin-motion`, `a11y`, `mobile`. Zrzuty jasnych wariantów Matrycy, Planu, Neonu i Zorzy sprawdzone ręcznie.
 - **Commit.** `0340c2e` (2026-10-30).
+
+## Wzory papieru: korek w jasnej Tablicy, płytki 20×20 w jasnych Kaflach (Fala 2, 2.6 planu motywów, 2026-10-30)
+
+- **Co robi.** Jasna **Tablica** ma wzór „korek”: drobne kropki zamiast szkiców. Jasne **Kafle** mają mniejsze pola (20×20 px) i cieńszą fugę niż w ciemnym wariancie.
+- **Gdzie.** `src/styles/skins/tablica.css` (blok `html[data-skin="tablica"]:not(.dark) .paper-grid::before`), `src/styles/skins/kafle.css` (blok `html[data-skin="kafle"]:not(.dark) .paper-grid::before`). Tylko CSS, bez zmian w komponentach.
+- **Jak działa.** Wzór to nadpisanie `background-image` i `background-size` warstwy `.paper-grid::before`. Dwie warstwy kropek mają różne rozmiary, więc się nie powtarzają w rytm. Ciemne warianty zostają bez zmian.
+- **Ograniczenia.** Nie zrobiłem pozostałych wariantów z planu: kalki i milimetrówki dla Planu (Plan ma już milimetrówkę z 2.5), cegiełki dla ciemnych Kafli, zielonej tablicy jako wyboru. Zeszyt nie dostał wyboru wzoru. Wybór wzoru przez użytkownika nie jest zrobiony — wzór jest stały dla stylu i schematu.
+- **Testy.** Vitest: pełny zestaw. E2E: `skins`, `skin-motion`, `a11y`. Zrzuty jasnej Tablicy i jasnych Kafli sprawdzone ręcznie.
+- **Commit.** do uzupełnienia (2026-10-30).

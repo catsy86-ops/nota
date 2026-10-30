@@ -199,3 +199,12 @@ html[data-skin="tablica"] { --overlay-radius: 0.75rem; --overlay-border: color-m
 
 /* Powiadomienia Tablicy (plan motywów 2.3): kreda, lekko zaokrąglone, krawędź w odcieniu ramy. */
 html[data-skin="tablica"] { --toast-radius: 0.75rem; --toast-border: color-mix(in srgb, var(--primary) 45%, transparent); }
+
+/* Jasna Tablica (plan motywów 2.6): wzór „korek” — drobne kropki jak na tablicy korkowej, zamiast szkiców. */
+html[data-skin="tablica"]:not(.dark) .paper-grid::before {
+  background-image:
+    radial-gradient(circle, color-mix(in srgb, var(--foreground) 14%, transparent) 1.2px, transparent 1.7px),
+    radial-gradient(circle, color-mix(in srgb, var(--foreground) 9%, transparent) 1px, transparent 1.5px);
+  background-size: 37px 41px, 53px 47px;
+  background-position: 5px 9px, 21px 30px;
+}
