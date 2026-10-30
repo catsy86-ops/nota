@@ -3930,4 +3930,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Co już było zrobione przed 2.7.** Zorza na telefonie nie ma `filter: blur(36px)` ani dryfu tła (`pointer: coarse` w `zorza.css`), a karta jak szyba z `backdrop-filter` działa tylko na komputerze (`pointer: fine`). Ten punkt planu nic nie wymagał.
 - **Ograniczenia.** Oddech poświaty jest teraz tylko w mgiełce, a pierścień stoi. To mniej wyrazisty efekt niż dawny oddech całej poświaty — świadoma zmiana na rzecz baterii. Nie mierzyłem klatek na prawdziwym telefonie; to zostaje w QA (krok 4.4 planu motywów).
 - **Testy.** Vitest: pełny zestaw. E2E: `glow`, `card-motion`, `skins`, `skin-motion`, `mobile`.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `f40a2bf` (2026-10-30).
