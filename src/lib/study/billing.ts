@@ -219,3 +219,50 @@ export function billingCsv(st: BillingStatement): string {
   rows.push(["Razem", st.due >= 0 ? "Zostało do zapłaty" : "Nadpłata", "", csvNum(Math.abs(st.due))]);
   return "\uFEFF" + rows.map((r) => r.map(cell).join(";")).join("\r\n") + "\r\n";
 }
+
+// ── H3.3 Miesiąc razem: zarobek z budów poza godzinami ─────────────────────────────────────────
+
+export interface MonthSiteEarnings {
+  /** Punkty po białym montażu w miesiącu, ze stawką. */
+  points: { count: number; amount: number };
+  /** Gotowe w miesiącu punkty bez żadnej stawki (nie liczone). */
+  pointsNoRate: number;
+  /** Etapy odhaczone w miesiącu, z kwotą etapu. */
+  stages: { count: number; amount: number };
+  /** Ryczałt za całość, gdy budowa skończyła się w tym miesiącu (ostatni etap odhaczony); inaczej 0. */
+  lump: number;
+  total: number;
+}
+
+/**
+ * Zarobek budowy w miesiącu `[from, to)` (ms) bez godzin — godziny liczy Grafik, więc tu ich nie ma
+ * (H3.3: nic dwa razy). Punkt liczy się w miesiącu białego montażu, etap — w miesiącu odhaczenia,
+ * ryczałt za całość — w miesiącu odhaczenia ostatniego etapu. Tylko włączone sposoby.
+ */
+export function monthSiteEarnings(
+  input: { billing: SiteBilling; points: readonly { type: string; doneAt?: number }[]; stages: readonly { id: string; done?: number }[] },
+  from: number, to: number,
+): MonthSiteEarnings {
+  const { billing: b, points, stages } = input;
+  const inMonth = (t: number | undefined) => t !== undefined && t >= from && t < to;
+  const out: MonthSiteEarnings = { points: { count: 0, amount: 0 }, pointsNoRate: 0, stages: { count: 0, amount: 0 }, lump: 0, total: 0 };
+  if (b.modes.includes("points")) {
+    for (const p of points) {
+      if (!inMonth(p.doneAt)) continue;
+      const r = pointRateFor(b, p.type);
+      if (r === undefined) { out.pointsNoRate++; continue; }
+      out.points.count++;
+      out.points.amount = round2(out.points.amount + r);
+    }
+  }
+  if (b.modes.includes("lump")) {
+    for (const s of stages) {
+      const amount = b.stageAmounts[s.id];
+      if (amount !== undefined && inMonth(s.done)) { out.stages.count++; out.stages.amount = round2(out.stages.amount + amount); }
+    }
+    const finished = stages.length > 0 && stages.every((s) => s.done !== undefined);
+    if (b.lump !== undefined && finished && inMonth(Math.max(...stages.map((s) => s.done!)))) out.lump = b.lump;
+  }
+  out.total = round2(out.points.amount + out.stages.amount + out.lump);
+  return out;
+}

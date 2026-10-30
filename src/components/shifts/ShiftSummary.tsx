@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { comparePayslip, PAYSLIP_TOLERANCE, type PayslipFacts } from "@/lib/shifts/payslip";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -21,6 +21,9 @@ import { LeaveMeter, YearSummaryDialog } from "./YearSummaryDialog";
 /** Czas albo „—” dla zera — jak dotychczasowe kafelki „Nadgodziny” i „Do normy”. */
 const durationOrDash = (min: number) => (Math.round(min) > 0 ? formatDuration(min) : "—");
 import { cn } from "@/lib/utils";
+
+// H3.3: „Z budów” (punkty, ryczałt) — kod Pracy w osobnym kawałku, nie w paczce Grafiku.
+const SiteMonthEarnings = lazy(() => import("@/components/study/SiteMonthEarnings").then((m) => ({ default: m.SiteMonthEarnings })));
 
 interface ShiftSummaryProps {
   summary: MonthSummary;
@@ -98,6 +101,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
           <CalendarRange className="w-4 h-4" aria-hidden /> Rok
         </button>
       </div>
+      <Suspense fallback={null}><SiteMonthEarnings monthKey={monthKey} base={grossTotal} /></Suspense>
 
       <div className="h-2.5 rounded-full bg-muted overflow-hidden flex" role="img"
         aria-label={`${formatDuration(minutes)} z ${formatDuration(normMinutes)} normy${extra ? `, ${formatDuration(extra)} ponadwymiarowych` : ""}${overtimeMinutes ? `, ${formatDuration(overtimeMinutes)} nadgodzin` : ""}`}>

@@ -113,3 +113,23 @@ test("należności (H3.2): ryczałt i odhaczony etap, zaliczka, zostało, cofni�
   const again = await openBilling(page);
   await expect(again.panel.getByTestId("billing-due")).toHaveText(/6500 zł/);
 });
+
+test("miesiąc razem (H3.3): gotowy punkt ze stawką widać w podsumowaniu Grafiku jako „Z budów” @mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const { card, panel } = await openBilling(page);
+  await card.getByTestId("site-points").getByRole("button", { name: /^\+ Łazienka/ }).click();
+  await panel.getByRole("button", { name: "Od punktu", exact: true }).click();
+  await amount(panel, "Za punkt (domyślnie) (zł)", "150");
+  await amount(panel, "WC (stelaż) ×1 (zł)", "250");
+  const points = card.getByTestId("site-points");
+  await points.getByRole("checkbox", { name: "Umywalka: biały montaż" }).click();
+  await points.getByRole("checkbox", { name: "WC (stelaż): biały montaż" }).click();
+  await expect(panel.getByTestId("billing-accrued")).toHaveText("400 zł");
+
+  await page.goto("/grafik");
+  const line = page.getByTestId("site-month-earnings");
+  await expect(line.getByTestId("site-month-total")).toHaveText("400 zł");
+  await line.locator("summary").click();
+  await expect(line).toContainText("Lipowa 5 2 punkty");
+  await expect(line.getByTestId("site-month-grand")).toHaveText("400 zł");
+});

@@ -22,3 +22,4 @@ export const removePayment = (site: string, id: string) => yBilling.removePaymen
 
 export const billingDump = () => yBilling.dump();
 export const mergeBillingDump = (raw: unknown) => yBilling.mergeDump(raw);
+export const subscribeBilling = (cb: () => void) => yBilling.subscribe(cb);

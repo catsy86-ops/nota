@@ -3777,6 +3777,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy.** Vitest: `src/lib/study/billing.test.ts` (tabela przypadków `billingStatement`, wpłaty i nadpłata, grosze, tekst i CSV, `cleanPayment`, wpłaty w Yjs: scalanie i kopia). E2E: `e2e/site-billing.spec.ts` (ryczałt + odhaczony etap, zaliczka, „Zostało”, cofnięcie usunięcia, tekst w schowku, zapis po odświeżeniu).
 - **Commit.** `ba84780` (2026-10-30).
 
+## Praca i Grafik: „Z budów” w podsumowaniu miesiąca (H3.3, plan 2026-10-29)
+
+- **Co robi.** W podsumowaniu miesiąca w Grafiku, pod „Razem brutto”, jest zwijana linia **„Z budów — punkty, ryczałt”** z kwotą. Rozwinięta pokazuje budowy z rozbiciem (np. „Lipowa 5 · 2 punkty · 1 etap”) i „Razem z godzinami z Grafiku”. Bez takich zarobków w miesiącu linii nie ma.
+- **Gdzie.** `src/lib/study/billing.ts` (`monthSiteEarnings`, `MonthSiteEarnings`), `src/components/study/SiteMonthEarnings.tsx`, ładowany leniwie z `src/components/shifts/ShiftSummary.tsx`; `subscribeBilling` w `billingStore.ts`, `subscribePoints` w `pointsStore.ts`.
+- **Jak działa.** Godziny nie wchodzą — liczy je już Grafik, więc nic nie jest liczone dwa razy. Punkt liczy się w miesiącu białego montażu (`steps.montaz`), etap w miesiącu odhaczenia, ryczałt za całość w miesiącu odhaczenia ostatniego etapu (koniec budowy). Tylko włączone sposoby rozliczenia budowy. Liczą się też budowy archiwalne (zwykle archiwizuje się je po końcu). Komponent sam wczytuje dokument Pracy (`studyReady`), bo do Grafiku można wejść bez Pracy. Kod Pracy jest w osobnym kawałku, nie w paczce Grafiku.
+- **Ograniczenia.** „Razem brutto” u góry się nie zmienia — suma z budowami jest w rozwinięciu. Gotowe punkty bez stawki są tylko zliczane w uwadze. Kwota nie uwzględnia wpłat (to H3.2, w karcie budowy).
+- **Testy.** Vitest: `src/lib/study/billing.test.ts` („miesiąc razem”: punkty w miesiącu, godziny pominięte, etapy i ryczałt po ostatnim etapie). E2E: `e2e/site-billing.spec.ts` (gotowe punkty ze stawką → „Z budów 400 zł” w Grafiku).
+- **Commit.** do uzupełnienia (2026-10-30).
+
 ## Powłoka: ekran startowy z animowanym „notki” (2026-10-30)
 
 - **Co robi.** Po uruchomieniu zainstalowanej aplikacji (PWA) na ciemnym tle pisze się słowo „notki”, kreska po kresce jak długopisem, w gradiencie bursztyn → koral → róż z ikony „N”. Na końcu wskakuje kropka nad „i” i rysuje się cienkie podkreślenie. Ekran gaśnie, gdy notatki są wczytane. Zastępuje dawny łuk „G”.

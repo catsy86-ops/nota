@@ -50,3 +50,4 @@ export function togglePointStep(site: string, point: WaterPoint, index: number, 
 
 export const pointsDump = () => yPoints.dump();
 export const mergePointsDump = (raw: unknown) => yPoints.mergeDump(raw);
+export const subscribePoints = (cb: () => void) => yPoints.subscribe(cb);

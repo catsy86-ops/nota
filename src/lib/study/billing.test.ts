@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
-import { billingCsv, billingStatement, billingSummary, billingText, cleanModes, cleanPayment, money, parseAmount, pointRateFor, stagesTotal, type BillingInput, type SiteBilling } from "./billing";
+import { billingCsv, billingStatement, monthSiteEarnings, billingSummary, billingText, cleanModes, cleanPayment, money, parseAmount, pointRateFor, stagesTotal, type BillingInput, type SiteBilling } from "./billing";
 import { createYBilling } from "./yBilling";
 
 const bill = (over: Partial<SiteBilling> = {}): SiteBilling => ({ modes: ["hours"], typeRates: {}, stageAmounts: {}, payments: [], ...over });
@@ -169,5 +169,34 @@ describe("należności (H3.2)", () => {
     t.mergeDump(JSON.parse(JSON.stringify(sb.dump())));
     t.mergeDump({ sites: { site: { payments: [{ id: "x", day: "nie", amount: 5 }, null] } } });
     expect(t.get("site").payments.map((p) => p.id)).toEqual(["p3", "p1"]);
+  });
+});
+
+describe("miesiąc razem (H3.3)", () => {
+  const oct = [new Date(2026, 9, 1).getTime(), new Date(2026, 10, 1).getTime()] as const;
+  const d = (day: number, month = 9) => new Date(2026, month, day, 12).getTime();
+  const run = (b: Partial<SiteBilling>, points: { type: string; doneAt?: number }[] = [], stages: { id: string; done?: number }[] = []) =>
+    monthSiteEarnings({ billing: bill(b), points, stages }, ...oct);
+
+  it("punkty po białym montażu w miesiącu; inne miesiące i niegotowe pomijane; bez stawki osobno", () => {
+    const r = run({ modes: ["points"], pointRate: 150, typeRates: { wc: 250 } },
+      [{ type: "umyw", doneAt: d(3) }, { type: "wc", doneAt: d(20) }, { type: "umyw", doneAt: d(2, 8) }, { type: "umyw" }]);
+    expect(r.points).toEqual({ count: 2, amount: 400 });
+    expect(r.total).toBe(400);
+    expect(run({ modes: ["points"] }, [{ type: "x", doneAt: d(5) }]).pointsNoRate).toBe(1);
+  });
+
+  it("godziny nigdy nie wchodzą (liczy je Grafik)", () => {
+    expect(run({ modes: ["hours"], pointRate: 150 }, [{ type: "x", doneAt: d(5) }]).total).toBe(0);
+  });
+
+  it("etapy w miesiącu odhaczenia; ryczałt za całość w miesiącu ostatniego etapu", () => {
+    const stages = [{ id: "a", done: d(10, 8) }, { id: "b", done: d(12) }];
+    const r = run({ modes: ["lump"], lump: 8000, stageAmounts: { a: 1000, b: 500 } }, [], stages);
+    expect(r.stages).toEqual({ count: 1, amount: 500 });
+    expect(r.lump).toBe(8000);
+    expect(r.total).toBe(8500);
+    expect(run({ modes: ["lump"], lump: 8000 }, [], [{ id: "a", done: d(5) }, { id: "b" }]).lump).toBe(0);
+    expect(run({ modes: ["lump"], lump: 8000 }, [], [{ id: "a", done: d(5, 10) }]).lump).toBe(0);
   });
 });
