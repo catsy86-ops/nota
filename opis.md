@@ -3784,7 +3784,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Godziny nie wchodzą — liczy je już Grafik, więc nic nie jest liczone dwa razy. Punkt liczy się w miesiącu białego montażu (`steps.montaz`), etap w miesiącu odhaczenia, ryczałt za całość w miesiącu odhaczenia ostatniego etapu (koniec budowy). Tylko włączone sposoby rozliczenia budowy. Liczą się też budowy archiwalne (zwykle archiwizuje się je po końcu). Komponent sam wczytuje dokument Pracy (`studyReady`), bo do Grafiku można wejść bez Pracy. Kod Pracy jest w osobnym kawałku, nie w paczce Grafiku.
 - **Ograniczenia.** „Razem brutto” u góry się nie zmienia — suma z budowami jest w rozwinięciu. Gotowe punkty bez stawki są tylko zliczane w uwadze. Kwota nie uwzględnia wpłat (to H3.2, w karcie budowy).
 - **Testy.** Vitest: `src/lib/study/billing.test.ts` („miesiąc razem”: punkty w miesiącu, godziny pominięte, etapy i ryczałt po ostatnim etapie). E2E: `e2e/site-billing.spec.ts` (gotowe punkty ze stawką → „Z budów 400 zł” w Grafiku).
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `ad601eb` (2026-10-30).
 
 ## Powłoka: ekran startowy z animowanym „notki” (2026-10-30)
 
