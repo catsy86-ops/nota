@@ -3950,3 +3950,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Nie zmieniłem znacznika aktywnej pozycji na dolnym pasku (zostaje w kolorze marki) — to osobny wybór. Kolory działów w paskach bocznych bez zmian.
 - **Testy.** Vitest: `src/lib/sectionColors.test.ts` (atrybut na `<html>` przy obu trybach; klucz w kodzie wyglądu; reguła CSS dla wyraźnych). E2E: `section-colors` (przełącznik zmienia atrybut i wraca), `appearance-quick`, `appearance-code`.
 - **Commit.** `d617374` (2026-10-30).
+
+## Sygnatury stylów: taśma Zeszytu, kreda Tablicy, rurka Neonu (Fala 3, 3.6 planu motywów, 2026-10-30)
+
+- **Co robi.** Trzy ozdoby, które mówią, w jakim stylu jest aplikacja:
+  - **Zeszyt:** przypięta notatka ma taśmę klejącą w górnej krawędzi (pół przezroczysty pasek, lekko pochylony).
+  - **Tablica:** znacznik aktywnej pozycji na dolnym pasku jest krótszy i skośny, jak kreda.
+  - **Neon:** przycisk „+” ma podwójną poświatę w kolorze marki, jak wkręcona rurka.
+- **Gdzie.** `src/styles/skins/signatures.css` (wszystkie trzy reguły). Tylko CSS.
+- **Jak działa.** Taśma to `::after` karty przypiętej (`[data-pinned]`), wykluczony jest `.note-glow-active`, bo ten pseudoelement jest zajęty przez poświatę aktywnej notatki. Znacznik Tablicy i poświata Neonu nadpisują klasy z 2.2 i 2.7 w tym samym miejscu, więc zmiana kształtu i koloru idzie w jednym pliku.
+- **Ograniczenia.** Dwie sygnatury z planu nie są zrobione: **Kafle** (pusty stan „brakująca płytka”) i **Plan** (puste stany jak rysunek techniczny). Wymagają zmiany rysunku pustych stanów w SVG (`src/lib/emptyGlyphs.ts`), a nie tylko CSS, więc zostawiam je na osobny krok. Neon ma już sygnaturę przypięcia (`data-sig="pin"`), więc jej nie dublowałem.
+- **Testy.** E2E: `skin-signatures`, `note-groups`, `skins`, `glow` (44 testy). Zrzut przypiętej notatki w Zeszycie sprawdzony ręcznie.
+- **Commit.** do uzupełnienia (2026-10-30).

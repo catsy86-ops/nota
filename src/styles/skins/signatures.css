@@ -450,3 +450,33 @@ html[data-motion="reduced"][data-sig] .sig-layer::after { animation: none; }
   html[data-sig][data-skin] .sig-layer::before,
   html[data-sig][data-skin] .sig-layer::after { animation: none; }
 }
+
+/* Sygnatury stylów (plan motywów 3.6): Zeszyt — taśma klejąca na przypiętej notatce. Tylko notatki bez
+   poświaty aktywnej (ta ma swój ::after). Taśma leży w górnej krawędzi wewnątrz karty (karta jest overflow-hidden). */
+html[data-skin="zeszyt"] .note-card[data-pinned]:not(.note-glow-active)::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 46px;
+  height: 14px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  border-left: 1px dashed color-mix(in srgb, var(--foreground) 14%, transparent);
+  border-right: 1px dashed color-mix(in srgb, var(--foreground) 14%, transparent);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
+  pointer-events: none;
+}
+
+/* Tablica — znacznik aktywnej pozycji jak kreda: krótszy, skośny, miękko ścięty. */
+html[data-skin="tablica"] .nav-active-bar {
+  height: 5px;
+  border-radius: 3px;
+  transform: skewX(-14deg);
+  opacity: 0.85;
+}
+
+/* Neon — przycisk „+” jak wkręcona rurka: podwójna poświata w kolorze marki (wartość z tokenów). */
+html[data-skin="neon"] .fab-brand {
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--brand-to) 70%, transparent), 0 0 18px color-mix(in srgb, var(--brand-to) 55%, transparent);
+}
