@@ -1,9 +1,9 @@
 /**
  * Ekran startowy z `index.html` (#boot-splash): widoczny tylko w zainstalowanej aplikacji
  * (`display-mode: standalone`) albo z `?splash` w adresie (podgląd). Znika, gdy dane są
- * wczytane, ale nie wcześniej niż po narysowaniu „N” — i najpóźniej po 3 s.
+ * wczytane, ale nie wcześniej niż po napisaniu „notki” (z kropką nad „i”) — i najpóźniej po 3 s.
  */
-const MIN_MS = 1150;
+const MIN_MS = 1450;
 const MIN_MS_REDUCED = 300;
 const MAX_MS = 3000;
 

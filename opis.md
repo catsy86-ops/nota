@@ -3776,3 +3776,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Do 100 wpłat na budowę, notatka do 80 znaków. Ryczałt za całość liczy się w pełni od początku (zaliczki odejmują się od umówionej kwoty). Punkt liczy się dopiero po białym montażu. Godziny to wszystkie godziny budowy do dziś, nie okres rozliczeniowy; dni z kilkoma budowami bez podziału nie wchodzą do kwoty. Linia w nagłówku panelu nadal pokazuje sposób rozliczenia, nie kwotę do zapłaty.
 - **Testy.** Vitest: `src/lib/study/billing.test.ts` (tabela przypadków `billingStatement`, wpłaty i nadpłata, grosze, tekst i CSV, `cleanPayment`, wpłaty w Yjs: scalanie i kopia). E2E: `e2e/site-billing.spec.ts` (ryczałt + odhaczony etap, zaliczka, „Zostało”, cofnięcie usunięcia, tekst w schowku, zapis po odświeżeniu).
 - **Commit.** `ba84780` (2026-10-30).
+
+## Powłoka: ekran startowy z animowanym „notki” (2026-10-30)
+
+- **Co robi.** Po uruchomieniu zainstalowanej aplikacji (PWA) na ciemnym tle pisze się słowo „notki”, kreska po kresce jak długopisem, w gradiencie bursztyn → koral → róż z ikony „N”. Na końcu wskakuje kropka nad „i” i rysuje się cienkie podkreślenie. Ekran gaśnie, gdy notatki są wczytane. Zastępuje dawny łuk „G”.
+- **Gdzie.** `index.html` (`#boot-splash`: style w `<head>`, SVG w `<body>`), `src/lib/bootSplash.ts` (`hideBootSplash`, `MIN_MS`).
+- **Jak działa.** Czysty SVG i CSS w `index.html`, bez JS i bez czcionki: widać go, zanim wczyta się paczka. Każda kreska to osobna ścieżka z `pathLength="1"` i animacją `stroke-dashoffset`; kolejność i tempo ustawiają zmienne `--d` (opóźnienie) i `--t` (czas) w atrybucie `style`. Do startu kreska ma `opacity: 0`, bo zaokrąglony koniec kreski o zerowej długości rysuje kropkę. Kropka nad „i” to `circle` ze skalą od 0 i lekkim odbiciem. Poświata: `filter: drop-shadow` na całym SVG. Tło (`#15110e`) to `background_color` z manifestu, więc systemowy ekran startowy przechodzi w ten bez błysku.
+- **Ograniczenia.** Widoczny tylko w trybie `standalone`/`fullscreen` albo z `?splash` w adresie (podgląd w przeglądarce). Najkrócej 1,45 s (300 ms przy ograniczonym ruchu), najdłużej 3 s. Przy `prefers-reduced-motion` słowo jest od razu narysowane. Systemowy ekran startowy Androida (ikona „N” z manifestu) jest poza aplikacją i zostaje.
+- **Testy.** Brak testu automatycznego; sprawdzone zrzutami klatek w Playwright (`/?splash`).
+- **Commit.** do uzupełnienia (2026-10-30).
