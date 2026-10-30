@@ -27,6 +27,7 @@ import { AppearanceCode } from "./AppearanceCode";
 import { AppearancePreview } from "./AppearancePreview";
 import { setOled, useOled } from "@/lib/oled";
 import { setSectionColors, useSectionColors, type SectionColors } from "@/lib/sectionColors";
+import { setUiDensity, useUiDensity, type UiDensity } from "@/lib/uiDensity";
 import { PRESETS, SLOT_COUNT, applyValues, readSlot, saveSlot } from "@/lib/appearancePresets";
 import { resetAppearance, applyAppearanceValues } from "@/lib/appearanceCode";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -80,6 +81,12 @@ const shapeOptions: { value: Shape; label: string; Icon: typeof Sun }[] = [
   { value: "sharp", label: "Ostry", Icon: Square },
   { value: "normal", label: "Zwykły", Icon: SquareRoundCorner },
   { value: "soft", label: "Miękki", Icon: Squircle },
+];
+
+const uiDensityOptions: { value: UiDensity; label: string; Icon: typeof Sun }[] = [
+  { value: "compact", label: "Kompakt", Icon: Minus },
+  { value: "normal", label: "Standard", Icon: Square },
+  { value: "comfy", label: "Luźno", Icon: Sparkles },
 ];
 
 const sectionOptions: { value: SectionColors; label: string; Icon: typeof Sun }[] = [
@@ -160,6 +167,7 @@ export function AppearanceSettings() {
   const { pref: seasonPref, season: activeSeason, setPref: setSeasonPref } = useSeasonPref();
   const oled = useOled();
   const sectionColors = useSectionColors();
+  const uiDensity = useUiDensity();
 
   return (
     <div className="space-y-8">
@@ -377,6 +385,10 @@ export function AppearanceSettings() {
           <ToggleRow label="Przegląd tygodnia" desc={todayCards.weeklyReview ? "Pokazany" : "Ukryty"} checked={todayCards.weeklyReview} onCheck={(on) => setTodayCard("weeklyReview", on)} />
         </Section>
 
+        <Section title="Gęstość interfejsu (komputer)">
+          <Segmented label="Gęstość interfejsu" options={uiDensityOptions} value={uiDensity} onChange={setUiDensity} />
+          <p className="text-xs text-muted-foreground mt-1.5">Odstępy i wysokości w całej aplikacji. Działa przy myszy i klawiaturze; na telefonie cele dotyku zostają bez zmian.</p>
+        </Section>
         <Section title="Domyślny układ siatki">
           <div className="grid grid-cols-3 gap-2">
             {(["masonry", "grid", "list", "board", "table"] as Layout[]).map((l) => (

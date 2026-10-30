@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { LayoutGroup, m as motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { SKINS, SKIN_SCHEME, type Skin } from "@/lib/skins";
@@ -24,12 +25,18 @@ interface SkinPickerProps {
 // Każdy styl ma oba schematy (4.1); najpierw ten, w którym powstał i który jest domyślny.
 const SCHEME_BADGE = { light: "Jasny + ciemny", dark: "Ciemny + jasny" } as const;
 
+/** Style schowane pod „Więcej stylów” (plan motywów 3.5): mniej używane, ale nadal w galerii. */
+const MORE_SKINS: readonly Skin[] = ["matrix"];
+
 export function SkinPicker({ value, onChange }: SkinPickerProps) {
   const accents = useAccentMap();
+  // Schowany styl pojawia się od razu, gdy jest wybrany; inaczej po rozwinięciu „Więcej stylów”.
+  const [moreOpen, setMoreOpen] = useState(() => MORE_SKINS.includes(value));
+  const visibleSkins = SKINS.filter((s) => !MORE_SKINS.includes(s) || moreOpen);
   return (
     <LayoutGroup id="skin-picker">
       <div role="radiogroup" aria-label="Styl aplikacji" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {SKINS.map((s, i) => {
+        {visibleSkins.map((s, i) => {
           const meta = SKIN_META[s];
           const active = s === value;
           const p = meta.preview;
@@ -43,7 +50,7 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
               role="radio"
               aria-checked={active}
               tabIndex={active ? 0 : -1}
-              onKeyDown={(e) => moveRadio(e, SKINS, value, onChange)}
+              onKeyDown={(e) => moveRadio(e, visibleSkins, value, onChange)}
               data-skin-option={s}
               onClick={() => { if (!active) { haptic("selection"); onChange(s); } }}
               whileHover={{ y: -3 }}
@@ -103,6 +110,16 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
           );
         })}
       </div>
+      {!moreOpen && (
+        <button
+          type="button"
+          onClick={() => setMoreOpen(true)}
+          aria-expanded={false}
+          className="pressable mt-3 w-full rounded-card border border-dashed border-border/70 px-3 py-2 text-sm text-muted-foreground hover:text-foreground coarse:min-h-11"
+        >
+          Więcej stylów ({MORE_SKINS.length})
+        </button>
+      )}
     </LayoutGroup>
   );
 }

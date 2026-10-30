@@ -26,6 +26,8 @@ export const APPEARANCE_KEYS = [
   "kaczy.oled.v1",
   // Podkreślenia działów subtelne / wyraźne (plan motywów 3.4).
   "kaczy.sectionColors.v1",
+  // Gęstość całego interfejsu (plan motywów 4.2).
+  "kaczy.uiDensity.v1",
 ] as const;
 
 const PREFIX = "NOTKI1-";

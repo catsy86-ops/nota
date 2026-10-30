@@ -1593,3 +1593,10 @@ html[data-oled="on"][data-skin].dark { --background: #000; }
 /* Podkreślenia działów (plan motywów 3.4): subtelne domyślnie, wyraźne po przełączeniu w Wyglądzie. */
 html:not([data-sections]) :is(.section-title, .app-title)::after { height: 2px; opacity: 0.6; }
 html[data-sections="bold"] :is(.section-title, .app-title)::after { height: 3px; opacity: 1; }
+
+/* Gęstość całego interfejsu (plan motywów 4.2): odstępy i wymiary idą przez `--spacing` (Tailwind v4).
+   Tylko mysz i klawiatura — na dotyku cele dotyku zostają 44 px (`coarse:` nie zmienia się). */
+@media (pointer: fine) {
+  html[data-ui-density="compact"] { --spacing: 0.2rem; }
+  html[data-ui-density="comfy"] { --spacing: 0.3rem; }
+}
