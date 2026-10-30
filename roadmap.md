@@ -1185,3 +1185,5 @@ Pełny plan: `docs/plan-praca-kalendarz-grafik-2026-10-27.md`. Zastępuje otwart
 ## Plan Pracy dla hydraulika — 2026-10-29
 
 Pełny plan: `docs/plan-praca-hydraulik-2026-10-29.md`. Luki wskazane przez właściciela: metry rur, materiał w aucie, punkty w pomieszczeniach, zdjęcia z aparatu, rozliczenie od punktu, ryczałt i fuchy, praca z pomocnikiem. Fale 0–6 (fundament, materiał, punkty, rozliczenia, zdjęcia, brygada, drobne), decyzje H-1…H-8. Wpięte otwarte punkty z 27.10: P0.1, P2.4, P2.11, P3.3, P6.3.
+
+- Plan upiększenia motywów i dostosowania wyglądu (2026-10-30): `docs/plan-motywy-2026-10-30.md` — fale 0–4, decyzje T-1…T-10.
