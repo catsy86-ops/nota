@@ -3873,4 +3873,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Klasa ustawia `background-image: linear-gradient(155deg, var(--brand-via), color-mix(in srgb, var(--brand-to) 62%, #000))`. Końcowy kolor przyciemniony o 38% czerni, żeby biała ikona miała kontrast także w jasnych stylach (Neon, Zeszyt). Reguła `button.bg-primary` z Miedzi nie działa już na ten przycisk, bo nie ma już klasy `bg-primary`.
 - **Ograniczenia.** Kontrast sprawdzony zrzutami w sześciu stylach (Zeszyt, Odblask, Tablica, Neon, Miedź, Matryca) i po przyciemnieniu w Neonie i Zeszycie. Brak testu automatycznego kontrastu tego gradientu; to kandydat do `skinContrast.test.ts`.
 - **Testy.** Vitest: pełny zestaw. E2E: `bottom-slot`, `fab-sheets-a11y`, `mobile`, `brand-notki`, `skins`, `a11y`.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `b936e25` (2026-10-30).
