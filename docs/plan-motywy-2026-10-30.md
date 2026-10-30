@@ -1,6 +1,6 @@
 # Plan: upiększenie motywów i dostosowanie wyglądu (2026-10-30)
 
-> **Status (2026-10-30):** Fala 0 zrobiona (0.1 Miedź, 0.2 tabliczka — margines i Fraunces okazały się już per styl, 0.3 poświata, 0.4 Odblask, 0.5 `public/prepaint.js`, 0.6 pomiar: precache 4 087 501 B, zapas ok. 1,9 KB — Fala 1 czeka na T-10). Źródła: audyt stanu (agent frontend-expert) i propozycje (agent general-purpose), oba tylko czytały kod. Plan uzupełnia `docs/plan-ui-motywy-2026-10-27.md` (Fazy 0–4 zrobione, Faza 5 QA otwarta) i nie powtarza zrobionych punktów.
+> **Status (2026-10-30):** Fala 0 zrobiona (0.1 Miedź, 0.2 tabliczka — margines i Fraunces okazały się już per styl, 0.3 poświata, 0.4 Odblask, 0.5 `public/prepaint.js`, 0.6 pomiar: precache 4 087 501 B, zapas ok. 1,9 KB — T-10 podjęta: próg 4,0 MiB). Źródła: audyt stanu (agent frontend-expert) i propozycje (agent general-purpose), oba tylko czytały kod. Plan uzupełnia `docs/plan-ui-motywy-2026-10-27.md` (Fazy 0–4 zrobione, Faza 5 QA otwarta) i nie powtarza zrobionych punktów.
 
 ## Skąd ten plan
 
@@ -91,6 +91,6 @@ Dziś jest 10 stylów (Zeszyt, Plan, Neon, Zorza, Miedź, Matryca, Hydraulika, O
 | T-7 | Styl per dział? | Nie; zamiast tego „wyraźne kolory działów” (3.4). |
 | T-8 | Własne zdjęcie jako tapeta, kod QR? | Nie teraz (kontrast, budżet precache). |
 | T-9 | Logo w nagłówku: „notki” długopisem zamiast „NOTKI”? | Tak, jedna marka wszędzie. |
-| T-10 | Budżet precache: podnieść próg czy ładować style leniwie? | Najpierw pomiar (0.6); przy zapasie < 20 KB leniwe ładowanie CSS stylów innych niż bieżący. |
+| T-10 | Budżet precache: podnieść próg czy ładować style leniwie? | **Podjęta 2026-10-30: próg 3,9 → 4,0 MiB.** |
 
 Kolejność: Fala 0 → 1 → 2 → 3 → 4. Fale 0 i 1 nie wymagają decyzji; 3.5 czeka na T-1–T-3, 3.2 na T-5–T-6, 4.1 na T-4, 1.6 na T-9.
