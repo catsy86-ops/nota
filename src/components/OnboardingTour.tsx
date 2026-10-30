@@ -1,44 +1,25 @@
-import { useEffect, useState } from "react";
-import { m as motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState } from "react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { INTERESTS, TOUR_SEEN_KEY, tourSteps, WELCOME_STEP, type Interest } from "@/lib/guides";
+import { GuideDialog } from "@/components/guide/GuideDialog";
 
-const SEEN_KEY = "kaczy.tour.seen.v1";
-
-const STEPS = [
-  {
-    emoji: "📝",
-    title: "Zapisz myśl w sekundę",
-    desc: "Kliknij pole „Zapisz notatkę…” na górze (lub duży przycisk + na dole) i po prostu pisz. Zapisuje się samo.",
-  },
-  {
-    emoji: "🔍",
-    title: "Znajdź wszystko",
-    desc: "Wyszukiwarka u góry przeszukuje tytuły i treść. Etykiety i foldery w panelu po lewej pomagają uporządkować notatki.",
-  },
-  {
-    emoji: "🗂️",
-    title: "Nic nie ginie",
-    desc: "Notatki możesz przypiąć, przenieść do archiwum albo do kosza — z kosza wracają jednym kliknięciem przez 30 dni.",
-  },
-];
-
-const PHONE_DESC: Record<number, { desc: string }> = {
-  0: { desc: "Stuknij duży przycisk + na dole i po prostu pisz. Przytrzymaj go, by od razu dodać listę, zdjęcie albo rysunek. Zapisuje się samo." },
-  1: { desc: "Wyszukiwarka u góry przeszukuje tytuły i treść. Foldery i etykiety znajdziesz w panelu otwieranym ikoną w lewym górnym rogu." },
-  2: { desc: "Na telefonie przesuń kafel w prawo, żeby go przypiąć, albo w lewo, żeby zarchiwizować. Kosz jest w menu „⋯” — z kosza notatki wracają przez 30 dni." },
-};
-
+/**
+ * Samouczek na start (pierwsze uruchomienie i „Więcej → Samouczek”): karta powitalna z wyborem działów,
+ * potem karty Notatek, wybranych działów i kopii. Treść w `lib/guides.ts`.
+ */
 export function OnboardingTour() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const [interests, setInterests] = useState<Set<Interest>>(() => new Set(INTERESTS.map((i) => i.id)));
+  const steps = useMemo(() => [WELCOME_STEP, ...tourSteps(interests)], [interests]);
 
   useEffect(() => {
-    if (!localStorage.getItem(SEEN_KEY)) {
-      const t = setTimeout(() => setOpen(true), 700);
-      return () => clearTimeout(t);
-    }
+    let seen = true;
+    try { seen = !!localStorage.getItem(TOUR_SEEN_KEY); } catch { /* prywatne okno — nie pokazuj */ }
+    if (seen) return;
+    const t = setTimeout(() => setOpen(true), 700);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -47,58 +28,49 @@ export function OnboardingTour() {
     return () => window.removeEventListener("kaczy:tour", onTour);
   }, []);
 
-  function finish() {
-    localStorage.setItem(SEEN_KEY, "1");
+  function close() {
+    try { localStorage.setItem(TOUR_SEEN_KEY, "1"); } catch { /* prywatne okno */ }
     setOpen(false);
     setStep(0);
   }
 
-  // Na telefonie nie ma paska „Zapisz notatkę…” ani panelu po lewej — teksty o „+” i menu „Więcej”.
-  const phone = typeof matchMedia !== "undefined" && matchMedia("(max-width: 767px)").matches;
-  const s = { ...STEPS[step], ...(phone ? PHONE_DESC[step] : {}) };
-  const last = step === STEPS.length - 1;
+  function flip(id: Interest) {
+    setInterests((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  const choose = step === 0 && (
+    <div className="flex flex-wrap justify-center gap-1.5" role="group" aria-label="Co Cię interesuje">
+      <span className="inline-flex items-center gap-1 rounded-full border border-primary bg-primary/10 px-3 py-1 text-sm font-medium coarse:min-h-11">
+        <Check className="h-3.5 w-3.5" aria-hidden />Notatki
+      </span>
+      {INTERESTS.map((i) => {
+        const on = interests.has(i.id);
+        return (
+          <button key={i.id} type="button" onClick={() => flip(i.id)} aria-pressed={on}
+            className={cn("pressable inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm coarse:min-h-11",
+              on ? "border-primary bg-primary/10 font-medium text-foreground" : "border-border text-muted-foreground hover:text-foreground")}>
+            {on && <Check className="h-3.5 w-3.5" aria-hidden />}{i.label}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) finish(); }}>
-      <DialogContent className="max-w-sm rounded-card text-center">
-        <DialogHeader className="items-center space-y-3">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={s.emoji}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-              className="text-5xl"
-            >
-              {s.emoji}
-            </motion.div>
-          </AnimatePresence>
-          <DialogTitle className="font-display text-xl">{s.title}</DialogTitle>
-          <DialogDescription className="text-sm leading-relaxed">{s.desc}</DialogDescription>
-        </DialogHeader>
-
-        <div className="flex items-center justify-center gap-1.5 py-2">
-          {STEPS.map((_, i) => (
-            <span
-              key={i}
-              className={cn(
-                "h-1.5 rounded-full transition-all duration-300",
-                i === step ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30"
-              )}
-            />
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" className="flex-1" onClick={finish}>
-            {last ? "Zamknij" : "Pomiń"}
-          </Button>
-          <Button className="flex-1" onClick={() => (last ? finish() : setStep(step + 1))}>
-            {last ? "Zaczynamy ✍️" : "Dalej"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <GuideDialog
+      open={open}
+      label="Samouczek"
+      steps={steps}
+      step={step}
+      onStep={setStep}
+      onClose={close}
+      extra={choose || undefined}
+      doneLabel="Zaczynamy"
+      testId="onboarding-tour"
+    />
   );
 }

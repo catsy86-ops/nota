@@ -1513,3 +1513,18 @@ html[data-motion="reduced"] .note-card .note-frame { animation: none !important;
     }
   }
 }
+
+/* Samouczek (components/guide/GuideArt.tsx): ilustracje rysowane długopisem jak ekran startowy.
+   `--d` = opóźnienie kreski; kreska niewidoczna do startu, bo zaokrąglony koniec o zerowej długości robi kropkę. */
+.guide-draw { stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; animation: guide-draw 0.45s var(--ease-out) var(--d, 0s) forwards; }
+.guide-pop { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: guide-pop 0.4s cubic-bezier(0.34, 1.7, 0.64, 1) var(--d, 0s) forwards; }
+.guide-grow { transform-box: fill-box; transform-origin: bottom; transform: scaleY(0); animation: guide-grow 0.5s var(--ease-out) var(--d, 0s) forwards; }
+.guide-slide { animation: guide-slide 1.6s var(--ease-in-out, ease-in-out) var(--d, 0s) infinite alternate; }
+@keyframes guide-draw { from { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
+@keyframes guide-pop { to { transform: scale(1); } }
+@keyframes guide-grow { to { transform: scaleY(1); } }
+@keyframes guide-slide { from { transform: translateX(-10px); } to { transform: translateX(10px); } }
+@media (prefers-reduced-motion: reduce) {
+  .guide-draw, .guide-pop, .guide-grow, .guide-slide { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
+}
+html[data-motion='reduced'] :is(.guide-draw, .guide-pop, .guide-grow, .guide-slide) { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }

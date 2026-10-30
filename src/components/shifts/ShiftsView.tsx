@@ -42,6 +42,7 @@ import { ShiftSettingsDialog } from "./ShiftSettingsDialog";
 import { ShiftTypeDialog } from "./ShiftTypeDialog";
 import { DayDialog } from "./DayDialog";
 import { PatternDialog } from "./PatternDialog";
+import { ShiftsHint } from "@/components/guide/ShiftsHint";
 import { WeekTemplateDialog } from "./WeekTemplateDialog";
 import { cyclePatterns, weekTemplates, weekTemplateSteps } from "@/lib/shifts";
 import { RangeCopyDialog } from "./RangeCopyDialog";
@@ -378,6 +379,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
             Od sm — zawsze widoczny. Na telefonie przełącznik siedzi tu, a nie w rzędzie nawigacji: tytuł miesiąca
             („październik 2026”) nie mieści się obok strzałek i przełącznika na 390 px. */}
         <div className="order-0 w-full space-y-2">
+          <ShiftsHint />
           <div className="flex items-center gap-2 sm:contents">
             <button type="button" aria-expanded={switcherOpen} aria-controls="shift-schedules" onClick={() => setSwitcherOpen((o) => !o)}
               className="sm:hidden pressable flex min-w-0 flex-1 items-center justify-between gap-2 h-10 coarse:h-11 px-3 rounded-control border border-border/60 bg-card text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">

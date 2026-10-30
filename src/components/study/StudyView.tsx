@@ -4,7 +4,9 @@ import { MODULES, TOPICS } from "@/lib/study/content";
 import { STUDY_TOPIC_PARAM } from "@/lib/study/questionSearch";
 import { columnOf, dueToday, useStudy } from "@/lib/study/store";
 import { pluralPl } from "@/lib/plural";
-import { ChartColumn, RotateCcw } from "lucide-react";
+import { ChartColumn, CircleQuestionMark, RotateCcw } from "lucide-react";
+import { openGuide } from "@/lib/guides";
+import { WorkGuide } from "@/components/guide/WorkGuide";
 import { StudyStatsDialog } from "./StudyStats";
 import { HeightsButton } from "./HeightsSheet";
 import { CalculatorsButton } from "./CalculatorsSheet";
@@ -222,6 +224,7 @@ function StudyScreen() {
 
   return (
     <div className="space-y-6" data-testid="study-view">
+      <WorkGuide />
       <CustomQuestionsDialog open={ownOpen} onOpenChange={setOwnOpen} prefill={prefill} />
       {/* Na Dzienniku nauka schodzi do jednego wiersza — na budowie liczy się „+ Wpis” i lista, nie pasek opanowania. */}
       {tab === "journal" ? (
@@ -247,6 +250,15 @@ function StudyScreen() {
             className="pressable inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
           >
             <ChartColumn className="h-4 w-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            onClick={() => openGuide("work")}
+            aria-label="Przewodnik po Pracy"
+            title="Przewodnik po Pracy"
+            className="pressable inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+          >
+            <CircleQuestionMark className="h-4 w-4" aria-hidden />
           </button>
           <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} onPractice={() => { setStatsOpen(false); changeScope({ kind: "all" }); setTab("quiz"); }} />
         </header>
