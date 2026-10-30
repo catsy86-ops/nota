@@ -3838,3 +3838,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Przy kopiowaniu Windows zamienia `\n` na `\r\n`; w testach porównanie normalizuje końce linii. Wpis „Problem (rozwiązany)” w tekście pokazuje status z pola `resolved`.
 - **Testy.** Vitest: `src/lib/study/journalView.test.ts` (`entryShareText`). E2E: `e2e/journal-menu.spec.ts` (rozwiązany, kopiuj, edytuj, usuń i cofnij); `study.spec.ts`, `photo-drawing.spec.ts`, `site-handover.spec.ts` otwierają edycję przez menu.
 - **Commit.** `9b104f4` (2026-10-30).
+
+## Wygląd: zestawy jednym stuknięciem (Fala 1, 1.3 planu motywów, 2026-10-30)
+
+- **Co robi.** W części **Szybko** w Ustawienia → Wygląd jest sekcja **Zestawy**: dwa gotowe — **Budowa** (Odblask, tryb budowa, gładkie tło, wyraźne ramki, tekst 125%, poświata wyłączona, ruch ograniczony) i **Noc** (ciemna Zorza, ciche tło, łagodna poświata) — oraz **Mój 1–3**: zapis bieżącego wyglądu do miejsca i przywrócenie jednym stuknięciem. Każde zastosowanie pokazuje komunikat z „Cofnij”.
+- **Gdzie.** `src/lib/appearancePresets.ts` (`PRESETS`, `readSlot`, `saveSlot`, `applyValues`), sekcja „Zestawy” w `src/components/settings/AppearanceSettings.tsx` (`applyPreset`, `readAllSlots`).
+- **Jak działa.** Gotowy zestaw zmienia tylko swoje klucze (`replace: false`), więc akcent, krój i układ zostają. Własny slot zapisuje i przywraca cały wygląd (`replace: true`, klucze spoza zapisu wracają do domyślnych). Zmiana idzie tą samą ścieżką co reset: zapis w localStorage i zdarzenie `storage` — bez przeładowania. Sloty to klucze `kaczy.appearance.slot.N.v1` (per urządzenie).
+- **Ograniczenia.** Dostęp przez przytrzymanie przełącznika jasności w nagłówku (druga część 1.3 z planu) nie jest zrobiony — zestawy są w Ustawieniach. Uszkodzony slot jest traktowany jak pusty.
+- **Testy.** Vitest: `src/lib/appearancePresets.test.ts` (gotowy zestaw zmienia tylko swoje klucze i „Cofnij” wraca; slot zapisuje i przywraca cały wygląd; uszkodzony slot). E2E: `e2e/appearance-presets.spec.ts` (Budowa i „Cofnij”; zapis slotu, reset, przywrócenie slotu).
+- **Commit.** do uzupełnienia (2026-10-30).

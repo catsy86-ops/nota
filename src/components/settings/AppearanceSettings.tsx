@@ -25,6 +25,7 @@ import { trySkin } from "@/lib/skinTry";
 import { NightSkinSettings } from "./NightSkinSettings";
 import { AppearanceCode } from "./AppearanceCode";
 import { AppearancePreview } from "./AppearancePreview";
+import { PRESETS, SLOT_COUNT, applyValues, readSlot, saveSlot } from "@/lib/appearancePresets";
 import { resetAppearance, applyAppearanceValues } from "@/lib/appearanceCode";
 import { toastWithUndo } from "@/lib/undoToast";
 import { setBackdrop, useBackdrop, type Backdrop } from "@/lib/backdrop";
@@ -105,6 +106,9 @@ const APPEARANCE_GROUPS = [
 const ADVANCED_KEY = "kaczy.appearance.advanced.v1";
 const readAdvanced = () => { try { return localStorage.getItem(ADVANCED_KEY) === "1"; } catch { return false; } };
 
+/** Zapisane sloty „Mój 1–3” (`null` = pusty) — do przycisków zestawów. */
+const readAllSlots = () => Array.from({ length: SLOT_COUNT }, (_, i) => readSlot(i + 1));
+
 /** Pory roku: ikony zamiast emoji (spójnie z resztą Ustawień). */
 const SEASON_ICON = { auto: CalendarDays, spring: Flower2, summer: Sun, autumn: Leaf, winter: Snowflake } as const;
 
@@ -128,6 +132,12 @@ export function AppearanceSettings() {
   function resetLook() {
     const before = resetAppearance();
     toastWithUndo("Przywrócono domyślny wygląd", () => applyAppearanceValues(before, { replace: true }));
+  }
+  // Zestawy (1.3): sloty „Mój 1–3” odświeżają się po zapisie; „Cofnij” wraca do wartości sprzed zestawu.
+  const [slots, setSlots] = useState(readAllSlots);
+  function applyPreset(name: string, before: Record<string, string>) {
+    setSlots(readAllSlots());
+    toastWithUndo(`Zastosowano zestaw: ${name}`, () => applyAppearanceValues(before, { replace: true }));
   }
   const { schemeMode, setMode: setThemeMode, skin } = useTheme();
   const skinScheme = SKIN_SCHEME[skin];
@@ -166,6 +176,42 @@ export function AppearanceSettings() {
       </div>
 
       <SettingsGroup id="wyglad-szybko" title="Szybko">
+        <Section title="Zestawy">
+          <div className="grid grid-cols-2 gap-2">
+            {PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => applyPreset(p.label, applyValues(p.values, { full: false }))}
+                className="pressable rounded-card border border-border/60 bg-muted/30 px-3 py-2 text-left hover:bg-muted/60 coarse:min-h-11"
+              >
+                <span className="block text-sm font-semibold">{p.label}</span>
+                <span className="block text-2xs text-muted-foreground">{p.desc}</span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 space-y-1.5" role="group" aria-label="Moje zestawy">
+            {Array.from({ length: SLOT_COUNT }, (_, i) => i + 1).map((n) => {
+              const saved = slots[n - 1];
+              return (
+                <div key={n} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={!saved}
+                    onClick={() => saved && applyPreset(`Mój ${n}`, applyValues(saved, { full: true }))}
+                    className="pressable min-w-0 flex-1 rounded-card border border-border/60 bg-muted/30 px-3 py-2 text-left text-sm hover:bg-muted/60 disabled:opacity-60 coarse:min-h-11"
+                  >
+                    {saved ? `Mój ${n}` : `Mój ${n} — pusty`}
+                  </button>
+                  <Button variant="outline" size="sm" className="coarse:h-11" onClick={() => { saveSlot(n); setSlots(readAllSlots()); toast.success(`Zapisano w „Mój ${n}”`); }}>
+                    Zapisz tu
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </Section>
+
         <Section title="Galeria stylów">
           <SkinPicker value={skin} onChange={trySkin} />
         </Section>
