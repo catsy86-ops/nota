@@ -145,3 +145,6 @@ html[data-skin="odblask"] { --fab-radius: 0.25rem; --nav-bar-radius: 0; --nav-ti
 
 /* Okna Odblasku (plan motywów 2.3): ostre rogi, gruba czarna krawędź, płaski cień — jak tabliczka na budowie. */
 html[data-skin="odblask"] { --overlay-radius: 0.25rem; --overlay-border: var(--foreground); --overlay-shadow: 0 0 0 1px var(--foreground); --overlay-title-font: 'Barlow Condensed', sans-serif; }
+
+/* Powiadomienia Odblasku (plan motywów 2.3): ostre, z czarną krawędzią — jak naklejka na taśmie. */
+html[data-skin="odblask"] { --toast-radius: 0.25rem; --toast-border: var(--foreground); --toast-shadow: 0 0 0 1px var(--foreground); }

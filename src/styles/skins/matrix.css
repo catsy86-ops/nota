@@ -133,3 +133,6 @@ html[data-skin="matrix"]:not(.dark) .notki-logo { filter: drop-shadow(0 0 6px hs
 
 /* Okna Matrycy (plan motywów 2.3): zielona poświata wokół okna, tytuł w monospace. */
 html[data-skin="matrix"] { --overlay-border: color-mix(in srgb, var(--primary) 50%, transparent); --overlay-shadow: 0 0 18px color-mix(in srgb, var(--primary) 30%, transparent); --overlay-title-font: 'JetBrains Mono Variable', ui-monospace, monospace; }
+
+/* Powiadomienia Matrycy (plan motywów 2.3): zielona poświata, bez zmiany kształtu. */
+html[data-skin="matrix"] { --toast-shadow: 0 0 16px color-mix(in srgb, var(--primary) 30%, transparent); }

@@ -196,3 +196,6 @@ html[data-sig="view"][data-skin="tablica"] .sig-layer::before {
 
 /* Okna Tablicy (plan motywów 2.3): zaokrąglone jak kreda, krawędź w odcieniu drewnianej ramy. */
 html[data-skin="tablica"] { --overlay-radius: 0.75rem; --overlay-border: color-mix(in srgb, var(--primary) 45%, transparent); }
+
+/* Powiadomienia Tablicy (plan motywów 2.3): kreda, lekko zaokrąglone, krawędź w odcieniu ramy. */
+html[data-skin="tablica"] { --toast-radius: 0.75rem; --toast-border: color-mix(in srgb, var(--primary) 45%, transparent); }
