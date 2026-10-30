@@ -1517,3 +1517,22 @@ html[data-motion="reduced"] .note-card .note-frame { animation: none !important;
   .guide-draw, .guide-pop, .guide-grow, .guide-slide { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
 }
 html[data-motion='reduced'] :is(.guide-draw, .guide-pop, .guide-grow, .guide-slide) { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
+
+/* Szkic pustych ekranów (components/art/Sketch.tsx, plan motywów 2.1): kreska z tokenów stylu.
+   `--sketch-w` grubość, `--sketch-dash` linie kartki, `--sketch-glow` filtr poświaty. */
+.sketch { filter: var(--sketch-glow, none); }
+.sketch-line { fill: none; stroke: currentColor; stroke-width: var(--sketch-w, 2); stroke-linecap: round; stroke-linejoin: round; }
+.sketch-under { stroke-opacity: 0.5; }
+.sketch-paper { stroke: currentColor; stroke-opacity: 0.18; stroke-width: var(--sketch-w, 2); stroke-dasharray: var(--sketch-dash, none); }
+.sketch-draw { stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; animation: guide-draw 0.35s var(--ease-out) var(--d, 0s) forwards; }
+@media (prefers-reduced-motion: reduce) { .sketch-draw { animation: none; stroke-dashoffset: 0; opacity: 1; } }
+html[data-motion='reduced'] .sketch-draw { animation: none; stroke-dashoffset: 0; opacity: 1; }
+html[data-skin="plan"] { --sketch-w: 1.4; --sketch-dash: 3 3; }
+html[data-skin="neon"] { --sketch-w: 1.8; --sketch-glow: drop-shadow(0 0 4px color-mix(in srgb, var(--primary) 70%, transparent)); }
+html[data-skin="zorza"] { --sketch-w: 1.8; --sketch-glow: drop-shadow(0 0 6px color-mix(in srgb, var(--primary) 45%, transparent)); }
+html[data-skin="matrix"] { --sketch-w: 1.6; --sketch-glow: drop-shadow(0 0 3px color-mix(in srgb, var(--primary) 80%, transparent)); }
+html[data-skin="miedz"] { --sketch-w: 2.2; }
+html[data-skin="hydraulika"] { --sketch-w: 2.6; }
+html[data-skin="odblask"] { --sketch-w: 3; }
+html[data-skin="kafle"] { --sketch-w: 2.4; }
+html[data-skin="tablica"] { --sketch-w: 2.4; }
