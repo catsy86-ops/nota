@@ -3837,4 +3837,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Menu oparte na `DropdownMenu`. Tekst składa się z rodzaju, budowy i daty w pierwszej linii, potem opisu, rozwiązania, kształtek, rur i próby. Data formatowana ręcznie, bo przeglądarki różnie wstawiają spacje w `toLocaleString`. Usunięcie korzysta z istniejących `removeJournalEntry` i `restoreJournalEntry` (jak wcześniej w arkuszu).
 - **Ograniczenia.** Przy kopiowaniu Windows zamienia `\n` na `\r\n`; w testach porównanie normalizuje końce linii. Wpis „Problem (rozwiązany)” w tekście pokazuje status z pola `resolved`.
 - **Testy.** Vitest: `src/lib/study/journalView.test.ts` (`entryShareText`). E2E: `e2e/journal-menu.spec.ts` (rozwiązany, kopiuj, edytuj, usuń i cofnij); `study.spec.ts`, `photo-drawing.spec.ts`, `site-handover.spec.ts` otwierają edycję przez menu.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `9b104f4` (2026-10-30).
