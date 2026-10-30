@@ -3883,4 +3883,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Zaokrąglenia to tokeny z wartością domyślną, więc bez skórki wszystko wygląda jak przed zmianą. Animacja znacznika (`layoutId`) i kolory zostają bez zmian; zmienia się tylko kształt. Przycisk „+” ma `border-radius: var(--fab-radius, 9999px)`.
 - **Ograniczenia.** Kafle i Hydraulika dostały tokeny, ale bez dopracowanych zrzutów — do QA na telefonie. Zmiana kształtu nie zmienia obszaru dotyku (44 px zostaje).
 - **Testy.** E2E: `bottom-slot`, `mobile`, `skins`, `fab-sheets-a11y`, `quick-presets`, `a11y`. Zrzuty paska w 5 stylach sprawdzone ręcznie.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `5cdca8c` (2026-10-30).
