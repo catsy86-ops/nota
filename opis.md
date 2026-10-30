@@ -3911,4 +3911,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Ciemny wariant deszczu jest bez zmian (domyślne `light=false`). Klucz montowania to `${backdrop}-${dark ? "d" : "l"}`, więc przejście między schematami przemontowuje płótno z właściwą paletą.
 - **Ograniczenia.** Deszcz w jasnym to ten sam koszt co w ciemnym (płótno, do 24 klatek/s), a ograniczony ruch i tryb „ciche” działają tak samo. Neon i Zorza jasne nie dostały jeszcze poświaty w tle (rozważane, nie zrobione).
 - **Testy.** Vitest: pełny zestaw. E2E: `skins`, `skin-motion`, `a11y`, `mobile`. Zrzuty jasnych wariantów Matrycy, Planu, Neonu i Zorzy sprawdzone ręcznie.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `0340c2e` (2026-10-30).
