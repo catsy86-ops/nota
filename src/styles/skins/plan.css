@@ -129,3 +129,6 @@ html[data-skin="plan"] .note-card::before {
 }
 
 /* Jasny Plan (4.1): linie kalki biorą granat z `--grid`; logo bez białego początku gradientu (zniknąłby na papierze). */
+
+/* Okna Planu (plan motywów 2.3): ostre rogi, cienka linia siatki, tytuł w wąskim kroju technicznym. */
+html[data-skin="plan"] { --overlay-radius: 0.125rem; --overlay-border: color-mix(in srgb, var(--grid) 60%, transparent); --overlay-title-font: 'Barlow Condensed', sans-serif; }

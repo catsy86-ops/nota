@@ -3884,3 +3884,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Kafle i Hydraulika dostały tokeny, ale bez dopracowanych zrzutów — do QA na telefonie. Zmiana kształtu nie zmienia obszaru dotyku (44 px zostaje).
 - **Testy.** E2E: `bottom-slot`, `mobile`, `skins`, `fab-sheets-a11y`, `quick-presets`, `a11y`. Zrzuty paska w 5 stylach sprawdzone ręcznie.
 - **Commit.** `5cdca8c` (2026-10-30).
+
+## Okna per styl: kształt, krawędź, cień i krój tytułu (Fala 2, 2.3 planu motywów, 2026-10-30)
+
+- **Co robi.** Dialogi i okna (`DialogContent`, także arkusze „+” i samouczek) biorą kształt, krawędź, cień i krój tytułu ze stylu. Odblask: ostre rogi, czarna krawędź, płaski cień i tytuł w wąskim kroju. Plan: ostre rogi, linia siatki, wąski krój. Tablica: zaokrąglone jak kreda, krawędź w odcieniu ramy. Miedź: krawędź w kolorze rury i cień jak na betonie. Matryca: zielona poświata i tytuł monospace. Hydraulika: cienka krawędź. Zeszyt bez zmian.
+- **Gdzie.** `src/components/ui/dialog.tsx` (klasy `[border-radius:var(--overlay-radius,…)]`, `[border-color:…]`, `[box-shadow:…]` na `DialogContent`, `[font-family:var(--overlay-title-font,inherit)]` na `DialogTitle`); tokeny `--overlay-*` w `src/styles/skins/{odblask,plan,tablica,miedz,matrix,hydraulika}.css`.
+- **Jak działa.** Każdy token ma wartość domyślną, więc bez skórki okno wygląda jak dawniej. Odwołania idą na istniejące tokeny (`--r-card` promień kart, `--elevation-3` cień, `--border` krawędź). Kształt okna i tytuł są widoczne także w samouczku i szybkich zestawach, bo używają tego samego `DialogContent`.
+- **Ograniczenia.** Toasty (sonner, `src/components/ui/sonner.tsx`) nie dostały jeszcze tokenów — to osobny krok. Kafle i Zorza bez własnych okien (zostają domyślne). Wąski krój tytułu w Odblasku i Planie to Barlow Condensed, który jest już w paczce stylu.
+- **Testy.** Vitest: pełny zestaw. E2E: `onboarding`, `guides`, `appearance-quick`, `quick-presets`, `a11y`, `mobile`, `fab-sheets-a11y`. Zrzuty samouczka w Odblasku i Zeszycie sprawdzone ręcznie.
+- **Commit.** do uzupełnienia (2026-10-30).

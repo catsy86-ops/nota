@@ -177,3 +177,6 @@ html[data-skin="hydraulika"]:not(.dark) .hydro-bubble {
 
 /* Hydraulika (plan motywów 2.2): „+” jako pokrętło — okrąg, a znacznik jak rura: zaokrąglony koniec. */
 html[data-skin="hydraulika"] { --nav-bar-radius: 9999px; --nav-tile-radius: 1.25rem; }
+
+/* Okna Hydrauliki (plan motywów 2.3): cienka krawędź w kolorze rury, miękki cień. */
+html[data-skin="hydraulika"] { --overlay-border: color-mix(in srgb, var(--primary) 40%, transparent); }

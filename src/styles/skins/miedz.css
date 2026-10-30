@@ -133,3 +133,6 @@ html[data-skin="miedz"].dark .paper-grid::before {
     linear-gradient(90deg, hsl(30 6% 38% / 0.6) 1px, transparent 1px),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .7 0 0 0 0 .66 0 0 0 0 .6 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+
+/* Okna Miedzi (plan motywów 2.3): krawędź w kolorze rury, wyraźny cień jak na betonie. */
+html[data-skin="miedz"] { --overlay-border: color-mix(in srgb, var(--primary) 55%, transparent); --overlay-shadow: 0 3px 0 0 color-mix(in srgb, var(--primary) 35%, transparent), var(--elevation-3); }

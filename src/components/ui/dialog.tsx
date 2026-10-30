@@ -50,7 +50,7 @@ const DialogContent = React.forwardRef<
         onInteractOutside?.(e);
       }}
       className={cn(
-        "fixed left-[50%] top-[50%] z-modal grid grid-cols-[minmax(0,1fr)] w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-card max-sm:max-w-[calc(100%-2rem)] shadow-xl ease-out-soft data-[state=open]:duration-base data-[state=closed]:duration-fast data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-[0.97] data-[state=open]:zoom-in-[0.97] data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+        "fixed left-[50%] top-[50%] z-modal grid grid-cols-[minmax(0,1fr)] w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto max-sm:max-w-[calc(100%-2rem)] [border-radius:var(--overlay-radius,var(--r-card))] [border-color:var(--overlay-border,var(--border))] [box-shadow:var(--overlay-shadow,var(--elevation-3))] ease-out-soft data-[state=open]:duration-base data-[state=closed]:duration-fast data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-[0.97] data-[state=open]:zoom-in-[0.97] data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
         sheet && "phone:max-w-none phone:rounded-b-none phone:top-auto phone:bottom-0 phone:max-h-[92dvh] phone:translate-y-0 phone:overflow-y-auto phone:rounded-t-2xl phone:border-x-0 phone:border-b-0 phone:pb-[max(1.5rem,env(safe-area-inset-bottom))] phone:data-[state=closed]:slide-out-to-bottom phone:data-[state=open]:slide-in-from-bottom phone:data-[state=closed]:slide-out-to-left-0 phone:data-[state=open]:slide-in-from-left-0 phone:data-[state=closed]:zoom-out-100 phone:data-[state=open]:zoom-in-100",
         className,
       )}
@@ -85,7 +85,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    className={cn("text-lg font-semibold leading-none tracking-tight [font-family:var(--overlay-title-font,inherit)]", className)}
     {...props}
   />
 ));
