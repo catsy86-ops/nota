@@ -3892,4 +3892,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Każdy token ma wartość domyślną, więc bez skórki okno wygląda jak dawniej. Odwołania idą na istniejące tokeny (`--r-card` promień kart, `--elevation-3` cień, `--border` krawędź). Kształt okna i tytuł są widoczne także w samouczku i szybkich zestawach, bo używają tego samego `DialogContent`.
 - **Ograniczenia.** Toasty (sonner, `src/components/ui/sonner.tsx`) nie dostały jeszcze tokenów — to osobny krok. Kafle i Zorza bez własnych okien (zostają domyślne). Wąski krój tytułu w Odblasku i Planie to Barlow Condensed, który jest już w paczce stylu.
 - **Testy.** Vitest: pełny zestaw. E2E: `onboarding`, `guides`, `appearance-quick`, `quick-presets`, `a11y`, `mobile`, `fab-sheets-a11y`. Zrzuty samouczka w Odblasku i Zeszycie sprawdzone ręcznie.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `6e0ce3b` (2026-10-30).
