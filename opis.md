@@ -3949,4 +3949,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Zmiana wyglądu domyślnego.** Wcześniej nagłówek `ViewTitle` miał kreskę 3 px w pełnym kolorze. Domyślnie jest teraz subtelna: 2 px, 60% krycia. Kto chce dawnego wyglądu, włącza „Wyraźne”.
 - **Ograniczenia.** Nie zmieniłem znacznika aktywnej pozycji na dolnym pasku (zostaje w kolorze marki) — to osobny wybór. Kolory działów w paskach bocznych bez zmian.
 - **Testy.** Vitest: `src/lib/sectionColors.test.ts` (atrybut na `<html>` przy obu trybach; klucz w kodzie wyglądu; reguła CSS dla wyraźnych). E2E: `section-colors` (przełącznik zmienia atrybut i wraca), `appearance-quick`, `appearance-code`.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `d617374` (2026-10-30).
