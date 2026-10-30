@@ -3803,3 +3803,20 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia.** Pod automatem testów (`navigator.webdriver`) przewodnik Pracy i podpowiedź Grafiku nie pokazują się same, bo zasłoniłyby ekran w setkach testów e2e; testy samouczka ustawiają `kaczy.guides.force` = „1”. Samouczek na start działa jak dawniej (testy ustawiają `kaczy.tour.seen.v1`). Właściciel, który widział stary samouczek, nowego sam nie zobaczy — otworzy go z „Więcej → Samouczek”; przewodnik po Pracy i podpowiedź Grafiku zobaczy przy następnym wejściu.
 - **Testy.** Vitest: `src/lib/guides.test.ts` (karty według wyboru, unikalne id, stan „widziane” i śmieci w pamięci, brak automatu pod webdriverem). E2E: `e2e/guides.spec.ts` (wybór działów zmienia liczbę kart, Wstecz, strzałki, skok kropką, zapamiętanie; przewodnik Pracy raz i z „?”; podpowiedź Grafiku raz); `e2e/mobile.spec.ts` (okno samouczka mieści się na telefonie).
 - **Commit.** `905a3ed` (2026-10-30).
+
+## Wygląd: Fala 0 planu motywów — naprawy (2026-10-30)
+
+- **Co robi.**
+  - **Miedź:** główny przycisk ma gradient liczony z koloru akcentu, czytelny w obu schematach (dawny gradient na sztywno dawał w ciemnej Miedzi ok. 3,8:1 i pomijał akcent).
+  - **Poświata zaznaczonej notatki** w stylach innych niż Zeszyt ma kolor stylu (`--primary`), nie pory roku; w Zeszycie dalej kolor pory roku. Opis pory roku w Ustawieniach mówi teraz, co naprawdę robi w innych stylach (plamy światła na tle).
+  - **Odblask** nie ma już żadnego ruchu: ramka aktywnej notatki to pełny, nieruchomy obrys, poświata nie „oddycha”, kropka „teraz” i tło Dziś nie pulsują; fokus z klawiatury to gruba kreska 3 px.
+  - **Bez mignięcia przy starcie:** styl, jasność i kolor paska stanu są ustawione, zanim wczyta się aplikacja.
+  - Tabliczka w rogu arkusza na komputerze: „NOTKI · ARKUSZ 1/1” zamiast starego „G”.
+- **Gdzie.** `src/styles/skins/miedz.css` (`@supports (color: oklch(from …))`), `src/index.css` (`--glow-default`, `.paper-stamp`), `src/components/settings/AppearanceSettings.tsx` (opis pory roku), `src/styles/skins/odblask.css`, `public/prepaint.js` i `<script src="/prepaint.js">` w `index.html`.
+- **Jak działa.**
+  - Miedź: jasny schemat — gradient od `--primary` w ciemniejsze (`l − 0,09`), więc biały tekst tylko zyskuje; ciemny — od jaśniejszego (`l + 0,08`) do `--primary`, więc ciemny tekst zyskuje. Odblask światła po najechaniu tylko w ciemnym. Przeglądarka bez kolorów względnych dostaje płaski `--primary`.
+  - Poświata: łańcuch `var(--glow-color, var(--glow-default, var(--season-accent)))`; `--glow-default` = `--primary` na `html[data-skin]:not([data-skin="zeszyt"])`. Własny kolor z Ustawień (`--glow-color`) dalej wygrywa.
+  - `prepaint.js`: osobny plik, nie skrypt w HTML, bo CSP ma `script-src 'self'`. Czyta `kaczy.skin.v1`, `kaczy-theme` (Zeszyt) i `kaczy.skinScheme.v1`; ustawia `data-skin`, klasę `dark`, `color-scheme` i `meta[name=theme-color]`. Mapy kolorów są kopią `SKIN_THEME_COLOR` i `SKIN_THEME_COLOR_ALT` — test pilnuje zgodności. Wszystko w `try`, przy błędzie JS ustawi wygląd po starcie.
+- **Ograniczenia.** „Styl na noc” (harmonogram) dochodzi dopiero w JS, więc wieczorem przy pierwszym uruchomieniu może mignąć styl dzienny. Przy dodaniu stylu trzeba dopisać go też w `prepaint.js` (test to wyłapie). Audyt wskazywał też czerwony margines i Fraunces w innych stylach — sprawdzone: każdy styl ma własny `--margin`, a tytuły arkuszy (`h2`) biorą krój stylu, więc bez zmian. Zapas precache po Fali 0: ok. 1,9 KB z 3,9 MiB — przed Falą 1 decyzja T-10.
+- **Testy.** Vitest: `src/lib/skinContrast.test.ts` (gradient Miedzi z `--primary`, tekst ≥ 4,5:1 na obu końcach w obu schematach), `src/lib/prepaint.test.ts` (10 stylów × jasność × tryb systemu = ta sama decyzja co `resolveDark` i ten sam kolor paska; śmieci w zapisie). E2E: `e2e/prepaint.spec.ts` (Neon ciemny i Miedź jasna ustawione przy zablokowanym module aplikacji).
+- **Commit.** do uzupełnienia (2026-10-30).

@@ -136,3 +136,14 @@ html[data-skin="odblask"] .notki-logo { filter: none; }
 
 /* Bez ruchu (plan 4.3): sygnatury stylu nie mają czasu trwania. */
 html[data-skin="odblask"] { --sig-ease: linear; --sig-dur: 0.01s; }
+
+/* Bez ruchu także w kafelkach i na Dziś (plan motywów 2026-10-30, 0.4): ramka aktywnej notatki stoi
+   (pełny obrys zamiast obracającego się łuku), poświata nie „oddycha”, kropka „teraz” i tło Dziś nie pulsują.
+   Te pętle kosztują też baterię w słońcu, kiedy ekran świeci na maksimum. */
+html[data-skin="odblask"] .note-glow-active,
+html[data-skin="odblask"] .today-breath::before,
+html[data-skin="odblask"] .now-dot::after { animation: none; }
+html[data-skin="odblask"] .now-dot::after { opacity: 0; }
+html[data-skin="odblask"] .note-card .note-frame { animation: none; background: var(--foreground); }
+/* Fokus z klawiatury i czytnika: gruba kreska w kolorze tekstu, widoczna na żółtym i na bieli. */
+html[data-skin="odblask"] :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }

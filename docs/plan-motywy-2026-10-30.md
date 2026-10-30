@@ -1,6 +1,6 @@
 # Plan: upiększenie motywów i dostosowanie wyglądu (2026-10-30)
 
-> **Status (2026-10-30):** plan zapisany, realizacja nie zaczęta. Źródła: audyt stanu (agent frontend-expert) i propozycje (agent general-purpose), oba tylko czytały kod. Plan uzupełnia `docs/plan-ui-motywy-2026-10-27.md` (Fazy 0–4 zrobione, Faza 5 QA otwarta) i nie powtarza zrobionych punktów.
+> **Status (2026-10-30):** Fala 0 zrobiona (0.1 Miedź, 0.2 tabliczka — margines i Fraunces okazały się już per styl, 0.3 poświata, 0.4 Odblask, 0.5 `public/prepaint.js`, 0.6 pomiar: precache 4 087 501 B, zapas ok. 1,9 KB — Fala 1 czeka na T-10). Źródła: audyt stanu (agent frontend-expert) i propozycje (agent general-purpose), oba tylko czytały kod. Plan uzupełnia `docs/plan-ui-motywy-2026-10-27.md` (Fazy 0–4 zrobione, Faza 5 QA otwarta) i nie powtarza zrobionych punktów.
 
 ## Skąd ten plan
 

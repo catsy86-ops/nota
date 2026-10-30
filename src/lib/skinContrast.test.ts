@@ -144,3 +144,19 @@ describe("Odblask: kontrast AAA tekstu", () => {
     });
   }
 });
+
+describe("Miedź: gradient przycisku głównego (plan motywów 2026-10-30, 0.1)", () => {
+  const css = readFileSync(resolve(process.cwd(), "src/styles/skins/miedz.css"), "utf8");
+  it("gradient z --primary, bez kolorów na sztywno, w stronę lepszego kontrastu", () => {
+    const rules = css.slice(css.indexOf("@supports (color: oklch(from"));
+    expect(rules).toContain("linear-gradient(180deg, var(--primary), oklch(from var(--primary) calc(l - 0.09) c h))");
+    expect(rules).toContain("linear-gradient(180deg, oklch(from var(--primary) calc(l + 0.08) c h), var(--primary))");
+    expect(css).not.toMatch(/button\.bg-primary\s*\{[^}]*hsl\(24 62%/);
+  });
+  it.each(["light", "dark"] as const)("%s: tekst na obu końcach gradientu ≥4.5:1", (scheme) => {
+    const t = resolveSkin("miedz", scheme);
+    const p = t.primary as Oklch;
+    const end: Oklch = [p[0] + (scheme === "light" ? -0.09 : 0.08), p[1], p[2]];
+    for (const bg of [p, end]) expect(contrast(rgb(t, "primary-foreground"), oklchToRgb(bg))).toBeGreaterThanOrEqual(4.5);
+  });
+});

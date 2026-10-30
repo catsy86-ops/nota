@@ -95,9 +95,9 @@
 @utility note-glow-active {
   /* --- Active note: seasonal glow --- */
   box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--glow-color, var(--season-accent)) 90%, transparent),
-    0 0 0 6px color-mix(in srgb, var(--glow-color, var(--season-accent)) calc(22% * var(--glow-mul, 1)), transparent),
-    0 10px 34px -8px color-mix(in srgb, var(--glow-color, var(--season-accent)) calc(55% * var(--glow-mul, 1)), transparent);
+    0 0 0 2px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) 90%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(22% * var(--glow-mul, 1)), transparent),
+    0 10px 34px -8px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(55% * var(--glow-mul, 1)), transparent);
   animation: note-glow-breathe 2.8s ease-in-out infinite;
   &::after {
     content: '';
@@ -107,7 +107,7 @@
     pointer-events: none;
     background: radial-gradient(
       120% 80% at 50% 0%,
-      color-mix(in srgb, var(--glow-color, var(--season-accent)) calc(18% * var(--glow-mul, 1)), transparent),
+      color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(18% * var(--glow-mul, 1)), transparent),
       transparent 65%
     );
   }
@@ -582,6 +582,12 @@ html[data-skin="zeszyt"] .app-header {
     --season-blob-3: oklch(0.6780 0.1807 2.47);
   }
 
+  /* Poświata aktywnej notatki: w Zeszycie kolor pory roku, w innych stylach ich własny akcent
+     (plan motywów 2026-10-30, 0.3) — pomarańczowa poświata w Matrycy czy Neonie gryzła się ze stylem. */
+  html[data-skin]:not([data-skin="zeszyt"]) {
+    --glow-default: var(--primary);
+  }
+
   /* Sezony zmieniają akcent i dekoracje, nie kolor marki — bursztyn zostaje przez cały rok
      (wcześniej zimą cała aplikacja robiła się niebieska, wiosną różowa). */
   html[data-season="spring"] {
@@ -699,7 +705,7 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
     color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
     white-space: nowrap;
   }
-  .paper-stamp::after { content: "G · ARKUSZ 1/1 · SKALA 1:1"; }
+  .paper-stamp::after { content: "NOTKI · ARKUSZ 1/1 · SKALA 1:1"; }
   html[data-view="today"] .paper-stamp::after { content: "DZIŚ · PRZEGLĄD DNIA"; }
   html[data-view="week"] .paper-stamp::after { content: "TYDZIEŃ · PRZEGLĄD"; }
   html[data-view="archive"] .paper-stamp::after { content: "ARCHIWUM · ARKUSZ 1/1"; }
@@ -775,15 +781,15 @@ html[data-motion="reduced"] .fab-ring[data-pressing="true"] { stroke-dashoffset:
   @keyframes note-glow-breathe {
     0%, 100% {
       box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--glow-color, var(--season-accent)) 85%, transparent),
-        0 0 0 6px color-mix(in srgb, var(--glow-color, var(--season-accent)) calc(18% * var(--glow-mul, 1)), transparent),
-        0 10px 30px -10px color-mix(in srgb, var(--glow-color, var(--season-accent)) calc(45% * var(--glow-mul, 1)), transparent);
+        0 0 0 2px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) 85%, transparent),
+        0 0 0 6px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(18% * var(--glow-mul, 1)), transparent),
+        0 10px 30px -10px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(45% * var(--glow-mul, 1)), transparent);
     }
     50% {
       box-shadow:
-        0 0 0 2px color-mix(in srgb, var(--glow-color, var(--season-accent)) 100%, transparent),
-        0 0 0 9px color-mix(in srgb, var(--glow-color, var(--season-accent)) calc(26% * var(--glow-mul, 1)), transparent),
-        0 14px 40px -8px color-mix(in srgb, var(--glow-color, var(--season-accent)) calc(65% * var(--glow-mul, 1)), transparent);
+        0 0 0 2px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) 100%, transparent),
+        0 0 0 9px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(26% * var(--glow-mul, 1)), transparent),
+        0 14px 40px -8px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(65% * var(--glow-mul, 1)), transparent);
     }
   }
 

@@ -217,7 +217,7 @@ export function AppearanceSettings() {
           </div>
           <p className="text-xs text-muted-foreground mt-1.5">
             {skin !== "zeszyt"
-              ? `Motyw pory roku zmienia styl Zeszyt. ${SKIN_META[skin].label} ma własne kolory i zostaje bez zmian.`
+              ? `W stylu ${SKIN_META[skin].label} pora roku dodaje tylko delikatne plamy światła na tle; kolory i poświata zostają w barwach stylu.`
               : seasonPref === "auto"
                 ? settings.seasonalTheme
                   ? `Dopasowany do daty (teraz: ${SEASON_META[activeSeason].label.toLowerCase()}). Tło papieru i akcenty.`

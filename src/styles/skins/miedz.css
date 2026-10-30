@@ -112,15 +112,23 @@ html[data-skin="miedz"] .notki-glyph {
     linear-gradient(105deg, transparent 38%, hsl(36 100% 92% / 0.95) 50%, transparent 62%),
     linear-gradient(170deg, hsl(28 80% 62%), var(--primary) 50%, hsl(16 60% 28%));
 }
-/* Przycisk główny lśni jak wypolerowana miedź; odblask przesuwa się po najechaniu. */
-html[data-skin="miedz"] button.bg-primary {
-  background-image: linear-gradient(115deg, transparent 30%, hsl(32 90% 80% / 0.45) 45%, transparent 60%),
-    linear-gradient(180deg, hsl(24 62% 50%), hsl(19 64% 37%));
-  background-size: 250% 100%, 100% 100%;
-  background-position: 120% 0, 0 0;
-  transition: background-position 700ms var(--ease-out);
+/* Przycisk główny jak wypolerowana miedź (plan motywów 2026-10-30, 0.1): gradient liczony z `--primary`,
+   więc idzie za akcentem i nie obniża kontrastu — jasny schemat: od `--primary` w ciemniejsze (biały tekst
+   zyskuje), ciemny: od jaśniejszego do `--primary` (ciemny tekst zyskuje). Odblask po najechaniu tylko
+   w ciemnym, gdzie rozjaśnia tło pod ciemnym tekstem; w jasnym obniżałby kontrast białego tekstu. */
+@supports (color: oklch(from red l c h)) {
+  html[data-skin="miedz"] button.bg-primary {
+    background-image: linear-gradient(180deg, var(--primary), oklch(from var(--primary) calc(l - 0.09) c h));
+  }
+  html[data-skin="miedz"].dark button.bg-primary {
+    background-image: linear-gradient(115deg, transparent 30%, hsl(36 90% 85% / 0.4) 45%, transparent 60%),
+      linear-gradient(180deg, oklch(from var(--primary) calc(l + 0.08) c h), var(--primary));
+    background-size: 250% 100%, 100% 100%;
+    background-position: 120% 0, 0 0;
+    transition: background-position 700ms var(--ease-out);
+  }
+  html[data-skin="miedz"].dark button.bg-primary:hover { background-position: -20% 0, 0 0; }
 }
-html[data-skin="miedz"] button.bg-primary:hover { background-position: -20% 0, 0 0; }
 
 /* Ciemna Miedź (4.1): beton w nocy — styki płyt i otwory po ściągach ciemniejsze, bez jasnych obwódek. */
 html[data-skin="miedz"].dark .paper-grid::before {
