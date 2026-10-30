@@ -3920,4 +3920,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Wzór to nadpisanie `background-image` i `background-size` warstwy `.paper-grid::before`. Dwie warstwy kropek mają różne rozmiary, więc się nie powtarzają w rytm. Ciemne warianty zostają bez zmian.
 - **Ograniczenia.** Nie zrobiłem pozostałych wariantów z planu: kalki i milimetrówki dla Planu (Plan ma już milimetrówkę z 2.5), cegiełki dla ciemnych Kafli, zielonej tablicy jako wyboru. Zeszyt nie dostał wyboru wzoru. Wybór wzoru przez użytkownika nie jest zrobiony — wzór jest stały dla stylu i schematu.
 - **Testy.** Vitest: pełny zestaw. E2E: `skins`, `skin-motion`, `a11y`. Zrzuty jasnej Tablicy i jasnych Kafli sprawdzone ręcznie.
-- **Commit.** do uzupełnienia (2026-10-30).
+- **Commit.** `94fcfec` (2026-10-30).
