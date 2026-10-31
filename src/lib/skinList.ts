@@ -21,7 +21,7 @@ export const SKIN_SCHEME: Record<Skin, "light" | "dark" | null> = {
   hydraulika: "dark",
   odblask: "light",
   kafle: "light",
-  tablica: "light",
+  tablica: "dark",
 };
 
 /** Kolor paska stanu / okna PWA. Opisy i miniatury galerii: `skinGallery.ts` (tylko Ustawienia). */
@@ -35,7 +35,7 @@ export const SKIN_THEME_COLOR: Record<Skin, string> = {
   hydraulika: "#0b1e2b",
   odblask: "#e1f23a",
   kafle: "#f4f6f9",
-  tablica: "#f6f7f8",
+  tablica: "#2f4a3c",
 };
 
 /**
@@ -64,5 +64,5 @@ export const SKIN_THEME_COLOR_ALT: Record<Exclude<Skin, "zeszyt">, string> = {
   hydraulika: "#f2f6f9",
   odblask: "#1a1a1a",
   kafle: "#2b2e33",
-  tablica: "#2f4a3c",
+  tablica: "#f6f7f8",
 };

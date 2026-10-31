@@ -1,4 +1,4 @@
-/* ─────────────────────────── MIEDŹ — beton i rury ─────────────────────────── */
+/* ─────────────────────────── MIEDŹ (Beton i patyna) — beton i patyna na miedzi ─────────────────────────── */
 html[data-skin="miedz"] {
   /* Ostrzeżenie na jasnej karcie: ciemniejszy tekst (WCAG AA, 6,0:1 na karcie, 4,8:1 na tle). */
   --warning-ink-mix: 55%;
@@ -101,11 +101,6 @@ html[data-skin="miedz"] h1,
 html[data-skin="miedz"] h2 {
   font-family: 'Bricolage Grotesque Variable', 'Plus Jakarta Sans Variable', sans-serif;
   letter-spacing: -0.015em;
-}
-/* Miedziana rura zamiast czerwonego marginesu: walec z odblaskiem. */
-html[data-skin="miedz"] .sidebar-gradient {
-  border-right-color: transparent !important;
-  box-shadow: inset -4px 0 0 -1px hsl(21 55% 42%), inset -2px 0 0 -1px hsl(28 70% 70%);
 }
 /* Przycisk główny jak wypolerowana miedź (plan motywów 2026-10-30, 0.1): gradient liczony z `--primary`,
    więc idzie za akcentem i nie obniża kontrastu — jasny schemat: od `--primary` w ciemniejsze (biały tekst

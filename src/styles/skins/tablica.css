@@ -1,8 +1,8 @@
 /* ─────────────────────── TABLICA — biuro budowy i sala szkoleń (plan motywów 4.5) ───────────────────────
-   Jasny: biała tablica suchościeralna w aluminiowej ramie, tekst i akcenty w kolorach markerów, ślady
-   niedokładnie startego pisma. Ciemny: zielona tablica szkolna, kreda i smugi po gąbce. Notatki trzymają
-   się na magnesach. */
-html[data-skin="tablica"] {
+   Domyślnie ciemny (plan motywów 3.5, T-3): zielona tablica szkolna, kreda i smugi po gąbce. Jasny: biała
+   tablica suchościeralna w aluminiowej ramie, tekst i akcenty w kolorach markerów, ślady niedokładnie
+   startego pisma. Notatki trzymają się na magnesach. */
+html[data-skin="tablica"]:not(.dark) {
   --background: oklch(0.9750 0.0020 250.00);
   --foreground: oklch(0.2200 0.0100 260.00);
   --card: oklch(1.0000 0.0000 0.00);
@@ -12,6 +12,8 @@ html[data-skin="tablica"] {
   /* Niebieski marker. */
   --primary: oklch(0.4700 0.1700 262.00);
   --ink-mix: 62%;
+  /* Ostrzeżenie na białej tablicy: ciemniejsza baza niż w zielonej (bez tego dziedziczy jasny żółty). */
+  --warning-ink-base: oklch(0.7697 0.1645 70.61);
   --primary-foreground: oklch(1.0000 0.0000 0.00);
   --secondary: oklch(0.9250 0.0030 250.00);
   --secondary-foreground: oklch(0.2200 0.0100 260.00);
@@ -49,7 +51,7 @@ html[data-skin="tablica"] {
 }
 
 /* Drugi schemat (4.1) — ciemny. Zielona tablica szkolna: kreda biała, żółta i różowa. */
-html[data-skin="tablica"].dark {
+html[data-skin="tablica"] {
   --background: oklch(0.3200 0.0450 162.00);
   --foreground: oklch(0.9500 0.0120 95.00);
   --card: oklch(0.3600 0.0450 162.00);

@@ -41,8 +41,8 @@ export const SKIN_META: Record<Skin, SkinMeta> = {
     ambient: true,
   },
   miedz: {
-    label: "Miedź",
-    blurb: "Beton z szalunku i miedziane rury.",
+    label: "Beton i patyna",
+    blurb: "Szalunkowy beton i zielona patyna na miedzi.",
     preview: { bg: "#e6e3df", card: "#fcfbf9", ink: "#24201d", accent: "#ae5a28", muted: "#2f7a83" },
     font: "'Bricolage Grotesque Variable', sans-serif",
   },
@@ -74,8 +74,8 @@ export const SKIN_META: Record<Skin, SkinMeta> = {
   },
   tablica: {
     label: "Tablica",
-    blurb: "Biała tablica i markery; w nocy zielona tablica i kreda.",
-    preview: { bg: "#f6f7f8", card: "#ffffff", ink: "#1c1f26", accent: "#2550c4", muted: "#2f8a4e" },
+    blurb: "Zielona tablica i kreda; w dzień biała z markerami.",
+    preview: { bg: "#2f4a3c", card: "#3b5a4a", ink: "#f2f0e6", accent: "#ffd166", muted: "#6f9a84" },
     font: "'Lexend Variable', sans-serif",
   },
 };

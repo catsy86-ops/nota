@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { isEffectEnabled } from "@/lib/effectsSettings";
+import { applyCustomTheme } from "@/lib/customTheme";
 import { SKIN_SCHEME, SKIN_THEME_COLOR, SKIN_THEME_COLOR_ALT, setSkin, skinStore, useSkin, type Skin } from "@/lib/skins";
 import { setSkinScheme, skinSchemeStore, type SkinSchemeMap } from "@/lib/skinScheme";
 import { applySkinFavicon } from "@/lib/skinFavicon";
@@ -50,8 +51,8 @@ export function revealRadius(x: number, y: number, w: number, h: number): number
 
 /**
  * Kształt odsłonięcia nowego stylu (plan motywów 2.4) jako para `clip-path` [od, do]. Przy zmianie na
- * Plan arkusz rozwija się od lewej, Miedź nagrzewa się od rury z prawej, Matryca spływa z góry,
- * a Hydraulika napełnia się od dołu. Zeszyt, Neon, Zorza i sama zmiana jasności — koło od kliknięcia.
+ * Plan arkusz rozwija się od lewej, Beton i patyna (Miedź) nagrzewa się od prawego dolnego rogu, Matryca spływa z góry,
+ * Hydraulika napełnia się od dołu, Kafle układają się ukośnie od rogu, a Tablica przeciera gąbką od prawej. Zeszyt, Neon, Zorza i sama zmiana jasności — koło od kliknięcia.
  */
 export function revealClip(skin: Skin | null, x: number, y: number, w: number, h: number): [string, string] {
   switch (skin) {
@@ -59,6 +60,10 @@ export function revealClip(skin: Skin | null, x: number, y: number, w: number, h
     case "miedz": return [`circle(0px at ${w}px ${h}px)`, `circle(${Math.ceil(Math.hypot(w, h))}px at ${w}px ${h}px)`];
     case "matrix": return ["inset(0 0 100% 0)", "inset(0 0 0 0)"];
     case "hydraulika": return ["inset(100% 0 0 0)", "inset(0 0 0 0)"];
+    // Kafle: płytki kładzione od rogu, ukośny front w górę i w prawo.
+    case "kafle": return ["polygon(0 0, 0 0, 0 0)", `polygon(0 0, ${Math.ceil(2.2 * w)}px 0, 0 ${Math.ceil(2.2 * h)}px)`];
+    // Tablica: gąbka przeciera od prawej do lewej.
+    case "tablica": return ["inset(0 0 0 100%)", "inset(0 0 0 0)"];
     default: {
       const r = revealRadius(x, y, w, h);
       return [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`];
@@ -96,6 +101,8 @@ function applyAppearance(dark: boolean, skin: Skin) {
       : (dark === (native === "dark") ? SKIN_THEME_COLOR[skin] : SKIN_THEME_COLOR_ALT[skin]);
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
     applySkinFavicon(skin);
+    // Własny motyw (4.1) przelicza się na nowo dla bieżącego stylu i schematu.
+    applyCustomTheme(root, skin);
   };
   const reduced = isMotionReduced();
   const doc = document as DocWithVT;

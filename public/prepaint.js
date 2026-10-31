@@ -7,7 +7,7 @@
     var S = { zeszyt: [null, "#f0b429", "#15110e"], plan: ["dark", "#10304f", "#eef4fa"], neon: ["dark", "#130a1b", "#f5f0f5"],
       zorza: ["dark", "#060a17", "#f6f0f6"], miedz: ["light", "#ae5a28", "#26221f"], matrix: ["dark", "#020a03", "#eef7ee"],
       hydraulika: ["dark", "#0b1e2b", "#f2f6f9"], odblask: ["light", "#e1f23a", "#1a1a1a"], kafle: ["light", "#f4f6f9", "#2b2e33"],
-      tablica: ["light", "#f6f7f8", "#2f4a3c"] };
+      tablica: ["dark", "#2f4a3c", "#f6f7f8"] };
     var ls = window.localStorage, sys = window.matchMedia("(prefers-color-scheme: dark)").matches;
     var skin = JSON.parse(ls.getItem("kaczy.skin.v1") || "null");
     if (!Object.prototype.hasOwnProperty.call(S, skin)) skin = "zeszyt";

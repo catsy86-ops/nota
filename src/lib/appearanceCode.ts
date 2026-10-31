@@ -28,6 +28,8 @@ export const APPEARANCE_KEYS = [
   "kaczy.sectionColors.v1",
   // Gęstość całego interfejsu (plan motywów 4.2).
   "kaczy.uiDensity.v1",
+  // Własny motyw (plan motywów 4.1): styl bazowy i odcienie papieru, kafla, akcentu.
+  "kaczy.customTheme.v1",
 ] as const;
 
 const PREFIX = "NOTKI1-";

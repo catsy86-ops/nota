@@ -15,6 +15,7 @@ import { EffectsSettings } from "./EffectsSettings";
 import { Segmented } from "./Segmented";
 import { SkinPicker } from "./SkinPicker";
 import { AccentPicker } from "./AccentPicker";
+import { CustomThemeControl } from "./CustomThemeControl";
 import { FrameLookPicker } from "./FrameLookPicker";
 import { GlowPicker } from "./GlowPicker";
 import { FontPicker } from "./FontPicker";
@@ -383,6 +384,10 @@ export function AppearanceSettings() {
           <p className="text-xs text-muted-foreground -mt-1">Zapisuje się tylko na tym urządzeniu, więc telefon i komputer mogą mieć inne karty.</p>
           <ToggleRow label="Trening mózgu" desc={todayCards.brainTraining ? "Pokazana" : "Ukryta"} checked={todayCards.brainTraining} onCheck={(on) => setTodayCard("brainTraining", on)} />
           <ToggleRow label="Przegląd tygodnia" desc={todayCards.weeklyReview ? "Pokazany" : "Ukryty"} checked={todayCards.weeklyReview} onCheck={(on) => setTodayCard("weeklyReview", on)} />
+        </Section>
+
+        <Section title="Własny motyw (eksperyment)">
+          <CustomThemeControl />
         </Section>
 
         <Section title="Gęstość interfejsu (komputer)">
