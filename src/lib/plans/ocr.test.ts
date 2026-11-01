@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { interpretOcrText, normalizeOcrText, parseDiameter, parseSymbolCode, parseSystemCode } from "./diameters";
-import { dedupeWords, tileGrid, tileToImage } from "./tiles";
+import { dedupeWords, isDarkBackground, tileGrid, tileToImage } from "./tiles";
 import { suggestDiameters } from "./assign";
 import type { DetectedText } from "./model";
 
@@ -15,6 +15,13 @@ describe("średnice z opisów planu", () => {
   it("wymiar rury 16x2 i 110×3,2", () => {
     expect(parseDiameter("PE-X 16x2")).toEqual({ mm: 16, form: "dim", confidence: 0.85 });
     expect(parseDiameter("PVC 110×3,2")?.mm).toBe(110);
+  });
+
+  it("„Ø” odczytane jako „2” — tylko obok kodu instalacji", () => {
+    expect(parseDiameter("216 ZW")).toEqual({ mm: 16, form: "guess", confidence: 0.5 });
+    expect(parseDiameter("220 CWU")?.mm).toBe(20);
+    expect(parseDiameter("216")).toBeNull();
+    expect(parseDiameter("220 V")).toBeNull();
   });
 
   it("typowe błędy OCR (0, O, @ zamiast Ø) — tylko typowe średnice, z niższą pewnością", () => {
@@ -75,5 +82,14 @@ describe("podpowiedź średnicy dla trasy", () => {
     const s = suggestDiameters(route, [text("a", "Ø16", 480, -20), text("b", "Ø20", 100, 300), text("c", "Salon", 500, -10), text("d", "DN25", 700, 30, false)], 60);
     expect(s.map((x) => [x.textId, x.mm])).toEqual([["a", 16], ["d", 25]]);
     expect(s[1].confidence).toBe(0.9);
+  });
+});
+
+describe("ciemne tło kafla", () => {
+  const px = (rgb: [number, number, number], n: number) => Array.from({ length: n }, () => [...rgb, 255]).flat();
+  it("czarne tło FastView z białymi napisami jest ciemne, biały plan nie", () => {
+    expect(isDarkBackground([...px([0, 0, 0], 90), ...px([255, 255, 255], 10)])).toBe(true);
+    expect(isDarkBackground([...px([255, 255, 255], 90), ...px([0, 0, 0], 10)])).toBe(false);
+    expect(isDarkBackground([])).toBe(false);
   });
 });

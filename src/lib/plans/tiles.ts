@@ -50,3 +50,14 @@ export function dedupeWords<T extends { box: Rect; confidence: number; text: str
   for (const w of sorted) if (!kept.some((k) => overlapRatio(k.box, w.box) >= threshold)) kept.push(w);
   return kept;
 }
+
+/**
+ * Czy kafel ma ciemne tło (domyślne tło DWG FastView jest czarne). Średnia jasność pikseli RGBA z miniatury —
+ * tesseract czyta ciemny tekst na jasnym tle, więc ciemny kafel odwracamy przed rozpoznaniem.
+ */
+export function isDarkBackground(rgba: ArrayLike<number>): boolean {
+  let sum = 0;
+  let n = 0;
+  for (let i = 0; i + 2 < rgba.length; i += 4) { sum += 0.299 * rgba[i] + 0.587 * rgba[i + 1] + 0.114 * rgba[i + 2]; n++; }
+  return n > 0 && sum / n < 110;
+}

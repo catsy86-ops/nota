@@ -15,6 +15,7 @@ import { SYSTEM_META } from "@/lib/plans/systems";
 import type { PlanData } from "@/lib/plans/yPlans";
 import { toastWithUndo } from "@/lib/undoToast";
 import { cn } from "@/lib/utils";
+import { pluralPl } from "@/lib/plural";
 
 const sectionCls = "space-y-1.5 border-b border-border/60 px-3 py-3 last:border-b-0";
 const h3 = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
@@ -62,7 +63,7 @@ export function MaterialsPanel({ plan, highlight, onHighlight }: { plan: PlanDat
               <li key={r.key}>
                 <button type="button" aria-pressed={highlight === r.key} onClick={() => onHighlight(highlight === r.key ? null : r.key, r.routeIds)} className={cn(rowBtn, highlight === r.key && "bg-primary/10")}>
                   <span aria-hidden className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: SYSTEM_META[r.system].color }} />
-                  <span className="min-w-0 flex-1 truncate">{pipeLabel(r)}<span className="text-xs text-muted-foreground"> · {r.routeIds.length} tras</span></span>
+                  <span className="min-w-0 flex-1 truncate">{pipeLabel(r)}<span className="text-xs text-muted-foreground"> · {r.routeIds.length} {pluralPl(r.routeIds.length, ["trasa", "trasy", "tras"])}</span></span>
                   <span className="font-mono text-sm tabular-nums">{r.meters === null ? `${Math.round(r.pixels)} px` : `${metersText(r.meters)} m`}</span>
                 </button>
               </li>

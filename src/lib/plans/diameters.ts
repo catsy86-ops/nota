@@ -42,6 +42,10 @@ export function parseDiameter(raw: string): ParsedDiameter | null {
   // „Ø” przeczytane jako 0/O/o/Q/@ tuż przed liczbą: tylko typowe średnice, z niższą pewnością.
   m = /(?:^|[\s(/])[0OoQ@D]\s?(\d{2,3})(?![\d.,])/.exec(t);
   if (m) { const mm = num(m[1]); if (COMMON.has(mm)) return { mm, form: "guess", confidence: 0.6 }; }
+  // „Ø” przeczytane jako „2” („216 ZW”, częste na ciemnym tle FastView): tylko obok kodu instalacji —
+  // samo „220” albo wymiar „225” nie jest średnicą.
+  m = /(?:^|[\s(/])2(\d{2})(?![\d.,])/.exec(t);
+  if (m && parseSystemCode(t)) { const mm = num(m[1]); if (COMMON.has(mm)) return { mm, form: "guess", confidence: 0.5 }; }
   return null;
 }
 

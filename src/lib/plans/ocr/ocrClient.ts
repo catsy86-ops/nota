@@ -1,5 +1,5 @@
 import type { Worker as TesseractWorker } from "tesseract.js";
-import { dedupeWords, OCR_OVERLAP, OCR_TILE, tileGrid, tileToImage, type Rect } from "../tiles";
+import { dedupeWords, isDarkBackground, OCR_OVERLAP, OCR_TILE, tileGrid, tileToImage, type Rect } from "../tiles";
 
 /**
  * Klient OCR Analizatora planów (przeglądarka). Ładowany dynamicznie dopiero po „Rozpoznaj opisy” —
@@ -125,6 +125,16 @@ async function startWorker(onProgress: (p: OcrProgress) => void): Promise<Tesser
   return worker;
 }
 
+/** Ciemne tło kafla (czarne tło FastView) — sprawdzane na miniaturze 32×32, żeby nie czytać całego kafla. */
+function darkTile(bitmap: ImageBitmap, r: Rect): boolean {
+  const c = document.createElement("canvas");
+  c.width = 32;
+  c.height = 32;
+  const ctx = c.getContext("2d", { willReadFrequently: true })!;
+  ctx.drawImage(bitmap, r.x, r.y, r.w, r.h, 0, 0, 32, 32);
+  return isDarkBackground(ctx.getImageData(0, 0, 32, 32).data);
+}
+
 /** Kafel obrazu jako PNG (tesseract przyjmuje Blob, nie ImageBitmap), w szarości i powiększony dla małych napisów. */
 async function tileBlob(bitmap: ImageBitmap, r: Rect, up: number): Promise<Blob> {
   const canvas = document.createElement("canvas");
@@ -133,7 +143,7 @@ async function tileBlob(bitmap: ImageBitmap, r: Rect, up: number): Promise<Blob>
   const ctx = canvas.getContext("2d", { willReadFrequently: false })!;
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.filter = "grayscale(1) contrast(1.4)";
+  ctx.filter = darkTile(bitmap, r) ? "grayscale(1) invert(1) contrast(1.4)" : "grayscale(1) contrast(1.4)";
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(bitmap, r.x, r.y, r.w, r.h, 0, 0, canvas.width, canvas.height);
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));

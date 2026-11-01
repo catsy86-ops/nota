@@ -1,5 +1,5 @@
 import { VaultStatusButton } from "@/components/vault/VaultStatusButton";
-import { isAppView } from "@/lib/viewMeta";
+import { isAppView, VIEW_LABEL } from "@/lib/viewMeta";
 import { SyncStatusDot } from "@/components/sync/SyncStatusDot";
 import { useEffect, useRef } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
@@ -113,24 +113,8 @@ export function AppHeader({
           {!sidebarOpen && <span aria-hidden className="hidden sm:block h-5 w-px bg-border" />}
           <div className={!sidebarOpen && view === "notes" ? "hidden sm:block" : "min-w-0"}>
             <h1 className={cn("app-title truncate text-lg font-display leading-tight tracking-tight text-foreground", isTitleBlockView(view) && "hidden")}>
-              {view === "notes" && "Notatki"}
-              {view === "today" && (
-"Dziś"
-              )}
-              {view === "week" && (
-"Ten tydzień"
-              )}
-              {view === "calendar" && (
-"Kalendarz"
-              )}
-              {view === "shifts" && "Grafik"}
-              {view === "study" && "Praca"}
-              {view === "debts" && "Długi"}
-              {view === "cwiczenia" && "Ćwiczenia"}
-              {view === "plans" && "Plany"}
-              {view === "archive" && "Archiwum"}
-              {view === "reminders" && "Terminy"}
-              {view === "trash" && "Kosz"}
+              {/* Nazwa z jednej tabeli (`VIEW_LABEL`) — nowy dział nie zgubi tytułu. */}
+              {view !== "folder" && view !== "label" && VIEW_LABEL[view]}
               {view === "folder" && (
                 <span className="flex items-center gap-1.5">
                   <FolderOpen className="w-4 h-4 text-primary-ink" />
