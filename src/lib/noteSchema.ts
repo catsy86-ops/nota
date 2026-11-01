@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/mini";
 import type { Note, Folder, NoteColor, FolderColor, ChecklistItem } from "@/hooks/useNotes";
 import type { NoteVersion } from "@/lib/versionsStore";
 import { normalizeAttachments } from "@/lib/attachments";
@@ -7,71 +7,71 @@ import { cleanNoteProps, cleanPropDefs, type PropDef } from "@/lib/noteProps";
 
 import { NOTE_COLORS as COLORS } from "@/lib/safeProjection";
 
-const colorSchema = z.enum(COLORS).catch("default" as NoteColor);
-const folderColorSchema = z.enum(COLORS).catch("default" as FolderColor);
+const colorSchema = z.catch(z.enum(COLORS), "default" as NoteColor);
+const folderColorSchema = z.catch(z.enum(COLORS), "default" as FolderColor);
 
 const checklistItemSchema = z.object({
-  id: z.string().catch(() => crypto.randomUUID()),
-  text: z.string().catch(""),
-  checked: z.boolean().catch(false),
-  indent: z.literal(1).optional().catch(undefined),
-}) satisfies z.ZodType<ChecklistItem, z.ZodTypeDef, unknown>;
+  id: z.catch(z.string(), () => crypto.randomUUID()),
+  text: z.catch(z.string(), ""),
+  checked: z.catch(z.boolean(), false),
+  indent: z.catch(z.optional(z.literal(1)), undefined),
+}) satisfies z.ZodMiniType<ChecklistItem, unknown>;
 
 /** Validates one imported note, filling in safe fallbacks for missing/malformed fields. */
 export const noteSchema = z.object({
-  id: z.string().catch(() => crypto.randomUUID()),
-  title: z.string().catch(""),
-  content: z.string().catch(""),
+  id: z.catch(z.string(), () => crypto.randomUUID()),
+  title: z.catch(z.string(), ""),
+  content: z.catch(z.string(), ""),
   color: colorSchema,
-  pinned: z.boolean().catch(false),
-  archived: z.boolean().catch(false),
-  trashed: z.boolean().catch(false),
-  trashedAt: z.number().nullable().catch(null),
-  labels: z.array(z.string()).catch([]),
-  aliases: z.array(z.string().max(200)).max(20).optional().catch(undefined),
-  reminder: z.number().nullable().catch(null),
-  reminderRepeat: z.enum(["none", "daily", "weekly", "monthly"]).optional().catch(undefined),
-  reminderDay: z.number().int().min(1).max(31).optional().catch(undefined),
-  reminderRepeatUntil: z.number().finite().optional().catch(undefined),
-  reminderAllDay: z.boolean().optional().catch(undefined),
-  reminderBase: z.number().finite().optional().catch(undefined),
-  reminderTime: z.number().int().min(0).max(1439).optional().catch(undefined),
-  snoozedUntil: z.number().finite().optional().catch(undefined),
-  priority: z.enum(["none", "low", "medium", "high"]).catch("none"),
-  dailyDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
-  periodKey: z.string().regex(/^\d{4}-(W\d{2}|\d{2})$/).optional().catch(undefined),
-  icon: z.string().min(1).max(32).optional().catch(undefined),
-  cover: z.enum(NOTE_COVERS).optional().catch(undefined),
-  favorite: z.literal(true).optional().catch(undefined),
-  readOnly: z.literal(true).optional().catch(undefined),
-  parentId: z.string().min(1).max(200).optional().catch(undefined),
-  wide: z.literal(true).optional().catch(undefined),
-  largeText: z.literal(true).optional().catch(undefined),
+  pinned: z.catch(z.boolean(), false),
+  archived: z.catch(z.boolean(), false),
+  trashed: z.catch(z.boolean(), false),
+  trashedAt: z.catch(z.nullable(z.number()), null),
+  labels: z.catch(z.array(z.string()), []),
+  aliases: z.catch(z.optional(z.array(z.string().check(z.maxLength(200))).check(z.maxLength(20))), undefined),
+  reminder: z.catch(z.nullable(z.number()), null),
+  reminderRepeat: z.catch(z.optional(z.enum(["none", "daily", "weekly", "monthly"])), undefined),
+  reminderDay: z.catch(z.optional(z.int().check(z.gte(1), z.lte(31))), undefined),
+  reminderRepeatUntil: z.catch(z.optional(z.number()), undefined),
+  reminderAllDay: z.catch(z.optional(z.boolean()), undefined),
+  reminderBase: z.catch(z.optional(z.number()), undefined),
+  reminderTime: z.catch(z.optional(z.int().check(z.gte(0), z.lte(1439))), undefined),
+  snoozedUntil: z.catch(z.optional(z.number()), undefined),
+  priority: z.catch(z.enum(["none", "low", "medium", "high"]), "none"),
+  dailyDate: z.catch(z.optional(z.string().check(z.regex(/^\d{4}-\d{2}-\d{2}$/))), undefined),
+  periodKey: z.catch(z.optional(z.string().check(z.regex(/^\d{4}-(W\d{2}|\d{2})$/))), undefined),
+  icon: z.catch(z.optional(z.string().check(z.minLength(1), z.maxLength(32))), undefined),
+  cover: z.catch(z.optional(z.enum(NOTE_COVERS)), undefined),
+  favorite: z.catch(z.optional(z.literal(true)), undefined),
+  readOnly: z.catch(z.optional(z.literal(true)), undefined),
+  parentId: z.catch(z.optional(z.string().check(z.minLength(1), z.maxLength(200))), undefined),
+  wide: z.catch(z.optional(z.literal(true)), undefined),
+  largeText: z.catch(z.optional(z.literal(true)), undefined),
   // Wartości właściwości: zły wpis jest pomijany, notatka zostaje.
-  props: z.unknown().transform((v) => cleanNoteProps(v)).optional(),
-  images: z.array(z.string()).catch([]),
+  props: z.optional(z.pipe(z.unknown(), z.transform((v) => cleanNoteProps(v)))),
+  images: z.catch(z.array(z.string()), []),
   // Starsze pliki nie mają pola; zły wpis jest pomijany, nie unieważnia notatki.
-  attachments: z.unknown().transform((v) => normalizeAttachments(v)).optional(),
-  checklist: z.array(checklistItemSchema).catch([]),
+  attachments: z.optional(z.pipe(z.unknown(), z.transform((v) => normalizeAttachments(v)))),
+  checklist: z.catch(z.array(checklistItemSchema), []),
   // Notatka prywatna: tylko szyfrogram (jawne pola są puste). Format sprawdza `yjsStore` przy zapisie.
-  locked: z.literal(true).optional().catch(undefined),
-  vault: z.string().max(5_000_000).optional().catch(undefined),
-  folderId: z.string().nullable().catch(null),
-  order: z.number().catch(0),
-  createdAt: z.number().catch(() => Date.now()),
-  updatedAt: z.number().catch(() => Date.now()),
-}) satisfies z.ZodType<Note, z.ZodTypeDef, unknown>;
+  locked: z.catch(z.optional(z.literal(true)), undefined),
+  vault: z.catch(z.optional(z.string().check(z.maxLength(5_000_000))), undefined),
+  folderId: z.catch(z.nullable(z.string()), null),
+  order: z.catch(z.number(), 0),
+  createdAt: z.catch(z.number(), () => Date.now()),
+  updatedAt: z.catch(z.number(), () => Date.now()),
+}) satisfies z.ZodMiniType<Note, unknown>;
 
 export const folderSchema = z.object({
-  id: z.string().catch(() => crypto.randomUUID()),
-  name: z.string().catch(""),
+  id: z.catch(z.string(), () => crypto.randomUUID()),
+  name: z.catch(z.string(), ""),
   color: folderColorSchema,
-  emoji: z.string().nullable().catch(null),
-  parentId: z.string().nullable().catch(null),
-  order: z.number().catch(0),
-  createdAt: z.number().catch(() => Date.now()),
-  updatedAt: z.number().optional().catch(undefined),
-}) satisfies z.ZodType<Folder, z.ZodTypeDef, unknown>;
+  emoji: z.catch(z.nullable(z.string()), null),
+  parentId: z.catch(z.nullable(z.string()), null),
+  order: z.catch(z.number(), 0),
+  createdAt: z.catch(z.number(), () => Date.now()),
+  updatedAt: z.catch(z.optional(z.number()), undefined),
+}) satisfies z.ZodMiniType<Folder, unknown>;
 
 /** Rejects anything that isn't even a plausible array-of-note-like-objects. */
 export function looksLikeNoteArray(value: unknown): value is Record<string, unknown>[] {
@@ -149,36 +149,36 @@ export interface FullBackup {
 const versionSchema = z.object({
   id: z.string(),
   noteId: z.string(),
-  title: z.string().catch(""),
-  content: z.string().catch(""),
+  title: z.catch(z.string(), ""),
+  content: z.catch(z.string(), ""),
   timestamp: z.number(),
 });
 
 export const fullBackupSchema = z.object({
-  version: z.union([z.literal(1), z.literal(2), z.literal(3)]).catch(1),
-  exportedAt: z.number().catch(() => Date.now()),
-  notes: z.array(noteSchema).catch([]),
-  labels: z.array(z.string()).catch([]),
-  folders: z.array(folderSchema).catch([]),
+  version: z.catch(z.union([z.literal(1), z.literal(2), z.literal(3)]), 1),
+  exportedAt: z.catch(z.number(), () => Date.now()),
+  notes: z.catch(z.array(noteSchema), []),
+  labels: z.catch(z.array(z.string()), []),
+  folders: z.catch(z.array(folderSchema), []),
   // Uszkodzona sekcja opcjonalna = brak sekcji, nie odrzucenie całego pliku.
-  versions: z.array(versionSchema).optional().catch(undefined),
-  settings: z.record(z.string()).optional().catch(undefined),
-  achievements: z.string().optional().catch(undefined),
-  shifts: z.string().optional().catch(undefined),
-  study: z.string().optional().catch(undefined),
-  supplements: z.string().optional().catch(undefined),
-  diet: z.string().optional().catch(undefined),
-  training: z.string().optional().catch(undefined),
-  debts: z.string().optional().catch(undefined),
-  entryCheck: z.string().optional().catch(undefined),
-  kits: z.string().optional().catch(undefined),
-  points: z.string().optional().catch(undefined),
-  plans: z.string().optional().catch(undefined),
-  billing: z.string().optional().catch(undefined),
-  shiftSchedules: z.string().optional().catch(undefined),
-  attachmentBlobs: z.record(z.string()).optional().catch(undefined),
-  skipped: z.object({ tooLarge: z.number(), missing: z.number(), journalPhotos: z.number(), siteDocs: z.number(), recordings: z.number().optional().catch(undefined), plans: z.number().optional().catch(undefined) }).optional().catch(undefined),
+  versions: z.catch(z.optional(z.array(versionSchema)), undefined),
+  settings: z.catch(z.optional(z.record(z.string(), z.string())), undefined),
+  achievements: z.catch(z.optional(z.string()), undefined),
+  shifts: z.catch(z.optional(z.string()), undefined),
+  study: z.catch(z.optional(z.string()), undefined),
+  supplements: z.catch(z.optional(z.string()), undefined),
+  diet: z.catch(z.optional(z.string()), undefined),
+  training: z.catch(z.optional(z.string()), undefined),
+  debts: z.catch(z.optional(z.string()), undefined),
+  entryCheck: z.catch(z.optional(z.string()), undefined),
+  kits: z.catch(z.optional(z.string()), undefined),
+  points: z.catch(z.optional(z.string()), undefined),
+  plans: z.catch(z.optional(z.string()), undefined),
+  billing: z.catch(z.optional(z.string()), undefined),
+  shiftSchedules: z.catch(z.optional(z.string()), undefined),
+  attachmentBlobs: z.catch(z.optional(z.record(z.string(), z.string())), undefined),
+  skipped: z.catch(z.optional(z.object({ tooLarge: z.number(), missing: z.number(), journalPhotos: z.number(), siteDocs: z.number(), recordings: z.catch(z.optional(z.number()), undefined), plans: z.catch(z.optional(z.number()), undefined) })), undefined),
   // Starsze kopie nie mają sekcji — wtedy po prostu brak definicji.
-  propDefs: z.unknown().transform((v) => cleanPropDefs(v)).optional(),
-  vault: z.unknown().optional(),
-}) satisfies z.ZodType<FullBackup, z.ZodTypeDef, unknown>;
+  propDefs: z.optional(z.pipe(z.unknown(), z.transform((v) => cleanPropDefs(v)))),
+  vault: z.optional(z.unknown()),
+}) satisfies z.ZodMiniType<FullBackup, unknown>;
