@@ -4028,7 +4028,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Paczka (D2).** `PlansView` poza precache (`globIgnores`), pobierany w tle przy pierwszej sesji online (`prefetchViewsWhenIdle`), potem w `static-assets`. `plansStore` zostaje w precache (kopia danych go importuje offline). Precache po fazie 2: 4044 KiB (próg 4096).
 - **Ograniczenia.** Faza 2 to tylko oglądanie: kalibracja, trasy, OCR, symbole i zestawienie w kolejnych fazach (`docs/plan-analizator-planow-2026-11-01.md`). Nazwy analizy nie da się jeszcze zmienić po utworzeniu. Na urządzeniu bez oryginału i kopii roboczej (bajty nie dotarły) edytor pokazuje komunikat zamiast planu.
 - **Testy.** Vitest: `src/lib/plans/geometry.test.ts` (odcinek, polilinia, kalibracja, bez skali, przeliczenia po zoomie, szczypanie, dopasowanie), `imageSniff.test.ts` (PNG/JPEG/WebP, SVG/GIF/HTML odrzucone, limity), `yPlans.test.ts` (scalanie dwóch urządzeń, sieroty, „Cofnij”, limity, kopia, klucze obrazów), `noteSchema.props.test.ts` (sekcja `plans` w schemacie), `fullBackup.test.ts`, `sidebarItems.test.ts`. E2E: `e2e/plans.spec.ts` (import z błędem i poprawnym plikiem, axe okna i listy, zoom, klawiatura, dopasowanie, odświeżenie, powrót, usunięcie z „Cofnij”, pasek boczny i „wstecz”).
-- **Commit.** (uzupełnić)
+- **Commit.** `d353ea7` (2026-11-01).
 
 ## Kalendarz i Grafik: kontrast nazw świąt i zaznaczonego weekendu (2026-11-01)
 
