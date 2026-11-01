@@ -257,3 +257,25 @@ export function cleanItem(raw: unknown): MaterialItem | null {
     at: num(i.at) ? i.at : 0,
   };
 }
+
+/** Kolor warstwy na planie → rodzaj instalacji (per analiza; pipeta w propozycjach tras). */
+export interface PlanColor {
+  hex: string;
+  system: SystemType;
+}
+
+export const PLAN_COLORS_MAX = 12;
+
+export function cleanColors(raw: unknown): PlanColor[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const out: PlanColor[] = [];
+  for (const c of raw as Partial<PlanColor>[]) {
+    const hex = typeof c?.hex === "string" && /^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex.toLowerCase() : null;
+    if (!hex || seen.has(hex) || !SYSTEM_TYPES.includes(c.system as SystemType)) continue;
+    seen.add(hex);
+    out.push({ hex, system: c.system as SystemType });
+    if (out.length >= PLAN_COLORS_MAX) break;
+  }
+  return out;
+}

@@ -56,10 +56,13 @@ interface Props {
   texts: readonly DetectedText[];
   proposals: readonly { id: string; box: readonly [number, number, number, number] }[];
   focusId: string | null;
+  /** Propozycje tras z obrazu (cienka przerywana w kolorze z pipety). */
+  routeProposals: readonly { id: string; pts: readonly number[] }[];
+  proposalColor: string | null;
 }
 
 /** Nakładka SVG w układzie oryginału: trasy, szkic, kalibracja, uchwyty zaznaczonej trasy. */
-export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selectedId, draft, hover, draftSystem, calibration, calDraft, showHandles, texts, proposals, focusId }: Props) {
+export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selectedId, draft, hover, draftSystem, calibration, calDraft, showHandles, texts, proposals, focusId, routeProposals, proposalColor }: Props) {
   const k = 1 / scale;
   const selected = routes.find((r) => r.id === selectedId) ?? null;
   const draftColor = SYSTEM_META[draftSystem].color;
@@ -93,6 +96,19 @@ export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selec
         <Label key={`l-${r.id}`} at={midpoint(r.pts)} scale={scale} color={SYSTEM_META[r.system].color}
           text={`${r.diameterMm ? `Ø${String(r.diameterMm).replace(".", ",")} · ` : ""}${lengthLabel(measureRoute(r, mpp)).replace(" (bez skali)", "")}`} />
       ))}
+
+      {routeProposals.length > 0 && (
+        <g pointerEvents="none" data-testid="plan-route-proposals">
+          {routeProposals.map((p) => (
+            <g key={p.id}>
+              {p.id === focusId && <polyline points={points(p.pts)} fill="none" stroke="#d97706" strokeOpacity={0.35} strokeWidth={HALO_W * k} strokeLinecap="round" strokeLinejoin="round" />}
+              <polyline points={points(p.pts)} fill="none" stroke={proposalColor ?? "#d97706"} strokeWidth={2.5 * k}
+                strokeDasharray={`${3 * k} ${3 * k}`} strokeLinecap="round" strokeLinejoin="round" />
+              <polyline points={points(p.pts)} fill="none" stroke="#111827" strokeOpacity={0.6} strokeWidth={1 * k} strokeDasharray={`${3 * k} ${3 * k}`} strokeDashoffset={3 * k} />
+            </g>
+          ))}
+        </g>
+      )}
 
       {selected && showHandles && toPairs(selected.pts).map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r={HANDLE_R * k} fill="#ffffff" stroke={SYSTEM_META[selected.system].color} strokeWidth={2.5 * k} data-handle={i} />

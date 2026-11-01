@@ -79,6 +79,8 @@ export default defineConfig(() => ({
           // Rolldown nazywa chunk tesseract.js „src-*” (od tesseract.js/src), a wasm-feature-detect „esm-*”;
           // `bundle.spec` sprawdza po zawartości, że żaden plik OCR nie wszedł do precache pod inną nazwą.
           "**/{ocrClient,src,esm}-*.js",
+          // Propozycje tras z obrazu (faza 5): klient i worker tylko po „Szukaj tras”.
+          "**/{detectClient,planDetect,planDetect.worker}-*.js",
         ],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,

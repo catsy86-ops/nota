@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
-import type { AnalysisProject, PlanCalibration, PlanImage } from "./model";
+import type { AnalysisProject, PlanCalibration, PlanColor, PlanImage } from "./model";
 import { createYPlans, type EntityKind, type PlanData, type PlanEntries } from "./yPlans";
 
 /** Analizy planów żyją w dokumencie Yjs notatek (`yPlans.ts`); widoki zmieniają je tylko akcjami poniżej. */
@@ -37,6 +37,7 @@ export function createPlan(name: string, image: PlanImage, work?: PlanImage, sit
 export const renamePlan = (pid: string, name: string) => yPlans.updateProject(pid, { name });
 export const setPlanStatus = (pid: string, status: AnalysisProject["status"]) => yPlans.updateProject(pid, { status });
 export const setPlanSite = (pid: string, siteId: string | undefined) => yPlans.updateProject(pid, { siteId });
+export const setPlanColors = (pid: string, list: PlanColor[]) => yPlans.setColors(pid, list);
 export const setPlanCalibration = (pid: string, cal: PlanCalibration | null) => yPlans.setCalibration(pid, cal);
 export const removePlan = (pid: string) => yPlans.removeProject(pid);
 export const restorePlan = (entries: PlanEntries) => yPlans.restore(entries);

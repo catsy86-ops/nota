@@ -168,7 +168,7 @@ for (const [name, opts, limit] of [
 test("Analizator planów: OCR i widok Planów poza precache, silnik z własnego adresu @smoke", async () => {
   const sw = readFileSync(path.join(distDir, "sw.js"), "utf8");
   const precached = [...sw.matchAll(/url:"([^"]+)"/g)].map((m) => m[1]);
-  expect(precached.filter((u) => /(^|\/)ocr\/|PlansView-|ocrClient-/.test(u)), "D2: Plany i OCR pobierane na żądanie").toEqual([]);
+  expect(precached.filter((u) => /(^|\/)ocr\/|PlansView-|ocrClient-|detectClient-|planDetect/.test(u)), "D2: Plany, OCR i propozycje tras pobierane na żądanie").toEqual([]);
   // Po zawartości, nie po nazwie: biblioteka tesseract.js (chunk „src-*”) i wykrywanie SIMD nie mogą wejść do precache.
   const precachedJs = precached.filter((u) => u.startsWith("assets/") && u.endsWith(".js")).map((u) => u.slice("assets/".length));
   expect(chunksMatching(precachedJs, /workerBlobURL|tesseract-core|WebAssembly\.validate\(new Uint8Array\(\[0,97,115,109,1,0,0,0,1,5,1,96,0,1,123/), "tesseract.js poza precache").toEqual([]);

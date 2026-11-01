@@ -1,15 +1,15 @@
 import * as Y from "yjs";
 import {
-  cleanCalibration, cleanItem, cleanProject, cleanRoute, cleanSymbol, cleanText, isPlanId,
+  cleanCalibration, cleanColors, cleanItem, cleanProject, cleanRoute, cleanSymbol, cleanText, isPlanId,
   PLAN_ITEMS_MAX, PLAN_PROJECTS_MAX, PLAN_ROUTES_MAX, PLAN_SYMBOLS_MAX, PLAN_TEXTS_MAX,
-  type AnalysisProject, type DetectedSymbol, type DetectedText, type MaterialItem, type PipeRoute, type PlanCalibration,
+  type AnalysisProject, type DetectedSymbol, type PlanColor, type DetectedText, type MaterialItem, type PipeRoute, type PlanCalibration,
 } from "./model";
 import { PLANS_MAP } from "./planRefs";
 
 /**
  * Analizy planów w Y.Doc notatek — synchronizacja i kopia jak reszta danych. Jedna mapa `plans`,
  * każda encja pod własnym kluczem (wzór `yPoints.ts`):
- * `p␁pid` projekt, `c␁pid` kalibracja, `r␁pid␁id` trasa, `t␁pid␁id` tekst OCR, `s␁pid␁id` symbol,
+ * `p␁pid` projekt, `c␁pid` kalibracja, `k␁pid` kolory warstw → instalacje, `r␁pid␁id` trasa, `t␁pid␁id` tekst OCR, `s␁pid␁id` symbol,
  * `i␁pid␁id` ręczna pozycja zestawienia. Wartość = zwykły obiekt; dwa urządzenia edytujące różne
  * trasy scalają się bez strat, ta sama trasa — ostatni zapis wygrywa. Kalibracja osobno od projektu,
  * żeby zmiana nazwy na telefonie nie nadpisała kalibracji z komputera.
@@ -29,6 +29,8 @@ const LIMIT: Record<EntityKind, number> = { r: PLAN_ROUTES_MAX, t: PLAN_TEXTS_MA
 export interface PlanData {
   project: AnalysisProject;
   calibration: PlanCalibration | null;
+  /** Kolory warstw przypisane do instalacji (`k␁pid`). */
+  colors: PlanColor[];
   routes: PipeRoute[];
   texts: DetectedText[];
   symbols: DetectedSymbol[];
@@ -46,6 +48,7 @@ export interface PlansDump {
 
 const projectKey = (pid: string) => ["p", pid].join(SEP);
 const calKey = (pid: string) => ["c", pid].join(SEP);
+const colorsKey = (pid: string) => ["k", pid].join(SEP);
 const entityKey = (kind: EntityKind, pid: string, id: string) => [kind, pid, id].join(SEP);
 
 const LIST_OF: Record<EntityKind, "routes" | "texts" | "symbols" | "items"> = { r: "routes", t: "texts", s: "symbols", i: "items" };
@@ -69,20 +72,24 @@ export function createYPlans(doc: Y.Doc) {
     if (snapshot) return snapshot;
     const byId = new Map<string, PlanData>();
     const cals = new Map<string, PlanCalibration>();
+    const colors = new Map<string, PlanColor[]>();
     const entities: [EntityKind, string, string, unknown][] = [];
     for (const [k, v] of map.entries()) {
       const [kind, pid, id] = k.split(SEP);
       if (!pid) continue;
       if (kind === "p") {
         const p = cleanProject(v);
-        if (p && p.id === pid) byId.set(pid, { project: p, calibration: null, routes: [], texts: [], symbols: [], items: [], lastEdit: p.updatedAt });
+        if (p && p.id === pid) byId.set(pid, { project: p, calibration: null, colors: [], routes: [], texts: [], symbols: [], items: [], lastEdit: p.updatedAt });
       } else if (kind === "c") {
         const c = cleanCalibration(v);
         if (c) cals.set(pid, c);
+      } else if (kind === "k") {
+        colors.set(pid, cleanColors(v));
       } else if ((kind === "r" || kind === "t" || kind === "s" || kind === "i") && id) {
         entities.push([kind, pid, id, v]);
       }
     }
+    for (const [pid, c] of colors) { const d = byId.get(pid); if (d) d.colors = c; }
     for (const [pid, c] of cals) {
       const d = byId.get(pid);
       if (d) { d.calibration = c; d.lastEdit = Math.max(d.lastEdit, c.at); }
@@ -141,6 +148,14 @@ export function createYPlans(doc: Y.Doc) {
     return true;
   }
 
+  /** Kolory warstw → instalacje (cała lista naraz; pusta lista usuwa klucz). */
+  function setColors(pid: string, list: PlanColor[]): boolean {
+    if (!get(pid)) return false;
+    const clean = cleanColors(list);
+    doc.transact(() => { if (clean.length) map.set(colorsKey(pid), clean); else map.delete(colorsKey(pid)); }, PLANS_ORIGIN);
+    return true;
+  }
+
   /** Zapis encji (nowej albo zmienionej); `false` = odrzucona (limit, zły kształt, brak analizy). */
   function save<K extends EntityKind>(kind: K, pid: string, entity: EntityOf[K]): boolean {
     const d = get(pid);
@@ -186,6 +201,7 @@ export function createYPlans(doc: Y.Doc) {
         if (!isPlanId(pid)) continue;
         if (kind === "p") { const p = cleanProject(v); if (p && p.id === pid && !id) map.set(k, p); }
         else if (kind === "c") { const c = cleanCalibration(v); if (c && !id) map.set(k, c); }
+        else if (kind === "k") { const c = cleanColors(v); if (c.length && !id) map.set(k, c); }
         else if ((kind === "r" || kind === "t" || kind === "s" || kind === "i") && isPlanId(id)) {
           const e = CLEAN[kind](v);
           if (e && e.id === id) map.set(k, e);
@@ -219,7 +235,7 @@ export function createYPlans(doc: Y.Doc) {
     subscribe: (cb: () => void) => { undoListeners.add(cb); return () => { undoListeners.delete(cb); }; },
   };
 
-  return { list, get, subscribe, history, createProject, updateProject, setCalibration, save, remove, removeProject, restore, dump, mergeDump };
+  return { list, get, subscribe, history, createProject, updateProject, setCalibration, setColors, save, remove, removeProject, restore, dump, mergeDump };
 }
 
 export type YPlans = ReturnType<typeof createYPlans>;

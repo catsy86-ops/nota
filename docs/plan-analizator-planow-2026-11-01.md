@@ -35,7 +35,7 @@ Wartości pochodne (`lengthPixels`, `lengthMeters`, status pomiaru, wiersze zest
 
 ## Fazy
 
-Stan: faza 2 (d353ea7), faza 3 (b761b57) i faza 4 — OCR (2026-11-01) zrobione. Następna: faza 5 (propozycje tras po kolorze w workerze; OpenCV za flagą po ocenie).
+Stan: faza 2 (d353ea7), faza 3 (b761b57) i faza 4 — OCR (2026-11-01) zrobione. Faza 5 (propozycje tras z koloru, własny algorytm w workerze; OpenCV odłożony — opis w opis.md) zrobiona. Następna: faza 6 (symbole ręczne, propozycje kolan i trójników z geometrii).
 
 | Faza | Zakres | Rozmiar |
 |---|---|---|

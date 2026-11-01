@@ -249,3 +249,23 @@ test("Plany (faza 4): OCR odczytuje średnice lokalnie — bez żądań na zewn�
   await editor.getByTestId("plan-diameter-suggestions").getByRole("button", { name: "Przypisz Ø16" }).click();
   await expect(editor.getByTestId("plan-routes")).toContainText("Ø16");
 });
+
+test("Plany (faza 5): pipeta koloru rury → propozycja trasy bez siatki i tekstu, dodana do weryfikacji", async ({ page }) => {
+  await newPlan(page, "Propozycje");
+  const editor = page.getByTestId("plan-editor");
+  const detect = editor.getByTestId("plan-detect");
+  await detect.getByRole("button", { name: "Wskaż kolor rury" }).click();
+  await clickImage(page, 700, 100);
+  await expect(detect.getByTestId("plan-detect-color")).toHaveAttribute("title", /^#[0-9a-f]{6}$/);
+  await detect.getByRole("button", { name: "Szukaj tras" }).click();
+  const found = detect.getByTestId("plan-detect-proposals");
+  await expect(found).toBeVisible();
+  // Jedna rura w kształcie L (siatka #999 i czarny opis odpadają).
+  await expect(found.getByRole("listitem")).toHaveCount(1);
+  await expect(found).toContainText(/(19[5-9]\d|20[0-4]\d) px/);
+  await found.getByRole("button", { name: "Dodaj wszystkie" }).click();
+  await expect(editor.getByTestId("plan-routes")).toContainText(/(19[5-9]\d|20[0-4]\d) px/);
+  // Dodana z automatyki = do weryfikacji: w panelu trasy „Zatwierdzona” nieodhaczone.
+  await editor.getByTestId("plan-routes").getByRole("button").first().click();
+  await expect(editor.getByTestId("plan-route-panel").getByRole("checkbox", { name: "Zatwierdzona" })).not.toBeChecked();
+});

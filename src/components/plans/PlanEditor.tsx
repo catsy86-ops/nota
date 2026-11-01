@@ -5,7 +5,7 @@ import { useImageUrl } from "@/hooks/useImageUrl";
 import { metersPerPixel, pickRoute, pickVertex } from "@/lib/plans/geometry";
 import { PLAN_NAME_MAX, PLAN_ROUTE_POINTS_MAX, type PipeRoute, type PlanPoint, type SystemType } from "@/lib/plans/model";
 import {
-  clearPlansUndo, newPlanId, redoPlans, removePlanEntity, renamePlan, savePlanEntity, setPlanCalibration, stopPlansCapture, undoPlans, usePlansUndo,
+  clearPlansUndo, newPlanId, redoPlans, removePlanEntity, renamePlan, savePlanEntity, setPlanCalibration, setPlanColors, stopPlansCapture, undoPlans, usePlansUndo,
 } from "@/lib/plans/plansStore";
 import { snapAngle } from "@/lib/plans/systems";
 import type { PlanData } from "@/lib/plans/yPlans";
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { PlanCanvas, type PlanCanvasHandle } from "./PlanCanvas";
 import { PlanOverlay } from "./PlanOverlay";
 import { OcrSection, type OcrProposal, type OcrRun } from "./OcrPanel";
+import { DetectSection, type DetectRun, type RouteProposal } from "./DetectPanel";
 import { imageStore } from "@/lib/imageStore";
 import { interpretOcrText, OCR_SURE } from "@/lib/plans/diameters";
 import { overlapRatio } from "@/lib/plans/tiles";
@@ -62,6 +63,13 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
   const [ocrRun, setOcrRun] = useState<OcrRun>({ state: "idle" });
   const [engineCached, setEngineCached] = useState<boolean | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
+  // Propozycje tras z koloru (faza 5): pipeta, kolor, tolerancja, instalacja i wyniki — tylko w edytorze.
+  const [picking, setPicking] = useState(false);
+  const [detectColor, setDetectColor] = useState<string | null>(null);
+  const [tolerance, setTolerance] = useState(0.25);
+  const [detectSystem, setDetectSystem] = useState<SystemType>("cold");
+  const [detectRun, setDetectRun] = useState<DetectRun>({ state: "idle" });
+  const [routeProposals, setRouteProposals] = useState<RouteProposal[]>([]);
   const undo = usePlansUndo();
   const mpp = metersPerPixel(calibration);
 
@@ -69,7 +77,11 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
   useEffect(() => {
     let on = true;
     void import("@/lib/plans/ocr/ocrClient").then((m) => m.engineReady()).then((r) => { if (on) setEngineCached(r); }).catch(() => {});
-    return () => { on = false; void import("@/lib/plans/ocr/ocrClient").then((m) => m.cancelOcr()).catch(() => {}); };
+    return () => {
+      on = false;
+      void import("@/lib/plans/ocr/ocrClient").then((m) => m.cancelOcr()).catch(() => {});
+      void import("@/lib/plans/detect/detectClient").then((m) => m.releaseDetectCache()).catch(() => {});
+    };
   }, []);
 
   // Każda analiza ma własny stos „Cofnij”.
@@ -85,6 +97,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
 
   const switchMode = useCallback((m: EditorMode) => {
     setMode(m);
+    setPicking(false);
     setDraft([]);
     setCalDraft([]);
     setHover(null);
@@ -117,11 +130,21 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
   }, [pid]);
 
   const onTap = useCallback((p: PlanPoint) => {
+    if (picking) {
+      setPicking(false);
+      void import("@/lib/plans/detect/detectClient").then((m) => m.sampleColor(project, p.x, p.y)).then((hex) => {
+        if (!hex) { toast.error("W tym miejscu jest tło — stuknij dokładnie w linię rury."); return; }
+        setDetectColor(hex);
+        const known = plan.colors.find((c) => c.hex === hex);
+        if (known) setDetectSystem(known.system);
+      }).catch(() => toast.error("Nie udało się odczytać koloru."));
+      return;
+    }
     if (mode === "route") { addDraftPoint(p); return; }
     if (mode === "calibrate") { setCalDraft((c) => (c.length >= 2 ? [p] : [...c, p])); return; }
     const scale = canvas.current?.view().scale ?? 1;
     setSelectedId(pickRoute(routes, p, HIT_ROUTE_PX / scale));
-  }, [mode, addDraftPoint, routes]);
+  }, [mode, addDraftPoint, routes, picking, project, plan.colors]);
 
   const onPressStart = useCallback((p: PlanPoint, scale: number) => {
     if (mode !== "select" || !selected) return false;
@@ -238,12 +261,39 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     if (removed) toastWithUndo("Usunięto opis", () => savePlanEntity("t", pid, removed));
   };
 
+  async function runDetect() {
+    if (!detectColor) return;
+    setDetectRun({ state: "running" });
+    try {
+      const { detectRoutes } = await import("@/lib/plans/detect/detectClient");
+      const found = await detectRoutes(project, plan.texts, detectColor, tolerance);
+      setRouteProposals(found.map((l) => ({ id: newPlanId("route"), pts: l.pts, confidence: l.confidence })));
+      setDetectRun({ state: "idle" });
+      if (!found.length) toast("Nie znaleziono linii w tym kolorze — zwiększ tolerancję albo wskaż kolor jeszcze raz.");
+    } catch (e) {
+      setDetectRun({ state: "error", message: (e as Error).message || "Wyszukiwanie tras się nie udało." });
+    }
+  }
+
+  /** Dodaje propozycje jako trasy „do weryfikacji” i zapamiętuje kolor warstwy → instalacja. */
+  const addProposals = (list: readonly RouteProposal[]) => {
+    stopPlansCapture();
+    let added = 0;
+    for (const p of list) {
+      const route: PipeRoute = { id: p.id, system: detectSystem, pts: p.pts, source: "auto", confidence: p.confidence, verified: false, at: Date.now() + added };
+      if (savePlanEntity("r", pid, route)) added++;
+    }
+    if (detectColor) setPlanColors(pid, [{ hex: detectColor, system: detectSystem }, ...plan.colors.filter((c) => c.hex !== detectColor)]);
+    setRouteProposals((cur) => cur.filter((x) => !list.includes(x)));
+    if (added < list.length) toast.error("Część tras nie zmieściła się (limit 500 w analizie).");
+  };
+
   const suggestions = useMemo(
     () => (selected ? suggestDiameters(selected, plan.texts, Math.max(40, Math.hypot(project.image.w, project.image.h) * 0.03)) : []),
     [selected, plan.texts, project.image.w, project.image.h],
   );
 
-  const hint = mode === "route" ? "Stuknij kolejne punkty rury" : mode === "calibrate" ? "Stuknij dwa końce znanego wymiaru" : "Stuknij trasę, żeby ją zaznaczyć";
+  const hint = picking ? "Stuknij linię rury, żeby pobrać jej kolor" : mode === "route" ? "Stuknij kolejne punkty rury" : mode === "calibrate" ? "Stuknij dwa końce znanego wymiaru" : "Stuknij trasę, żeby ją zaznaczyć";
 
   return (
     <section aria-label={`Analiza: ${project.name}`} className="flex h-[calc(100dvh-8.5rem)] min-h-[28rem] flex-col overflow-hidden rounded-card border border-border/60 bg-card sm:h-[calc(100dvh-7rem)]" data-testid="plan-editor">
@@ -303,7 +353,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
             onPressEnd={onPressEnd}
             onKeyAction={onKeyAction}
             crosshair={mode !== "select"}
-            cursor={mode === "select" ? "default" : "crosshair"}
+            cursor={picking ? "copy" : mode === "select" ? "default" : "crosshair"}
             label={`Plan ${project.name}. ${hint}. Przesuwaj palcem albo strzałkami, przybliżaj dwoma palcami, kółkiem albo klawiszami plus i minus, zero dopasowuje do ekranu.`}
           >
             {(scale) => (
@@ -312,6 +362,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
                 draft={mode === "route" ? draft : null} hover={hover} draftSystem={draftSystem}
                 calibration={mode === "route" ? null : calibration} calDraft={mode === "calibrate" ? calDraft : []} showHandles={mode === "select"}
                 texts={plan.texts} proposals={proposals} focusId={focusId}
+                routeProposals={routeProposals} proposalColor={detectColor}
               />
             )}
           </PlanCanvas>
@@ -328,6 +379,12 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
           {mode === "select" && selected && (
             <RouteSection route={selected} mpp={mpp} onChange={(r) => { stopPlansCapture(); savePlanEntity("r", pid, r); }} onDelete={() => deleteRoute(selected.id)}
               suggestions={suggestions} onFocusText={setFocusId} />
+          )}
+          {mode === "select" && (
+            <DetectSection picking={picking} onPick={setPicking} color={detectColor} tolerance={tolerance} onTolerance={setTolerance}
+              system={detectSystem} onSystem={setDetectSystem} run={detectRun} proposals={routeProposals} mpp={mpp} focusId={focusId} onFocus={setFocusId}
+              onDetect={() => void runDetect()} onAdd={(p) => addProposals([p])} onReject={(id) => setRouteProposals((l) => l.filter((p) => p.id !== id))}
+              onAddAll={() => addProposals(routeProposals)} />
           )}
           {mode === "select" && (
             <OcrSection run={ocrRun} engineCached={engineCached} proposals={proposals} texts={plan.texts} focusId={focusId} onFocus={setFocusId}
