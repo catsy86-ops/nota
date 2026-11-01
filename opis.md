@@ -4042,7 +4042,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Szkic trasy i punkty kalibracji żyją w stanie edytora; do Yjs idzie dopiero „Zakończ trasę” albo „Zapisz skalę”. Trasa narysowana ręcznie zapisuje się jako `source: "manual"`, `verified: true`. Przeciąganie punktu zmienia kopię punktów w stanie i zapisuje raz po puszczeniu. `UndoManager` śledzi tylko origin `plans` (zmiany z innych urządzeń i scalanie kopii — origin `plans-import` — nie są cofane); stos czyszczony przy otwarciu analizy, `stopCapturing` przed każdą akcją, więc jedna akcja = jeden krok. Na telefonie przyciski „−”/„+” są schowane (szczypanie), żeby nazwa analizy mieściła się w pasku.
 - **Ograniczenia.** Nie da się dodać ani usunąć pojedynczego punktu w środku istniejącej trasy (tylko przesunąć; inaczej — narysować od nowa). Zatwierdzanie i szacunek są per trasa, zestawienie w fazie 7. Skala jedna na analizę (bez osobnej skali dla wycinków planu).
 - **Testy.** Vitest: `geometry.test.ts` (przyciąganie 45°, trafianie trasy i punktu, liczby z przecinkiem), `yPlans.test.ts` („Cofnij”/„Ponów”, scalanie kopii poza stosem). E2E `e2e/plans.spec.ts`: trasa bez skali w pikselach, kalibracja → metry, średnica, przeciąganie punktu, „Cofnij”, usunięcie z „Cofnij”, odświeżenie, axe edytora; trasa z klawiatury; telefon — trasa stuknięciami palcem i nazwa nieucięta.
-- **Commit.** (uzupełnić)
+- **Commit.** `b761b57` (2026-11-01).
 
 ## Kalendarz i Grafik: kontrast nazw świąt i zaznaczonego weekendu (2026-11-01)
 
