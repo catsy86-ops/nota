@@ -8,7 +8,7 @@ import { COMMON_DIAMETERS, SYSTEM_META } from "@/lib/plans/systems";
 import type { DiameterSuggestion } from "@/lib/plans/assign";
 import { cn } from "@/lib/utils";
 
-export type EditorMode = "select" | "route" | "calibrate";
+export type EditorMode = "select" | "route" | "calibrate" | "symbol";
 
 const field = "h-10 w-full rounded-field border border-border bg-background px-3 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
 const sectionCls = "space-y-2 border-b border-border/60 px-3 py-3 last:border-b-0";

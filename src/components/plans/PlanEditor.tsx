@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Maximize, Minus, MousePointer2, Pencil, Plus, Redo2, Ruler, Spline, Undo2 } from "lucide-react";
+import { ArrowLeft, CircleDot, Maximize, Minus, MousePointer2, Pencil, Plus, Redo2, Ruler, Spline, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useImageUrl } from "@/hooks/useImageUrl";
 import { metersPerPixel, pickRoute, pickVertex } from "@/lib/plans/geometry";
@@ -16,6 +16,9 @@ import { PlanCanvas, type PlanCanvasHandle } from "./PlanCanvas";
 import { PlanOverlay } from "./PlanOverlay";
 import { OcrSection, type OcrProposal, type OcrRun } from "./OcrPanel";
 import { DetectSection, type DetectRun, type RouteProposal } from "./DetectPanel";
+import { FittingsSection, SymbolPlaceSection, SymbolSection } from "./SymbolPanel";
+import { pickSymbol, proposeFittings, type FittingProposal } from "@/lib/plans/fittings";
+import type { DetectedSymbol, SymbolType } from "@/lib/plans/model";
 import { imageStore } from "@/lib/imageStore";
 import { interpretOcrText, OCR_SURE } from "@/lib/plans/diameters";
 import { overlapRatio } from "@/lib/plans/tiles";
@@ -31,8 +34,11 @@ const HIT_HANDLE_PX = 18;
 const MODES: { id: EditorMode; label: string; Icon: typeof Ruler }[] = [
   { id: "select", label: "Zaznacz", Icon: MousePointer2 },
   { id: "route", label: "Trasa", Icon: Spline },
+  { id: "symbol", label: "Symbol", Icon: CircleDot },
   { id: "calibrate", label: "Skala", Icon: Ruler },
 ];
+/** Promień trafienia symbolu (piksele ekranu) — symbol ma pierwszeństwo przed trasą pod nim. */
+const HIT_SYMBOL_PX = 16;
 
 /**
  * Edytor jednej analizy (faza 3): tryby „Zaznacz” (stuknięcie wybiera trasę, przeciąganie punktu poprawia
@@ -70,6 +76,11 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
   const [detectSystem, setDetectSystem] = useState<SystemType>("cold");
   const [detectRun, setDetectRun] = useState<DetectRun>({ state: "idle" });
   const [routeProposals, setRouteProposals] = useState<RouteProposal[]>([]);
+  // Symbole (faza 6): rodzaj i instalacja nowego symbolu, zaznaczony symbol, propozycje kształtek.
+  const [symbolType, setSymbolType] = useState<SymbolType>("outlet");
+  const [symbolSystem, setSymbolSystem] = useState<SystemType | undefined>(undefined);
+  const [selectedSymbolId, setSelectedSymbolId] = useState<string | null>(null);
+  const [fittings, setFittings] = useState<(FittingProposal & { id: string })[]>([]);
   const undo = usePlansUndo();
   const mpp = metersPerPixel(calibration);
 
@@ -94,10 +105,13 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     [routes, drag, selectedId],
   );
   const selected = routes.find((r) => r.id === selectedId) ?? null;
+  const selectedSymbol = plan.symbols.find((s) => s.id === selectedSymbolId) ?? null;
+  useEffect(() => { if (selectedSymbolId && !plan.symbols.some((s) => s.id === selectedSymbolId)) setSelectedSymbolId(null); }, [plan.symbols, selectedSymbolId]);
 
   const switchMode = useCallback((m: EditorMode) => {
     setMode(m);
     setPicking(false);
+    setSelectedSymbolId(null);
     setDraft([]);
     setCalDraft([]);
     setHover(null);
@@ -129,6 +143,12 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     if (removed) toastWithUndo("Usunięto trasę", () => savePlanEntity("r", pid, removed));
   }, [pid]);
 
+  const deleteSymbol = useCallback((id: string) => {
+    stopPlansCapture();
+    const removed = removePlanEntity("s", pid, id);
+    if (removed) toastWithUndo("Usunięto symbol", () => savePlanEntity("s", pid, removed));
+  }, [pid]);
+
   const onTap = useCallback((p: PlanPoint) => {
     if (picking) {
       setPicking(false);
@@ -142,9 +162,17 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     }
     if (mode === "route") { addDraftPoint(p); return; }
     if (mode === "calibrate") { setCalDraft((c) => (c.length >= 2 ? [p] : [...c, p])); return; }
+    if (mode === "symbol") {
+      const s: DetectedSymbol = { id: newPlanId("sym"), type: symbolType, x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10, ...(symbolSystem ? { system: symbolSystem } : {}), manual: true, verified: true, at: Date.now() };
+      stopPlansCapture();
+      if (!savePlanEntity("s", pid, s)) toast.error("Nie udało się dodać symbolu (limit 1000 w analizie).");
+      return;
+    }
     const scale = canvas.current?.view().scale ?? 1;
-    setSelectedId(pickRoute(routes, p, HIT_ROUTE_PX / scale));
-  }, [mode, addDraftPoint, routes, picking, project, plan.colors]);
+    const sym = pickSymbol(plan.symbols, p, HIT_SYMBOL_PX / scale);
+    setSelectedSymbolId(sym);
+    setSelectedId(sym ? null : pickRoute(routes, p, HIT_ROUTE_PX / scale));
+  }, [mode, addDraftPoint, routes, picking, project, plan.colors, plan.symbols, symbolType, symbolSystem, pid]);
 
   const onPressStart = useCallback((p: PlanPoint, scale: number) => {
     if (mode !== "select" || !selected) return false;
@@ -181,10 +209,12 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
       if (key === "Backspace") { setDraft((d) => d.slice(0, -2)); return true; }
       if (key === "Enter") { finishRoute(); return true; }
     }
+    if (mode === "symbol" && key === " ") { onTap(center); return true; }
     if (mode === "calibrate" && key === " ") { setCalDraft((c) => (c.length >= 2 ? [center] : [...c, center])); return true; }
+    if (mode === "select" && selectedSymbolId && (key === "Delete" || key === "Backspace")) { deleteSymbol(selectedSymbolId); return true; }
     if (mode === "select" && selectedId && (key === "Delete" || key === "Backspace")) { deleteRoute(selectedId); return true; }
     return false;
-  }, [mode, selectedId, switchMode, addDraftPoint, finishRoute, deleteRoute]);
+  }, [mode, selectedId, selectedSymbolId, switchMode, addDraftPoint, finishRoute, deleteRoute, deleteSymbol, onTap]);
 
   // Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y — poza polami tekstowymi (tam działa cofanie przeglądarki).
   useEffect(() => {
@@ -288,12 +318,24 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     if (added < list.length) toast.error("Część tras nie zmieściła się (limit 500 w analizie).");
   };
 
+  const proposeFittingsNow = () => {
+    const scale = canvas.current?.view().scale ?? 1;
+    const found = proposeFittings(routes, plan.symbols, Math.max(6, HIT_SYMBOL_PX / scale));
+    setFittings(found.map((f) => ({ ...f, id: newPlanId("sym") })));
+    if (!found.length) toast("Brak nowych kolan ani trójników — trasy są proste albo symbole już stoją.");
+  };
+  const addFittings = (list: readonly (FittingProposal & { id: string })[]) => {
+    stopPlansCapture();
+    for (const f of list) savePlanEntity("s", pid, { id: f.id, type: f.type, x: f.x, y: f.y, system: f.system, confidence: f.confidence, manual: false, verified: false, at: Date.now() });
+    setFittings((cur) => cur.filter((x) => !list.includes(x)));
+  };
+
   const suggestions = useMemo(
     () => (selected ? suggestDiameters(selected, plan.texts, Math.max(40, Math.hypot(project.image.w, project.image.h) * 0.03)) : []),
     [selected, plan.texts, project.image.w, project.image.h],
   );
 
-  const hint = picking ? "Stuknij linię rury, żeby pobrać jej kolor" : mode === "route" ? "Stuknij kolejne punkty rury" : mode === "calibrate" ? "Stuknij dwa końce znanego wymiaru" : "Stuknij trasę, żeby ją zaznaczyć";
+  const hint = picking ? "Stuknij linię rury, żeby pobrać jej kolor" : mode === "symbol" ? "Stuknij miejsce symbolu" : mode === "route" ? "Stuknij kolejne punkty rury" : mode === "calibrate" ? "Stuknij dwa końce znanego wymiaru" : "Stuknij trasę, żeby ją zaznaczyć";
 
   return (
     <section aria-label={`Analiza: ${project.name}`} className="flex h-[calc(100dvh-8.5rem)] min-h-[28rem] flex-col overflow-hidden rounded-card border border-border/60 bg-card sm:h-[calc(100dvh-7rem)]" data-testid="plan-editor">
@@ -353,6 +395,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
             onPressEnd={onPressEnd}
             onKeyAction={onKeyAction}
             crosshair={mode !== "select"}
+
             cursor={picking ? "copy" : mode === "select" ? "default" : "crosshair"}
             label={`Plan ${project.name}. ${hint}. Przesuwaj palcem albo strzałkami, przybliżaj dwoma palcami, kółkiem albo klawiszami plus i minus, zero dopasowuje do ekranu.`}
           >
@@ -363,6 +406,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
                 calibration={mode === "route" ? null : calibration} calDraft={mode === "calibrate" ? calDraft : []} showHandles={mode === "select"}
                 texts={plan.texts} proposals={proposals} focusId={focusId}
                 routeProposals={routeProposals} proposalColor={detectColor}
+                symbols={plan.symbols} selectedSymbolId={selectedSymbolId} fittings={fittings}
               />
             )}
           </PlanCanvas>
@@ -375,6 +419,10 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
           {mode !== "route" && (
             <ScaleSection mode={mode} calibration={calibration} calDraft={calDraft} mpp={mpp}
               onStart={() => switchMode("calibrate")} onSave={saveCalibration} onCancel={() => switchMode("select")} onClear={clearCalibration} />
+          )}
+          {mode === "symbol" && <SymbolPlaceSection type={symbolType} onType={setSymbolType} system={symbolSystem} onSystem={setSymbolSystem} />}
+          {mode === "select" && selectedSymbol && (
+            <SymbolSection symbol={selectedSymbol} onChange={(s) => { stopPlansCapture(); savePlanEntity("s", pid, s); }} onDelete={() => deleteSymbol(selectedSymbol.id)} />
           )}
           {mode === "select" && selected && (
             <RouteSection route={selected} mpp={mpp} onChange={(r) => { stopPlansCapture(); savePlanEntity("r", pid, r); }} onDelete={() => deleteRoute(selected.id)}
@@ -390,6 +438,11 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
             <OcrSection run={ocrRun} engineCached={engineCached} proposals={proposals} texts={plan.texts} focusId={focusId} onFocus={setFocusId}
               onRun={() => void runOcr()} onCancel={cancelOcrRun} onEdit={(id, text) => setProposals((l) => l.map((p) => (p.id === id ? { ...p, text } : p)))}
               onAccept={acceptProposal} onReject={(id) => setProposals((l) => l.filter((p) => p.id !== id))} onAcceptSure={acceptSure} onRemoveText={removeText} />
+          )}
+          {(mode === "select" || mode === "symbol") && (
+            <FittingsSection proposals={fittings} symbols={plan.symbols} routesCount={routes.length} selectedId={selectedSymbolId} focusId={focusId} onFocus={setFocusId}
+              onPropose={proposeFittingsNow} onAdd={(f) => addFittings([f])} onReject={(id) => setFittings((l) => l.filter((f) => f.id !== id))}
+              onAddAll={() => addFittings(fittings)} onSelect={(id) => { if (mode !== "select") switchMode("select"); setSelectedId(null); setSelectedSymbolId(id); }} />
           )}
           {mode === "select" && <RoutesList routes={routes} mpp={mpp} selectedId={selectedId} onSelect={setSelectedId} />}
         </aside>

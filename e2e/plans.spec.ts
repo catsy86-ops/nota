@@ -269,3 +269,38 @@ test("Plany (faza 5): pipeta koloru rury → propozycja trasy bez siatki i tekst
   await editor.getByTestId("plan-routes").getByRole("button").first().click();
   await expect(editor.getByTestId("plan-route-panel").getByRole("checkbox", { name: "Zatwierdzona" })).not.toBeChecked();
 });
+
+test("Plany (faza 6): symbol ręczny — postawienie, zaznaczenie, zmiana rodzaju, usunięcie; kolano z załamania trasy", async ({ page }) => {
+  await newPlan(page, "Symbole");
+  const editor = page.getByTestId("plan-editor");
+  await editor.getByRole("button", { name: "Symbol", exact: true }).click();
+  await editor.getByRole("radio", { name: "Punkt poboru" }).click();
+  await clickImage(page, 300, 500);
+  const symbols = editor.getByTestId("plan-symbols");
+  await expect(symbols).toContainText("Punkt poboru");
+  await expect(symbols).toContainText("ręczny");
+
+  await editor.getByRole("button", { name: "Zaznacz", exact: true }).click();
+  await clickImage(page, 302, 498);
+  const panel = editor.getByTestId("plan-symbol-panel");
+  await expect(panel).toContainText("dodany ręcznie");
+  await panel.getByLabel("Rodzaj").selectOption({ label: "Zawór" });
+  await expect(symbols).toContainText("Zawór");
+  await panel.getByRole("button", { name: "Usuń symbol" }).click();
+  await expect(symbols).not.toContainText("Zawór");
+  await page.getByRole("button", { name: "Cofnij" }).last().click();
+  await expect(symbols).toContainText("Zawór");
+
+  // Trasa z jednym załamaniem 90° → jedna propozycja kolana.
+  await editor.getByRole("button", { name: "Trasa", exact: true }).click();
+  await clickImage(page, 100, 100);
+  await clickImage(page, 1400, 100);
+  await clickImage(page, 1400, 800);
+  await editor.getByRole("button", { name: "Zakończ trasę" }).click();
+  await symbols.getByRole("button", { name: "Zaproponuj kolana i trójniki z tras" }).click();
+  const fittings = symbols.getByTestId("plan-fitting-proposals");
+  await expect(fittings.getByRole("listitem")).toHaveCount(1);
+  await expect(fittings).toContainText("Kolano · ZW");
+  await fittings.getByRole("button", { name: "Dodaj wszystkie" }).click();
+  await expect(symbols).toContainText(/Kolano · ZW\s*do sprawdzenia/);
+});

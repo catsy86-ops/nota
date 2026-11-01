@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { lengthLabel, measureRoute } from "@/lib/plans/geometry";
-import type { DetectedText, PipeRoute, PlanCalibration, PlanPoint } from "@/lib/plans/model";
+import type { DetectedSymbol, DetectedText, PipeRoute, PlanCalibration, PlanPoint, SymbolType } from "@/lib/plans/model";
 import { SYSTEM_META } from "@/lib/plans/systems";
 
 /** Grubości i promienie w pikselach EKRANU — dzielone przez skalę, żeby nie rosły z zoomem. */
@@ -59,10 +59,14 @@ interface Props {
   /** Propozycje tras z obrazu (cienka przerywana w kolorze z pipety). */
   routeProposals: readonly { id: string; pts: readonly number[] }[];
   proposalColor: string | null;
+  symbols: readonly DetectedSymbol[];
+  selectedSymbolId: string | null;
+  /** Propozycje kolan i trójników (przerywane, bez wypełnienia). */
+  fittings: readonly { id: string; type: SymbolType; x: number; y: number; system: PipeRoute["system"] }[];
 }
 
 /** Nakładka SVG w układzie oryginału: trasy, szkic, kalibracja, uchwyty zaznaczonej trasy. */
-export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selectedId, draft, hover, draftSystem, calibration, calDraft, showHandles, texts, proposals, focusId, routeProposals, proposalColor }: Props) {
+export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selectedId, draft, hover, draftSystem, calibration, calDraft, showHandles, texts, proposals, focusId, routeProposals, proposalColor, symbols, selectedSymbolId, fittings }: Props) {
   const k = 1 / scale;
   const selected = routes.find((r) => r.id === selectedId) ?? null;
   const draftColor = SYSTEM_META[draftSystem].color;
@@ -110,6 +114,16 @@ export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selec
         </g>
       )}
 
+      <g data-testid="plan-symbols-layer">
+        {symbols.map((s) => (
+          <SymbolMark key={s.id} type={s.type} x={s.x} y={s.y} k={k} color={s.system ? SYSTEM_META[s.system].color : "#4b5563"}
+            dashed={!s.verified} selected={s.id === selectedSymbolId} focused={s.id === focusId} />
+        ))}
+        {fittings.map((f) => (
+          <SymbolMark key={f.id} type={f.type} x={f.x} y={f.y} k={k} color={SYSTEM_META[f.system].color} dashed proposal focused={f.id === focusId} />
+        ))}
+      </g>
+
       {selected && showHandles && toPairs(selected.pts).map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r={HANDLE_R * k} fill="#ffffff" stroke={SYSTEM_META[selected.system].color} strokeWidth={2.5 * k} data-handle={i} />
       ))}
@@ -146,4 +160,21 @@ function toPairs(pts: readonly number[]): PlanPoint[] {
   const out: PlanPoint[] = [];
   for (let i = 0; i + 1 < pts.length; i += 2) out.push({ x: pts[i], y: pts[i + 1] });
   return out;
+}
+
+/** Litera symbolu na planie (krótka, czytelna przy małej skali). */
+const SYMBOL_LETTER: Record<SymbolType, string> = { outlet: "P", valve: "Z", manifold: "R", elbow: "K", tee: "T", riser: "Pn", other: "?" };
+
+function SymbolMark({ type, x, y, k, color, dashed, selected, focused, proposal }: {
+  type: SymbolType; x: number; y: number; k: number; color: string; dashed?: boolean; selected?: boolean; focused?: boolean; proposal?: boolean;
+}) {
+  const r = 9 * k;
+  return (
+    <g transform={`translate(${x} ${y})`} pointerEvents="none" data-symbol={type}>
+      {(selected || focused) && <circle r={r + 5 * k} fill={color} fillOpacity={0.22} />}
+      <circle r={r} fill={proposal ? "#fffbeb" : "#ffffff"} stroke={color} strokeWidth={(selected ? 3 : 2) * k} strokeDasharray={dashed ? `${3 * k} ${2 * k}` : undefined} />
+      <text textAnchor="middle" dominantBaseline="central" fontSize={(SYMBOL_LETTER[type].length > 1 ? 8 : 10) * k} fontWeight={700}
+        fontFamily="'JetBrains Mono', ui-monospace, monospace" fill="#111827">{SYMBOL_LETTER[type]}</text>
+    </g>
+  );
 }
