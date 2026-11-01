@@ -4053,7 +4053,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Offline i paczka.** Pliki silnika mają reguły: `globIgnores` `**/ocr/**` i chunki `ocrClient-*`, `src-*` (biblioteka tesseract.js), `esm-*` (wasm-feature-detect) — poza precache; runtime cache `ocr-engine` (CacheFirst, ścieżka z wersją). Przed pierwszym rozpoznaniem `fetch` plików z postępem i `navigator.storage.persist()`. Nagłówki `/ocr/*` (immutable, `.gz` jako `application/octet-stream`) w `netlify.toml` i `vercel.json`. Precache bez zmian: 4046,9 KiB.
 - **Ograniczenia.** Napisy pionowe (wzdłuż pionowych rur) nie są obracane — mogą nie zostać odczytane. Nie ma OCR zaznaczonego fragmentu z oryginału (cały plan z kopii roboczej). Znak Ø bywa czytany jako 0/O/@ — wtedy tylko typowe średnice i znak „(?)”. Czas i pamięć na telefonie nie były mierzone na urządzeniu. Przypisanie średnicy nie zapisuje, z którego opisu pochodzi.
 - **Testy.** Vitest: `src/lib/plans/ocr.test.ts` (Ø/DN/16x2, błędy OCR, zwykłe liczby odrzucone, kody instalacji i punktów, kafle, deduplikacja, podpowiedź średnicy). E2E: `e2e/plans.spec.ts` — „faza 4”: prawdziwe rozpoznanie „Ø16 ZW” i „DN 25” z blokadą każdego żądania spoza własnego adresu (lista żądań zewnętrznych pusta), „Salon” pominięty, zatwierdzenie i „Przypisz Ø16”. `e2e/bundle.spec.ts`: OCR i Plany poza precache (też po zawartości plików), reguła `ocr-engine`, pliki w `dist/ocr/7.0.0/`, `ocrClient` wskazuje `/ocr/`, OCR poza paczką startową.
-- **Commit.** (uzupełnić)
+- **Commit.** `4c53d7b` (2026-11-01).
 
 ## Kalendarz i Grafik: kontrast nazw świąt i zaznaczonego weekendu (2026-11-01)
 
