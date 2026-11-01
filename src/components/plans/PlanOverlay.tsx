@@ -63,10 +63,12 @@ interface Props {
   selectedSymbolId: string | null;
   /** Propozycje kolan i trójników (przerywane, bez wypełnienia). */
   fittings: readonly { id: string; type: SymbolType; x: number; y: number; system: PipeRoute["system"] }[];
+  /** Trasy i symbole podświetlone z wiersza zestawienia. */
+  highlightIds: readonly string[] | null;
 }
 
 /** Nakładka SVG w układzie oryginału: trasy, szkic, kalibracja, uchwyty zaznaczonej trasy. */
-export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selectedId, draft, hover, draftSystem, calibration, calDraft, showHandles, texts, proposals, focusId, routeProposals, proposalColor, symbols, selectedSymbolId, fittings }: Props) {
+export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selectedId, draft, hover, draftSystem, calibration, calDraft, showHandles, texts, proposals, focusId, routeProposals, proposalColor, symbols, selectedSymbolId, fittings, highlightIds }: Props) {
   const k = 1 / scale;
   const selected = routes.find((r) => r.id === selectedId) ?? null;
   const draftColor = SYSTEM_META[draftSystem].color;
@@ -83,7 +85,7 @@ export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selec
       </g>
       {routes.map((r) => {
         const color = SYSTEM_META[r.system].color;
-        const isSel = r.id === selectedId;
+        const isSel = r.id === selectedId || !!highlightIds?.includes(r.id);
         return (
           <g key={r.id} data-route={r.id}>
             {isSel && <polyline points={points(r.pts)} fill="none" stroke={color} strokeOpacity={0.25} strokeWidth={HALO_W * k} strokeLinecap="round" strokeLinejoin="round" />}
@@ -117,7 +119,7 @@ export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selec
       <g data-testid="plan-symbols-layer">
         {symbols.map((s) => (
           <SymbolMark key={s.id} type={s.type} x={s.x} y={s.y} k={k} color={s.system ? SYSTEM_META[s.system].color : "#4b5563"}
-            dashed={!s.verified} selected={s.id === selectedSymbolId} focused={s.id === focusId} />
+            dashed={!s.verified} selected={s.id === selectedSymbolId || !!highlightIds?.includes(s.id)} focused={s.id === focusId} />
         ))}
         {fittings.map((f) => (
           <SymbolMark key={f.id} type={f.type} x={f.x} y={f.y} k={k} color={SYSTEM_META[f.system].color} dashed proposal focused={f.id === focusId} />

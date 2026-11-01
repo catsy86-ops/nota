@@ -35,7 +35,7 @@ Wartości pochodne (`lengthPixels`, `lengthMeters`, status pomiaru, wiersze zest
 
 ## Fazy
 
-Stan: faza 2 (d353ea7), faza 3 (b761b57) i faza 4 — OCR (2026-11-01) zrobione. Faza 5 (propozycje tras z koloru, własny algorytm w workerze; OpenCV odłożony — opis w opis.md) zrobiona. Faza 6 (symbole ręczne, kolana i trójniki z geometrii) zrobiona. Następna: faza 7 (zestawienie materiałów, CSV, przekazanie do Pracy).
+Stan: faza 2 (d353ea7), faza 3 (b761b57) i faza 4 — OCR (2026-11-01) zrobione. Faza 5 (propozycje tras z koloru, własny algorytm w workerze; OpenCV odłożony — opis w opis.md) zrobiona. Faza 6 (symbole ręczne, kolana i trójniki z geometrii) zrobiona. Faza 7 (zestawienie, CSV, braki budowy) zrobiona. Następna: faza 8 (przegląd `security-reviewer`, axe w a11y.spec, raport końcowy).
 
 | Faza | Zakres | Rozmiar |
 |---|---|---|

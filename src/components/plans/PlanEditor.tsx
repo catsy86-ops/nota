@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CircleDot, Maximize, Minus, MousePointer2, Pencil, Plus, Redo2, Ruler, Spline, Undo2 } from "lucide-react";
+import { ArrowLeft, CircleDot, ClipboardList, Maximize, Minus, MousePointer2, Pencil, Plus, Redo2, Ruler, Spline, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useImageUrl } from "@/hooks/useImageUrl";
 import { metersPerPixel, pickRoute, pickVertex } from "@/lib/plans/geometry";
@@ -17,6 +17,7 @@ import { PlanOverlay } from "./PlanOverlay";
 import { OcrSection, type OcrProposal, type OcrRun } from "./OcrPanel";
 import { DetectSection, type DetectRun, type RouteProposal } from "./DetectPanel";
 import { FittingsSection, SymbolPlaceSection, SymbolSection } from "./SymbolPanel";
+import { MaterialsPanel } from "./MaterialsPanel";
 import { pickSymbol, proposeFittings, type FittingProposal } from "@/lib/plans/fittings";
 import type { DetectedSymbol, SymbolType } from "@/lib/plans/model";
 import { imageStore } from "@/lib/imageStore";
@@ -81,6 +82,9 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
   const [symbolSystem, setSymbolSystem] = useState<SystemType | undefined>(undefined);
   const [selectedSymbolId, setSelectedSymbolId] = useState<string | null>(null);
   const [fittings, setFittings] = useState<(FittingProposal & { id: string })[]>([]);
+  // Zestawienie (faza 7) zamiast panelu narzędzi; wiersz podświetla swoje trasy i symbole na planie.
+  const [showSummary, setShowSummary] = useState(false);
+  const [highlight, setHighlight] = useState<{ key: string; ids: string[] } | null>(null);
   const undo = usePlansUndo();
   const mpp = metersPerPixel(calibration);
 
@@ -112,6 +116,9 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     setMode(m);
     setPicking(false);
     setSelectedSymbolId(null);
+    // Wybór narzędzia wraca z zestawienia do panelu narzędzi.
+    setShowSummary(false);
+    setHighlight(null);
     setDraft([]);
     setCalDraft([]);
     setHover(null);
@@ -378,7 +385,11 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
             <Icon className="h-4 w-4" aria-hidden />{label}
           </button>
         ))}
-        <p className="ml-2 hidden truncate text-xs text-muted-foreground md:block" aria-live="polite">{hint}</p>
+        <p className="ml-2 hidden min-w-0 flex-1 truncate text-xs text-muted-foreground md:block" aria-live="polite">{hint}</p>
+        <button type="button" aria-pressed={showSummary} onClick={() => { setShowSummary((v) => !v); setHighlight(null); }}
+          className={cn(toolBtn, "ml-auto shrink-0", showSummary && "bg-primary text-primary-foreground hover:bg-primary")}>
+          <ClipboardList className="h-4 w-4" aria-hidden /><span className="hidden sm:inline">Zestawienie</span>
+        </button>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -406,12 +417,13 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
                 calibration={mode === "route" ? null : calibration} calDraft={mode === "calibrate" ? calDraft : []} showHandles={mode === "select"}
                 texts={plan.texts} proposals={proposals} focusId={focusId}
                 routeProposals={routeProposals} proposalColor={detectColor}
-                symbols={plan.symbols} selectedSymbolId={selectedSymbolId} fittings={fittings}
+                symbols={plan.symbols} selectedSymbolId={selectedSymbolId} fittings={fittings} highlightIds={highlight?.ids ?? null}
               />
             )}
           </PlanCanvas>
         </div>
         <aside aria-label="Panel analizy" className="max-h-[45%] shrink-0 overflow-y-auto border-t border-border/60 lg:max-h-none lg:border-l lg:border-t-0">
+          {showSummary ? <MaterialsPanel plan={plan} highlight={highlight?.key ?? null} onHighlight={(key, ids) => setHighlight(key ? { key, ids } : null)} /> : <>
           {mode === "route" && (
             <DraftSection draft={draft} mpp={mpp} system={draftSystem} onSystem={setDraftSystem} snap={snap} onSnap={setSnap}
               onUndoPoint={() => setDraft((d) => d.slice(0, -2))} onFinish={finishRoute} onCancel={() => switchMode("select")} />
@@ -445,6 +457,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
               onAddAll={() => addFittings(fittings)} onSelect={(id) => { if (mode !== "select") switchMode("select"); setSelectedId(null); setSelectedSymbolId(id); }} />
           )}
           {mode === "select" && <RoutesList routes={routes} mpp={mpp} selectedId={selectedId} onSelect={setSelectedId} />}
+          </>}
         </aside>
       </div>
     </section>

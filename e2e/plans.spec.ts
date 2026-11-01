@@ -304,3 +304,62 @@ test("Plany (faza 6): symbol ręczny — postawienie, zaznaczenie, zmiana rodzaj
   await fittings.getByRole("button", { name: "Dodaj wszystkie" }).click();
   await expect(symbols).toContainText(/Kolano · ZW\s*do sprawdzenia/);
 });
+
+test("Plany (faza 7): zestawienie — bez skali w px, po kalibracji metry, pozycja ręczna, CSV i braki budowy w Pracy", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({
+      site: "Lipowa 5",
+      journal: [{ id: "a", at: Date.now(), kind: "ok", topic: null, text: "Montaż", site: "Lipowa 5", checked: [], images: [] }],
+    }));
+  });
+  await newPlan(page, "Zestawienie");
+  const editor = page.getByTestId("plan-editor");
+  await editor.getByRole("button", { name: "Trasa", exact: true }).click();
+  await clickImage(page, 100, 100);
+  await clickImage(page, 1400, 100);
+  await clickImage(page, 1400, 800);
+  await editor.getByRole("button", { name: "Zakończ trasę" }).click();
+  await editor.getByLabel("Średnica (mm)").fill("16");
+  await editor.getByLabel("Średnica (mm)").press("Enter");
+
+  await editor.getByRole("button", { name: "Zestawienie" }).click();
+  const materials = editor.getByTestId("plan-materials");
+  await expect(materials).toContainText("Plan bez skali");
+  await expect(materials.getByTestId("plan-materials-noScale")).toContainText(/Rura ZW Ø16.*(199\d|200\d) px/);
+  await expect(materials.getByRole("button", { name: "Do braków" })).toBeDisabled();
+
+  // Skala 1000 px = 5 m → trasa 2000 px = 10 m w sekcji potwierdzonej.
+  await editor.getByRole("button", { name: "Skala", exact: true }).click();
+  await expect(materials).toHaveCount(0);
+  await clickImage(page, 0, 450);
+  await clickImage(page, 1000, 450);
+  await editor.getByLabel("Długość w metrach").fill("5");
+  await editor.getByRole("button", { name: "Zapisz skalę" }).click();
+  await editor.getByRole("button", { name: "Zestawienie" }).click();
+  const confirmed = materials.getByTestId("plan-materials-confirmed");
+  await expect(confirmed).toContainText(/Rura ZW Ø16.*(9,9\d|10,0\d) m/);
+  await confirmed.getByRole("button").first().click();
+  await expect(confirmed.getByRole("button").first()).toHaveAttribute("aria-pressed", "true");
+
+  const items = materials.getByTestId("plan-items");
+  await items.getByLabel("Opis pozycji").fill("=Zawór kulowy");
+  await items.getByLabel("Ilość").fill("3");
+  await items.getByRole("button", { name: "Dodaj pozycję" }).click();
+  await expect(items).toContainText("=Zawór kulowy");
+
+  const [download] = await Promise.all([page.waitForEvent("download"), materials.getByRole("button", { name: "CSV" }).click()]);
+  expect(download.suggestedFilename()).toBe("Zestawienie - Zestawienie.csv");
+  const csv = await (await import("node:fs/promises")).readFile(await download.path(), "utf8");
+  expect(csv.charCodeAt(0)).toBe(0xfeff);
+  expect(csv).toMatch(/Rury — pomiar potwierdzony;Rura ZW Ø16;Zimna woda;16;(9,9\d|10,0\d);m;1 tras/);
+  // Opis zaczynający się od „=” nie staje się formułą w Excelu.
+  expect(csv).toContain("Pozycje ręczne;'=Zawór kulowy;;;3;szt;ręczne");
+
+  await materials.getByRole("button", { name: "Do braków" }).click();
+  const send = page.getByTestId("plan-send");
+  await expect(send.getByLabel("Budowa")).toHaveValue(/.+/);
+  await send.getByRole("button", { name: "Dodaj do braków" }).click();
+  await expect(page.getByText(/Dodano do braków „Lipowa 5”: 2 pozycji/)).toBeVisible();
+});
