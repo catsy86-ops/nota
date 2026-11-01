@@ -30,3 +30,6 @@ playwright/.cache
 *.sln
 *.sw?
 shots/
+
+# Silnik OCR kopiowany z node_modules przez scripts/copy-ocr.mjs (predev/prebuild)
+public/ocr/

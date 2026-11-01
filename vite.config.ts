@@ -74,6 +74,11 @@ export default defineConfig(() => ({
           // Analizator planów (D2, 2026-11-01): widok poza precache, pobierany w tle przy pierwszej sesji online
           // (`prefetchViewsWhenIdle`) i trzymany w `static-assets`. `plansStore` zostaje — kopia danych go potrzebuje offline.
           "**/PlansView-*.js",
+          // Silnik OCR (tesseract, ~9 MB w public/ocr/<wersja>/) i jego klient: tylko po „Pobierz silnik OCR”.
+          "**/ocr/**",
+          // Rolldown nazywa chunk tesseract.js „src-*” (od tesseract.js/src), a wasm-feature-detect „esm-*”;
+          // `bundle.spec` sprawdza po zawartości, że żaden plik OCR nie wszedł do precache pod inną nazwą.
+          "**/{ocrClient,src,esm}-*.js",
         ],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,
@@ -82,6 +87,13 @@ export default defineConfig(() => ({
         importScripts: ["sw-notifications.js", "sw-share.js"],
         navigateFallback: "/index.html",
         runtimeCaching: [
+          // Silnik OCR Analizatora planów: ścieżka z wersją, więc CacheFirst bez wygasania; po pierwszym pobraniu działa offline.
+          // Przed regułami ogólnymi — wygrywa pierwsza pasująca.
+          {
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/ocr/"),
+            handler: "CacheFirst",
+            options: { cacheName: "ocr-engine", expiration: { maxEntries: 10 }, cacheableResponse: { statuses: [200] } },
+          },
           // Czcionki protokołu PDF (`public/fonts/protokol-*.ttf`): poza precache (budżet), ale po pierwszym użyciu działają offline.
           {
             urlPattern: ({ url }) => /\/fonts\/protokol-[^/]*\.ttf$/.test(url.pathname),

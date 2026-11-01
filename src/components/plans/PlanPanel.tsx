@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { calibrationError, distance, lengthLabel, measureRoute, parseDecimal, polylineLength } from "@/lib/plans/geometry";
 import { cleanDiameter, PLAN_LABEL_MAX, SYSTEM_TYPES, type PipeRoute, type PlanCalibration, type PlanPoint, type SystemType } from "@/lib/plans/model";
 import { COMMON_DIAMETERS, SYSTEM_META } from "@/lib/plans/systems";
+import type { DiameterSuggestion } from "@/lib/plans/assign";
 import { cn } from "@/lib/utils";
 
 export type EditorMode = "select" | "route" | "calibrate";
@@ -117,7 +118,15 @@ export function DraftSection({ draft, mpp, system, onSystem, snap, onSnap, onUnd
 }
 
 /** Właściwości zaznaczonej trasy: instalacja, średnica, szacunek, zatwierdzenie, opis, usunięcie. */
-export function RouteSection({ route, mpp, onChange, onDelete }: { route: PipeRoute; mpp: number | null; onChange: (r: PipeRoute) => void; onDelete: () => void }) {
+export function RouteSection({ route, mpp, onChange, onDelete, suggestions, onFocusText }: {
+  route: PipeRoute;
+  mpp: number | null;
+  onChange: (r: PipeRoute) => void;
+  onDelete: () => void;
+  /** Opisy ze średnicą przy tej trasie (`suggestDiameters`) — przypisanie dopiero po „Przypisz”. */
+  suggestions: readonly DiameterSuggestion[];
+  onFocusText: (id: string | null) => void;
+}) {
   const [diameter, setDiameter] = useState(route.diameterMm ? String(route.diameterMm).replace(".", ",") : "");
   const [label, setLabel] = useState(route.label ?? "");
   useEffect(() => { setDiameter(route.diameterMm ? String(route.diameterMm).replace(".", ",") : ""); setLabel(route.label ?? ""); }, [route.id, route.diameterMm, route.label]);
@@ -157,6 +166,19 @@ export function RouteSection({ route, mpp, onChange, onDelete }: { route: PipeRo
         <datalist id="plan-diameters">{COMMON_DIAMETERS.map((v) => <option key={v} value={v} />)}</datalist>
         {badDiameter && <span role="alert" className="block text-xs text-destructive-ink">Wpisz średnicę od 6 do 1000 mm.</span>}
       </label>
+      {suggestions.length > 0 && (
+        <div className="space-y-1" data-testid="plan-diameter-suggestions">
+          <p className="text-xs text-muted-foreground">Z opisów przy trasie:</p>
+          {suggestions.map((s) => (
+            <div key={s.textId} className="flex items-center gap-2 text-sm" onMouseEnter={() => onFocusText(s.textId)} onMouseLeave={() => onFocusText(null)}>
+              <span className="min-w-0 flex-1 truncate"><span className="font-mono">{s.text}</span> <span className="text-xs text-muted-foreground">· {Math.round(s.distance)} px od trasy</span></span>
+              <Button type="button" variant="outline" disabled={route.diameterMm === s.mm} onClick={() => onChange({ ...route, diameterMm: s.mm })} className="pressable h-9 px-2.5 coarse:h-11">
+                {route.diameterMm === s.mm ? "Przypisano" : `Przypisz Ø${String(s.mm).replace(".", ",")}`}
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
       <label className="block space-y-1 text-sm">
         <span className="font-medium">Opis</span>
         <input value={label} onChange={(e) => setLabel(e.target.value)} onBlur={commitLabel} onKeyDown={(e) => { if (e.key === "Enter") commitLabel(); }} maxLength={PLAN_LABEL_MAX} placeholder="np. podejście do umywalki" className={field} />

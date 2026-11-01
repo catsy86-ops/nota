@@ -198,3 +198,54 @@ test.describe("telefon", () => {
     await expect(editor.getByTestId("plan-route-length")).toBeVisible();
   });
 });
+
+test("Plany (faza 4): OCR odczytuje średnice lokalnie — bez żądań na zewnątrz — i podpowiada średnicę trasy", async ({ page }) => {
+  test.setTimeout(180_000);
+  const external: string[] = [];
+  await page.route("**/*", (route) => {
+    const url = new URL(route.request().url());
+    if (url.origin !== "http://localhost:4173") { external.push(url.href); return route.abort(); }
+    return route.continue();
+  });
+  await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+  await page.goto("/plany");
+  // Plan z wyraźnymi opisami (jak zrzut z DWG FastView): rura i opis „Ø16 ZW” nad nią, „DN 25” dalej.
+  const b64 = await page.evaluate(() => {
+    const c = document.createElement("canvas");
+    c.width = 1400; c.height = 800;
+    const ctx = c.getContext("2d")!;
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, 1400, 800);
+    ctx.strokeStyle = "#1565c0"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(100, 200); ctx.lineTo(1200, 200); ctx.stroke();
+    ctx.fillStyle = "#000"; ctx.font = "bold 34px Arial";
+    ctx.fillText("Ø16 ZW", 520, 170);
+    ctx.fillText("DN 25", 900, 600);
+    ctx.fillText("Salon", 200, 500);
+    return c.toDataURL("image/png").split(",")[1];
+  });
+  await page.getByTestId("plans-list").getByRole("button", { name: "Nowa analiza" }).click();
+  await page.getByTestId("plan-new").getByTestId("plan-file").setInputFiles({ name: "Opisy.png", mimeType: "image/png", buffer: Buffer.from(b64, "base64") });
+  await page.getByTestId("plan-new").getByRole("button", { name: "Utwórz analizę" }).click();
+  await expect(page.getByTestId("plan-canvas")).toHaveAttribute("data-tx", /\d/);
+
+  const editor = page.getByTestId("plan-editor");
+  const ocr = editor.getByTestId("plan-ocr");
+  await ocr.getByRole("button", { name: "Rozpoznaj opisy" }).click();
+  const proposals = editor.getByTestId("plan-ocr-proposals");
+  await expect(proposals).toBeVisible({ timeout: 150_000 });
+  await expect(proposals).toContainText("Ø16");
+  await expect(proposals).toContainText("Ø25");
+  // „Salon” nic nie znaczy dla zestawienia — nie jest proponowany.
+  await expect(proposals.locator("input[value='Salon']")).toHaveCount(0);
+  expect(external, "obraz planu ani silnik nie idą do zewnętrznych usług").toEqual([]);
+
+  // Zatwierdzenie opisu z Ø16, potem trasa wzdłuż rury dostaje podpowiedź „Przypisz Ø16”.
+  await proposals.getByRole("button", { name: /^Zatwierdź „.*16/ }).click();
+  await expect(editor.getByTestId("plan-ocr-texts")).toContainText("16");
+  await editor.getByRole("button", { name: "Trasa", exact: true }).click();
+  await clickImage(page, 100, 200);
+  await clickImage(page, 1200, 200);
+  await editor.getByRole("button", { name: "Zakończ trasę" }).click();
+  await editor.getByTestId("plan-diameter-suggestions").getByRole("button", { name: "Przypisz Ø16" }).click();
+  await expect(editor.getByTestId("plan-routes")).toContainText("Ø16");
+});

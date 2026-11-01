@@ -14,6 +14,12 @@ import { modShortcut } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 import { PlanCanvas, type PlanCanvasHandle } from "./PlanCanvas";
 import { PlanOverlay } from "./PlanOverlay";
+import { OcrSection, type OcrProposal, type OcrRun } from "./OcrPanel";
+import { imageStore } from "@/lib/imageStore";
+import { interpretOcrText, OCR_SURE } from "@/lib/plans/diameters";
+import { overlapRatio } from "@/lib/plans/tiles";
+import { suggestDiameters } from "@/lib/plans/assign";
+import type { DetectedText } from "@/lib/plans/model";
 import { DraftSection, RouteSection, RoutesList, ScaleSection, type EditorMode } from "./PlanPanel";
 
 const toolBtn = "pressable inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-control px-2.5 text-sm font-medium text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40 disabled:hover:bg-transparent coarse:h-11 coarse:min-w-11";
@@ -52,8 +58,19 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
   /** Przeciągany punkt zaznaczonej trasy: punkty na czas ruchu, zapis dopiero po puszczeniu. */
   const [drag, setDrag] = useState<{ index: number; pts: number[] } | null>(null);
   const [renaming, setRenaming] = useState(false);
+  const [proposals, setProposals] = useState<OcrProposal[]>([]);
+  const [ocrRun, setOcrRun] = useState<OcrRun>({ state: "idle" });
+  const [engineCached, setEngineCached] = useState<boolean | null>(null);
+  const [focusId, setFocusId] = useState<string | null>(null);
   const undo = usePlansUndo();
   const mpp = metersPerPixel(calibration);
+
+  // Czy silnik OCR jest już pobrany (do komunikatu o pierwszym pobraniu). Przy wyjściu przerywamy rozpoznawanie.
+  useEffect(() => {
+    let on = true;
+    void import("@/lib/plans/ocr/ocrClient").then((m) => m.engineReady()).then((r) => { if (on) setEngineCached(r); }).catch(() => {});
+    return () => { on = false; void import("@/lib/plans/ocr/ocrClient").then((m) => m.cancelOcr()).catch(() => {}); };
+  }, []);
 
   // Każda analiza ma własny stos „Cofnij”.
   useEffect(() => { clearPlansUndo(); }, [pid]);
@@ -176,6 +193,56 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     if (prev) toastWithUndo("Usunięto skalę — długości wróciły do pikseli", () => setPlanCalibration(pid, prev));
   };
 
+  async function runOcr() {
+    setOcrRun({ state: "running", label: "Przygotowuję…", value: 0 });
+    try {
+      // Kopia robocza (lżejsza), a gdy jej bajtów tu nie ma — oryginał.
+      const rec = (project.work && await imageStore.get(project.work.ref)) || await imageStore.get(project.image.ref);
+      if (!rec) throw new Error("Obrazu planu nie ma na tym urządzeniu.");
+      const { recognizePlan } = await import("@/lib/plans/ocr/ocrClient");
+      const LABEL = { download: "Pobieram silnik OCR…", start: "Uruchamiam silnik OCR…", recognize: "Odczytuję opisy" } as const;
+      const lines = await recognizePlan(new Blob([rec.bytes], { type: rec.type }), project.image.w, (p) =>
+        setOcrRun({ state: "running", label: p.detail ? `${LABEL[p.stage]} — ${p.detail}` : LABEL[p.stage], value: p.value }));
+      setEngineCached(true);
+      const saved = plan.texts;
+      // Tylko napisy, które coś znaczą dla zestawienia, i nie te już zatwierdzone w tym samym miejscu.
+      const next = lines
+        .filter((l) => interpretOcrText(l.raw))
+        .map((l): OcrProposal => ({ id: newPlanId("text"), raw: l.raw, text: l.raw, box: [l.box.x, l.box.y, l.box.w, l.box.h], confidence: l.confidence }))
+        .filter((p) => !saved.some((t) => overlapRatio(rect(t.box), rect(p.box)) > 0.5));
+      setProposals(next);
+      setOcrRun({ state: "idle" });
+      toast.success(next.length ? `Odczytano ${next.length} opisów do sprawdzenia` : "Nie znaleziono średnic ani oznaczeń — sprawdź, czy plan jest wyraźny");
+    } catch (e) {
+      if ((e as Error).name === "OcrCancelled" || (e as Error).message.startsWith("Przerwano")) { setOcrRun({ state: "idle" }); return; }
+      setOcrRun({ state: "error", message: (e as Error).message || "Rozpoznawanie się nie udało." });
+    }
+  }
+
+  const cancelOcrRun = () => { void import("@/lib/plans/ocr/ocrClient").then((m) => m.cancelOcr()); setOcrRun({ state: "idle" }); };
+
+  const toText = (p: OcrProposal): DetectedText => ({ id: p.id, raw: p.raw, text: p.text.trim(), box: p.box, confidence: p.confidence, verified: true, at: Date.now() });
+  const acceptProposal = (p: OcrProposal) => {
+    stopPlansCapture();
+    if (savePlanEntity("t", pid, toText(p))) setProposals((list) => list.filter((x) => x.id !== p.id));
+  };
+  const acceptSure = () => {
+    stopPlansCapture();
+    const sure = proposals.filter((p) => p.confidence >= OCR_SURE && interpretOcrText(p.text));
+    for (const p of sure) savePlanEntity("t", pid, toText(p));
+    setProposals((list) => list.filter((x) => !sure.includes(x)));
+  };
+  const removeText = (id: string) => {
+    stopPlansCapture();
+    const removed = removePlanEntity("t", pid, id);
+    if (removed) toastWithUndo("Usunięto opis", () => savePlanEntity("t", pid, removed));
+  };
+
+  const suggestions = useMemo(
+    () => (selected ? suggestDiameters(selected, plan.texts, Math.max(40, Math.hypot(project.image.w, project.image.h) * 0.03)) : []),
+    [selected, plan.texts, project.image.w, project.image.h],
+  );
+
   const hint = mode === "route" ? "Stuknij kolejne punkty rury" : mode === "calibrate" ? "Stuknij dwa końce znanego wymiaru" : "Stuknij trasę, żeby ją zaznaczyć";
 
   return (
@@ -244,6 +311,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
                 scale={scale} routes={shownRoutes} mpp={mpp} selectedId={selectedId}
                 draft={mode === "route" ? draft : null} hover={hover} draftSystem={draftSystem}
                 calibration={mode === "route" ? null : calibration} calDraft={mode === "calibrate" ? calDraft : []} showHandles={mode === "select"}
+                texts={plan.texts} proposals={proposals} focusId={focusId}
               />
             )}
           </PlanCanvas>
@@ -258,7 +326,13 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
               onStart={() => switchMode("calibrate")} onSave={saveCalibration} onCancel={() => switchMode("select")} onClear={clearCalibration} />
           )}
           {mode === "select" && selected && (
-            <RouteSection route={selected} mpp={mpp} onChange={(r) => { stopPlansCapture(); savePlanEntity("r", pid, r); }} onDelete={() => deleteRoute(selected.id)} />
+            <RouteSection route={selected} mpp={mpp} onChange={(r) => { stopPlansCapture(); savePlanEntity("r", pid, r); }} onDelete={() => deleteRoute(selected.id)}
+              suggestions={suggestions} onFocusText={setFocusId} />
+          )}
+          {mode === "select" && (
+            <OcrSection run={ocrRun} engineCached={engineCached} proposals={proposals} texts={plan.texts} focusId={focusId} onFocus={setFocusId}
+              onRun={() => void runOcr()} onCancel={cancelOcrRun} onEdit={(id, text) => setProposals((l) => l.map((p) => (p.id === id ? { ...p, text } : p)))}
+              onAccept={acceptProposal} onReject={(id) => setProposals((l) => l.filter((p) => p.id !== id))} onAcceptSure={acceptSure} onRemoveText={removeText} />
           )}
           {mode === "select" && <RoutesList routes={routes} mpp={mpp} selectedId={selectedId} onSelect={setSelectedId} />}
         </aside>
@@ -266,3 +340,5 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     </section>
   );
 }
+
+const rect = (b: readonly [number, number, number, number]) => ({ x: b[0], y: b[1], w: b[2], h: b[3] });

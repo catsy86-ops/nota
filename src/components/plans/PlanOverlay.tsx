@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { lengthLabel, measureRoute } from "@/lib/plans/geometry";
-import type { PipeRoute, PlanCalibration, PlanPoint } from "@/lib/plans/model";
+import type { DetectedText, PipeRoute, PlanCalibration, PlanPoint } from "@/lib/plans/model";
 import { SYSTEM_META } from "@/lib/plans/systems";
 
 /** Grubości i promienie w pikselach EKRANU — dzielone przez skalę, żeby nie rosły z zoomem. */
@@ -52,10 +52,14 @@ interface Props {
   /** Punkty nowej kalibracji (0–2). */
   calDraft: readonly PlanPoint[];
   showHandles: boolean;
+  /** Zatwierdzone opisy (ramka ciągła) i propozycje OCR (przerywana). */
+  texts: readonly DetectedText[];
+  proposals: readonly { id: string; box: readonly [number, number, number, number] }[];
+  focusId: string | null;
 }
 
 /** Nakładka SVG w układzie oryginału: trasy, szkic, kalibracja, uchwyty zaznaczonej trasy. */
-export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selectedId, draft, hover, draftSystem, calibration, calDraft, showHandles }: Props) {
+export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selectedId, draft, hover, draftSystem, calibration, calDraft, showHandles, texts, proposals, focusId }: Props) {
   const k = 1 / scale;
   const selected = routes.find((r) => r.id === selectedId) ?? null;
   const draftColor = SYSTEM_META[draftSystem].color;
@@ -63,6 +67,13 @@ export const PlanOverlay = memo(function PlanOverlay({ scale, routes, mpp, selec
 
   return (
     <g data-testid="plan-overlay">
+      <g pointerEvents="none" data-testid="plan-text-boxes">
+        {[...texts.map((t) => ({ id: t.id, box: t.box, dashed: false })), ...proposals.map((p) => ({ id: p.id, box: p.box, dashed: true }))].map((t) => (
+          <rect key={t.id} x={t.box[0] - 2 * k} y={t.box[1] - 2 * k} width={t.box[2] + 4 * k} height={t.box[3] + 4 * k} rx={2 * k}
+            fill={t.id === focusId ? "#d97706" : "none"} fillOpacity={0.18} stroke="#d97706" strokeWidth={(t.id === focusId ? 2.5 : 1.5) * k}
+            strokeDasharray={t.dashed ? `${4 * k} ${3 * k}` : undefined} />
+        ))}
+      </g>
       {routes.map((r) => {
         const color = SYSTEM_META[r.system].color;
         const isSel = r.id === selectedId;

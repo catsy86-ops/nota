@@ -18,6 +18,17 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Silnik OCR Analizatora planów (public/ocr/<wersja>/): ścieżka z wersją, więc niezmienny.
+# .gz to dane języków — typ binarny, żeby hosting nie dokładał Content-Encoding (worker i tak sprawdza bajty gzip).
+[[headers]]
+  for = "/ocr/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+[[headers]]
+  for = "/ocr/*.gz"
+  [headers.values]
+    Content-Type = "application/octet-stream"
+
 # The service worker must never be cached: a stale sw.js means the app can
 # never ship an update to users who already installed it.
 [[headers]]

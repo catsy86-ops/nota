@@ -35,7 +35,7 @@ Wartości pochodne (`lengthPixels`, `lengthMeters`, status pomiaru, wiersze zest
 
 ## Fazy
 
-Stan: faza 2 zrobiona (d353ea7), faza 3 zrobiona (2026-11-01). Następna: faza 4 (OCR) — przed nią przegląd `performance-engineer`.
+Stan: faza 2 (d353ea7), faza 3 (b761b57) i faza 4 — OCR (2026-11-01) zrobione. Następna: faza 5 (propozycje tras po kolorze w workerze; OpenCV za flagą po ocenie).
 
 | Faza | Zakres | Rozmiar |
 |---|---|---|
@@ -64,3 +64,12 @@ Przyjęte rekomendacje (do zmiany na prośbę):
 - D8 — limity: 50 projektów, 500 tras, 1000 punktów na trasę, 1000 tekstów, 1000 symboli, 200 ręcznych pozycji; plik ≤ 20 MB, ≤ 40 MP, bok ≤ 12 000 px.
 - D9 — CSV ze średnikiem, BOM, przecinek dziesiętny, ochrona przed formułami.
 - D10 — wiersze wyliczane z tras tylko do odczytu, edycja w trasie.
+
+## Faza 4 — OCR: zalecenia `performance-engineer` (2026-11-01)
+
+- **Pliki lokalnie, nie z CDN.** Skrypt `scripts/copy-ocr.mjs` w `predev`/`prebuild` kopiuje do `public/ocr/<wersja core>/` (w `.gitignore`): `worker.min.js` (tesseract.js/dist), `tesseract-core-simd-lstm.js` + `.wasm`, `tesseract-core-lstm.js` + `.wasm` (bez SIMD), `eng.traineddata.gz` i `pol.traineddata.gz` z `@tesseract.js-data/*/4.0.0_best_int`. Bez `?url` (hash w nazwach psuje ścieżki tesseracta). Pierwsze pobranie ok. 6,8–8,6 MB.
+- **Opcje:** `corePath` = konkretny plik wybrany przez `wasm-feature-detect` (`simd`), `workerPath`, `langPath` z `/ocr/<wersja>`, `workerBlobURL:false` (wymagane — core liczy katalog wasm z `self.location`), `cacheMethod:"none"` (domyślnie tesseract pisze ~10 MB do IndexedDB `keyval-store`, wspólnej z aplikacją i kasowanej przez `ErrorBoundary`). OEM `LSTM_ONLY`, PSM `SPARSE_TEXT` (11), `user_defined_dpi: 300`, `recognize(…, { blocks: true })`. Bez whitelisty w głównym przebiegu.
+- **Workbox:** `globIgnores` `**/ocr/**`, `**/opencv/**`, chunk `ocrClient-*`; reguła `CacheFirst` `ocr-engine` (maxEntries 10, status 200) przed regułami ogólnymi; nagłówki `/ocr/*` immutable w `netlify.toml`/`vercel.json`. „Pobierz silnik” = `fetch` listy plików z postępem, `navigator.storage.persist()`.
+- **Telefon:** jeden worker, kafle 2048 px z zakładką ~144 px z kopii roboczej, deduplikacja słów po bbox w układzie oryginału; anulowanie = `worker.terminate()`; `terminate()` po zakończeniu i przy odmontowaniu. Ø nie jest pewne w modelach — normalizacja po rozpoznaniu (Ø/ø/⌀/Φ/0/O/@ + liczba z listy typowych średnic → średnica z obniżoną pewnością, DN, kody ZW/CWU/CO/WC/KAN).
+- **OpenCV:** 10,9 MB (`@techstark/opencv-js`), 2–6 s startu na Androidzie. Rekomendacja: najpierw własny algorytm po kolorze w workerze (faza 5); OpenCV (decyzja D5 „wszystko”) jako klasyczny worker z `importScripts("/opencv/<wersja>/opencv.js")`, poza precache, za flagą „eksperymentalne”.
+- **Testy:** `bundle.spec` — precache bez `ocr/`/`opencv`/`ocrClient`, reguła `ocr-engine` istnieje, pliki skopiowane; `plans.spec` — OCR próbki „DN 25” z blokadą żądań spoza origin i drugi przebieg offline.
