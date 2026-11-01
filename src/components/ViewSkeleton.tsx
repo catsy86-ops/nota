@@ -9,6 +9,7 @@ const LABELS: Record<LazyView, string> = {
   calendar: "Ładowanie kalendarza…",
   shifts: "Ładowanie grafiku…",
   study: "Ładowanie Pracy…",
+  plans: "Ładowanie planów…",
 };
 
 function Bone({ className }: { className?: string }) {

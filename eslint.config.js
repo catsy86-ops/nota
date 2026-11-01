@@ -49,6 +49,9 @@ export default tseslint.config(
       "src/lib/imageSync.test.ts",
       "src/lib/shifts/yShifts.ts",
       "src/lib/shifts/yShifts.test.ts",
+      // Analizator planów: mapa `plans` (wzór yPoints) i jej test scalania dwóch dokumentów.
+      "src/lib/plans/yPlans.ts",
+      "src/lib/plans/yPlans.test.ts",
       // Premie: test synchronizacji w dokumencie Yjs (ten sam wzorzec co yShifts).
       "src/lib/shifts/bonus.test.ts",
       // Wiele grafików: rejestr i test izolacji (ten sam dokument Yjs co grafik).

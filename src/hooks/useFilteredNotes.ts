@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { isAppView } from "@/lib/viewMeta";
 import type { Note, Folder } from "@/hooks/useNotes";
 import { getDescendantFolderIds } from "@/hooks/useNotes";
 import type { ViewPrefs } from "@/lib/viewPrefs";
@@ -14,7 +15,7 @@ import { noteMatchesLabel } from "@/lib/labelTree";
 
 const NO_OPENED: LastOpenedMap = {};
 
-export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "shifts" | "study" | "debts" | "cwiczenia" | "folder" | "widget" | "trash" | "inbox";
+export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "shifts" | "study" | "debts" | "cwiczenia" | "plans" | "folder" | "widget" | "trash" | "inbox";
 
 /** Liczba trafień wyszukiwania poza bieżącym widokiem. */
 export interface Elsewhere { notes: number; archive: number; trash: number }
@@ -120,7 +121,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   return useMemo(() => {
     // Kalendarz rysuje własną projekcję (`expandOccurrences`) i nie korzysta
     // z siatki notatek — nie ma po co filtrować ani przeszukiwać indeksu.
-    if (view === "calendar" || view === "shifts" || view === "study" || view === "debts" || view === "cwiczenia" || view === "widget") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
+    if (isAppView(view) || view === "widget") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
 
     const baseNotes = view === "archive"
       ? filterNotes(archivedNotes, archivedNotes, { view, activeLabel, activeFolder, folders, search, propDefs })

@@ -5,7 +5,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
  * Działy, które można ukryć (PW-3, plan Powłoki 2.2). Notatki, Dziś, Archiwum i Kosz zostają zawsze.
  * Ukrycie zabiera dział z paska bocznego, z „Więcej” i z palety; dane zostają, a link dalej działa.
  */
-export const HIDEABLE_VIEWS = ["inbox", "reminders", "calendar", "shifts", "study", "debts", "cwiczenia"] as const satisfies readonly View[];
+export const HIDEABLE_VIEWS = ["inbox", "reminders", "calendar", "shifts", "study", "debts", "cwiczenia", "plans"] as const satisfies readonly View[];
 export type HideableView = (typeof HIDEABLE_VIEWS)[number];
 
 /** Odczyt zapisu: nieznane wartości odrzucamy, więc starsza albo uszkodzona wartość nie ukrywa niczego przypadkiem. */

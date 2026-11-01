@@ -7,6 +7,7 @@ const loaders = {
   calendar: () => import("@/components/calendar/ReminderCalendarView"),
   shifts: () => import("@/components/shifts/ShiftsView"),
   study: () => import("@/components/study/StudyView"),
+  plans: () => import("@/components/plans/PlansView"),
 } as const;
 
 export type LazyView = keyof typeof loaders;
@@ -27,6 +28,7 @@ function load<V extends LazyView>(view: V): ReturnType<(typeof loaders)[V]> {
 export const loadCalendarView = () => load("calendar");
 export const loadShiftsView = () => load("shifts");
 export const loadStudyView = () => load("study");
+export const loadPlansView = () => load("plans");
 
 export function isLazyView(view: View): view is LazyView {
   return view in loaders;

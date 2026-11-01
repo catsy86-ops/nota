@@ -16,6 +16,7 @@ export const GO_CHORDS: { key: string; view: View }[] = [
   { key: "s", view: "study" },
   { key: "l", view: "debts" },
   { key: "t", view: "cwiczenia" },
+  { key: "r", view: "plans" },
 ];
 
 /** Widok dla drugiego klawisza sekwencji „g, <litera>” (null = brak). */

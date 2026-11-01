@@ -1,4 +1,5 @@
 import { pulseSkinSignal } from "@/lib/skinSignal";
+import { isAppView } from "@/lib/viewMeta";
 import { Activity, useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, Suspense } from "react";
 import { flushSync } from "react-dom";
 import { isMotionReduced } from "@/hooks/useMotionPref";
@@ -94,7 +95,7 @@ import { OlderDeviceBanner } from "@/components/sync/OlderDeviceBanner";
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
-import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
+import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, PlansView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -363,7 +364,7 @@ const Index = () => {
   // Sekcje widoku: „Przypięte” (zwijane od 4 notatek) i reszta, opcjonalnie podzielona na grupy.
   // `visibleNotes` = to, co faktycznie jest na ekranie (bez zwiniętych) w kolejności widoku.
   // Tablica / tabela mają sens tylko w widokach z listą notatek (nie w agendzie, koszu, kalendarzu, grafiku).
-  const listView = view !== "reminders" && view !== "trash" && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && view !== "widget";
+  const listView = view !== "reminders" && view !== "trash" && !isAppView(view) && view !== "widget";
   const boardMode = prefs.layout === "board" && listView;
   const tableMode = prefs.layout === "table" && listView;
   // Kolumny tablicy potrzebują podziału: bez wybranego domyślnie idą po etykiecie.
@@ -707,7 +708,7 @@ const Index = () => {
         <main ref={mainRef} className={`flex-1 max-w-352 mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col pb-safe ${view === "today" ? "gap-4 sm:gap-10" : "gap-8 sm:gap-10"}`}>
           <OlderDeviceBanner onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }} />
           {isTitleBlockView(view) && <ViewTitle view={view} count={view === "today" ? displayNotes.length : undefined} />}
-          {view !== "shifts" && view !== "calendar" && view !== "study" && view !== "debts" && view !== "cwiczenia" && (
+          {!isAppView(view) && (
             <div data-view-static className="sm:hidden">
               <SearchBar value={search} onChange={setSearch} />
             </div>
@@ -908,6 +909,14 @@ const Index = () => {
             )}
           </Activity>
 
+          {view === "plans" && (
+            <ViewErrorBoundary name="Plany">
+              <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
+                <PlansView />
+              </Suspense>
+            </ViewErrorBoundary>
+          )}
+
           {view === "cwiczenia" && (
             <ViewErrorBoundary name="Ćwiczenia">
               <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
@@ -936,10 +945,10 @@ const Index = () => {
 
           {/* Liczba wyników dla czytnika ekranu — lista zmienia się bez żadnego komunikatu. */}
           <p role="status" aria-live="polite" className="sr-only">
-            {deferredSearch && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
+            {deferredSearch && !isAppView(view) ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
           </p>
           <AnimatePresence>
-            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && view !== "widget" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote(view === "reminders" ? "reminder" : undefined)} onClearSearch={() => setSearch("")} />}
+            {!isAppView(view) && view !== "widget" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote(view === "reminders" ? "reminder" : undefined)} onClearSearch={() => setSearch("")} />}
           </AnimatePresence>
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>

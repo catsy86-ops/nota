@@ -17,6 +17,7 @@ import { cleanNoteProps, cleanPropDef, cleanPropDefs, type NoteProps, type PropD
 import { mergeSpec, projectReminder, readSpec, REMINDER_FIELDS, specOf, type ReminderState } from "@/lib/reminderSpec";
 import { fallbackRepeat } from "@/lib/reminderRepeat";
 import { journalRefsIn } from "@/lib/study/journalRefs";
+import { planRefsIn } from "@/lib/plans/planRefs";
 import { cleanLabelPath, isUnderLabel, renameLabelBranch } from "@/lib/labelTree";
 import {
   NOTE_COLORS, PRIORITIES, REMINDER_REPEATS, REMOTE_LIMITS as LIM,
@@ -760,6 +761,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     });
     // Zdjęcia dziennika z budowy (Nauka) — te same bajty w `imageStore`.
     for (const r of journalRefsIn(doc)) refs.add(r);
+    // Obrazy analiz planów (oryginał i kopia robocza).
+    for (const r of planRefsIn(doc)) refs.add(r);
     return refs;
   }
 
@@ -785,6 +788,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     });
     referencedAttachments().forEach((a, hash) => { if (isAttachmentSyncable(a)) refs.add(hash); });
     for (const r of journalRefsIn(doc, true)) refs.add(r);
+    // Plany: kopia robocza zawsze, oryginał tylko do 2 MB (D3).
+    for (const r of planRefsIn(doc, true)) refs.add(r);
     return refs;
   }
 

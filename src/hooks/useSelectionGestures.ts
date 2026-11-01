@@ -1,4 +1,5 @@
 import { useCallback, useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
+import { isAppView } from "@/lib/viewMeta";
 import type { View } from "@/hooks/useFilteredNotes";
 
 /**
@@ -46,7 +47,7 @@ export function useSelectionGestures({
 
   // Ctrl/Cmd+A poza polami tekstowymi: zaznacza wszystko, co widać (bez zwiniętych sekcji).
   useEffect(() => {
-    if (view === "calendar" || view === "shifts" || view === "study" || view === "debts" || view === "cwiczenia") return;
+    if (isAppView(view)) return;
     const onKey = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== "a") return;
       const a = document.activeElement as HTMLElement | null;

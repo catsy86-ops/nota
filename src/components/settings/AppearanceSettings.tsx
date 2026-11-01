@@ -56,6 +56,7 @@ const HIDEABLE_LABELS: Record<HideableView, string> = {
   study: "Praca",
   debts: "Długi",
   cwiczenia: "Ćwiczenia",
+  plans: "Plany",
 };
 import { SKIN_META } from "@/lib/skinGallery";
 import { setSiteMode, useSiteMode, type SiteMode } from "@/lib/siteMode";

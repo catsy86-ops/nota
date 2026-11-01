@@ -1,5 +1,5 @@
 import type { ElementType } from "react";
-import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Inbox, Dumbbell } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Inbox, Dumbbell, Ruler } from "lucide-react";
 import type { View } from "@/hooks/useFilteredNotes";
 import { viewLabel } from "@/lib/viewMeta";
 
@@ -33,6 +33,7 @@ export function sidebarItems(counts: { inbox: number; overdue: number; trash: nu
     { icon: CalendarRange, label: viewLabel("calendar"), view: "calendar", group: "codziennie" },
     { icon: BriefcaseBusiness, label: viewLabel("shifts"), view: "shifts", group: "praca" },
     { icon: HardHat, label: viewLabel("study"), view: "study", group: "praca" },
+    { icon: Ruler, label: viewLabel("plans"), view: "plans", group: "praca" },
     { icon: HandCoins, label: viewLabel("debts"), view: "debts", group: "osobiste" },
     { icon: Dumbbell, label: viewLabel("cwiczenia"), view: "cwiczenia", group: "osobiste" },
     { icon: Archive, label: viewLabel("archive"), view: "archive", group: "archiwum" },

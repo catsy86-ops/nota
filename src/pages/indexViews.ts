@@ -1,9 +1,9 @@
 import { lazy } from "react";
 import type { View } from "@/hooks/useFilteredNotes";
-import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
+import { loadCalendarView, loadPlansView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
 
 // Kolejność działów (jak w pasku bocznym) — od niej zależy kierunek przejścia między widokami.
-export const VIEW_ORDER: View[] = ["notes", "today", "week", "reminders", "calendar", "shifts", "study", "debts", "cwiczenia", "archive", "trash", "inbox", "label", "folder", "widget"];
+export const VIEW_ORDER: View[] = ["notes", "today", "week", "reminders", "calendar", "shifts", "study", "debts", "cwiczenia", "plans", "archive", "trash", "inbox", "label", "folder", "widget"];
 
 export const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 export const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
@@ -20,6 +20,8 @@ export const FocusMode = lazy(() => import("@/components/FocusMode").then((m) =>
 // Loadery wspólne z nawigacją (`preloadView` przy `pointerdown`), patrz lib/viewPreload.ts.
 export const StudyView = lazy(loadStudyView);
 export const DebtsView = lazy(() => import("@/components/debts/DebtsView").then((m) => ({ default: m.DebtsView })));
+// Analizator planów (D2: poza precache, pobierany w tle przy pierwszej sesji online).
+export const PlansView = lazy(loadPlansView);
 export const CwiczeniaView = lazy(() => import("@/components/cwiczenia/CwiczeniaView").then((m) => ({ default: m.CwiczeniaView })));
 // Porządkowanie Skrzynki — okno ładuje się przy pierwszym otwarciu.
 export const InboxTriage = lazy(() => import("@/components/InboxTriage").then((m) => ({ default: m.InboxTriage })));

@@ -42,3 +42,15 @@ describe("kopia — właściwości", () => {
     expect(backup.propDefs).toEqual([]);
   });
 });
+
+describe("kopia — analizy planów", () => {
+  it("sekcja plans i licznik pominiętych obrazów planów przechodzą przez schemat (Zod nie obcina)", () => {
+    const backup = fullBackupSchema.parse({
+      version: 3, exportedAt: 1, notes: [], labels: [], folders: [],
+      plans: JSON.stringify({ entries: {} }),
+      skipped: { tooLarge: 0, missing: 0, journalPhotos: 0, siteDocs: 0, recordings: 0, plans: 2 },
+    });
+    expect(backup.plans).toBe('{"entries":{}}');
+    expect(backup.skipped?.plans).toBe(2);
+  });
+});

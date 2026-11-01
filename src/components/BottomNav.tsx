@@ -2,7 +2,7 @@
 import { openQuickPresets } from "@/lib/quickPresets";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { m as motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Inbox, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
+import { Ruler, StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Inbox, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { openJournalSheet } from "@/lib/study/entrySheet";
@@ -132,7 +132,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
   };
   // Szósta komórka (lupa) tylko tam, gdzie nie ma pola szukania; FAB zostaje w środku paska wtedy przesunięty o pół komórki.
   const showPaletteSlot = !viewHasSearch(view) && !!onOpenPalette;
-  const isMoreActive = ["inbox", "archive", "trash", "calendar", "shifts", "study", "debts", "cwiczenia", "folder", "label"].includes(view);
+  const isMoreActive = ["inbox", "archive", "trash", "calendar", "shifts", "study", "debts", "cwiczenia", "plans", "folder", "label"].includes(view);
 
   return (
     <>
@@ -259,6 +259,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
             {isViewShown(hiddenViews, "calendar") && <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onPointerDown={() => preloadView("calendar")} onFocus={() => preloadView("calendar")} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />}
             {isViewShown(hiddenViews, "shifts") && <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onPointerDown={() => preloadView("shifts")} onFocus={() => preloadView("shifts")} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />}
             {isViewShown(hiddenViews, "study") && <SheetTile Icon={HardHat} label="Praca" active={view === "study"} onPointerDown={() => preloadView("study")} onFocus={() => preloadView("study")} onClick={() => { onGo("study"); setMoreOpen(false); }} />}
+            {isViewShown(hiddenViews, "plans") && <SheetTile Icon={Ruler} label="Plany" active={view === "plans"} onPointerDown={() => preloadView("plans")} onFocus={() => preloadView("plans")} onClick={() => { onGo("plans"); setMoreOpen(false); }} />}
             {isViewShown(hiddenViews, "debts") && <SheetTile Icon={HandCoins} label="Długi" active={view === "debts"} onClick={() => { onGo("debts"); setMoreOpen(false); }} />}
             {isViewShown(hiddenViews, "cwiczenia") && <SheetTile Icon={Dumbbell} label="Ćwiczenia" active={view === "cwiczenia"} onClick={() => { onGo("cwiczenia"); setMoreOpen(false); }} />}
           </SheetGroup>

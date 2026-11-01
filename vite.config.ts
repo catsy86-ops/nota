@@ -71,6 +71,9 @@ export default defineConfig(() => ({
           "**/{jsQR,QrScanDialog}-*.js",
           // Edytor CodeMirror (~500 KB) za flagą `cmEditor`: tylko na żądanie, poza precache (plan rozbudowy, Faza 1a).
           "**/CmEditor-*.js",
+          // Analizator planów (D2, 2026-11-01): widok poza precache, pobierany w tle przy pierwszej sesji online
+          // (`prefetchViewsWhenIdle`) i trzymany w `static-assets`. `plansStore` zostaje — kopia danych go potrzebuje offline.
+          "**/PlansView-*.js",
         ],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,

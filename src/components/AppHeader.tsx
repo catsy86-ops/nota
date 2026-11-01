@@ -1,4 +1,5 @@
 import { VaultStatusButton } from "@/components/vault/VaultStatusButton";
+import { isAppView } from "@/lib/viewMeta";
 import { SyncStatusDot } from "@/components/sync/SyncStatusDot";
 import { useEffect, useRef } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
@@ -126,6 +127,7 @@ export function AppHeader({
               {view === "study" && "Praca"}
               {view === "debts" && "Długi"}
               {view === "cwiczenia" && "Ćwiczenia"}
+              {view === "plans" && "Plany"}
               {view === "archive" && "Archiwum"}
               {view === "reminders" && "Terminy"}
               {view === "trash" && "Kosz"}
@@ -142,7 +144,7 @@ export function AppHeader({
                 </span>
               )}
             </h1>
-            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && (
+            {!isAppView(view) && (
               <p className="text-xs text-muted-foreground hidden sm:block">
                 <RollingNumber value={displayCount} /> {pluralPl(displayCount, ["notatka", "notatki", "notatek"])}
               </p>
@@ -202,7 +204,7 @@ export function AppHeader({
           {/* W kalendarzu układ, sortowanie i filtry notatek nie robią nic —
               kalendarz rysuje własną projekcję terminów. Poza tym, że kontrolki
               tam kłamią, na 320 px rozpychały nagłówek w poziomie. */}
-          {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && <ViewControls allLabels={allLabels} sortable={view !== "reminders"} />}
+          {!isAppView(view) && <ViewControls allLabels={allLabels} sortable={view !== "reminders"} />}
         </div>
       </div>
     </header>

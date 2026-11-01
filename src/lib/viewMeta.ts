@@ -15,6 +15,7 @@ export const VIEW_LABEL: Partial<Record<View, string>> = {
   study: "Praca",
   debts: "Długi",
   cwiczenia: "Ćwiczenia",
+  plans: "Plany",
   archive: "Archiwum",
   trash: "Kosz",
 };
@@ -22,3 +23,11 @@ export const VIEW_LABEL: Partial<Record<View, string>> = {
 export function viewLabel(view: View): string {
   return VIEW_LABEL[view] ?? view;
 }
+
+/**
+ * Działy-aplikacje: własny widok zamiast listy notatek — bez wyszukiwarki notatek, kontrolek widoku,
+ * pustego stanu listy i gestów zaznaczania. Jedno miejsce zamiast łańcuchów `view !== …` w kilku plikach.
+ */
+export const APP_VIEWS: ReadonlySet<View> = new Set<View>(["calendar", "shifts", "study", "debts", "cwiczenia", "plans"]);
+
+export const isAppView = (view: View): boolean => APP_VIEWS.has(view);

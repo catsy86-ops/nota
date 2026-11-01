@@ -14,6 +14,7 @@ import { logDiag } from "@/lib/diagnostics";
 import { imageStore, isEmbeddableImageDataUrl } from "@/lib/imageStore";
 import { journalImageRefs } from "@/lib/study/images";
 import { recordingRefsIn, siteDocRefsIn } from "@/lib/study/journalRefs";
+import { planRefsIn } from "@/lib/plans/planRefs";
 import { STUDY_STORAGE_KEY } from "@/lib/study/keys";
 import { extraSchedulesDump, mainShiftData, restoreExtraSchedule, restoreShifts, shiftsReady } from "@/lib/shifts/store";
 import { migrate } from "@/lib/shifts/model";
@@ -75,6 +76,8 @@ export interface BackupAttachmentReport {
   siteDocs: number;
   /** Nagrania głosowe z wpisów, które nie weszły do backupu — osobno od zdjęć (U8). */
   recordings: number;
+  /** Obrazy analiz planów, które nie weszły do backupu (budżet albo brak bajtów). */
+  plans: number;
 }
 
 /** Zdanie do toastu o pominiętych załącznikach; `null`, gdy wszystko weszło. */
@@ -83,11 +86,12 @@ export function describeSkippedAttachments(r?: BackupAttachmentReport): string |
   const n = r.tooLarge.length + r.missing.length;
   const photos = r.journalPhotos;
   const docs = r.siteDocs;
-  if (!n && !photos && !docs && !r.recordings) return null;
+  if (!n && !photos && !docs && !r.recordings && !r.plans) return null;
   const photosPart = photos ? `Pominięte zdjęcia dziennika z budowy: ${photos} — zostaną tylko na tym urządzeniu.` : null;
   const docsPart = docs ? `Pominięte pliki budów (plany, PDF): ${docs} — zostaną tylko na tym urządzeniu.` : null;
   const recPart = r.recordings ? `Pominięte nagrania głosowe: ${r.recordings} — zostaną tylko na tym urządzeniu.` : null;
-  const extra = [photosPart, docsPart, recPart].filter(Boolean).join(" ") || null;
+  const plansPart = r.plans ? `Pominięte obrazy analiz planów: ${r.plans} — zostaną tylko na tym urządzeniu.` : null;
+  const extra = [photosPart, docsPart, recPart, plansPart].filter(Boolean).join(" ") || null;
   if (!n) return extra;
   const parts: string[] = [];
   if (r.tooLarge.length) parts.push(`${r.tooLarge.length} za duże na backup (limit ${formatFileSize(BACKUP_ATTACHMENTS_BUDGET_BYTES)} na wszystkie pliki)`);
@@ -98,7 +102,7 @@ export function describeSkippedAttachments(r?: BackupAttachmentReport): string |
 
 /** Bajty załączników do backupu v3 w ramach budżetu; najpierw mniejsze, żeby weszło ich jak najwięcej. */
 async function collectAttachmentBlobs(budget: number): Promise<{ blobs: Record<string, string>; report: BackupAttachmentReport }> {
-  const report: BackupAttachmentReport = { tooLarge: [], missing: [], journalPhotos: 0, siteDocs: 0, recordings: 0 };
+  const report: BackupAttachmentReport = { tooLarge: [], missing: [], journalPhotos: 0, siteDocs: 0, recordings: 0, plans: 0 };
   const blobs: Record<string, string> = {};
   let used = 0;
   const all = [...yjsStore.referencedAttachments().values()].sort((a, b) => a.size - b.size);
@@ -128,6 +132,19 @@ async function collectAttachmentBlobs(budget: number): Promise<{ blobs: Record<s
     blobs[hash] = dataUrl;
     used += approx;
   }
+  // Obrazy analiz planów (D7): najpierw kopie robocze i małe oryginały (te same, co jadą do innych
+  // urządzeń), potem duże oryginały — przy braku budżetu zostaje przynajmniej obraz do oglądania.
+  const syncablePlans = planRefsIn(yjsStore.doc, true);
+  const planOrder = [...syncablePlans, ...[...planRefsIn(yjsStore.doc)].filter((h) => !syncablePlans.has(h))];
+  for (const hash of planOrder) {
+    if (blobs[hash]) continue;
+    const dataUrl = await imageStore.getDataUrl(hash);
+    if (!dataUrl) { report.plans++; continue; }
+    const approx = Math.ceil(dataUrl.length * 0.75);
+    if (used + approx > budget) { report.plans++; continue; }
+    blobs[hash] = dataUrl;
+    used += approx;
+  }
   return { blobs, report };
 }
 
@@ -143,6 +160,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   const { kitsDump } = await import("@/lib/study/kitsStore");
   const { pointsDump } = await import("@/lib/study/pointsStore");
   const { billingDump } = await import("@/lib/study/billingStore");
+  const { plansDump } = await import("@/lib/plans/plansStore");
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES);
   const study = yStudy.dump();
   const propDefs = yjsStore.projectPropDefs();
@@ -182,9 +200,11 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     points: JSON.stringify(pointsDump()),
     // Sposób rozliczenia budów (H3.1) — osobna mapa, scalana bez nadpisywania.
     billing: JSON.stringify(billingDump()),
+    // Analizy planów (mapa `plans`) — scalane bez nadpisywania.
+    plans: JSON.stringify(plansDump()),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
     // Same liczby (bez treści) — okno przywracania mówi, czego w pliku nie ma; zera = nic nie pominięto.
-    skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings },
+    skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings, plans: report.plans },
   };
   return { backup, attachments: report };
 }
@@ -332,6 +352,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   if (backup.entryCheck) await import("@/lib/study/entryCheckStore").then((m) => m.mergeEntryCheckDump(JSON.parse(backup.entryCheck!))).catch(() => {});
   if (backup.kits) await import("@/lib/study/kitsStore").then((m) => m.mergeKitsDump(JSON.parse(backup.kits!))).catch(() => {});
   if (backup.points) await import("@/lib/study/pointsStore").then((m) => m.mergePointsDump(JSON.parse(backup.points!))).catch(() => {});
+  if (backup.plans) await import("@/lib/plans/plansStore").then((m) => m.mergePlansDump(JSON.parse(backup.plans!))).catch(() => {});
   if (backup.billing) await import("@/lib/study/billingStore").then((m) => m.mergeBillingDump(JSON.parse(backup.billing!))).catch(() => {});
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
