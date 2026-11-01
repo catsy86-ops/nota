@@ -4096,7 +4096,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Dostępność.** `/plany` w `e2e/a11y.spec.ts` (axe WCAG 2.2 AA, wszystkie style, oba schematy, 390 i 1440 px): 40/40.
 - **Przy okazji.** `src/lib/shifts/csvShifts.ts`: dosłowny znak BOM w wyrażeniu regularnym (błąd ESLint `no-irregular-whitespace` z 28.10) zamieniony na `\uFEFF`.
 - **Testy.** Vitest: `src/lib/plans/security.test.ts` (W1, W2 z bombą 50 000 px i obrotem EXIF, 40 MP, D1 — 10 000 pomieszanych odcinków w < 1,5 s), `yPlans.test.ts` (D2, D3 w odczycie i scalaniu). E2E: `e2e/plans.spec.ts` (10 testów), `e2e/bundle.spec.ts`, `e2e/a11y.spec.ts` („plany”).
-- **Commit.** (uzupełnić)
+- **Commit.** `706708b` (2026-11-01).
 
 ## Kalendarz i Grafik: kontrast nazw świąt i zaznaczonego weekendu (2026-11-01)
 
