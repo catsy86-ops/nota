@@ -16,6 +16,7 @@ const VIEWS = [
   { name: "kalendarz", path: "/kalendarz" },
   { name: "grafik", path: "/grafik" },
   { name: "nauka", path: "/praca" },
+  { name: "plany", path: "/plany" },
 ] as const;
 
 const SIZES = [
