@@ -13,7 +13,8 @@
 - **Grafik G2 (2026-10-27):** zrobione G2.1–G2.4, G2.5 bez pędzla, G2.6. Nie robione: pędzel z „Własnymi godzinami” (G2.5).
 - **Grafik G3 (2026-10-27):** G3.1 i G3.2 zrobione (hook `useShiftPaint`). Nie robione: G4.8 i G4.9 (decyzja G-7 odłożona, G-1 czeka na kadry).
 - **Grafik G4.1 (2026-10-27):** alarm przed zmianą (60 min domyślnie, per grafik, wyłączalny). Bez akcji „Skończyłem” na powiadomieniu.
-- **Grafik G4.2–G4.3 (2026-10-27):** kreator nowego grafiku; rok w wykresach i mapa dni. Nie robione jeszcze: Kalendarz K3.6 (po QA), K4.1, K4.5, Grafik G4.4–G4.7 (bez G4.8–G4.9), cała Praca (P2–P5).
+- **Grafik G4.2–G4.3 (2026-10-27):** kreator nowego grafiku; rok w wykresach i mapa dni.
+- **Sprawdzenie w kodzie (2026-11-01):** Kalendarz K3.6, K4.1, K4.5 i K4.3 (zapytanie kontenerowe `@[6rem]` w `DayCell.tsx`, komórka `min-h-14`) zrobione; 44 px szerokości na 320 px jest niewykonalne przy 7 kolumnach (~37 px), cel 24 px WCAG 2.2 AA spełniony. Grafik G4.4–G4.7 zrobione. Wiersze K3/K4 wyżej są z 27.10 i opisują stan pośredni. Otwarte bez decyzji: reszta G3.2 (`EmptyMonth`, dalszy podział `ShiftsView`), P6.3 (najpierw agent `architect`); z decyzją: G4.8 (G-7), P2.4, P2.11, P3.3 i QA telefonu.
 
 ## Kontekst
 

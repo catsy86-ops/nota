@@ -46,6 +46,7 @@ import { ShiftsHint } from "@/components/guide/ShiftsHint";
 import { WeekTemplateDialog } from "./WeekTemplateDialog";
 import { cyclePatterns, weekTemplates, weekTemplateSteps } from "@/lib/shifts";
 import { RangeCopyDialog } from "./RangeCopyDialog";
+import { EmptyShifts } from "./EmptyShifts";
 
 /** Co zrobi stuknięcie w dzień — widoczne pod paskiem i czytane przy siatce. */
 function brushHint(brush: Brush, typesById: Map<string, ShiftType>, hours: ShiftHours | null): string {
@@ -479,34 +480,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
         </div>
         <div className="order-8 short:col-span-full">
-          {(() => {
-            // G2.2: pusty miesiąc i pusty tydzień mają ten sam pusty stan. Z wcześniejszymi dniami proponujemy przedłużenie cyklu.
-            const weekDays = Array.from({ length: 7 }, (_, i) => addDaysToKey(weekStart, i));
-            const empty = isWeek ? !weekDays.some((k) => data.days[k]) : !Object.keys(data.days).some((k) => k.startsWith(monthKey));
-            if (!empty) return null;
-            const extend = !isWeek && Object.keys(data.days).some((k) => k < `${monthKey}-01`);
-            return (
-              <section aria-label={isWeek ? "Pusty tydzień" : "Pusty miesiąc"} className="mb-3 rounded-card border border-border/60 bg-card p-4 space-y-3">
-                <p className="text-sm text-muted-foreground">{isWeek ? "W tym tygodniu nie ma zmian." : "W tym miesiącu nie ma jeszcze zmian."}</p>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => setPatternOpen(true)}
-                    className="pressable h-10 coarse:h-11 px-4 rounded-control bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                    {extend ? "Przedłuż cykl" : "Nałóż cykl"}
-                  </button>
-                  <button type="button" onClick={() => setTemplateOpen(true)}
-                    className="pressable h-10 coarse:h-11 px-4 rounded-card border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                    Szablon tygodnia
-                  </button>
-                  {!isWeek && (
-                    <button type="button" onClick={copyPreviousMonth}
-                      className="pressable h-10 coarse:h-11 px-4 rounded-card border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                      Skopiuj poprzedni miesiąc
-                    </button>
-                  )}
-                </div>
-              </section>
-            );
-          })()}
+          <EmptyShifts days={data.days} isWeek={isWeek} weekStart={weekStart} monthKey={monthKey}
+            onPattern={() => setPatternOpen(true)} onTemplate={() => setTemplateOpen(true)} onCopyPreviousMonth={copyPreviousMonth} />
           <ShiftDnd days={data.days} typesById={typesById} onTransfer={onDrop}>
             {isWeek ? (
               <ShiftWeekView weekStart={weekStart} days={data.days} typesById={typesById} remindersByDay={remindersByDay} titleOf={titleOf}
