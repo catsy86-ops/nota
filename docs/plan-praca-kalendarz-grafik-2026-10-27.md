@@ -14,7 +14,7 @@
 - **Grafik G3 (2026-10-27):** G3.1 i G3.2 zrobione (hook `useShiftPaint`). Nie robione: G4.8 i G4.9 (decyzja G-7 odłożona, G-1 czeka na kadry).
 - **Grafik G4.1 (2026-10-27):** alarm przed zmianą (60 min domyślnie, per grafik, wyłączalny). Bez akcji „Skończyłem” na powiadomieniu.
 - **Grafik G4.2–G4.3 (2026-10-27):** kreator nowego grafiku; rok w wykresach i mapa dni.
-- **Sprawdzenie w kodzie (2026-11-01):** Kalendarz K3.6, K4.1, K4.5 i K4.3 (zapytanie kontenerowe `@[6rem]` w `DayCell.tsx`, komórka `min-h-14`) zrobione; 44 px szerokości na 320 px jest niewykonalne przy 7 kolumnach (~37 px), cel 24 px WCAG 2.2 AA spełniony. Grafik G4.4–G4.7 zrobione. Wiersze K3/K4 wyżej są z 27.10 i opisują stan pośredni. Otwarte bez decyzji: reszta G3.2 (`EmptyMonth`, dalszy podział `ShiftsView`), P6.3 (najpierw agent `architect`); z decyzją: G4.8 (G-7), P2.4, P2.11, P3.3 i QA telefonu.
+- **Sprawdzenie w kodzie (2026-11-01):** Kalendarz K3.6, K4.1, K4.5 i K4.3 (zapytanie kontenerowe `@[6rem]` w `DayCell.tsx`, komórka `min-h-14`) zrobione; 44 px szerokości na 320 px jest niewykonalne przy 7 kolumnach (~37 px), cel 24 px WCAG 2.2 AA spełniony. Grafik G4.4–G4.7 zrobione. Wiersze K3/K4 wyżej są z 27.10 i opisują stan pośredni. G3.2 dokończone (`EmptyShifts.tsx`, 214b855), P6.3 zrobione w H0.2. Otwarte tylko z decyzją albo telefonem: G4.8 (G-7), P2.4, P2.11, P3.3 i QA telefonu.
 
 ## Kontekst
 
@@ -104,7 +104,7 @@ Do tego dokumentacja nie nadąża za kodem: `opis.md` (Kalendarz :1397, Grafik :
 | G3.2 | Podział `ShiftsView.tsx` (749): `TransferChooser`, `ShiftExportBar`, `EmptyMonth`, hook `useShiftActions` (pędzel `onDay`, `:262-297`). `summary.ts` (520): okres rozliczeniowy osobno. | 1 | M |
 | P6.1 | **`JournalEntrySheet.tsx` (946):** rysunek z podpisami, dyktowanie z parserem i pola protokołu/kształtek do osobnych plików. Granica lazy bez zmian, każdy krok osobnym commitem. | 1 | M |
 | P6.2 | `SiteCardDialog.tsx` (561): hook `useSiteCardActions` (ZIP, archiwum, zmniejszanie, protokół, `:94-197`), `SiteTallyBar` do pliku. | 1 | S |
-| P6.3 | `yStudy.ts` (832) i `store.ts` (624): podział na dziennik, karty i naukę z jednym punktem wejścia. Najpierw agent `architect`. Test granicy (`content.ts` nie w `yStudy`). | 1 | M |
+| P6.3 | **Zrobione w H0.2 (5af8473, 4bb5de5, 5b6ef3f):** `store.ts` jest fasadą (`studyProjection`, `learnActions`, `journalActions`, `siteActions`), `yStudy.ts` 521 linii, nie importuje `content.ts`. Pierwotnie: `yStudy.ts` (832) i `store.ts` (624): podział na dziennik, karty i naukę z jednym punktem wejścia. Najpierw agent `architect`. Test granicy (`content.ts` nie w `yStudy`). | 1 | M |
 | P6.4 | Oś dziennika: `content-visibility: auto` na sekcji dnia. Protokół na miniaturach zamiast 12 pełnych zdjęć (`HandoverPaper.tsx:74`). | 2 | S |
 
 ## Kalendarz
