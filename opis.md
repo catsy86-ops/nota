@@ -4083,6 +4083,21 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy.** Vitest: `src/lib/plans/summary.test.ts` (grupy i statusy, bez skali bez metrów, symbole, pozycje do braków tylko pewne, CSV: BOM, średnik, przecinek, px bez skali, ochrona przed formułami, nazwa pliku). E2E: `e2e/plans.spec.ts` — „faza 7” (bez skali w px i „Do braków” nieaktywne, po kalibracji 10,00 m, podświetlenie wiersza, pozycja ręczna z „=”, pobrany CSV z BOM i apostrofem, braki budowy „Lipowa 5”).
 - **Commit.** `d04846f` (2026-11-01).
 
+## Plany — przegląd bezpieczeństwa i zamknięcie działu (faza 8, 2026-11-01)
+
+- **Przegląd `security-reviewer`.** Bez ustaleń krytycznych i bez XSS (teksty z OCR i od innych urządzeń idą do SVG/Reacta jako tekst; `<image href>` tylko z `blob:` magazynu). Obraz planu nie wychodzi poza własny adres. Poprawione:
+  - **W1 — wymuszone wysłanie dużych plików.** Rozmiar obrazu w danych analizy deklaruje zapis (także obcy), więc o wysyłce decyduje prawdziwy rozmiar bajtów: `mayLeaveDevice` w `src/lib/plans/planRefs.ts` (ponad limit peera — nic; plik ponad 2 MB spod klucza analizy planu — zostaje). Sprawdzane we wszystkich trzech drogach: P2P (`src/lib/imageSync.ts`, `mirrorLocalImages`), przekaźnik (`src/lib/sync/relayBlobs.ts`, opcja `mayUpload`, podpięta w `relayRuntime.ts`) i plik synchronizacji (`src/lib/yjsFileSync.ts`).
+  - **W2 — bomba dekompresji z bajtów od innego urządzenia albo z kopii.** `checkStoredPlanImage` w `imageSniff.ts` (sygnatura, limity 12 000 px i 40 MP, wymiary zgodne z analizą, z zamianą boków przy obrocie EXIF) przed każdym dekodowaniem: edytor i miniatura listy (`src/components/plans/usePlanImageUrl.ts`), OCR (`runOcr`), wyszukiwanie tras (`detectClient.ts`). Bajty niezgodne z analizą nie są otwierane — komunikat na płótnie, trasy i opisy zostają. `cleanPlanImage` przyjmuje najwyżej 40 MP.
+  - **D1 — zawieszenie wyszukiwania tras.** `joinPolylines` łączy końce przez siatkę komórek (liniowo zamiast sześciennie); powyżej 20 000 odcinków komunikat „Za dużo linii w tym kolorze”; limit czasu 30 s z zamknięciem workera (`cancelDetect`), przycisk „Anuluj”, wynik anulowanego przebiegu pomijany; w wątku UI (gdy Worker się nie uruchomi) tylko obraz do 1 MP.
+  - **D2 — nieusuwalne encje.** `yPlans.ts` przyjmuje tylko kanoniczne klucze (`p␁pid`, `c␁pid`, `k␁pid`, `r|t|s|i␁pid␁id`), w odczycie i przy scalaniu.
+  - **D3 — tysiące obcych analiz.** Limit 50 analiz (ostatnio zmieniane) obowiązuje przed dołączaniem encji przy odczycie i przy scalaniu kopii.
+  - **D4 — zepsuty OCR po brakującym pliku.** `/ocr/*` bez pliku to 404 (`netlify.toml`, `vercel.json`, przed fallbackiem SPA), a reguła `ocr-engine` ma wtyczkę `cacheWillUpdate`, która nie zapisze odpowiedzi HTML.
+- **Odłożone (informacyjne z przeglądu).** CSP jest tylko `Report-Only`, a `connect-src https:` niczego nie zawęża — przy włączaniu wymuszania zawęzić do `'self'` i adresu przekaźnika. Pełna kopia JSON jest niezaszyfrowana i zawiera kopie robocze (a w budżecie też oryginały) planów klientów — warto to napisać w oknie kopii albo dać opcję „bez obrazów planów”. `npm audit`: `dompurify` (przez `jspdf`), `zod`, `react-router` — osobne zadanie.
+- **Dostępność.** `/plany` w `e2e/a11y.spec.ts` (axe WCAG 2.2 AA, wszystkie style, oba schematy, 390 i 1440 px): 40/40.
+- **Przy okazji.** `src/lib/shifts/csvShifts.ts`: dosłowny znak BOM w wyrażeniu regularnym (błąd ESLint `no-irregular-whitespace` z 28.10) zamieniony na `\uFEFF`.
+- **Testy.** Vitest: `src/lib/plans/security.test.ts` (W1, W2 z bombą 50 000 px i obrotem EXIF, 40 MP, D1 — 10 000 pomieszanych odcinków w < 1,5 s), `yPlans.test.ts` (D2, D3 w odczycie i scalaniu). E2E: `e2e/plans.spec.ts` (10 testów), `e2e/bundle.spec.ts`, `e2e/a11y.spec.ts` („plany”).
+- **Commit.** (uzupełnić)
+
 ## Kalendarz i Grafik: kontrast nazw świąt i zaznaczonego weekendu (2026-11-01)
 
 - **Co.** Nazwa święta w komórce dnia ma pełny `text-destructive-ink` (wcześniej `/80`, poniżej 4,5:1 na karcie). W pasku tygodnia zaznaczony dzień ma napis dnia tygodnia w `text-foreground` — kolor marki na tle podbarwionym marką nie miał kontrastu w stylu Hydraulika.

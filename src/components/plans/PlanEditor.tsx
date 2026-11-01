@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, CircleDot, ClipboardList, Maximize, Minus, MousePointer2, Pencil, Plus, Redo2, Ruler, Spline, Undo2 } from "lucide-react";
 import { toast } from "sonner";
-import { useImageUrl } from "@/hooks/useImageUrl";
+import { usePlanImageUrl } from "./usePlanImageUrl";
+import { checkStoredPlanImage } from "@/lib/plans/imageSniff";
 import { metersPerPixel, pickRoute, pickVertex } from "@/lib/plans/geometry";
 import { PLAN_NAME_MAX, PLAN_ROUTE_POINTS_MAX, type PipeRoute, type PlanPoint, type SystemType } from "@/lib/plans/model";
 import {
@@ -50,11 +51,13 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
   const { project, routes, calibration } = plan;
   const pid = project.id;
   const canvas = useRef<PlanCanvasHandle>(null);
-  const workUrl = useImageUrl(project.work?.ref ?? "");
-  // Oryginał wczytujemy tylko bez kopii roboczej albo gdy jej bajtów nie ma tu (`null`) — nie oba naraz.
-  const needOriginal = !project.work || workUrl === null;
-  const imageUrl = useImageUrl(needOriginal ? project.image.ref : "");
-  const url = needOriginal ? imageUrl : workUrl;
+  const workUrl = usePlanImageUrl(project.work);
+  // Oryginał wczytujemy tylko bez kopii roboczej albo gdy jej bajtów nie ma tu albo są złe — nie oba naraz.
+  const needOriginal = !project.work || workUrl === null || workUrl === "bad";
+  const imageUrl = usePlanImageUrl(needOriginal ? project.image : undefined);
+  const shown = needOriginal ? imageUrl : workUrl;
+  const url = shown === "bad" ? null : shown;
+  const badImage = shown === "bad";
 
   const [mode, setMode] = useState<EditorMode>("select");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -77,6 +80,8 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
   const [detectSystem, setDetectSystem] = useState<SystemType>("cold");
   const [detectRun, setDetectRun] = useState<DetectRun>({ state: "idle" });
   const [routeProposals, setRouteProposals] = useState<RouteProposal[]>([]);
+  /** Numer przebiegu wyszukiwania — wynik anulowanego (albo starszego) przebiegu jest pomijany. */
+  const detectRunRef = useRef(0);
   // Symbole (faza 6): rodzaj i instalacja nowego symbolu, zaznaczony symbol, propozycje kształtek.
   const [symbolType, setSymbolType] = useState<SymbolType>("outlet");
   const [symbolSystem, setSymbolSystem] = useState<SystemType | undefined>(undefined);
@@ -257,8 +262,11 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     setOcrRun({ state: "running", label: "Przygotowuję…", value: 0 });
     try {
       // Kopia robocza (lżejsza), a gdy jej bajtów tu nie ma — oryginał.
-      const rec = (project.work && await imageStore.get(project.work.ref)) || await imageStore.get(project.image.ref);
+      // Kopia robocza, a bez niej (albo z bajtami niezgodnymi z analizą) oryginał — zawsze po sprawdzeniu (W2).
+      const work = project.work && await imageStore.get(project.work.ref);
+      const rec = work && checkStoredPlanImage(work.bytes, project.work) ? work : await imageStore.get(project.image.ref);
       if (!rec) throw new Error("Obrazu planu nie ma na tym urządzeniu.");
+      if (!checkStoredPlanImage(rec.bytes, rec === work ? project.work : project.image)) throw new Error("Obraz planu na tym urządzeniu jest uszkodzony albo niezgodny z analizą.");
       const { recognizePlan } = await import("@/lib/plans/ocr/ocrClient");
       const LABEL = { download: "Pobieram silnik OCR…", start: "Uruchamiam silnik OCR…", recognize: "Odczytuję opisy" } as const;
       const lines = await recognizePlan(new Blob([rec.bytes], { type: rec.type }), project.image.w, (p) =>
@@ -300,14 +308,17 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
 
   async function runDetect() {
     if (!detectColor) return;
+    const run = ++detectRunRef.current;
     setDetectRun({ state: "running" });
     try {
       const { detectRoutes } = await import("@/lib/plans/detect/detectClient");
       const found = await detectRoutes(project, plan.texts, detectColor, tolerance);
+      if (detectRunRef.current !== run) return;
       setRouteProposals(found.map((l) => ({ id: newPlanId("route"), pts: l.pts, confidence: l.confidence })));
       setDetectRun({ state: "idle" });
       if (!found.length) toast("Nie znaleziono linii w tym kolorze — zwiększ tolerancję albo wskaż kolor jeszcze raz.");
     } catch (e) {
+      if (detectRunRef.current !== run) return;
       setDetectRun({ state: "error", message: (e as Error).message || "Wyszukiwanie tras się nie udało." });
     }
   }
@@ -397,6 +408,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
           <PlanCanvas
             ref={canvas}
             url={url}
+            badImage={badImage}
             width={project.image.w}
             height={project.image.h}
             onTap={onTap}
@@ -443,7 +455,8 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
           {mode === "select" && (
             <DetectSection picking={picking} onPick={setPicking} color={detectColor} tolerance={tolerance} onTolerance={setTolerance}
               system={detectSystem} onSystem={setDetectSystem} run={detectRun} proposals={routeProposals} mpp={mpp} focusId={focusId} onFocus={setFocusId}
-              onDetect={() => void runDetect()} onAdd={(p) => addProposals([p])} onReject={(id) => setRouteProposals((l) => l.filter((p) => p.id !== id))}
+              onDetect={() => void runDetect()}
+              onCancel={() => { detectRunRef.current++; void import("@/workers/planDetect").then((m) => m.cancelDetect()); setDetectRun({ state: "idle" }); }} onAdd={(p) => addProposals([p])} onReject={(id) => setRouteProposals((l) => l.filter((p) => p.id !== id))}
               onAddAll={() => addProposals(routeProposals)} />
           )}
           {mode === "select" && (

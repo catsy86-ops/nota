@@ -38,6 +38,8 @@ interface Props {
   crosshair?: boolean;
   label: string;
   cursor?: string;
+  /** Bajty obrazu niezgodne z analizą (nie są dekodowane) — komunikat zamiast planu. */
+  badImage?: boolean;
 }
 
 /**
@@ -45,7 +47,7 @@ interface Props {
  * albo mysz przesuwa, dwa palce przybliżają, kółko przybliża wokół kursora, klawiatura: strzałki,
  * `+`/`-`, `0` = dopasuj. Krótkie stuknięcie bez ruchu idzie do `onTap` (rysowanie, kalibracja).
  */
-export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanvas({ url, width, height, children, onTap, onHover, onPressStart, onPressMove, onPressEnd, onKeyAction, crosshair, label, cursor }, ref) {
+export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanvas({ url, width, height, children, onTap, onHover, onPressStart, onPressMove, onPressEnd, onKeyAction, crosshair, label, cursor, badImage }, ref) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [view, setView] = useState<Viewport | null>(null);
@@ -197,7 +199,12 @@ export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanva
           <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-foreground/70" />
         </span>
       )}
-      {url === null && (
+      {badImage && (
+        <p role="alert" className="absolute inset-x-4 top-4 rounded-card bg-card/95 p-3 text-sm text-destructive-ink shadow">
+          Obraz planu na tym urządzeniu jest uszkodzony albo niezgodny z analizą — nie został otwarty. Trasy i opisy zostają.
+        </p>
+      )}
+      {url === null && !badImage && (
         <p className="absolute inset-x-4 top-4 rounded-card bg-card/95 p-3 text-sm text-muted-foreground shadow">
           Obraz planu jeszcze nie dotarł na to urządzenie. Otwórz analizę na urządzeniu, na którym ją utworzono, albo poczekaj na synchronizację.
         </p>

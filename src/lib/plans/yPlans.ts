@@ -75,8 +75,10 @@ export function createYPlans(doc: Y.Doc) {
     const colors = new Map<string, PlanColor[]>();
     const entities: [EntityKind, string, string, unknown][] = [];
     for (const [k, v] of map.entries()) {
-      const [kind, pid, id] = k.split(SEP);
-      if (!pid) continue;
+      const parts = k.split(SEP);
+      const [kind, pid, id] = parts;
+      // Tylko kanoniczne klucze (przegląd D2): wpis pod `r␁pid␁id␁x` byłby nieusuwalny przez `remove`.
+      if (!pid || parts.length !== (kind === "p" || kind === "c" || kind === "k" ? 2 : 3)) continue;
       if (kind === "p") {
         const p = cleanProject(v);
         if (p && p.id === pid) byId.set(pid, { project: p, calibration: null, colors: [], routes: [], texts: [], symbols: [], items: [], lastEdit: p.updatedAt });
@@ -88,6 +90,12 @@ export function createYPlans(doc: Y.Doc) {
       } else if ((kind === "r" || kind === "t" || kind === "s" || kind === "i") && id) {
         entities.push([kind, pid, id, v]);
       }
+    }
+    // Limit analiz PRZED dołączaniem encji (przegląd D3): obce dane z tysiącami projektów nie przeliczają
+    // wszystkich tras przy każdej zmianie — zostaje 50 ostatnio zmienianych.
+    if (byId.size > PLAN_PROJECTS_MAX) {
+      const keep = new Set([...byId.values()].sort((a, b) => b.project.updatedAt - a.project.updatedAt).slice(0, PLAN_PROJECTS_MAX).map((d) => d.project.id));
+      for (const pid of [...byId.keys()]) if (!keep.has(pid)) byId.delete(pid);
     }
     for (const [pid, c] of colors) { const d = byId.get(pid); if (d) d.colors = c; }
     for (const [pid, c] of cals) {
@@ -195,10 +203,14 @@ export function createYPlans(doc: Y.Doc) {
   /** Wpisy (z „Cofnij” albo z kopii) wracają przez `clean*` — tylko znane klucze i kształty. */
   function restore(entries: PlanEntries, onlyMissing = false, origin: string = PLANS_ORIGIN): void {
     doc.transact(() => {
+      // Limit analiz także przy scalaniu kopii (przegląd D3): nowe projekty tylko do 50 łącznie.
+      let projects = list().length;
       for (const [k, v] of Object.entries(entries)) {
         if (onlyMissing && map.has(k)) continue;
-        const [kind, pid, id] = k.split(SEP);
-        if (!isPlanId(pid)) continue;
+        const parts = k.split(SEP);
+        const [kind, pid, id] = parts;
+        if (!isPlanId(pid) || parts.length !== (kind === "p" || kind === "c" || kind === "k" ? 2 : 3)) continue;
+        if (kind === "p" && !get(pid)) { if (projects >= PLAN_PROJECTS_MAX) continue; projects++; }
         if (kind === "p") { const p = cleanProject(v); if (p && p.id === pid && !id) map.set(k, p); }
         else if (kind === "c") { const c = cleanCalibration(v); if (c && !id) map.set(k, c); }
         else if (kind === "k") { const c = cleanColors(v); if (c.length && !id) map.set(k, c); }

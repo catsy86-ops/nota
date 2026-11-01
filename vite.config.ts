@@ -94,7 +94,13 @@ export default defineConfig(() => ({
           {
             urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/ocr/"),
             handler: "CacheFirst",
-            options: { cacheName: "ocr-engine", expiration: { maxEntries: 10 }, cacheableResponse: { statuses: [200] } },
+            options: {
+              cacheName: "ocr-engine",
+              expiration: { maxEntries: 10 },
+              cacheableResponse: { statuses: [200] },
+              // Strona aplikacji (fallback SPA) zamiast pliku silnika nie trafia do cache „immutable”.
+              plugins: [{ cacheWillUpdate: async ({ response }) => (response && !(response.headers.get("content-type") ?? "").includes("text/html") ? response : null) }],
+            },
           },
           // Czcionki protokołu PDF (`public/fonts/protokol-*.ttf`): poza precache (budżet), ale po pierwszym użyciu działają offline.
           {

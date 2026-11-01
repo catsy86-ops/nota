@@ -1,5 +1,6 @@
 import { fitWithin } from "@/lib/imagePrepare";
 import { imageStore } from "@/lib/imageStore";
+import { checkStoredPlanImage } from "../imageSniff";
 import type { AnalysisProject, DetectedText } from "../model";
 import { rgbToHex, type DetectedPolyline } from "./lines";
 
@@ -18,8 +19,11 @@ async function decode(project: AnalysisProject): Promise<Decoded> {
   const ref = project.work?.ref ?? project.image.ref;
   const key = `${project.id}:${ref}`;
   if (cache?.key === key) return cache;
-  const rec = (project.work && await imageStore.get(project.work.ref)) || await imageStore.get(project.image.ref);
+  const work = project.work && await imageStore.get(project.work.ref);
+  const rec = work && checkStoredPlanImage(work.bytes, project.work) ? work : await imageStore.get(project.image.ref);
   if (!rec) throw new Error("Obrazu planu nie ma na tym urządzeniu.");
+  // Bajty sprawdzone przed dekodowaniem — od innego urządzenia albo z kopii mogą być czymkolwiek (W2).
+  if (!checkStoredPlanImage(rec.bytes, rec === work ? project.work : project.image)) throw new Error("Obraz planu na tym urządzeniu jest uszkodzony albo niezgodny z analizą.");
   const bitmap = await createImageBitmap(new Blob([rec.bytes], { type: rec.type }));
   try {
     const { width, height } = fitWithin(bitmap.width, bitmap.height, DETECT_SIDE_MAX);

@@ -139,7 +139,7 @@ export function cleanPlanImage(raw: unknown): PlanImage | undefined {
   const i = raw as Partial<PlanImage> | null;
   if (!i || typeof i !== "object" || typeof i.ref !== "string" || !isImageRef(i.ref)) return undefined;
   if (!PLAN_IMAGE_TYPES.includes(i.type as PlanImageType)) return undefined;
-  if (!num(i.w) || !num(i.h) || i.w < 1 || i.h < 1 || i.w > PLAN_IMAGE_SIDE_MAX || i.h > PLAN_IMAGE_SIDE_MAX) return undefined;
+  if (!num(i.w) || !num(i.h) || i.w < 1 || i.h < 1 || i.w > PLAN_IMAGE_SIDE_MAX || i.h > PLAN_IMAGE_SIDE_MAX || i.w * i.h > PLAN_IMAGE_PIXELS_MAX) return undefined;
   return { ref: i.ref, type: i.type as PlanImageType, size: num(i.size) && i.size >= 0 ? Math.round(i.size) : 0, w: Math.round(i.w), h: Math.round(i.h) };
 }
 

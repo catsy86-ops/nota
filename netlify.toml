@@ -7,6 +7,13 @@
 
 # SPA fallback. Netlify matches real files first, so this never shadows
 # /offline.html, /sw.js or anything under /assets/.
+# Brakujący plik silnika OCR to 404, nie strona aplikacji — inaczej service worker zapisałby
+# index.html jako .wasm/.gz pod ścieżką „immutable” i OCR byłby zepsuty do wyczyszczenia cache.
+[[redirects]]
+  from = "/ocr/*"
+  to = "/ocr-missing"
+  status = 404
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

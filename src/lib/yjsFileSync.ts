@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { mayLeaveDevice, planRefsIn } from "@/lib/plans/planRefs";
 import { yjsStore, type YjsStore } from "@/lib/yjsStore";
 import { download } from "@/lib/exportNotes";
 import { logDiag } from "@/lib/diagnostics";
@@ -47,9 +48,11 @@ export function base64ToBytes(b64: string): Uint8Array {
 export async function buildSyncFile(store: YjsStore = yjsStore): Promise<SyncFile> {
   const update = store.encodeSyncState();
   const blobs: Record<string, string> = {};
+  const planRefs = planRefsIn(store.doc);
   for (const ref of store.syncableRefs()) {
     const dataUrl = await store.images.getDataUrl(ref);
-    if (dataUrl) blobs[ref] = dataUrl;
+    // Prawdziwy rozmiar (~3/4 data URL), nie zadeklarowany w danych planu (przegląd W1).
+    if (dataUrl && mayLeaveDevice(ref, Math.floor(dataUrl.length * 0.75), planRefs)) blobs[ref] = dataUrl;
   }
   return { format: SYNC_FILE_FORMAT, version: SYNC_FILE_VERSION, exportedAt: Date.now(), update: bytesToBase64(update), blobs };
 }

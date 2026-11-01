@@ -1,4 +1,4 @@
-import { isImageRef } from "@/lib/imageStore";
+import { isImageRef, MAX_PEER_BLOB_BYTES } from "@/lib/imageStore";
 
 type MapLike = { forEach(cb: (value: unknown, key: string) => void): void };
 
@@ -28,4 +28,14 @@ export function planRefsIn(doc: { getMap(name: string): MapLike }, syncable = fa
     refs.add(image);
   });
   return refs;
+}
+
+/**
+ * Czy bajty spod klucza mogą wyjść z urządzenia (P2P, przekaźnik, plik synchronizacji). Rozmiar w danych
+ * planu deklaruje zapis — także obcy — więc decyduje PRAWDZIWY rozmiar bajtów: ponad limit peera nic,
+ * a plik ponad 2 MB spod klucza analizy planu zostaje lokalnie (D3; przegląd bezpieczeństwa W1 — obcy
+ * projekt nie wymusi wysłania dużego oryginału planu ani innego pliku przez wskazanie jego hasha).
+ */
+export function mayLeaveDevice(ref: string, size: number, planRefs: ReadonlySet<string>): boolean {
+  return size <= MAX_PEER_BLOB_BYTES && !(size > PLAN_SYNC_MAX_BYTES && planRefs.has(ref));
 }

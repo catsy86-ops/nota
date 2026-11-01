@@ -10,7 +10,7 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Rozbija tekst na pola z separatorem `;`: BOM, pola w cudzysłowie (`""` to cudzysłów), CRLF albo LF. */
 export function parseSemicolonCsv(text: string): string[][] {
-  const src = text.replace(/^﻿/, "");
+  const src = text.replace(/^\uFEFF/, "");
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";

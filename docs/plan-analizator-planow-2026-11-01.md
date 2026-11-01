@@ -35,7 +35,7 @@ Wartości pochodne (`lengthPixels`, `lengthMeters`, status pomiaru, wiersze zest
 
 ## Fazy
 
-Stan: faza 2 (d353ea7), faza 3 (b761b57) i faza 4 — OCR (2026-11-01) zrobione. Faza 5 (propozycje tras z koloru, własny algorytm w workerze; OpenCV odłożony — opis w opis.md) zrobiona. Faza 6 (symbole ręczne, kolana i trójniki z geometrii) zrobiona. Faza 7 (zestawienie, CSV, braki budowy) zrobiona. Następna: faza 8 (przegląd `security-reviewer`, axe w a11y.spec, raport końcowy).
+Stan: faza 2 (d353ea7), faza 3 (b761b57) i faza 4 — OCR (2026-11-01) zrobione. Faza 5 (propozycje tras z koloru, własny algorytm w workerze; OpenCV odłożony — opis w opis.md) zrobiona. Faza 6 (symbole ręczne, kolana i trójniki z geometrii) zrobiona. Faza 7 (zestawienie, CSV, braki budowy) zrobiona. Faza 8 (przegląd bezpieczeństwa z poprawkami W1, W2, D1–D4, axe) zrobiona — plan zamknięty, raport końcowy na dole.
 
 | Faza | Zakres | Rozmiar |
 |---|---|---|
@@ -73,3 +73,22 @@ Przyjęte rekomendacje (do zmiany na prośbę):
 - **Telefon:** jeden worker, kafle 2048 px z zakładką ~144 px z kopii roboczej, deduplikacja słów po bbox w układzie oryginału; anulowanie = `worker.terminate()`; `terminate()` po zakończeniu i przy odmontowaniu. Ø nie jest pewne w modelach — normalizacja po rozpoznaniu (Ø/ø/⌀/Φ/0/O/@ + liczba z listy typowych średnic → średnica z obniżoną pewnością, DN, kody ZW/CWU/CO/WC/KAN).
 - **OpenCV:** 10,9 MB (`@techstark/opencv-js`), 2–6 s startu na Androidzie. Rekomendacja: najpierw własny algorytm po kolorze w workerze (faza 5); OpenCV (decyzja D5 „wszystko”) jako klasyczny worker z `importScripts("/opencv/<wersja>/opencv.js")`, poza precache, za flagą „eksperymentalne”.
 - **Testy:** `bundle.spec` — precache bez `ocr/`/`opencv`/`ocrClient`, reguła `ocr-engine` istnieje, pliki skopiowane; `plans.spec` — OCR próbki „DN 25” z blokadą żądań spoza origin i drugi przebieg offline.
+
+
+## Raport końcowy (2026-11-01)
+
+**Co dodano.** Dział „Plany” (`/plany`): import zrzutu z DWG FastView (PNG/JPG/WebP, walidacja po bajtach), edytor SVG (zoom, przesuwanie, szczypanie, klawiatura), kalibracja skali z jednego wymiaru, ręczne trasy punkt po punkcie z korektą punktów i cofaniem, OCR opisów (średnice, kody instalacji) na urządzeniu, propozycje tras z koloru warstwy, symbole ręczne i propozycje kolan/trójników z geometrii, zestawienie materiałów z grupami pewności, CSV i przekazanie pewnych pozycji do braków budowy w Pracy. Dane w Yjs (mapa `plans`), synchronizacja i kopia jak reszta aplikacji.
+
+**Pliki.** Logika: `src/lib/plans/` (`model`, `geometry`, `viewport`, `imageSniff`, `imageImport`, `planRefs`, `yPlans`, `plansStore`, `systems`, `diameters`, `tiles`, `assign`, `fittings`, `summary`, `csv`, `ocr/ocrClient`, `detect/lines`, `detect/detectClient`). Worker: `src/workers/planDetect*`. UI: `src/components/plans/` (`PlansView`, `PlansList`, `NewAnalysisDialog`, `PlanEditor`, `PlanCanvas`, `PlanOverlay`, `PlanPanel`, `OcrPanel`, `DetectPanel`, `SymbolPanel`, `MaterialsPanel`, `usePlanImageUrl`). Skrypt: `scripts/copy-ocr.mjs`. Szczegóły każdej fazy: sekcje „Plany — …” w `opis.md`.
+
+**Biblioteki.** `tesseract.js` 7.0.0 (OCR LSTM w WebAssembly, Apache-2.0) i `wasm-feature-detect` 1.8.0 (wariant SIMD) — jedyny darmowy, lokalny OCR w przeglądarce bez usług w chmurze; pliki silnika i dane `pol`+`eng` z devDependencies (`tesseract.js-core`, `@tesseract.js-data/*`) kopiowane do `public/ocr/7.0.0/`. OpenCV.js świadomie nie dodany (10,9 MB, 2–6 s startu na Androidzie) — własny algorytm w workerze wystarcza dla zrzutów z warstwami w kolorach.
+
+**Uruchomienie.** `npm run dev` / `npm run build` same kopiują silnik OCR (`predev`/`prebuild`). Dział w pasku bocznym (grupa Praca), w „Więcej”, w palecie, skrót `g r`.
+
+**Test na zrzucie z DWG FastView.** Na prawdziwym zrzucie nie testowano (brak próbki od właściciela). E2E używa planów rysowanych w przeglądarce: rura w kolorze, szara siatka, czarne opisy „Ø16 ZW”, „DN 25”, „Salon”. Do zrobienia przez właściciela: import prawdziwego zrzutu, kalibracja po wymiarze ściany, „Rozpoznaj opisy”, „Wskaż kolor rury” → „Szukaj tras”, porównanie zestawienia z ręcznym pomiarem.
+
+**Automatyczne vs. do zatwierdzenia.** Automatyczne (zawsze propozycje): odczyt opisów (OCR), znaczenie opisów (średnica, instalacja, punkt), propozycje tras z koloru, kolana i trójniki z geometrii, podpowiedź średnicy dla trasy. Wymaga zatwierdzenia: każdy opis („Zatwierdź”), każda propozycja trasy („Dodaj” → trasa „do weryfikacji” → „Zatwierdzona”), każda kształtka, każde przypisanie średnicy („Przypisz”). Skala zawsze ręczna; bez skali nie ma metrów.
+
+**Wyniki testów (2026-11-01).** Vitest 2859 (jeden test wydajności wyszukiwania notatek pada tylko pod obciążeniem równoległym, osobno przechodzi); e2e `plans.spec` 10/10 (komputer i telefon), `bundle.spec` 7/7, `a11y.spec` „plany” 40/40; typecheck czysty; ESLint 0 błędów; build: precache 4057 KiB / 4096.
+
+**Ograniczenia i dalsze kroki.** QA na telefonie z prawdziwym zrzutem (czas OCR i pamięć — szacunki z przeglądu wydajności, nie pomiary); napisy pionowe w OCR (obrót kafla); OCR zaznaczonego fragmentu z oryginału; dodawanie/usuwanie punktu w środku trasy; przeciąganie symboli; przypięcie analizy do budowy na stałe (`siteId`); zapas na docinki i ceny w zestawieniu; linie przerywane w wykrywaniu tras; OpenCV za flagą, jeśli własny algorytm zawiedzie na prawdziwych planach; zawężenie CSP i opcja kopii bez obrazów planów.

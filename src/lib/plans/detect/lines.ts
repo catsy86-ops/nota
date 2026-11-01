@@ -11,6 +11,9 @@
  * działa w workerze i w testach.
  */
 
+/** Najwięcej odcinków szkieletu do łączenia — powyżej przerywamy z komunikatem (przegląd D1). */
+export const DETECT_PIECES_MAX = 20_000;
+
 export interface DetectOptions {
   /** Kolor rury `#rrggbb`. */
   color: string;
@@ -219,7 +222,10 @@ export function detectLines(rgba: Uint8ClampedArray, w: number, h: number, opts:
   const mask = closeMask(colorMask(rgba, w, h, opts.color, opts.tolerance), w, h);
   const skel = skeletonize(mask, w, h);
   // Odcinki przecięte innymi liniami albo rozgałęzieniem szkieletu — najpierw łączymy stykające się końce.
-  const pieces = tracePaths(skel, w, h).map((raw) => { const pts = simplify(raw, 1.5); return { pts, length: pathLength(pts), confidence: 0 }; });
+  const paths = tracePaths(skel, w, h);
+  // Gęsty plan w tym kolorze (ściany, tekst) przy dużej tolerancji — wynik i tak byłby bezużyteczny.
+  if (paths.length > DETECT_PIECES_MAX) throw new Error("Za dużo linii w tym kolorze — zmniejsz tolerancję albo wskaż kolor dokładniej na rurze.");
+  const pieces = paths.map((raw) => { const pts = simplify(raw, 1.5); return { pts, length: pathLength(pts), confidence: 0 }; });
   const out: DetectedPolyline[] = [];
   for (const joined of joinPolylines(pieces, 3)) {
     const pts = simplify(joined.pts, 1.5);
@@ -236,27 +242,61 @@ export function detectLines(rgba: Uint8ClampedArray, w: number, h: number, opts:
   return out.sort((a, b) => b.length - a.length);
 }
 
-/** Łączy krótkie odcinki, których końce się stykają (rura przecięta inną linią) — do `gap` pikseli. */
+/**
+ * Łączy odcinki, których końce się stykają (rura przecięta inną linią) — do `gap` pikseli. Końce trzyma
+ * w siatce komórek o boku `gap`, więc koszt rośnie liniowo z liczbą odcinków (przegląd bezpieczeństwa D1:
+ * wersja „każdy z każdym od nowa po każdym scaleniu” była sześcienna i potrafiła zawiesić worker).
+ */
 export function joinPolylines(lines: readonly DetectedPolyline[], gap: number): DetectedPolyline[] {
-  const list = lines.map((l) => ({ ...l, pts: l.pts.slice() }));
-  let merged = true;
-  while (merged) {
-    merged = false;
-    outer: for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
-      const a = list[i].pts, b = list[j].pts;
-      const ends: [number[], number[]][] = [[a, b], [a, rev(b)], [rev(a), b], [rev(a), rev(b)]];
-      for (const [p, q] of ends) {
-        if (Math.hypot(q[0] - p[p.length - 2], q[1] - p[p.length - 1]) <= gap) {
-          const pts = [...p, ...q.slice(2)];
-          list[i] = { pts, length: pathLength(pts), confidence: Math.max(list[i].confidence, list[j].confidence) };
-          list.splice(j, 1);
-          merged = true;
-          break outer;
-        }
+  const list = lines.map((l) => ({ pts: l.pts.slice(), confidence: l.confidence, alive: true }));
+  const cell = Math.max(1, gap);
+  const grid = new Map<string, Set<number>>();
+  const keyOf = (x: number, y: number) => `${Math.floor(x / cell)},${Math.floor(y / cell)}`;
+  const ends = (p: readonly number[]) => [[p[0], p[1]], [p[p.length - 2], p[p.length - 1]]] as const;
+  const index = (i: number, on: boolean) => {
+    for (const [x, y] of ends(list[i].pts)) {
+      const k = keyOf(x, y);
+      let set = grid.get(k);
+      if (on) { if (!set) grid.set(k, (set = new Set())); set.add(i); } else set?.delete(i);
+    }
+  };
+  list.forEach((_, i) => index(i, true));
+  /** Inny żywy odcinek z końcem przy (x, y): numer i czy pasuje jego początek. */
+  const near = (self: number, x: number, y: number): [number, boolean] | null => {
+    const cx = Math.floor(x / cell), cy = Math.floor(y / cell);
+    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) {
+      for (const j of grid.get(`${cx + dx},${cy + dy}`) ?? []) {
+        if (j === self || !list[j].alive) continue;
+        const [[hx, hy], [tx, ty]] = ends(list[j].pts);
+        if (Math.hypot(hx - x, hy - y) <= gap) return [j, true];
+        if (Math.hypot(tx - x, ty - y) <= gap) return [j, false];
       }
     }
+    return null;
+  };
+  for (let i = 0; i < list.length; i++) {
+    if (!list[i].alive) continue;
+    for (let side = 0; side < 2; side++) {
+      // Doklejamy do końca łamanej, póki coś się styka; potem odwracamy i robimy to samo z drugiej strony.
+      for (;;) {
+        const p = list[i].pts;
+        const hit = near(i, p[p.length - 2], p[p.length - 1]);
+        if (!hit) break;
+        const [j, head] = hit;
+        index(i, false);
+        index(j, false);
+        list[j].alive = false;
+        const q = head ? list[j].pts : rev(list[j].pts);
+        list[i].pts = [...p, ...q.slice(2)];
+        list[i].confidence = Math.max(list[i].confidence, list[j].confidence);
+        index(i, true);
+      }
+      index(i, false);
+      list[i].pts = rev(list[i].pts);
+      index(i, true);
+    }
   }
-  return list;
+  return list.filter((l) => l.alive).map((l) => ({ pts: l.pts, length: pathLength(l.pts), confidence: l.confidence }));
 }
 
 function rev(p: readonly number[]): number[] {

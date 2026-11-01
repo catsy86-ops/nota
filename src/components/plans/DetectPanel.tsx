@@ -18,7 +18,7 @@ const sectionCls = "space-y-2 border-b border-border/60 px-3 py-3 last:border-b-
 const h3 = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
-export function DetectSection({ picking, onPick, color, tolerance, onTolerance, system, onSystem, run, proposals, mpp, focusId, onFocus, onDetect, onAdd, onReject, onAddAll }: {
+export function DetectSection({ picking, onPick, color, tolerance, onTolerance, system, onSystem, run, proposals, mpp, focusId, onFocus, onDetect, onCancel, onAdd, onReject, onAddAll }: {
   picking: boolean;
   onPick: (on: boolean) => void;
   color: string | null;
@@ -32,6 +32,7 @@ export function DetectSection({ picking, onPick, color, tolerance, onTolerance, 
   focusId: string | null;
   onFocus: (id: string | null) => void;
   onDetect: () => void;
+  onCancel: () => void;
   onAdd: (p: RouteProposal) => void;
   onReject: (id: string) => void;
   onAddAll: () => void;
@@ -56,9 +57,14 @@ export function DetectSection({ picking, onPick, color, tolerance, onTolerance, 
             <span className="flex justify-between font-medium"><span>Tolerancja koloru</span><span className="font-mono text-xs tabular-nums text-muted-foreground">{pct(tolerance)}</span></span>
             <input type="range" min={0.05} max={0.6} step={0.05} value={tolerance} onChange={(e) => onTolerance(Number(e.target.value))} className="w-full accent-[var(--primary)]" />
           </label>
-          <Button type="button" onClick={onDetect} disabled={run.state === "running"} className="pressable w-full coarse:h-11">
-            {run.state === "running" ? <><LoaderCircle className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />Szukam tras…</> : "Szukaj tras"}
-          </Button>
+          {run.state === "running" ? (
+            <div className="grid grid-cols-[1fr_auto] gap-2" role="status" aria-live="polite">
+              <p className="flex items-center gap-2 text-sm"><LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />Szukam tras…</p>
+              <Button type="button" variant="outline" onClick={onCancel} className="pressable coarse:h-11">Anuluj</Button>
+            </div>
+          ) : (
+            <Button type="button" onClick={onDetect} className="pressable w-full coarse:h-11">Szukaj tras</Button>
+          )}
         </>
       )}
       {run.state === "error" && <p role="alert" className="text-sm text-destructive-ink">{run.message}</p>}

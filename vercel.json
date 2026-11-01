@@ -5,6 +5,10 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/ocr/(.*)",
+      "destination": "/ocr-missing"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

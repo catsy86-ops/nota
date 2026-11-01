@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import type { WebrtcProvider } from "y-webrtc";
+import { mayLeaveDevice, planRefsIn } from "@/lib/plans/planRefs";
 import { yjsStore } from "@/lib/yjsStore";
 import { providerOptions, roomNamesFor } from "@/lib/yjsSync";
 import { logDiag, logSecurity } from "@/lib/diagnostics";
@@ -53,11 +54,15 @@ function isWireImage(v: unknown): v is WireImage {
 
 async function mirrorLocalImages(map: Y.Map<WireImage>, token: number): Promise<void> {
   const images = yjsStore.images;
+  // Prawdziwy rozmiar bajtów, nie zadeklarowany w danych planu (przegląd W1, `mayLeaveDevice`).
+  const planRefs = planRefsIn(yjsStore.doc);
   for (const ref of yjsStore.syncableRefs()) {
     if (token !== startToken) return;
     if (map.has(ref) || !images.has(ref)) continue;
     const rec = await images.get(ref);
-    if (rec && token === startToken && !map.has(ref)) map.set(ref, { t: rec.type, b: new Uint8Array(rec.bytes) });
+    if (!rec || token !== startToken || map.has(ref)) continue;
+    if (!mayLeaveDevice(ref, rec.bytes.byteLength, planRefs)) continue;
+    map.set(ref, { t: rec.type, b: new Uint8Array(rec.bytes) });
   }
 }
 

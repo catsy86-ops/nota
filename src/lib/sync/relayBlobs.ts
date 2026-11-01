@@ -28,6 +28,8 @@ export interface RelayBlobsOptions {
   refs: () => Iterable<string>;
   images: BlobImages;
   fetch?: typeof fetch;
+  /** Czy bajty mogą wyjść z urządzenia (prawdziwy rozmiar; `mayLeaveDevice`). Brak = wszystkie z `refs`. */
+  mayUpload?: (hash: string, size: number) => boolean;
 }
 
 export interface BlobSyncResult {
@@ -92,6 +94,7 @@ export class RelayBlobs {
     }
     const rec = await this.opts.images.get(hash);
     if (!rec) throw new Error("blob: obraz zniknął lokalnie");
+    if (this.opts.mayUpload && !this.opts.mayUpload(hash, rec.bytes.byteLength)) return false;
     const plain = packBlob(rec.type, new Uint8Array(rec.bytes));
     const sealed = await sealRaw(this.opts.keys.dataKey, plain, blobAad(this.opts.keys.roomId, id));
     const res = await this.fetchFn(`${this.base}${path}`, {

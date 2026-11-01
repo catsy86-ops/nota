@@ -112,4 +112,21 @@ describe("analizy planów w Yjs", () => {
     expect(a.get("p1")!.routes).toHaveLength(2);
     expect(a.history.canUndo()).toBe(false);
   });
+
+  it("D2/D3: klucz z dodatkowym segmentem nie jest encją; nadmiar obcych analiz nie wchodzi (odczyt i scalanie)", () => {
+    const { a, b, docA } = pair();
+    a.createProject(project("p1"));
+    docA.getMap("plans").set("r\u0001p1\u0001r1\u0001x", route("r1"));
+    expect(a.get("p1")!.routes).toEqual([]);
+    // Obce dane: 60 analiz wprost w mapie — widać 50 ostatnio zmienianych.
+    docA.transact(() => { for (let i = 0; i < 60; i++) docA.getMap("plans").set(`p\u0001x${i}`, project(`x${i}`, { updatedAt: i + 10 })); });
+    expect(a.list()).toHaveLength(50);
+    expect(a.get("x0")).toBeNull();
+    expect(a.get("x59")).not.toBeNull();
+    // Scalanie kopii z 60 analizami: dochodzi tylko do limitu.
+    const entries: Record<string, unknown> = {};
+    for (let i = 0; i < 60; i++) entries[`p\u0001y${i}`] = project(`y${i}`);
+    b.mergeDump({ entries });
+    expect(b.list()).toHaveLength(50);
+  });
 });

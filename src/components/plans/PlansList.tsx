@@ -1,6 +1,7 @@
 import { Plus, Ruler, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NoteImage } from "@/components/NoteImage";
+import type { PlanImage } from "@/lib/plans/model";
+import { usePlanImageUrl } from "./usePlanImageUrl";
 import { metersPerPixel } from "@/lib/plans/geometry";
 import { removePlan, restorePlan } from "@/lib/plans/plansStore";
 import type { PlanData } from "@/lib/plans/yPlans";
@@ -40,7 +41,7 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
             return (
               <li key={d.project.id} className="relative overflow-hidden rounded-card border border-border/60 bg-card">
                 <button type="button" onClick={() => onOpen(d.project.id)} className="block w-full text-left outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
-                  <NoteImage imageRef={d.project.work?.ref ?? d.project.image.ref} alt="" className="aspect-[16/9] w-full bg-white object-contain" placeholderClassName="aspect-[16/9]" />
+                  <PlanThumb image={d.project.work ?? d.project.image} />
                   <span className="block space-y-0.5 border-t border-border/60 px-3 py-2 pr-14">
                     <span className="block truncate font-medium">{d.project.name}</span>
                     <span className="block text-xs text-muted-foreground">
@@ -59,4 +60,11 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
       )}
     </section>
   );
+}
+
+/** Miniatura analizy — obraz dopiero po sprawdzeniu bajtów (`usePlanImageUrl`). */
+function PlanThumb({ image }: { image: PlanImage }) {
+  const url = usePlanImageUrl(image);
+  if (url && url !== "bad") return <img src={url} alt="" className="aspect-[16/9] w-full bg-white object-contain" loading="lazy" />;
+  return <span aria-hidden className="block aspect-[16/9] w-full bg-muted/60" />;
 }

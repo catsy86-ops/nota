@@ -81,3 +81,19 @@ export function checkPlanFile(size: number, head: Uint8Array): { ok: SniffedImag
   if (s.w > PLAN_IMAGE_SIDE_MAX || s.h > PLAN_IMAGE_SIDE_MAX || s.w * s.h > PLAN_IMAGE_PIXELS_MAX) return { error: "tooLarge" };
   return { ok: s };
 }
+
+/**
+ * Bajty planu z magazynu przed dekodowaniem (przegląd bezpieczeństwa W2): od innego urządzenia albo
+ * z kopii mogą przyjść dowolne bajty pod kluczem planu — mały PNG, który rozpakowuje się do dziesiątek
+ * tysięcy pikseli, wywróciłby kartę przy otwarciu analizy, OCR albo wyszukiwaniu tras. Te same limity co
+ * przy imporcie, a wymiary z nagłówka muszą się zgadzać z zapisanymi w analizie.
+ */
+export function checkStoredPlanImage(bytes: ArrayBuffer, expected?: { w: number; h: number }): SniffedImage | null {
+  const head = new Uint8Array(bytes, 0, Math.min(bytes.byteLength, 64 * 1024));
+  const checked = checkPlanFile(bytes.byteLength, head);
+  if ("error" in checked) return null;
+  const s = checked.ok;
+  // Zdjęcie JPEG z obrotem EXIF: przeglądarka zamienia boki przy dekodowaniu, więc zamiana też pasuje.
+  if (expected && !((s.w === expected.w && s.h === expected.h) || (s.w === expected.h && s.h === expected.w))) return null;
+  return s;
+}
