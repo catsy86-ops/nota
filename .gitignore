@@ -33,3 +33,6 @@ shots/
 
 # Silnik OCR kopiowany z node_modules przez scripts/copy-ocr.mjs (predev/prebuild)
 public/ocr/
+
+# Pamięć kompilatora TypeScript (tsc -b)
+*.tsbuildinfo
