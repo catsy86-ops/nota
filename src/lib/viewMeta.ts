@@ -31,3 +31,22 @@ export function viewLabel(view: View): string {
 export const APP_VIEWS: ReadonlySet<View> = new Set<View>(["calendar", "shifts", "study", "debts", "cwiczenia", "plans"]);
 
 export const isAppView = (view: View): boolean => APP_VIEWS.has(view);
+
+/** Grupa działu (jak w pasku bocznym) — linijka nad tytułem w główce kartki. Archiwum i Kosz nie mają grupy. */
+export type ViewGroup = "codziennie" | "praca" | "osobiste" | "archiwum";
+
+export const VIEW_GROUP: Partial<Record<View, ViewGroup>> = {
+  notes: "codziennie",
+  inbox: "codziennie",
+  today: "codziennie",
+  week: "codziennie",
+  reminders: "codziennie",
+  calendar: "codziennie",
+  shifts: "praca",
+  study: "praca",
+  plans: "praca",
+  debts: "osobiste",
+  cwiczenia: "osobiste",
+  archive: "archiwum",
+  trash: "archiwum",
+};

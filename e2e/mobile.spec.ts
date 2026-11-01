@@ -10,14 +10,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("„Więcej” → Ustawienia otwiera ustawienia przy zamkniętym pasku bocznym @smoke @mobile", async ({ page }) => {
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("button", { name: "Ustawienia" }).last().click();
   await expect(page.getByRole("dialog", { name: "Ustawienia" })).toBeVisible();
   await expect(page.getByRole("tab", { name: /Kopia i dane/ })).toBeVisible();
 });
 
 test("Ustawienia na telefonie zajmują cały ekran i nie zmieniają wysokości przy zmianie zakładki @smoke @mobile", async ({ page }) => {
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("button", { name: "Ustawienia" }).last().click();
   const dialog = page.getByRole("dialog", { name: "Ustawienia" });
   await expect(dialog).toBeVisible();
@@ -72,7 +72,7 @@ test("Przypomnienia mają własną zakładkę w dolnym pasku, Archiwum jest w �
   await expect(page.getByRole("heading", { name: "Terminy", level: 1 })).toBeVisible();
   await expect(nav.getByRole("button", { name: "Terminy" })).toHaveAttribute("aria-current", "page");
 
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("button", { name: "Archiwum" }).last().click();
   await expect(page.getByRole("heading", { name: "Archiwum", level: 1 })).toBeVisible();
 });
@@ -96,7 +96,7 @@ test("notatka z listą na pełnym ekranie: pozycje zaraz pod tytułem, nie na do
 test("„wstecz” zamyka arkusz „Więcej”, a nie zmienia widoku pod nim @smoke @mobile", async ({ page }) => {
   await page.getByRole("navigation").getByRole("button", { name: "Dziś" }).click();
   await expect(page).toHaveURL(/\/dzis$/);
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await expect(page.getByRole("dialog", { name: "Więcej" })).toBeVisible();
 
   await page.goBack();
@@ -111,7 +111,7 @@ test("„wstecz” zamyka arkusz „Więcej”, a nie zmienia widoku pod nim @sm
 test("zamknięcie arkusza krzyżykiem nie zostawia dodatkowego wpisu w historii @mobile", async ({ page }) => {
   await page.getByRole("navigation").getByRole("button", { name: "Dziś" }).click();
   await expect(page).toHaveURL(/\/dzis$/);
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("dialog", { name: "Więcej" }).getByRole("button", { name: "Zamknij" }).click();
   await expect(page.getByRole("dialog", { name: "Więcej" })).toBeHidden();
   await page.goBack();
@@ -128,7 +128,7 @@ test("„wstecz” zwija pełnoekranowy kompozytor, szkic zostaje @mobile", asyn
 
 test("arkusz „Więcej” zamyka się przeciągnięciem uchwytu w dół, krótki ruch go nie zamyka @mobile", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "dotyk przez CDP jest tylko w Chromium");
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   const sheet = page.getByRole("dialog", { name: "Więcej" });
   await expect(sheet).toBeVisible();
   const handle = sheet.locator("[data-sheet-handle]");
@@ -159,7 +159,7 @@ test("ponowne stuknięcie „Notatki” i „Więcej → Szukaj” ustawiają ku
 
   await page.getByRole("searchbox", { name: "Szukaj w notatkach" }).blur();
   await nav.getByRole("button", { name: "Dziś" }).click();
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("dialog", { name: "Więcej" }).getByRole("button", { name: "Szukaj" }).click();
   await expect(page).not.toHaveURL(/\/dzis$/);
   await expect(page.getByRole("searchbox", { name: "Szukaj w notatkach" })).toBeFocused();
@@ -170,14 +170,14 @@ test.describe("telefon w poziomie", () => {
 
   test("zostaje dolna nawigacja, a panel boczny nie zajmuje 1/3 ekranu", async ({ page }) => {
     await expect(page.getByRole("button", { name: "Nowa notatka" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Więcej", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Więcej(: .+)?$/ })).toBeVisible();
     // Panel jest wysuwany na żądanie, nie stały w układzie.
     await expect(page.getByRole("complementary")).toHaveCount(0);
   });
 });
 
 test("dolny pasek chowa się, gdy klawiatura Androida zmniejsza okno przy pisaniu @mobile", async ({ page }) => {
-  const nav = page.locator("nav").filter({ has: page.getByRole("button", { name: "Więcej", exact: true }) });
+  const nav = page.locator("nav").filter({ has: page.getByRole("button", { name: /^Więcej(: .+)?$/ }) });
   await expect(nav).toBeVisible();
   await page.getByRole("button", { name: "Nowa notatka" }).click();
   await page.getByPlaceholder("Tytuł").focus();
@@ -192,7 +192,7 @@ test("dolny pasek chowa się, gdy klawiatura Androida zmniejsza okno przy pisani
 });
 
 test("zwykłe okno na telefonie jest wyśrodkowane z marginesem 1 rem i zaokrąglone (1.3) @smoke @mobile", async ({ page }) => {
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("button", { name: "Samouczek" }).click();
   const dialog = page.getByRole("dialog").last();
   await expect(dialog).toBeVisible();

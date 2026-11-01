@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function openAppearance(page: import("@playwright/test").Page) {
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("button", { name: "Ustawienia" }).click();
   await page.getByRole("tab", { name: "Wygląd" }).click();
 }

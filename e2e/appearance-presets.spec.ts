@@ -7,7 +7,7 @@ test.use({ isMobile: true, hasTouch: true, viewport: { width: 390, height: 844 }
 test("zestaw Budowa stosuje się od razu i cofa się z komunikatu @mobile", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
   await page.goto("/");
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("button", { name: "Ustawienia" }).click();
   await page.getByRole("tab", { name: "Wygląd" }).click();
   const html = page.locator("html");
@@ -22,7 +22,7 @@ test("własny slot: zapis bieżącego wyglądu i przywrócenie @mobile", async (
   await page.goto("/");
   await page.evaluate(() => localStorage.setItem("kaczy.skin.v1", JSON.stringify("neon")));
   await page.reload();
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("button", { name: "Ustawienia" }).click();
   await page.getByRole("tab", { name: "Wygląd" }).click();
   await page.getByRole("button", { name: "Zapisz tu" }).nth(0).click();

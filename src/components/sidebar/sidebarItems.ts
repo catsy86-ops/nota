@@ -1,10 +1,11 @@
 import type { ElementType } from "react";
 import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Inbox, Dumbbell, Ruler } from "lucide-react";
 import type { View } from "@/hooks/useFilteredNotes";
-import { viewLabel } from "@/lib/viewMeta";
+import { viewLabel, type ViewGroup } from "@/lib/viewMeta";
 
 /** Grupy paska bocznego (PW-4, plan Powłoki 2.1). `archiwum` to dół paska bez nagłówka. */
-export type SidebarGroupKey = "codziennie" | "praca" | "osobiste" | "archiwum";
+/** Grupy z `viewMeta` — ta sama, której używa główka kartki (`ViewTitle`). */
+export type SidebarGroupKey = ViewGroup;
 
 export interface SidebarItem {
   icon: ElementType;

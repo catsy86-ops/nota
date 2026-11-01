@@ -35,11 +35,10 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: (t
   const hidden = useHideAmounts();
 
   return (
-    <section aria-labelledby="debts-title" className="mx-auto w-full max-w-2xl px-4 pb-32 pt-6 desk:pt-8">
+    // Tytuł i grupa są w główce kartki (`ViewTitle`); tu zostaje opis i „Ukryj kwoty”.
+    <section aria-label="Długi" className="mx-auto w-full max-w-2xl pb-32">
       <header className="mb-5">
-        <p className="text-xs font-display uppercase tracking-[0.18em] text-muted-foreground">Prywatne</p>
-        <h1 id="debts-title" className="font-display text-3xl font-bold tracking-tight">Długi</h1>
-        <div className="mt-1 flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">Kto ile pożyczył i ile już oddał.</p>
           <Button
             variant="ghost"
@@ -134,7 +133,7 @@ function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addRemind
               aria-checked={selected}
               onClick={() => setKind(k)}
               className={cn(
-                "tap-target flex items-center justify-center gap-2 rounded-field px-3 py-2 text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                "tap-target flex items-center justify-center gap-1.5 whitespace-nowrap rounded-field px-2 py-2 text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                 selected ? "bg-card text-foreground shadow-elevation-up" : "text-muted-foreground hover:text-foreground"
               )}
             >

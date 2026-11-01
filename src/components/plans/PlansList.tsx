@@ -1,4 +1,4 @@
-import { Plus, Ruler, Trash } from "lucide-react";
+import { ImagePlus, Plus, Ruler, Spline, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PlanImage } from "@/lib/plans/model";
 import { usePlanImageUrl } from "./usePlanImageUrl";
@@ -11,6 +11,12 @@ import { toastWithUndo } from "@/lib/undoToast";
 const dateLabel = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "numeric", month: "short", year: "numeric" });
 
 /** Lista analiz: miniatura, nazwa, liczba tras, stan skali. Stuknięcie otwiera edytor. */
+const EMPTY_STEPS = [
+  { Icon: ImagePlus, title: "Zrzut planu", text: "Zrób zrzut ekranu w DWG FastView i dodaj go przez „Nowa analiza”." },
+  { Icon: Ruler, title: "Skala", text: "Zaznacz jeden znany wymiar, np. ścianę 4,25 m." },
+  { Icon: Spline, title: "Trasy", text: "Poprowadź rury albo wskaż ich kolor — długości policzą się w metrach." },
+] as const;
+
 export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen: (pid: string) => void; onNew: () => void }) {
   function remove(d: PlanData) {
     const entries = removePlan(d.project.id);
@@ -27,12 +33,22 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
       </div>
 
       {plans.length === 0 ? (
-        <div className="rounded-card border border-dashed border-border p-6 text-center">
-          <Ruler className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden />
-          <p className="mt-2 font-display text-lg">Brak analiz</p>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-            Zrób zrzut ekranu planu w DWG FastView i dodaj go tutaj. Potem ustaw skalę z jednego znanego wymiaru i poprowadź trasy rur.
-          </p>
+        // Pusty stan jako trzy kroki (plan wyglądu, Faza 7): to prawdziwa kolejność pracy, więc numeracja coś mówi.
+        <div className="rounded-card border border-dashed border-border p-5 sm:p-6">
+          <p className="font-display text-lg">Brak analiz</p>
+          <ol className="mt-3 grid gap-3 sm:grid-cols-3 sm:gap-4">
+            {EMPTY_STEPS.map(({ Icon, title, text }, i) => (
+              <li key={title} className="flex gap-3 sm:flex-col sm:gap-2">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full border border-border text-muted-foreground" aria-hidden>
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium"><span className="font-mono text-muted-foreground">{i + 1}.</span> {title}</p>
+                  <p className="text-sm text-muted-foreground">{text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

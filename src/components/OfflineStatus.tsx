@@ -84,7 +84,8 @@ export function OfflineStatus() {
     : offline ? "Offline — zapisuję lokalnie"
     : saved ? "Zapisano"
     : "Łączenie z urządzeniami…";
-  // Sam komunikat o zapisie nie jest przyciskiem — nie może przesłaniać kliknięć pod sobą.
+  // Sam komunikat o zapisie nie jest przyciskiem — nie może przesłaniać kliknięć pod sobą. W edytorze Planów na
+  // telefonie (pełny ekran) bierny „Zapisano” leżał na panelu — tam znika; błąd i offline zostają.
   const passive = !saveFailed && !offline && (saving || saved);
 
   return (
@@ -95,7 +96,7 @@ export function OfflineStatus() {
         onClick={() => { setPanelMounted(true); setPanelOpen(true); }}
         aria-label={`Status zapisu i synchronizacji: ${label}`}
         tabIndex={passive ? -1 : undefined}
-        className={`save-status glass-strong fixed bottom-24 left-1/2 z-modal flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 coarse:min-h-11 text-xs text-muted-foreground shadow-elevation-3 transition-colors hover:text-foreground sm:bottom-6 ${passive ? "pointer-events-none" : "cursor-pointer"}`}
+        className={`save-status glass-strong fixed bottom-24 left-1/2 z-modal flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 coarse:min-h-11 text-xs text-muted-foreground shadow-elevation-3 transition-colors hover:text-foreground sm:bottom-6 ${passive ? "pointer-events-none max-sm:in-data-plan-full:hidden" : "cursor-pointer"}`}
       >
         {saveFailed ? (
           <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-destructive-ink" />

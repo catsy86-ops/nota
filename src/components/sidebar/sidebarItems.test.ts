@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { groupSidebarItems, sidebarItems } from "./sidebarItems";
+import { VIEW_GROUP } from "@/lib/viewMeta";
 
 const counts = { inbox: 0, overdue: 0, trash: 0 };
 
@@ -22,5 +23,9 @@ describe("grupy paska bocznego (PW-4)", () => {
     const items = sidebarItems(counts);
     const grouped = groupSidebarItems(items).flatMap((g) => g.items);
     expect(grouped.length).toBe(items.length);
+  });
+
+  it("grupa w pasku = grupa w główce kartki (VIEW_GROUP)", () => {
+    for (const item of sidebarItems(counts)) expect(item.group).toBe(VIEW_GROUP[item.view]);
   });
 });

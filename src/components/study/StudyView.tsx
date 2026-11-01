@@ -226,10 +226,10 @@ function StudyScreen() {
     <div className="space-y-6" data-testid="study-view">
       <WorkGuide />
       <CustomQuestionsDialog open={ownOpen} onOpenChange={setOwnOpen} prefill={prefill} />
-      {/* Na Dzienniku nauka schodzi do jednego wiersza — na budowie liczy się „+ Wpis” i lista, nie pasek opanowania. */}
+      {/* Na Dzienniku nauka schodzi do jednego wiersza — na budowie liczy się „+ Wpis” i lista, nie pasek opanowania.
+          Bez własnego tytułu: „Praca” jest w główce kartki, „Dziennik” w zakładce (plan wyglądu, Faza 1). */}
       {tab === "journal" ? (
         <header className="flex flex-wrap items-center gap-x-3 gap-y-2" data-study-header="compact">
-          <h2 className="font-display text-lg">Dziennik budowy</h2>
           <button
             type="button"
             onClick={() => setTab("board")}
@@ -238,6 +238,7 @@ function StudyScreen() {
           >
             <span className="font-mono font-semibold tabular-nums text-primary-ink" data-testid="mastery-count">{masteredCount}</span>
             <span className="font-mono tabular-nums">/{TOPICS.length}</span>
+            <span className="ml-1 text-xs">tematów</span>
           </button>
           <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
           {/* Ikony jako jedna grupa: na wąskim ekranie przechodzą do drugiego wiersza razem, nie pojedynczo. */}

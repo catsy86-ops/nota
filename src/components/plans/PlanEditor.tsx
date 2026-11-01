@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CircleDot, ClipboardList, Maximize, Minus, MousePointer2, Pencil, Plus, Redo2, Ruler, Spline, Undo2 } from "lucide-react";
+import { ArrowLeft, CircleDot, ClipboardList, Maximize, Minus, MousePointer2, Pencil, Plus, Redo2, RotateCw, Ruler, Spline, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePlanImageUrl } from "./usePlanImageUrl";
 import { checkStoredPlanImage } from "@/lib/plans/imageSniff";
@@ -60,6 +60,15 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
   const badImage = shown === "bad";
 
   const [mode, setMode] = useState<EditorMode>("select");
+  // Telefon (plan wyglądu, Faza 3): edytor na pełny ekran — dolny pasek chowa się po `data-plan-full`.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-plan-full", "");
+    return () => root.removeAttribute("data-plan-full");
+  }, []);
+  // Wysokość panelu na telefonie: mały (sam pasek sekcji), średni, duży — uchwyt nad panelem przełącza po kolei.
+  const [panelSize, setPanelSize] = useState<PanelSize>("m");
+  const [rotateHint, setRotateHint] = useState(() => showRotateHint(project.image.w, project.image.h));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<number[]>([]);
   const [draftSystem, setDraftSystem] = useState<SystemType>("cold");
@@ -356,7 +365,8 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
   const hint = picking ? "Stuknij linię rury, żeby pobrać jej kolor" : mode === "symbol" ? "Stuknij miejsce symbolu" : mode === "route" ? "Stuknij kolejne punkty rury" : mode === "calibrate" ? "Stuknij dwa końce znanego wymiaru" : "Stuknij trasę, żeby ją zaznaczyć";
 
   return (
-    <section aria-label={`Analiza: ${project.name}`} className="flex h-[calc(100dvh-8.5rem)] min-h-[28rem] flex-col overflow-hidden rounded-card border border-border/60 bg-card sm:h-[calc(100dvh-7rem)]" data-testid="plan-editor">
+    // Na telefonie `fixed inset-0`: płótno nie dzieli ekranu z główką kartki, paskiem u góry i dolnym paskiem.
+    <section aria-label={`Analiza: ${project.name}`} className="flex flex-col overflow-hidden bg-card max-sm:fixed max-sm:inset-0 max-sm:z-overlay max-sm:pt-[env(safe-area-inset-top)] max-sm:pb-[env(safe-area-inset-bottom)] sm:h-[calc(100dvh-7rem)] sm:min-h-[28rem] sm:rounded-card sm:border sm:border-border/60" data-testid="plan-editor">
       <div className="flex flex-wrap items-center gap-1 border-b border-border/60 px-1.5 py-1">
         <button type="button" onClick={onBack} className={toolBtn} aria-label="Wróć do listy analiz">
           <ArrowLeft className="h-4 w-4" aria-hidden /><span className="hidden sm:inline">Analizy</span>
@@ -405,6 +415,15 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
 
       <div className="flex min-h-0 flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="relative min-h-0 flex-1">
+          {rotateHint && (
+            <p className="absolute inset-x-2 top-2 z-raised flex items-center gap-2 rounded-card border border-border/60 bg-card/95 px-3 py-2 text-xs shadow-elevation-2 sm:hidden" role="status">
+              <RotateCw className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+              <span className="min-w-0 flex-1">Plan jest poziomy — obróć telefon, będzie większy.</span>
+              <button type="button" onClick={() => { dismissRotateHint(); setRotateHint(false); }} className={cn(toolBtn, "h-8 min-w-8 px-1")} aria-label="Zamknij podpowiedź">
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </p>
+          )}
           <PlanCanvas
             ref={canvas}
             url={url}
@@ -434,7 +453,15 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
             )}
           </PlanCanvas>
         </div>
-        <aside aria-label="Panel analizy" className="max-h-[45%] shrink-0 overflow-y-auto border-t border-border/60 lg:max-h-none lg:border-l lg:border-t-0">
+        <aside aria-label="Panel analizy" className={cn("shrink-0 overflow-y-auto border-t border-border/60 sm:max-h-[45%] lg:max-h-none lg:border-l lg:border-t-0", PANEL_HEIGHT[panelSize])}>
+          <button
+            type="button"
+            onClick={() => setPanelSize((v) => (v === "s" ? "m" : v === "m" ? "l" : "s"))}
+            className="sticky top-0 z-raised flex h-6 w-full items-center justify-center bg-card sm:hidden"
+            aria-label={`Wysokość panelu: ${PANEL_LABEL[panelSize]} — zmień`}
+          >
+            <span aria-hidden className="h-1 w-10 rounded-full bg-muted-foreground/40" />
+          </button>
           {showSummary ? <MaterialsPanel plan={plan} highlight={highlight?.key ?? null} onHighlight={(key, ids) => setHighlight(key ? { key, ids } : null)} /> : <>
           {mode === "route" && (
             <DraftSection draft={draft} mpp={mpp} system={draftSystem} onSystem={setDraftSystem} snap={snap} onSnap={setSnap}
@@ -475,6 +502,20 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
       </div>
     </section>
   );
+}
+
+type PanelSize = "s" | "m" | "l";
+const PANEL_HEIGHT: Record<PanelSize, string> = { s: "max-sm:h-[18%]", m: "max-sm:h-[45%]", l: "max-sm:h-[75%]" };
+const PANEL_LABEL: Record<PanelSize, string> = { s: "mała", m: "średnia", l: "duża" };
+
+const ROTATE_HINT_KEY = "kaczy.plans.rotateHint.v1";
+/** Raz: poziomy plan na pionowym telefonie zajmuje wąski pas — podpowiedź, żeby obrócić. */
+function showRotateHint(w: number, h: number): boolean {
+  if (typeof window === "undefined" || window.innerWidth >= 640 || window.innerHeight <= window.innerWidth || w < h * 1.3) return false;
+  try { return !localStorage.getItem(ROTATE_HINT_KEY); } catch { return false; }
+}
+function dismissRotateHint() {
+  try { localStorage.setItem(ROTATE_HINT_KEY, "1"); } catch { /* bez pamięci — podpowiedź wróci */ }
 }
 
 const rect = (b: readonly [number, number, number, number]) => ({ x: b[0], y: b[1], w: b[2], h: b[3] });

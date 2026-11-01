@@ -52,8 +52,8 @@ export function OcrSection({ run, engineCached, proposals, texts, focusId, onFoc
       ) : (
         <>
           <p className="text-xs text-muted-foreground">
-            Odczytuje średnice (Ø16, DN25, 16x2) i oznaczenia (ZW, CWU, CO, WC) na tym urządzeniu — obraz nie jest nigdzie wysyłany. Wynik to propozycje do sprawdzenia.
-            {engineCached === false && " Za pierwszym razem pobierze silnik OCR (ok. 9 MB), potem działa bez internetu."}
+            Średnice i oznaczenia (ZW, CWU, CO) odczytane na tym urządzeniu, bez wysyłania obrazu — do sprawdzenia.
+            {engineCached === false && " Pierwszy raz pobierze silnik (ok. 9 MB)."}
           </p>
           {run.state === "error" && <p role="alert" className="text-sm text-destructive-ink">{run.message}</p>}
           <Button type="button" variant={proposals.length || texts.length ? "outline" : "default"} onClick={onRun} className="pressable w-full coarse:h-11">

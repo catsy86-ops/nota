@@ -18,6 +18,6 @@ describe("kolory działów: subtelne / wyraźne (plan motywów 3.4)", () => {
 
   it("klucz w kodzie wyglądu, a grubość kreski zależy od trybu", () => {
     expect(APPEARANCE_KEYS).toContain("kaczy.sectionColors.v1");
-    expect(css).toContain('html[data-sections="bold"] :is(.section-title, .app-title)::after { height: 3px; opacity: 1; }');
+    expect(css).toContain('html[data-sections="bold"] .section-title::after { height: 3px; opacity: 1; }');
   });
 });

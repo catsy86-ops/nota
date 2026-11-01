@@ -16,10 +16,7 @@ import { ImportExportMenu } from "@/components/ImportExportMenu";
 import { NotkiLogo } from "@/components/NotkiLogo";
 import { NMonogramLogo } from "@/components/NMonogramLogo";
 import type { View } from "@/hooks/useFilteredNotes";
-import { pluralPl } from "@/lib/plural";
-import { RollingNumber } from "@/components/RollingNumber";
 import { useHideOnScroll } from "@/hooks/useHideOnScroll";
-import { isTitleBlockView } from "@/components/ViewTitle";
 import { useLongPress } from "@/hooks/useLongPress";
 import { openQuickPresets } from "@/lib/quickPresets";
 
@@ -32,7 +29,6 @@ interface AppHeaderProps {
   view: View;
   activeFolder: string | null;
   activeLabel: string | null;
-  displayCount: number;
   search: string;
   onSearchChange: (v: string) => void;
   onImport: () => void;
@@ -44,7 +40,7 @@ interface AppHeaderProps {
 
 export function AppHeader({
   selectionMode, sidebarOpen, onToggleSidebar, dark, onToggleTheme,
-  view, activeFolder, activeLabel, displayCount, search, onSearchChange, onImport, onOpenSync, onOpenPalette,
+  view, activeFolder, activeLabel, search, onSearchChange, onImport, onOpenSync, onOpenPalette,
 }: AppHeaderProps) {
   // Przytrzymanie przełącznika jasności → szybkie zestawy wyglądu (plan motywów 1.3).
   const themePress = useLongPress(openQuickPresets);
@@ -112,9 +108,9 @@ export function AppHeader({
           )}
           {!sidebarOpen && <span aria-hidden className="hidden sm:block h-5 w-px bg-border" />}
           <div className={!sidebarOpen && view === "notes" ? "hidden sm:block" : "min-w-0"}>
-            <h1 className={cn("app-title truncate text-lg font-display leading-tight tracking-tight text-foreground", isTitleBlockView(view) && "hidden")}>
-              {/* Nazwa z jednej tabeli (`VIEW_LABEL`) — nowy dział nie zgubi tytułu. */}
-              {view !== "folder" && view !== "label" && VIEW_LABEL[view]}
+            {/* Tytuł działu jest w główce kartki (h1 na stronie). Tu tylko mała kopia, gdy główka zniknie
+                pod paskiem (`data-head-out` z `ViewTitle`) — ukryta dla czytnika, żeby h1 był jeden. */}
+            <p aria-hidden className="app-title truncate text-lg font-display leading-tight tracking-tight text-foreground opacity-0 transition-opacity duration-base in-data-head-out:opacity-100 motion-reduce:transition-none">
               {view === "folder" && (
                 <span className="flex items-center gap-1.5">
                   <FolderOpen className="w-4 h-4 text-primary-ink" />
@@ -127,26 +123,23 @@ export function AppHeader({
                   {activeLabel}
                 </span>
               )}
-            </h1>
-            {!isAppView(view) && (
-              <p className="text-xs text-muted-foreground hidden sm:block">
-                <RollingNumber value={displayCount} /> {pluralPl(displayCount, ["notatka", "notatki", "notatek"])}
-              </p>
-            )}
+              {view !== "folder" && view !== "label" && VIEW_LABEL[view]}
+            </p>
           </div>
         </div>
 
         {/* Grafik i Kalendarz nie przeszukują notatek — pole tylko by udawało, że działa. */}
         {viewSearches && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
-        {!viewSearches && onOpenPalette && (
-          <IconButton asChild className="sm:hidden">
-            <motion.button onClick={onOpenPalette} aria-label="Szukaj i polecenia">
-              <Search className="w-5 h-5" />
-            </motion.button>
-          </IconButton>
-        )}
 
         <div className="flex items-center gap-1">
+          {/* Szukanie na telefonie w grupie ikon po prawej, nie samotnie na środku paska. */}
+          {!viewSearches && onOpenPalette && (
+            <IconButton asChild className="sm:hidden">
+              <motion.button onClick={onOpenPalette} aria-label="Szukaj i polecenia">
+                <Search className="w-5 h-5" />
+              </motion.button>
+            </IconButton>
+          )}
           {!sidebarOpen && (
             <IconButton asChild className="hidden sm:inline-flex">
               <motion.button

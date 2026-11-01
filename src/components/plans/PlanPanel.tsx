@@ -67,7 +67,7 @@ export function ScaleSection({ mode, calibration, calDraft, mpp, onStart, onSave
     <section className={sectionCls} aria-label="Skala" data-testid="plan-scale">
       <h3 className={h3}>Skala</h3>
       {mpp === null ? (
-        <p className="text-sm text-muted-foreground">Bez skali — długości są w pikselach. Ustaw skalę z jednego znanego wymiaru, żeby liczyć metry.</p>
+        <p className="text-sm text-muted-foreground">Bez skali długości są w pikselach — ustaw ją z jednego znanego wymiaru.</p>
       ) : (
         <p className="text-sm"><span className="font-mono tabular-nums">1 m = {fmt(1 / mpp, 1)} px</span><span className="text-muted-foreground"> · z odcinka {fmt(calibration!.meters, 3)} m</span></p>
       )}
@@ -112,7 +112,7 @@ export function DraftSection({ draft, mpp, system, onSystem, snap, onSnap, onUnd
         <Button type="button" onClick={onFinish} disabled={n < 2} className="pressable coarse:h-11">Zakończ trasę</Button>
       </div>
       <Button type="button" variant="ghost" onClick={onCancel} className="pressable w-full coarse:h-11">Anuluj rysowanie</Button>
-      <p className="text-xs text-muted-foreground">Klawiatura: spacja dodaje punkt w celowniku, Backspace cofa punkt, Enter kończy, Esc anuluje.</p>
+      <p className="text-xs text-muted-foreground coarse:hidden">Klawiatura: spacja dodaje punkt w celowniku, Backspace cofa punkt, Enter kończy, Esc anuluje.</p>
     </section>
   );
 }

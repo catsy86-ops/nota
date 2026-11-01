@@ -67,11 +67,8 @@ export function CwiczeniaView() {
   const phoneHide = (id: CwiczeniaTab) => (tab === id ? undefined : "max-sm:hidden");
 
   return (
-    <section aria-labelledby="cwiczenia-title" className="mx-auto w-full max-w-2xl px-4 pb-32 pt-6 desk:pt-8">
-      <header className="mb-5">
-        <p className="text-xs font-display uppercase tracking-[0.18em] text-muted-foreground">Prywatne</p>
-        <h1 id="cwiczenia-title" className="font-display text-3xl font-bold tracking-tight">Ćwiczenia</h1>
-      </header>
+    // Tytuł i grupa są w główce kartki (`ViewTitle`).
+    <section aria-label="Ćwiczenia" className="mx-auto w-full max-w-2xl pb-32">
 
       <div role="group" aria-label="Dział Ćwiczeń" className="mb-4 flex gap-1 rounded-card bg-muted p-0.5 sm:hidden">
         {CWICZENIA_TABS.map((t) => (

@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 test("telefon: przytrzymanie „Tryb ciemny” w Więcej → zestaw Noc, Cofnij @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   const tile = page.getByRole("button", { name: "Tryb ciemny" });
   await tile.hover(); // przewija arkusz do kafelka i stawia kursor na nim
   await page.mouse.down();

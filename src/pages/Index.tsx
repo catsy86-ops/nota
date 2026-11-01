@@ -54,7 +54,7 @@ import { AddNoteBar, type ComposerAction, type ComposerExtras } from "@/componen
 import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
-import { ViewTitle, isTitleBlockView } from "@/components/ViewTitle";
+import { ViewTitle } from "@/components/ViewTitle";
 import { NoteGrid } from "@/components/NoteGrid";
 import { BoardColumn } from "@/components/BoardColumn";
 import { NoteBoard } from "@/components/NoteBoard";
@@ -697,7 +697,6 @@ const Index = () => {
           view={view}
           activeFolder={activeFolder}
           activeLabel={activeLabel}
-          displayCount={displayNotes.length}
           search={search}
           onSearchChange={setSearch}
           onImport={handleImport}
@@ -707,7 +706,15 @@ const Index = () => {
         {/* Dziś na telefonie: ciaśniejsze odstępy między kartami, mniej przewijania na 390 px. */}
         <main ref={mainRef} className={`flex-1 max-w-352 mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col pb-safe ${view === "today" ? "gap-4 sm:gap-10" : "gap-8 sm:gap-10"}`}>
           <OlderDeviceBanner onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }} />
-          {isTitleBlockView(view) && <ViewTitle view={view} count={view === "today" ? displayNotes.length : undefined} />}
+          {/* Główka kartki w każdym dziale (plan wyglądu, Faza 1); Długi i Ćwiczenia mają węższą kolumnę. */}
+          {view !== "widget" && (
+            <ViewTitle
+              view={view}
+              title={view === "folder" ? folders.find((f) => f.id === activeFolder)?.name || "Folder" : view === "label" ? `#${activeLabel}` : undefined}
+              count={isAppView(view) || view === "reminders" ? undefined : displayNotes.length}
+              className={view === "debts" || view === "cwiczenia" ? "mx-auto max-w-2xl" : undefined}
+            />
+          )}
           {!isAppView(view) && (
             <div data-view-static className="sm:hidden">
               <SearchBar value={search} onChange={setSearch} />

@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }) => {
 test("wczytanie kodu stosuje wygląd bez przeładowania i cofa się @mobile", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => { (window as unknown as { __mark: number }).__mark = 42; });
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("button", { name: "Ustawienia" }).click();
   await page.getByRole("tab", { name: "Wygląd" }).click();
   await page.getByLabel("Kod wyglądu").fill(NEON_CODE);

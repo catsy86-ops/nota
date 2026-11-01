@@ -2,7 +2,7 @@
 import { openQuickPresets } from "@/lib/quickPresets";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { m as motion, LayoutGroup } from "framer-motion";
-import { Ruler, StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Inbox, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
+import { Ruler, StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, FolderOpen, Tag, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Inbox, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { openJournalSheet } from "@/lib/study/entrySheet";
@@ -60,6 +60,21 @@ const SLOT_META: Record<BottomSlotView, { label: string; Icon: typeof Bell }> = 
 };
 
 // Prawa pozycja (2.3): wybór z Ustawień, domyślnie Terminy.
+
+/** Działy z arkusza „Więcej”: piąty przycisk pokazuje bieżący z nich (plan wyglądu, Faza 6, D-W2). */
+const MORE_META: Partial<Record<View, { label: string; Icon: typeof Bell }>> = {
+  inbox: { label: "Skrzynka", Icon: Inbox },
+  archive: { label: "Archiwum", Icon: Archive },
+  trash: { label: "Kosz", Icon: Trash },
+  calendar: { label: "Kalendarz", Icon: CalendarRange },
+  shifts: { label: "Grafik", Icon: BriefcaseBusiness },
+  study: { label: "Praca", Icon: HardHat },
+  plans: { label: "Plany", Icon: Ruler },
+  debts: { label: "Długi", Icon: HandCoins },
+  cwiczenia: { label: "Ćwiczenia", Icon: Dumbbell },
+  folder: { label: "Folder", Icon: FolderOpen },
+  label: { label: "Etykieta", Icon: Tag },
+};
 
 export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, onOpenActions, trashCount = 0, inboxCount = 0, dark = false, onToggleTheme, onImport, onGoFilter, search = "" }: BottomNavProps) {
   const { filters } = useSavedFilters();
@@ -142,7 +157,9 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
   };
   // Szósta komórka (lupa) tylko tam, gdzie nie ma pola szukania; FAB zostaje w środku paska wtedy przesunięty o pół komórki.
   const showPaletteSlot = !viewHasSearch(view) && !!onOpenPalette;
-  const isMoreActive = ["inbox", "archive", "trash", "calendar", "shifts", "study", "debts", "cwiczenia", "plans", "folder", "label"].includes(view);
+  const isMoreActive = view in MORE_META;
+  // Dział z „Więcej”, którego nie ma na pasku (np. Kalendarz ustawiony jako prawa pozycja już tam jest).
+  const moreCurrent = isMoreActive && view !== bottomSlot ? MORE_META[view] : undefined;
 
   return (
     <>
@@ -150,7 +167,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={spring.soft}
-        className="fixed bottom-0 inset-x-0 z-overlay desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible"
+        className="fixed bottom-0 inset-x-0 z-overlay desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible max-sm:in-data-plan-full:hidden"
       >
         <LayoutGroup id="bottom-nav">
           <ul className={cn("relative grid items-end h-[64px] max-w-md mx-auto px-2", showPaletteSlot ? "grid-cols-6" : "grid-cols-5")}>
@@ -222,8 +239,10 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
                 <Search className="w-5 h-5" />
               </NavItem>
             )}
-            <NavItem active={isMoreActive || moreOpen} current={false} label="Więcej" onClick={() => setMoreOpen(true)} buttonProps={{ "aria-haspopup": "dialog", "aria-expanded": moreOpen }}>
-              <Ellipsis className="w-5 h-5" />
+            {/* W dziale z „Więcej” przycisk mówi, gdzie jesteś („Plany”), a stuknięcie dalej otwiera arkusz. */}
+            <NavItem active={isMoreActive || moreOpen} current={false} label={moreCurrent?.label ?? "Więcej"} onClick={() => setMoreOpen(true)}
+              buttonProps={{ "aria-haspopup": "dialog", "aria-expanded": moreOpen, "aria-label": moreCurrent ? `Więcej: ${moreCurrent.label}` : undefined }}>
+              {moreCurrent ? <moreCurrent.Icon className="w-5 h-5" /> : <Ellipsis className="w-5 h-5" />}
             </NavItem>
           </ul>
         </LayoutGroup>

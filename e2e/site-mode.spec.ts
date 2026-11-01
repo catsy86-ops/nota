@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 
 test("tryb budowa: większy tekst, cele ≥ 52 px, gładkie tło, „Cofnij” 8 s @mobile", async ({ page }) => {
   const html = page.locator("html");
-  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("button", { name: "Ustawienia" }).last().click();
   await page.getByRole("tab", { name: "Wygląd" }).click();
   await page.getByRole("radiogroup", { name: "Tryb budowa" }).getByRole("radio", { name: "Włączony" }).click();
