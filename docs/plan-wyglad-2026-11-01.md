@@ -49,7 +49,11 @@ Jeden nagłówek strony dla każdego działu, jak nagłówek kartki w zeszycie:
 
 Kolejność: 0 → 1 → 2 (fundament wspólny), potem 3–7 niezależnie, 8 na końcu. Budżet paczki bez zmian (żadnych nowych zależności; arkusz od dołu budujemy na istniejącym `Sheet` z Radix Dialog, bez `vaul`).
 
-## Decyzje do podjęcia
+## Status (2026-11-01)
+
+Decyzje D-W1…D-W5 przyjęte z rekomendacjami. Fazy 0–7 zrobione (opis w `opis.md`: „Główka kartki”, „Nagłówki działów”, „Wygląd: plan dopracowania 2026-11-01, Fazy 3–7”). Zostaje Faza 8 w części ręcznej: QA na telefonie (dotyk, arkusz panelu Planów, obrót) i decyzja o domyślnym zwinięciu „Osobiste” w pasku bocznym.
+
+## Decyzje (przyjęte)
 
 | # | Pytanie | Rekomendacja |
 |---|---|---|

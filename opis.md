@@ -1319,14 +1319,15 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Testy:** `e2e/bundle.spec.ts`: 6/6.
 - **Commit:** edec40f, 2026-10-19.
 
-## Dziś, Praca, Grafik — blok tytułowy widoku (B4, 2026-10-19)
+## Główka kartki — jeden nagłówek strony we wszystkich działach (plan wyglądu, Fazy 1–2, 2026-11-01)
 
-- **Co robi:** na Dziś, Praca i Grafik nad treścią stoi tytuł h1 (font display, 3xl) i wiersz mono z dzisiejszą datą. Na Dziś dochodzi licznik notatek („2 notatki”). Pasek nagłówka na tych widokach nie pokazuje już nazwy widoku, żeby nie powielać tytułu.
-- **Gdzie jest:** `src/components/ViewTitle.tsx` (`ViewTitle`, `isTitleBlockView`, lista `TITLE_BLOCK_VIEWS`), `src/pages/Index.tsx` (pierwsze dziecko `<main>`), `src/components/AppHeader.tsx` (h1 z klasą `hidden` na tych widokach).
-- **Jak działa:** na tych trzech widokach jedyny widoczny h1 to blok tytułowy. Nagłówek go ukrywa (`hidden` usuwa też z drzewa dostępności), więc czytnik ekranu nie widzi dwóch nagłówków poziomu 1.
-- **Decyzja:** B4 z planu wizualnego (plan `plan-wizualny-2026-10-18.md`, usunięty — patrz „Dokumenty usunięte”) zrobiony jako dom tytułu z datą. Nie dodano innych widoków.
-- **Testy:** w Chrome (390 px): na /dzis, /praca, /grafik jeden widoczny h1 z właściwą nazwą i wiersz z datą. E2E `routes`, `shifts`: 32/33 (jeden test offline Grafiku niestabilny pod obciążeniem, przechodzi osobno).
-- **Commit:** dada7f1, 2026-10-19.
+- **Co robi.** Każdy dział (poza widżetem) zaczyna się tak samo: linijka mono nad tytułem (grupa z paska bocznego — Codziennie, Praca, Osobiste; folder i etykieta; data w Kalendarzu, Grafiku i Pracy; liczba notatek w widokach list) i tytuł z kreską pióra. Pasek u góry nie pokazuje tytułu, dopóki główka jest na ekranie; po przewinięciu pojawia się tam mała kopia. Ikona szukania na telefonie stoi w grupie ikon po prawej. Długi i Ćwiczenia nie mają już własnego nagłówka („PRYWATNE” + drugi h1), Praca nie ma trzeciego tytułu „Dziennik budowy” (licznik „0/18 tematów” zostaje).
+- **Gdzie jest.** `src/components/ViewTitle.tsx` (`ViewTitle`, `kickerGroup`, `DATED_VIEWS`); grupy: `VIEW_GROUP` i typ `ViewGroup` w `src/lib/viewMeta.ts`, `SidebarGroupKey = ViewGroup` w `src/components/sidebar/sidebarItems.ts`; wpięcie w `src/pages/Index.tsx` (pierwsze dziecko `<main>`); pasek: `src/components/AppHeader.tsx` (`p.app-title` z `aria-hidden`); `DebtsView.tsx`, `CwiczeniaView.tsx`, `StudyView.tsx`.
+- **Jak działa.** `ViewTitle` to jedyny h1 widoku. `IntersectionObserver` (margines −72 px = pasek) ustawia `data-head-out` na `<html>`, gdy główka schowa się pod paskiem; mały tytuł w pasku ma `opacity-0 in-data-head-out:opacity-100` — bez stanu w Reakcie. Grupa o nazwie działu jest pomijana („PRACA” nad „Praca”). Dziś nie ma daty w linijce: pokazuje ją ozdoba „1 lis” i karta dnia (trzecia kopia łamała linijkę na 390 px). Długi i Ćwiczenia: główka w tej samej kolumnie `max-w-2xl` co treść; sekcje bez własnego `px-4` (był podwójny margines 32 px na telefonie).
+- **Decyzje (D-W1, D-W5 z `docs/plan-wyglad-2026-11-01.md`).** Tytuł na stronie, w pasku tylko po przewinięciu; grupa wszędzie, data tylko tam, gdzie dzień ma znaczenie.
+- **Ograniczenia.** Pasek chowa się przy przewijaniu w dół, więc mały tytuł widać po ruchu w górę. Liczba notatek liczy widoczne notatki (`displayNotes`), nie terminy w Terminach.
+- **Testy.** `src/components/sidebar/sidebarItems.test.ts` (grupa w pasku = `VIEW_GROUP`), e2e szukające h1 działu (`routes`, `mobile`, `hidden-views`, `reminders-calendar`), `e2e/a11y.spec.ts`, zrzuty `e2e/visual.spec.ts`.
+- **Commit.** `1532aec` (2026-11-01).
 
 ## Przypomnienia — stan aktualny (terminy, serie, odłożenie, dymki, widok Terminy)
 
@@ -3911,14 +3912,14 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy.** Vitest: pełny zestaw. E2E: `onboarding`, `guides`, `appearance-quick`, `quick-presets`, `appearance-presets`, `a11y`, `mobile`, `fab-sheets-a11y`, `study`, `journal-menu`. Zrzuty samouczka i powiadomienia w Odblasku, Tablicy i Zeszycie sprawdzone ręcznie; promień powiadomienia sprawdzony obliczonym stylem.
 - **Commit.** `6e0ce3b` (2026-10-30).
 
-## Nagłówki działów: podkreślenie piórem w kolorze działu (Fala 2, 2.4 planu motywów, 2026-10-30)
+## Nagłówki działów: podkreślenie piórem w kolorze działu (2.4 planu motywów; plan wyglądu, Faza 2)
 
-- **Co robi.** Tytuł każdego działu ma pod sobą kreskę w jego kolorze: Notatki — kolor marki, Grafik — akcent, Praca — kolor ostrzeżenia, Kalendarz — kolor sukcesu. Kreska dorysowuje się raz, przy wejściu w dział. Na Dziś używa koloru Notatek.
-- **Gdzie.** `src/components/ViewTitle.tsx` (klasa `section-title` na `h1` Dziś, Pracy i Grafiku); `src/index.css`: `.section-title::after` i kolory po `html[data-view]`, oraz `.app-title::after` dla nagłówka widoku w `AppHeader` (Notatki, Kalendarz i pozostałe, bez bloku tytułowego).
-- **Jak działa.** Kreska to pseudoelement z `transform: scaleX(0)`, który animacją `section-rule` rośnie do 1 po 0,05 s. Kolor bierze z `--sec-*` (tokeny działów już istnieją w `index.css`). Zmiana widoku zmienia `data-view` i kolor, a animacja startuje przy montowaniu nagłówka.
-- **Ograniczenia.** `.app-title` ma `overflow: hidden` (klasa `truncate`), więc jego kreska siedzi na samym tytule, a nie na całym pudełku. Przy bardzo długich nazwach widoku kreska jest tej samej długości co obcięty tekst. Kreska nie jest w tekście, więc czytnik ekranu jej nie zgłasza (to tylko ozdoba).
-- **Testy.** Vitest: pełny zestaw. E2E: `a11y`, `mobile`, `workday`, `study`, `shifts`, `today-site-card`, `brand-notki`, `touch-targets`. Kreska sprawdzona zrzutem nagłówka Notatek i tytułu Pracy oraz obliczonym stylem pseudoelementu.
-- **Commit.** `2d03a42` (2026-10-30).
+- **Co robi.** Tytuł działu w główce kartki ma pod sobą kreskę w kolorze działu: Notatki i Dziś — kolor marki, Grafik — akcent, Praca — kolor ostrzeżenia, Kalendarz — kolor sukcesu. Kreska dorysowuje się raz, przy wejściu w dział, i ma długość tytułu. Nigdzie indziej jej nie ma: ani w małym tytule paska, ani pod nagłówkami kart i sekcji (Faza 2: akcent tylko tam, gdzie znaczy „tu jesteś”).
+- **Gdzie.** `src/components/ViewTitle.tsx` (`section-title` i `justify-self-start` na h1); `src/index.css`: `.section-title::after`, kolory po `html[data-view]`, grubość po `data-sections`; `src/styles/skins/signatures.css`: pióro Zeszytu tylko na `h1` (wcześniej też każdy `h2`).
+- **Jak działa.** Kreska to pseudoelement z `transform: scaleX(0)`, który animacją (`section-rule`, w Zeszycie `zeszyt-pen`) rośnie do 1. Kolor z `--sec-*`. Przy ograniczonym ruchu od razu pełna.
+- **Ograniczenia.** Kreska jest ozdobą, czytnik ekranu jej nie zgłasza. Inne style mogą mieć własne sygnatury nagłówków (np. Tablica) — Faza 2 zmieniła tylko Zeszyt.
+- **Testy.** `src/lib/sectionColors.test.ts`, `e2e/skin-signatures.spec.ts` (pióro na pierwszym h1), zrzuty `e2e/visual.spec.ts`.
+- **Commit.** `2d03a42` (2026-10-30), Faza 2: `1532aec` (2026-11-01).
 
 ## Jasne schematy: Matryca i Plan (Fala 2, 2.5 planu motywów, 2026-10-30)
 
@@ -4113,3 +4114,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Pułapka.** `npm audit fix --omit=dev` usuwa devDependencies z `node_modules` (w tym dane OCR z `public/ocr`) — po nim `npm install`. Zostają podatności tylko w narzędziach builda (`vite-plugin-pwa` → `workbox-build` → `deepmerge`, `glob`, `fast-uri`); poprawka wymaga zmiany głównej wersji `vite-plugin-pwa`, nie trafia do aplikacji.
 - **Testy.** `src/lib/noteSchema.test.ts`, `src/lib/noteSchema.props.test.ts`, cały Vitest (2859), `e2e/bundle.spec.ts`, `e2e/search-backup.spec.ts`, `e2e/import-external.spec.ts`.
 - **Commit.** `e364a1a` (dompurify), `e6fac15` (react-router), `04e1ba2` (zod) (2026-11-01).
+
+## Wygląd: plan dopracowania 2026-11-01, Fazy 3–7
+
+Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomendacjami). Fazy 1–2 (główka kartki, pióro tylko pod tytułem) — w sekcjach „Główka kartki” i „Nagłówki działów”.
+
+- **Plany — edytor na telefonie (Faza 3, D-W3).** `src/components/plans/PlanEditor.tsx`: poniżej `sm` edytor jest `fixed inset-0 z-overlay` z marginesami `safe-area`; po zamontowaniu ustawia `data-plan-full` na `<html>`, a dolny pasek (`BottomNav.tsx`, `max-sm:in-data-plan-full:hidden`) znika. Panel ma uchwyt (`PanelSize` `s`/`m`/`l` → 18/45/75% wysokości, `PANEL_HEIGHT`), stuknięcie przełącza po kolei. Poziomy plan (szerokość > 1,3 × wysokość) na pionowym telefonie pokazuje raz podpowiedź „obróć telefon” (`showRotateHint`, klucz `kaczy.plans.rotateHint.v1`). Od `sm` wzwyż edytor jak dotąd (karta z wysokością okna).
+- **Komunikaty (Faza 4).** Odznaki już czekały na zamknięcie okien i innych toastów (`useAchievementToasts`), toasty stały nad dolnym paskiem (`index.css`, 88 px). Nowe: bierny wskaźnik „Zapisano” (`OfflineStatus.tsx`) znika w pełnoekranowym edytorze Planów na telefonie — leżał na panelu; błąd zapisu i offline zostają.
+- **Tekst i gęstość (Faza 5, D-W4).** Panel Planów: opisy OCR, wykrywania tras i skali skrócone do jednego zdania (`OcrPanel.tsx`, `DetectPanel.tsx`, `PlanPanel.tsx`); podpowiedź o klawiszach przy rysowaniu trasy ukryta na dotyku (`coarse:hidden`). Długi: etykiety przełącznika rodzaju bez łamania (`whitespace-nowrap`, „Pożyczyłem od” w jednej linii). Kalendarz: pole „Szukaj terminów” w `text-sm`. Podpowiedź Grafiku bez zmian (ma wersję dotykową i „Rozumiem”).
+- **Dolny pasek (Faza 6, D-W2).** `BottomNav.tsx`, `MORE_META`: w dziale z „Więcej”, którego nie ma na pasku, piąty przycisk pokazuje jego ikonę i nazwę („Plany”), nazwa dostępna „Więcej: Plany”; stuknięcie dalej otwiera arkusz. Testy klikają go wzorcem `/^Więcej(: .+)?$/` (nie łapie „Więcej opcji”).
+- **Komputer (Faza 7).** Pusty stan Planów (`PlansList.tsx`, `EMPTY_STEPS`) to trzy kroki: zrzut, skala, trasy — w jednej kolumnie na telefonie, w trzech na komputerze. Pasek boczny przy 900 px nadal się przewija (grupy można zwijać); domyślne zwinięcie „Osobiste” czeka na decyzję.
+- **Testy.** `e2e/plans.spec.ts`, `e2e/mobile.spec.ts`, `e2e/a11y.spec.ts`, zrzuty `e2e/visual.spec.ts` (Faza 0: wszystkie działy i edytor Planów).
+- **Commit.** `1532aec` (2026-11-01).
