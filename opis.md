@@ -4092,7 +4092,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
   - **D2 — nieusuwalne encje.** `yPlans.ts` przyjmuje tylko kanoniczne klucze (`p␁pid`, `c␁pid`, `k␁pid`, `r|t|s|i␁pid␁id`), w odczycie i przy scalaniu.
   - **D3 — tysiące obcych analiz.** Limit 50 analiz (ostatnio zmieniane) obowiązuje przed dołączaniem encji przy odczycie i przy scalaniu kopii.
   - **D4 — zepsuty OCR po brakującym pliku.** `/ocr/*` bez pliku to 404 (`netlify.toml`, `vercel.json`, przed fallbackiem SPA), a reguła `ocr-engine` ma wtyczkę `cacheWillUpdate`, która nie zapisze odpowiedzi HTML.
-- **Odłożone (informacyjne z przeglądu).** CSP jest tylko `Report-Only`, a `connect-src https:` niczego nie zawęża — przy włączaniu wymuszania zawęzić do `'self'` i adresu przekaźnika. Pełna kopia JSON jest niezaszyfrowana i zawiera kopie robocze (a w budżecie też oryginały) planów klientów — warto to napisać w oknie kopii albo dać opcję „bez obrazów planów”. `npm audit`: `dompurify` (przez `jspdf`), `zod`, `react-router` — osobne zadanie.
+- **Odłożone (informacyjne z przeglądu).** CSP jest tylko `Report-Only`, a `connect-src https:` niczego nie zawęża — przy włączaniu wymuszania zawęzić do `'self'` i adresu przekaźnika. Pełna kopia JSON jest niezaszyfrowana i zawiera kopie robocze (a w budżecie też oryginały) planów klientów — warto to napisać w oknie kopii albo dać opcję „bez obrazów planów”. `npm audit` (dompurify, zod, react-router) — zrobione, patrz „Zależności: poprawki z npm audit”.
 - **Dostępność.** `/plany` w `e2e/a11y.spec.ts` (axe WCAG 2.2 AA, wszystkie style, oba schematy, 390 i 1440 px): 40/40.
 - **Przy okazji.** `src/lib/shifts/csvShifts.ts`: dosłowny znak BOM w wyrażeniu regularnym (błąd ESLint `no-irregular-whitespace` z 28.10) zamieniony na `\uFEFF`.
 - **Testy.** Vitest: `src/lib/plans/security.test.ts` (W1, W2 z bombą 50 000 px i obrotem EXIF, 40 MP, D1 — 10 000 pomieszanych odcinków w < 1,5 s), `yPlans.test.ts` (D2, D3 w odczycie i scalaniu). E2E: `e2e/plans.spec.ts` (10 testów), `e2e/bundle.spec.ts`, `e2e/a11y.spec.ts` („plany”).
@@ -4104,3 +4104,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Gdzie.** `src/components/calendar/dayCellStyles.ts` (`holidayNameClass`), `src/components/calendar/WeekStrip.tsx`.
 - **Pułapka.** Oba błędy zależały od daty: wychodzą tylko w miesiącu ze świętem w siatce i gdy dziś jest sobota albo niedziela. `e2e/a11y.spec.ts` łapie je dopiero w taki dzień.
 - **Testy.** `e2e/a11y.spec.ts` (1440 i 390 px, wszystkie style) zielone 2026-11-01.
+
+## Zależności: poprawki z npm audit (2026-11-01)
+
+- **Co.** `npm audit --omit=dev` nie zgłasza podatności. Podniesione: `dompurify` 3.4.17 (przez `jspdf`), `react-router-dom` 7.18.4 (z 6.30), `zod` 4.6.7 (z 3.25).
+- **zod przez `zod/mini`.** Jedyny użytkownik to `src/lib/noteSchema.ts` (`noteSchema`, `folderSchema`, `fullBackupSchema`), ładowany leniwie przy imporcie i przywracaniu kopii (`src/lib/exportNotes.ts`, `src/lib/import/commit.ts`). Klasyczne API zod 4 dawało chunk `noteSchema-*` 93 KB i precache ponad próg 4,0 MiB z `e2e/bundle.spec.ts`. API funkcyjne `zod/mini` (`z.catch(z.optional(...), undefined)`, `.check(z.maxLength(...))`, `z.pipe(z.unknown(), z.transform(...))`) daje 30 KB, mniej niż zod 3. Typy sprawdza `satisfies z.ZodMiniType<Note, unknown>`.
+- **Zachowanie bez zmian.** Brakujące pole opcjonalne nie pojawia się w wyniku, złe pole dostaje wartość z `catch`. Zod 4 zawsze odrzuca `Infinity`, więc `.finite()` znikło bez skutku. `z.record` wymaga typu klucza.
+- **Pułapka.** `npm audit fix --omit=dev` usuwa devDependencies z `node_modules` (w tym dane OCR z `public/ocr`) — po nim `npm install`. Zostają podatności tylko w narzędziach builda (`vite-plugin-pwa` → `workbox-build` → `deepmerge`, `glob`, `fast-uri`); poprawka wymaga zmiany głównej wersji `vite-plugin-pwa`, nie trafia do aplikacji.
+- **Testy.** `src/lib/noteSchema.test.ts`, `src/lib/noteSchema.props.test.ts`, cały Vitest (2859), `e2e/bundle.spec.ts`, `e2e/search-backup.spec.ts`, `e2e/import-external.spec.ts`.
+- **Commit.** `e364a1a` (dompurify), `e6fac15` (react-router), `04e1ba2` (zod) (2026-11-01).
