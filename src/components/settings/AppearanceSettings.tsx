@@ -177,7 +177,8 @@ export function AppearanceSettings() {
           więc pasek wchodzi w ten margines (`-top-3`, `-mt-3` + `pt-4.5`) — inaczej nad nim prześwituje tekst. */}
       {/* Podgląd na żywo (1.2) przyklejony razem z paskiem grup: widać skutek każdej zmiany niżej. */}
       <div className="sticky -top-3 z-sticky -mx-1 -mt-3 space-y-2 bg-background px-1 pb-2 pt-4.5">
-      <nav aria-label="Części Wyglądu" className="flex gap-1.5 overflow-x-auto">
+      {/* Bez przewijania w bok: na wąskim telefonie (320 px) części zawijają się do drugiego rzędu, nic nie ucieka za krawędź. */}
+      <nav aria-label="Części Wyglądu" className="flex flex-wrap gap-1.5">
         {APPEARANCE_GROUPS.map((g) => (
           <a
             key={g.id}
@@ -187,7 +188,7 @@ export function AppearanceSettings() {
               if (g.id === "wyglad-zaawansowane" && !advanced) { setAdvanced(true); window.requestAnimationFrame(() => jumpTo(g.id)); }
               else jumpTo(g.id);
             }}
-            className="pressable inline-flex shrink-0 items-center rounded-full border border-border/60 bg-muted/40 px-3 py-1.5 coarse:min-h-11 coarse:px-4 text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="pressable inline-flex items-center justify-center whitespace-nowrap rounded-full border border-border/60 bg-muted/40 px-2.5 py-1.5 coarse:min-h-11 sm:px-3 sm:coarse:px-4 text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >{g.label}</a>
         ))}
       </nav>
