@@ -4072,7 +4072,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Kolano = wierzchołek trasy, w którym kierunek zmienia się o co najmniej 30° (kolano 90° ma najwyższą pewność). Trójnik = koniec trasy leżący na odcinku INNEJ trasy tej samej instalacji, ale nie przy jej końcu (to przedłużenie). Przecięcia tras i trasy różnych instalacji nie dają trójników — zgodnie z wymaganiem „kolana i trójniki nie z przypadkowych przecięć”. Miejsce, przy którym już stoi symbol, nie jest proponowane drugi raz. Symbole z propozycji: `manual: false`, `verified: false`.
 - **Ograniczenia.** Nie ma rozpoznawania symboli z obrazu (tylko z geometrii tras i ręcznie) — wzorce symboli DWG są różne w każdym biurze projektowym. Symbolu nie da się przeciągnąć (usuń i postaw ponownie). Propozycje kształtek liczą się z zapisanych tras, nie z propozycji z obrazu.
 - **Testy.** Vitest: `src/lib/plans/fittings.test.ts` (kąt, kolano 90° bez łagodnego łuku, trójnik tylko w tej samej instalacji i nie przy końcu, przecięcie bez trójnika, istniejący symbol, zaznaczanie). E2E: `e2e/plans.spec.ts` — „faza 6” (postawienie, zaznaczenie stuknięciem, zmiana rodzaju, usunięcie i „Cofnij”, kolano z trasy L dodane do sprawdzenia).
-- **Commit.** (uzupełnić)
+- **Commit.** `f3986b6` (2026-11-01).
 
 ## Kalendarz i Grafik: kontrast nazw świąt i zaznaczonego weekendu (2026-11-01)
 
