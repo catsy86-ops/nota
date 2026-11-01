@@ -240,26 +240,29 @@ function StudyScreen() {
             <span className="font-mono tabular-nums">/{TOPICS.length}</span>
           </button>
           <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
-          <HeightsButton variant="icon" className="ml-auto" />
-          <CalculatorsButton variant="icon" />
-          <button
-            type="button"
-            onClick={() => setStatsOpen(true)}
-            aria-label="Statystyki"
-            title="Statystyki"
-            className="pressable inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
-          >
-            <ChartColumn className="h-4 w-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => openGuide("work")}
-            aria-label="Przewodnik po Pracy"
-            title="Przewodnik po Pracy"
-            className="pressable inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
-          >
-            <CircleQuestionMark className="h-4 w-4" aria-hidden />
-          </button>
+          {/* Ikony jako jedna grupa: na wąskim ekranie przechodzą do drugiego wiersza razem, nie pojedynczo. */}
+          <div className="ml-auto flex items-center gap-1.5">
+            <HeightsButton variant="icon" />
+            <CalculatorsButton variant="icon" />
+            <button
+              type="button"
+              onClick={() => setStatsOpen(true)}
+              aria-label="Statystyki"
+              title="Statystyki"
+              className="pressable inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+            >
+              <ChartColumn className="h-4 w-4" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => openGuide("work")}
+              aria-label="Przewodnik po Pracy"
+              title="Przewodnik po Pracy"
+              className="pressable inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+            >
+              <CircleQuestionMark className="h-4 w-4" aria-hidden />
+            </button>
+          </div>
           <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} onPractice={() => { setStatsOpen(false); changeScope({ kind: "all" }); setTab("quiz"); }} />
         </header>
       ) : (
@@ -289,7 +292,7 @@ function StudyScreen() {
         <TabsList className="h-auto w-full sm:w-auto">
           <TabsTrigger value="quiz" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Quiz</TabsTrigger>
           <TabsTrigger value="board" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Tablica</TabsTrigger>
-          <TabsTrigger value="list" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Lista kontrolna</TabsTrigger>
+          <TabsTrigger value="list" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11" aria-label="Lista kontrolna"><span className="sm:hidden">Lista</span><span className="max-sm:hidden">Lista kontrolna</span></TabsTrigger>
           <TabsTrigger value="journal" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Dziennik</TabsTrigger>
         </TabsList>
         {/* forceMount: runda w toku nie ginie po zajrzeniu do tablicy lub listy. */}

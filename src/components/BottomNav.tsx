@@ -112,13 +112,23 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
     window.clearTimeout(pressTimer.current);
     setPressing(false);
   };
-  // Podpowiedź o przytrzymaniu „+” — raz, już przy pierwszym stuknięciu (wcześniej dopiero po czwartym).
+  // Podpowiedź o przytrzymaniu „+” — raz, po pierwszym stuknięciu, ale dopiero gdy edytor się zamknie:
+  // nad otwartym edytorem zasłaniała podpowiedzi pod treścią (tag, przypomnienie).
   const hintOnce = () => {
     try {
       if (localStorage.getItem("kaczy.fab.hint.v1")) return;
       localStorage.setItem("kaczy.fab.hint.v1", "1");
-      toast("Przytrzymaj „+”, by od razu dodać listę, zdjęcie, rysunek albo dyktować", { duration: 6000 });
-    } catch { /* brak localStorage — bez podpowiedzi */ }
+    } catch { return; /* brak localStorage — bez podpowiedzi */ }
+    const editorOpen = () => !!document.querySelector("[role='dialog'][aria-label='Nowa notatka']");
+    const start = Date.now();
+    let seen = false;
+    const timer = window.setInterval(() => {
+      const age = Date.now() - start;
+      if (editorOpen()) { seen = true; if (age < 10 * 60_000) return; }
+      else if (!seen && age < 3000) return; // edytor jeszcze się otwiera
+      window.clearInterval(timer);
+      if (age < 10 * 60_000) toast("Przytrzymaj „+”, by od razu dodać listę, zdjęcie, rysunek albo dyktować", { duration: 6000 });
+    }, 500);
   };
   // Każde dotknięcie „+” obraca ikonę o ćwierć obrotu — cichy znak, że edytor się otwiera.
   const [quarterTurns, setQuarterTurns] = useState(0);
