@@ -4063,7 +4063,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Paczka.** `detectClient-*`, `planDetect-*`, `planDetect.worker-*` w `globIgnores` (pobierane po „Szukaj tras”); `bundle.spec` sprawdza. Precache 4048,7 KiB.
 - **Ograniczenia.** Linie przerywane (np. instalacja projektowana) rozpadają się na krótkie odcinki i mogą odpaść. Plan jednokolorowy (wszystko czarne) da też ściany — wtedy lepiej rysować ręcznie. Skrzyżowania tej samej instalacji dzielą trasę na kawałki. Nie ma wyboru obszaru planu do przeszukania.
 - **Testy.** Vitest: `src/lib/plans/detect/lines.test.ts` (kolory, maska bez czarnej ściany i bieli, szkielet 1 px, rura w kształcie L jako jedna łamana z narożnikiem i właściwą długością, ściana i litera w ramce opisu odpadają, krótkie kreski, RDP). E2E: `e2e/plans.spec.ts` — „faza 5” (pipeta na niebieskiej rurze planu z szarą siatką i czarnym tekstem → jedna propozycja ~2000 px, „Dodaj wszystkie”, trasa do weryfikacji). `e2e/bundle.spec.ts` (chunki wykrywania poza precache).
-- **Commit.** (uzupełnić)
+- **Commit.** `a019d28` (2026-11-01).
 
 ## Kalendarz i Grafik: kontrast nazw świąt i zaznaczonego weekendu (2026-11-01)
 
