@@ -16,6 +16,8 @@ import { PLANS_MAP } from "./planRefs";
  */
 
 export const PLANS_ORIGIN = "plans";
+/** Scalanie kopii — osobny origin, więc nie trafia na stos „Cofnij”. */
+const IMPORT_ORIGIN = "plans-import";
 const SEP = "\u0001";
 
 export type EntityKind = "r" | "t" | "s" | "i";
@@ -56,6 +58,12 @@ export function createYPlans(doc: Y.Doc) {
     snapshot = null;
     listeners.forEach((l) => l());
   });
+  // Cofanie zmian z tego urządzenia (zmiany z innych przychodzą bez origin i nie są cofane).
+  // Kilka zapisów w 400 ms to jeden krok (np. przeciągnięcie punktu trasy).
+  const undo = new Y.UndoManager(map, { trackedOrigins: new Set([PLANS_ORIGIN]), captureTimeout: 400 });
+  const undoListeners = new Set<() => void>();
+  const undoChanged = () => undoListeners.forEach((l) => l());
+  for (const ev of ["stack-item-added", "stack-item-popped", "stack-cleared"] as const) undo.on(ev, undoChanged);
 
   function read() {
     if (snapshot) return snapshot;
@@ -170,7 +178,7 @@ export function createYPlans(doc: Y.Doc) {
   }
 
   /** Wpisy (z „Cofnij” albo z kopii) wracają przez `clean*` — tylko znane klucze i kształty. */
-  function restore(entries: PlanEntries, onlyMissing = false): void {
+  function restore(entries: PlanEntries, onlyMissing = false, origin: string = PLANS_ORIGIN): void {
     doc.transact(() => {
       for (const [k, v] of Object.entries(entries)) {
         if (onlyMissing && map.has(k)) continue;
@@ -183,7 +191,7 @@ export function createYPlans(doc: Y.Doc) {
           if (e && e.id === id) map.set(k, e);
         }
       }
-    }, PLANS_ORIGIN);
+    }, origin);
   }
 
   function dump(): PlansDump {
@@ -196,10 +204,22 @@ export function createYPlans(doc: Y.Doc) {
   function mergeDump(raw: unknown): void {
     const entries = (raw as Partial<PlansDump> | null)?.entries;
     if (!entries || typeof entries !== "object" || Array.isArray(entries)) return;
-    restore(entries as PlanEntries, true);
+    restore(entries as PlanEntries, true, IMPORT_ORIGIN);
   }
 
-  return { list, get, subscribe, createProject, updateProject, setCalibration, save, remove, removeProject, restore, dump, mergeDump };
+  const history = {
+    undo: () => { undo.undo(); },
+    redo: () => { undo.redo(); },
+    /** Nowy stos przy otwarciu analizy — „Cofnij” nie sięga do innej analizy. */
+    clear: () => { undo.clear(); },
+    /** Kończy bieżący krok: następny zapis to osobna pozycja „Cofnij”. */
+    stop: () => { undo.stopCapturing(); },
+    canUndo: () => undo.undoStack.length > 0,
+    canRedo: () => undo.redoStack.length > 0,
+    subscribe: (cb: () => void) => { undoListeners.add(cb); return () => { undoListeners.delete(cb); }; },
+  };
+
+  return { list, get, subscribe, history, createProject, updateProject, setCalibration, save, remove, removeProject, restore, dump, mergeDump };
 }
 
 export type YPlans = ReturnType<typeof createYPlans>;

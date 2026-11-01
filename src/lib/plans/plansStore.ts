@@ -43,5 +43,17 @@ export const restorePlan = (entries: PlanEntries) => yPlans.restore(entries);
 export const savePlanEntity = yPlans.save;
 export const removePlanEntity = <K extends EntityKind>(kind: K, pid: string, id: string) => yPlans.remove(kind, pid, id);
 
+/** „Cofnij”/„Ponów” w edytorze: stan przycisków i akcje. */
+const undoSnapshot = { undo: false, redo: false };
+let undoState = undoSnapshot;
+yPlans.history.subscribe(() => { undoState = { undo: yPlans.history.canUndo(), redo: yPlans.history.canRedo() }; });
+export function usePlansUndo(): { undo: boolean; redo: boolean } {
+  return useSyncExternalStore(yPlans.history.subscribe, () => undoState);
+}
+export const undoPlans = () => yPlans.history.undo();
+export const redoPlans = () => yPlans.history.redo();
+export const clearPlansUndo = () => yPlans.history.clear();
+export const stopPlansCapture = () => yPlans.history.stop();
+
 export const plansDump = () => yPlans.dump();
 export const mergePlansDump = (raw: unknown) => yPlans.mergeDump(raw);

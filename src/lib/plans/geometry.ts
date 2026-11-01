@@ -82,3 +82,28 @@ export function lengthLabel(m: RouteMeasure): string {
   if (m.lengthMeters === null) return `${Math.round(m.lengthPixels)} px (bez skali)`;
   return `${m.lengthMeters.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m`;
 }
+
+/** Trasa najbliżej punktu, jeśli bliżej niż `tolerance` (piksele obrazu); `null` = stuknięcie obok. */
+export function pickRoute<T extends { id: string; pts: readonly number[] }>(routes: readonly T[], p: PlanPoint, tolerance: number): string | null {
+  let best: string | null = null;
+  let bestD = tolerance;
+  for (const r of routes) {
+    const d = distanceToPolyline(p, r.pts);
+    if (d <= bestD) { bestD = d; best = r.id; }
+  }
+  return best;
+}
+
+/** Indeks punktu polilinii najbliżej `p` w promieniu `tolerance`; `-1` = żaden. */
+export function pickVertex(pts: readonly number[], p: PlanPoint, tolerance: number): number {
+  let best = -1;
+  let bestD = tolerance;
+  for (let i = 0; i + 1 < pts.length; i += 2) {
+    const d = Math.hypot(pts[i] - p.x, pts[i + 1] - p.y);
+    if (d <= bestD) { bestD = d; best = i / 2; }
+  }
+  return best;
+}
+
+/** „2,5” i „2.5” jako liczba (pola metrów i średnic); puste albo złe → `NaN`. */
+export const parseDecimal = (s: string) => (s.trim() === "" ? Number.NaN : Number(s.trim().replace(",", ".")));

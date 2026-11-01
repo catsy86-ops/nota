@@ -25,6 +25,17 @@ interface Props {
   onTap?: (p: PlanPoint) => void;
   /** Ruch kursora nad planem (podgląd rysowanej trasy) — punkt w pikselach oryginału; `null` = poza planem. */
   onHover?: (p: PlanPoint | null) => void;
+  /**
+   * Naciśnięcie na planie: `true` = to uchwyt (np. punkt trasy) — dalszy ruch idzie do `onPressMove`
+   * zamiast przesuwać plan, a puszczenie do `onPressEnd`. `scale` pozwala liczyć promień trafienia na ekranie.
+   */
+  onPressStart?: (p: PlanPoint, scale: number) => boolean;
+  onPressMove?: (p: PlanPoint) => void;
+  onPressEnd?: () => void;
+  /** Klawisz na płótnie przed obsługą widoku: `true` = obsłużony. `center` = środek okna w pikselach obrazu (celownik). */
+  onKeyAction?: (key: string, center: PlanPoint) => boolean;
+  /** Celownik w środku okna przy obsłudze z klawiatury (rysowanie, kalibracja). */
+  crosshair?: boolean;
   label: string;
   cursor?: string;
 }
@@ -34,14 +45,14 @@ interface Props {
  * albo mysz przesuwa, dwa palce przybliżają, kółko przybliża wokół kursora, klawiatura: strzałki,
  * `+`/`-`, `0` = dopasuj. Krótkie stuknięcie bez ruchu idzie do `onTap` (rysowanie, kalibracja).
  */
-export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanvas({ url, width, height, children, onTap, onHover, label, cursor }, ref) {
+export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanvas({ url, width, height, children, onTap, onHover, onPressStart, onPressMove, onPressEnd, onKeyAction, crosshair, label, cursor }, ref) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [view, setView] = useState<Viewport | null>(null);
   const viewRef = useRef<Viewport | null>(null);
   viewRef.current = view;
   const pointers = useRef(new Map<number, PlanPoint>());
-  const gesture = useRef<{ start: PlanPoint; moved: boolean; pinched: boolean } | null>(null);
+  const gesture = useRef<{ start: PlanPoint; moved: boolean; pinched: boolean; handle: boolean } | null>(null);
 
   const local = (e: { clientX: number; clientY: number }): PlanPoint => {
     const r = box.current!.getBoundingClientRect();
@@ -91,8 +102,15 @@ export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanva
     e.currentTarget.setPointerCapture(e.pointerId);
     const p = local(e);
     pointers.current.set(e.pointerId, p);
-    if (pointers.current.size === 1) gesture.current = { start: p, moved: false, pinched: false };
-    else if (gesture.current) gesture.current.pinched = true;
+    const v = viewRef.current;
+    if (pointers.current.size === 1) {
+      const handle = !!(v && onPressStart?.(screenToImage(v, p), v.scale));
+      gesture.current = { start: p, moved: false, pinched: false, handle };
+    } else if (gesture.current) {
+      // Drugi palec w trakcie przeciągania uchwytu: kończymy uchwyt, dalej szczypanie.
+      if (gesture.current.handle) { gesture.current.handle = false; onPressEnd?.(); }
+      gesture.current.pinched = true;
+    }
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -111,6 +129,7 @@ export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanva
     }
     pointers.current.set(e.pointerId, p);
     const g = gesture.current;
+    if (g?.handle) { g.moved = true; onPressMove?.(screenToImage(v, p)); return; }
     if (g && !g.moved && Math.hypot(p.x - g.start.x, p.y - g.start.y) < TAP_SLOP) return;
     if (g && !g.moved) { g.moved = true; apply(panBy(v, p.x - g.start.x, p.y - g.start.y)); return; }
     apply(panBy(v, p.x - prev.x, p.y - prev.y));
@@ -121,6 +140,7 @@ export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanva
     const g = gesture.current;
     if (pointers.current.size === 0) {
       gesture.current = null;
+      if (g?.handle) { onPressEnd?.(); if (g.moved) return; }
       const v = viewRef.current;
       if (had && g && !g.moved && !g.pinched && v && onTap && e.type === "pointerup") onTap(screenToImage(v, local(e)));
     }
@@ -130,6 +150,7 @@ export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanva
     const v = viewRef.current;
     if (!v) return;
     const center = { x: size.w / 2, y: size.h / 2 };
+    if (onKeyAction?.(e.key, screenToImage(v, center))) { e.preventDefault(); return; }
     const step: Record<string, () => Viewport> = {
       ArrowLeft: () => panBy(v, KEY_PAN, 0), ArrowRight: () => panBy(v, -KEY_PAN, 0),
       ArrowUp: () => panBy(v, 0, KEY_PAN), ArrowDown: () => panBy(v, 0, -KEY_PAN),
@@ -149,7 +170,9 @@ export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanva
       tabIndex={0}
       data-testid="plan-canvas"
       data-scale={view ? view.scale.toFixed(4) : undefined}
-      className="relative h-full w-full touch-none select-none overflow-hidden bg-[#f4f5f7] outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring dark:bg-[#1b1d22]"
+      data-tx={view ? view.tx.toFixed(2) : undefined}
+      data-ty={view ? view.ty.toFixed(2) : undefined}
+      className="plan-canvas relative h-full w-full touch-none select-none overflow-hidden bg-[#f4f5f7] outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring dark:bg-[#1b1d22]"
       style={{ cursor: cursor ?? "grab" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -167,6 +190,12 @@ export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanva
             {children?.(view.scale)}
           </g>
         </svg>
+      )}
+      {crosshair && (
+        <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 hidden h-7 w-7 -translate-x-1/2 -translate-y-1/2 [.plan-canvas:focus-visible_&]:block">
+          <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-foreground/70" />
+          <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-foreground/70" />
+        </span>
       )}
       {url === null && (
         <p className="absolute inset-x-4 top-4 rounded-card bg-card/95 p-3 text-sm text-muted-foreground shadow">

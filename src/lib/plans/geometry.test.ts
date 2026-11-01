@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { calibrationError, distance, distanceToPolyline, lengthLabel, measureRoute, metersPerPixel, polylineLength } from "./geometry";
+import { calibrationError, distance, distanceToPolyline, lengthLabel, measureRoute, metersPerPixel, parseDecimal, pickRoute, pickVertex, polylineLength } from "./geometry";
+import { snapAngle } from "./systems";
 import { clampView, fitView, imageToScreen, panBy, pinchView, screenToImage, zoomAt } from "./viewport";
 
 describe("geometria planu", () => {
@@ -72,5 +73,30 @@ describe("widok planu (zoom, przesunięcie)", () => {
     const v = clampView({ scale: 1, tx: -5000, ty: 9000 }, 1000, 1000, 800, 600, 48);
     expect(v.tx).toBe(48 - 1000);
     expect(v.ty).toBe(600 - 48);
+  });
+});
+
+describe("rysowanie i zaznaczanie tras (faza 3)", () => {
+  it("przyciąganie co 45° zachowuje długość odcinka", () => {
+    expect(snapAngle({ x: 0, y: 0 }, { x: 100, y: 7 })).toEqual({ x: 100.2, y: 0 });
+    const diag = snapAngle({ x: 0, y: 0 }, { x: 50, y: 55 });
+    expect(diag.x).toBeCloseTo(diag.y, 1);
+    expect(Math.hypot(diag.x, diag.y)).toBeCloseTo(Math.hypot(50, 55), 0);
+  });
+
+  it("stuknięcie wybiera najbliższą trasę w promieniu, a obok — nic", () => {
+    const routes = [{ id: "a", pts: [0, 0, 100, 0] }, { id: "b", pts: [0, 20, 100, 20] }];
+    expect(pickRoute(routes, { x: 50, y: 4 }, 10)).toBe("a");
+    expect(pickRoute(routes, { x: 50, y: 15 }, 10)).toBe("b");
+    expect(pickRoute(routes, { x: 50, y: 60 }, 10)).toBeNull();
+    expect(pickVertex([0, 0, 100, 0, 100, 50], { x: 97, y: 3 }, 8)).toBe(1);
+    expect(pickVertex([0, 0, 100, 0], { x: 50, y: 0 }, 8)).toBe(-1);
+  });
+
+  it("liczby z przecinkiem i kropką", () => {
+    expect(parseDecimal("4,20")).toBe(4.2);
+    expect(parseDecimal(" 16 ")).toBe(16);
+    expect(parseDecimal("")).toBeNaN();
+    expect(parseDecimal("abc")).toBeNaN();
   });
 });

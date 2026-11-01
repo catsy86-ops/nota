@@ -35,6 +35,8 @@ Wartości pochodne (`lengthPixels`, `lengthMeters`, status pomiaru, wiersze zest
 
 ## Fazy
 
+Stan: faza 2 zrobiona (d353ea7), faza 3 zrobiona (2026-11-01). Następna: faza 4 (OCR) — przed nią przegląd `performance-engineer`.
+
 | Faza | Zakres | Rozmiar |
 |---|---|---|
 | 2 | Dział, routing, model/yPlans/sklep, planRefs (GC, sync, kopia), import z walidacją, kopia robocza, lista, edytor (zoom, przesuwanie, dopasowanie) | L |

@@ -92,4 +92,24 @@ describe("analizy planów w Yjs", () => {
     expect(planRefsIn(docA)).toEqual(new Set([H("a"), H("b"), H("c")]));
     expect(planRefsIn(docA, true)).toEqual(new Set([H("a"), H("c")]));
   });
+
+  it("„Cofnij” i „Ponów” cofają zapis trasy i kalibracji, a scalanie kopii nie trafia na stos", () => {
+    const { a } = pair();
+    a.createProject(project("p1"));
+    a.history.clear();
+    a.save("r", "p1", route("r1"));
+    a.history.stop();
+    a.setCalibration("p1", { a: { x: 0, y: 0 }, b: { x: 100, y: 0 }, meters: 1, at: 2 });
+    a.history.undo();
+    expect(a.get("p1")!.calibration).toBeNull();
+    expect(a.get("p1")!.routes).toHaveLength(1);
+    a.history.undo();
+    expect(a.get("p1")!.routes).toHaveLength(0);
+    a.history.redo();
+    expect(a.get("p1")!.routes).toHaveLength(1);
+    a.history.clear();
+    a.mergeDump({ entries: { "r\u0001p1\u0001r9": route("r9") } });
+    expect(a.get("p1")!.routes).toHaveLength(2);
+    expect(a.history.canUndo()).toBe(false);
+  });
 });

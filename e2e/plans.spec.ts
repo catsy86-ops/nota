@@ -91,3 +91,110 @@ test("Plany: dział jest w pasku bocznym, „wstecz” z edytora wraca do listy"
   await expect(page.getByTestId("plans-list")).toBeVisible();
   await expect(page).toHaveURL(/\/plany$/);
 });
+
+/** Klik w punkt obrazu (piksele oryginału) — przeliczenie przez widok z atrybutów płótna. */
+async function clickImage(page: Page, x: number, y: number) {
+  const canvas = page.getByTestId("plan-canvas");
+  const box = (await canvas.boundingBox())!;
+  const [s, tx, ty] = await Promise.all(["data-scale", "data-tx", "data-ty"].map(async (a) => Number(await canvas.getAttribute(a))));
+  await page.mouse.click(box.x + tx + x * s, box.y + ty + y * s);
+}
+
+async function newPlan(page: Page, name: string) {
+  await page.goto("/plany");
+  await page.getByTestId("plans-list").getByRole("button", { name: "Nowa analiza" }).click();
+  const dialog = page.getByTestId("plan-new");
+  await dialog.getByTestId("plan-file").setInputFiles({ name: `${name}.png`, mimeType: "image/png", buffer: await planPng(page) });
+  await dialog.getByRole("button", { name: "Utwórz analizę" }).click();
+  await expect(page.getByTestId("plan-canvas")).toHaveAttribute("data-tx", /\d/);
+}
+
+test("Plany (faza 3): trasa bez skali w pikselach, kalibracja daje metry, średnica, przeciąganie punktu, usuwanie i „Cofnij”", async ({ page }) => {
+  await newPlan(page, "Trasy");
+  const editor = page.getByTestId("plan-editor");
+
+  // Trasa 100,100 → 1400,100 → 1400,800 = 1300 + 700 = 2000 px.
+  await editor.getByRole("button", { name: "Trasa", exact: true }).click();
+  await clickImage(page, 100, 100);
+  await clickImage(page, 1400, 100);
+  await clickImage(page, 1400, 800);
+  const draftLen = editor.getByTestId("plan-draft-length");
+  await expect(draftLen).toHaveText(/^(199\d|200\d) px \(bez skali\)$/);
+  await editor.getByRole("button", { name: "Zakończ trasę" }).click();
+  const routeLen = editor.getByTestId("plan-route-length");
+  await expect(routeLen).toContainText("bez skali");
+
+  // Skala: odcinek 0,0 → 1000,0 to 5 m, więc 2000 px = 10 m.
+  await editor.getByRole("button", { name: "Skala", exact: true }).click();
+  await clickImage(page, 0, 450);
+  await clickImage(page, 1000, 450);
+  await editor.getByLabel("Długość w metrach").fill("5");
+  await editor.getByRole("button", { name: "Zapisz skalę" }).click();
+  await expect(editor.getByTestId("plan-scale")).toContainText(/1 m = (19\d|20\d)/);
+
+  // Zaznaczenie stuknięciem w trasę, średnica i długość w metrach.
+  await clickImage(page, 700, 100);
+  await expect(routeLen).toHaveText(/^(9,9\d|10,0\d) m$/);
+  await editor.getByLabel("Średnica (mm)").fill("16");
+  await editor.getByLabel("Średnica (mm)").press("Enter");
+  await expect(editor.getByTestId("plan-routes")).toContainText("Ø16");
+
+  // Przeciągnięcie ostatniego punktu 1400,800 → 1400,450: trasa krótsza o 350 px (1,75 m).
+  const canvas = page.getByTestId("plan-canvas");
+  const box = (await canvas.boundingBox())!;
+  const [s, tx, ty] = await Promise.all(["data-scale", "data-tx", "data-ty"].map(async (a) => Number(await canvas.getAttribute(a))));
+  await page.mouse.move(box.x + tx + 1400 * s, box.y + ty + 800 * s);
+  await page.mouse.down();
+  await page.mouse.move(box.x + tx + 1400 * s, box.y + ty + 600 * s, { steps: 5 });
+  await page.mouse.move(box.x + tx + 1400 * s, box.y + ty + 450 * s, { steps: 5 });
+  await page.mouse.up();
+  await expect(routeLen).toHaveText(/^8,2\d m$/);
+
+  // „Cofnij” z paska (i Ctrl+Z) wraca do poprzedniego przebiegu.
+  await editor.getByRole("button", { name: "Cofnij", exact: true }).click();
+  await expect(routeLen).toHaveText(/^(9,9\d|10,0\d) m$/);
+
+  await editor.getByRole("button", { name: "Usuń trasę" }).click();
+  await expect(editor.getByTestId("plan-routes")).toContainText("Brak tras");
+  await page.getByRole("button", { name: "Cofnij" }).last().click();
+  await expect(editor.getByTestId("plan-routes")).toContainText("Ø16");
+
+  // Po odświeżeniu: trasa i skala zostają.
+  await page.reload();
+  await expect(page.getByTestId("plan-routes")).toContainText(/Ø16.*(9,9\d|10,0\d) m/);
+  const axe = await new AxeBuilder({ page }).include("[data-testid='plan-editor']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
+  expect(axe.violations).toEqual([]);
+});
+
+test("Plany (faza 3): trasa z klawiatury — spacja w celowniku, Enter kończy", async ({ page }) => {
+  await newPlan(page, "Klawiatura");
+  const editor = page.getByTestId("plan-editor");
+  await editor.getByRole("button", { name: "Trasa", exact: true }).click();
+  const canvas = page.getByTestId("plan-canvas");
+  await canvas.focus();
+  await page.keyboard.press(" ");
+  for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press(" ");
+  await page.keyboard.press("Enter");
+  await expect(editor.getByTestId("plan-routes")).toContainText("ZW 1");
+});
+
+test.describe("telefon", () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test("Plany na telefonie: trasa stuknięciami palcem, nazwa analizy widoczna w pasku @mobile", async ({ page }) => {
+    await newPlan(page, "Łazienka");
+    const editor = page.getByTestId("plan-editor");
+    await expect(editor.getByRole("heading", { name: "Łazienka" })).toBeVisible();
+    const title = await editor.getByRole("heading", { name: "Łazienka" }).locator("span").first().evaluate((el) => el.scrollWidth <= el.clientWidth);
+    expect(title, "nazwa analizy nie jest ucięta").toBe(true);
+    await editor.getByRole("button", { name: "Trasa", exact: true }).tap();
+    const canvas = page.getByTestId("plan-canvas");
+    const box = (await canvas.boundingBox())!;
+    const [s, tx, ty] = await Promise.all(["data-scale", "data-tx", "data-ty"].map(async (a) => Number(await canvas.getAttribute(a))));
+    for (const [x, y] of [[100, 100], [1400, 100]]) await page.touchscreen.tap(box.x + tx + x * s, box.y + ty + y * s);
+    await expect(editor.getByTestId("plan-draft-length")).toHaveText(/^1[23]\d\d px \(bez skali\)$/);
+    await editor.getByRole("button", { name: "Zakończ trasę" }).tap();
+    await expect(editor.getByTestId("plan-route-length")).toBeVisible();
+  });
+});
