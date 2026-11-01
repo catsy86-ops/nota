@@ -1,6 +1,6 @@
 import { MapPin } from "lucide-react";
 import { NoteImage } from "@/components/NoteImage";
-import type { Handover } from "@/lib/study/handover";
+import { signerLabel, type Handover } from "@/lib/study/handover";
 
 const shortDate = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
 
@@ -115,12 +115,20 @@ export function HandoverPaper({ handover: h }: { handover: Handover }) {
         </section>
       )}
 
-      <section className="grid grid-cols-2 gap-8 pt-10 break-inside-avoid-page" aria-label="Podpisy">
-        {["Wykonawca", "Inwestor"].map((who) => (
-          <div key={who} className="text-center text-xs">
-            <div className="border-t border-foreground/70 pt-1">{who} — data i podpis</div>
+      <section className="grid grid-cols-2 items-end gap-8 pt-10 break-inside-avoid-page" aria-label="Podpisy">
+        <div className="text-center text-xs">
+          <div className="border-t border-foreground/70 pt-1">Wykonawca — data i podpis</div>
+        </div>
+        <div className="text-center text-xs" data-handover-signature={h.signature ? "signed" : "empty"}>
+          {/* P2.4: podpis złożony palcem na telefonie stoi na linii jak podpis długopisem. */}
+          {h.signature && (
+            <NoteImage imageRef={h.signature.image} loading="eager" alt={`Podpis: ${signerLabel(h.signature)}`}
+              className="mx-auto -mb-1 h-16 w-auto max-w-full object-contain" placeholderClassName="h-16" />
+          )}
+          <div className="border-t border-foreground/70 pt-1">
+            {h.signature ? `Inwestor — ${signerLabel(h.signature)}, ${shortDate(h.signature.at)}` : "Inwestor — data i podpis"}
           </div>
-        ))}
+        </div>
       </section>
     </article>
   );

@@ -117,13 +117,36 @@ export class PdfWriter {
     if (slot % 2 === 1) this.y += cellH + 4;
   }
 
-  /** Pola na podpisy na końcu dokumentu. */
-  signatures(labels: [string, string]) {
-    this.ensure(40);
+  /**
+   * Pola na podpisy na końcu dokumentu. `signed` (P2.4) wstawia obraz podpisu nad drugą linią
+   * z imieniem i datą pod spodem; bez niego obie linie zostają puste do podpisu długopisem.
+   */
+  signatures(labels: [string, string], signed?: { dataUrl?: string; caption: string }) {
+    const { doc } = this;
+    const blank = "____________________________";
+    const first = `${labels[0]}: ${blank}          ${labels[1]}: `;
+    this.ensure(signed ? 56 : 40);
     this.gap(8);
-    this.line(`${labels[0]}: ____________________________          ${labels[1]}: ____________________________`, 10);
+    if (signed?.dataUrl) {
+      const boxW = 60, boxH = 24;
+      // Obraz zaczyna się tam, gdzie linia drugiego podpisu (ta sama czcionka co `line` niżej).
+      doc.setFont(FONT_ID, "normal");
+      doc.setFontSize(10);
+      const x = Math.min(MARGIN + doc.getTextWidth(first), MARGIN + CONTENT_W - boxW);
+      try {
+        const props = doc.getImageProperties(signed.dataUrl);
+        const ratio = props.height / props.width;
+        let w = boxW, h = boxW * ratio;
+        if (h > boxH) { h = boxH; w = h / ratio; }
+        doc.addImage(signed.dataUrl, x, this.y + boxH - h, w, h);
+      } catch {
+        // Uszkodzony obraz: zostaje pusta linia, imię i data niżej i tak są.
+      }
+      this.y += boxH + 1;
+    }
+    this.line(`${first}${blank}`, 10);
     this.gap(2);
-    this.line("Data: ____________________", 10);
+    this.line(signed ? `Podpisał: ${signed.caption}` : "Data: ____________________", 10);
   }
 
   /** Numery stron i zwrot pliku. */

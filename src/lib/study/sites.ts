@@ -1,4 +1,5 @@
 import type { JournalEntry } from "./yStudy";
+import { cleanSignature, type SiteSignature } from "./signature";
 import { cleanStages, type SiteStage } from "./stages";
 import { cleanOrderLog, cleanShortages, type OrderLogEntry, type Shortage } from "./shortages";
 import { SITE_ACCESS_MAX, SITE_PHONE_MAX } from "./contact";
@@ -62,6 +63,8 @@ export interface SiteCard {
   warranty?: string;
   /** P2.8: stawka godzinowa na tej budowie (zł/h) do rozliczenia; brak = nie wpisano. */
   rate?: number;
+  /** P2.4: podpis klienta na protokole odbioru (`signature.ts`); brak = nie podpisano. */
+  signature?: SiteSignature;
 }
 
 export const SITE_NAME_MAX = 120;
@@ -109,6 +112,7 @@ export function cleanSite(raw: unknown): SiteCard | null {
     ...(isDayKey(s.warranty) ? { warranty: s.warranty } : {}),
     ...(typeof s.rate === "number" && Number.isFinite(s.rate) && s.rate > 0 && s.rate <= SITE_RATE_MAX ? { rate: Math.round(s.rate * 100) / 100 } : {}),
     ...withGeo(cleanGeo(s.geo)),
+    ...optional("signature", cleanSignature(s.signature)),
   };
 }
 

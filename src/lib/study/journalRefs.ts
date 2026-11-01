@@ -59,6 +59,19 @@ export function journalRefsIn(doc: { getMap(name: string): MapLike }, syncable =
     if (syncable && !image && !(typeof d?.size === "number" && d.size <= DOC_SYNC_MAX_BYTES)) return;
     refs.add(id);
   });
+  // P2.4: podpis klienta na karcie budowy (`signature.ts`) — mały PNG, jedzie zawsze.
+  for (const id of signatureRefsIn(doc)) refs.add(id);
+  return refs;
+}
+
+/** Klucze podpisów klientów z kart budów (`SiteCard.signature.image`); karta bywa mapą pól albo starszym obiektem. */
+export function signatureRefsIn(doc: { getMap(name: string): MapLike }): Set<string> {
+  const refs = new Set<string>();
+  doc.getMap("studySites").forEach((card) => {
+    const c = card as { get?: (k: string) => unknown; signature?: unknown } | null;
+    const sig = (typeof c?.get === "function" ? c.get("signature") : c?.signature) as { image?: unknown } | null | undefined;
+    if (typeof sig?.image === "string" && isImageRef(sig.image)) refs.add(sig.image);
+  });
   return refs;
 }
 

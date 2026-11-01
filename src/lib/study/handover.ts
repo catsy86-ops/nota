@@ -3,6 +3,7 @@ import { testLine } from "./pressureTest";
 import { dayKeyOf, periodLabel } from "./report";
 import { siteStages, type SiteStage } from "./stages";
 import type { JournalEntry } from "./yStudy";
+import type { SiteSignature } from "./signature";
 import { pointsProgress, pointType, POINT_STEPS, sidesLabel, STEP_LABEL, type Room, type WaterPoint } from "./points";
 
 /**
@@ -77,11 +78,13 @@ export interface Handover {
   rooms: HandoverRoom[] | null;
   /** Gotowe punkty (po białym montażu) z wszystkich; `null` bez punktów. */
   pointsDone: { done: number; total: number } | null;
+  /** P2.4: podpis klienta z karty (klucz obrazu, imię, moment); `null` = puste pole na podpis. */
+  signature: SiteSignature | null;
 }
 
 export function buildHandover(
   journal: readonly JournalEntry[],
-  site: Pick<SiteCard, "id" | "name" | "address" | "investor" | "stages">,
+  site: Pick<SiteCard, "id" | "name" | "address" | "investor" | "stages" | "signature">,
   now: number = Date.now(),
   /** Pomieszczenia i punkty budowy (`pointsStore.ts`); brak = protokół bez sekcji punktów. */
   sitePoints?: { rooms: readonly Room[]; points: readonly WaterPoint[] },
@@ -118,6 +121,7 @@ export function buildHandover(
     photoGroups,
     morePhotos: Math.max(0, photos.length - HANDOVER_PHOTOS_MAX),
     ...handoverPoints(entries, sitePoints),
+    signature: site.signature ? { ...site.signature } : null,
   };
 }
 
@@ -147,6 +151,9 @@ export function handoverPointLine(p: HandoverPoint, date: (at: number) => string
   const steps = p.steps.length ? p.steps.map((s) => `${s.label} ${date(s.at)}`).join(", ") : "do zrobienia";
   return `${head} — ${steps}${p.photos ? ` · ${p.photos} zdj.` : ""}`;
 }
+
+/** „Jan Kowalski” albo „inwestor”, gdy imienia nie wpisano. */
+export const signerLabel = (s: Pick<SiteSignature, "name">) => s.name || "inwestor";
 
 const shortDate = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
 
@@ -181,5 +188,7 @@ export function handoverText(h: Handover): string {
     const byStage = h.photoGroups.filter((g) => g.stage).map((g) => `${g.stage}: ${g.photos.length}`);
     lines.push("", `Dokumentacja zdjęciowa: ${h.photos.length + h.morePhotos} zdjęć${byStage.length ? ` (${byStage.join(", ")})` : ""}.`);
   }
+  // Sam fakt podpisu — obraz podpisu nie wychodzi w tekście (dane osobowe, wiadomość idzie dalej).
+  if (h.signature) lines.push("", `Odbiór podpisał: ${signerLabel(h.signature)}, ${shortDate(h.signature.at)}`);
   return lines.join("\n");
 }

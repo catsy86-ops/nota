@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, Phone, Send, Share2, Plus, Camera } from "lucide-react";
+import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, PenLine, Phone, Send, Share2, Plus, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -43,6 +43,7 @@ import { SiteDocsPanel } from "./SiteDocsPanel";
 import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
 import { HandoverPaper } from "./HandoverPaper";
+import { SiteSignatureDialog } from "./SiteSignatureDialog";
 import { QuickLink } from "./QuickLink";
 import { DayHoursDialog } from "./DayHoursDialog";
 import { RecipientsForm } from "./RecipientsForm";
@@ -89,6 +90,7 @@ export function SiteCardDialog({
   /** Protokół odbioru w trakcie drukowania; `null` = nie drukujemy. */
   const [handover, setHandover] = useState<Handover | null>(null);
   const endHandover = useCallback(() => setHandover(null), []);
+  const [signOpen, setSignOpen] = useState(false);
 
   useEffect(() => {
     if (site) setForm(formOf(site));
@@ -486,6 +488,15 @@ export function SiteCardDialog({
               >
                 <FileText className="mr-1.5 h-4 w-4" aria-hidden />{pdfBusy ? "Przygotowuję…" : "PDF protokołu"}
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => setSignOpen(true)}
+                title={site.signature ? "Podpis klienta jest na protokole — obejrzyj, złóż od nowa albo usuń" : "Klient podpisuje palcem na telefonie; podpis trafia na wydruk i PDF protokołu"}
+                className="coarse:h-11"
+                data-testid="site-signature-open"
+              >
+                <PenLine className="mr-1.5 h-4 w-4" aria-hidden />{site.signature ? "Podpisany" : "Podpis klienta"}
+              </Button>
               <Button variant="ghost" onClick={toggleArchive} className="col-span-2 text-muted-foreground coarse:h-11">
                 {site.archived === undefined
                   ? <><Archive className="mr-1.5 h-4 w-4" aria-hidden />Do archiwum</>
@@ -514,6 +525,7 @@ export function SiteCardDialog({
       {site && (
         <DayHoursDialog day={hoursOpen ? localDayKey() : null} siteId={site.id} onOpenChange={(o) => { if (!o) setHoursOpen(false); }} />
       )}
+      {site && <SiteSignatureDialog site={site} open={signOpen} onOpenChange={setSignOpen} />}
       {handover && (
         <PrintRoot testId="handover-print" onDone={endHandover}>
           <HandoverPaper handover={handover} />

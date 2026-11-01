@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
 
 // Protokół odbioru z karty budowy: wydruk z danymi budowy, etapami, próbą szczelności, uwagami i podpisami.
@@ -163,4 +164,56 @@ test("punkty w protokole i w karcie „Przed wejściem” (H2.4, H2.2)", async (
   // Karta „Przed wejściem” mówi, co zostało na punktach tej budowy.
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("entry-check-points")).toHaveText("Punkty: 1 do podejścia · 1 do montażu");
+});
+
+test("podpis klienta (P2.4): palcem w polu, na wydruku protokołu, usunięcie z „Cofnij”", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    // Oprócz tekstu zapamiętaj, czy na kartce stoi obraz podpisu (wczytany z magazynu).
+    window.print = () => {
+      const box = document.querySelector("[data-handover-signature]");
+      w.__printed = document.getElementById("report-print")?.textContent;
+      w.__signature = box?.getAttribute("data-handover-signature");
+      w.__signatureImg = !!box?.querySelector("img[src^='blob:']");
+    };
+  });
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
+  const card = page.getByTestId("site-card");
+
+  await card.getByRole("button", { name: "Podpis klienta" }).click();
+  const dialog = page.getByTestId("site-signature");
+  await expect(dialog.getByRole("button", { name: "Zapisz podpis" })).toBeDisabled();
+  const axe = await new AxeBuilder({ page }).include("[data-testid='site-signature']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
+  expect(axe.violations).toEqual([]);
+
+  await dialog.getByLabel("Imię i nazwisko podpisującego").fill("Jan Kowalski");
+  const pad = await dialog.getByTestId("signature-pad").boundingBox();
+  if (!pad) throw new Error("brak pola podpisu");
+  await page.mouse.move(pad.x + 30, pad.y + 100);
+  await page.mouse.down();
+  for (const [dx, dy] of [[60, -40], [100, 10], [150, -30], [220, 5]]) await page.mouse.move(pad.x + dx, pad.y + 100 + dy, { steps: 4 });
+  await page.mouse.up();
+  await dialog.getByRole("button", { name: "Zapisz podpis" }).click();
+  await expect(page.getByText("Zapisano podpis — jest na protokole")).toBeVisible();
+  await expect(card.getByTestId("site-signature-open")).toHaveText("Podpisany");
+
+  await card.getByRole("button", { name: "Protokół odbioru" }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
+  const out = await page.evaluate(() => {
+    const w = window as unknown as { __printed: string; __signature: string; __signatureImg: boolean };
+    return { __printed: w.__printed, __signature: w.__signature, __signatureImg: w.__signatureImg };
+  });
+  expect(out.__printed).toContain("Inwestor — Jan Kowalski, 16.10.2026");
+  expect(out.__signature).toBe("signed");
+  expect(out.__signatureImg).toBe(true);
+
+  // Usunięcie: pole wraca do pustego, „Cofnij” przywraca ten sam podpis.
+  await card.getByTestId("site-signature-open").click();
+  await expect(page.getByTestId("site-signature-current").getByRole("img", { name: "Podpis: Jan Kowalski" })).toBeVisible();
+  await page.getByTestId("site-signature").getByRole("button", { name: "Usuń podpis" }).click();
+  await expect(card.getByTestId("site-signature-open")).toHaveText("Podpis klienta");
+  await page.getByRole("button", { name: "Cofnij" }).click();
+  await expect(card.getByTestId("site-signature-open")).toHaveText("Podpisany");
 });

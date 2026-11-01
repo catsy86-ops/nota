@@ -8,6 +8,7 @@ import { cleanSiteHours, type SiteHours } from "./siteHours";
 import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
 import { cleanServiceCalls, type ServiceCall } from "./service";
 import { cleanPlanItems, type PlanItem } from "./planItems";
+import { cleanSignature, type SiteSignature } from "./signature";
 import { SITE_MAX, type StudyState } from "./yStudy";
 import { getStudy, siteDirectoryOf } from "./studyProjection";
 
@@ -199,6 +200,16 @@ export function setSiteRate(id: string, rate: number | null) {
   if (!prev) return;
   const { stored: _s, count: _c, open: _o, first: _f, last: _l, rate: _r, ...card } = prev;
   yStudy.saveSite(rate && rate > 0 ? { ...card, rate } : card);
+}
+
+/** P2.4: podpis klienta na protokole; `null` usuwa (bajty sprząta potem `collectGarbage`). */
+export function setSiteSignature(id: string, signature: SiteSignature | null) {
+  const s = getStudy();
+  const prev = findSite(s, id);
+  if (!prev) return;
+  const { stored: _s, count: _c, open: _o, first: _f, last: _l, signature: _sig, ...card } = prev;
+  const clean = cleanSignature(signature);
+  yStudy.saveSite(clean ? { ...card, signature: clean } : card);
 }
 
 export function setSiteGeo(id: string, geo: GeoPoint | null) {

@@ -1,4 +1,4 @@
-import { handoverPointLine, type Handover } from "./handover";
+import { handoverPointLine, signerLabel, type Handover } from "./handover";
 import { PdfWriter, pdfFileName, photoPages, sharePdf, type PdfPhoto } from "./pdfWriter";
 
 /**
@@ -13,6 +13,8 @@ export interface HandoverPdfOptions {
   /** Nazwa firmy z Ustawień Pracy (pusta = bez nagłówka). */
   company: string;
   photos: HandoverPdfPhoto[];
+  /** P2.4: obraz podpisu klienta jako data URL (bajty z `imageStore`); brak = puste pola. */
+  signatureDataUrl?: string;
 }
 
 /** Nazwa pliku dla protokołu. */
@@ -61,6 +63,9 @@ export async function buildHandoverPdf(h: Handover, opts: HandoverPdfOptions): P
     w.photos(opts.photos);
   }
 
-  w.signatures(["Wykonawca", "Inwestor"]);
+  const signed = h.signature
+    ? { dataUrl: opts.signatureDataUrl, caption: `${signerLabel(h.signature)}, ${shortDate(h.signature.at)}${opts.signatureDataUrl ? "" : " (obraz podpisu niedostępny)"}` }
+    : undefined;
+  w.signatures(["Wykonawca", "Inwestor"], signed);
   return w.finish();
 }

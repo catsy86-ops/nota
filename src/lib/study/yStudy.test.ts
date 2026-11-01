@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
 import { cleanDump, createYStudy, dumpFromLegacy, journalRefsIn, type JournalEntry } from "./yStudy";
 import { EXAM_KEEP } from "./exam";
+import { signatureRefsIn } from "./journalRefs";
 
 /** Dwa „telefony” i wymiana stanu w obie strony — jak po spotkaniu w sieci. */
 function pair() {
@@ -545,4 +546,24 @@ describe("transakcje zapisu (siatka przed podziałem H0.2)", () => {
     const t = createYStudy(other);
     expect(transactions(other, () => t.mergeIn(dump, "m1"))).toEqual(["study-migration"]);
   });
+});
+
+describe("podpis klienta w karcie budowy (P2.4)", () => {
+  const IMG = "a".repeat(64);
+  const sig = { image: IMG, name: "Jan Kowalski", at: new Date(2026, 10, 1, 15).getTime() };
+  it("podpis przechodzi na drugi telefon i jest w kluczach do sprzątania, kopii i synchronizacji", () => {
+    const docA = new Y.Doc(), docB = new Y.Doc();
+    const a = createYStudy(docA), b = createYStudy(docB);
+    a.saveSite({ id: "b-1", name: "Lipowa 5", address: "", investor: "Jan Kowalski", created: 1, signature: sig });
+    Y.applyUpdate(docB, Y.encodeStateAsUpdate(docA));
+    expect(b.get().sites["b-1"].signature).toEqual(sig);
+    expect(signatureRefsIn(docB)).toEqual(new Set([IMG]));
+    expect(journalRefsIn(docB)).toContain(IMG);
+    expect(journalRefsIn(docB, true)).toContain(IMG);
+    // Usunięcie podpisu zwalnia klucz — bajty zbierze `collectGarbage`.
+    const { signature: _s, ...without } = a.get().sites["b-1"];
+    a.saveSite(without);
+    expect(signatureRefsIn(docA).size).toBe(0);
+  });
+
 });
