@@ -43,8 +43,9 @@ test("przeciągnięcie karty zmienia kolejność i przełącza na sortowanie rę
   await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 15 });
   await page.mouse.up();
   await expect(page.getByText("Przełączono na sortowanie ręczne")).toBeVisible();
-  const order = await page.locator("[data-note-id-wrap]").evaluateAll((els) => els.map((e) => e.getAttribute("data-note-id-wrap")));
-  expect(order.indexOf("m1")).toBeGreaterThan(order.indexOf("m3"));
+  // Kolejność zapisuje się przez Yjs i przerysowuje po chwili — czekamy na nią, zamiast czytać od razu po toaście.
+  const order = () => page.locator("[data-note-id-wrap]").evaluateAll((els) => els.map((e) => e.getAttribute("data-note-id-wrap")));
+  await expect.poll(async () => { const o = await order(); return o.indexOf("m1") - o.indexOf("m3"); }).toBeGreaterThan(0);
 });
 
 test("edycja w kaflu na komputerze zajmuje dwie kolumny i wraca po zapisie", async ({ page }) => {

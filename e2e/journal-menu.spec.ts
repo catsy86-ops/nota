@@ -4,8 +4,9 @@ import { test, expect } from "@playwright/test";
 
 test.use({ isMobile: true, hasTouch: true, viewport: { width: 390, height: 844 } });
 
-test.beforeEach(async ({ page, context }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+test.beforeEach(async ({ page, context, browserName }) => {
+  // WebKit w Playwright nie zna uprawnień do schowka — tam sprawdzamy tylko komunikat „Skopiowano”.
+  if (browserName === "chromium") await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.clock.setFixedTime(new Date(2026, 9, 22, 12, 0).getTime());
   await page.addInitScript(() => {
     localStorage.setItem("kaczy.tour.seen.v1", "1");
@@ -20,7 +21,7 @@ test.beforeEach(async ({ page, context }) => {
   await page.goto("/praca");
 });
 
-test("⋯ przy wpisie: rozwiązany, kopiuj, edytuj, usuń i cofnij @mobile", async ({ page }) => {
+test("⋯ przy wpisie: rozwiązany, kopiuj, edytuj, usuń i cofnij @mobile", async ({ page, browserName }) => {
   const entry = page.locator("[data-journal-entry]").filter({ hasText: "Cieknie złączka" });
   const menu = entry.getByRole("button", { name: "Opcje wpisu" });
 
@@ -32,8 +33,8 @@ test("⋯ przy wpisie: rozwiązany, kopiuj, edytuj, usuń i cofnij @mobile", asy
   await menu.click();
   await page.getByRole("menuitem", { name: "Kopiuj tekst" }).click();
   await expect(page.getByText("Skopiowano wpis")).toBeVisible();
-  // Schowek Windows zamienia \n na \r\n.
-  expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, "\n")).toBe("Problem (rozwiązany) · Lipowa 5 · 22.10.2026, 09:05\nCieknie złączka");
+  // Schowek Windows zamienia \n na \r\n. Odczyt schowka tylko w Chromium (bez uprawnień w WebKit).
+  if (browserName === "chromium") expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, "\n")).toBe("Problem (rozwiązany) · Lipowa 5 · 22.10.2026, 09:05\nCieknie złączka");
 
   await menu.click();
   await page.getByRole("menuitem", { name: "Edytuj wpis" }).click();

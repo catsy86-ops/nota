@@ -21,7 +21,7 @@ const DAYS = {
   "2026-10-08": { type: "u" }, "2026-10-09": { type: "u" }, "2026-10-10": { type: "u" },
   "2026-03-10": { type: "u" },
   "2026-03-16": { type: "l4" },
-  "2026-01-05": { type: "d" },
+  "2026-01-05": { type: "e" }, // Dniówka 8 h (domyślne rodzaje od G3.1 nie mają „Dzień”)
 };
 
 test("licznik urlopu liczy wykorzystane, zaplanowane i pozostałe, a wymiar zmienia się w ustawieniach", async ({ page }) => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast, Bell, BriefcaseBusiness, CalendarRange, CalendarDays, ChevronDown, Flower2, Highlighter, Inbox, Leaf, Minus, RotateCcw, Snowflake, Sparkles, Waves, Square, SquareRoundCorner, Squircle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -170,13 +170,26 @@ export function AppearanceSettings() {
   const oled = useOled();
   const sectionColors = useSectionColors();
   const uiDensity = useUiDensity();
+  // Przyklejony pasek części z podglądem ma zmienną wysokość. Ta wysokość jako `scroll-padding-top` karty:
+  // fokus z klawiatury i skok do grupy nie chowają już elementu pod paskiem (WCAG 2.4.11).
+  const stickyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = stickyRef.current;
+    let scroller = el?.parentElement ?? null;
+    while (scroller && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller = scroller.parentElement;
+    if (!el || !scroller || typeof ResizeObserver === "undefined") return;
+    const target = scroller;
+    const ro = new ResizeObserver(() => { target.style.scrollPaddingTop = `${el.offsetHeight}px`; });
+    ro.observe(el);
+    return () => { ro.disconnect(); target.style.scrollPaddingTop = ""; };
+  }, []);
 
   return (
     <div className="space-y-8">
       {/* Pasek skoku do grup (plan motywów 3.4): przyklejony u góry przewijanej karty. Kontener ma `pt-3`,
           więc pasek wchodzi w ten margines (`-top-3`, `-mt-3` + `pt-4.5`) — inaczej nad nim prześwituje tekst. */}
       {/* Podgląd na żywo (1.2) przyklejony razem z paskiem grup: widać skutek każdej zmiany niżej. */}
-      <div className="sticky -top-3 z-sticky -mx-1 -mt-3 space-y-2 bg-background px-1 pb-2 pt-4.5">
+      <div ref={stickyRef} className="sticky -top-3 z-sticky -mx-1 -mt-3 space-y-2 bg-background px-1 pb-2 pt-4.5">
       {/* Bez przewijania w bok: na wąskim telefonie (320 px) części zawijają się do drugiego rzędu, nic nie ucieka za krawędź. */}
       <nav aria-label="Części Wyglądu" className="flex flex-wrap gap-1.5">
         {APPEARANCE_GROUPS.map((g) => (

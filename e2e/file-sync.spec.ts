@@ -62,8 +62,10 @@ test("plik synchronizacji niesie też Grafik — dni z obu urządzeń zostają",
 
   const a = await (await browser.newContext()).newPage();
   await openShifts(a);
-  await day(a, 5, "wolne").click(); // pędzel „Dzień”
-  await expect(day(a, 5, "Dzień")).toBeVisible();
+  // Domyślne rodzaje od G3.1: Urlop, L4, Dniówka, Budowa — pędzel wybierany jawnie.
+  await a.getByRole("radio", { name: /Dniówka/ }).click();
+  await day(a, 5, "wolne").click();
+  await expect(day(a, 5, "Dniówka")).toBeVisible();
   await openDataTab(a);
   const [download] = await Promise.all([
     a.waitForEvent("download"),
@@ -73,7 +75,7 @@ test("plik synchronizacji niesie też Grafik — dni z obu urządzeń zostają",
 
   const b = await (await browser.newContext()).newPage();
   await openShifts(b);
-  await b.getByRole("radio", { name: /Noc/ }).click();
+  await b.getByRole("radio", { name: /Budowa/ }).click();
   await day(b, 6, "wolne").click();
   await openDataTab(b);
   const [chooser] = await Promise.all([
@@ -84,6 +86,6 @@ test("plik synchronizacji niesie też Grafik — dni z obu urządzeń zostają",
   await expect(b.getByText(/^Scalono/)).toBeVisible({ timeout: 15_000 });
   await b.keyboard.press("Escape");
 
-  await expect(day(b, 5, "Dzień")).toBeVisible();
-  await expect(day(b, 6, "Noc")).toBeVisible();
+  await expect(day(b, 5, "Dniówka")).toBeVisible();
+  await expect(day(b, 6, "Budowa")).toBeVisible();
 });

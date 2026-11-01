@@ -10,7 +10,9 @@ const PATHS = ["/", "/przypomnienia", "/kalendarz", "/grafik", "/praca"];
 const SELECTOR = "button, a[href], input, select, textarea, [role=button], [role=tab], [role=menuitem], [role=checkbox], [role=switch], [role=radio]";
 const MIN = 44;
 
-test("cele dotyku na telefonie są co najmniej 44 px @mobile", async ({ page }) => {
+test("cele dotyku na telefonie są co najmniej 44 px @mobile", async ({ page, isMobile }) => {
+  // Cele 44 px włącza dotyk (`coarse:`) — na komputerze z myszą przyciski są celowo mniejsze.
+  test.skip(!isMobile, "tylko telefon");
   test.setTimeout(240_000);
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
   const report: Array<{ path: string; w: number; h: number; hitW: number; hitH: number; label: string; tag: string }> = [];

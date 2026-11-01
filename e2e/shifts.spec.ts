@@ -361,7 +361,8 @@ test("paleta poleceń znajduje dzień grafiku i otwiera jego okno", async ({ pag
   const hit = page.getByRole("option", { name: /środa, 14 października|14 października/i }).filter({ hasText: "Dzień" });
   await expect(hit).toHaveCount(1);
   await hit.click();
-  await expect(page.getByRole("heading", { name: "Grafik", level: 1 })).toBeVisible();
+  // Okno dnia jest modalne — tło (z nagłówkiem działu) jest wtedy ukryte przed czytnikiem, więc dział po adresie.
+  await expect(page).toHaveURL(/\/grafik/);
   await expect(page.getByRole("dialog")).toContainText("14 października");
 });
 

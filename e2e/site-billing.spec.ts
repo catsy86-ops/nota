@@ -76,8 +76,10 @@ test("stawka godzinowa z panelu rozliczenia; 320 px bez przewijania w bok @mobil
   expect(wide, "przewijanie w bok przy 320 px").toBe(false);
 });
 
-test("należności (H3.2): ryczałt i odhaczony etap, zaliczka, zostało, cofnięcie usunięcia, tekst @mobile", async ({ page, context }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+test("należności (H3.2): ryczałt i odhaczony etap, zaliczka, zostało, cofnięcie usunięcia, tekst @mobile", async ({ page, context, browserName }) => {
+  // WebKit w Playwright nie zna uprawnień do schowka — tam sprawdzamy tylko komunikat „Skopiowano”.
+  const clip = browserName === "chromium";
+  if (clip) await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.setViewportSize({ width: 390, height: 844 });
   const { card, panel } = await openBilling(page);
   const dues = panel.getByTestId("billing-dues");
@@ -105,9 +107,11 @@ test("należności (H3.2): ryczałt i odhaczony etap, zaliczka, zostało, cofni�
   await page.evaluate(() => { Object.defineProperty(navigator, "share", { value: undefined, configurable: true }); });
   await dues.getByRole("button", { name: "Tekst" }).click();
   await expect(page.getByText("Skopiowano — wklej szefowi na WhatsAppie")).toBeVisible();
-  const text = await page.evaluate(() => navigator.clipboard.readText());
-  expect(text).toContain("*Zostało do zapłaty: 6500 zł*");
-  expect(text).toContain("• 22.10.2026: 3000 zł (zaliczka gotówką)");
+  if (clip) {
+    const text = await page.evaluate(() => navigator.clipboard.readText());
+    expect(text).toContain("*Zostało do zapłaty: 6500 zł*");
+    expect(text).toContain("• 22.10.2026: 3000 zł (zaliczka gotówką)");
+  }
 
   await page.reload();
   const again = await openBilling(page);

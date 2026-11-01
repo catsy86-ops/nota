@@ -33,6 +33,11 @@ export function useViewScroll(view: string): void {
   const lastY = useRef<number | null>(null);
   const restoring = useRef(false);
   const timer = useRef<number | undefined>(undefined);
+  // Adres z ostatniego zatwierdzonego renderu. Przy przejściu do innego działu adres zmienia się przed
+  // renderem: treść na chwilę się skraca, przeglądarka przycina przewinięcie do 0, a zdarzenie trafia
+  // jeszcze do nasłuchu starego działu — bez tej kontroli nadpisywało jego zapamiętane miejsce zerem.
+  const committedPath = useRef(window.location.pathname);
+  useLayoutEffect(() => { committedPath.current = window.location.pathname; });
 
   useLayoutEffect(() => {
     // Sprzątanie poprzedniego działu: zapis jego ostatniej pozycji, zanim ruszy układ nowego.
@@ -70,12 +75,15 @@ export function useViewScroll(view: string): void {
 
   useEffect(() => {
     const onScroll = () => {
-      if (restoring.current) return;
+      if (restoring.current || window.location.pathname !== committedPath.current) return;
       lastY.current = window.scrollY;
       window.clearTimeout(timer.current);
       timer.current = window.setTimeout(() => writeViewScroll(view, window.scrollY), SAVE_DEBOUNCE_MS);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(timer.current);
+    };
   }, [view]);
 }

@@ -2,8 +2,10 @@ import { test, expect, type Page } from "@playwright/test";
 
 // Plan UI/UX 3.10: „Widok” na telefonie ma punkty „pół” i „pełny”; przeciągnięcie uchwytu zmienia wysokość.
 // Gest dotykowy przez CDP, jak w mobile.spec.ts — mysz na emulowanym telefonie nie daje tych zdarzeń.
-test("arkusz Widok: startuje na pół ekranu, przeciągnięcie w górę otwiera pełny, w dół wraca @mobile", async ({ page, browserName }) => {
+test("arkusz Widok: startuje na pół ekranu, przeciągnięcie w górę otwiera pełny, w dół wraca @mobile", async ({ page, browserName, isMobile }) => {
   test.skip(browserName !== "chromium", "dotyk przez CDP jest tylko w Chromium");
+  // Arkusz „Widok” jest tylko na telefonie; na komputerze ten sam przycisk otwiera menu.
+  test.skip(!isMobile, "tylko układ telefonu");
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
   await page.goto("/");
   await page.getByRole("button", { name: "Widok i kolumny" }).click();
