@@ -3823,7 +3823,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Budżet precache.** Po tej zmianie precache przekroczył 4 MiB; z precache wypadł `y-webrtc` (~110 KB — synchronizacja i tak wymaga sieci, po pierwszym połączeniu jest w `static-assets`) i `jobPdf` (PDF-y są poza precache jak protokół). Precache 3993 KiB.
 - **Ograniczenia.** Wpisy sprzed założenia pozycji nie odliczają się (stan zaczyna się od zera albo od inwentaryzacji). Nazwa w aucie musi odpowiadać nazwie we wpisie. „Oznacz wszystko jako zamówione” nie dotyczy auta — po zakupie dopisuje się przyjęcie. Starsza wersja aplikacji nie zna mapy `studyVan` ani pola `supply` (zachowuje je we wpisie).
 - **Testy.** Vitest: `src/lib/study/van.test.ts` (stan z historii, dostawa się nie liczy, metry z cm, czyszczenie, Yjs dwa telefony, „Cofnij”, kopia, „Do auta” w tekście), `src/lib/fullBackup.test.ts`. E2E: `e2e/van.spec.ts` (pozycja ze stanem i minimum, wpis „z auta” i „dostawa”, „dokupić 1”, „Do auta” w hurtowni, przyjęcie), `e2e/bundle.spec.ts`, regresja synchronizacji (`file-sync`, `pwa`, `sync-code`).
-- **Commit.** COMMIT_H13 (2026-11-02).
+- **Commit.** `1d3a86d` (2026-11-02).
 
 ## Praca: jedna lista do hurtowni (H1.4, plan 2026-10-29)
 
