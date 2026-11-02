@@ -65,6 +65,8 @@ export interface JournalEntry {
   point?: string;
   /** H5.1: kto zapisał wpis (imię z urządzenia, `companyPrefs.ts`); brak = nie ustawiono. */
   by?: string;
+  /** H1.3: materiał z wpisu przyszedł dostawą na budowę, nie z auta; brak = z auta (decyzja H-1). */
+  supply?: "site";
 }
 
 /**
@@ -157,6 +159,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(geo ? { geo } : {}),
     ...(typeof e.point === "string" && e.point && e.point.length <= 64 ? { point: e.point } : {}),
     ...(cleanAuthor(e.by) ? { by: cleanAuthor(e.by) } : {}),
+    ...(e.supply === "site" ? { supply: "site" as const } : {}),
   };
 }
 
@@ -171,7 +174,7 @@ export const ORDERED_ENTRY_LISTS = new Set<string>(["images", "fittings"]);
  */
 export const JOURNAL_ENTRY_KEYS: ReadonlySet<string> = new Set([
   "id", "at", "kind", "topic", "text", "site", "siteId", "checked", "images", "captions", "drawnFrom", "recordings",
-  "resolved", "solution", "test", "fittings", "pipes", "stage", "geo", "owner", "due", "after", "point", "by",
+  "resolved", "solution", "test", "fittings", "pipes", "stage", "geo", "owner", "due", "after", "point", "by", "supply",
 ]);
 
 /** Oryginały narysowanych zdjęć (H0.1): tylko dla zdjęć ze `images`, oryginał to poprawny, inny klucz. */

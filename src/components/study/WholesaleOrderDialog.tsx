@@ -6,7 +6,7 @@ import { haptic } from "@/lib/haptics";
 import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
 import { metersLabel } from "@/lib/study/pipes";
-import { sharedSupplierPhone, wholesaleText, whatsappOrderUrl, type WholesaleGroup } from "@/lib/study/order";
+import { sharedSupplierPhone, wholesaleText, whatsappOrderUrl, type VanBuy, type WholesaleGroup } from "@/lib/study/order";
 import { markSiteOrdered, undoSiteOrdered } from "@/lib/study/store";
 import type { SiteInfo } from "@/lib/study/sites";
 
@@ -15,13 +15,16 @@ import type { SiteInfo } from "@/lib/study/sites";
  * w grupach „Na budowę: …”. Jedna wiadomość (kopia albo WhatsApp — numer hurtowni, gdy budowy mają
  * ten sam) i „Oznacz wszystko jako zamówione” z jednym „Cofnij” dla wszystkich budów.
  */
-export function WholesaleOrderDialog({ open, onOpenChange, groups, dir }: {
+export function WholesaleOrderDialog({ open, onOpenChange, groups, van, dir }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   groups: readonly WholesaleGroup[];
+  /** H1.3: pozycje poniżej minimum w aucie. */
+  van: readonly VanBuy[];
   dir: readonly SiteInfo[];
 }) {
-  const text = () => wholesaleText(groups);
+  const text = () => wholesaleText(groups, van);
+  const empty = groups.length === 0 && van.length === 0;
   const phone = sharedSupplierPhone(groups.map((g) => dir.find((s) => s.id === g.siteId)?.supplierPhone));
 
   async function copy() {
@@ -54,7 +57,7 @@ export function WholesaleOrderDialog({ open, onOpenChange, groups, dir }: {
           <DialogTitle className="font-display">Do hurtowni</DialogTitle>
           <DialogDescription>Braki i materiał od ostatniego zamówienia ze wszystkich budów — jedna wiadomość.</DialogDescription>
         </DialogHeader>
-        {groups.length === 0 ? (
+        {empty ? (
           <p className="text-sm text-muted-foreground">Nic do zamówienia. Braki dopisujesz w karcie budowy, a kształtki i rury we wpisach.</p>
         ) : (
           <div className="-mx-1 max-h-[55dvh] space-y-3 overflow-y-auto px-1">
@@ -83,13 +86,27 @@ export function WholesaleOrderDialog({ open, onOpenChange, groups, dir }: {
                 </ul>
               </section>
             ))}
+            {van.length > 0 && (
+              <section aria-label="Do auta" data-testid="wholesale-van" className="rounded-field border border-border p-2.5">
+                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Do auta</h3>
+                <ul className="space-y-0.5 text-sm">
+                  {van.map((v) => (
+                    <li key={v.name} className="flex items-baseline justify-between gap-3">
+                      <span className="min-w-0 truncate">{v.name}</span>
+                      <span className="shrink-0 font-mono tabular-nums">{v.qty.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} {v.unit}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-1 text-2xs text-muted-foreground">Po zakupie dopisz przyjęcie w „Auto”.</p>
+              </section>
+            )}
           </div>
         )}
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={copy} disabled={groups.length === 0} className="coarse:h-11">
+          <Button variant="outline" size="sm" onClick={copy} disabled={empty} className="coarse:h-11">
             <Copy className="h-4 w-4" aria-hidden />Kopiuj
           </Button>
-          <Button variant="outline" size="sm" onClick={sendWhatsApp} disabled={groups.length === 0} className="coarse:h-11">
+          <Button variant="outline" size="sm" onClick={sendWhatsApp} disabled={empty} className="coarse:h-11">
             <MessageCircle className="h-4 w-4" aria-hidden />WhatsApp
           </Button>
           <Button size="sm" onClick={markAll} disabled={groups.length === 0} className="coarse:h-11">

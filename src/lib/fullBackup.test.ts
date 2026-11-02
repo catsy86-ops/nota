@@ -15,6 +15,7 @@ import { getKits, removeKit, saveKit } from "./study/kitsStore";
 import { addRoom, getSitePoints, removeRoom } from "./study/pointsStore";
 import { getSiteBilling, setLump, setPointRate } from "./study/billingStore";
 import { getJobs, removeJob, saveQuoteItem, setJobMeta } from "./study/jobsStore";
+import { addVanEvent, getVan, removeVanItem, saveVanItem } from "./study/vanStore";
 import { addTrainingEntry, addPlanDay, removeTrainingEntry, trainingDump } from "./training/store";
 import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
@@ -348,6 +349,17 @@ describe("Nauka w pełnej kopii", () => {
     expect(getJobs().has("fucha-1")).toBe(false);
     await restoreFullBackup(backup, ALL);
     expect(getJobs().get("fucha-1")).toMatchObject({ status: "done", scope: "Wymiana baterii", items: [{ id: "q1", price: 150 }] });
+  });
+
+  it("materiał w aucie wraca z kopii (H1.3)", async () => {
+    saveVanItem({ id: "v-k", name: "Kolano 16", unit: "szt.", min: 10, at: 1, order: 0 });
+    addVanEvent({ id: "e1", item: "v-k", kind: "count", qty: 20, at: 2 });
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    removeVanItem("v-k");
+    expect(getVan().items).toHaveLength(0);
+    await restoreFullBackup(backup, ALL);
+    expect(getVan().items.map((i) => i.name)).toEqual(["Kolano 16"]);
+    expect(getVan().events).toMatchObject([{ id: "e1", qty: 20 }]);
   });
 
   it("zestawy materiału wracają z kopii (H1.2)", async () => {

@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { weekSeparators } from "@/lib/study/journalWeeks";
-import { Archive, Clock, ChevronRight, FileText, MapPin, PackageCheck, Plus, Search, Wrench, X } from "lucide-react";
+import { Archive, Clock, ChevronRight, FileText, MapPin, PackageCheck, Plus, Search, Truck, Wrench, X } from "lucide-react";
 import { studyReminders } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,9 @@ import { readSiteParam, takeSiteParam } from "@/lib/study/siteLink";
 import { NewSiteDialog } from "./NewSiteDialog";
 import { JobsDialog } from "./JobsDialog";
 import { WholesaleOrderDialog } from "./WholesaleOrderDialog";
+import { VanDialog } from "./VanDialog";
+import { useVan } from "@/lib/study/vanStore";
+import { vanStock } from "@/lib/study/van";
 import { wholesaleGroups } from "@/lib/study/order";
 import { useJobs } from "@/lib/study/jobsStore";
 import { money } from "@/lib/study/billing";
@@ -137,6 +140,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   // H1.4: wspólna lista do hurtowni ze wszystkich budów w toku.
   const [wholesaleOpen, setWholesaleOpen] = useState(false);
   const wholesale = useMemo(() => wholesaleGroups(study.journal, dir), [study.journal, dir]);
+  // H1.3: materiał w aucie — poniżej minimum idzie do listy hurtowni jako „Do auta”.
+  const van = useVan();
+  const [vanOpen, setVanOpen] = useState(false);
+  const vanBuy = useMemo(
+    () => van.items.map((i) => vanStock(i, van.events, study.journal)).filter((s) => s.toBuy > 0).map((s) => ({ name: s.item.name, qty: s.toBuy, unit: s.item.unit })),
+    [van, study.journal],
+  );
+  const wholesaleCount = wholesale.length + (vanBuy.length > 0 ? 1 : 0);
   const archivedCount = used.filter((x) => x.archived !== undefined).length;
   const sites = used.filter((x) => x.archived === undefined || showArchived || x.id === filter.site);
   const hasUnsited = useMemo(() => used.length > 0 && study.journal.some((e) => !entrySiteId(e)), [used, study.journal]);
@@ -300,14 +311,22 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                     <Wrench className="h-3.5 w-3.5 shrink-0" aria-hidden />Zlecenia{jobs.size > 0 && ` (${jobs.size})`}
                     {unpaid > 0 && <span className="font-mono tabular-nums text-primary-ink">· {money(unpaid)}</span>}
                   </button>
-                  {wholesale.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setVanOpen(true)}
+                    data-testid="van-open"
+                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                  >
+                    <Truck className="h-3.5 w-3.5 shrink-0" aria-hidden />Auto{vanBuy.length > 0 && <span className="text-warning-ink"> · dokupić {vanBuy.length}</span>}
+                  </button>
+                  {wholesaleCount > 0 && (
                     <button
                       type="button"
                       onClick={() => setWholesaleOpen(true)}
                       data-testid="wholesale-open"
                       className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
                     >
-                      <PackageCheck className="h-3.5 w-3.5 shrink-0" aria-hidden />Do hurtowni ({wholesale.length})
+                      <PackageCheck className="h-3.5 w-3.5 shrink-0" aria-hidden />Do hurtowni ({wholesaleCount})
                     </button>
                   )}
                   {archivedCount > 0 && (
@@ -467,7 +486,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
       </section>
       <JournalEntrySheet onPractice={onPractice} />
       <NewSiteDialog key={newSiteJob ? "job" : "site"} open={newSiteOpen} onOpenChange={setNewSiteOpen} dir={dir} initialJob={newSiteJob} onCreated={(id) => setCard(id)} />
-      <WholesaleOrderDialog open={wholesaleOpen} onOpenChange={setWholesaleOpen} groups={wholesale} dir={dir} />
+      <WholesaleOrderDialog open={wholesaleOpen} onOpenChange={setWholesaleOpen} groups={wholesale} van={vanBuy} dir={dir} />
+      <VanDialog open={vanOpen} onOpenChange={setVanOpen} journal={study.journal} />
       <JobsDialog open={jobsOpen} onOpenChange={setJobsOpen} jobs={jobs} dir={dir}
         onOpen={(id) => { setJobsOpen(false); setCard(id); }}
         onNew={() => { setJobsOpen(false); setNewSiteJob(true); setNewSiteOpen(true); }} />

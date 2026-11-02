@@ -170,6 +170,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   const { pointsDump } = await import("@/lib/study/pointsStore");
   const { billingDump } = await import("@/lib/study/billingStore");
   const { jobsDump } = await import("@/lib/study/jobsStore");
+  const { vanDump } = await import("@/lib/study/vanStore");
   const { plansDump } = await import("@/lib/plans/plansStore");
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES, opts.planImages ?? getViewPrefs().backupPlanImages);
   const study = yStudy.dump();
@@ -212,6 +213,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     billing: JSON.stringify(billingDump()),
     // Zlecenia własne — fuchy (H3.4): status, wycena; osobna mapa, scalana bez nadpisywania.
     jobs: JSON.stringify(jobsDump()),
+    // Materiał w aucie (H1.3): pozycje i zdarzenia (inwentaryzacje, przyjęcia), scalane bez nadpisywania.
+    van: JSON.stringify(vanDump()),
     // Analizy planów (mapa `plans`) — scalane bez nadpisywania.
     plans: JSON.stringify(plansDump()),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
@@ -366,6 +369,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   if (backup.points) await import("@/lib/study/pointsStore").then((m) => m.mergePointsDump(JSON.parse(backup.points!))).catch(() => {});
   if (backup.plans) await import("@/lib/plans/plansStore").then((m) => m.mergePlansDump(JSON.parse(backup.plans!))).catch(() => {});
   if (backup.billing) await import("@/lib/study/billingStore").then((m) => m.mergeBillingDump(JSON.parse(backup.billing!))).catch(() => {});
+  if (backup.van) await import("@/lib/study/vanStore").then((m) => m.mergeVanDump(JSON.parse(backup.van!))).catch((err) => logDiag("warn", "backup", "restore van failed", err));
   if (backup.jobs) await import("@/lib/study/jobsStore").then((m) => m.mergeJobsDump(JSON.parse(backup.jobs!))).catch((err) => logDiag("warn", "backup", "restore jobs failed", err));
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);

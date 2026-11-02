@@ -33,7 +33,8 @@ import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, rest
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, freshEntry, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
 import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput, whenLabel, yesterdaySiteText } from "@/lib/study/journalView";
-import { findSiteByName } from "@/lib/study/sites";
+import { findSiteByName, siteKey } from "@/lib/study/sites";
+import { setSiteSupply, useVan } from "@/lib/study/vanStore";
 import { accuracyLabel, cleanGeo, mapsUrl, nearestSite } from "@/lib/study/geo";
 import { suggestFittingNames } from "@/lib/study/fittings";
 import { editDemotesTopic, editSavedMessage, newEntryMessage, shouldOfferSiteGeo } from "@/lib/study/entrySheetRules";
@@ -168,6 +169,15 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const recentSites = useMemo(() => dir.filter((s) => s.archived === undefined).map((s) => s.name), [dir]);
   /** Id budowy wybranej w polu (`""` = bez budowy albo nieznana nazwa) — dla podpowiedzi tekstu. */
   const siteCard = useMemo(() => findSiteByName(dir, site), [dir, site]);
+  // H1.3: skąd materiał — „z auta” (domyślnie, H-1) albo dostawa na budowę; karta pamięta ostatni wybór.
+  const van = useVan();
+  const supplySiteId = siteCard?.id ?? (site.trim() ? siteKey(site) : "");
+  const [supplyChoice, setSupplyChoice] = useState<"site" | "van" | null>(null);
+  useEffect(() => { setSupplyChoice(null); }, [open, editing]);
+  const editedEntry = isEdit ? study.journal.find((e) => e.id === editing) : undefined;
+  const supply: "site" | "van" = supplyChoice ?? (isEdit ? editedEntry?.supply ?? "van" : van.siteSupply[supplySiteId] ?? "van");
+  const hasMaterial = (form.fittings?.length ?? 0) > 0 || (form.pipes?.length ?? 0) > 0;
+  const rememberSupply = () => { if (hasMaterial && supplySiteId) setSiteSupply(supplySiteId, supply); };
   const siteId = siteCard?.id ?? "";
   /** Najbliższe nieodhaczone etapy budowy — przy „Zrobione” do odhaczenia jednym stuknięciem. */
   const nextStages = useMemo(() => (siteCard ? siteStages(siteCard).filter((s) => s.done === undefined).slice(0, 3) : []), [siteCard]);
@@ -324,8 +334,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     commitSite();
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, captions: form.captions, drawnFrom: form.drawnFrom, recordings: form.recordings, at, test: form.test, fittings: form.fittings, pipes: form.pipes, stage: form.stage, geo: form.geo ?? null });
-    if (entry) freshEntry.id = entry.id;
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, captions: form.captions, drawnFrom: form.drawnFrom, recordings: form.recordings, at, test: form.test, fittings: form.fittings, pipes: form.pipes, supply, stage: form.stage, geo: form.geo ?? null });
+    if (entry) { freshEntry.id = entry.id; rememberSupply(); }
     if (!entry) {
       haptic("warn");
       setEmptyAttempt(true);
@@ -354,7 +364,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const prev = study.journal.find((e) => e.id === f.id);
     const demotes = editDemotesTopic({ kind: f.kind, topic: f.topic }, prev, !!f.topic && columnOf(study, f.topic) === "done");
     const saved = updateJournalEntry(f.id, {
-      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, captions: f.captions, drawnFrom: f.drawnFrom, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, pipes: f.pipes, stage: f.stage, geo: f.geo ?? null,
+      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, captions: f.captions, drawnFrom: f.drawnFrom, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, pipes: f.pipes, supply, stage: f.stage, geo: f.geo ?? null,
     });
     if (!saved) {
       haptic("warn");
@@ -869,6 +879,17 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             {pipesVisible && (
               <div id="journal-pipes" className="rounded-card border border-border p-3">
                 <PipesFields value={form.pipes ?? []} history={pipeHistory} onChange={(p) => patch({ pipes: p })} />
+              </div>
+            )}
+            {hasMaterial && van.items.length > 0 && (
+              <div className="grid grid-cols-2 gap-1 rounded-field border border-border p-0.5" role="group" aria-label="Skąd materiał" data-testid="entry-supply">
+                {([["van", "Z auta"], ["site", "Dostawa na budowę"]] as const).map(([v, label]) => (
+                  <button key={v} type="button" aria-pressed={supply === v} onClick={() => setSupplyChoice(v)}
+                    className={cn("pressable rounded-[calc(var(--radius-field)-2px)] px-2 py-1 text-xs coarse:min-h-11 coarse:text-sm",
+                      supply === v ? "bg-primary/12 font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                    {label}
+                  </button>
+                ))}
               </div>
             )}
             {topicOpen && (

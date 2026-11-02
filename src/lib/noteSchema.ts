@@ -130,6 +130,8 @@ export interface FullBackup {
   billing?: string;
   /** Zlecenia własne — fuchy (lib/study/yJobs.ts, JSON `{ jobs }`); scalane bez nadpisywania (H3.4). */
   jobs?: string;
+  /** Materiał w aucie (lib/study/yVan.ts, JSON `{ items, events }`); scalany bez nadpisywania (H1.3). */
+  van?: string;
   /** Analizy planów (lib/plans/yPlans.ts, JSON `{ entries }`); scalane bez nadpisywania. */
   plans?: string;
   /** Grafiki poza głównym (`lib/shifts/schedules.ts`, JSON tablica `{ id, name, data }`); scalane przy przywracaniu. */
@@ -178,6 +180,7 @@ export const fullBackupSchema = z.object({
   plans: z.catch(z.optional(z.string()), undefined),
   billing: z.catch(z.optional(z.string()), undefined),
   jobs: z.catch(z.optional(z.string()), undefined),
+  van: z.catch(z.optional(z.string()), undefined),
   shiftSchedules: z.catch(z.optional(z.string()), undefined),
   attachmentBlobs: z.catch(z.optional(z.record(z.string(), z.string())), undefined),
   skipped: z.catch(z.optional(z.object({ tooLarge: z.number(), missing: z.number(), journalPhotos: z.number(), siteDocs: z.number(), recordings: z.catch(z.optional(z.number()), undefined), plans: z.catch(z.optional(z.number()), undefined) })), undefined),

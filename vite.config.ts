@@ -69,6 +69,10 @@ export default defineConfig(() => ({
           "**/{exportPdf,index.es,html2canvas,html2canvas.esm,purify.es,StatsDialog,jspdf.es.min,handoverPdf,reportPdf,pdfWriter}-*.js",
           // Skan kodu QR do parowania (jsQR ~130 KB): parowanie i tak wymaga sieci, więc offline nic nie daje (2026-10-28, P3.2).
           "**/{jsQR,QrScanDialog}-*.js",
+          // Synchronizacja WebRTC (y-webrtc ~110 KB): łączy urządzenia, więc i tak działa tylko z siecią;
+          // po pierwszym połączeniu zostaje w `static-assets` (2026-11-02, H1.3 — budżet precache 4 MiB).
+          "**/y-webrtc-*.js",
+          "**/jobPdf-*.js",
           // Edytor CodeMirror (~500 KB) za flagą `cmEditor`: tylko na żądanie, poza precache (plan rozbudowy, Faza 1a).
           "**/CmEditor-*.js",
           // Analizator planów (D2, 2026-11-01): widok poza precache, pobierany w tle przy pierwszej sesji online

@@ -33,6 +33,8 @@ export interface NewJournalEntry {
   fittings?: Fitting[];
   /** Zużyte rury (cm); puste/brak = bez rur. */
   pipes?: Pipe[];
+  /** H1.3: „site” = dostawa na budowę; brak = z auta. Liczy się tylko przy kształtkach albo rurach. */
+  supply?: "site" | "van";
   /** Etap budowy zamknięty tym wpisem (id z karty); `null`/brak = bez etapu. */
   stage?: string | null;
   /** „Tu jestem” — lokalizacja wpisu; `null`/brak = bez lokalizacji. Sama nie czyni wpisu niepustym. */
@@ -67,6 +69,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     text,
     checked,
     images,
+    ...(input.supply === "site" && (fittings.length || pipes.length) ? { supply: "site" as const } : {}),
     ...(Object.keys(captions).length ? { captions } : {}),
     ...(Object.keys(drawnFrom).length ? { drawnFrom } : {}),
     ...(recordings.length ? { recordings } : {}),

@@ -103,14 +103,21 @@ export function wholesaleGroups(
   });
 }
 
-/** Jedna wiadomość do hurtowni z grupami „Na budowę: …”. */
-export function wholesaleText(groups: readonly WholesaleGroup[]): string {
+/** Pozycja „Do auta” (H1.3): poniżej minimum w aucie. */
+export interface VanBuy { name: string; qty: number; unit: string }
+
+/** Jedna wiadomość do hurtowni z grupami „Na budowę: …” i „Do auta”. */
+export function wholesaleText(groups: readonly WholesaleGroup[], van: readonly VanBuy[] = []): string {
   const lines = ["Zamówienie do hurtowni"];
   for (const g of groups) {
     lines.push("", `Na budowę: ${g.siteName}`);
     lines.push(...g.missing.map((s) => `- ${s.text}${s.qty ? `: ${s.qty}` : ""}`));
     lines.push(...pipeLines(g.order));
     lines.push(...g.order.items.map((f) => `- ${f.name}: ${f.qty} szt.`));
+  }
+  if (van.length > 0) {
+    lines.push("", "Do auta:");
+    lines.push(...van.map((v) => `- ${v.name}: ${v.qty.toLocaleString("pl-PL", { maximumFractionDigits: 2 })} ${v.unit}`));
   }
   return lines.join("\n");
 }
