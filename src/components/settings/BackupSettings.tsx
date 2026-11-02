@@ -321,6 +321,18 @@ export function BackupSettings() {
         </p>
       </Section>
 
+      <label className="flex items-start gap-2.5 text-sm">
+        <Checkbox
+          className="mt-0.5"
+          checked={prefs.backupPlanImages}
+          onCheckedChange={(v) => setViewPref("backupPlanImages", !!v)}
+        />
+        <span>
+          Obrazy planów w kopii
+          <span className="block text-xs text-muted-foreground">Plik kopii nie jest szyfrowany. Bez obrazów analizy planów zostają w kopii, a same rysunki tylko na urządzeniach.</span>
+        </span>
+      </label>
+
       <Button onClick={() => exportNow(askSkip)} className="w-full gap-2">
         <Download className="w-4 h-4" /> Pobierz pełny backup teraz
       </Button>

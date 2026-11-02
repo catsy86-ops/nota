@@ -9,6 +9,7 @@ export function describeBackupSkipped(s?: BackupSkipped): string | null {
   if (s.journalPhotos) parts.push(`zdjęcia dziennika z budowy: ${s.journalPhotos}`);
   if (s.siteDocs) parts.push(`pliki budów (plany, PDF): ${s.siteDocs}`);
   if (s.recordings) parts.push(`nagrania głosowe z wpisów: ${s.recordings}`);
+  if (s.plans) parts.push(`obrazy analiz planów: ${s.plans}`);
   if (!parts.length) return null;
   const onlyHere = s.recordings
     ? " Zdjęcia, nagrania i pliki budów zostały tylko na tamtym urządzeniu."

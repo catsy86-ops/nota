@@ -46,6 +46,7 @@ const basePrefs: ViewPrefs = {
   autosaveSeconds: 0,
   autoExportDays: 7,
   backupReminderDays: 0,
+  backupPlanImages: true,
   todayReminderHours: 0,
   todayReminderTime: "",
   weekReminderTime: "",

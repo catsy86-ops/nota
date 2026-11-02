@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { mayLeaveDevice, planRefsIn } from "@/lib/plans/planRefs";
+import { mayLeaveDevice, sizeCappedRefsIn } from "@/lib/plans/planRefs";
 import { createStore, get as idbGet, set as idbSet, del as idbDel, type UseStore } from "idb-keyval";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
@@ -197,7 +197,7 @@ export async function startRelay(code: string): Promise<void> {
     provider = p;
     blobs = new RelayBlobs({
       baseUrl: url, keys, refs: () => yjsStore.syncableRefs(), images: yjsStore.images,
-      mayUpload: (hash, size) => mayLeaveDevice(hash, size, planRefsIn(yjsStore.doc)),
+      mayUpload: (hash, size) => mayLeaveDevice(hash, size, sizeCappedRefsIn(yjsStore.doc)),
     });
     const onNotes = () => scheduleBlobs();
     yjsStore.notesMap.observeDeep(onNotes);

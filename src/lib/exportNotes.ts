@@ -21,6 +21,7 @@ import { migrate } from "@/lib/shifts/model";
 import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
 import { PUSH_PREFS_KEY, type PushPrefs } from "@/lib/push/prefs";
 import { downloadBlob } from "@/lib/downloadBlob";
+import { getViewPrefs } from "@/lib/viewPrefs";
 
 const PUSH_RESTORE_KEY = PUSH_PREFS_KEY;
 
@@ -78,6 +79,8 @@ export interface BackupAttachmentReport {
   recordings: number;
   /** Obrazy analiz planów, które nie weszły do backupu (budżet albo brak bajtów). */
   plans: number;
+  /** Obrazy analiz planów pominięte z wyboru (Ustawienia → Kopia, `backupPlanImages`) — bez ostrzeżenia przed zapisem. */
+  plansExcluded?: number;
 }
 
 /** Zdanie do toastu o pominiętych załącznikach; `null`, gdy wszystko weszło. */
@@ -101,7 +104,7 @@ export function describeSkippedAttachments(r?: BackupAttachmentReport): string |
 }
 
 /** Bajty załączników do backupu v3 w ramach budżetu; najpierw mniejsze, żeby weszło ich jak najwięcej. */
-async function collectAttachmentBlobs(budget: number): Promise<{ blobs: Record<string, string>; report: BackupAttachmentReport }> {
+async function collectAttachmentBlobs(budget: number, planImages: boolean): Promise<{ blobs: Record<string, string>; report: BackupAttachmentReport }> {
   const report: BackupAttachmentReport = { tooLarge: [], missing: [], journalPhotos: 0, siteDocs: 0, recordings: 0, plans: 0 };
   const blobs: Record<string, string> = {};
   let used = 0;
@@ -134,8 +137,14 @@ async function collectAttachmentBlobs(budget: number): Promise<{ blobs: Record<s
   }
   // Obrazy analiz planów (D7): najpierw kopie robocze i małe oryginały (te same, co jadą do innych
   // urządzeń), potem duże oryginały — przy braku budżetu zostaje przynajmniej obraz do oglądania.
+  // Bez obrazów planów (wybór w Ustawieniach): plik JSON nie jest szyfrowany, a plany bywają cudzymi
+  // projektami — analizy (trasy, skala, zestawienie) zostają, obrazy tylko na urządzeniu.
   const syncablePlans = planRefsIn(yjsStore.doc, true);
   const planOrder = [...syncablePlans, ...[...planRefsIn(yjsStore.doc)].filter((h) => !syncablePlans.has(h))];
+  if (!planImages) {
+    report.plansExcluded = planOrder.filter((h) => !blobs[h]).length;
+    return { blobs, report };
+  }
   for (const hash of planOrder) {
     if (blobs[hash]) continue;
     const dataUrl = await imageStore.getDataUrl(hash);
@@ -149,7 +158,7 @@ async function collectAttachmentBlobs(budget: number): Promise<{ blobs: Record<s
 }
 
 /** Zawartość pełnego backupu v3 (bez zapisu do pliku) + raport o pominiętych załącznikach. */
-export async function buildFullBackupWithReport(opts: { attachmentBudget?: number } = {}): Promise<{ backup: FullBackup; attachments: BackupAttachmentReport }> {
+export async function buildFullBackupWithReport(opts: { attachmentBudget?: number; planImages?: boolean } = {}): Promise<{ backup: FullBackup; attachments: BackupAttachmentReport }> {
   await yjsStore.ready();
   await versionsStore.load();
   await shiftsReady();
@@ -161,7 +170,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   const { pointsDump } = await import("@/lib/study/pointsStore");
   const { billingDump } = await import("@/lib/study/billingStore");
   const { plansDump } = await import("@/lib/plans/plansStore");
-  const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES);
+  const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES, opts.planImages ?? getViewPrefs().backupPlanImages);
   const study = yStudy.dump();
   const propDefs = yjsStore.projectPropDefs();
   const backup: FullBackup = {
@@ -204,7 +213,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     plans: JSON.stringify(plansDump()),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
     // Same liczby (bez treści) — okno przywracania mówi, czego w pliku nie ma; zera = nic nie pominięto.
-    skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings, plans: report.plans },
+    skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings, plans: report.plans + (report.plansExcluded ?? 0) },
   };
   return { backup, attachments: report };
 }

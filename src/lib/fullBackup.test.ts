@@ -224,6 +224,23 @@ describe("pełny backup v3 — załączniki", () => {
     expect(backup.skipped).toEqual({ tooLarge: 0, missing: 0, journalPhotos: 0, siteDocs: 0, recordings: 0 , plans: 0 });
     expect(describeBackupSkipped(backup.skipped)).toBeNull();
   });
+
+  it("kopia bez obrazów planów (wybór w Ustawieniach): obrazy pominięte bez ostrzeżenia, okno przywracania o nich mówi", async () => {
+    const image = await imageStore.putDataUrl("data:image/png;base64,DDDD");
+    const work = await imageStore.putDataUrl("data:image/png;base64,EEEE");
+    yjsStore.doc.getMap("plans").set(`p${String.fromCharCode(1)}x`, { image: { ref: image, size: 3 }, work: { ref: work } });
+
+    const full = await buildFullBackupWithReport();
+    expect(Object.keys(full.backup.attachmentBlobs ?? {})).toEqual(expect.arrayContaining([image, work]));
+
+    const { backup, attachments } = await buildFullBackupWithReport({ planImages: false });
+    expect(Object.keys(backup.attachmentBlobs ?? {})).not.toContain(image);
+    expect(Object.keys(backup.attachmentBlobs ?? {})).not.toContain(work);
+    expect(attachments.plansExcluded).toBe(2);
+    expect(describeSkippedAttachments(attachments)).toBeNull();
+    expect(backup.skipped?.plans).toBe(2);
+    expect(describeBackupSkipped(backup.skipped)).toBe("Ten plik nie zawiera: obrazy analiz planów: 2.");
+  });
 });
 
 describe("Nauka w pełnej kopii", () => {

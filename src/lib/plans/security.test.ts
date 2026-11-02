@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mayLeaveDevice } from "./planRefs";
+import { mayLeaveDevice, sizeCappedRefsIn } from "./planRefs";
 import { checkStoredPlanImage } from "./imageSniff";
 import { cleanPlanImage } from "./model";
 import { joinPolylines } from "./detect/lines";
@@ -20,6 +20,18 @@ describe("Plany — poprawki po przeglądzie bezpieczeństwa", () => {
     // Zwykłe zdjęcie spoza planów — tylko limit peera.
     expect(mayLeaveDevice("b".repeat(64), 5_000_000, plan)).toBe(true);
     expect(mayLeaveDevice("b".repeat(64), 25 * 1024 * 1024, plan)).toBe(false);
+  });
+
+  it("podpis klienta (P2.4) też ma limit 2 MB: obca karta nie wymusi wysłania dużego pliku", () => {
+    const sig = "c".repeat(64);
+    const maps: Record<string, Map<string, unknown>> = {
+      studySites: new Map([["s1", { signature: { image: sig, name: "Jan", at: 1 } }]]),
+    };
+    const doc = { getMap: (name: string) => maps[name] ?? new Map() };
+    const capped = sizeCappedRefsIn(doc);
+    expect(capped.has(sig)).toBe(true);
+    expect(mayLeaveDevice(sig, 50_000, capped)).toBe(true);
+    expect(mayLeaveDevice(sig, 5_000_000, capped)).toBe(false);
   });
 
   it("W2: zapisane bajty sprawdzane przed dekodowaniem — bomba, zły typ i niezgodne wymiary odpadają", () => {

@@ -29,6 +29,8 @@ export interface ViewPrefs {
   autosaveSeconds: number;
   autoExportDays: number; // 0 = off
   backupReminderDays: number; // 0 = off
+  /** Obrazy analiz planów w pełnej kopii JSON (plik nie jest szyfrowany). `false` = kopia bez nich. */
+  backupPlanImages: boolean;
   todayReminderHours: number; // 0 = off, otherwise interval in hours between nudges
   todayReminderTime: string; // "" = disabled, otherwise "HH:mm" for daily fixed-time reminder (takes priority over interval)
   weekReminderTime: string; // "" = disabled, otherwise "HH:mm" for weekly fixed-time reminder
@@ -57,6 +59,7 @@ const DEFAULTS: ViewPrefs = {
   autosaveSeconds: 0,
   autoExportDays: 7,
   backupReminderDays: 14,
+  backupPlanImages: true,
   todayReminderHours: 0,
   todayReminderTime: "",
   weekReminderTime: "",
@@ -97,7 +100,7 @@ export function resetViewPrefs() {
 export const VIEW_PREF_GROUPS = {
   edytor: ["defaultNoteColor", "spellcheck", "autosaveSeconds"],
   przypomnienia: ["todayReminderHours", "todayReminderTime", "weekReminderTime", "weekReminderDay"],
-  kopia: ["autoExportDays", "backupReminderDays"],
+  kopia: ["autoExportDays", "backupReminderDays", "backupPlanImages"],
 } as const satisfies Record<string, readonly (keyof ViewPrefs)[]>;
 
 /** Nazwy ustawień po polsku — do listy „co się zmieni” w potwierdzeniu resetu. */
@@ -119,6 +122,7 @@ export const VIEW_PREF_LABELS: Record<keyof ViewPrefs, string> = {
   autosaveSeconds: "autosave",
   autoExportDays: "auto-backup",
   backupReminderDays: "przypomnienie o kopii",
+  backupPlanImages: "obrazy planów w kopii",
   todayReminderHours: "przypomnienie „Dziś”",
   todayReminderTime: "godzina „Dziś”",
   weekReminderTime: "przypomnienie „Ten tydzień”",
