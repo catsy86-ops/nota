@@ -80,3 +80,15 @@ test("pasek boczny: grupy Codziennie / Praca / Osobiste; grupa zwija się i pami
   await page.reload();
   await expect(aside.locator('[data-sidebar-group="praca"] button[aria-expanded]')).toHaveAttribute("aria-expanded", "false");
 });
+
+test("pasek boczny: „Osobiste” domyślnie zwinięte, ale rozwinięte w otwartym dziale (plan wyglądu, Faza 7)", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+  await page.goto("/");
+  const osobiste = page.getByRole("complementary").locator('[data-sidebar-group="osobiste"]');
+  await expect(osobiste.locator("button[aria-expanded]")).toHaveAttribute("aria-expanded", "false");
+  await expect(osobiste.getByRole("button", { name: "Długi", exact: true })).toBeHidden();
+  await page.goto("/dlugi");
+  await expect(osobiste.locator("button[aria-expanded]")).toHaveAttribute("aria-expanded", "true");
+  await expect(osobiste.getByRole("button", { name: "Długi", exact: true })).toBeVisible();
+});

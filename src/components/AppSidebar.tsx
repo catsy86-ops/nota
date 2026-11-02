@@ -33,14 +33,18 @@ import { NEUROKLIK_URL } from "@/lib/neuroklik";
 
 const MAX_FAVORITES = 10;
 
-/** Zwinięte grupy paska (PW-4): zapamiętane per przeglądarka; błąd dostępu do pamięci = wszystkie otwarte. */
+/** Zwinięte grupy paska (PW-4): zapamiętane per przeglądarka. Bez zapisu „Osobiste” są zwinięte (plan wyglądu,
+ *  Faza 7) — pasek ma się mieścić na 900 px; błąd dostępu do pamięci daje ten sam stan domyślny. */
 const SIDEBAR_GROUPS_KEY = "kaczy.sidebarGroups.v1";
+const DEFAULT_COLLAPSED_GROUPS: Partial<Record<SidebarGroupKey, boolean>> = { osobiste: true };
 function readCollapsedGroups(): Partial<Record<SidebarGroupKey, boolean>> {
   try {
-    const parsed = JSON.parse(localStorage.getItem(SIDEBAR_GROUPS_KEY) ?? "{}");
-    return parsed && typeof parsed === "object" ? parsed : {};
+    const raw = localStorage.getItem(SIDEBAR_GROUPS_KEY);
+    if (raw === null) return DEFAULT_COLLAPSED_GROUPS;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : DEFAULT_COLLAPSED_GROUPS;
   } catch {
-    return {};
+    return DEFAULT_COLLAPSED_GROUPS;
   }
 }
 
@@ -100,9 +104,9 @@ export function AppSidebar({
   const themePress = useLongPress(openQuickPresets);
   const [moreOpen, setMoreOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState(readCollapsedGroups);
-  const toggleGroup = (key: SidebarGroupKey) => {
+  const setGroupCollapsed = (key: SidebarGroupKey, collapsed: boolean) => {
     setCollapsedGroups((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
+      const next = { ...prev, [key]: collapsed };
       try { localStorage.setItem(SIDEBAR_GROUPS_KEY, JSON.stringify(next)); } catch { /* bez zapisu — zwinięcie działa do odświeżenia */ }
       return next;
     });
@@ -197,7 +201,8 @@ export function AppSidebar({
               {/* Kafle statystyk usunięte — liczniki są już przy pozycjach nawigacji. */}
               <div className="space-y-2">
                 {groupSidebarItems(sidebarItems).map((g) => {
-                  const collapsed = !!collapsedGroups[g.key];
+                  // Grupa z otwartym działem zawsze widoczna — zwinięcie nie chowa miejsca, w którym jesteś.
+                  const collapsed = !!collapsedGroups[g.key] && !g.items.some((item) => item.view === view);
                   const rows = (
                     <div className="space-y-0.5" hidden={collapsed}>
                       {g.items.map((item) => (
@@ -216,7 +221,7 @@ export function AppSidebar({
                       <button
                         type="button"
                         aria-expanded={!collapsed}
-                        onClick={() => toggleGroup(g.key)}
+                        onClick={() => setGroupCollapsed(g.key, !collapsed)}
                         className="section-caps px-3 mb-1 flex w-full items-center justify-between gap-1.5 py-1 rounded-control hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         {g.label}
