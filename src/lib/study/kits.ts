@@ -1,5 +1,6 @@
 import { cleanFittings, fittingKey, FITTING_QTY_MAX, type Fitting } from "./fittings";
 import { cleanPipes, PIPE_CM_MAX, type Pipe } from "./pipes";
+import { POINT_TYPES } from "./points";
 
 /**
  * Zestawy materiału (H1.2, plan 2026-10-29): nazwana lista kształtek i rur, np. „Podejście umywalki”.
@@ -11,6 +12,8 @@ export interface Kit {
   name: string;
   fittings: Fitting[];
   pipes: Pipe[];
+  /** H2.5: typy punktów (`POINT_TYPES[].id`), dla których to jest podejście — do szacunku materiału z punktów. */
+  forPoints?: string[];
 }
 
 export const KIT_NAME_MAX = 40;
@@ -22,17 +25,17 @@ export const KITS_MAX = 30;
  */
 export const DEFAULT_KITS: readonly Kit[] = [
   {
-    id: "kit-umywalka", name: "Podejście umywalki",
+    id: "kit-umywalka", name: "Podejście umywalki", forPoints: ["umywalka"],
     fittings: [{ name: "Kolano naścienne 16", qty: 2 }, { name: "Trójnik 16", qty: 2 }, { name: "Kolano 50/45°", qty: 1 }],
     pipes: [{ name: "Rura PEX 16×2", cm: 300 }, { name: "Rura PVC 50", cm: 100 }],
   },
   {
-    id: "kit-wc", name: "Podejście WC (stelaż)",
+    id: "kit-wc", name: "Podejście WC (stelaż)", forPoints: ["wc-stelaz"],
     fittings: [{ name: "Kolano naścienne 16", qty: 1 }, { name: "Trójnik 16", qty: 1 }, { name: "Kolano 110/87°", qty: 1 }],
     pipes: [{ name: "Rura PEX 16×2", cm: 150 }, { name: "Rura PVC 110", cm: 100 }],
   },
   {
-    id: "kit-zlew", name: "Podejście zlewu i zmywarki",
+    id: "kit-zlew", name: "Podejście zlewu i zmywarki", forPoints: ["zlew"],
     fittings: [{ name: "Kolano naścienne 16", qty: 2 }, { name: "Trójnik 16", qty: 2 }, { name: "Trójnik 50/87°", qty: 1 }],
     pipes: [{ name: "Rura PEX 16×2", cm: 400 }, { name: "Rura PVC 50", cm: 150 }],
   },
@@ -46,7 +49,8 @@ export function cleanKit(raw: unknown): Kit | null {
   const fittings = cleanFittings(k.fittings);
   const pipes = cleanPipes(k.pipes);
   if (!name || (fittings.length === 0 && pipes.length === 0)) return null;
-  return { id: k.id, name, fittings, pipes };
+  const forPoints = Array.isArray(k.forPoints) ? POINT_TYPES.map((t) => t.id).filter((id) => k.forPoints!.includes(id)) : [];
+  return { id: k.id, name, fittings, pipes, ...(forPoints.length ? { forPoints } : {}) };
 }
 
 /**
@@ -75,4 +79,30 @@ export function kitSummary(kit: Kit): string {
   const cm = kit.pipes.reduce((s, p) => s + p.cm, 0);
   const parts = [pieces > 0 && `${pieces} szt.`, cm > 0 && `${(cm / 100).toLocaleString("pl-PL", { maximumFractionDigits: 2 })} m rur`].filter(Boolean);
   return parts.join(" · ");
+}
+
+export interface PointsEstimate {
+  fittings: Fitting[];
+  pipes: Pipe[];
+  /** Punkty policzone z zestawów. */
+  covered: number;
+  /** Typy punktów bez zestawu, z liczbą sztuk (do podpowiedzi „przypisz zestaw”). */
+  uncovered: { type: string; count: number }[];
+}
+
+/**
+ * H2.5 Szacunek materiału z punktów: każdy punkt dokłada zestaw przypisany do jego typu (pierwszy
+ * pasujący z listy). To szacunek na podejścia, nie na piony i rozprowadzenie.
+ */
+export function estimateFromPoints(points: readonly { type: string }[], kits: readonly Kit[]): PointsEstimate {
+  let acc: { fittings: Fitting[]; pipes: Pipe[] } = { fittings: [], pipes: [] };
+  let covered = 0;
+  const missing = new Map<string, number>();
+  for (const p of points) {
+    const kit = kits.find((k) => k.forPoints?.includes(p.type));
+    if (!kit) { missing.set(p.type, (missing.get(p.type) ?? 0) + 1); continue; }
+    acc = applyKit(acc.fittings, acc.pipes, kit);
+    covered++;
+  }
+  return { ...acc, covered, uncovered: [...missing].map(([type, count]) => ({ type, count })) };
 }

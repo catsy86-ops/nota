@@ -105,6 +105,24 @@ test("zmiana nazwy pomieszczenia: Enter zapisuje, Esc anuluje, nazwa zostaje po 
   await expect(again.getByTestId("site-points").getByRole("button", { name: "Zmień nazwę: Łazienka piętro" })).toBeVisible();
 });
 
+test("materiał na start z punktów: szacunek z zestawów i „Dodaj do braków” (H2.5) @mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const card = await openCard(page);
+  const panel = card.getByTestId("site-points");
+  await panel.getByRole("button", { name: /^\+ Łazienka/ }).click();
+  const est = panel.getByTestId("points-estimate");
+  await expect(est).toContainText("2 z 4 punktów bez podejścia");
+  await est.locator("summary").click();
+  await expect(est.getByTestId("points-estimate-items")).toContainText("Kolano naścienne 16");
+  await expect(est).toContainText("Bez zestawu: Prysznic ×1, Pralka ×1");
+  await est.getByRole("button", { name: "Dodaj do braków" }).click();
+  const shortages = card.getByTestId("site-shortages");
+  await expect(shortages).toContainText("Kolano naścienne 16");
+  await expect(shortages).toContainText("3 szt.");
+  await page.getByRole("button", { name: "Cofnij" }).click();
+  await expect(shortages).not.toContainText("Kolano naścienne 16");
+});
+
 // Jednopikselowy PNG — wystarczy, żeby `prepareImage` zapisał zdjęcie.
 const PNG_B64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 

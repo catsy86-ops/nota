@@ -12,6 +12,8 @@ import type { Fitting } from "@/lib/study/fittings";
 import type { Pipe } from "@/lib/study/pipes";
 import { FittingsFields } from "./FittingsFields";
 import { PipesFields } from "./PipesFields";
+import { cn } from "@/lib/utils";
+import { POINT_TYPES, pointType } from "@/lib/study/points";
 
 const newKit = (): Kit => ({ id: `kit-${crypto.randomUUID()}`, name: "", fittings: [], pipes: [] });
 
@@ -65,6 +67,23 @@ export function KitsDialog({ open, onOpenChange, fittingHistory, pipeHistory }: 
             <div className="rounded-card border border-border p-3">
               <PipesFields value={editing.pipes} history={pipeHistory} onChange={(pipes) => { setEditing({ ...editing, pipes }); setError(null); }} />
             </div>
+            <fieldset className="space-y-1.5">
+              <legend className="text-sm font-medium">Podejście dla punktów</legend>
+              <p className="text-xs text-muted-foreground">Z tych punktów karta budowy policzy szacunek materiału na start.</p>
+              <div className="flex flex-wrap gap-1.5">
+                {POINT_TYPES.filter((t) => t.id !== "inny").map((t) => {
+                  const on = editing.forPoints?.includes(t.id) ?? false;
+                  return (
+                    <button key={t.id} type="button" aria-pressed={on}
+                      onClick={() => setEditing({ ...editing, forPoints: on ? editing.forPoints!.filter((x) => x !== t.id) : [...(editing.forPoints ?? []), t.id] })}
+                      className={cn("pressable rounded-full border px-2.5 py-0.5 text-xs coarse:min-h-11 coarse:px-3 coarse:text-sm",
+                        on ? "border-primary bg-primary/10 font-medium text-foreground" : "border-border text-muted-foreground hover:text-foreground")}>
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
             {error && <p role="alert" className="text-sm text-destructive-ink">{error}</p>}
             <div className="flex flex-wrap justify-end gap-2">
               <Button type="button" variant="ghost" onClick={() => setEditing(null)} className="coarse:h-11">Anuluj</Button>
@@ -78,7 +97,9 @@ export function KitsDialog({ open, onOpenChange, fittingHistory, pipeHistory }: 
                 <li key={kit.id} className="flex items-center gap-2 rounded-card border border-border px-3 py-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{kit.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{kitSummary(kit)}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {kitSummary(kit)}{kit.forPoints?.length ? ` · dla: ${kit.forPoints.map((id) => pointType(id).label).join(", ")}` : ""}
+                    </p>
                   </div>
                   <Button type="button" variant="ghost" size="icon" onClick={() => startEdit(kit)} aria-label={`Zmień zestaw ${kit.name}`} className="coarse:size-11">
                     <Pencil className="h-4 w-4" aria-hidden />

@@ -3806,6 +3806,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy.** Vitest: `src/lib/study/billing.test.ts` („miesiąc razem”: punkty w miesiącu, godziny pominięte, etapy i ryczałt po ostatnim etapie). E2E: `e2e/site-billing.spec.ts` (gotowe punkty ze stawką → „Z budów 400 zł” w Grafiku).
 - **Commit.** `ad601eb` (2026-10-30).
 
+## Praca: materiał na start z punktów (H2.5, plan 2026-10-29)
+
+- **Co robi.** W panelu „Punkty” karty budowy zwijana linia **„Materiał na start”**: rury i kształtki z zestawów dla punktów, które nie mają jeszcze podejścia, z informacją, ile punktów policzono i które typy nie mają zestawu („Bez zestawu: Prysznic ×1”). **„Dodaj do braków”** wpisuje pozycje jako braki „Brakuje” (z „Cofnij”) — stąd idą do „Do zamówienia” w karcie i na listę „Do hurtowni” (H1.4). W oknie „Zestawy materiału” zestaw dostaje sekcję **„Podejście dla punktów”** (wybór typów punktów); lista zestawów pokazuje „dla: Umywalka”.
+- **Gdzie.** `src/lib/study/kits.ts` (`Kit.forPoints`, `cleanKit`, `DEFAULT_KITS`, `estimateFromPoints`, `PointsEstimate`), `src/components/study/PointsEstimate.tsx`, `src/components/study/SitePointsPanel.tsx`, `src/components/study/KitsDialog.tsx`.
+- **Jak działa.** Każdy punkt bez podejścia (`pointStage` = 0) dokłada pierwszy zestaw z jego typem w `forPoints`; sumowanie przez `applyKit` (te same nazwy łączą się bez wielkości liter i ogonków). Przykładowe zestawy mają przypisania: umywalka, WC na stelażu, zlew. Do braków wchodzą przez `addShortage` — ta sama nazwa nie dubluje się, najwyżej dostaje nową ilość; limit 40 braków na budowę obowiązuje.
+- **Ograniczenia.** Szacunek obejmuje podejścia, nie piony ani rozprowadzenie. Zestawy przejęte na własność przed H2.5 (zapisane w dokumencie) nie mają przypisań — trzeba je wybrać w oknie zestawów. Starsza wersja aplikacji zapisując zestaw gubi `forPoints` (zna tylko nazwę i pozycje).
+- **Testy.** Vitest: `src/lib/study/kits.test.ts` („szacunek materiału z punktów”). E2E: `e2e/site-points.spec.ts` („materiał na start…”: łazienka z szablonu, 2 z 4 punktów, „Dodaj do braków” i „Cofnij”), regresja `e2e/journal-kits.spec.ts`.
+- **Commit.** COMMIT_H25 (2026-11-02).
+
 ## Praca: jedna lista do hurtowni (H1.4, plan 2026-10-29)
 
 - **Co robi.** W dzienniku, w wierszu budów, pigułka **„Do hurtowni (n)”** (gdy jest co zamawiać) otwiera listę: braki „Brakuje” oraz rury i kształtki od ostatniego zamówienia ze wszystkich budów w toku, w grupach „Na budowę: …”. Jedna wiadomość: „Kopiuj” albo „WhatsApp” (na numer hurtowni, jeśli budowy mają ten sam). **„Oznacz wszystko jako zamówione”** robi to, co przycisk w karcie budowy, dla każdej budowy naraz — jeden dymek z „Cofnij” dla wszystkich.

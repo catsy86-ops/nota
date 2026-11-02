@@ -12,6 +12,7 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { HEIGHT_MAX, latestPointPhotos, pointCaption, pointsProgress, pointStage, pointType, POINT_STEPS, POINT_TYPES, ROOM_NAME_MAX, ROOM_TEMPLATES, sidesLabel, STEP_LABEL, type WaterPoint } from "@/lib/study/points";
 import { addPoint, addRoom, removePoint, removeRoom, renameRoom, restoreRoom, savePoint, togglePointStep, useSitePoints } from "@/lib/study/pointsStore";
 import type { SiteInfo } from "@/lib/study/sites";
+import { PointsEstimate } from "./PointsEstimate";
 
 /** Opis kroku do zrobienia przy punkcie: „→ próba” albo „gotowe”. */
 const nextLabel = (p: WaterPoint) => {
@@ -245,6 +246,8 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
           </div>
         );
       })}
+
+      <PointsEstimate site={site} points={points} />
 
       <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); addNamed(); }}>
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={ROOM_NAME_MAX} placeholder="np. Łazienka piętro"

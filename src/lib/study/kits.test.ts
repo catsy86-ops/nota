@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
-import { applyKit, cleanKit, DEFAULT_KITS, kitSummary, type Kit } from "./kits";
+import { applyKit, cleanKit, DEFAULT_KITS, estimateFromPoints, kitSummary, type Kit } from "./kits";
 import { createYKits } from "./yKits";
 import { catalogFittings, catalogPipes, SYSTEMS } from "./catalog";
 import { fittingKey } from "./fittings";
@@ -75,5 +75,21 @@ describe("zestawy w Yjs (H1.2)", () => {
     const fresh = createYKits(new Y.Doc());
     fresh.mergeDump(createYKits(new Y.Doc()).dump());
     expect(fresh.get().own).toBe(false);
+  });
+});
+
+describe("szacunek materiału z punktów (H2.5)", () => {
+  it("cleanKit zostawia tylko znane typy punktów, w stałej kolejności", () => {
+    const k = cleanKit({ id: "k", name: "X", fittings: [{ name: "Kolano 16", qty: 1 }], pipes: [], forPoints: ["wanna", "nieznany", "umywalka"] });
+    expect(k?.forPoints).toEqual(["umywalka", "wanna"]);
+    expect(cleanKit({ id: "k", name: "X", fittings: [{ name: "Kolano 16", qty: 1 }], pipes: [] })).not.toHaveProperty("forPoints");
+  });
+
+  it("łazienka z przykładowych zestawów: umywalka i WC policzone, prysznic i pralka bez zestawu", () => {
+    const est = estimateFromPoints([{ type: "umywalka" }, { type: "wc-stelaz" }, { type: "prysznic" }, { type: "pralka" }, { type: "umywalka" }], DEFAULT_KITS);
+    expect(est.covered).toBe(3);
+    expect(est.uncovered).toEqual([{ type: "prysznic", count: 1 }, { type: "pralka", count: 1 }]);
+    expect(est.fittings.find((f) => f.name === "Kolano naścienne 16")?.qty).toBe(5);
+    expect(est.pipes.find((p) => p.name === "Rura PEX 16×2")?.cm).toBe(750);
   });
 });
