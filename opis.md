@@ -2854,7 +2854,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Jak działa.** Szyfrogram to te same bajty, które są w dokumencie i w pełnej kopii — plik nie ujawnia niczego nowego. Id notatki przychodzi od peera, więc w nazwie pliku zostaje tylko `[A-Za-z0-9-]` (przegląd `security-reviewer` 2026-11-02). Kartka z kodem powstaje w niewidocznej ramce `iframe` (bez skryptów strony), więc kod nie trafia do DOM aplikacji; ramka znika po `afterprint` albo po minucie. `formatRecoveryInput` zostawia znaki spoza alfabetu (dekoder zgłosi błąd), żeby literówka nie znikała po cichu, i ucina do 32 znaków.
 - **Ograniczenia.** Odzysk notatki innym (starym) hasłem albo kodem awaryjnym — **nie zrobiony**: aplikacja nie przechowuje starych nagłówków skarbca. Projekt z listą wycofanych nagłówków odrzucony w przeglądzie bezpieczeństwa (zderzenie zapisu z `meta`, możliwość podrzucenia klucza przez peera i „prania” treści, stare klucze pod wyciekłym hasłem); wymagania nowego projektu są w `docs/plan-skarbiec-2026-10-25.md` (1.2 część 2).
 - **Testy.** `src/lib/privateNotes.test.ts` (szyfrogram tylko dla nieodszyfrowywalnej notatki), `src/lib/vault.test.ts` (`formatRecoveryInput`: grupy, wklejenie z separatorami dekoduje się do tych samych bajtów, długość), `e2e/private-notes.spec.ts` (kartka do druku zawiera kod w grupach, okno kodu zostaje otwarte).
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `0c41cf5` (2026-11-02).
 
 ## Skarbiec — ostrzeżenie przed blokadą i kłódka w nagłówku (1.3 i 2.1, 2026-10-26)
 
