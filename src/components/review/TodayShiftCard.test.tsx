@@ -77,3 +77,31 @@ describe("TodayShiftCard — czas zmiany (G2.1)", () => {
     expect(screen.getByTestId("today-timing").textContent).toMatch(/^Zaczynasz za .*, o \d\d:\d\d$/);
   });
 });
+
+describe("TodayShiftCard — notatka dnia na karcie (Dziś 2.6)", () => {
+  const dayNote = (over: Record<string, unknown> = {}) => ({
+    id: "d1", title: "", content: "Pierwsza linia\n\nDruga linia\nTrzecia", locked: false,
+    checklist: [{ id: "a", text: "x", checked: true }, { id: "b", text: "y", checked: false }], ...over,
+  }) as never;
+
+  it("bez notatki dnia przycisk zakłada ją", () => {
+    render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} dailyNote={null} />);
+    expect(screen.getByRole("button", { name: "Notatka dnia" })).toBeTruthy();
+    expect(screen.queryByTestId("today-daily-preview")).toBeNull();
+  });
+
+  it("z notatką dnia: „Dopisz”, pierwsze dwie linie i licznik odhaczeń", () => {
+    render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} dailyNote={dayNote()} />);
+    expect(screen.getByRole("button", { name: "Dopisz" })).toBeTruthy();
+    const preview = screen.getByTestId("today-daily-preview");
+    expect(preview.textContent).toContain("Pierwsza linia");
+    expect(preview.textContent).toContain("Druga linia");
+    expect(preview.textContent).not.toContain("Trzecia");
+    expect(preview.textContent).toContain("Odhaczone: 1 z 2");
+  });
+
+  it("prywatna notatka dnia nie pokazuje treści", () => {
+    render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} dailyNote={dayNote({ locked: true, content: "" })} />);
+    expect(screen.getByTestId("today-daily-preview").textContent).toContain("Notatka dnia jest w skarbcu.");
+  });
+});

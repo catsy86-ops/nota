@@ -6,6 +6,7 @@ import type { Folder, Note } from "@/hooks/useNotes";
 import type { useNotesContext } from "@/hooks/NotesProvider";
 import type { useViewRoute } from "@/hooks/useViewRoute";
 import type { useTodayCards } from "@/lib/todayCards";
+import { dailyKey, findDailyNote } from "@/lib/dailyNote";
 
 type NotesApi = ReturnType<typeof useNotesContext>;
 
@@ -51,7 +52,7 @@ export function TodayCards({ searching, go, notes, folders, reminderNotes, today
           {!searching && (
             <ViewErrorBoundary name="Grafik">
               <Suspense fallback={<CardSkeleton />}>
-                <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} />
+                <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} dailyNote={findDailyNote(notes, dailyKey()) ?? null} />
               </Suspense>
             </ViewErrorBoundary>
           )}
