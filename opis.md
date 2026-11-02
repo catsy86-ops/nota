@@ -3831,7 +3831,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Imię jest na urządzeniu (localStorage), nie w dokumencie — każdy telefon to inna osoba. Wpis zachowuje autora przy poprawkach treści; punkt dostaje autora ostatniej zmiany kroków. Imię czyści `safeLine` (bez znaków sterujących), do 40 znaków. Pole `by` jest nowe: starsza wersja aplikacji zachowuje je we wpisach (`JOURNAL_ENTRY_KEYS` chroni nieznane pola), ale przepisując listę braków albo punkt — gubi.
 - **Ograniczenia.** Godziny na budowach nie mają autora: jedna pozycja na dzień i budowę, więc dwie osoby nadpisywałyby sobie wpis — potrzebne osobne klucze na osobę (razem ze wspólną budową, H5.3). Bez ustawionego imienia nic się nie podpisuje.
 - **Testy.** Vitest: `src/lib/study/author.test.ts`, `src/lib/study/yStudy.test.ts` („autor wpisu”: drugi telefon i poprawka). E2E: `e2e/author.spec.ts`.
-- **Commit.** COMMIT_H51 (2026-11-02).
+- **Commit.** `7b5e534` (2026-11-02).
 
 ## Praca: zlecenia własne — fuchy (H3.4, plan 2026-10-29)
 
