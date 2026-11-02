@@ -2854,7 +2854,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Jak działa.** Bez nowych danych: zgodność z istniejących odhaczeń (`logKey(dzień, id)`), tydzień z wpisów treningu (`weekKeys` z `lib/week.ts`). Nic nie zmienia formatu, więc bez wymogu C-1.
 - **Stan planu Ćwiczeń.** 1.1 (więcej partii i sprzętu) jest już w katalogu (`catalog.ts`), 3.1 (masa ciała, C-2) zrobione wcześniej. Otwarte m.in. 1.2–1.4, 2.1–2.7, 3.3, 3.4, Etap 4 — do sprawdzenia w kodzie przed realizacją.
 - **Testy.** `src/lib/supplements/model.test.ts` (`weekAdherence`), `src/lib/training/model.test.ts` (`trainingWeek`: tydzień pn–nd, nieznane ćwiczenia pominięte), `e2e/cwiczenia-tydzien.spec.ts`.
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `93026b6` (2026-11-02).
 
 ## Skrzynka — „Zapisz” i dyktowanie w polu, tytuł z treści, „Otwórz notatkę”, pusty stan z działaniem (1.1, 1.3, 2.2, 3.2, 4.5, 2026-11-02)
 
