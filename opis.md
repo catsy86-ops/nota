@@ -3813,7 +3813,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Grupy liczy ta sama `siteOrder` co karta budowy (kształtki i rury od `orderedAt`), braki tylko ze statusem „Brakuje”. Budowy w archiwum i bez niczego do zamówienia są pominięte. Fuchy są na liście jak budowy (materiał z hurtowni). Numer: `sharedSupplierPhone` bierze numer, gdy wszystkie wpisane numery są tym samym numerem; różne numery albo brak — WhatsApp pyta o odbiorcę.
 - **Ograniczenia.** „Braki w aucie” z planu czekają na H1.3 (materiał w aucie — decyzja H-1). Lista nie pozwala odznaczyć pojedynczej pozycji — do tego jest karta budowy.
 - **Testy.** Vitest: `src/lib/study/order.test.ts` („H1.4”: grupy, archiwum i puste pominięte, tekst, wspólny numer). E2E: `e2e/wholesale.spec.ts` (390 px: dwie budowy w grupach, oznaczenie wszystkiego, „Cofnij”), regresja `e2e/site-order.spec.ts`.
-- **Commit.** COMMIT_H14 (2026-11-02).
+- **Commit.** `67d29a6` (2026-11-02).
 
 ## Praca: zlecenia własne — fuchy (H3.4, plan 2026-10-29)
 
