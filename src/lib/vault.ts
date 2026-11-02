@@ -162,6 +162,17 @@ export function encodeRecoveryCode(bytes: Uint8Array): string {
   return out.match(/.{1,4}/g)!.join("-");
 }
 
+/**
+ * 1.7: kod awaryjny w trakcie wpisywania albo po wklejeniu — wielkie litery, dowolne separatory (spacje,
+ * kropki, myślniki, nowe linie) usunięte, grupy po 4 z myślnikiem, najwyżej tyle znaków, ile ma kod.
+ * Znaki spoza alfabetu zostają (dekoder zgłosi błąd), żeby literówka nie znikała po cichu.
+ */
+export function formatRecoveryInput(raw: string): string {
+  const max = Math.ceil((RECOVERY_BYTES * 8) / 5);
+  const clean = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, max);
+  return clean.match(/.{1,4}/g)?.join("-") ?? "";
+}
+
 export function decodeRecoveryCode(code: string): Uint8Array {
   const clean = code.toUpperCase().replace(/[\s-]/g, "").replace(/0/g, "O").replace(/1/g, "I");
   if (!/^[A-Z2-7]+$/.test(clean)) throw new VaultError("bad-recovery");

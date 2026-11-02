@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { m as motion } from "framer-motion";
-import { Archive, ArchiveRestore, Check, KeyRound, Lock, Pin, RotateCcw, Trash } from "lucide-react";
+import { Archive, ArchiveRestore, Check, Download, KeyRound, Lock, Pin, RotateCcw, Trash } from "lucide-react";
+import { downloadBlob } from "@/lib/downloadBlob";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -112,7 +113,16 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
 
         <div className="mt-3 flex items-center gap-2 flex-wrap">
           {undecryptable ? (
-            <span className="text-2xs text-destructive-ink">Tego szyfrogramu nie da się odszyfrować tym hasłem.</span>
+            <>
+              <span className="text-2xs text-destructive-ink">Tego szyfrogramu nie da się odszyfrować tym hasłem.</span>
+              <button
+                type="button"
+                onClick={stop(() => downloadCiphertext(note.id))}
+                className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-foreground/10 coarse:min-h-11"
+              >
+                <Download className="w-3 h-3" aria-hidden />Pobierz szyfrogram
+              </button>
+            </>
           ) : noVault ? (
             <span className="text-2xs text-muted-foreground">Skarbiec nie jest ustawiony na tym urządzeniu.</span>
           ) : (
@@ -149,6 +159,19 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
     </motion.div>
   );
 });
+
+/**
+ * Skarbiec 1.2: plik z szyfrogramem notatki, której nie da się odszyfrować — do ręcznego odzysku (np. po
+ * przywróceniu dawnego skarbca). Zawiera tylko szyfrogram i id (id jest częścią danych uwierzytelniających).
+ * Id przychodzi od peera — w nazwie pliku tylko `[A-Za-z0-9-]` (przegląd `security-reviewer` 2026-11-02).
+ */
+function downloadCiphertext(id: string) {
+  const vault = privateNotes.undecryptableToken(id);
+  if (!vault) { toast.error("Tej notatki nie ma już w dokumencie"); return; }
+  const file = JSON.stringify({ format: "notki-vault-note", version: 1, id, vault, exportedAt: new Date().toISOString() }, null, 2);
+  downloadBlob(new Blob([file], { type: "application/json" }), `notki-szyfrogram-${id.replace(/[^A-Za-z0-9-]/g, "").slice(0, 8) || "notatka"}.notki-vault`);
+  toast.success("Zapisano szyfrogram", { description: "Plik nie zawiera hasła ani treści — tylko zaszyfrowane dane." });
+}
 
 /** Termin przypomnienia zostaje jawny (decyzja projektowa), tekstu nie ma. */
 function ReminderBadgeSafe({ note }: { note: Note }) {

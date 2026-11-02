@@ -140,6 +140,9 @@ describe("privateNotes — model i sesja", () => {
     expect(pn.peek("a")?.content).toBe("AAA");
     expect(pn.peek("b")).toBeUndefined();
     expect(pn.isUndecryptable("b")).toBe(true);
+    // 1.2: szyfrogram do pobrania tylko dla nieodszyfrowywalnej notatki.
+    expect(pn.undecryptableToken("b")).toBe(tokenA);
+    expect(pn.undecryptableToken("a")).toBeUndefined();
   });
 
   it("starszy peer z jawną wersją nie przywraca tekstu po scaleniu", async () => {

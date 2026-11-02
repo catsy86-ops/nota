@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  KDF_ITERATIONS, VaultError, createVault, decodeRecoveryCode, decryptString, deriveKek, encodeRecoveryCode, encryptString,
+  KDF_ITERATIONS, VaultError, createVault, decodeRecoveryCode, decryptString, formatRecoveryInput, deriveKek, encodeRecoveryCode, encryptString,
   fromB64u, importDataKey, isValidMeta, looksLikeVaultToken, noteAad, passwordStrength, randomBytes, toB64u,
   unlockWithPassword, unlockWithRecovery,
 } from "./vault";
@@ -174,5 +174,25 @@ describe("hasło i metadane z zewnątrz (A07/A04)", () => {
     expect(isValidMeta({ ...base, iter: 2_000_000_000 })).toBe(false);
     expect(isValidMeta({ ...base, wrapped: "x".repeat(10_000) })).toBe(false);
     expect(isValidMeta({ ...base, epoch: Infinity })).toBe(false);
+  });
+});
+
+describe("formatRecoveryInput (1.7)", () => {
+  it("wielkie litery, grupy po 4, dowolne separatory przy wklejaniu", () => {
+    expect(formatRecoveryInput("abcd")).toBe("ABCD");
+    expect(formatRecoveryInput("abcde")).toBe("ABCD-E");
+    expect(formatRecoveryInput(" abcd.efgh ijkl\nmnop ")).toBe("ABCD-EFGH-IJKL-MNOP");
+  });
+
+  it("wklejony kod w dowolnym zapisie dekoduje się do tych samych bajtów", () => {
+    const bytes = new Uint8Array(20).map((_, i) => i * 13);
+    const code = encodeRecoveryCode(bytes);
+    const messy = code.toLowerCase().replace(/-/g, " . ");
+    expect(formatRecoveryInput(messy)).toBe(code);
+    expect(decodeRecoveryCode(formatRecoveryInput(messy))).toEqual(bytes);
+  });
+
+  it("nie dłużej niż kod (32 znaki, 8 grup)", () => {
+    expect(formatRecoveryInput("A".repeat(50)).replace(/-/g, "")).toHaveLength(32);
   });
 });

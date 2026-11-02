@@ -1,5 +1,19 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie „Skarbca” (notatki prywatne) (2026-10-25)
 
+> **Status (2026-11-02):** zrobione wcześniej (opis w `opis.md`): 1.3, 1.4 (V-1), 1.5 (V-2), 2.1, 3.1 (v2, V-3), 3.2 (passkey PRF, V-4). Zrobione 2026-11-02: 1.2 część 1 („Pobierz szyfrogram”; „Usuń” już było) i 1.7 (druk kodu, wpisywanie z myślnikami, wklejanie z separatorami).
+>
+> **1.2 część 2 (odzysk starym hasłem / kodem) — projekt odrzucony w przeglądzie `security-reviewer` 2026-11-02, do nowego projektu.** Wymagania (MUSI):
+> 1. Wycofane klucze w osobnym kluczu `vaultMap` (np. `retired`), nie w `meta` — bez zmiany odcisku, bez kasowania przez starsze wersje, bez zderzenia zapisu z `meta`.
+> 2. Łańcuch uwierzytelniony bieżącym kluczem danych: przy `rekey` stary klucz danych opakowany NOWYM (AES-GCM, AAD `notki:vault:retired:<epoka>:<odcisk>`), przy kolejnym `rekey` przepakowany. Podrzucony wpis się nie odszyfruje, wyciekłe stare hasło nic nie daje, przypadki „spóźniony zapis” i „pominięte przy rekey” naprawiają się same przy odblokowaniu.
+> 3. Rozjazd dwóch skarbców offline: do pinu `iter`; przy werdykcie „changed” zachować poprzedni pin lokalnie przed `writeVaultPin`; odzysk tylko z tego lokalnego nagłówka (stare hasło / kod), wynik dopisany do łańcucha. Nagłówków z dokumentu bez dowodu nie przyjmować.
+> 4. Walidacja wpisów w czasie działania (kształt, `iter` w granicach, ≤ 3 wpisy, `retiredAt` nie z przyszłości); zły wpis pominąć z `logSecurity`.
+> 5. Przeszyfrowanie z CAS (`getVault(id) === token`, notatka nadal zablokowana, bieżąca epoka) w `enqueue`, potem `failed.delete`.
+> 6. Dławienie jak przy odblokowaniu; sekretów nie logować, bajty zerować.
+> 7. Przy zmianie hasła opcja „hasło wyciekło — nie zachowuj starego klucza” (czyści łańcuch).
+> Testy: spóźniony zapis po `rekey`, dwa skarbce offline, łańcuch przez dwie epoki, odrzucenie podrzuconych wpisów, zgodność odcisku i starego klienta, wyścigi, dławienie, brak sekretów w danych.
+>
+> Zostają też: 1.1 (sekcja „Skarbiec — stan aktualny”), 1.6, 2.2–2.5, 3.3, Etap 4.
+
 Dziesiąty plan z serii „dział po dziale”, w tym samym układzie. Skarbiec to szyfrowanie notatek prywatnych: `lib/vault.ts` (kryptografia), `lib/privateNotes.ts` (sesja, kolejka zapisu, blokada), `lib/vaultAutoLock.ts`, `components/vault/*`.
 
 **Zasada tego planu:** każda zmiana w kryptografii i formacie (Etap 3) przechodzi przegląd bezpieczeństwa (`security-reviewer` albo `/security-review`), ma wektory testowe i odczyt starego formatu. Nic nie osłabia obecnej ochrony, nawet tymczasowo.

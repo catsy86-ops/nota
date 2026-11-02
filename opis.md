@@ -2845,6 +2845,17 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Nie zrobione:** agenda na komputerze (na desktopie siatka zostaje, a tryb „Lista” nie jest widoczny); oś godzin tygodnia (3.3).
 - **Testy:** `src/components/calendar/MonthAgenda.test.tsx`; e2e `e2e/calendar-agenda.spec.ts` (telefon: Lista ↔ Miesiąc).
 
+## Skarbiec — szyfrogram do pobrania i kod awaryjny: druk, wpisywanie (1.2 część 1, 1.7, 2026-11-02)
+
+- **Co robi.**
+  - **1.2 (część 1):** kafel notatki prywatnej, której nie da się odszyfrować bieżącym kluczem, ma przycisk **„Pobierz szyfrogram”**: plik `notki-szyfrogram-<id>.notki-vault` (JSON: `format: "notki-vault-note"`, `version`, `id`, `vault`, `exportedAt`) do ręcznego odzysku. „Usuń” (do kosza, z możliwością przywrócenia) był już na kaflu.
+  - **1.7:** przy kodzie awaryjnym przycisk **„Drukuj”** — kartka z kodem w grupach po 4, datą i trzema zdaniami instrukcji. Pole kodu w „Mam kod awaryjny” samo zamienia litery na wielkie, wstawia myślniki co 4 znaki i przyjmuje wklejenie z dowolnymi separatorami (spacje, kropki, nowe linie). Plik `.txt` z kodem ma nazwę marki „notki” (dawniej „skarbca G”).
+- **Gdzie.** `privateNotes.undecryptableToken(id)` (`src/lib/privateNotes.ts`) — szyfrogram tylko dla notatki z `failed`; `downloadCiphertext` w `src/components/vault/LockedNoteTile.tsx`; `formatRecoveryInput` w `src/lib/vault.ts`; `printRecoveryCode` w `src/lib/recoveryPrint.ts`; przycisk w `RecoveryCodeStep` (`VaultDialogs.tsx`).
+- **Jak działa.** Szyfrogram to te same bajty, które są w dokumencie i w pełnej kopii — plik nie ujawnia niczego nowego. Id notatki przychodzi od peera, więc w nazwie pliku zostaje tylko `[A-Za-z0-9-]` (przegląd `security-reviewer` 2026-11-02). Kartka z kodem powstaje w niewidocznej ramce `iframe` (bez skryptów strony), więc kod nie trafia do DOM aplikacji; ramka znika po `afterprint` albo po minucie. `formatRecoveryInput` zostawia znaki spoza alfabetu (dekoder zgłosi błąd), żeby literówka nie znikała po cichu, i ucina do 32 znaków.
+- **Ograniczenia.** Odzysk notatki innym (starym) hasłem albo kodem awaryjnym — **nie zrobiony**: aplikacja nie przechowuje starych nagłówków skarbca. Projekt z listą wycofanych nagłówków odrzucony w przeglądzie bezpieczeństwa (zderzenie zapisu z `meta`, możliwość podrzucenia klucza przez peera i „prania” treści, stare klucze pod wyciekłym hasłem); wymagania nowego projektu są w `docs/plan-skarbiec-2026-10-25.md` (1.2 część 2).
+- **Testy.** `src/lib/privateNotes.test.ts` (szyfrogram tylko dla nieodszyfrowywalnej notatki), `src/lib/vault.test.ts` (`formatRecoveryInput`: grupy, wklejenie z separatorami dekoduje się do tych samych bajtów, długość), `e2e/private-notes.spec.ts` (kartka do druku zawiera kod w grupach, okno kodu zostaje otwarte).
+- **Commit.** `do uzupełnienia` (2026-11-02).
+
 ## Skarbiec — ostrzeżenie przed blokadą i kłódka w nagłówku (1.3 i 2.1, 2026-10-26)
 
 - **1.3 Ostrzeżenie przed auto-blokadą.** 30 s przed auto-blokadą po bezczynności pojawia się dymek „Zablokuję za 30 s” z przyciskiem „Jeszcze N min” (N = ustawiona blokada). Stuknięcie przedłuża blokadę i ostrzeżenie. Aktywność w oknie przesuwa ostrzeżenie o tyle, ile trwała bezczynność (`scheduleWarn` w `vaultAutoLock.ts`). Ostrzeżenie nie jest zależne od otwartej notatki (plan mówił „przy otwartej prywatnej notatce”; skarbiec odblokowany to dziś ten sam stan, więc nie dodawałem drugiego warunku). Szkic w edycji zapisuje się przed blokadą przez istniejącą kolejkę (bez zmian).

@@ -659,6 +659,11 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     peek: (id: string): PrivateContent | undefined => (key && !locking ? cache.get(id)?.content : undefined),
     peekToken: (id: string): string | undefined => (key && !locking ? cache.get(id)?.vault : undefined),
     isUndecryptable: (id: string) => failed.has(id),
+    /**
+     * 1.2: szyfrogram notatki, której nie da się odszyfrować tym kluczem — do pobrania i ręcznego odzysku.
+     * Tylko dla takich notatek; to te same bajty, które są w dokumencie i w pełnej kopii (nic jawnego).
+     */
+    undecryptableToken: (id: string): string | undefined => (failed.has(id) ? store.getVault(id) ?? undefined : undefined),
     hasRecovery: () => Boolean(meta()?.recovery),
     ensureDecrypted,
     setup, unlock, unlockWithRecoveryCode, unlockWithPasskey, addPasskey, hasPasskeys, lock, flush,

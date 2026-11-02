@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TriangleAlert, Copy, Download, KeyRound, Lock, ShieldCheck } from "lucide-react";
+import { TriangleAlert, Copy, Download, KeyRound, Lock, Printer, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { privateNotes, VaultThrottledError } from "@/lib/privateNotes";
-import { MIN_PASSWORD_LENGTH, VaultError, passwordStrength } from "@/lib/vault";
+import { MIN_PASSWORD_LENGTH, VaultError, formatRecoveryInput, passwordStrength } from "@/lib/vault";
+import { printRecoveryCode } from "@/lib/recoveryPrint";
 import { passkeyApiAvailable } from "@/lib/passkey";
 import { vaultUi, type VaultUiKind } from "@/lib/vaultUi";
 import { downloadBlob } from "@/lib/downloadBlob";
@@ -352,7 +353,7 @@ function RecoverForm({ onBack, onDone }: { onBack: () => void; onDone: (recovery
       <p className="text-sm text-muted-foreground">Wpisz kod awaryjny i ustaw nowe hasło. Wygenerujemy też nowy kod — stary przestanie działać.</p>
       <div className="space-y-1.5">
         <Label htmlFor="vault-recovery-code">Kod awaryjny</Label>
-        <Input id="vault-recovery-code" autoFocus autoComplete="off" spellCheck={false} placeholder="XXXX-XXXX-XXXX-…" className="font-mono" value={code} onChange={(e) => setCode(e.target.value)} />
+        <Input id="vault-recovery-code" autoFocus autoComplete="off" spellCheck={false} placeholder="XXXX-XXXX-XXXX-…" autoCapitalize="characters" className="font-mono uppercase" value={code} onChange={(e) => setCode(formatRecoveryInput(e.target.value))} />
       </div>
       <NewPasswordFields password={password} setPassword={setPassword} confirm={confirm} setConfirm={setConfirm} />
       {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
@@ -373,7 +374,7 @@ function RecoveryCodeStep({ code, onClose }: { code: string; onClose: () => void
     try { await navigator.clipboard.writeText(code); toast.success("Skopiowano kod awaryjny"); } catch { toast.error("Nie udało się skopiować — przepisz kod ręcznie"); }
   }
   function download() {
-    const blob = new Blob([`Kod awaryjny skarbca G\n\n${code}\n\nKto zna ten kod, może odblokować Twoje prywatne notatki. Trzymaj go osobno od urządzeń.\n`], { type: "text/plain" });
+    const blob = new Blob([`Kod awaryjny skarbca notki\n\n${code}\n\nKto zna ten kod, może odblokować Twoje prywatne notatki. Trzymaj go osobno od urządzeń.\n`], { type: "text/plain" });
     downloadBlob(blob, "notki-kod-awaryjny.txt");
   }
 
@@ -383,9 +384,10 @@ function RecoveryCodeStep({ code, onClose }: { code: string; onClose: () => void
         To jedyny raz, kiedy widzisz ten kod. Zapisz go poza urządzeniem (wydruk, menedżer haseł). Kto go zna, może odblokować Twoje notatki.
       </p>
       <p data-testid="recovery-code" className="select-all rounded-field border border-border bg-muted/40 px-3 py-3 text-center font-mono text-sm tracking-wider wrap-break-word">{code}</p>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" size="sm" onClick={copy}><Copy className="w-3.5 h-3.5 mr-1.5" />Kopiuj</Button>
         <Button type="button" variant="outline" size="sm" onClick={download}><Download className="w-3.5 h-3.5 mr-1.5" />Pobierz .txt</Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => printRecoveryCode(code)}><Printer className="w-3.5 h-3.5 mr-1.5" />Drukuj</Button>
       </div>
       <label className="flex items-start gap-2 text-sm">
         <Checkbox className="mt-0.5 coarse:h-6 coarse:w-6" checked={saved} onCheckedChange={(v) => setSaved(v === true)} />

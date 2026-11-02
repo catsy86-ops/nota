@@ -47,6 +47,17 @@ async function setUpVaultAndLock(page: Page) {
   // Kod awaryjny pokazywany raz.
   const recovery = page.getByRole("dialog", { name: "Zapisz kod awaryjny" });
   await expect(recovery.getByTestId("recovery-code")).toHaveText(/^([A-Z2-7]{4}-){7}[A-Z2-7]{4}$/);
+  // 1.7: „Drukuj” — kartka w osobnej ramce z kodem w grupach; okno z kodem zostaje otwarte.
+  const code = (await recovery.getByTestId("recovery-code").textContent())!;
+  await page.evaluate(() => {
+    const w = window as unknown as { __printSheet?: string };
+    new MutationObserver((list) => {
+      for (const m of list) for (const n of m.addedNodes) if (n instanceof HTMLIFrameElement) w.__printSheet = n.contentDocument?.body.textContent ?? "";
+    }).observe(document.body, { childList: true });
+  });
+  await recovery.getByRole("button", { name: "Drukuj" }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __printSheet?: string }).__printSheet ?? "")).toContain(code.split("-").join(" "));
+  await expect(recovery).toBeVisible();
   await recovery.getByLabel("Zapisałem kod w bezpiecznym miejscu.").check();
   await recovery.getByRole("button", { name: "Gotowe" }).click();
   await expect(page.getByText("Notatka zablokowana")).toBeVisible();
