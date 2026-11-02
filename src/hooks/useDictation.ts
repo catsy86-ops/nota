@@ -1,26 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-
-/** Minimalny kształt Web Speech API — brak typów w lib.dom. */
-interface SpeechRecognitionLike {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult: ((e: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null;
-  onerror: ((e: { error: string }) => void) | null;
-  onend: (() => void) | null;
-  start(): void;
-  stop(): void;
-  abort(): void;
-}
-
-type Ctor = new () => SpeechRecognitionLike;
-
-function getCtor(): Ctor | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as { SpeechRecognition?: Ctor; webkitSpeechRecognition?: Ctor };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
+import { localSpeechReady, setLocalSpeechReady, speechRecognitionCtor as getCtor, type SpeechRecognitionLike } from "@/lib/localSpeech";
 
 const CONSENT_KEY = "kaczy.dictation.consent";
 
@@ -40,12 +20,14 @@ const ERRORS: Record<string, string> = {
   "no-speech": "Nic nie usłyszałem — spróbuj jeszcze raz.",
   "audio-capture": "Nie znaleziono mikrofonu.",
   network: "Rozpoznawanie mowy wymaga połączenia z internetem.",
+  "language-not-supported": "Polski nie jest już na urządzeniu — dyktuj z internetem albo pobierz go w Ustawienia → Ogólne.",
 };
 
 /**
  * Dyktowanie przez Web Speech API. W Chrome nagranie jest wysyłane do usługi
  * rozpoznawania mowy Google, więc przy pierwszym użyciu pokazujemy to wprost
- * i zapamiętujemy zgodę na tym urządzeniu.
+ * i zapamiętujemy zgodę na tym urządzeniu. H6.1: gdy polski jest potwierdzony na urządzeniu
+ * (flaga z Ustawień, `localSpeech.ts`), dyktowanie idzie lokalnie — bez internetu i bez zgody na usługę.
  */
 export function useDictation(onText: (text: string) => void) {
   const supported = getCtor() !== null;
@@ -56,11 +38,12 @@ export function useDictation(onText: (text: string) => void) {
 
   const stop = useCallback(() => { recRef.current?.stop(); }, []);
 
-  const begin = useCallback(() => {
+  const begin = useCallback((local: boolean) => {
     const Ctor = getCtor();
     if (!Ctor) return;
     const rec = new Ctor();
     rec.lang = "pl-PL";
+    if (local) rec.processLocally = true;
     rec.continuous = true;
     rec.interimResults = false;
     rec.onresult = (e) => {
@@ -70,6 +53,8 @@ export function useDictation(onText: (text: string) => void) {
       }
     };
     rec.onerror = (e) => {
+      // Lokalne rozpoznawanie zawiodło (np. model usunięty) — następne dyktowanie przez usługę przeglądarki.
+      if (local && e.error !== "aborted" && e.error !== "no-speech") setLocalSpeechReady(false);
       if (e.error !== "aborted") toast.error(ERRORS[e.error] ?? "Dyktowanie nie powiodło się");
     };
     rec.onend = () => { setListening(false); recRef.current = null; };
@@ -79,6 +64,13 @@ export function useDictation(onText: (text: string) => void) {
 
   const toggle = useCallback(() => {
     if (recRef.current) { stop(); return; }
+    if (localSpeechReady()) { begin(true); return; }
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      toast.error("Bez internetu dyktowanie wymaga pobranego polskiego", {
+        description: "Ustawienia → Ogólne → Dyktowanie głosem: „Sprawdź i pobierz polski”, gdy będziesz w sieci.",
+      });
+      return;
+    }
     if (!hasDictationConsent()) {
       toast("Dyktowanie używa usługi przeglądarki", {
         description: "W Chrome nagranie głosu jest wysyłane do rozpoznawania mowy Google. Notatki zostają na urządzeniu.",
@@ -87,13 +79,13 @@ export function useDictation(onText: (text: string) => void) {
           label: "Rozumiem, dyktuj",
           onClick: () => {
             try { localStorage.setItem(CONSENT_KEY, "1"); } catch { /* ignore */ }
-            begin();
+            begin(false);
           },
         },
       });
       return;
     }
-    begin();
+    begin(false);
   }, [begin, stop]);
 
   useEffect(() => () => { recRef.current?.abort(); }, []);

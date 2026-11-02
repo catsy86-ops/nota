@@ -739,7 +739,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             </div>
             {recording && (
               <Suspense fallback={null}>
-                <VoiceRecorder onFile={(f) => void addRecordingFile(f)} onClose={() => setRecording(false)} />
+                <VoiceRecorder onFile={(f) => void addRecordingFile(f)} onClose={() => setRecording(false)}
+                  onTranscript={(t) => setText((prev) => (prev.trim() ? `${prev.trimEnd()} ${t}` : t))} />
               </Suspense>
             )}
             {recordings.length > 0 && (

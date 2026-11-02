@@ -20,6 +20,7 @@ import { PushSettings } from "./PushSettings";
 import { getNotificationPermission } from "@/lib/notificationPermission";
 import { MOD_KEY } from "@/lib/platform";
 import { hasDictationConsent, withdrawDictationConsent } from "@/hooks/useDictation";
+import { hasLocalSpeechApi, installLocalSpeech, localSpeechReady, localSpeechStatus, setLocalSpeechReady } from "@/lib/localSpeech";
 import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
 import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
 import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
@@ -360,6 +361,55 @@ function DictationConsentRow() {
           Cofnij zgodę
         </Button>
       </div>
+      <LocalDictationRow />
     </Section>
+  );
+}
+
+/**
+ * H6.1: dyktowanie na urządzeniu. Przeglądarka jest pytana **tylko po stuknięciu** — w części wersji
+ * Chromium samo pytanie wywraca kartę (`localSpeech.ts`). Bez API wiersza nie ma.
+ */
+function LocalDictationRow() {
+  const [ready, setReady] = useState(localSpeechReady);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  if (!hasLocalSpeechApi()) return null;
+
+  async function check() {
+    setBusy(true);
+    setNote(null);
+    try {
+      let st = await localSpeechStatus();
+      if (st === "downloadable" || st === "downloading") {
+        setNote("Pobieranie polskiego…");
+        st = (await installLocalSpeech()) ? "available" : "unavailable";
+      }
+      setReady(st === "available");
+      if (st === "available") { setNote(null); toast.success("Polski jest na urządzeniu — dyktowanie działa bez internetu"); }
+      else setNote("Ta przeglądarka nie ma polskiego do dyktowania bez internetu (albo pobieranie się nie udało).");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3" data-testid="local-dictation">
+      <p className="text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">Bez internetu. </span>
+        {ready
+          ? "Polski na urządzeniu — dyktowanie działa bez internetu, a głos nie wychodzi z telefonu."
+          : note ?? "Polski pobrany na telefon: dyktowanie zadziała bez internetu, a głos nie wyjdzie z telefonu."}
+      </p>
+      {ready ? (
+        <Button variant="outline" size="sm" className="coarse:h-11" onClick={() => { setLocalSpeechReady(false); setReady(false); toast("Dyktowanie znowu przez usługę przeglądarki"); }}>
+          Wyłącz
+        </Button>
+      ) : (
+        <Button variant="outline" size="sm" className="coarse:h-11" disabled={busy} onClick={() => void check()}>
+          {busy ? "Sprawdzam…" : "Sprawdź i pobierz polski"}
+        </Button>
+      )}
+    </div>
   );
 }

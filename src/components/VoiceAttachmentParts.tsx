@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Square } from "lucide-react";
+import { Captions, Square } from "lucide-react";
 import { toast } from "sonner";
 import { readAttachment, type Attachment } from "@/lib/attachments";
 import { startVoiceRecording, voiceErrorMessage, type VoiceSession } from "@/lib/voiceRecorder";
+import { liveTextWanted, setLiveTextWanted, startTranscript, transcriptMode } from "@/lib/liveTranscript";
 
 /**
  * Części notatki głosowej ładowane leniwie (poza główną paczką): odtwarzacz nagrania
@@ -28,8 +29,32 @@ export function AudioPreview({ attachment }: { attachment: Attachment }) {
 
 const clock = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`;
 
+/**
+ * H6.2 Tekst na żywo obok nagrania (`liveTranscript.ts`): przełącznik pamiętany na urządzeniu,
+ * domyślnie wyłączony. Błąd rozpoznawania wyłącza go i mówi o tym; nagranie trwa dalej.
+ */
+function useLiveText(onTranscript: ((text: string) => void) | undefined) {
+  const available = !!onTranscript && transcriptMode() !== null;
+  const [on, setOn] = useState(() => available && liveTextWanted());
+  const cb = useRef(onTranscript);
+  cb.current = onTranscript;
+  useEffect(() => {
+    if (!on) return;
+    const t = startTranscript((text) => cb.current?.(text), () => {
+      setOn(false);
+      setLiveTextWanted(false);
+      toast.error("Tekst na żywo nie działa razem z nagraniem na tym urządzeniu", { description: "Nagranie trwa dalej. Tekst podyktujesz po nagraniu." });
+    });
+    if (!t) { setOn(false); return; }
+    return () => t.stop();
+  }, [on]);
+  const toggle = () => { setLiveTextWanted(!on); setOn(!on); };
+  return { available, on, toggle };
+}
+
 /** Pasek trwającego nagrywania: czas od startu z limitem 3 min i „Zatrzymaj”. */
-function RecordingBar({ since, onStop }: { since: number; onStop: () => void }) {
+function RecordingBar({ since, onStop, onTranscript }: { since: number; onStop: () => void; onTranscript?: (text: string) => void }) {
+  const live = useLiveText(onTranscript);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 500);
@@ -39,6 +64,13 @@ function RecordingBar({ since, onStop }: { since: number; onStop: () => void }) 
     <div role="status" data-testid="voice-recording" className="flex items-center gap-2 rounded-field border border-destructive/40 px-2.5 py-1.5 text-xs">
       <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-destructive" aria-hidden />
       <span className="flex-1 font-mono tabular-nums">Nagrywanie {clock(Math.max(0, now - since))} / 3:00</span>
+      {live.available && (
+        <button type="button" onClick={live.toggle} aria-pressed={live.on} data-testid="voice-live-text"
+          title="Rozpoznaje mowę podczas nagrania i dopisuje tekst do wpisu"
+          className={`pressable inline-flex items-center gap-1 rounded-control px-2 py-1 coarse:min-h-11 ${live.on ? "bg-primary/10 font-medium text-primary-ink" : "text-muted-foreground hover:bg-muted"}`}>
+          <Captions className="h-3.5 w-3.5" aria-hidden />Tekst na żywo
+        </button>
+      )}
       <button type="button" onClick={onStop} className="pressable inline-flex items-center gap-1 rounded-control px-2 py-1 font-medium text-destructive-ink hover:bg-destructive/10 coarse:min-h-11">
         <Square className="h-3 w-3 fill-current" aria-hidden /> Zatrzymaj
       </button>
@@ -50,7 +82,7 @@ function RecordingBar({ since, onStop }: { since: number; onStop: () => void }) 
  * Nagrywanie od zamontowania do „Zatrzymaj”, limitu 3 min albo odmontowania (np. zamknięcie edytora).
  * Nagrany plik idzie do `onFile`; po zakończeniu albo błędzie zawsze `onClose`.
  */
-export function VoiceRecorder({ onFile, onClose }: { onFile: (file: File) => void; onClose: () => void }) {
+export function VoiceRecorder({ onFile, onClose, onTranscript }: { onFile: (file: File) => void; onClose: () => void; onTranscript?: (text: string) => void }) {
   const [since, setSince] = useState<number | null>(null);
   const sessionRef = useRef<VoiceSession | null>(null);
   const cb = useRef({ onFile, onClose });
@@ -74,5 +106,5 @@ export function VoiceRecorder({ onFile, onClose }: { onFile: (file: File) => voi
     return () => { cancelled = true; sessionRef.current?.stop(); };
   }, []);
   if (since === null) return null;
-  return <RecordingBar since={since} onStop={() => sessionRef.current?.stop()} />;
+  return <RecordingBar since={since} onStop={() => sessionRef.current?.stop()} onTranscript={onTranscript} />;
 }
