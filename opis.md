@@ -2866,7 +2866,7 @@ Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj nota
   - Własne „Mój 1–3” pokazują, co zapisano („Zorza, ciemny · tekst 125% · bez ruchu”, `slotSummary`).
 - **Pułapki przy tej zmianie.** `src/lib/recentSearches.ts` już istniał (historia palety) — omyłkowo nadpisany i przywrócony z gita; wyszukiwarka używa jego API. Pliki z mieszanymi końcami linii (CRLF/LF) — skrypty zmian normalizują do LF.
 - **Testy.** `src/lib/searchSuggest.test.ts` (puste pole, opisy, operatory po dwukropku), `src/lib/appearancePresets.test.ts` (włączony zestaw, nowe zestawy, opis slotu).
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `e771952` (2026-11-02).
 
 ## Powłoka — logo bez pętli, „Szukaj” z arkusza, boczne wycięcie ekranu (1.1, 1.5, 1.6, 2026-11-02)
 
