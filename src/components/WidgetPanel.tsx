@@ -1,8 +1,12 @@
+import { lazy, Suspense } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TodayDueList } from "@/components/review/TodayDueList";
 import { countDueToday } from "@/lib/reminderAgenda";
 import type { Note } from "@/hooks/useNotes";
+
+// 4.5: linia zmiany z Grafiku — leniwie, żeby Grafik nie wchodził do paczki startowej.
+const WidgetShiftLine = lazy(() => import("@/components/WidgetShiftLine"));
 
 /**
  * Widżet „Na dziś” (widok `widget`, adres `/widzet`): terminy na dziś i szybkie dodanie notatki,
@@ -18,6 +22,9 @@ export function WidgetPanel({ notes, onOpen, onOpenToday, onNew, onUpdate }: {
   const due = countDueToday(notes);
   return (
     <section aria-label="Widżet na dziś" data-testid="widget-panel" className="space-y-4">
+      <Suspense fallback={null}>
+        <WidgetShiftLine />
+      </Suspense>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-lg">Na dziś</h2>
         <div className="flex gap-2">

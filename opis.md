@@ -2852,6 +2852,15 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Testy.** `src/components/review/TodayShiftCard.test.tsx` (bez notatki, z notatką, prywatna).
 - **Commit.** `97174a3` (2026-11-02).
 
+## Skrzynka na znaczku aplikacji (5.3) i widżet z linią zmiany (4.5), 2026-11-02
+
+- **Co robi.**
+  - **5.3:** w Ustawieniach → Ogólne → Powiadomienia przełącznik „Skrzynka na znaczku aplikacji” (domyślnie wyłączony). Gdy włączony, znaczek ikony aplikacji pokazuje zaległe i nieposortowane notatki Skrzynki. Tytuł karty nadal liczy tylko zaległe.
+  - **4.5:** widżet `/widzet` („Na dziś”) pokazuje nad listą jedną linię dzisiejszej zmiany z Grafiku, np. „R 06:00–14:00 · za 2 godz.”. Bez zmiany: „Dziś nie ma zmiany”.
+- **Gdzie.** `src/lib/overdueBadge.ts` (`inboxStore`, `appBadgeCount`), `src/hooks/useOverdueBadge.ts` (trzeci argument `inbox`), `src/pages/Index.tsx` (`inboxBadge`), `src/components/settings/GeneralSettings.tsx`; `src/components/WidgetPanel.tsx` i nowy `src/components/WidgetShiftLine.tsx` (ładowany leniwie).
+- **Testy.** `src/lib/overdueBadge.test.ts`, `src/components/WidgetShiftLine.test.tsx`. Jednostkowe przechodzą; pełny zestaw e2e i zrzuty nie były jeszcze puszczane po tej zmianie.
+- **Commit.** `do uzupełnienia` (2026-11-02).
+
 ## Najmniejsze punkty planów: przegląd tygodnia i nowy rekord (Skrzynka 5.2, Ćwiczenia 3.3, 2026-11-02)
 
 - **Co robi.**

@@ -583,7 +583,9 @@ const Index = () => {
   // Licznik w pasku bocznym tylko przy tym, co wymaga uwagi: zaległe przypomnienia i Kosz.
   // Ta sama liczba ląduje w tytule karty i na ikonie aplikacji (useOverdueBadge).
   // Zaległości: aktywne notatki plus terminy Pracy (D1); archiwum nie liczy się (D4).
-  const overdueCount = useOverdueBadge(notes, useStudyOverdueCount());
+  // Skrzynka 5.3: nieposortowane notatki — liczone tylko dla znaczka, gdy użytkownik to włączył.
+  const inboxBadge = useMemo(() => notes.reduce((n, note) => n + (isInboxNote(note) ? 1 : 0), 0), [notes]);
+  const overdueCount = useOverdueBadge(notes, useStudyOverdueCount(), inboxBadge);
   // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby
   // w `localStorage` na zawsze i zjadała limit.
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);

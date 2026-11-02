@@ -3,7 +3,7 @@ import type { Note } from "@/hooks/useNotes";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import { useDayClock } from "@/lib/dayClock";
 import { countOverdue } from "@/lib/reminderAgenda";
-import { BASE_TITLE, formatBadgeTitle, useBadgeEnabled } from "@/lib/overdueBadge";
+import { BASE_TITLE, appBadgeCount, formatBadgeTitle, useBadgeEnabled, useInboxBadgeEnabled } from "@/lib/overdueBadge";
 
 const RECHECK_MS = 30_000;
 
@@ -28,8 +28,9 @@ export function applyAppBadge(count: number, nav: BadgeNavigator = navigator): v
  * `notes` to aktywne notatki z przypomnieniami (bez kosza i archiwum — D4 planu Przypomnień).
  * `extra` to zaległości spoza notatek (terminy Pracy), żeby pasek i tytuł liczyły to samo co lista.
  */
-export function useOverdueBadge(notes: Note[], extra = 0): number {
+export function useOverdueBadge(notes: Note[], extra = 0, inbox = 0): number {
   const enabled = useBadgeEnabled();
+  const inboxOn = useInboxBadgeEnabled();
   // Po powrocie do karty i po północy liczymy od razu, bez czekania na odpytanie.
   const tick = useDayClock();
   const [, force] = useReducer((x: number) => x + 1, 0);
@@ -46,15 +47,12 @@ export function useOverdueBadge(notes: Note[], extra = 0): number {
     return () => window.clearInterval(id);
   }, [notesRef, extraRef]);
 
+  // Tytuł karty zawsze liczy tylko zaległe; znaczek aplikacji może dołożyć Skrzynkę (5.3).
+  const appCount = appBadgeCount(count, inbox, { overdueOn: enabled, inboxOn });
   useEffect(() => {
-    if (!enabled) {
-      document.title = BASE_TITLE;
-      applyAppBadge(0);
-      return;
-    }
-    document.title = formatBadgeTitle(BASE_TITLE, count);
-    applyAppBadge(count);
-  }, [enabled, count, tick]);
+    document.title = enabled ? formatBadgeTitle(BASE_TITLE, count) : BASE_TITLE;
+    applyAppBadge(appCount);
+  }, [enabled, count, appCount, tick]);
 
   useEffect(() => () => {
     document.title = BASE_TITLE;

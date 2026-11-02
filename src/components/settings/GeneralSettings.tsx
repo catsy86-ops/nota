@@ -21,7 +21,7 @@ import { getNotificationPermission } from "@/lib/notificationPermission";
 import { MOD_KEY } from "@/lib/platform";
 import { hasDictationConsent, withdrawDictationConsent } from "@/hooks/useDictation";
 import { hasLocalSpeechApi, installLocalSpeech, localSpeechReady, localSpeechStatus, setLocalSpeechReady } from "@/lib/localSpeech";
-import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
+import { setBadgeEnabled, setInboxBadgeEnabled, useBadgeEnabled, useInboxBadgeEnabled } from "@/lib/overdueBadge";
 import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
 import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
 import { AUTHOR_MAX, COMPANY_NAME_MAX, setAuthor, setCompanyName, useAuthor, useCompanyName } from "@/lib/study/companyPrefs";
@@ -128,6 +128,7 @@ export function GeneralSettings() {
   const confirmPrefs = useConfirmPrefs();
   const prefs = useViewPrefs();
   const badgeEnabled = useBadgeEnabled();
+  const inboxBadge = useInboxBadgeEnabled();
   const reportNudges = useReportNudges();
   const siteArrival = useSiteArrival();
   const companyName = useCompanyName();
@@ -145,6 +146,12 @@ export function GeneralSettings() {
           desc="Pokazuje liczbę zaległych przypomnień jako „(3) NOTKI” na karcie i znaczek na ikonie zainstalowanej aplikacji."
           checked={badgeEnabled}
           onCheck={setBadgeEnabled}
+        />
+        <ToggleRow
+          label="Skrzynka na znaczku aplikacji"
+          desc="Dolicza nieposortowane notatki Skrzynki do znaczka na ikonie zainstalowanej aplikacji. Domyślnie wyłączone."
+          checked={inboxBadge}
+          onCheck={setInboxBadgeEnabled}
         />
       </div>
 
