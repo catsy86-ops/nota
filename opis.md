@@ -2845,6 +2845,17 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Nie zrobione:** agenda na komputerze (na desktopie siatka zostaje, a tryb „Lista” nie jest widoczny); oś godzin tygodnia (3.3).
 - **Testy:** `src/components/calendar/MonthAgenda.test.tsx`; e2e `e2e/calendar-agenda.spec.ts` (telefon: Lista ↔ Miesiąc).
 
+## Powłoka — logo bez pętli, „Szukaj” z arkusza, boczne wycięcie ekranu (1.1, 1.5, 1.6, 2026-11-02)
+
+- **Co robi.**
+  - **1.1 (WCAG 2.2.2):** monogram w nagłówku i pasku bocznym rysuje się raz przy pojawieniu (kropka przebiega obrys i gaśnie), potem stoi; najechanie kursorem powtarza przebieg. Dawniej pętla 4,8 s bez końca. Przy ograniczonym ruchu litera stoi od razu (także `data-motion="reduced"`).
+  - **1.5:** „Szukaj” w arkuszu „Więcej” ustawia kursor w polu po zamknięciu arkusza (`onCloseAutoFocus`), a nie po `setTimeout(400)` — Radix nie odbiera już fokusu polu.
+  - **1.6:** przy `viewport-fit=cover` telefon w poziomie z wycięciem: `body` ma boczne `env(safe-area-inset-*)`, dolny pasek i pasek boczny na telefonie mają własne odsunięcie. W pionie bez zmian.
+- **Gdzie.** `.n-mark*` w `src/index.css` (osobne klatki `n-mark-draw-again` / `n-mark-dot-again` do powtórki), klasa `n-mark` w `NMonogramLogo.tsx`; `searchAfterClose` w `BottomNav.tsx`; `body` w `index.css`, klasy w `BottomNav.tsx` i `AppSidebar.tsx`.
+- **Stan planu Powłoki.** 1.7 (kolor paska przy starcie) robi już `public/prepaint.js`; 1.3, 2.1 zrobione wcześniej (VIEW_META, PW-1/PW-4). W `index.css` zostają inne pętle (fala hasła, puls „teraz”, połysk paska) — poza 1.1.
+- **Testy.** `src/test/logoMotion.test.ts` (brak `infinite` w `.n-mark*`), `e2e/mobile.spec.ts` („Więcej → Szukaj” ustawia kursor).
+- **Commit.** `do uzupełnienia` (2026-11-02).
+
 ## Dziś — prywatna notatka, czas powtórek, najbliższy termin, trening bez duplikatów, Skrzynka i Ćwiczenia (1.2–1.5, 2.3, 4.3, 4.4, 2026-11-02)
 
 - **Co robi.**

@@ -155,6 +155,9 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
     const input = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="search"]')).find((el) => el.offsetParent !== null);
     input?.focus({ preventScroll: true });
   };
+  // Powłoka 1.5: „Szukaj” z arkusza „Więcej” — fokus po zamknięciu arkusza (`onCloseAutoFocus`), a nie po
+  // zgadywanym czasie; inaczej Radix oddawał fokus przyciskowi „Więcej” i zabierał go z pola.
+  const searchAfterClose = useRef(false);
   // Szósta komórka (lupa) tylko tam, gdzie nie ma pola szukania; FAB zostaje w środku paska wtedy przesunięty o pół komórki.
   const showPaletteSlot = !viewHasSearch(view) && !!onOpenPalette;
   const isMoreActive = view in MORE_META;
@@ -167,7 +170,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={spring.soft}
-        className="fixed bottom-0 inset-x-0 z-overlay desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible max-sm:in-data-plan-full:hidden"
+        className="fixed bottom-0 inset-x-0 z-overlay desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] shadow-elevation-up transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible max-sm:in-data-plan-full:hidden"
       >
         <LayoutGroup id="bottom-nav">
           <ul className={cn("relative grid items-end h-[64px] max-w-md mx-auto px-2", showPaletteSlot ? "grid-cols-6" : "grid-cols-5")}>
@@ -272,14 +275,24 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
       </Sheet>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" snap className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
+        <SheetContent
+          side="bottom"
+          snap
+          className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60"
+          onCloseAutoFocus={(e) => {
+            if (!searchAfterClose.current) return;
+            searchAfterClose.current = false;
+            e.preventDefault();
+            focusSearch();
+          }}
+        >
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">Więcej</SheetTitle>
           </SheetHeader>
           <SheetGroup title="Szybko">
             <SheetTile Icon={Plus} label="Dodaj…" onClick={() => { setMoreOpen(false); setQuickOpen(true); }} />
             {/* Po zamknięciu arkusza fokus wraca na „Więcej” — kursor w wyszukiwarce dopiero po tym. */}
-            <SheetTile Icon={Search} label="Szukaj" onClick={() => { setMoreOpen(false); onGo("notes"); window.setTimeout(focusSearch, 400); }} />
+            <SheetTile Icon={Search} label="Szukaj" onClick={() => { searchAfterClose.current = true; setMoreOpen(false); onGo("notes"); }} />
           </SheetGroup>
           <SheetGroup title="Przejdź do">
             {isViewShown(hiddenViews, "inbox") && <SheetTile Icon={Inbox} label="Skrzynka" active={view === "inbox"} badge={inboxCount || undefined} onClick={() => { onGo("inbox"); setMoreOpen(false); }} />}

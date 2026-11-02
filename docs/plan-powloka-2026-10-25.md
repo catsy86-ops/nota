@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie powłoki aplikacji (2026-10-25)
 
+> **Status (2026-11-02):** zrobione 1.1, 1.5, 1.6 (2026-11-02), 1.7 (prepaint.js), 1.3 i 2.1 (wcześniej). Reszta do sprawdzenia w kodzie przed realizacją.
+
 Dwunasty i ostatni plan z serii „dział po dziale”, w tym samym układzie. Powłoka to to, co jest wokół działów: nagłówek (`AppHeader`), pasek boczny (`AppSidebar`, `sidebarItems.ts`), dolny pasek i arkusz „Więcej” (`BottomNav`), paleta poleceń (`CommandPalette`), samouczek (`OnboardingTour`), logo i nazwa, przełącznik jasności, skróty globalne.
 
 **Granica z planem przekrojowym** (`docs/plan-ui-ux-qol-2026-10-25.md`): tokeny (promienie, cienie, warstwy, typografia, OKLCH, ikony, fokus), ruch i nowoczesny CSS, reguły ładowania, arkusze, cele dotyku, wydajność — są tam i tu się nie powtarzają. Tu tylko elementy powłoki i nazwa aplikacji.

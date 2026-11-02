@@ -9,16 +9,16 @@ interface NMonogramLogoProps {
 const N_PATH = "M6 19 V5 L18 19 V5";
 
 /**
- * Animowany monogram „N”: litera rysuje się gradientową linią, chwilę świeci,
- * po czym wymazuje się w tym samym kierunku, a po jej obrysie biegnie jasna kropka.
- * Czysty SVG + CSS (`stroke-dashoffset`, `offset-distance`, `opacity`) — style
- * `.n-mark-*` w `index.css`; przy `prefers-reduced-motion` litera stoi w miejscu.
+ * Animowany monogram „N”: przy pojawieniu się litera raz rysuje się gradientową linią, a po jej obrysie
+ * przebiega jasna kropka; potem litera stoi (Powłoka 1.1, WCAG 2.2.2). Najechanie kursorem powtarza przebieg.
+ * Czysty SVG + CSS (`stroke-dashoffset`, `offset-distance`, `opacity`) — style `.n-mark-*` w `index.css`;
+ * przy ograniczonym ruchu litera stoi od razu.
  */
 export function NMonogramLogo({ className }: NMonogramLogoProps) {
   // Unikalny gradient — logo bywa jednocześnie w nagłówku i w pasku bocznym.
   const grad = `n-mark-grad-${useId().replace(/:/g, "")}`;
   return (
-    <svg viewBox="0 0 24 24" className={cn("w-8 h-8 overflow-visible", className)} aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={cn("n-mark w-8 h-8 overflow-visible", className)} aria-hidden="true">
       <defs>
         <linearGradient id={grad} x1="6" y1="5" x2="18" y2="19" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="var(--primary)" />

@@ -127,6 +127,14 @@
   box-shadow: var(--elevation-3);
 }
 
+/* Powłoka 1.6: telefon w poziomie z wycięciem ekranu (`viewport-fit=cover`) — treść w układzie (nagłówek,
+   główna kolumna) odsunięta od boków o wycięcie. W pionie wcięcia są zerowe, więc nic się nie zmienia.
+   Elementy `fixed` (dolny pasek, pasek boczny na telefonie) mają własne odsunięcie w klasach. */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 @utility glass {
   /* Nagłówek i dolny pasek to pełny papier — bez rozmycia (koszt na telefonie) i bez prześwitującej kratki. */
   background-color: var(--background);
@@ -1130,42 +1138,56 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   .logo-intro::after { display: none; }
 }
 
-/* ── Monogram „h” (NMonogramLogo.tsx) ──────────────────────────────────── */
-/* Jeden cykl 4,8 s: rysowanie (0–28%), świecenie (28–72%), wymazywanie (72–100%).
-   Kropka jedzie po tym samym obrysie (offset-path), zsynchronizowana z końcem linii. */
+/* ── Monogram (NMonogramLogo.tsx) ──────────────────────────────────────── */
+/* Powłoka 1.1 (WCAG 2.2.2): jeden przebieg przy pojawieniu się — litera rysuje się, a kropka przebiega po
+   obrysie i gaśnie; potem litera stoi. Najechanie kursorem powtarza przebieg (inna nazwa animacji = restart).
+   Dawniej pętla 4,8 s bez końca w nagłówku i pasku bocznym. */
 .n-mark-line,
 .n-mark-glow {
   stroke-dasharray: 100;
   stroke-dashoffset: 0;
-  animation: n-mark-draw 4.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  animation: n-mark-draw 1.4s cubic-bezier(0.65, 0, 0.35, 1) 1 both;
 }
 .n-mark-glow {
   opacity: 0.28;
   filter: blur(1.2px);
 }
 @keyframes n-mark-draw {
-  0% { stroke-dashoffset: 100; }
-  28%, 72% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -100; }
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes n-mark-draw-again {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
 }
 .n-mark-dot {
   offset-path: path("M6 19 V5 L18 19 V5");
   offset-rotate: 0deg;
-  offset-distance: 0%;
+  offset-distance: 100%;
   opacity: 0;
-  animation: n-mark-dot 4.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  animation: n-mark-dot 1.4s cubic-bezier(0.65, 0, 0.35, 1) 1 both;
 }
 @keyframes n-mark-dot {
   0% { offset-distance: 0%; opacity: 0; }
-  3% { opacity: 1; }
-  28% { offset-distance: 100%; opacity: 1; }
-  34% { offset-distance: 100%; opacity: 0; }
+  8% { opacity: 1; }
+  85% { offset-distance: 100%; opacity: 1; }
   100% { offset-distance: 100%; opacity: 0; }
 }
+@keyframes n-mark-dot-again {
+  0% { offset-distance: 0%; opacity: 0; }
+  8% { opacity: 1; }
+  85% { offset-distance: 100%; opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+:hover > .n-mark .n-mark-line, .n-mark:hover .n-mark-line,
+:hover > .n-mark .n-mark-glow, .n-mark:hover .n-mark-glow { animation-name: n-mark-draw-again; }
+:hover > .n-mark .n-mark-dot, .n-mark:hover .n-mark-dot { animation-name: n-mark-dot-again; }
 @media (prefers-reduced-motion: reduce) {
   .n-mark-line, .n-mark-glow { animation: none; stroke-dashoffset: 0; }
   .n-mark-dot { animation: none; opacity: 0; }
 }
+html[data-motion="reduced"] .n-mark-line, html[data-motion="reduced"] .n-mark-glow { animation: none; stroke-dashoffset: 0; }
+html[data-motion="reduced"] .n-mark-dot { animation: none; opacity: 0; }
 
 /* ── Hasło (AnimatedTagline.tsx): litera po literze + fala koloru ───────── */
 .tagline-word { display: inline-block; white-space: pre; }
