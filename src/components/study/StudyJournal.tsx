@@ -25,6 +25,8 @@ import { PhotoGalleryDialog } from "./PhotoGallery";
 import { ReminderRow } from "./ReminderRow";
 import { readSiteParam, takeSiteParam } from "@/lib/study/siteLink";
 import { NewSiteDialog } from "./NewSiteDialog";
+import { SitePackageImportDialog } from "./SitePackageDialogs";
+import type { SitePackage } from "@/lib/study/sitePackage";
 import { JobsDialog } from "./JobsDialog";
 import { WholesaleOrderDialog } from "./WholesaleOrderDialog";
 import { VanDialog } from "./VanDialog";
@@ -132,6 +134,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   // Budowy z wpisami i zapisane karty bez wpisów (nowa budowa), żeby nowa była od razu na liście.
   const used = useMemo(() => dir.filter((x) => x.count > 0 || x.stored), [dir]);
   const [newSiteOpen, setNewSiteOpen] = useState(false);
+  const [sitePackage, setSitePackage] = useState<SitePackage | null>(null);
   /** „Nowe zlecenie” z listy zleceń otwiera to samo okno od razu jako fuchę (H3.4). */
   const [newSiteJob, setNewSiteJob] = useState(false);
   const [jobsOpen, setJobsOpen] = useState(false);
@@ -485,7 +488,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         )}
       </section>
       <JournalEntrySheet onPractice={onPractice} />
-      <NewSiteDialog key={newSiteJob ? "job" : "site"} open={newSiteOpen} onOpenChange={setNewSiteOpen} dir={dir} initialJob={newSiteJob} onCreated={(id) => setCard(id)} />
+      <NewSiteDialog key={newSiteJob ? "job" : "site"} open={newSiteOpen} onOpenChange={setNewSiteOpen} dir={dir} initialJob={newSiteJob} onCreated={(id) => setCard(id)} onPackage={setSitePackage} />
+      <SitePackageImportDialog pkg={sitePackage} onClose={() => setSitePackage(null)} onDone={(id) => { setSitePackage(null); setCard(id); }} />
       <WholesaleOrderDialog open={wholesaleOpen} onOpenChange={setWholesaleOpen} groups={wholesale} van={vanBuy} dir={dir} />
       <VanDialog open={vanOpen} onOpenChange={setVanOpen} journal={study.journal} />
       <JobsDialog open={jobsOpen} onOpenChange={setJobsOpen} jobs={jobs} dir={dir}

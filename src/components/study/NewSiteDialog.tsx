@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { FileUp } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,9 @@ import { SITE_PHONE_MAX } from "@/lib/study/contact";
 import { saveSiteCard } from "@/lib/study/store";
 import { JOB_SCOPE_MAX } from "@/lib/study/jobs";
 import { setJobMeta } from "@/lib/study/jobsStore";
+import type { SitePackage } from "@/lib/study/sitePackage";
+import { readSitePackageFile } from "@/lib/study/sitePackageIo";
+import { toast } from "sonner";
 
 interface NewSiteDialogProps {
   open: boolean;
@@ -19,6 +23,8 @@ interface NewSiteDialogProps {
   onCreated: (id: string) => void;
   /** Otwarcie od razu jako zlecenie własne (fucha). */
   initialJob?: boolean;
+  /** H5.2: wczytany plik `.budowa` — rodzic pokazuje podgląd scalenia. */
+  onPackage?: (pkg: SitePackage) => void;
 }
 
 const EMPTY = { name: "", client: "", phone: "", address: "", scope: "" };
@@ -29,7 +35,8 @@ const EMPTY = { name: "", client: "", phone: "", address: "", scope: "" };
  * „Zlecenie własne” (H3.4) to ta sama karta z wpisem w mapie zleceń; szybkie założenie: klient,
  * telefon, adres i co zrobić — wycenę dopisuje się na karcie.
  */
-export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob = false }: NewSiteDialogProps) {
+export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob = false, onPackage }: NewSiteDialogProps) {
+  const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState(EMPTY);
   const [job, setJob] = useState(initialJob);
   const trimmed = form.name.trim();
@@ -40,6 +47,17 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
   function reset() {
     setForm(EMPTY);
     setJob(initialJob);
+  }
+
+  async function pickPackage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const r = await readSitePackageFile(file);
+    if (!r.ok) { toast.error(r.error); return; }
+    reset();
+    onOpenChange(false);
+    onPackage?.(r.pkg);
   }
 
   function create() {
@@ -104,6 +122,14 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
             </>
           )}
           <div className="flex justify-end gap-2">
+            {onPackage && !job && (
+              <>
+                <input ref={fileRef} type="file" accept=".budowa,application/json" className="hidden" onChange={(e) => void pickPackage(e)} data-testid="site-package-file" />
+                <Button type="button" variant="ghost" className="mr-auto text-muted-foreground" onClick={() => fileRef.current?.click()} title="Plik .budowa od szefa albo pomocnika">
+                  <FileUp className="mr-1.5 h-4 w-4" aria-hidden />Z pliku
+                </Button>
+              </>
+            )}
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Anuluj</Button>
             <Button type="submit" disabled={!trimmed || !!error}>{job ? "Utwórz zlecenie" : "Utwórz budowę"}</Button>
           </div>

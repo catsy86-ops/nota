@@ -46,6 +46,7 @@ import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
 import { HandoverPaper } from "./HandoverPaper";
 import { SiteSignatureDialog } from "./SiteSignatureDialog";
+import { SitePackageExportDialog } from "./SitePackageDialogs";
 import { QuickLink } from "./QuickLink";
 import { DayHoursDialog } from "./DayHoursDialog";
 import { RecipientsForm } from "./RecipientsForm";
@@ -95,6 +96,7 @@ export function SiteCardDialog({
   const [handover, setHandover] = useState<Handover | null>(null);
   const endHandover = useCallback(() => setHandover(null), []);
   const [signOpen, setSignOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
 
   useEffect(() => {
     if (site) setForm(formOf(site));
@@ -508,6 +510,15 @@ export function SiteCardDialog({
               >
                 <PenLine className="mr-1.5 h-4 w-4" aria-hidden />{site.signature ? "Podpisany" : "Podpis klienta"}
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => setSendOpen(true)}
+                title="Plik .budowa dla pomocnika: etapy, braki, punkty, plan i wpisy — bez pieniędzy i telefonów"
+                className="col-span-2 coarse:h-11"
+                data-testid="site-package-open"
+              >
+                <Send className="mr-1.5 h-4 w-4" aria-hidden />Wyślij budowę pomocnikowi
+              </Button>
               {!job && (
                 <Button variant="ghost" onClick={() => setJobMeta(site.id, {})} className="col-span-2 text-muted-foreground coarse:h-11"
                   title="Twoje zlecenie, nie budowa szefa: wycena, status, termin i PDF dla klienta">
@@ -543,6 +554,7 @@ export function SiteCardDialog({
         <DayHoursDialog day={hoursOpen ? localDayKey() : null} siteId={site.id} onOpenChange={(o) => { if (!o) setHoursOpen(false); }} />
       )}
       {site && <SiteSignatureDialog site={site} open={signOpen} onOpenChange={setSignOpen} />}
+      {site && <SitePackageExportDialog site={site} open={sendOpen} onOpenChange={setSendOpen} />}
       {handover && (
         <PrintRoot testId="handover-print" onDone={endHandover}>
           <HandoverPaper handover={handover} />
