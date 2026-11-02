@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Camera, Check, ChevronDown, Droplets, Plus, Trash2 } from "lucide-react";
+import { Camera, Check, ChevronDown, Droplets, Pencil, Plus, Trash2 } from "lucide-react";
 import { NoteImage } from "@/components/NoteImage";
 import { prepareImage } from "@/lib/imagePrepare";
 import { imageStore } from "@/lib/imageStore";
@@ -10,7 +10,7 @@ import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
 import { HEIGHT_MAX, latestPointPhotos, pointCaption, pointsProgress, pointStage, pointType, POINT_STEPS, POINT_TYPES, ROOM_NAME_MAX, ROOM_TEMPLATES, sidesLabel, STEP_LABEL, type WaterPoint } from "@/lib/study/points";
-import { addPoint, addRoom, removePoint, removeRoom, restoreRoom, savePoint, togglePointStep, useSitePoints } from "@/lib/study/pointsStore";
+import { addPoint, addRoom, removePoint, removeRoom, renameRoom, restoreRoom, savePoint, togglePointStep, useSitePoints } from "@/lib/study/pointsStore";
 import type { SiteInfo } from "@/lib/study/sites";
 
 /** Opis kroku do zrobienia przy punkcie: „→ próba” albo „gotowe”. */
@@ -31,6 +31,9 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
   const photoInput = useRef<HTMLInputElement>(null);
   const photoFor = useRef<{ point: WaterPoint; room: string } | null>(null);
   const [photoBusy, setPhotoBusy] = useState<string | null>(null);
+  /** Pomieszczenie, któremu zmieniasz nazwę (H2.2): wiersz staje się polem; Enter albo wyjście z pola zapisuje, Esc anuluje. */
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const renameCancelled = useRef(false);
 
   function takePhoto(point: WaterPoint, room: string) {
     photoFor.current = { point, room };
@@ -89,6 +92,13 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
     expand(room.id);
   }
 
+  function finishRename(roomId: string, raw: string) {
+    setRenaming(null);
+    if (renameCancelled.current) { renameCancelled.current = false; return; }
+    const name = raw.trim();
+    if (name && name !== rooms.find((r) => r.id === roomId)?.name) renameRoom(site.id, roomId, name);
+  }
+
   function dropRoom(roomId: string) {
     const removed = removeRoom(site.id, roomId);
     if (removed) toastWithUndo(`Usunięto „${removed.room.name}” (${removed.points.length} pkt)`, () => restoreRoom(site.id, removed));
@@ -122,12 +132,36 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
         return (
           <div key={room.id} className="rounded-card border border-border" data-testid="site-room">
             <div className="flex items-center gap-1 pr-1">
-              <button type="button" onClick={() => flip(room.id)} aria-expanded={expanded} aria-controls={`room-${room.id}`}
-                className="pressable flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-left coarse:min-h-11">
-                <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", !expanded && "-rotate-90")} aria-hidden />
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">{room.name}</span>
-                <span className="font-mono text-xs tabular-nums text-muted-foreground" aria-label={`${rp.done} z ${rp.total} gotowe`}>{rp.done}/{rp.total}</span>
-              </button>
+              {renaming === room.id ? (
+                <input
+                  autoFocus
+                  data-own-escape
+                  defaultValue={room.name}
+                  maxLength={ROOM_NAME_MAX}
+                  aria-label={`Nowa nazwa: ${room.name}`}
+                  onFocus={(e) => e.currentTarget.select()}
+                  onBlur={(e) => finishRename(room.id, e.currentTarget.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur(); }
+                    // Esc: bez zapisu (blur po nim nic nie zmieni); nie zamyka okna karty budowy.
+                    if (e.key === "Escape") { e.preventDefault(); renameCancelled.current = true; e.currentTarget.blur(); }
+                  }}
+                  className="m-1 h-9 min-w-0 flex-1 rounded-field border border-input bg-background px-2.5 text-base font-medium text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+                />
+              ) : (
+                <>
+                  <button type="button" onClick={() => flip(room.id)} aria-expanded={expanded} aria-controls={`room-${room.id}`}
+                    className="pressable flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-left coarse:min-h-11">
+                    <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", !expanded && "-rotate-90")} aria-hidden />
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{room.name}</span>
+                    <span className="font-mono text-xs tabular-nums text-muted-foreground" aria-label={`${rp.done} z ${rp.total} gotowe`}>{rp.done}/{rp.total}</span>
+                  </button>
+                  <button type="button" onClick={() => setRenaming(room.id)} aria-label={`Zmień nazwę: ${room.name}`}
+                    className="pressable grid size-9 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
+                    <Pencil className="h-4 w-4" aria-hidden />
+                  </button>
+                </>
+              )}
               <button type="button" onClick={() => dropRoom(room.id)} aria-label={`Usuń pomieszczenie ${room.name}`}
                 className="pressable grid size-9 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
                 <Trash2 className="h-4 w-4" aria-hidden />

@@ -82,6 +82,29 @@ test("usunięcie pomieszczenia z „Cofnij”; własna nazwa; 320 px bez przewij
   await expect(panel.getByTestId("site-point")).toHaveCount(3);
 });
 
+test("zmiana nazwy pomieszczenia: Enter zapisuje, Esc anuluje, nazwa zostaje po odświeżeniu (H2.2) @mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const card = await openCard(page);
+  const panel = card.getByTestId("site-points");
+  await panel.getByRole("button", { name: /^\+ Łazienka/ }).click();
+
+  await panel.getByRole("button", { name: "Zmień nazwę: Łazienka" }).click();
+  const field = panel.getByLabel("Nowa nazwa: Łazienka");
+  await field.fill("Łazienka piętro");
+  await field.press("Enter");
+  await expect(panel.getByRole("button", { name: "Zmień nazwę: Łazienka piętro" })).toBeVisible();
+
+  await panel.getByRole("button", { name: "Zmień nazwę: Łazienka piętro" }).click();
+  await panel.getByLabel("Nowa nazwa: Łazienka piętro").fill("Coś innego");
+  await panel.getByLabel("Nowa nazwa: Łazienka piętro").press("Escape");
+  await expect(card).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Zmień nazwę: Łazienka piętro" })).toBeVisible();
+
+  await page.reload();
+  const again = await openCard(page);
+  await expect(again.getByTestId("site-points").getByRole("button", { name: "Zmień nazwę: Łazienka piętro" })).toBeVisible();
+});
+
 // Jednopikselowy PNG — wystarczy, żeby `prepareImage` zapisał zdjęcie.
 const PNG_B64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 
