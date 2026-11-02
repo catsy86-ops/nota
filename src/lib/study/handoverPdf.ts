@@ -1,12 +1,12 @@
 import { handoverPointLine, signerLabel, type Handover } from "./handover";
-import { PdfWriter, pdfFileName, photoPages, sharePdf, type PdfPhoto } from "./pdfWriter";
+import { PdfWriter, pdfFileName, photoPages, sharePdf, signatureDataUrl, type PdfPhoto } from "./pdfWriter";
 
 /**
  * P2.5: protokół odbioru jako plik PDF. Układ i czcionka są we wspólnym `pdfWriter.ts`; tu tylko treść.
  * Zdjęcia dostaje od wywołującego jako data URL (bajty są w `imageStore`).
  */
 
-export { photoPages, sharePdf };
+export { photoPages, sharePdf, signatureDataUrl };
 export type HandoverPdfPhoto = PdfPhoto;
 
 export interface HandoverPdfOptions {

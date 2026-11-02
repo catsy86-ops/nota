@@ -1,3 +1,6 @@
+import { imageStore } from "@/lib/imageStore";
+import { safeLine } from "@/lib/safeText";
+
 /**
  * Wspólny zapis PDF dla protokołu i raportu (P2.5): jsPDF ładowany leniwie, polskie znaki z czcionki
  * Barlow Condensed (`public/fonts/protokol-*.ttf`, OFL — wbudowane fonty jsPDF ich nie mają),
@@ -27,7 +30,7 @@ export function photoPages(count: number): number[] {
 
 /** Nazwa pliku PDF: bez znaków, które źle znoszą systemy plików, z ograniczeniem długości. */
 export function pdfFileName(prefix: string, subject: string): string {
-  const clean = subject.replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 60) || "budowa";
+  const clean = safeLine(subject.replace(/[\\/:*?"<>|]+/g, " ")).slice(0, 60) || "budowa";
   return `${prefix} - ${clean}.pdf`;
 }
 
@@ -38,6 +41,33 @@ export const blobToDataUrl = (blob: Blob) => new Promise<string>((resolve, rejec
   r.onerror = () => reject(r.error);
   r.readAsDataURL(blob);
 });
+
+/**
+ * P2.4/H3.5: obraz podpisu klienta z magazynu jako data URL — tylko PNG/JPEG (klucz z innego urządzenia
+ * może wskazywać dowolne bajty). `undefined` = brak podpisu albo obraz jeszcze nie dotarł na to urządzenie.
+ */
+export async function signatureDataUrl(sig: { image: string } | null | undefined): Promise<string | undefined> {
+  const rec = sig ? await imageStore.get(sig.image) : undefined;
+  const type = rec ? signatureImageType(new Uint8Array(rec.bytes)) : null;
+  return rec && type ? blobToDataUrl(new Blob([rec.bytes], { type })) : undefined;
+}
+
+/** Podpis z pola to mały PNG; większe pliki i obrazy ponad 4000 px (bomba dekompresji) odpadają. */
+const SIGNATURE_MAX_BYTES = 2 * 1024 * 1024;
+const SIGNATURE_MAX_PX = 4000;
+
+/**
+ * Rodzaj obrazu podpisu z bajtów, nie z zapisanego typu (ten przychodzi z innego urządzenia) — przegląd
+ * bezpieczeństwa H3.5 L3. PNG: wymiary z nagłówka IHDR; JPEG trafia do PDF bez dekodowania.
+ */
+export function signatureImageType(b: Uint8Array): "image/png" | "image/jpeg" | null {
+  if (b.byteLength > SIGNATURE_MAX_BYTES || b.byteLength < 24) return null;
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";
+  if (b[0] !== 0x89 || b[1] !== 0x50 || b[2] !== 0x4e || b[3] !== 0x47) return null;
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const w = dv.getUint32(16), h = dv.getUint32(20);
+  return w > 0 && h > 0 && w <= SIGNATURE_MAX_PX && h <= SIGNATURE_MAX_PX ? "image/png" : null;
+}
 
 type JsPdf = InstanceType<typeof import("jspdf").default>;
 

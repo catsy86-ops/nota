@@ -72,9 +72,11 @@ export const SITE_FIELD_MAX = 200;
 
 /** Małe litery bez ogonków — „zolta” znajduje „żółta”. */
 import { entrySiteId, fold, foldName, siteKey } from "./siteKey";
+import { safeLine } from "@/lib/safeText";
 export { entrySiteId, fold, foldName, siteKey };
 
-const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+// Pola karty idą do PDF-ów i nazw plików dla klienta — bez znaków sterujących i przełączników kierunku.
+const str = (v: unknown, max: number) => (typeof v === "string" ? safeLine(v).slice(0, max) : "");
 
 /** Kształt karty; `null` = nie do uratowania. */
 const withStages = (stages: SiteStage[] | undefined) => (stages ? { stages } : {});

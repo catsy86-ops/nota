@@ -1,4 +1,5 @@
 import { cleanAmount } from "./billing";
+import { safeLine } from "@/lib/safeText";
 
 /**
  * Zlecenia własne — fuchy (H3.4, plan 2026-10-29). Fucha to zwykła karta budowy (wpisy, zdjęcia,
@@ -35,6 +36,8 @@ export interface JobMeta {
   /** Marża na materiał w procentach (0–300); brak = 0. */
   margin?: number;
   created: number;
+  /** H3.5: ostatnia zmiana treści dla klienta (zakres, marża, pozycje); brak = od założenia. */
+  changedAt?: number;
 }
 
 export interface QuoteItem {
@@ -54,9 +57,7 @@ export interface Job extends JobMeta {
 }
 
 const isStatus = (v: unknown): v is JobStatus => typeof v === "string" && (JOB_STATUSES as readonly string[]).includes(v);
-// Znaki sterujące są tu celem usunięcia (tekst trafia do PDF dla klienta).
-// eslint-disable-next-line no-control-regex
-const text = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max) : "");
+const text = (v: unknown, max: number) => (typeof v === "string" ? safeLine(v).slice(0, max) : "");
 const time = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : undefined);
 const TERM_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
@@ -79,6 +80,7 @@ export function cleanJobMeta(raw: unknown): JobMeta | null {
   const scope = text(j.scope, JOB_SCOPE_MAX);
   const term = typeof j.term === "string" && TERM_RE.test(j.term) ? j.term : undefined;
   const margin = cleanMargin(j.margin);
+  const changedAt = time(j.changedAt);
   return {
     status: j.status,
     statusAt: time(j.statusAt) ?? created,
@@ -86,6 +88,7 @@ export function cleanJobMeta(raw: unknown): JobMeta | null {
     ...(term ? { term } : {}),
     ...(margin !== undefined ? { margin } : {}),
     created,
+    ...(changedAt !== undefined ? { changedAt } : {}),
   };
 }
 
@@ -154,6 +157,14 @@ export function sortJobs<T extends Pick<Job, "status" | "term" | "statusAt">>(li
     STATUS_RANK[a.status] - STATUS_RANK[b.status]
     || (a.status === "booked" ? (a.term ?? "9").localeCompare(b.term ?? "9") : b.statusAt - a.statusAt));
 }
+
+/**
+ * H3.5 (przegląd bezpieczeństwa M1): podpis z karty ważny na potwierdzeniu fuchy tylko, gdy złożono go po
+ * ostatniej zmianie zakresu, marży albo pozycji — inaczej klient „potwierdzałby” treść, której nie widział.
+ * Podpis jest jeden na kartę (ten sam co na protokole odbioru).
+ */
+export const signatureValidFor = (job: Pick<JobMeta, "created" | "changedAt">, sig: { at: number } | null | undefined) =>
+  !!sig && sig.at >= (job.changedAt ?? job.created);
 
 /** Ilość w polu: „2,5” → 2.5; pusty albo zły tekst → `undefined`. */
 export function parseQty(raw: string): number | undefined {

@@ -1,4 +1,5 @@
 import { isImageRef } from "@/lib/imageStore";
+import { safeLine } from "@/lib/safeText";
 
 /**
  * P2.4: podpis klienta na protokole odbioru. Obraz (PNG z pola podpisu) leży w `imageStore` jak
@@ -25,7 +26,7 @@ export function cleanSignature(raw: unknown): SiteSignature | undefined {
   if (typeof s.at !== "number" || !Number.isFinite(s.at) || s.at <= 0) return undefined;
   // Bez znaków sterujących i przełączników kierunku tekstu — imienia na protokole nie da się wizualnie podrobić.
   const name = typeof s.name === "string"
-    ? s.name.replace(/[\p{Cc}\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu, " ").replace(/\s+/g, " ").trim().slice(0, SIGNATURE_NAME_MAX)
+    ? safeLine(s.name).slice(0, SIGNATURE_NAME_MAX)
     : "";
   return { image: s.image, name, at: s.at };
 }

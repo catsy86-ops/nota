@@ -291,7 +291,7 @@ export function SiteCardDialog({
                 <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void addPhotoEntry(file); }} />
               </div>
               {tally && <SiteTallyBar tally={tally} points={sitePointsProgress} />}
-              {job && <SiteJobPanel site={site} job={job} />}
+              {job && <SiteJobPanel site={site} job={job} onSign={() => setSignOpen(true)} />}
               <SiteStagesPanel site={site} />
               <SitePointsPanel site={site} journal={study.journal} />
               <SiteShortagesPanel site={site} />

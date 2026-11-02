@@ -61,9 +61,13 @@ export function createYJobs(doc: Y.Doc) {
   function setMeta(site: string, patch: Partial<JobMeta>, now = Date.now()): boolean {
     if (!isId(site)) return false;
     const prev = get(site);
-    const base: Partial<JobMeta> = prev ? { status: prev.status, statusAt: prev.statusAt, scope: prev.scope, term: prev.term, margin: prev.margin, created: prev.created } : { status: "quote", statusAt: now, created: now };
+    const base: Partial<JobMeta> = prev
+      ? { status: prev.status, statusAt: prev.statusAt, scope: prev.scope, term: prev.term, margin: prev.margin, created: prev.created, changedAt: prev.changedAt }
+      : { status: "quote", statusAt: now, created: now };
     const next = { ...base, ...patch };
     if (patch.status && patch.status !== prev?.status && patch.statusAt === undefined) next.statusAt = now;
+    // Zmiana treści dla klienta unieważnia wcześniejszy podpis na potwierdzeniu (H3.5).
+    if (prev && (("scope" in patch && patch.scope !== prev.scope) || ("margin" in patch && patch.margin !== prev.margin))) next.changedAt = now;
     const clean = cleanJobMeta(next);
     if (!clean) return false;
     doc.transact(() => map.set(key("j", site), clean), JOBS_ORIGIN);
@@ -77,14 +81,26 @@ export function createYJobs(doc: Y.Doc) {
     const exists = map.has(key("i", site, item.id));
     if (!clean || (!exists && (get(site)?.items.length ?? 0) >= QUOTE_ITEMS_MAX)) return false;
     const { id, ...value } = clean;
-    doc.transact(() => map.set(key("i", site, id), value), JOBS_ORIGIN);
+    doc.transact(() => {
+      map.set(key("i", site, id), value);
+      touch(site);
+    }, JOBS_ORIGIN);
     return true;
+  }
+
+  /** Znacznik zmiany treści wyceny (H3.5) — w tej samej transakcji co zmiana pozycji. */
+  function touch(site: string, now = Date.now()): void {
+    const meta = get(site);
+    if (!meta) return;
+    const { items: _items, ...rest } = meta;
+    const clean = cleanJobMeta({ ...rest, changedAt: now });
+    if (clean) map.set(key("j", site), clean);
   }
 
   function removeItem(site: string, id: string): QuoteItem | null {
     const k = key("i", site, id);
     const prev = get(site)?.items.find((i) => i.id === id) ?? null;
-    if (map.has(k)) doc.transact(() => map.delete(k), JOBS_ORIGIN);
+    if (map.has(k)) doc.transact(() => { map.delete(k); touch(site); }, JOBS_ORIGIN);
     return prev;
   }
 

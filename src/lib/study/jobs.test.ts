@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
-import { cleanJobMeta, cleanQuoteItem, itemClientTotal, parseMargin, parseQty, quoteTotals, sortJobs, unpaidTotal, type Job } from "./jobs";
+import { cleanJobMeta, cleanQuoteItem, itemClientTotal, parseMargin, parseQty, quoteTotals, signatureValidFor, sortJobs, unpaidTotal, type Job } from "./jobs";
+import { signatureImageType } from "./pdfWriter";
+import { safeLine } from "@/lib/safeText";
 import { createYJobs } from "./yJobs";
 
 const job = (over: Partial<Job> = {}): Job => ({ status: "quote", statusAt: 1, created: 1, items: [], ...over });
@@ -98,5 +100,45 @@ describe("zlecenia własne — Yjs (H3.4)", () => {
     other.setMeta("s", { status: "paid" }, 5);
     other.mergeDump(JSON.parse(JSON.stringify(dump)));
     expect(other.get("s")).toMatchObject({ status: "paid", items: [{ id: "a" }] });
+  });
+});
+
+describe("potwierdzenie wykonania — poprawki po przeglądzie bezpieczeństwa (H3.5)", () => {
+  it("M1: podpis ważny tylko, gdy złożony po ostatniej zmianie wyceny; zmiana pozycji albo zakresu go unieważnia", () => {
+    const y = createYJobs(new Y.Doc());
+    y.setMeta("s", { status: "done" }, 100);
+    expect(signatureValidFor(y.get("s")!, { at: 150 })).toBe(true);
+    expect(signatureValidFor(y.get("s")!, { at: 50 })).toBe(false);
+    expect(signatureValidFor(y.get("s")!, null)).toBe(false);
+    y.saveItem("s", { id: "a", kind: "labor", name: "Montaż", qty: 1, unit: "usł.", price: 150, order: 0 });
+    const after = y.get("s")!.changedAt!;
+    expect(after).toBeGreaterThan(150);
+    expect(signatureValidFor(y.get("s")!, { at: 150 })).toBe(false);
+    // Sama zmiana statusu treści nie zmienia.
+    y.setMeta("s", { status: "paid" }, after + 10);
+    expect(y.get("s")!.changedAt).toBe(after);
+    y.setMeta("s", { scope: "Inny zakres" }, after + 20);
+    expect(y.get("s")!.changedAt).toBe(after + 20);
+  });
+
+  it("L1/L2: znaki sterujące i przełączniki kierunku znikają z tekstu do PDF", () => {
+    expect(safeLine("Jan\nZapłacono: 0 zł")).toBe("Jan Zapłacono: 0 zł");
+    expect(safeLine("plik\u202Efdp.exe")).toBe("plik fdp.exe");
+    expect(cleanQuoteItem({ kind: "labor", name: "A\u2066B", qty: 1, price: 1 }, "a")?.name).toBe("A B");
+  });
+
+  it("L3: obraz podpisu rozpoznany po bajtach; za duże wymiary PNG odpadają", () => {
+    const png = (w: number, h: number) => {
+      const b = new Uint8Array(64);
+      b.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
+      new DataView(b.buffer).setUint32(16, w);
+      new DataView(b.buffer).setUint32(20, h);
+      return b;
+    };
+    expect(signatureImageType(png(1200, 400))).toBe("image/png");
+    expect(signatureImageType(png(50_000, 50_000))).toBeNull();
+    expect(signatureImageType(new Uint8Array(64).fill(0x41))).toBeNull();
+    const jpg = new Uint8Array(64); jpg.set([0xff, 0xd8, 0xff]);
+    expect(signatureImageType(jpg)).toBe("image/jpeg");
   });
 });

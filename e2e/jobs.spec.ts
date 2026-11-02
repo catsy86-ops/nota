@@ -162,3 +162,38 @@ test("H3.6: raport „Wszystkie budowy szefa” bez fuch, „Wszystkie moje zlec
   await expect(dialog.getByTestId("own-report-note")).toBeVisible();
   await expect(dialog.getByRole("button", { name: /Szefowi|dodaj szefa/ })).toHaveCount(0);
 });
+
+test("H3.5: po „Zrobione” podpis klienta i PDF „Potwierdzenie wykonania” z obrazem podpisu", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const card = await newJob(page);
+  const job = card.getByTestId("site-job");
+  await addItem(card, "Robocizna", "Wymiana baterii", "150");
+  await expect(job.getByTestId("job-done")).toHaveCount(0);
+  await job.getByRole("group", { name: "Status zlecenia" }).getByRole("button", { name: "Zrobione" }).click();
+
+  await job.getByTestId("job-sign").click();
+  const dialog = page.getByTestId("site-signature");
+  await dialog.getByLabel("Imię i nazwisko podpisującego").fill("Jan Kowalski");
+  const pad = (await dialog.getByTestId("signature-pad").boundingBox())!;
+  await page.mouse.move(pad.x + 30, pad.y + 100);
+  await page.mouse.down();
+  for (const [dx, dy] of [[60, -40], [100, 10], [150, -30], [220, 5]]) await page.mouse.move(pad.x + dx, pad.y + 100 + dy, { steps: 4 });
+  await page.mouse.up();
+  await dialog.getByRole("button", { name: "Zapisz podpis" }).click();
+  await expect(job.getByTestId("job-sign")).toHaveText("Podpisane");
+
+  const download = page.waitForEvent("download", { timeout: 30000 });
+  await job.getByRole("button", { name: "Potwierdzenie wykonania" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe("Potwierdzenie wykonania - Kowalski kran.pdf");
+  const fs = await import("node:fs");
+  const bytes = fs.readFileSync((await file.path())!);
+  expect(bytes.subarray(0, 5).toString("ascii")).toBe("%PDF-");
+  // Obraz podpisu w pliku (jsPDF zapisuje obrazy jako /Subtype /Image).
+  expect(bytes.toString("latin1")).toContain("/Subtype /Image");
+
+  // Zmiana wyceny po podpisie unieważnia go na potwierdzeniu (przegląd bezpieczeństwa M1).
+  await page.clock.setFixedTime(new Date(2026, 10, 2, 12, 5).getTime());
+  await addItem(card, "Materiał", "Bateria", "250");
+  await expect(job.getByTestId("job-sign")).toHaveText("Podpisz ponownie");
+});

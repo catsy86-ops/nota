@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { ChevronDown, FileText, Plus, Wrench, X } from "lucide-react";
+import { ChevronDown, FileCheck, FileText, PenLine, Plus, Wrench, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
@@ -10,7 +10,7 @@ import { amountInput, money, parseAmount } from "@/lib/study/billing";
 import { companyNameStore } from "@/lib/study/companyPrefs";
 import {
   itemClientTotal, JOB_SCOPE_MAX, JOB_STATUS_LABEL, JOB_STATUSES, parseMargin, parseQty, QUOTE_KIND_LABEL, QUOTE_KINDS,
-  QUOTE_NAME_MAX, QUOTE_UNIT_MAX, quoteTotals, type Job, type QuoteKind,
+  QUOTE_NAME_MAX, QUOTE_UNIT_MAX, quoteTotals, signatureValidFor, type Job, type QuoteKind,
 } from "@/lib/study/jobs";
 import { removeJob, removeQuoteItem, restoreJob, saveQuoteItem, setJobMeta } from "@/lib/study/jobsStore";
 import type { SiteInfo } from "@/lib/study/sites";
@@ -24,7 +24,7 @@ const newItemId = () => `q-${Date.now().toString(36)}${Math.random().toString(36
  * zakres prac, termin (widoczny w Kalendarzu), wycena z robocizną i materiałem z marżą, PDF „Wycena”.
  * Dane w mapie `studyJobs` (`jobsStore.ts`), nie w karcie — pieniądze zostają przy Tobie.
  */
-export function SiteJobPanel({ site, job }: { site: SiteInfo; job: Job }) {
+export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; /** Okno podpisu klienta (ten sam podpis co na protokole, P2.4). */ onSign: () => void }) {
   const [open, setOpen] = useState(true);
   const [kind, setKind] = useState<QuoteKind>("labor");
   const [name, setName] = useState("");
@@ -32,6 +32,8 @@ export function SiteJobPanel({ site, job }: { site: SiteInfo; job: Job }) {
   const [unit, setUnit] = useState("");
   const [price, setPrice] = useState("");
   const totals = quoteTotals(job);
+  /** Podpis z karty złożony po ostatniej zmianie wyceny (H3.5). */
+  const signed = signatureValidFor(job, site.signature);
 
   function setStatus(status: Job["status"]) {
     if (status === job.status) return;
@@ -78,6 +80,20 @@ export function SiteJobPanel({ site, job }: { site: SiteInfo; job: Job }) {
       if ((await sharePdf(blob, jobPdfName(site.name))) === "downloaded") toast.success("Pobrano PDF wyceny");
     } catch {
       toast.error("Nie udało się zrobić PDF-u wyceny");
+    }
+  }
+
+  /** H3.5: potwierdzenie wykonania z podpisem klienta z karty. */
+  async function sendDonePdf() {
+    try {
+      const [{ buildJobDonePdf, jobDonePdfName }, { sharePdf, signatureDataUrl }] = await Promise.all([import("@/lib/study/jobPdf"), import("@/lib/study/pdfWriter")]);
+      const dataUrl = signed ? await signatureDataUrl(site.signature) : undefined;
+      if (site.signature && !signed) toast.warning("Podpis jest sprzed zmiany wyceny — w PDF zostaje puste miejsce. Podpisz ponownie.");
+      else if (signed && !dataUrl) toast.warning("Obraz podpisu jeszcze nie dotarł na to urządzenie — w PDF jest tylko imię i data");
+      const blob = await buildJobDonePdf(job, site, { company: companyNameStore.get(), today: localDayKey(), signatureDataUrl: dataUrl });
+      if ((await sharePdf(blob, jobDonePdfName(site.name))) === "downloaded") toast.success("Pobrano potwierdzenie wykonania");
+    } catch {
+      toast.error("Nie udało się zrobić PDF-u potwierdzenia");
     }
   }
 
@@ -205,6 +221,15 @@ export function SiteJobPanel({ site, job }: { site: SiteInfo; job: Job }) {
             </div>
             <div className="flex justify-between text-base font-semibold"><dt>Razem dla klienta</dt><dd className="font-mono tabular-nums" data-testid="job-total">{money(totals.total)}</dd></div>
           </dl>
+
+          {(job.status === "done" || job.status === "paid") && (
+            <div className="flex flex-wrap items-center gap-2 rounded-field bg-muted/40 p-2" data-testid="job-done">
+              <Button type="button" variant="outline" size="sm" onClick={onSign} className="coarse:h-11" data-testid="job-sign">
+                <PenLine className="h-4 w-4" aria-hidden />{signed ? "Podpisane" : site.signature ? "Podpisz ponownie" : "Podpis klienta"}
+              </Button>
+              <Button type="button" size="sm" onClick={sendDonePdf} className="coarse:h-11"><FileCheck className="h-4 w-4" aria-hidden />Potwierdzenie wykonania</Button>
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Button type="button" variant="outline" size="sm" onClick={sendPdf} className="coarse:h-11"><FileText className="h-4 w-4" aria-hidden />PDF wyceny</Button>

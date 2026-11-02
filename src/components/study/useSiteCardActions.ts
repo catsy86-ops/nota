@@ -105,12 +105,9 @@ export function useSiteCardActions({
         photos.push({ dataUrl, caption: entry?.captions?.[ref] ?? (entry ? new Date(entry.at).toLocaleDateString("pl-PL") : "") });
       }
       // Generator PDF leniwie: rzadko używany, poza precache (jak sam jsPDF).
-      const { buildHandoverPdf, handoverPdfName, sharePdf } = await import("@/lib/study/handoverPdf");
-      // P2.4: obraz podpisu z magazynu, tylko PNG/JPEG (klucz z innego urządzenia może wskazywać cokolwiek).
-      const sigRec = h.signature ? await imageStore.get(h.signature.image) : undefined;
-      const signatureDataUrl = sigRec && /^image\/(png|jpeg)$/.test(sigRec.type)
-        ? await blobToDataUrl(new Blob([sigRec.bytes], { type: sigRec.type }))
-        : undefined;
+      const { buildHandoverPdf, handoverPdfName, sharePdf, signatureDataUrl: loadSignature } = await import("@/lib/study/handoverPdf");
+      // P2.4: obraz podpisu z magazynu, tylko PNG/JPEG (`signatureDataUrl` w `pdfWriter.ts`).
+      const signatureDataUrl = await loadSignature(h.signature);
       // Karta mówi „Podpisany”, a obrazu nie ma (nie dojechał z innego urządzenia) — nie wysyłaj tego po cichu.
       if (h.signature && !signatureDataUrl) toast.warning("Obraz podpisu jeszcze nie dotarł na to urządzenie — w PDF jest tylko imię i data");
       const blob = await buildHandoverPdf(h, { company: companyNameStore.get(), photos, signatureDataUrl });
