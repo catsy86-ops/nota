@@ -155,13 +155,11 @@ Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mob
 - [~] **B2** „Zdjęcie do wpisu” w karcie budowy zrobione; bez etapu (decyzja: bieżący etap z karty nie istnieje w modelu).
 - [x] **A6** kalendarz: legenda kształtów (K4.1), zapytanie kontenerowe w komórce (K4.3), przejście przy wyborze dnia (K4.5; panel przenika się, nie rośnie z komórki). Całodniowy pasek (K4.1) pominięty — brak wydarzeń całodniowych w modelu.
 
-### Fala 2–4 — niezrobione
-- Fala 2 (wizualizacja): D1 graf na telefonie, D2 wykres wagi i historii, D3 heatmapa serii, D4 legenda obrazu miesiąca, D5 przegląd wykresów przy 390 px.
-- Fala 3 (teren): B1 tryb rękawic, B2 zdjęcie jednym dotknięciem, B3 „Zaczynasz za…”, A6 kalendarz (kształty dni, legenda).
-- Fala 4: E1 poprawka SM-2, B4 pędzel i szablon tygodnia, B5 porównanie z wypłatą, E3 import `.ics`, E4 import `.md`, A3 zakładki edycji, A4 arkusz „⋯”.
-- F1 ręczne QA na telefonie, F2 odświeżenie e2e Grafiku (36 testów), F3 podział `Index.tsx`.
+### Stan Fal 2–4 (sprawdzone 2026-11-02)
+- Zrobione: D1 graf na telefonie, D4 legenda obrazu miesiąca (w G4.7, af0fcd4), B1, B2 (bez etapu), B3, A6, E1 (SM-2, oceny „Od nowa / Dobrze”), B4 (szablon tygodnia i pasek pędzli), E3 (import CSV/RRULE), A1 (lupa w nagłówku, test), F2 (zrzuty Grafiku), F3 (podział `Index.tsx`).
+- Do sprawdzenia w kodzie (brak potwierdzenia w notatkach): D2, D3, D5, B5, E4, A4.
+- Zostaje: C5 haptyka sukcesu i ostrzeżenia w Ćwiczeniach i Grafiku, E2 scalenie kopii `fold` (niski priorytet).
+- Wymaga telefonu: F1 ręczne QA, A3 zakładki edycji i pierścień skupienia na dotyku, wake lock i cele 56 px.
 
-### Decyzje otwarte (potrzebne od właściciela)
-- A1: lupa w nagłówku (zrobione) czy także w pasku dolnym — obecnie tylko nagłówek.
-- E1: ocena SRS trzema przyciskami czy dwoma.
-- B-punkty z P2.x, G4.9 (dodatek nocny) — czekają na wcześniejsze decyzje z planów Pracy/Grafiku.
+### Decyzje
+- A1: lupa tylko w nagłówku (zostaje). E1: dwa przyciski (SM-2). G4.9 dodatek nocny: zrezygnowany.

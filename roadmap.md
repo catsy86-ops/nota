@@ -31,11 +31,11 @@ Plan do poziomu Notion/Obsidian, zatwierdzony. Kolejność: 0 → 1 → 2 → 3 
 
 - [x] **Faza 0 — fundamenty:** flagi funkcji (`src/lib/featureFlags.ts`, karta w Ustawieniach), RPC dla Workerów (`src/workers/rpc.ts`), zestaw do pomiarów (`src/test/fixtures/bigVault.ts`, `e2e/perf.spec.ts` z `PERF=1`).
   - Punkt odniesienia 2026-10-23, 1000 notatek, Chromium: pierwsza notatka 1,2 s, lista ustabilizowana 10,7 s, wyszukiwanie 1,8 s, otwarcie czytnika 21 s. Do zbadania przed Fazą 4 (otwarcie czytnika przy dużej liczbie notatek).
-- [ ] **Faza 1 — edytor CodeMirror 6 z podglądem na żywo.**
+- [x] **Faza 1 — edytor CodeMirror 6 z podglądem na żywo.**
 - [ ] **Faza 1b — motywy:** własne animacje, mikrointerakcje i przejścia dla każdego z 7 stylów (prośba właściciela 2026-10-23, po Fazie 1).
-- [ ] **Faza 2 — przekaźnik synchronizacji E2E** (serwer `relay-server/`, szyfrowanie po stronie klienta).
-- [ ] **Faza 3 — sieć wiedzy:** aliasy, etykiety zagnieżdżone, osadzanie, lokalny graf, karty.
-- [ ] **Faza 4 — wyszukiwanie z indeksem** w Workerze.
+- [x] **Faza 2 — przekaźnik synchronizacji E2E** (serwer `relay-server/`, szyfrowanie po stronie klienta). Zostaje: obrazy i wpisy ponad 512 KB; hosting odłożony (przekaźnik lokalny).
+- [x] **Faza 3 — sieć wiedzy:** aliasy, etykiety zagnieżdżone, osadzanie, lokalny graf, karty. Zostaje: widżet osadzenia w CodeMirror, aliasy w eksporcie i imporcie MD/ZIP.
+- [x] **Faza 4 — wyszukiwanie z indeksem** (MiniSearch, `pole>`/`<`, `ścieżka:`). Odłożone: indeks w Workerze i zrzut do IndexedDB.
 - [ ] **Faza 5 — bazy** (typy pól, formuły, zapisane widoki).
 - [ ] **Faza 6 — bogate treści** (matematyka, Mermaid, kolorowanie kodu, podgląd PDF).
 - [ ] **Faza 7 — folder `.md` na dysku** (Chrome/Edge na komputerze).
@@ -52,7 +52,7 @@ Plan do poziomu Notion/Obsidian, zatwierdzony. Kolejność: 0 → 1 → 2 → 3 
 - [x] **Vite 8 / Vitest 4 — zrobione (2026-10-21).** Vite 8.3.5, Vitest 4.1.12, `@vitest/coverage-v8` 4.1.12, `@vitejs/plugin-react-swc` 4.3.3. `manualChunks` przepisane na `build.rolldownOptions.output.codeSplitting` (grupy po ścieżce w `node_modules`). `globIgnores` dla eksportu PDF: Rolldown nazywa `html2canvas` bez `.esm`. Testy: `tsconfig.app.json` ma `node` w `types` (Vitest 4 nie dokłada typów Node), `exportNotes.test.ts` bindowane do prototypu, `yjsSync.test.ts` liczy tylko pokoje bieżącego kodu.
 - [x] **Próg paczki startowej** — podniesiony do 400 KB (2026-10-21: 398,3 KB przy Vite 8, 57 plików startowych; poprzednio 393,1 KB przy Vite 5). Precache 3,09 MB przy progu 3,2 MB.
 - [ ] **Wdrożenie hostingu:** konfiguracje Vercel i Netlify są w repo; brak połączenia repo z kontem (decyzja użytkownika).
-- [ ] **Decyzje z 2026-10-11 (bez rozstrzygnięcia w repo):** (2) Android push — odłożony; (3) import własnych materiałów do Nauki — bez decyzji; (4) egzekwowanie CSP — inline-skrypt z `offline.html` przeniesiony do `public/offline.js` (2026-10-21). Nagłówek nadal `Report-Only` w `netlify.toml`; przełączenie na egzekwowanie po tygodniu bez naruszeń — decyzja użytkownika.
+- [ ] **Decyzje z 2026-10-11 (bez rozstrzygnięcia w repo):** (2) Android push — odłożony; (3) import własnych materiałów do Nauki — bez decyzji; (4) egzekwowanie CSP — inline-skrypt z `offline.html` przeniesiony do `public/offline.js` (2026-10-21). Nagłówek nadal `Report-Only` w `netlify.toml`; przełączenie na egzekwowanie po tygodniu bez naruszeń — decyzja użytkownika. `connect-src` zostaje szerokie (`https: wss:`), bo adresy sygnalizacji, przekaźnika i push wpisuje użytkownik; zawężenie ma sens dopiero z hostingiem i stałymi adresami (sprawdzone 2026-11-02).
 - [x] **Zgodność wersji przed D5 — decyzja 2026-10-21: wymóg.** Przed użyciem D5 wszystkie urządzenia muszą mieć nową wersję aplikacji (bez okresu przejściowego). Stara aplikacja nie czyta wpisów dziennika w nowym formacie (potwierdzone testem).
 - [x] **Pełny e2e po ostatnich zmianach** — 2026-10-21 po `2f8662e`: 469 zaliczonych, 2 pominięte, 2 niezaliczone (timeout `beforeEach` w `reminders-calendar` i `mobile`); obie przechodzą po samodzielnym uruchomieniu.
 
@@ -1122,7 +1122,7 @@ Kolejność (po decyzjach): 3.3 Tailwind v4 + React 19 + shadcn (osobne commity:
 
 ## Plan UI/UX i QoL — 2026-10-25
 
-Pełny plan: `docs/plan-ui-ux-qol-2026-10-25.md` (Fazy 0–6: bezpieczniki zrzutów, system projektowy, nowoczesny CSS i ruch, QoL, wydajność odczuwalna, upiększenie, QA). Decyzje D-1…D-4 otwarte. Realizacja nie zaczęta.
+Pełny plan: `docs/plan-ui-ux-qol-2026-10-25.md` (Fazy 0–6: bezpieczniki zrzutów, system projektowy, nowoczesny CSS i ruch, QoL, wydajność odczuwalna, upiększenie, QA). Decyzje D-1…D-4 podjęte, plan zrobiony (stan w pamięci i `opis.md`); zostaje QA na telefonie.
 
 ## Plan działu Notatki — 2026-10-25
 
@@ -1176,7 +1176,7 @@ Pełny plan: `docs/plan-powloka-2026-10-25.md` (Etapy 1–5: logo bez pętli, je
 
 ## Plan UI, motywów i skórek — 2026-10-27
 
-Pełny plan: `docs/plan-ui-motywy-2026-10-27.md` (Fazy 0–5: fundament skórek — kontrakt tokenów, jedna lista, rozbicie `skins.css`, progi strażnika; personalizacja — akcent, kształt, ciche tło, skórka na noc; równe sygnatury i sygnatura dnia na Dziś; galeria z „Przymierz” i stylem w palecie; nowe skórki Kafle i Odblask oraz jasne schematy Planu i Hydrauliki; QA). Decyzje M-1…M-4 otwarte. Realizacja nie zaczęta.
+Pełny plan: `docs/plan-ui-motywy-2026-10-27.md` (Fazy 0–5: fundament skórek — kontrakt tokenów, jedna lista, rozbicie `skins.css`, progi strażnika; personalizacja — akcent, kształt, ciche tło, skórka na noc; równe sygnatury i sygnatura dnia na Dziś; galeria z „Przymierz” i stylem w palecie; nowe skórki Kafle i Odblask oraz jasne schematy Planu i Hydrauliki; QA). Decyzje M-1…M-4 podjęte, Fazy 0–4 zrobione; Faza 5 (QA telefonu, pomiar klatek) ręcznie.
 
 ## Plan Pracy, Kalendarza i Grafiku — 2026-10-27
 

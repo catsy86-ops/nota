@@ -1,6 +1,6 @@
 # Zadanie: moduł „Analizator planów hydraulicznych” (zlecone 2026-10-29)
 
-> **Status:** na liście do zrobienia (`TODO.md`), realizacja nie zaczęta. Treść zlecenia właściciela poniżej, skrócona do wymagań; na końcu uwagi o dopasowaniu do tego repozytorium.
+> **Status (2026-11-02):** zrobione — fazy 2–8 według `docs/plan-analizator-planow-2026-11-01.md` (dział `/plany`, zamknięty commitem 706708b, raport końcowy na dole tamtego planu). Treść zlecenia właściciela poniżej, skrócona do wymagań; na końcu uwagi o dopasowaniu do tego repozytorium.
 
 ## Cel
 

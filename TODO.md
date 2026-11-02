@@ -4,7 +4,6 @@ Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs/
 
 ## Do decyzji właściciela
 - **4.5 Wyszukiwanie bez polskich znaków.** Zrobione w zakresie listy kontrolnej (`StudyChecklist.tsx`). Pytań quizu nie przeszukuje; to osobna decyzja, jeśli będzie potrzebna.
-- **Ziarno papieru w Zeszycie.** Kod ma martwą regułę `html:not([data-skin])` (usunięta). Czy ziarno ma wrócić i w którym stylu?
 - **Widżet `/widget`.** Działa jako osobny skrót PWA „Na dziś”. Czy zostaje w tej formie?
 - **Esc w kompozytorze.** Zapisuje i zamyka (wybrany wariant). Czy wrócić do wariantu „szkic zostaje”?
 
@@ -12,7 +11,6 @@ Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs/
 - **4.6 Więcej pytań wbudowanych.** Dziś ok. 29 pytań na 18 tematów. Potrzebne źródła (poradnik, listy kontrolne).
 
 ## Do zrobienia później
-- **Analizator planów hydraulicznych (zlecone 2026-10-29).** Nowy dział: import zrzutów z DWG FastView, edytor z zoomem, kalibracja skali, ręczne trasy z długością polilinii, OCR średnic (Tesseract.js), propozycje tras (OpenCV.js), symbole, zestawienie materiałów i CSV. Pełna treść, kolejność faz i uwagi o dopasowaniu do repozytorium (Yjs zamiast bazy, leniwe ładowanie OCR i OpenCV poza precache): `docs/zadanie-analizator-planow-2026-10-29.md`.
 - **4.3 Własne tematy.** Nieznany temat jest cicho odrzucany przy wczytaniu (`sanitizeStudy` w `src/lib/study/store.ts`). Obecny UI nie tworzy tematów, więc odrzucenie dotyczy tylko uszkodzonych danych. Pełne własne tematy to nowy model danych (tematy w `studyCustom`, UI tworzenia i kolumny), więc czeka na osobny projekt.
 - **Etap 6 (model danych w Yjs).** Opcje A i B zrobione 2026-10-25 (karta i odhaczenia jako mapy, zdjęcia i kształtki jako `Y.Array`, dump wersja 2). Zob. `docs/plan-dane-yjs-2026-10-25.md`. Do zrobienia: ręczne QA z dwoma telefonami (zdjęcia i odhaczenia równocześnie).
 - **Import własnych materiałów do Nauki** (`roadmap.md`).
