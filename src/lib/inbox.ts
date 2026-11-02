@@ -34,3 +34,19 @@ export function captureParts(raw: string): { title: string; content: string } | 
   const content = [tail, rest].filter(Boolean).join("\n");
   return { title: head, content };
 }
+
+/**
+ * 1.3: notatka bez tytułu pokazuje pierwszą niepustą linię treści (jak kafel), reszta idzie do podglądu.
+ * Bez treści — „Bez tytułu”.
+ */
+const NL = String.fromCharCode(10);
+
+export function triageHeadline(note: { title: string; content: string }): { title: string; preview: string } {
+  const content = note.content.trim();
+  if (note.title.trim()) return { title: note.title.trim(), preview: content.slice(0, 300) };
+  // Linie po NL; ewentualne CR znika przy trim().
+  const lines = content.split(NL);
+  const first = lines.findIndex((l) => l.trim());
+  if (first < 0) return { title: "Bez tytułu", preview: "" };
+  return { title: lines[first].trim().slice(0, 120), preview: lines.slice(first + 1).join(NL).trim().slice(0, 300) };
+}

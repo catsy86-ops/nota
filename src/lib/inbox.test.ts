@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { captureParts, INBOX_TITLE_MAX, isInboxNote } from "./inbox";
+import { captureParts, INBOX_TITLE_MAX, isInboxNote, triageHeadline } from "./inbox";
 
 describe("isInboxNote", () => {
   it("skrzynka to notatki bez folderu, bez etykiet i nie będące podnotatką", () => {
@@ -56,5 +56,18 @@ describe("odłożenie ze Skrzynki (S-1)", () => {
     expect(isInboxNote({ ...base, snoozedUntil: now - 1 })).toBe(true);
     expect(isInboxNote({ ...base, snoozedUntil: 0 })).toBe(true);
     expect(isInboxNote(base)).toBe(true);
+  });
+});
+
+describe("triageHeadline (Skrzynka 1.3)", () => {
+  const NL = String.fromCharCode(10);
+  it("z tytułem — tytuł i treść jako podgląd", () => {
+    expect(triageHeadline({ title: " Rury ", content: "50 m" })).toEqual({ title: "Rury", preview: "50 m" });
+  });
+  it("bez tytułu — pierwsza niepusta linia, reszta w podglądzie", () => {
+    expect(triageHeadline({ title: "", content: `${NL}  Zadzwonić do hurtowni ${NL}o rabat${NL}jutro` })).toEqual({ title: "Zadzwonić do hurtowni", preview: `o rabat${NL}jutro` });
+  });
+  it("bez tytułu i treści — „Bez tytułu”", () => {
+    expect(triageHeadline({ title: " ", content: " " })).toEqual({ title: "Bez tytułu", preview: "" });
   });
 });

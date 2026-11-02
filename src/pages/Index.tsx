@@ -733,7 +733,7 @@ const Index = () => {
           )}
           {triageMounted && (
             <Suspense fallback={null}>
-              <InboxTriage open={triageOpen} onOpenChange={setTriageOpen} />
+              <InboxTriage open={triageOpen} onOpenChange={setTriageOpen} onOpenNote={(id) => openNote(id, false, true)} />
             </Suspense>
           )}
 
@@ -958,7 +958,7 @@ const Index = () => {
             {deferredSearch && !isAppView(view) ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
           </p>
           <AnimatePresence>
-            {!isAppView(view) && view !== "widget" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote(view === "reminders" ? "reminder" : undefined)} onClearSearch={() => setSearch("")} />}
+            {!isAppView(view) && view !== "widget" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={view === "inbox" ? undefined : () => expandAddNote(view === "reminders" ? "reminder" : undefined)} onClearSearch={() => setSearch("")} />}
           </AnimatePresence>
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>

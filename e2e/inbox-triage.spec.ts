@@ -48,3 +48,18 @@ test("skrzynka: „Jutro” odkłada notatkę poza Skrzynkę, „Cofnij” ją p
   await dialog.getByRole("button", { name: "Cofnij ostatnią akcję" }).click();
   await expect(dialog).toContainText("1 z 1");
 });
+
+test("skrzynka: pusty stan „Zapisz pomysł” daje kursor w polu; „Otwórz notatkę” z porządkowania (4.5, 3.2)", async ({ page }) => {
+  await expect(page.getByRole("button", { name: "Nowa notatka" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Zapisz pomysł" }).click();
+  await expect(page.getByLabel("Przechwyć do skrzynki")).toBeFocused();
+
+  const stamp = Date.now();
+  await capture(page, `Pomysł ${stamp}`);
+  await page.getByRole("button", { name: /Porządkuj skrzynkę \(1\)/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Porządkowanie skrzynki" });
+  await dialog.getByRole("button", { name: "Otwórz notatkę" }).click();
+  await expect(dialog).toBeHidden();
+  // Edytor otwiera się w miejscu kafla (pole tytułu w karcie notatki).
+  await expect(page.getByRole("article", { name: `Pomysł ${stamp}` }).getByRole("textbox", { name: "Tytuł" })).toHaveValue(`Pomysł ${stamp}`);
+});

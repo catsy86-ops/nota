@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
-import { Archive, Clock, RotateCcw, Trash } from "lucide-react";
+import { Archive, Clock, PencilLine, RotateCcw, Trash } from "lucide-react";
 import { m } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import type { Note } from "@/hooks/useNotes";
-import { isInboxNote } from "@/lib/inbox";
+import { isInboxNote, triageHeadline } from "@/lib/inbox";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 interface InboxTriageProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** 3.2: „Otwórz notatkę” — zamyka okno i otwiera notatkę w edytorze. */
+  onOpenNote?: (id: string) => void;
 }
+
 
 /** Skrót 1–9 dotyczy pierwszych dziewięciu chipów: najpierw foldery, potem etykiety. */
 const SHORTCUT_COUNT = 9;
@@ -33,7 +36,7 @@ interface UndoStep {
  * (reguła `isInboxNote`), Archiwizuj i Kosz też, „Zostaw” przechodzi dalej bez zmian. Kolejka jest
  * zamrożona na otwarcie okna, więc notatka znika z ekranu dopiero po własnej akcji.
  */
-export function InboxTriage({ open, onOpenChange }: InboxTriageProps) {
+export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps) {
   const { notes, folders, allLabels, updateNote, archiveNote, unarchiveNote, trashNote, restoreFromTrash } = useNotesContext();
   // Kolejka zamrożona przy otwarciu: akcja usuwa notatkę z Skrzynki, ale nie zmienia listy pod spodem.
   const [queue, setQueue] = useState<Note[]>([]);
@@ -138,8 +141,7 @@ export function InboxTriage({ open, onOpenChange }: InboxTriageProps) {
     }
   }
 
-  const title = current ? (current.title.trim() || "Bez tytułu") : "";
-  const preview = current ? current.content.trim().slice(0, 300) : "";
+  const { title, preview } = current ? triageHeadline(current) : { title: "", preview: "" };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -212,6 +214,11 @@ export function InboxTriage({ open, onOpenChange }: InboxTriageProps) {
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={leave}>
                 Zostaw w skrzynce
               </Button>
+              {onOpenNote && (
+                <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => { const id = current.id; onOpenChange(false); onOpenNote(id); }}>
+                  <PencilLine className="h-4 w-4" aria-hidden /> Otwórz notatkę
+                </Button>
+              )}
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5 ml-auto" onClick={undo} disabled={undoStack.length === 0}>
                 <RotateCcw className="h-4 w-4" aria-hidden /> Cofnij
               </Button>

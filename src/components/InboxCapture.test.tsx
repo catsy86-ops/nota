@@ -45,3 +45,15 @@ describe("InboxCapture", () => {
     expect(got).toEqual([["Tytuł", "Treść"]]);
   });
 });
+
+describe("InboxCapture — przycisk „Zapisz” (Skrzynka 1.1)", () => {
+  it("pojawia się przy niepustym polu i zapisuje", () => {
+    const got: [string, string][] = [];
+    render(<InboxCapture onCapture={(t, c) => got.push([t, c])} />);
+    expect(screen.queryByRole("button", { name: "Zapisz do skrzynki" })).toBeNull();
+    fireEvent.change(screen.getByLabelText("Przechwyć do skrzynki"), { target: { value: "Kupić klej" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz do skrzynki" }));
+    expect(got).toEqual([["Kupić klej", ""]]);
+    expect(screen.queryByRole("button", { name: "Zapisz do skrzynki" })).toBeNull();
+  });
+});

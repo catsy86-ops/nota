@@ -44,7 +44,7 @@ export const DESCRIPTIONS: Record<View, string> = {
   label: "Dodaj etykietę, wpisując #nazwę w treści notatki albo wybierając ją w menu notatki.",
   folder: "Przenieś notatkę do tego folderu z jej menu albo wpisz @nazwę folderu przy zapisie.",
   widget: "",
-  inbox: "Nowe pomysły wpisz w polu powyżej. Trafią tu, dopóki nie przypiszesz im folderu albo etykiety.",
+  inbox: "Nowe pomysły wpisz w polu powyżej — Enter zapisuje. Zostaną tu, dopóki nie przypiszesz im folderu albo etykiety.",
 };
 
 /**
@@ -131,6 +131,18 @@ export function EmptyState({ view, search, elsewhere, onGo, onNew, onClearSearch
             className="inline-flex items-center gap-1.5 rounded-card bg-primary/10 px-4 py-2 text-sm font-medium text-primary-ink hover:bg-primary/20 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             {view === "notes" ? "Napisz pierwszą notatkę" : "Nowa notatka"}
+          </button>
+        </div>
+      )}
+      {view === "inbox" && (
+        // Skrzynka 4.5: jedno działanie — kursor w polu przechwytywania nad listą.
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => document.querySelector<HTMLTextAreaElement>("[data-inbox-capture]")?.focus()}
+            className="inline-flex items-center gap-1.5 rounded-card bg-primary/10 px-4 py-2 text-sm font-medium text-primary-ink hover:bg-primary/20 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Zapisz pomysł
           </button>
         </div>
       )}
