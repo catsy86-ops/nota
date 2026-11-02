@@ -62,12 +62,12 @@ test("zdjęcia z dnia: dwa wpisy po przerwie, godzina z EXIF, budowa z wpisów d
   const groups = dialog.getByTestId("photo-day-group");
   await expect(groups.nth(0)).toContainText("07:40–07:55");
   await expect(groups.nth(0)).toContainText("2 zdjęcia");
-  await expect(groups.nth(0).getByRole("combobox")).toHaveValue("Lipowa 5");
+  await expect(groups.nth(0).getByRole("combobox", { name: /Budowa wpisu/ })).toHaveValue("Lipowa 5");
   await expect(groups.nth(0)).toContainText("z godzin i wpisów tego dnia");
   const axe = await new AxeBuilder({ page }).include("[data-testid='photo-day']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
   expect(axe.violations).toEqual([]);
 
-  await groups.nth(1).getByRole("combobox").selectOption("");
+  await groups.nth(1).getByRole("combobox", { name: /Budowa wpisu/ }).selectOption("");
   await dialog.getByRole("button", { name: "Dodaj wpisy" }).click();
   await expect(page.getByText("Dodano 2 wpisy ze zdjęć")).toBeVisible();
   await expect(dialog).toBeHidden();
@@ -83,4 +83,29 @@ test("zdjęcie bez EXIF: godzina z pliku i podpowiedź o tym", async ({ page }) 
   await dialog.getByTestId("photo-day-file").setInputFiles([{ name: "x.jpg", mimeType: "image/jpeg", buffer: Buffer.from(jpeg) }]);
   await expect(dialog.getByTestId("photo-day-summary")).toHaveText("1 wpis z 1 zdjęcia");
   await expect(dialog).toContainText("1 zdjęcie nie ma czasu zrobienia");
+});
+
+test("zdjęcia z dnia: etap i punkt tej budowy przy grupie (H4.4)", async ({ page }) => {
+  const jpeg = await baseJpeg(page);
+  // Łazienka z szablonu — punkty tej budowy, do których można przypiąć zdjęcie.
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
+  const card = page.getByTestId("site-card");
+  await card.getByTestId("site-points").getByRole("button", { name: /^\+ Łazienka/ }).click();
+  await page.keyboard.press("Escape");
+
+  await page.getByTestId("photo-day-open").click();
+  const dialog = page.getByTestId("photo-day");
+  await dialog.getByTestId("photo-day-file").setInputFiles([
+    { name: "a.jpg", mimeType: "image/jpeg", buffer: withExif(jpeg, "2026:10:14 07:40:00") },
+  ]);
+  const group = dialog.getByTestId("photo-day-group");
+  await expect(group.getByRole("combobox", { name: /Etap przy wpisie/ })).toBeVisible();
+  await group.getByRole("combobox", { name: /Etap przy wpisie/ }).selectOption({ label: "Kanalizacja podposadzkowa" });
+  await group.getByRole("combobox", { name: /Punkt przy wpisie/ }).selectOption({ index: 1 });
+  await dialog.getByRole("button", { name: "Dodaj wpisy" }).click();
+  await expect(page.getByText("Dodano 1 wpis ze zdjęć")).toBeVisible();
+
+  await expect(page.getByTestId("journal-entry-stage").filter({ hasText: "Kanalizacja podposadzkowa" }).first()).toBeVisible();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
+  await expect(page.getByTestId("site-card").getByTestId("site-points").getByRole("img", { name: /Ostatnie zdjęcie:/ })).toHaveCount(1);
 });

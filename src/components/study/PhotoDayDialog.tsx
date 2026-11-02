@@ -11,6 +11,9 @@ import { imageStore } from "@/lib/imageStore";
 import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { EXIF_READ_BYTES, readExif } from "@/lib/exif";
 import { dayKeyOf } from "@/lib/study/report";
+import { siteStages } from "@/lib/study/stages";
+import { pointType } from "@/lib/study/points";
+import { getSitePoints } from "@/lib/study/pointsStore";
 import { dayLabel } from "@/lib/study/journalView";
 import { addJournalEntry, getStudy, siteDirectoryOf, useSiteDirectory } from "@/lib/study/store";
 import { entrySiteId, findSiteByName } from "@/lib/study/sites";
@@ -27,6 +30,22 @@ const WHY: Record<SiteReason, string> = {
   none: "wybierz budowę",
 };
 
+/** Etapy i punkty budowy wybranej przy grupie (`null` = bez budowy albo nieznana). */
+function siteChoices(name: string) {
+  const s = getStudy();
+  const card = name ? findSiteByName(siteDirectoryOf(s), name) : undefined;
+  if (!card) return null;
+  const { rooms, points } = getSitePoints(card.id);
+  const room = new Map(rooms.map((r) => [r.id, r.name]));
+  return {
+    id: card.id,
+    stages: siteStages(card),
+    points: points.map((p) => ({ id: p.id, label: `${room.get(p.room) ?? "Pomieszczenie"} · ${pointType(p.type).label}` })),
+  };
+}
+
+type Pin = { stage?: string; point?: string };
+
 const time = (at: number) => new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 
 /** Budowy z godzinami albo wpisami danego dnia — podpowiedź dla zdjęć bez lokalizacji. */
@@ -42,6 +61,7 @@ function daySitesOf(day: string): string[] {
  * H4.3 „Zdjęcia z dnia”: zdjęcia z galerii → wpisy z godziną zrobienia, pogrupowane po przerwach
  * i budowach (`groupPhotos`). Czas i GPS czyta `readExif` z pierwszych 128 KB pliku — przed
  * zmniejszeniem, które gubi EXIF. Lokalizacja zdjęcia tylko podpowiada budowę, do wpisu nie trafia.
+ * H4.4: przy grupie można przypiąć etap i punkt tej budowy; etap tylko przypina, nie odhacza.
  */
 export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const dir = useSiteDirectory();
@@ -49,6 +69,8 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   const [files, setFiles] = useState<File[]>([]);
   const [photos, setPhotos] = useState<PhotoInfo[]>([]);
   const [sites, setSites] = useState<Record<number, string>>({});
+  /** H4.4: etap i punkt przypięte do grupy — tylko z etapów i punktów tej budowy. */
+  const [pins, setPins] = useState<Record<number, Pin>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const live = dir.filter((s) => s.archived === undefined);
 
@@ -66,6 +88,11 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
     setFiles([]);
     setPhotos([]);
     setSites({});
+    setPins({});
+  }
+
+  function pinGroup(i: number, patch: Pin) {
+    setPins((p) => ({ ...p, [i]: { ...p[i], ...patch } }));
   }
 
   async function pick(e: React.ChangeEvent<HTMLInputElement>) {
@@ -83,6 +110,7 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
       setFiles(chosen);
       setPhotos(infos);
       setSites({});
+      setPins({});
     } finally {
       setBusy(null);
     }
@@ -102,7 +130,11 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           if (!prepared) { skipped++; continue; }
           refs.push(await imageStore.putBlob(prepared));
         }
-        if (refs.length && addJournalEntry({ kind: "ok", topic: null, text: "", images: refs, at: g.start, site: sites[i] ?? g.site })) entries++;
+        const choice = siteChoices(sites[i] ?? g.site);
+        const pin = pins[i] ?? {};
+        const stage = choice?.stages.some((x) => x.id === pin.stage) ? pin.stage : undefined;
+        const point = choice?.points.some((x) => x.id === pin.point) ? pin.point : undefined;
+        if (refs.length && addJournalEntry({ kind: "ok", topic: null, text: "", images: refs, at: g.start, site: sites[i] ?? g.site, stage, point })) entries++;
       }
     } catch {
       photoSaveFailed();
@@ -149,6 +181,8 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                 const header = day !== lastDay ? dayLabel(g.start) : null;
                 lastDay = day;
                 const value = sites[i] ?? g.site;
+                const choice = siteChoices(value);
+                const pin = pins[i] ?? {};
                 return (
                   <li key={g.keys.join("-")} className="space-y-1.5" data-testid="photo-day-group">
                     {header && <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{header}</p>}
@@ -163,7 +197,10 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                       <select
                         aria-label={`Budowa wpisu ${time(g.start)}`}
                         value={value}
-                        onChange={(e) => setSites((s) => ({ ...s, [i]: e.target.value }))}
+                        onChange={(e) => {
+                          setSites((s) => ({ ...s, [i]: e.target.value }));
+                          setPins((p) => { const { [i]: _drop, ...rest } = p; return rest; });
+                        }}
                         className={selectClass}
                       >
                         <option value="">Bez budowy</option>
@@ -171,6 +208,22 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                         {live.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
                       </select>
                       {sites[i] === undefined && <p className="mt-1 text-xs text-muted-foreground">{WHY[g.why]}</p>}
+                      {choice && (choice.stages.length > 0 || choice.points.length > 0) && (
+                        <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2">
+                          {choice.stages.length > 0 && (
+                            <select aria-label={`Etap przy wpisie ${time(g.start)}`} value={pin.stage ?? ""} onChange={(e) => pinGroup(i, { stage: e.target.value || undefined })} className={selectClass}>
+                              <option value="">Bez etapu</option>
+                              {choice.stages.map((x) => <option key={x.id} value={x.id}>{x.done !== undefined ? `✓ ${x.name}` : x.name}</option>)}
+                            </select>
+                          )}
+                          {choice.points.length > 0 && (
+                            <select aria-label={`Punkt przy wpisie ${time(g.start)}`} value={pin.point ?? ""} onChange={(e) => pinGroup(i, { point: e.target.value || undefined })} className={selectClass}>
+                              <option value="">Bez punktu</option>
+                              {choice.points.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+                            </select>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </li>
                 );
