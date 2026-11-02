@@ -103,7 +103,7 @@ test("3.1: zmiana nazwy i łączenie osób z „Cofnij”", async ({ page }) => 
   await rename.getByLabel("Nowa nazwa").fill(`Aleksandra ${stamp}`);
   await rename.getByRole("button", { name: "Zapisz" }).click();
   await expect(page.getByRole("dialog").getByRole("heading", { name: `Aleksandra ${stamp}` })).toBeVisible();
-  await page.getByRole("button", { name: "Cofnij" }).last().click();
+  await page.locator("[data-sonner-toast]").filter({ hasText: `Nowa nazwa: Aleksandra ${stamp}` }).getByRole("button", { name: "Cofnij" }).click();
   await expect(page.getByRole("dialog").getByRole("heading", { name: b })).toBeVisible();
 });
 
