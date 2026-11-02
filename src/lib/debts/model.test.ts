@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { balances, cleanDebt, debtSide, doubleSettle, foldName, formatAmount, knownPeople, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
+import { balances, cleanDebt, debtsCsv, debtSide, doubleSettle, foldName, personStatement, formatAmount, knownPeople, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
 
 const e = (over: Partial<DebtEntry>): DebtEntry => ({
   id: "d-1", person: "Anna", kind: "lent", amount: 10000, at: "2026-10-10", note: "", created: 1, ...over,
@@ -160,5 +160,32 @@ describe("foldName (2.5)", () => {
   it("małe litery bez polskich znaków", () => {
     expect(foldName("  Łukasz  Żółć ")).toBe("lukasz zolc");
     expect(foldName("ŚWIĘTY")).toBe("swiety");
+  });
+});
+
+describe("wiadomość i CSV (3.2, 3.4)", () => {
+  const list = [
+    e({ id: "a", person: "Ania", kind: "lent", amount: 10_000, at: "2026-10-01", created: 1, note: "=SUMA(A1)" }),
+    e({ id: "b", person: "Ania", kind: "repaid", amount: 2_550, at: "2026-10-05", created: 2 }),
+    e({ id: "c", person: "Marek", kind: "borrowed", amount: 4_000, at: "2026-10-03", created: 3, note: "obiad; kino" }),
+  ];
+
+  it("wiadomość: saldo i wpisy od najnowszego", () => {
+    const ania = balances(list).find((p) => p.name === "Ania")!;
+    const lines = personStatement(ania).split(String.fromCharCode(10));
+    expect(lines[0]).toBe("Ania — rozliczenie");
+    expect(lines[1]).toBe("Do oddania: 74,50 zł");
+    expect(lines[3]).toBe("05.10.2026 · Oddał mi · 25,50 zł");
+    expect(lines[4]).toBe("01.10.2026 · Pożyczyłem · 100,00 zł · =SUMA(A1)");
+  });
+
+  it("CSV: BOM, średnik, od najstarszego, saldo osoby ze znakiem, bez formuł", () => {
+    const csv = debtsCsv(list);
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
+    const rows = csv.slice(1).split(String.fromCharCode(13, 10));
+    expect(rows[0]).toBe("Data;Osoba;Rodzaj;Kwota [zł];Za co;Saldo osoby [zł] (+ nam winna)");
+    expect(rows[1]).toBe("2026-10-01;Ania;Pożyczyłem;100,00;'=SUMA(A1);74,50");
+    expect(rows[2]).toBe('2026-10-03;Marek;Pożyczyłem od;40,00;"obiad; kino";-40,00');
+    expect(rows[3]).toBe("2026-10-05;Ania;Oddał mi;25,50;;74,50");
   });
 });

@@ -18,6 +18,8 @@ vi.mock("@/lib/debts/store", () => ({
   updateDebt: (entry: unknown) => updateMock(entry),
 }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }) }));
+const { shareMock } = vi.hoisted(() => ({ shareMock: vi.fn(async () => "copied") }));
+vi.mock("@/lib/shareOrCopy", () => ({ shareOrCopy: shareMock }));
 
 import { DebtsView } from "./DebtsView";
 
@@ -241,5 +243,15 @@ describe("DebtsView — plan Długów, Etap 2", () => {
     fireEvent.click(screen.getByRole("button", { name: "Wpis z Ania" }));
     const form = screen.getByRole("form", { name: "Nowy wpis" });
     expect((within(form).getByLabelText("Kto") as HTMLInputElement).value).toBe("Ania");
+  });
+});
+
+describe("DebtsView — plan Długów, Etap 3", () => {
+  it("3.2: „Wyślij” przekazuje rozliczenie osoby do udostępnienia albo schowka", async () => {
+    fixture.entries = [debt("1", "Ania", "lent", 10_000)];
+    render(<DebtsView />);
+    fireEvent.click(screen.getByRole("button", { name: /Ania/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Wyślij" }));
+    expect(shareMock).toHaveBeenCalledWith({ title: "Ania — rozliczenie", text: expect.stringContaining("Do oddania: 100,00 zł") });
   });
 });

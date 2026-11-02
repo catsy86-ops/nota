@@ -12,6 +12,9 @@
  */
 export type DebtKind = "lent" | "repaid" | "borrowed" | "returned";
 export const DEBT_KINDS: readonly DebtKind[] = ["lent", "repaid", "borrowed", "returned"];
+/** Nazwa rodzaju na ekranie, w wiadomości i w CSV. */
+export const DEBT_KIND_LABEL: Record<DebtKind, string> = { lent: "Pożyczyłem", repaid: "Oddał mi", borrowed: "Pożyczyłem od", returned: "Oddałem" };
+
 /** Znak wpływu wpisu na saldo: dodatni = ta osoba jest nam winna więcej. */
 export const KIND_SIGN: Record<DebtKind, 1 | -1> = { lent: 1, repaid: -1, borrowed: -1, returned: 1 };
 
@@ -200,4 +203,47 @@ export function knownPeople(entries: readonly DebtEntry[]): string[] {
   const seen = new Map<string, string>();
   for (const e of [...entries].sort(byNewest)) if (!seen.has(personKey(e.person))) seen.set(personKey(e.person), e.person);
   return [...seen.values()].sort((a, b) => a.localeCompare(b, "pl"));
+}
+
+/** „2026-10-14” → „14.10.2026”. */
+const plDate = (day: string) => `${day.slice(8, 10)}.${day.slice(5, 7)}.${day.slice(0, 4)}`;
+
+/**
+ * 3.2 Wiadomość do osoby: saldo i wpisy (od najnowszego), głosem wysyłającego. Kwoty zawsze widoczne —
+ * wysyłka to wyraźne stuknięcie, a ukrywanie kwot chroni tylko ekran.
+ */
+export function personStatement(p: PersonDebts): string {
+  const head = p.balance === 0 ? "Rozliczone." : p.balance > 0 ? `Do oddania: ${formatAmount(p.balance)}` : `Jestem winien: ${formatAmount(-p.balance)}`;
+  const lines = p.entries.map((e) => `${plDate(e.at)} · ${DEBT_KIND_LABEL[e.kind]} · ${formatAmount(e.amount)}${e.note ? ` · ${e.note}` : ""}`);
+  return [`${p.name} — rozliczenie`, head, "", ...lines].join(String.fromCharCode(10));
+}
+
+const CRLF = String.fromCharCode(13, 10);
+const BOM = String.fromCharCode(0xfeff);
+
+/**
+ * Pole tekstowe CSV: początek `=`, `+`, `-`, `@`, tabulator albo CR dostaje apostrof (bez wstrzykiwania formuł
+ * w Excelu), średnik, cudzysłów albo nowa linia — cudzysłowy.
+ */
+function textCell(v: string): string {
+  const c = v.charCodeAt(0);
+  // Pusty tekst: `"=+-@".includes("")` to `true` — bez sprawdzenia długości puste pole dostawało apostrof.
+  const s = v.length > 0 && ("=+-@".includes(v.charAt(0)) || c === 9 || c === 13) ? `'${v}` : v;
+  return /[;"]/.test(s) || s.includes(String.fromCharCode(10)) || s.includes(String.fromCharCode(13)) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+/** Grosze → „-12,50” (liczba w polskim Excelu; bez apostrofu, to nie tekst). */
+const moneyCell = (grosze: number) => (grosze / 100).toFixed(2).replace(".", ",");
+
+/**
+ * 3.4 Wszystkie wpisy jako CSV pod polski Excel (separator „;”, BOM, CRLF, przecinek dziesiętny), od
+ * najstarszego. Saldo osoby: plus — ta osoba jest nam winna, minus — my jej.
+ */
+export function debtsCsv(entries: readonly DebtEntry[]): string {
+  const balance = new Map(balances(entries).map((p) => [p.key, p.balance]));
+  const rows = [["Data", "Osoba", "Rodzaj", "Kwota [zł]", "Za co", "Saldo osoby [zł] (+ nam winna)"].map(textCell).join(";")];
+  for (const e of [...entries].sort(byNewest).reverse()) {
+    rows.push([textCell(e.at), textCell(e.person), textCell(DEBT_KIND_LABEL[e.kind]), moneyCell(e.amount), textCell(e.note), moneyCell(balance.get(personKey(e.person)) ?? 0)].join(";"));
+  }
+  return BOM + rows.join(CRLF) + CRLF;
 }

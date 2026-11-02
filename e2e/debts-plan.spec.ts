@@ -85,3 +85,33 @@ test("2.1: na telefonie formularz zwinięty, „Nowy wpis” go rozwija i to zap
   await expect(page.getByRole("form", { name: "Nowy wpis" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Zwiń formularz" })).toHaveAttribute("aria-expanded", "true");
 });
+
+test("3.1: zmiana nazwy i łączenie osób z „Cofnij”", async ({ page }) => {
+  const stamp = Date.now();
+  const a = `Ola ${stamp}`;
+  const b = `Ola K ${stamp}`;
+  await addLent(page, a);
+  await addLent(page, b);
+  await page.getByRole("button", { name: new RegExp(`^${b}`) }).click();
+  await page.getByRole("combobox").filter({ hasText: "Połącz z…" }).selectOption({ label: a });
+  await page.getByRole("button", { name: "Połącz", exact: true }).click();
+  await expect(page.getByText(`Połączono: wpisy „${a}” są teraz pod „${b}”`)).toBeVisible();
+  await expect(page.getByRole("dialog").getByText("Do oddania: 240,00 zł")).toBeVisible();
+
+  await page.getByRole("button", { name: "Zmień nazwę" }).click();
+  const rename = page.getByRole("form", { name: "Zmiana nazwy osoby" });
+  await rename.getByLabel("Nowa nazwa").fill(`Aleksandra ${stamp}`);
+  await rename.getByRole("button", { name: "Zapisz" }).click();
+  await expect(page.getByRole("dialog").getByRole("heading", { name: `Aleksandra ${stamp}` })).toBeVisible();
+  await page.getByRole("button", { name: "Cofnij" }).last().click();
+  await expect(page.getByRole("dialog").getByRole("heading", { name: b })).toBeVisible();
+});
+
+test("3.4: eksport CSV wszystkich wpisów", async ({ page }) => {
+  const person = `CSV ${Date.now()}`;
+  await addLent(page, person);
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Eksport CSV" }).click()]);
+  expect(download.suggestedFilename()).toMatch(/^notki-dlugi-\d{4}-\d{2}-\d{2}\.csv$/);
+  const text = await (await import("node:fs/promises")).readFile(await download.path(), "utf8");
+  expect(text).toContain(`;${person};Pożyczyłem;120,00;;120,00`);
+});

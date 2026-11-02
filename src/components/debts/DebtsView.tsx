@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Check, ChevronDown, Eye, EyeOff, HandCoins, Pencil, Plus, Search, Trash2, TriangleAlert, Undo2 } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Check, ChevronDown, Combine, Download, Eye, EyeOff, HandCoins, Pencil, Plus, Search, Send, Trash2, TriangleAlert, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +11,11 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { localDayKey } from "@/lib/dayDone";
-import { addDebt, addDebtFromText, removeDebt, restoreDebt, updateDebt, useDebts } from "@/lib/debts/store";
+import { addDebt, addDebtFromText, removeDebt, renamePeople, restoreDebt, restoreDebts, updateDebt, useDebts } from "@/lib/debts/store";
+import { shareOrCopy } from "@/lib/shareOrCopy";
+import { downloadBlob } from "@/lib/downloadBlob";
 import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
-import { balances, debtSide, doubleSettle, foldName, runningBalances, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
+import { balances, debtsCsv, debtSide, doubleSettle, foldName, personKey, personStatement, runningBalances, DEBT_KIND_LABEL, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -101,8 +103,19 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
         <AddForm key={prefill?.n ?? 0} entries={entries} addReminderNote={addReminderNote} hidden={hidden} initialPerson={prefill?.name} focusAmount={!!prefill} />
       </div>
       <People people={people} onOpen={setOpenKey} hidden={hidden} />
+      {entries.length > 0 && (
+        <div className="mt-6 flex justify-end">
+          <Button variant="ghost" size="sm" className="tap-target gap-1.5 text-muted-foreground" onClick={() => {
+            // 3.4: wszystkie wpisy w jednym pliku (kwoty zawsze — eksport to wyraźne stuknięcie).
+            downloadBlob(new Blob([debtsCsv(entries)], { type: "text/csv;charset=utf-8" }), `notki-dlugi-${localDayKey()}.csv`);
+            toast.success("Zapisano plik CSV z długami");
+          }}>
+            <Download className="h-4 w-4" aria-hidden />Eksport CSV
+          </Button>
+        </div>
+      )}
 
-      <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} reminders={reminders} addReminderNote={addReminderNote} people={entries} hidden={hidden} onNewEntry={newEntryFor} />
+      <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} reminders={reminders} addReminderNote={addReminderNote} people={entries} hidden={hidden} onNewEntry={newEntryFor} others={people} onRekey={setOpenKey} />
     </section>
   );
 }
@@ -122,7 +135,6 @@ function Summary({ owedToMe, iOwe, hidden }: { owedToMe: number; iOwe: number; h
   );
 }
 
-const KIND_LABEL: Record<DebtKind, string> = { lent: "Pożyczyłem", repaid: "Oddał mi", borrowed: "Pożyczyłem od", returned: "Oddałem" };
 
 /**
  * Wybór rodzaju (1.4): `ToggleGroup` z `ui/` — jeden przystanek Tab, strzałki, 44 px na dotyku.
@@ -136,7 +148,7 @@ function KindPicker({ value, onChange }: { value: DebtKind; onChange: (k: DebtKi
         return (
           <ToggleGroupItem key={k} value={k} className="flex items-center justify-center gap-1.5 whitespace-nowrap">
             <Icon className="h-4 w-4" aria-hidden />
-            {KIND_LABEL[k]}
+            {DEBT_KIND_LABEL[k]}
           </ToggleGroupItem>
         );
       })}
@@ -196,7 +208,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount 
     setDue("");
     setPickedAt(null);
     haptic("success");
-    toast.success(`${KIND_LABEL[kind]}: ${entry.person}, ${formatAmount(entry.amount)}`, {
+    toast.success(`${DEBT_KIND_LABEL[kind]}: ${entry.person}, ${formatAmount(entry.amount)}`, {
       action: { label: "Cofnij", onClick: () => { removeDebt(entry.id); } },
     });
     amountRef.current?.focus();
@@ -375,6 +387,9 @@ interface HistoryProps {
   hidden: boolean;
   /** 2.1: „+ Wpis z {imię}” — formularz z tą osobą. */
   onNewEntry?: (name: string) => void;
+  /** 3.1: wszystkie osoby (do „Połącz z…”) i zmiana klucza otwartej osoby po zmianie nazwy. */
+  others?: PersonDebts[];
+  onRekey?: (key: string) => void;
 }
 
 function PersonSheet({ person, onClose, ...rest }: { person: PersonDebts | null; onClose: () => void } & HistoryProps) {
@@ -399,7 +414,7 @@ function clearDueReminders(entries: DebtEntry[], reminders: DebtReminderApi | un
   return cleared;
 }
 
-function PersonHistory({ person, onDone, reminders, addReminderNote, people, hidden, onNewEntry }: { person: PersonDebts; onDone: () => void } & HistoryProps) {
+function PersonHistory({ person, onDone, reminders, addReminderNote, people, hidden, onNewEntry, others = [], onRekey }: { person: PersonDebts; onDone: () => void } & HistoryProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [askRemove, setAskRemove] = useState<DebtEntry | null>(null);
   const running = useMemo(() => runningBalances(person.entries), [person.entries]);
@@ -456,6 +471,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
           {person.balance === 0 ? "Rozliczone." : person.balance > 0 ? `Do oddania: ${amountText(person.balance, hidden)}` : `Jesteś winien: ${amountText(-person.balance, hidden)}`}
         </SheetDescription>
       </SheetHeader>
+      <PersonTools person={person} others={others} onRekey={onRekey} />
 
       {twice && (
         // 1.6: „Oddał całość” na dwóch telefonach naraz — saldo przeskoczyło na drugą stronę.
@@ -496,7 +512,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
                       {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{KIND_LABEL[e.kind]} · <span className="tabular-nums">{amountText(e.amount, hidden)}</span></p>
+                      <p className="text-sm font-medium">{DEBT_KIND_LABEL[e.kind]} · <span className="tabular-nums">{amountText(e.amount, hidden)}</span></p>
                       <p className="text-xs text-muted-foreground">
                         {formatDay(e.at)}{e.note ? ` · ${e.note}` : ""}
                       </p>
@@ -504,10 +520,10 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
                         Saldo po tym: {running[i] === 0 ? "0" : `${running[i] > 0 ? "" : "− "}${amountText(Math.abs(running[i]), hidden)}`}
                       </p>
                     </div>
-                    <Button variant="ghost" size="icon" aria-label={`Edytuj wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => setEditingId(e.id)}>
+                    <Button variant="ghost" size="icon" aria-label={`Edytuj wpis: ${DEBT_KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => setEditingId(e.id)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" aria-label={`Usuń wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => requestRemove(e)}>
+                    <Button variant="ghost" size="icon" aria-label={`Usuń wpis: ${DEBT_KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => requestRemove(e)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </li>
@@ -639,5 +655,91 @@ function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, onDon
 
 /** „2026-11” → „listopad 2026”. */
 const monthLabel = (key: string) => new Date(`${key}-01T12:00:00`).toLocaleDateString("pl-PL", { month: "long", year: "numeric" });
+
+/**
+ * 3.1–3.2 Narzędzia osoby: „Wyślij” (wiadomość albo schowek), „Zmień nazwę” (wszystkie wpisy naraz)
+ * i „Połącz z…” (wpisy innej osoby pod tę nazwę). Zmiany jedną transakcją Yjs, z „Cofnij”.
+ */
+function PersonTools({ person, others, onRekey }: { person: PersonDebts; others: PersonDebts[]; onRekey?: (key: string) => void }) {
+  const uid = useId();
+  const [renaming, setRenaming] = useState(false);
+  const [name, setName] = useState(person.name);
+  const [mergeKey, setMergeKey] = useState<string | null>(null);
+  const merge = others.find((p) => p.key === mergeKey) ?? null;
+  const candidates = others.filter((p) => p.key !== person.key);
+
+  const send = async () => {
+    const outcome = await shareOrCopy({ title: `${person.name} — rozliczenie`, text: personStatement(person) });
+    if (outcome === "copied") toast.success("Skopiowano rozliczenie — wklej je w wiadomości");
+    else if (outcome === "failed") toast.error("Nie udało się wysłać ani skopiować");
+  };
+
+  const rename = () => {
+    const clean = normalizeName(name);
+    if (!clean || clean === person.name) { setRenaming(false); return; }
+    const prev = renamePeople([person.key], clean);
+    if (!prev) { toast.error("Nie udało się zmienić nazwy"); return; }
+    haptic("success");
+    setRenaming(false);
+    onRekey?.(personKey(clean));
+    const merged = others.some((p) => p.key === personKey(clean) && p.key !== person.key);
+    toast.success(merged ? `Połączono z „${clean}”` : `Nowa nazwa: ${clean}`, { action: { label: "Cofnij", onClick: () => { restoreDebts(prev); onRekey?.(person.key); } } });
+  };
+
+  const doMerge = () => {
+    if (!merge) return;
+    const prev = renamePeople([merge.key], person.name);
+    setMergeKey(null);
+    if (!prev) { toast.error("Nie udało się połączyć"); return; }
+    haptic("success");
+    toast.success(`Połączono: wpisy „${merge.name}” są teraz pod „${person.name}”`, { action: { label: "Cofnij", onClick: () => restoreDebts(prev) } });
+  };
+
+  return (
+    <div className="mt-3 space-y-2">
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" className="tap-target gap-1.5" onClick={() => void send()}>
+          <Send className="h-4 w-4" aria-hidden />Wyślij
+        </Button>
+        <Button variant="outline" size="sm" className="tap-target gap-1.5" aria-expanded={renaming} onClick={() => { setName(person.name); setRenaming((v) => !v); }}>
+          <Pencil className="h-4 w-4" aria-hidden />Zmień nazwę
+        </Button>
+        {candidates.length > 0 && (
+          <label className="inline-flex items-center gap-1.5">
+            <Combine className="h-4 w-4 text-muted-foreground" aria-hidden />
+            <span className="sr-only">Połącz z inną osobą</span>
+            <select
+              value=""
+              onChange={(e) => { if (e.target.value) setMergeKey(e.target.value); }}
+              className="h-9 rounded-field border border-input bg-background px-2 text-sm coarse:h-11"
+            >
+              <option value="">Połącz z…</option>
+              {candidates.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
+            </select>
+          </label>
+        )}
+      </div>
+      {renaming && (
+        <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); rename(); }} aria-label="Zmiana nazwy osoby">
+          <label htmlFor={`${uid}-name`} className="sr-only">Nowa nazwa</label>
+          <Input id={`${uid}-name`} value={name} maxLength={DEBT_PERSON_MAX} autoFocus onChange={(e) => setName(e.target.value)} className="h-11 flex-1" />
+          <Button type="submit" className="h-11">Zapisz</Button>
+        </form>
+      )}
+      <AlertDialog open={!!merge} onOpenChange={(o) => !o && setMergeKey(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Połączyć „{merge?.name}” z „{person.name}”?</AlertDialogTitle>
+            <AlertDialogDescription>Wszystkie wpisy „{merge?.name}” przejdą pod nazwę „{person.name}”, a saldo się zsumuje. Można to cofnąć z komunikatu.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction onClick={doMerge}>Połącz</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
 
 const formatDay = (at: string) => new Date(`${at}T12:00:00`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });

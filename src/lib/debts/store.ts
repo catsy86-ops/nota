@@ -74,6 +74,25 @@ export function updateDebt(entry: DebtEntry): DebtEntry | null {
   return yDebts.replace(clean) ? clean : null;
 }
 
+/**
+ * 3.1 Zmiana nazwy i łączenie: wszystkie wpisy osób o kluczach `fromKeys` dostają nazwę `name` — jedną
+ * transakcją. Zwraca poprzednie wpisy (do „Cofnij” przez `restoreDebts`) albo `null`, gdy nie ma czego zmieniać.
+ */
+export function renamePeople(fromKeys: readonly string[], name: string): DebtEntry[] | null {
+  const clean = normalizeName(name).slice(0, DEBT_PERSON_MAX);
+  if (!clean) return null;
+  const keys = new Set(fromKeys);
+  const prev = yDebts.get().filter((e) => keys.has(personKey(e.person)));
+  if (prev.length === 0) return null;
+  yDebts.replaceMany(prev.map((e) => ({ ...e, person: clean })));
+  return prev;
+}
+
+/** Przywraca wpisy sprzed zmiany nazwy albo łączenia (ten sam id). */
+export function restoreDebts(entries: readonly DebtEntry[]): void {
+  yDebts.replaceMany(entries);
+}
+
 /** Zrzut Długów do kopii zapasowej. */
 export function debtsDump(): DebtEntry[] {
   return yDebts.dump();

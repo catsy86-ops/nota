@@ -48,3 +48,17 @@ describe("createYDebts", () => {
     expect(calls).toBeGreaterThan(0);
   });
 });
+
+describe("replaceMany (3.1)", () => {
+  it("zmienia kilka wpisów jedną transakcją, nie dodaje nieistniejących", () => {
+    const doc = new Y.Doc();
+    const d = createYDebts(doc);
+    d.add(entry("x"));
+    d.add(entry("y"));
+    let updates = 0;
+    doc.on("update", () => { updates++; });
+    expect(d.replaceMany([entry("x", { person: "Ola" }), entry("y", { person: "Ola" }), entry("z", { person: "Ola" })])).toBe(2);
+    expect(updates).toBe(1);
+    expect(d.get().map((e) => e.person)).toEqual(["Ola", "Ola"]);
+  });
+});

@@ -60,6 +60,15 @@ export function createYDebts(doc: Y.Doc) {
     return true;
   }
 
+  /** Kilka zmian jedną transakcją (3.1: zmiana nazwy, łączenie, cofnięcie). Wpisów, których nie ma, nie dodaje. */
+  function replaceMany(list: readonly DebtEntry[]): number {
+    let n = 0;
+    doc.transact(() => {
+      for (const e of list) if (entries.has(e.id)) { entries.set(e.id, e); n++; }
+    }, DEBTS_ORIGIN);
+    return n;
+  }
+
   /** Cofnięcie usunięcia: wpis wraca z tym samym id i datą. */
   function restore(entry: DebtEntry): void {
     doc.transact(() => entries.set(entry.id, entry), DEBTS_ORIGIN);
@@ -81,5 +90,5 @@ export function createYDebts(doc: Y.Doc) {
     }, DEBTS_ORIGIN);
   }
 
-  return { get, subscribe, add, remove, restore, replace, dump, mergeDump };
+  return { get, subscribe, add, remove, restore, replace, replaceMany, dump, mergeDump };
 }
