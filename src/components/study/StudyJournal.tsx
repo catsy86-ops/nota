@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { weekSeparators } from "@/lib/study/journalWeeks";
-import { Archive, Clock, ChevronRight, FileText, MapPin, Plus, Search, Wrench, X } from "lucide-react";
+import { Archive, Clock, ChevronRight, FileText, MapPin, PackageCheck, Plus, Search, Wrench, X } from "lucide-react";
 import { studyReminders } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ import { ReminderRow } from "./ReminderRow";
 import { readSiteParam, takeSiteParam } from "@/lib/study/siteLink";
 import { NewSiteDialog } from "./NewSiteDialog";
 import { JobsDialog } from "./JobsDialog";
+import { WholesaleOrderDialog } from "./WholesaleOrderDialog";
+import { wholesaleGroups } from "@/lib/study/order";
 import { useJobs } from "@/lib/study/jobsStore";
 import { money } from "@/lib/study/billing";
 import { unpaidTotal } from "@/lib/study/jobs";
@@ -132,6 +134,9 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const [jobsOpen, setJobsOpen] = useState(false);
   const jobs = useJobs();
   const unpaid = useMemo(() => unpaidTotal(jobs.values()), [jobs]);
+  // H1.4: wspólna lista do hurtowni ze wszystkich budów w toku.
+  const [wholesaleOpen, setWholesaleOpen] = useState(false);
+  const wholesale = useMemo(() => wholesaleGroups(study.journal, dir), [study.journal, dir]);
   const archivedCount = used.filter((x) => x.archived !== undefined).length;
   const sites = used.filter((x) => x.archived === undefined || showArchived || x.id === filter.site);
   const hasUnsited = useMemo(() => used.length > 0 && study.journal.some((e) => !entrySiteId(e)), [used, study.journal]);
@@ -295,6 +300,16 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                     <Wrench className="h-3.5 w-3.5 shrink-0" aria-hidden />Zlecenia{jobs.size > 0 && ` (${jobs.size})`}
                     {unpaid > 0 && <span className="font-mono tabular-nums text-primary-ink">· {money(unpaid)}</span>}
                   </button>
+                  {wholesale.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setWholesaleOpen(true)}
+                      data-testid="wholesale-open"
+                      className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                    >
+                      <PackageCheck className="h-3.5 w-3.5 shrink-0" aria-hidden />Do hurtowni ({wholesale.length})
+                    </button>
+                  )}
                   {archivedCount > 0 && (
                     <button
                       type="button"
@@ -452,6 +467,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
       </section>
       <JournalEntrySheet onPractice={onPractice} />
       <NewSiteDialog key={newSiteJob ? "job" : "site"} open={newSiteOpen} onOpenChange={setNewSiteOpen} dir={dir} initialJob={newSiteJob} onCreated={(id) => setCard(id)} />
+      <WholesaleOrderDialog open={wholesaleOpen} onOpenChange={setWholesaleOpen} groups={wholesale} dir={dir} />
       <JobsDialog open={jobsOpen} onOpenChange={setJobsOpen} jobs={jobs} dir={dir}
         onOpen={(id) => { setJobsOpen(false); setCard(id); }}
         onNew={() => { setJobsOpen(false); setNewSiteJob(true); setNewSiteOpen(true); }} />

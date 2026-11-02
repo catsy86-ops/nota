@@ -77,3 +77,46 @@ export function supplierOrderText(siteName: string, order: SiteOrder, shortages:
   }
   return lines.join("\n");
 }
+
+/** H1.4: co zamówić dla jednej budowy na wspólnej liście do hurtowni. */
+export interface WholesaleGroup {
+  siteId: string;
+  siteName: string;
+  order: SiteOrder;
+  /** Braki „Brakuje” (zamówione i dostarczone się nie powtarzają). */
+  missing: Shortage[];
+}
+
+/**
+ * H1.4 Jedna lista do hurtowni: braki i kształtki/rury od ostatniego zamówienia ze wszystkich budów
+ * w toku (bez archiwum), po jednej grupie na budowę, w kolejności listy budów. Puste budowy pomijane.
+ */
+export function wholesaleGroups(
+  journal: readonly JournalEntry[],
+  sites: readonly { id: string; name: string; archived?: number; orderedAt?: number; shortages?: readonly Shortage[] }[],
+): WholesaleGroup[] {
+  return sites.flatMap((s) => {
+    if (s.archived !== undefined) return [];
+    const order = siteOrder(journal, s.id, s.orderedAt);
+    const missing = (s.shortages ?? []).filter((x) => x.status === "missing");
+    return order.items.length || order.pipes.length || missing.length ? [{ siteId: s.id, siteName: s.name, order, missing }] : [];
+  });
+}
+
+/** Jedna wiadomość do hurtowni z grupami „Na budowę: …”. */
+export function wholesaleText(groups: readonly WholesaleGroup[]): string {
+  const lines = ["Zamówienie do hurtowni"];
+  for (const g of groups) {
+    lines.push("", `Na budowę: ${g.siteName}`);
+    lines.push(...g.missing.map((s) => `- ${s.text}${s.qty ? `: ${s.qty}` : ""}`));
+    lines.push(...pipeLines(g.order));
+    lines.push(...g.order.items.map((f) => `- ${f.name}: ${f.qty} szt.`));
+  }
+  return lines.join("\n");
+}
+
+/** Numer hurtowni wspólny dla wszystkich budów z listy; różne numery albo żaden = `undefined` (WhatsApp zapyta). */
+export function sharedSupplierPhone(phones: readonly (string | undefined)[]): string | undefined {
+  const set = new Set(phones.map((p) => (p ? normalizePhone(p) : null)).filter((p): p is string => !!p));
+  return set.size === 1 ? [...set][0] : undefined;
+}

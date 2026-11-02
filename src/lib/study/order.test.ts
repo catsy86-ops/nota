@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry } from "./yStudy";
-import { orderText, siteOrder, supplierOrderText, whatsappOrderUrl } from "./order";
+import { orderText, sharedSupplierPhone, siteOrder, supplierOrderText, whatsappOrderUrl, wholesaleGroups, wholesaleText } from "./order";
 import { markMissingOrdered, type Shortage } from "./shortages";
 import { cleanSite, siteKey } from "./sites";
 
@@ -149,5 +149,30 @@ describe("rury w zamówieniu (H1.1)", () => {
     expect(orderText("Dom", order)).toContain("- Rura PEX 16×2: 24,5 m");
     const missing: Shortage[] = [{ id: "s1", text: "Klej", qty: "1", status: "missing", at: day(1) } as Shortage];
     expect(supplierOrderText("Dom", order, missing).split("\n")).toEqual(["Zamówienie — Dom", "Braki:", "- Klej: 1", "Rury:", "- Rura PEX 16×2: 24,5 m"]);
+  });
+});
+
+describe("H1.4 — jedna lista do hurtowni", () => {
+  const shortage = (text: string, status: Shortage["status"]): Shortage => ({ id: text, text, qty: "2 szt.", status, at: day(1) }) as Shortage;
+  it("grupy ze wszystkich budów w toku: braki „Brakuje”, kształtki od zamówienia; archiwum i puste pominięte", () => {
+    const journal = [
+      entry("a", day(1), [{ name: "Kolano 16", qty: 4 }]),
+      entry("b", day(2), [{ name: "Trójnik 20", qty: 1 }], "Lipowa 5"),
+      entry("c", day(3), [{ name: "Złączka", qty: 9 }], "Stara"),
+    ];
+    const groups = wholesaleGroups(journal, [
+      { id: SITE, name: "Dom Kowalski", shortages: [shortage("Zawór kulowy", "missing"), shortage("Syfon", "ordered")] },
+      { id: siteKey("Lipowa 5"), name: "Lipowa 5", orderedAt: day(5) },
+      { id: siteKey("Stara"), name: "Stara", archived: day(4) },
+      { id: siteKey("Nowa"), name: "Nowa" },
+    ]);
+    expect(groups.map((g) => g.siteName)).toEqual(["Dom Kowalski"]);
+    expect(wholesaleText(groups)).toBe("Zamówienie do hurtowni\n\nNa budowę: Dom Kowalski\n- Zawór kulowy: 2 szt.\n- Kolano 16: 4 szt.");
+  });
+
+  it("numer hurtowni: wspólny dla budów albo żaden", () => {
+    expect(sharedSupplierPhone(["600 100 200", "+48600100200", undefined])).toBe("48600100200");
+    expect(sharedSupplierPhone(["600100200", "700100200"])).toBeUndefined();
+    expect(sharedSupplierPhone([undefined])).toBeUndefined();
   });
 });

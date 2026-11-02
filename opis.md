@@ -3806,6 +3806,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy.** Vitest: `src/lib/study/billing.test.ts` („miesiąc razem”: punkty w miesiącu, godziny pominięte, etapy i ryczałt po ostatnim etapie). E2E: `e2e/site-billing.spec.ts` (gotowe punkty ze stawką → „Z budów 400 zł” w Grafiku).
 - **Commit.** `ad601eb` (2026-10-30).
 
+## Praca: jedna lista do hurtowni (H1.4, plan 2026-10-29)
+
+- **Co robi.** W dzienniku, w wierszu budów, pigułka **„Do hurtowni (n)”** (gdy jest co zamawiać) otwiera listę: braki „Brakuje” oraz rury i kształtki od ostatniego zamówienia ze wszystkich budów w toku, w grupach „Na budowę: …”. Jedna wiadomość: „Kopiuj” albo „WhatsApp” (na numer hurtowni, jeśli budowy mają ten sam). **„Oznacz wszystko jako zamówione”** robi to, co przycisk w karcie budowy, dla każdej budowy naraz — jeden dymek z „Cofnij” dla wszystkich.
+- **Gdzie.** `src/lib/study/order.ts` (`wholesaleGroups`, `wholesaleText`, `sharedSupplierPhone`, `WholesaleGroup`), `src/components/study/WholesaleOrderDialog.tsx`, `src/components/study/StudyJournal.tsx` (pigułka `wholesale-open`). Zapis: `markSiteOrdered` / `undoSiteOrdered` (`siteActions.ts`) — te same co w karcie, więc historia zamówień i statusy braków zmieniają się tak samo.
+- **Jak działa.** Grupy liczy ta sama `siteOrder` co karta budowy (kształtki i rury od `orderedAt`), braki tylko ze statusem „Brakuje”. Budowy w archiwum i bez niczego do zamówienia są pominięte. Fuchy są na liście jak budowy (materiał z hurtowni). Numer: `sharedSupplierPhone` bierze numer, gdy wszystkie wpisane numery są tym samym numerem; różne numery albo brak — WhatsApp pyta o odbiorcę.
+- **Ograniczenia.** „Braki w aucie” z planu czekają na H1.3 (materiał w aucie — decyzja H-1). Lista nie pozwala odznaczyć pojedynczej pozycji — do tego jest karta budowy.
+- **Testy.** Vitest: `src/lib/study/order.test.ts` („H1.4”: grupy, archiwum i puste pominięte, tekst, wspólny numer). E2E: `e2e/wholesale.spec.ts` (390 px: dwie budowy w grupach, oznaczenie wszystkiego, „Cofnij”), regresja `e2e/site-order.spec.ts`.
+- **Commit.** COMMIT_H14 (2026-11-02).
+
 ## Praca: zlecenia własne — fuchy (H3.4, plan 2026-10-29)
 
 - **Co robi.** Fucha to karta budowy z panelem **„Zlecenie własne”**: status (Wycena → Umówione → Zrobione → Zapłacone), „Co zrobić”, termin, wycena z pozycjami robocizny i materiału, marża na materiał w %, sumy („Razem dla klienta”) i **„PDF wyceny”**. Zakłada się ją w oknie „Nowa budowa” przełącznikiem „Zlecenie własne” (nazwa, klient, telefon, adres, co zrobić) albo z listy **„Zlecenia”** (pigułka obok „+ Nowa budowa” w dzienniku, z liczbą zleceń i kwotą niezapłaconą). Istniejącą kartę zmienia się w fuchę przyciskiem „To zlecenie własne (fucha)” na dole karty; „To nie jest fucha” cofa to (z „Cofnij”). Fucha ma te same wpisy, zdjęcia, materiał i godziny co budowa; panel „Rozliczenie” (dla budów szefa) jest przy niej ukryty. Umówiony termin pojawia się w Kalendarzu („Praca: 1 zlecenie”). Pigułka fuchy w dzienniku ma ikonę klucza zamiast pinezki.
