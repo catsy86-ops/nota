@@ -3813,7 +3813,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Każdy punkt bez podejścia (`pointStage` = 0) dokłada pierwszy zestaw z jego typem w `forPoints`; sumowanie przez `applyKit` (te same nazwy łączą się bez wielkości liter i ogonków). Przykładowe zestawy mają przypisania: umywalka, WC na stelażu, zlew. Do braków wchodzą przez `addShortage` — ta sama nazwa nie dubluje się, najwyżej dostaje nową ilość; limit 40 braków na budowę obowiązuje.
 - **Ograniczenia.** Szacunek obejmuje podejścia, nie piony ani rozprowadzenie. Zestawy przejęte na własność przed H2.5 (zapisane w dokumencie) nie mają przypisań — trzeba je wybrać w oknie zestawów. Starsza wersja aplikacji zapisując zestaw gubi `forPoints` (zna tylko nazwę i pozycje).
 - **Testy.** Vitest: `src/lib/study/kits.test.ts` („szacunek materiału z punktów”). E2E: `e2e/site-points.spec.ts` („materiał na start…”: łazienka z szablonu, 2 z 4 punktów, „Dodaj do braków” i „Cofnij”), regresja `e2e/journal-kits.spec.ts`.
-- **Commit.** COMMIT_H25 (2026-11-02).
+- **Commit.** `dac5bdf` (2026-11-02).
 
 ## Praca: jedna lista do hurtowni (H1.4, plan 2026-10-29)
 
