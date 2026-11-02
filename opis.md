@@ -1319,7 +1319,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - `dada7f1` (2026-10-19) — rodzaje „Pożyczyłem od” i „Oddałem”.
 - `011be10` (2026-10-20) — kopia zapasowa, edycja wpisu, cofnięcie rozliczenia.
 - `1b8bcf8` (2026-10-20) — poprawka L9 (usuwanie uszkodzonego wpisu).
-- `do uzupełnienia` (2026-11-02) — plan Długów, Etap 1 (1.2–1.7).
+- `0755b9a` (2026-11-02) — plan Długów, Etap 1 (1.2–1.7).
 
 ## Budżet paczki startowej — próg 386 KB (decyzja właściciela, 2026-10-19)
 
