@@ -3856,7 +3856,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
   - **Zapis (`applySitePackage`):** najpierw zdjęcia, potem karta nowej budowy (`saveSiteCard`), potem reszta w jednej transakcji Yjs. Karta musi powstać osobno, bo `setSite*` czytają projekcję `getStudy()`, która widzi kartę dopiero po zakończeniu transakcji.
 - **Ograniczenia i pułapki.** Usunięcia nie przechodzą: pozycja usunięta u Ciebie, a obecna w pliku, wraca (okno o tym mówi). Wpis, który już jest, nie zmienia się, bo wpisy nie mają czasu zmiany — poprawki pomocnika w starym wpisie nie dojdą. Imię nadawcy jest niezweryfikowane. Paczka bez zdjęć nie zawiera kluczy zdjęć ani zdjęć „po naprawie”. Zdjęcia, których nie ma na urządzeniu albo które po ponownym kodowaniu mają ponad 2 MB, są pomijane i liczone w toaście. Godziny, dokumenty, zgłoszenia serwisowe i zamówienia nie wchodzą do pliku.
 - **Testy.** Vitest: `src/lib/study/sitePackage.test.ts` (co nie wychodzi, odczyt, czasy z przyszłości, filtr zdjęć, scalenie, nazwy). E2E: `e2e/site-package.spec.ts` (eksport z brakiem i usterką → import w drugim kontekście jako nowa budowa → ponowny import „nic nowego”; obcy plik; axe obu okien).
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `5fe45eb` (2026-11-02).
 
 ## Praca: zlecenia własne — fuchy (H3.4, plan 2026-10-29)
 
