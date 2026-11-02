@@ -1327,7 +1327,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - `011be10` (2026-10-20) — kopia zapasowa, edycja wpisu, cofnięcie rozliczenia.
 - `1b8bcf8` (2026-10-20) — poprawka L9 (usuwanie uszkodzonego wpisu).
 - `0755b9a` (2026-11-02) — plan Długów, Etap 1 (1.2–1.7).
-- `do uzupełnienia` (2026-11-02) — plan Długów, Etap 2 (2.1–2.5).
+- `dd1cead` (2026-11-02) — plan Długów, Etap 2 (2.1–2.5).
 
 ## Budżet paczki startowej — próg 386 KB (decyzja właściciela, 2026-10-19)
 
