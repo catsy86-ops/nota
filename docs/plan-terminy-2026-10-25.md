@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Terminy” (przypomnienia) (2026-10-25)
 
+> **Status (2026-11-02):** zrobione 1.1–1.6, 2.1–2.6, 3.1, 3.3, 4.1–4.4 (opis w `opis.md`). Otwarte: 3.2 (wcześniejsze przypomnienie), 3.4 (termin z treści), 3.5 (w razie potrzeby), 4.5 (animacja odhaczenia).
+
 Piąty plan z serii „dział po dziale” (po Notatkach, Skrzynce, Dziś i Kalendarzu), w tym samym układzie. Obejmuje widok Terminy (`/przypomnienia`, `view === "reminders"`), wybór terminu (`ReminderPicker`), dymki i powiadomienia, logikę serii i parser dat. Kalendarz ma osobny plan.
 
 ## Kontekst

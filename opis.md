@@ -2845,6 +2845,18 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Nie zrobione:** agenda na komputerze (na desktopie siatka zostaje, a tryb „Lista” nie jest widoczny); oś godzin tygodnia (3.3).
 - **Testy:** `src/components/calendar/MonthAgenda.test.tsx`; e2e `e2e/calendar-agenda.spec.ts` (telefon: Lista ↔ Miesiąc).
 
+## Terminy — wygląd odznaki, nagłówków listy i dymka (4.2–4.4, 2026-11-02)
+
+- **Co robi.**
+  - **4.2 Odznaka terminu na kaflu:** godzina w JetBrains Mono, zaległy termin z dzwonkiem `BellRing` (w tonie `destructive-ink`), seria z `Repeat` jak dotąd, w jednej linii (`stamp-tag`).
+  - **4.3 Nagłówki grup w widoku „Lista”:** kropka w kolorze stanu (czerwona — Zaległe/Przegapione, akcent — Dziś, szara — reszta), ikona grupy (Zaległe `BellRing`, Przegapione `History`, Dziś `CalendarDays`, 7 dni `CalendarRange`, Później `CalendarClock`, Archiwum, Praca) i licznik jako `stamp-tag`. W widoku kafli licznik w `stamp-tag` był już wcześniej (`NoteGroupSection`). Kolejność grup bez zmian (`groupReminders`).
+  - **4.4 Dymek przypomnienia:** karta aplikacji (`bg-card`, `rounded-card`) z bursztynowym paskiem z lewej, dzwonek `BellRing` zamiast emoji ⏰, godzina w mono, przyciski 44 px na dotyku. Dźwięk i wibracja bez zmian.
+- **Gdzie.** `ReminderBadge` w `src/components/ReminderPicker.tsx`, `GROUP_ICON` i `dotClass` w `src/components/reminders/ReminderListGroups.tsx`, `src/components/ReminderDueToast.tsx`.
+- **Przy okazji:** powiadomienie o prywatnej notatce mówiło „Otwórz G i odblokuj skarbiec”, a push „Przypomnienie z G” — teraz „notki” (`useReminderNotifications.ts`, `lib/push/schedule.ts`).
+- **Stan planu Terminów.** Zrobione wcześniej: 1.1–1.6, 2.1–2.6, 3.1, 3.3 (T-2), 4.1 (arkusz od dołu na telefonie). Otwarte: 3.2 (wcześniejsze przypomnienie — zmiana modelu i push), 3.4 (termin z treści notatki), 3.5 (tylko w razie potrzeby), 4.5 (animacja odhaczenia — wymaga animowanego wyjścia wierszy).
+- **Testy.** Bez nowych testów logiki (sam wygląd); `src/lib/push/schedule.test.ts` z nowym tekstem; przeszły e2e Terminów, Dziś, Kalendarza i axe oraz zrzuty `@visual` (poza znanymi chwiejnymi „praca — komputer”).
+- **Commit.** `do uzupełnienia` (2026-11-02).
+
 ## Skarbiec — stan aktualny (notatki prywatne; plan Skarbca 1.1, 2026-11-02)
 
 Jedno miejsce z obrazem całości. Szczegóły kolejnych kroków są w wpisach „Skarbiec — …” niżej.

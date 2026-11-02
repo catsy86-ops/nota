@@ -1,4 +1,4 @@
-import { Repeat } from "lucide-react";
+import { Archive, BellRing, CalendarClock, CalendarDays, CalendarRange, HardHat, History, Repeat, type LucideIcon } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { ReminderQuickActions } from "@/components/ReminderQuickActions";
 import { formatReminderShort } from "@/lib/reminderTime";
@@ -22,13 +22,23 @@ interface ReminderListGroupsProps {
  * Terminy jako lista (2.6, widok „Lista”): wiersz jak na Dziś — tytuł, termin w mono, odznaka serii,
  * akcje przy terminie. Grupy i kolejność dostaje od rodzica (`groupReminders`).
  */
+/** 4.3: ikona i kropka stanu przy nagłówku grupy (kolejność grup ustala `groupReminders`). */
+const GROUP_ICON: Record<string, LucideIcon> = {
+  overdue: BellRing, missed: History, today: CalendarDays, week: CalendarRange, later: CalendarClock, archive: Archive, work: HardHat,
+};
+const dotClass = (g: ReminderListGroup) =>
+  g.tone === "alert" || g.key === "overdue" || g.key === "missed" ? "bg-destructive" : g.key === "today" ? "bg-primary" : "bg-muted-foreground/50";
+
 export function ReminderListGroups({ groups, onOpen, onUpdate }: ReminderListGroupsProps) {
   return (
     <div className="space-y-5" data-reminders-list>
       {groups.map((g) => (
         <section key={g.key} data-reminders-list-group={g.key} aria-label={g.label}>
-          <h2 className={cn("text-xs font-medium mb-1", g.tone === "alert" ? "text-destructive-ink" : "text-muted-foreground")}>
-            {g.label} <span className="tabular-nums">({g.notes.length})</span>
+          <h2 className={cn("mb-1.5 flex items-center gap-1.5 text-xs font-medium", g.tone === "alert" ? "text-destructive-ink" : "text-muted-foreground")}>
+            <span className={cn("size-1.5 shrink-0 rounded-full", dotClass(g))} aria-hidden />
+            {(() => { const Icon = GROUP_ICON[g.key] ?? CalendarClock; return <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />; })()}
+            {g.label}
+            <span className="stamp-tag tabular-nums normal-case tracking-normal">{g.notes.length}</span>
           </h2>
           <ul className="divide-y divide-border/50 rounded-card border border-border/70 bg-card">
             {g.notes.map((n) => (

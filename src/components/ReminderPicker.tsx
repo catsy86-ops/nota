@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, type MouseEvent, type ReactNode, type Ref } from "react";
-import { Bell, Repeat, X } from "lucide-react";
+import { Bell, BellRing, Repeat, X } from "lucide-react";
 import { isSameDay as sameDay } from "date-fns";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -360,9 +360,9 @@ export const ReminderBadge = forwardRef<HTMLElement, ReminderBadgeProps & HTMLAt
   );
   const content = (
     <>
-      <Bell className="w-2.5 h-2.5" />
+      {passed ? <BellRing className="w-2.5 h-2.5" aria-hidden /> : <Bell className="w-2.5 h-2.5" aria-hidden />}
       {passed && <span className="sr-only">Zaległe: </span>}
-      {formatReminderShort(reminder)}
+      <span className="font-mono tabular-nums">{formatReminderShort(reminder)}</span>
       {reminderRepeat && reminderRepeat !== "none" && <Repeat className="w-2.5 h-2.5" />}
     </>
   );
