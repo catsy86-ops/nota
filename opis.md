@@ -2866,7 +2866,7 @@ Jedno miejsce z obrazem całości. Szczegóły kolejnych kroków są w wpisach �
 - **Jak działa.** Sprawdzenie działa tylko przy odblokowanym skarbcu (nie jest drugą drogą do odblokowania), rozpakowuje klucz kodem i go porzuca; zły kod liczy się do tego samego limitu prób co odblokowanie. Data sprawdzenia to zwykła preferencja urządzenia — bez kodu. Filtr: zapytanie z samym operatorem zawęża pełną listę, więc kafle prywatne zostają; tekst i tak omija notatki prywatne.
 - **Ograniczenia.** Pozycji „Prywatne” w pasku bocznym nie ma — wyszukiwarka ma własny stan, którego nie da się ustawić z Ustawień bez przeładowania; zamiast linku karta podaje `ma:prywatne`. Data utworzenia skarbca nie jest zapisywana, więc karta jej nie pokazuje.
 - **Testy.** `src/lib/privateNotes.test.ts` (sprawdzenie kodu, zły kod w limicie prób, brak sprawdzenia przy zablokowanym, statystyki), `src/lib/vaultRecoveryCheck.test.ts`, `src/lib/searchQuery.test.ts` (`ma:prywatne`, negacja), `e2e/private-notes.spec.ts` (filtr, karta stanu, zły i dobry kod z separatorami).
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `6666b29` (2026-11-02).
 
 ## Skarbiec — szyfrogram do pobrania i kod awaryjny: druk, wpisywanie (1.2 część 1, 1.7, 2026-11-02)
 
