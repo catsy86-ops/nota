@@ -2855,7 +2855,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Przy okazji:** powiadomienie o prywatnej notatce mówiło „Otwórz G i odblokuj skarbiec”, a push „Przypomnienie z G” — teraz „notki” (`useReminderNotifications.ts`, `lib/push/schedule.ts`).
 - **Stan planu Terminów.** Zrobione wcześniej: 1.1–1.6, 2.1–2.6, 3.1, 3.3 (T-2), 4.1 (arkusz od dołu na telefonie). Otwarte: 3.2 (wcześniejsze przypomnienie — zmiana modelu i push), 3.4 (termin z treści notatki), 3.5 (tylko w razie potrzeby), 4.5 (animacja odhaczenia — wymaga animowanego wyjścia wierszy).
 - **Testy.** Bez nowych testów logiki (sam wygląd); `src/lib/push/schedule.test.ts` z nowym tekstem; przeszły e2e Terminów, Dziś, Kalendarza i axe oraz zrzuty `@visual` (poza znanymi chwiejnymi „praca — komputer”).
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `f79fca1` (2026-11-02).
 
 ## Skarbiec — stan aktualny (notatki prywatne; plan Skarbca 1.1, 2026-11-02)
 
