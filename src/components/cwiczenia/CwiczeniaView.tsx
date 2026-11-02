@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { nextReminderAt } from "@/lib/timeOfDay";
-import { logKey, SUPPLEMENT_DOSE_MAX, SUPPLEMENT_NAME_MAX, SUPPLEMENT_WHEN, SUPPLEMENT_WHEN_LABEL, type Supplement, type SupplementWhen } from "@/lib/supplements/model";
+import { logKey, weekAdherence, SUPPLEMENT_DOSE_MAX, SUPPLEMENT_NAME_MAX, SUPPLEMENT_WHEN, SUPPLEMENT_WHEN_LABEL, type Supplement, type SupplementWhen } from "@/lib/supplements/model";
 import { addSupplement, removeSupplement, restoreSupplement, setSupplementTaken, useSupplements, useSupplementsTaken } from "@/lib/supplements/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -158,6 +158,7 @@ function SupplementList({ supplements, taken, day, notes }: { supplements: Suppl
                     <span className={done ? "text-sm text-muted-foreground line-through" : "text-sm"}>{s.name}</span>
                     {s.dose && <span className="ml-2 text-xs text-muted-foreground">{s.dose}</span>}
                   </label>
+                  <WeekDots days={weekAdherence(s.id, taken, day)} />
                   <Button
                     variant="ghost"
                     size="sm"
@@ -174,6 +175,19 @@ function SupplementList({ supplements, taken, day, notes }: { supplements: Suppl
         </div>
       ))}
     </div>
+  );
+}
+
+/** 3.2: ostatnie 7 dni odżywki jako kropki (od najstarszego do dziś) i „6/7”. */
+function WeekDots({ days }: { days: boolean[] }) {
+  const n = days.filter(Boolean).length;
+  return (
+    <span className="flex shrink-0 items-center gap-1.5" role="img" aria-label={`W ostatnich 7 dniach: ${n} z 7`} data-testid="supplement-week">
+      <span className="flex gap-0.5" aria-hidden>
+        {days.map((d, i) => <span key={i} className={d ? "size-1.5 rounded-full bg-success" : "size-1.5 rounded-full bg-muted-foreground/25"} />)}
+      </span>
+      <span className="font-mono text-2xs tabular-nums text-muted-foreground" aria-hidden>{n}/7</span>
+    </span>
   );
 }
 

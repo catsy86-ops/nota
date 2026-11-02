@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { nextReminderAt } from "../timeOfDay";
-import { bySupplementOrder, cleanSupplement, logKey, parseLogKey, takenCount, type Supplement } from "./model";
+import { bySupplementOrder, cleanSupplement, logKey, parseLogKey, takenCount, weekAdherence, type Supplement } from "./model";
 
 const sup = (id: string, when: Supplement["when"], created = 0): Supplement => ({ id, name: id, dose: "", when, created });
 
@@ -68,5 +68,13 @@ describe("przypomnienie odżywki", () => {
     const now = new Date(2026, 9, 20, 9, 0).getTime();
     expect(nextReminderAt("12:00", now)).toBe(new Date(2026, 9, 20, 12, 0).getTime());
     expect(nextReminderAt("07:30", now)).toBe(new Date(2026, 9, 21, 7, 30).getTime());
+  });
+});
+
+describe("weekAdherence (plan Ćwiczeń 3.2)", () => {
+  it("7 dni od najstarszego do dziś z samych odhaczeń", () => {
+    const taken = new Set([logKey("2026-11-02", "a"), logKey("2026-10-30", "a"), logKey("2026-10-27", "a"), logKey("2026-10-26", "a"), logKey("2026-11-02", "b")]);
+    expect(weekAdherence("a", taken, "2026-11-02")).toEqual([true, false, false, true, false, false, true]);
+    expect(weekAdherence("c", taken, "2026-11-02").filter(Boolean)).toHaveLength(0);
   });
 });

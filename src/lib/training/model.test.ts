@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { EQUIPMENT_LIST, EXERCISES, exerciseById, isKnownExercise } from "./catalog";
-import { bestKg, byTrainingTime, cleanEntry, cleanKg, cleanPlanDay, cleanSet, planLine, progressByExercise, volumeOf, type TrainingEntry } from "./model";
+import { bestKg, byTrainingTime, cleanEntry, trainingWeek, cleanKg, cleanPlanDay, cleanSet, planLine, progressByExercise, volumeOf, type TrainingEntry } from "./model";
 
 const entry = (id: string, day: string, exerciseId: string, sets: { reps: number; kg?: number }[], over: Partial<TrainingEntry> = {}): TrainingEntry =>
   ({ id, day, exerciseId, sets, note: "", created: 1, ...over }) as TrainingEntry;
@@ -88,5 +88,20 @@ describe("liczenie", () => {
   it("chronologia: dzień, potem godzina", () => {
     const list = [entry("późno", "2026-10-20", "klatka-rozpietki", [{ reps: 1 }], { time: "21:00" }), entry("wcześnie", "2026-10-20", "klatka-rozpietki", [{ reps: 1 }], { time: "07:00" })];
     expect(list.sort(byTrainingTime).map((e) => e.id)).toEqual(["wcześnie", "późno"]);
+  });
+});
+
+describe("trainingWeek (plan Ćwiczeń 3.5)", () => {
+  it("dni z treningiem pn–nd i serie na partię, od najczęstszej; poza tygodniem i nieznane pomija", () => {
+    const groupOf = (id: string) => ({ a: "klatka", b: "biceps" } as Record<string, string>)[id];
+    const list = [
+      entry("1", "2026-11-02", "a", [{ reps: 8 }, { reps: 8 }]),
+      entry("2", "2026-11-04", "a", [{ reps: 8 }]),
+      entry("3", "2026-11-04", "b", [{ reps: 10 }]),
+      entry("4", "2026-11-04", "x", [{ reps: 10 }]),
+      entry("5", "2026-11-01", "a", [{ reps: 8 }]),
+    ];
+    expect(trainingWeek(list, "2026-11-05", groupOf)).toEqual({ days: 2, setsByGroup: [{ group: "klatka", sets: 3 }, { group: "biceps", sets: 1 }] });
+    expect(trainingWeek([], "2026-11-05", groupOf)).toEqual({ days: 0, setsByGroup: [] });
   });
 });

@@ -1,3 +1,4 @@
+import { addDaysToKey } from "@/lib/week";
 /**
  * Odżywki: lista suplementów i dzienne odhaczenia. Czysta logika bez Yjs i bez React —
  * wejście z dokumentu, kopii i peera przechodzi przez `cleanSupplement`, więc śmieci nie wywracają widoku.
@@ -79,3 +80,12 @@ export function bySupplementOrder(a: Supplement, b: Supplement): number {
 export function takenCount(supplements: readonly Supplement[], taken: ReadonlySet<string>, day: string): number {
   return supplements.filter((s) => taken.has(logKey(day, s.id))).length;
 }
+
+/**
+ * Plan Ćwiczeń 3.2: zgodność z ostatnich 7 dni (od najstarszego do dziś) z samego `supplementLog` —
+ * bez nowych danych. `taken` — klucze `logKey`.
+ */
+export function weekAdherence(supplementId: string, taken: ReadonlySet<string>, today: string): boolean[] {
+  return Array.from({ length: 7 }, (_, i) => taken.has(logKey(addDaysToKey(today, i - 6), supplementId)));
+}
+

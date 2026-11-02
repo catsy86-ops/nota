@@ -2845,6 +2845,17 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Nie zrobione:** agenda na komputerze (na desktopie siatka zostaje, a tryb „Lista” nie jest widoczny); oś godzin tygodnia (3.3).
 - **Testy:** `src/components/calendar/MonthAgenda.test.tsx`; e2e `e2e/calendar-agenda.spec.ts` (telefon: Lista ↔ Miesiąc).
 
+## Ćwiczenia — 7 dni zgodności odżywki i tydzień treningowy (3.2, 3.5, 2026-11-02)
+
+- **Co robi.**
+  - **3.2:** przy każdej odżywce 7 kropek ostatnich dni (od najstarszego do dziś; zielona — wzięta) i „6/7”. Czytnik: „W ostatnich 7 dniach: 6 z 7”.
+  - **3.5:** w Treningu wiersz „Ten tydzień”: liczba dni z treningiem (pn–nd) i serie na partię od najczęstszej („2 treningi · serie: Klatka 6, Biceps 3”). Partii, której brakuje, nie było w tym tygodniu. Wiersza nie ma, gdy w tygodniu nie było treningu.
+- **Gdzie.** `weekAdherence` w `src/lib/supplements/model.ts`, `WeekDots` w `CwiczeniaView.tsx`; `trainingWeek` w `src/lib/training/model.ts` (partia z `exerciseById` — katalog i własne ćwiczenia), `WeekSummary` w `TrainingSection.tsx`.
+- **Jak działa.** Bez nowych danych: zgodność z istniejących odhaczeń (`logKey(dzień, id)`), tydzień z wpisów treningu (`weekKeys` z `lib/week.ts`). Nic nie zmienia formatu, więc bez wymogu C-1.
+- **Stan planu Ćwiczeń.** 1.1 (więcej partii i sprzętu) jest już w katalogu (`catalog.ts`), 3.1 (masa ciała, C-2) zrobione wcześniej. Otwarte m.in. 1.2–1.4, 2.1–2.7, 3.3, 3.4, Etap 4 — do sprawdzenia w kodzie przed realizacją.
+- **Testy.** `src/lib/supplements/model.test.ts` (`weekAdherence`), `src/lib/training/model.test.ts` (`trainingWeek`: tydzień pn–nd, nieznane ćwiczenia pominięte), `e2e/cwiczenia-tydzien.spec.ts`.
+- **Commit.** `do uzupełnienia` (2026-11-02).
+
 ## Skrzynka — „Zapisz” i dyktowanie w polu, tytuł z treści, „Otwórz notatkę”, pusty stan z działaniem (1.1, 1.3, 2.2, 3.2, 4.5, 2026-11-02)
 
 - **Co robi.**

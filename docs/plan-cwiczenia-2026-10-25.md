@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Ćwiczenia” (2026-10-25)
 
+> **Status (2026-11-02):** zrobione 1.1 (katalog), 3.1 (masa ciała, C-2), 3.2 i 3.5 (2026-11-02). Reszta do sprawdzenia w kodzie przed realizacją; 2.7 czeka na C-1.
+
 Dziewiąty plan z serii „dział po dziale”, w tym samym układzie. Dział ma trzy części: Odżywki, Trening, Dieta (`/cwiczenia`).
 
 ## Kontekst

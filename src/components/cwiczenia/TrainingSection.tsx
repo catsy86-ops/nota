@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { nextReminderAt } from "@/lib/timeOfDay";
 import { CUSTOM_HINT_MAX, CUSTOM_NAME_MAX, CUSTOM_PREFIX, EQUIPMENT_LIST, EXERCISES, exerciseById, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS, type Equipment, type MuscleGroup } from "@/lib/training/catalog";
-import { bestKgSeries, byTrainingTime, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
+import { bestKgSeries, byTrainingTime, trainingWeek, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
 import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingEquipment, setTrainingReminder, useTrainingEntries, useTrainingEquipment, useTrainingPlans, useTrainingReminder, useCustomExercises, addCustomExercise, removeCustomExercise } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ export function TrainingSection() {
   const today = localDayKey();
   const todays = useMemo(() => entries.filter((e) => e.day === today).sort(byTrainingTime), [entries, today]);
   const progress = useMemo(() => progressByExercise(entries), [entries]);
+  const week = useMemo(() => trainingWeek(entries, today, (id) => exerciseById(id)?.group), [entries, today]);
   const [restUntil, setRestUntil] = useState<number | null>(null);
 
   return (
@@ -47,9 +48,29 @@ export function TrainingSection() {
         </div>
       )}
 
+      <WeekSummary week={week} />
       <ProgressList progress={progress} entries={entries} />
       <AddPlanForm />
     </section>
+  );
+}
+
+/**
+ * 3.5: tydzień treningowy — dni z treningiem i serie na partię (pn–nd), od najczęstszej; brak partii na liście
+ * pokazuje, co w tym tygodniu jest pomijane.
+ */
+function WeekSummary({ week }: { week: ReturnType<typeof trainingWeek> }) {
+  if (week.days === 0) return null;
+  return (
+    <div data-testid="training-week">
+      <h3 className="text-xs font-medium text-muted-foreground">Ten tydzień</h3>
+      <p className="mt-1 text-sm">
+        <span className="font-semibold">{week.days} {week.days === 1 ? "trening" : week.days < 5 ? "treningi" : "treningów"}</span>
+        {week.setsByGroup.length > 0 && (
+          <span className="text-muted-foreground"> · serie: {week.setsByGroup.map((g) => `${MUSCLE_GROUP_LABELS[g.group as MuscleGroup] ?? g.group} ${g.sets}`).join(", ")}</span>
+        )}
+      </p>
+    </div>
   );
 }
 

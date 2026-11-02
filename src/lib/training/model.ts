@@ -1,3 +1,4 @@
+import { weekKeys } from "@/lib/week";
 import { isKnownExercise } from "./catalog";
 
 /**
@@ -199,3 +200,28 @@ export function progressByExercise(entries: readonly TrainingEntry[]): Map<strin
 export function planLine(p: PlanDay): string {
   return `${p.name} · ${p.targetSets} × ${p.targetReps}`;
 }
+
+export interface TrainingWeek {
+  /** Dni tygodnia (pn–nd), w które był trening. */
+  days: number;
+  /** Serie na partię w tym tygodniu, od największej liczby. */
+  setsByGroup: { group: string; sets: number }[];
+}
+
+/**
+ * Plan Ćwiczeń 3.5: tydzień treningowy (pn–nd z dniem `today`) — ile dni z treningiem i ile serii na partię,
+ * żeby było widać pomijaną partię. `groupOf` zwraca partię ćwiczenia (katalog i własne); nieznane — pomijane.
+ */
+export function trainingWeek(entries: readonly TrainingEntry[], today: string, groupOf: (exerciseId: string) => string | undefined): TrainingWeek {
+  const week = new Set(weekKeys(today));
+  const days = new Set<string>();
+  const sets = new Map<string, number>();
+  for (const e of entries) {
+    if (!week.has(e.day)) continue;
+    days.add(e.day);
+    const g = groupOf(e.exerciseId);
+    if (g) sets.set(g, (sets.get(g) ?? 0) + e.sets.length);
+  }
+  return { days: days.size, setsByGroup: [...sets].map(([group, n]) => ({ group, sets: n })).sort((a, b) => b.sets - a.sets) };
+}
+
