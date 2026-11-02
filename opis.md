@@ -3854,7 +3854,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
   - **Bez Workera:** odczyt 128 KB z każdego z najwyżej 60 plików to ułamek sekundy, więc Worker i nowa zależność nie były potrzebne (punkt planu o Workerze i przeglądzie `performance-engineer` zamknięty tą decyzją).
 - **Ograniczenia i pułapki.** HEIC (iPhone) i PNG nie mają tu EXIF — czas idzie z pliku. Android może usuwać GPS przy wyborze z galerii (próba H4.2 na telefonie nadal otwarta) — wtedy budowę podpowiadają godziny i wpisy dnia. Pliki do 2 MB `prepareImage` zapisuje bez zmian, więc ich EXIF (z GPS) zostaje w magazynie zdjęć na urządzeniu, tak jak przy zwykłym dodawaniu zdjęć. Wpisy mają rodzaj „ok” i są bez tekstu, opis dopisuje się w arkuszu. Punktów i etapów nie da się jeszcze przypisać przy imporcie (H4.4).
 - **Testy.** Vitest: `src/lib/exif.test.ts` (oba porządki bajtów, przesunięcie strefy, GPS 0,0 i zerowy mianownik, ucięte i zaszumione pliki), `src/lib/study/photoImport.test.ts` (przerwa, GPS, podpowiedź z dnia, bieżąca, limit, inny dzień). E2E: `e2e/photo-day.spec.ts` (prawdziwy JPEG z wstawionym EXIF: dwa wpisy, godziny na osi, budowa z wpisów dnia, axe; zdjęcie bez EXIF).
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `0c6eafc` (2026-11-02).
 
 ## Praca: paczka budowy `.budowa` dla pomocnika (H5.2, plan 2026-10-29)
 
