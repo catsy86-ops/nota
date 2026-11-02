@@ -2857,7 +2857,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie.** `src/components/InboxCapture.tsx`; `triageHeadline` w `src/lib/inbox.ts`, `InboxTriage.tsx` (prop `onOpenNote`, w `Index.tsx` `openNote(id, false, true)` — trzeci argument otwiera edytor, bez niego `openNote` tylko pokazuje kafel); `EmptyState.tsx` (przycisk dla `inbox`, `Index.tsx` nie podaje `onNew` w Skrzynce).
 - **Pułapka.** Znak nowej linii w kodzie wstawiany przez polecenia powłoki zamienia się na dosłowny znak — `triageHeadline` dzieli po `String.fromCharCode(10)`, a CR znika przy `trim()`.
 - **Testy.** `src/lib/inbox.test.ts` (`triageHeadline`), `src/components/InboxCapture.test.tsx` (przycisk „Zapisz”), `e2e/inbox-triage.spec.ts` (pusty stan i kursor w polu, „Otwórz notatkę” → edytor), zrzuty `skrzynka-telefon-*` odświeżone.
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `50daf70` (2026-11-02).
 
 ## Terminy — wygląd odznaki, nagłówków listy i dymka (4.2–4.4, 2026-11-02)
 
