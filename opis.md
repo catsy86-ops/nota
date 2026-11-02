@@ -2859,7 +2859,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Stan planu Dziś.** Zrobione wcześniej 1.1 (D-1), część 2.1 (stan zmiany w karcie), 4.1 (ustawienia kart). Otwarte: 2.2, 2.4–2.6, Etap 3 (3.4 czeka na D-3), 4.2, 4.5.
 - **Testy.** `src/lib/noteListTitle.test.ts`, `TodayDueList.test.tsx` (najbliższy termin, prywatna notatka), `TodayStudyCard.test.tsx` (szacunek), `TodayShiftCard.test.tsx` (szkielet), `e2e/inbox-today.spec.ts` (wiersz Skrzynki → „Porządkuj”), zrzuty `dzis-*` odświeżone.
 - **Przy okazji:** `e2e/reminders-calendar.spec.ts` czekał na nagłówek z rokiem — wcześniej czasem odczytywał nagłówek pustych Notatek, zanim kalendarz się pokazał.
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `f4a63eb` (2026-11-02).
 
 ## Ćwiczenia — 7 dni zgodności odżywki i tydzień treningowy (3.2, 3.5, 2026-11-02)
 
