@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { Bookmark, Search, X } from "lucide-react";
+import { Bookmark, Clock, Search, X } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -7,7 +7,8 @@ import { tween, spring } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useSavedFilters, sameQuery, MAX_FILTER_NAME } from "@/lib/savedFilters";
-import { suggestOperators, applySuggestion } from "@/lib/searchSuggest";
+import { suggestOperators, applySuggestion, emptySuggestions, type Suggestion } from "@/lib/searchSuggest";
+import { clearRecentSearches, loadRecentSearches, saveRecentSearch } from "@/lib/recentSearches";
 
 interface SearchBarProps {
   value: string;
@@ -63,9 +64,12 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
   useEffect(() => { setActive(-1); setDismissed(false); }, [value]);
 
   const folderNames = useMemo(() => [...new Set(folders.map((f) => f.name))], [folders]);
-  const suggestions = useMemo(
-    () => suggestOperators(value, { labels: allLabels, folders: folderNames }),
-    [value, allLabels, folderNames],
+  // Wspólna historia z paletą poleceń (`recentSearches.ts`); odświeżana przy wejściu w pole.
+  const [recent, setRecent] = useState<string[]>(() => loadRecentSearches());
+  // Puste pole: ostatnie wyszukiwania i szybkie filtry; z tekstem — operatory i nazwy dla ostatniego słowa.
+  const suggestions = useMemo<{ from: number; items: Suggestion[] }>(
+    () => (value === "" ? { from: 0, items: emptySuggestions(recent) } : suggestOperators(value, { labels: allLabels, folders: folderNames })),
+    [value, allLabels, folderNames, recent],
   );
   const showSuggestions = focused && !dismissed && !saving && suggestions.items.length > 0;
   const canSave = value.trim().length > 0 && !filters.some((f) => sameQuery(f.query, value));
@@ -73,6 +77,8 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
   function pick(i: number) {
     const s = suggestions.items[i];
     if (!s) return;
+    if (s.kind === "clear") { clearRecentSearches(); setRecent([]); return; }
+    if (s.kind === "recent") { commit(s.insert); return; }
     commit(applySuggestion(value, suggestions.from, s));
   }
 
@@ -113,8 +119,8 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
         type="search"
         value={value}
         onChange={(e) => typeValue(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onFocus={() => { setFocused(true); setRecent(loadRecentSearches()); }}
+        onBlur={() => { setFocused(false); setRecent(saveRecentSearch(value)); }}
         onKeyDown={onKeyDown}
         placeholder={PLACEHOLDER}
         aria-label="Szukaj w notatkach"
@@ -126,6 +132,8 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
         aria-controls={showSuggestions ? listId : undefined}
         aria-activedescendant={showSuggestions && active >= 0 ? `${listId}-${active}` : undefined}
         className={cn(
+          // Bez natywnego „×” przeglądarki — pole ma własne „Wyczyść wyszukiwanie” (dawniej dwa krzyżyki obok siebie).
+          "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-cancel-button]:hidden",
           "w-full pl-10 py-2.5 rounded-card bg-muted/60 border text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-hidden transition-[border-color,box-shadow,background-color] duration-fast ease-std",
           value ? (canSave ? "pr-18" : "pr-9") : "pr-9",
           focused ? "border-primary/50 ring-2 ring-primary/20 bg-background" : "border-border"
@@ -168,12 +176,12 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
         <ul
           id={listId}
           role="listbox"
-          aria-label="Podpowiedzi operatorów"
+          aria-label={value === "" ? "Ostatnie wyszukiwania i szybkie filtry" : "Podpowiedzi wyszukiwania"}
           className="absolute left-0 right-0 top-full z-dropdown mt-1.5 max-h-64 overflow-y-auto rounded-card border border-border bg-popover p-1 shadow-elevation-3"
         >
           {suggestions.items.map((s, i) => (
             <li
-              key={s.insert}
+              key={`${s.kind}-${s.label}`}
               id={`${listId}-${i}`}
               role="option"
               aria-selected={i === active}
@@ -181,11 +189,14 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
               onMouseDown={(e) => { e.preventDefault(); pick(i); }}
               onMouseEnter={() => setActive(i)}
               className={cn(
-                "cursor-pointer truncate rounded-field px-3 py-1.5 text-sm font-mono",
+                "flex cursor-pointer items-baseline gap-2 rounded-field px-3 py-1.5 text-sm coarse:min-h-11 coarse:items-center",
                 i === active ? "bg-primary/10 text-primary-ink" : "text-foreground",
+                s.kind === "clear" && "mt-1 border-t border-border/60 pt-2 text-xs text-muted-foreground",
               )}
             >
-              {s.label}
+              {s.kind === "recent" && <Clock className="h-3.5 w-3.5 shrink-0 self-center text-muted-foreground" aria-hidden />}
+              <span className={cn("truncate", (s.kind === "operator" || s.kind === undefined) && "font-mono")}>{s.label}</span>
+              {s.hint && <span className="ml-auto shrink-0 truncate text-xs text-muted-foreground">{s.hint}</span>}
             </li>
           ))}
         </ul>

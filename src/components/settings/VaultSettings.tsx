@@ -87,7 +87,7 @@ export function VaultSettings() {
         <p className="text-2xs text-muted-foreground">Skarbiec blokuje się też, gdy karta jest ukryta dłużej niż wybrany czas.</p>
       </div>
 
-      <details className="rounded-card border border-border/60 px-4 py-3 text-xs leading-relaxed text-muted-foreground" data-testid="vault-howto">
+      <details className="disclosure rounded-card border border-border/60 px-4 py-3 text-xs leading-relaxed text-muted-foreground" data-testid="vault-howto">
         <summary className="cursor-pointer text-sm font-semibold text-foreground">Jak to działa i czego nie robi</summary>
         <div className="mt-2 space-y-2">
           <p>

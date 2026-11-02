@@ -2845,6 +2845,29 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Nie zrobione:** agenda na komputerze (na desktopie siatka zostaje, a tryb „Lista” nie jest widoczny); oś godzin tygodnia (3.3).
 - **Testy:** `src/components/calendar/MonthAgenda.test.tsx`; e2e `e2e/calendar-agenda.spec.ts` (telefon: Lista ↔ Miesiąc).
 
+## Ustawienia — naprawy, wyszukiwarka z historią i opisami, więcej zestawów wyglądu (2026-11-02)
+
+Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj notatek i szybko zestawy”. Usterki znalezione na zrzutach okna Ustawień (390 i 1440 px) i wyszukiwarki.
+
+- **Naprawy w Ustawieniach.**
+  - **Prześwit pod nagłówkiem:** po przewinięciu tekst wchodził w szczelinę między paskiem kart a paskiem sekcji (np. „Przejdź do trybu Dziś” w Ogólnych). Przyczyna: kontener przewijania miał górny `padding` (`pt-3`), a przyklejony pasek stawał pod nim. Odstęp jest teraz nad kontenerem (`mb-3` listy kart w `SettingsDialog.tsx`), paski sekcji stoją na `top-0` (Wygląd przestał kompensować `-top-3 -mt-3`).
+  - **Przewinięcie przy zmianie karty:** zostawało z poprzedniej karty („Ogólne” otwierało się przy Skrótach). `chooseTab` przewija kontener na górę.
+  - **Sync na komputerze:** pola kodu i „Zeskanuj kod” wychodziły poza kartę, a „Dołącz” nie było widać — formularz zawija się (`sm:flex-wrap`).
+  - **Rozwijane sekcje** („Serwery łączące urządzenia”, „Przekaźnik”, „Jak to działa” w skarbcu): strzałka aplikacji obracana przy otwarciu (`details.disclosure` w `index.css`) zamiast trójkąta przeglądarki.
+  - **Teksty:** „gdy G są zamknięte” → „gdy aplikacja jest zamknięta”, „(3) G” → „(3) NOTKI”, dymek instalacji „NOTKI są teraz na ekranie głównym”; pod przełącznikami kategorii push „Po wyłączeniu terminy tej kategorii nie trafiają na serwer” (dawne „Wyłączone: …” pod włączonym przełącznikiem wyglądało jak stan).
+- **Wyszukiwarka notatek** (`SearchBar.tsx`, `lib/searchSuggest.ts`).
+  - Jeden „×”: natywny przycisk czyszczenia `type="search"` jest ukryty (dawniej dwa krzyżyki obok siebie).
+  - Puste pole w fokusie: **ostatnie wyszukiwania** (wspólne z paletą poleceń — `lib/recentSearches.ts`, klucz `kaczy.recentSearches.v1`, zapis przy wyjściu z pola), **szybkie filtry** (`ma:przypomnienie`, `przypięte`, `lista:otwarte`, `nowsze:7d`) i „Wyczyść ostatnie wyszukiwania” (`emptySuggestions`).
+  - Każdy operator ma **opis** po polsku („ma:obraz — ze zdjęciem lub obrazem”), nazwy etykiet i folderów — „etykieta” / „folder”.
+  - Po dwukropku innego operatora („ma:”, „brak:”) lista pokazuje pasujące operatory — dawniej była pusta.
+- **Szybkie zestawy wyglądu** (`lib/appearancePresets.ts`, `QuickPresets.tsx`, sekcja „Szybko” w `AppearanceSettings.tsx`, ikony w `settings/presetIcons.ts`).
+  - Nowe zestawy: **Czytanie** (tekst 112,5%, ciche tło, zwykłe ramki, bez poświaty i ruchu) i **Oszczędny** (ciemny Zeszyt z czarnym tłem OLED, gładkie tło, bez ruchu i poświaty).
+  - Zestawy mają ikony, a **włączony** zestaw jest oznaczony („Włączony” w Ustawieniach, ptaszek w okienku szybkich zestawów; `isPresetActive` porównuje wartości po sparsowanym JSON).
+  - Własne „Mój 1–3” pokazują, co zapisano („Zorza, ciemny · tekst 125% · bez ruchu”, `slotSummary`).
+- **Pułapki przy tej zmianie.** `src/lib/recentSearches.ts` już istniał (historia palety) — omyłkowo nadpisany i przywrócony z gita; wyszukiwarka używa jego API. Pliki z mieszanymi końcami linii (CRLF/LF) — skrypty zmian normalizują do LF.
+- **Testy.** `src/lib/searchSuggest.test.ts` (puste pole, opisy, operatory po dwukropku), `src/lib/appearancePresets.test.ts` (włączony zestaw, nowe zestawy, opis slotu).
+- **Commit.** `do uzupełnienia` (2026-11-02).
+
 ## Powłoka — logo bez pętli, „Szukaj” z arkusza, boczne wycięcie ekranu (1.1, 1.5, 1.6, 2026-11-02)
 
 - **Co robi.**

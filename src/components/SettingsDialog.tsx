@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -25,9 +25,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   // Plan 3.6: otwiera się na ostatniej zakładce wybranej przez użytkownika (link z parametrem ma pierwszeństwo).
   const [activeTab, setActiveTab] = useState<string>(() => consumeRequestedSettingsTab() ?? readViewMemory("settingsTab", SETTINGS_TABS, "appearance"));
+  // Zmiana karty zaczyna od góry — dawniej zostawało przewinięcie poprzedniej (np. „Ogólne” od razu przy Skrótach).
+  const scrollRef = useRef<HTMLDivElement>(null);
   const chooseTab = (tab: string) => {
     setActiveTab(tab);
     writeViewMemory("settingsTab", tab);
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
   };
   const [joinPrefill, setJoinPrefill] = useState("");
 
@@ -71,7 +74,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
         <Tabs value={activeTab} onValueChange={chooseTab} className="flex-1 flex flex-col min-h-0">
           {/* Na telefonie same nazwy (ikona bez podpisu nie mówi, co jest w zakładce). */}
-          <TabsList className="grid grid-cols-4 w-full h-auto">
+          <TabsList className="mb-3 grid grid-cols-4 w-full h-auto">
             <TabsTrigger value="appearance" className="gap-1.5 max-sm:text-xs"><LayoutGrid className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Wygląd</span></TabsTrigger>
             <TabsTrigger value="general" className="gap-1.5 max-sm:text-xs"><Pencil className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Ogólne</span></TabsTrigger>
             {/* „Kopia i dane” może się zawinąć na wąskim ekranie — zakładka nie ma mieć stałej wysokości na jeden wiersz. */}
@@ -79,8 +82,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             <TabsTrigger value="sync" className="gap-1.5 max-sm:text-xs"><Wifi className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Sync</span></TabsTrigger>
           </TabsList>
 
-          {/* -mx-1 px-1: pierścień zaznaczenia przy lewej krawędzi nie jest przycinany. */}
-          <div className="flex-1 overflow-y-auto pt-3 -mx-1 px-1">
+          {/* -mx-1 px-1: pierścień zaznaczenia przy lewej krawędzi nie jest przycinany. Odstęp od kart jest nad
+              kontenerem (`mb-3` listy), nie w nim: górny `padding` przewijania zostawiał szczelinę nad przyklejonym
+              paskiem sekcji, w której prześwitywała przewijana treść. */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto -mx-1 px-1">
             <TabsContent value="appearance" className="mt-0">
               <AppearanceSettings />
             </TabsContent>

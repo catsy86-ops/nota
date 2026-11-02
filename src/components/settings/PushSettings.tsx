@@ -64,7 +64,7 @@ export function PushSettings() {
       <div className="space-y-3 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
         <p className="text-xs text-muted-foreground">
           Przypomnienia notatek, Grafik na jutro, raport dnia i tygodnia, problemy i materiał z budowy przyjdą o czasie także wtedy,
-          gdy G są zamknięte. Wysyła je Twój serwer powiadomień.
+          gdy aplikacja jest zamknięta. Wysyła je Twój serwer powiadomień.
           Trafiają na niego terminy i tytuły na 14 dni — bez treści notatek, a z notatek prywatnych bez tytułów.
         </p>
         {support !== "ok" ? (
@@ -118,12 +118,12 @@ export function PushSettings() {
         )}
       </div>
       <div className="mt-3 space-y-2">
-        <p className="text-xs text-muted-foreground">Co ma przypominać, gdy G są zamknięte:</p>
+        <p className="text-xs text-muted-foreground">Co ma przypominać, gdy aplikacja jest zamknięta:</p>
         {PUSH_CATEGORIES.map((c) => (
           <ToggleRow
             key={c.id}
             label={c.label}
-            desc={`Wyłączone: terminy tej kategorii nie trafiają na serwer.`}
+            desc={`Po wyłączeniu terminy tej kategorii nie trafiają na serwer.`}
             checked={!(prefs.off ?? []).includes(c.id)}
             onCheck={(on) => setPushCategory(c.id, on)}
           />

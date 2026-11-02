@@ -238,7 +238,7 @@ export function SyncSettings({ prefillCode }: Props) {
           {scanOpen && <QrScanDialog open={scanOpen} onOpenChange={setScanOpen} onCode={(c) => { setJoinInput(c); toast.success("Kod odczytany — kliknij Dołącz"); }} />}
         </Suspense>
         <form
-          className="flex flex-col gap-2 sm:flex-row sm:items-center"
+          className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center"
           onSubmit={(e) => { e.preventDefault(); handleJoin(); }}
         >
           <InputOTP
@@ -331,7 +331,7 @@ function RelayServer() {
   }
 
   return (
-    <details className="group rounded-card border border-border/60 bg-muted/20 p-3 text-xs" open={saved !== "" || undefined}>
+    <details className="disclosure group rounded-card border border-border/60 bg-muted/20 p-3 text-xs" open={saved !== "" || undefined}>
       <summary className="cursor-pointer font-semibold text-foreground select-none">
         Przekaźnik {saved ? "(włączony)" : "(wyłączony)"}
       </summary>
@@ -423,7 +423,7 @@ function SignalingServers() {
   }
 
   return (
-    <details className="group rounded-card border border-border/60 bg-muted/20 p-3 text-xs" open={saved.length > 0 || undefined}>
+    <details className="disclosure group rounded-card border border-border/60 bg-muted/20 p-3 text-xs" open={saved.length > 0 || undefined}>
       <summary className="cursor-pointer font-semibold text-foreground select-none">
         Serwery łączące urządzenia {saved.length > 0 ? `(własne: ${saved.length})` : "(domyślne)"}
       </summary>

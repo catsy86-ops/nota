@@ -135,6 +135,30 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
+/* Rozwijane sekcje (Ustawienia): strzałka aplikacji zamiast trójkąta przeglądarki, obrót przy otwarciu. */
+details.disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  list-style: none;
+}
+details.disclosure > summary::-webkit-details-marker { display: none; }
+details.disclosure > summary::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: 0.6;
+  transform: rotate(-45deg);
+  transition: transform var(--dur-fast, 0.15s) ease-out;
+}
+details.disclosure[open] > summary::before { transform: rotate(45deg); }
+@media (prefers-reduced-motion: reduce) {
+  details.disclosure > summary::before { transition: none; }
+}
+
 @utility glass {
   /* Nagłówek i dolny pasek to pełny papier — bez rozmycia (koszt na telefonie) i bez prześwitującej kratki. */
   background-color: var(--background);

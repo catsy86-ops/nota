@@ -26,10 +26,10 @@ test("własny slot: zapis bieżącego wyglądu i przywrócenie @mobile", async (
   await page.getByRole("button", { name: "Ustawienia" }).click();
   await page.getByRole("tab", { name: "Wygląd" }).click();
   await page.getByRole("button", { name: "Zapisz tu" }).nth(0).click();
-  await expect(page.getByRole("button", { name: "Mój 1", exact: true })).toBeEnabled();
+  await expect(page.getByRole("button", { name: /^Mój 1 (?!—)/ })).toBeEnabled();
   await page.getByRole("button", { name: /^Przywróć domyślny wygląd/ }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Przywróć" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-skin", "zeszyt");
-  await page.getByRole("button", { name: "Mój 1", exact: true }).click();
+  await page.getByRole("button", { name: /^Mój 1 (?!—)/ }).click();
   await expect(page.locator("html")).toHaveAttribute("data-skin", "neon");
 });

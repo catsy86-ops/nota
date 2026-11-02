@@ -10,7 +10,7 @@ const store = createPersistedStore<boolean>(BADGE_KEY, true, {
 export const setBadgeEnabled = (v: boolean) => store.set(v);
 export const useBadgeEnabled = () => store.use();
 
-/** Tytuł karty: „(3) G” przy zaległych, sam tytuł bazowy przy zerze. */
+/** Tytuł karty: „(3) NOTKI” przy zaległych, sam tytuł bazowy przy zerze. */
 export function formatBadgeTitle(base: string, count: number): string {
   const n = Math.floor(count);
   return n > 0 ? `(${n > 99 ? "99+" : n}) ${base}` : base;

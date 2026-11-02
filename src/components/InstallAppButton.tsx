@@ -70,7 +70,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
     }
     const outcome = await install();
     if (outcome === "accepted") {
-      toast.success("Zainstalowano! 🎉", { description: "G są teraz na ekranie głównym." });
+      toast.success("Zainstalowano! 🎉", { description: "NOTKI są teraz na ekranie głównym." });
       onDone?.();
     }
   };
