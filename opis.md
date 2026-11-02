@@ -3824,6 +3824,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy.** Vitest: `src/lib/study/order.test.ts` („H1.4”: grupy, archiwum i puste pominięte, tekst, wspólny numer). E2E: `e2e/wholesale.spec.ts` (390 px: dwie budowy w grupach, oznaczenie wszystkiego, „Cofnij”), regresja `e2e/site-order.spec.ts`.
 - **Commit.** `67d29a6` (2026-11-02).
 
+## Praca: autor przy wpisach, brakach i punktach (H5.1, plan 2026-10-29)
+
+- **Co robi.** W Ustawieniach → Ogólne pole **„Twoje imię w Pracy”**. Nowe wpisy dziennika, dopisane braki i zmiany kroków punktów zapisują to imię. Pozycje innej osoby (np. pomocnika, z innego telefonu) mają podpis: na osi dziennika „Marek,” nad godziną, przy braku „· Marek”, przy punkcie „→ próba · Marek”. Swoich pozycji aplikacja nie podpisuje.
+- **Gdzie.** `src/lib/study/companyPrefs.ts` (`AUTHOR_KEY` = `kaczy.study.author.v1`, `cleanAuthor`, `currentAuthor`, `useAuthor`, `setAuthor`, `otherAuthor`), pole `by` w `JournalEntry` (`journalEntry.ts`, `JOURNAL_ENTRY_KEYS`), `Shortage` (`shortages.ts`, `addShortage(…, by)`), `WaterPoint` (`points.ts`); zapis: `addJournalEntry` / `updateJournalEntry` (`journalActions.ts`), `togglePointStep` (`pointsStore.ts`), `SiteShortagesPanel.tsx`. Widok: `JournalItem.tsx`, `SiteShortagesPanel.tsx`, `SitePointsPanel.tsx`, `GeneralSettings.tsx`.
+- **Jak działa.** Imię jest na urządzeniu (localStorage), nie w dokumencie — każdy telefon to inna osoba. Wpis zachowuje autora przy poprawkach treści; punkt dostaje autora ostatniej zmiany kroków. Imię czyści `safeLine` (bez znaków sterujących), do 40 znaków. Pole `by` jest nowe: starsza wersja aplikacji zachowuje je we wpisach (`JOURNAL_ENTRY_KEYS` chroni nieznane pola), ale przepisując listę braków albo punkt — gubi.
+- **Ograniczenia.** Godziny na budowach nie mają autora: jedna pozycja na dzień i budowę, więc dwie osoby nadpisywałyby sobie wpis — potrzebne osobne klucze na osobę (razem ze wspólną budową, H5.3). Bez ustawionego imienia nic się nie podpisuje.
+- **Testy.** Vitest: `src/lib/study/author.test.ts`, `src/lib/study/yStudy.test.ts` („autor wpisu”: drugi telefon i poprawka). E2E: `e2e/author.spec.ts`.
+- **Commit.** COMMIT_H51 (2026-11-02).
+
 ## Praca: zlecenia własne — fuchy (H3.4, plan 2026-10-29)
 
 - **Co robi.** Fucha to karta budowy z panelem **„Zlecenie własne”**: status (Wycena → Umówione → Zrobione → Zapłacone), „Co zrobić”, termin, wycena z pozycjami robocizny i materiału, marża na materiał w %, sumy („Razem dla klienta”) i **„PDF wyceny”**. Zakłada się ją w oknie „Nowa budowa” przełącznikiem „Zlecenie własne” (nazwa, klient, telefon, adres, co zrobić) albo z listy **„Zlecenia”** (pigułka obok „+ Nowa budowa” w dzienniku, z liczbą zleceń i kwotą niezapłaconą). Istniejącą kartę zmienia się w fuchę przyciskiem „To zlecenie własne (fucha)” na dole karty; „To nie jest fucha” cofa to (z „Cofnij”). Fucha ma te same wpisy, zdjęcia, materiał i godziny co budowa; panel „Rozliczenie” (dla budów szefa) jest przy niej ukryty. Umówiony termin pojawia się w Kalendarzu („Praca: 1 zlecenie”). Pigułka fuchy w dzienniku ma ikonę klucza zamiast pinezki.

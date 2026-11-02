@@ -16,6 +16,7 @@ import { JOURNAL_SOLUTION_MAX, setProblemResolved, setProblemSolution, type Jour
 import { entryHeadline, KIND_LABEL, sameJournalEntry } from "@/lib/study/journalView";
 import { KindIcon } from "./JournalEntrySheet";
 import { JournalItemMenu } from "./JournalItemMenu";
+import { otherAuthor, useAuthor } from "@/lib/study/companyPrefs";
 
 const AudioPreview = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.AudioPreview })));
 
@@ -43,6 +44,8 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
   const [solving, setSolving] = useState(false);
   // Świeżo dodany wpis: podświetlenie przy montażu wiersza (§9 W5); jednorazowe, bez zapamiętywania.
   const [fresh] = useState(() => freshEntry.id === e.id);
+  /** H5.1: „Marek, 9:40” — autor przy wpisach z innego telefonu (pomocnik); swoje bez podpisu. */
+  const author = otherAuthor(e.by, useAuthor());
 
   function toggleResolved() {
     haptic(resolved ? "tap" : "success");
@@ -57,6 +60,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
         dateTime={new Date(e.at).toISOString()}
         className="border-r border-primary/30 pr-2 pt-0.5 text-right font-mono text-xs tabular-nums text-muted-foreground"
       >
+        {author && <span className="block truncate font-sans text-2xs" data-testid="entry-by">{author},</span>}
         {new Date(e.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}
       </time>
       <div className="flex min-w-0 items-start gap-2.5">

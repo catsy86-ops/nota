@@ -13,6 +13,7 @@ import { HEIGHT_MAX, latestPointPhotos, pointCaption, pointsProgress, pointStage
 import { addPoint, addRoom, removePoint, removeRoom, renameRoom, restoreRoom, savePoint, togglePointStep, useSitePoints } from "@/lib/study/pointsStore";
 import type { SiteInfo } from "@/lib/study/sites";
 import { PointsEstimate } from "./PointsEstimate";
+import { otherAuthor, useAuthor } from "@/lib/study/companyPrefs";
 
 /** Opis kroku do zrobienia przy punkcie: „→ próba” albo „gotowe”. */
 const nextLabel = (p: WaterPoint) => {
@@ -27,6 +28,7 @@ const nextLabel = (p: WaterPoint) => {
  */
 export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: readonly JournalEntry[] }) {
   const { rooms, points } = useSitePoints(site.id);
+  const me = useAuthor();
   const photos = useMemo(() => latestPointPhotos(journal), [journal]);
   // H2.3: jedno ukryte pole aparatu na cały panel; `photoFor` mówi, którego punktu dotyczy zdjęcie.
   const photoInput = useRef<HTMLInputElement>(null);
@@ -223,7 +225,7 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
                               {stage > i && <Check className="h-4 w-4" aria-hidden />}
                             </button>
                           ))}
-                          <span className={cn("pl-1 text-xs", stage >= POINT_STEPS.length ? "text-success-ink" : "text-muted-foreground")}>{nextLabel(p)}</span>
+                          <span className={cn("pl-1 text-xs", stage >= POINT_STEPS.length ? "text-success-ink" : "text-muted-foreground")}>{nextLabel(p)}{otherAuthor(p.by, me) && <span data-testid="point-by"> · {p.by}</span>}</span>
                         </div>
                       </li>
                     );

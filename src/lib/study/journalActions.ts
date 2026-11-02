@@ -1,4 +1,5 @@
 import type { Fitting } from "./fittings";
+import { currentAuthor } from "./companyPrefs";
 import type { Pipe } from "./pipes";
 import type { Attachment } from "@/lib/attachments";
 import { TOPICS } from "./content";
@@ -87,7 +88,8 @@ export function addJournalEntry(input: NewJournalEntry, now: number = Date.now()
   const s = getStudy();
   const { siteId, site, card } = resolveSite(siteDirectoryOf(s), s.site, now);
   const point = typeof input.point === "string" && input.point && input.point.length <= 64 ? input.point : undefined;
-  const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, site, ...(siteId ? { siteId } : {}), ...(point ? { point } : {}) };
+  const by = currentAuthor();
+  const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, site, ...(siteId ? { siteId } : {}), ...(point ? { point } : {}), ...(by ? { by } : {}) };
   yStudy.addEntry(entry, card);
   return entry;
 }
@@ -110,6 +112,8 @@ export function updateJournalEntry(id: string, input: JournalEdit, now: number =
   const kept = {
     // Punkt zdjęcia (H2.3) nie jest w formularzu arkusza — zostaje przy każdym rodzaju wpisu.
     point: prev?.point,
+    // Autor zostaje ten, kto wpis zapisał (H5.1) — poprawka nie zmienia autora.
+    by: prev?.by,
     ...(fields.kind === "problem" && prev ? { solution: prev.solution, owner: prev.owner, due: prev.due, after: prev.after } : {}),
   };
   const entry: JournalEntry = {

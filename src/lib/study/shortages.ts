@@ -1,4 +1,5 @@
 import { cleanFittings, fittingsLine, type Fitting } from "./fittings";
+import { cleanAuthor } from "./companyPrefs";
 import { endOfDayOffset } from "../dueTerms";
 import { dayInputValue } from "../reminderTime";
 
@@ -24,6 +25,8 @@ export interface Shortage {
   changed?: number;
   /** Data dostawy (ms, północ lokalna dnia); tylko przy „zamówione”. Brak = termin liczy się od zmiany statusu. */
   due?: number;
+  /** H5.1: kto dopisał brak; brak = nie ustawiono. */
+  by?: string;
 }
 
 export interface OrderLogEntry {
@@ -72,6 +75,7 @@ export function cleanShortagesCounted(raw: unknown): { list: Shortage[] | undefi
       at: typeof s.at === "number" && Number.isFinite(s.at) ? s.at : 0,
       ...(typeof s.changed === "number" && Number.isFinite(s.changed) ? { changed: s.changed } : {}),
       ...(typeof s.due === "number" && Number.isFinite(s.due) ? { due: s.due } : {}),
+      ...(cleanAuthor(s.by) ? { by: cleanAuthor(s.by) } : {}),
     });
   }
   if (out.length > SHORTAGES_MAX) {
@@ -118,7 +122,7 @@ const key = (s: string) => s.toLocaleLowerCase("pl").replace(/\s+/g, " ").trim()
  * Dopisuje brak. Pusta nazwa albo limit → bez zmian. Ta sama nazwa wciąż niedostarczona → bez
  * duplikatu (najwyżej podmienia ilość, jeśli nowa podana).
  */
-export function addShortage(list: readonly Shortage[], text: string, qty: string, now: number, makeId: () => string = newId): Shortage[] {
+export function addShortage(list: readonly Shortage[], text: string, qty: string, now: number, makeId: () => string = newId, by?: string): Shortage[] {
   const t = clip(text, SHORTAGE_TEXT_MAX);
   const q = clip(qty, SHORTAGE_QTY_MAX);
   const out = list.map((s) => ({ ...s }));
@@ -128,7 +132,7 @@ export function addShortage(list: readonly Shortage[], text: string, qty: string
   if (out.length >= SHORTAGES_MAX) return out;
   let id = makeId();
   while (out.some((s) => s.id === id)) id = makeId();
-  return [...out, { id, text: t, qty: q, status: "missing", at: now }];
+  return [...out, { id, text: t, qty: q, status: "missing", at: now, ...(by ? { by } : {}) }];
 }
 
 /** Następny status po stuknięciu: brakuje → zamówione → dostarczone → brakuje. */

@@ -1,4 +1,5 @@
 import { cleanFittings, type Fitting } from "./fittings";
+import { cleanAuthor } from "./companyPrefs";
 import { cleanPipes, type Pipe } from "./pipes";
 import { isImageRef } from "@/lib/imageStore";
 import type { Attachment } from "@/lib/attachments";
@@ -62,6 +63,8 @@ export interface JournalEntry {
   geo?: GeoPoint;
   /** Punkt w pomieszczeniu (`points.ts`, id), którego dotyczy zdjęcie wpisu (H2.3); brak = bez punktu. */
   point?: string;
+  /** H5.1: kto zapisał wpis (imię z urządzenia, `companyPrefs.ts`); brak = nie ustawiono. */
+  by?: string;
 }
 
 /**
@@ -153,6 +156,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(stage ? { stage } : {}),
     ...(geo ? { geo } : {}),
     ...(typeof e.point === "string" && e.point && e.point.length <= 64 ? { point: e.point } : {}),
+    ...(cleanAuthor(e.by) ? { by: cleanAuthor(e.by) } : {}),
   };
 }
 
@@ -167,7 +171,7 @@ export const ORDERED_ENTRY_LISTS = new Set<string>(["images", "fittings"]);
  */
 export const JOURNAL_ENTRY_KEYS: ReadonlySet<string> = new Set([
   "id", "at", "kind", "topic", "text", "site", "siteId", "checked", "images", "captions", "drawnFrom", "recordings",
-  "resolved", "solution", "test", "fittings", "pipes", "stage", "geo", "owner", "due", "after", "point",
+  "resolved", "solution", "test", "fittings", "pipes", "stage", "geo", "owner", "due", "after", "point", "by",
 ]);
 
 /** Oryginały narysowanych zdjęć (H0.1): tylko dla zdjęć ze `images`, oryginał to poprawny, inny klucz. */

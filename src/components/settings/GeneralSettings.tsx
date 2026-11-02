@@ -23,7 +23,7 @@ import { hasDictationConsent, withdrawDictationConsent } from "@/hooks/useDictat
 import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
 import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
 import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
-import { COMPANY_NAME_MAX, setCompanyName, useCompanyName } from "@/lib/study/companyPrefs";
+import { AUTHOR_MAX, COMPANY_NAME_MAX, setAuthor, setCompanyName, useAuthor, useCompanyName } from "@/lib/study/companyPrefs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -130,6 +130,7 @@ export function GeneralSettings() {
   const reportNudges = useReportNudges();
   const siteArrival = useSiteArrival();
   const companyName = useCompanyName();
+  const author = useAuthor();
 
   return (
     <div className="space-y-4">
@@ -235,6 +236,12 @@ export function GeneralSettings() {
           <Label htmlFor="company-name" className="text-xs text-muted-foreground">Pojawi się na nagłówku protokołu odbioru (zostaje na tym urządzeniu)</Label>
           <Input id="company-name" key={companyName} defaultValue={companyName} maxLength={COMPANY_NAME_MAX} placeholder="np. Instalacje Kowalski"
             onBlur={(e) => { if (e.target.value.trim() !== companyName) setCompanyName(e.target.value.trim()); }} />
+        </Section>
+
+        <Section title="Twoje imię w Pracy">
+          <Label htmlFor="study-author" className="text-xs text-muted-foreground">Podpisuje Twoje wpisy, braki i punkty — przy wspólnej budowie widać, kto co zrobił (zostaje na tym urządzeniu)</Label>
+          <Input id="study-author" key={author} defaultValue={author} maxLength={AUTHOR_MAX} placeholder="np. Marek"
+            onBlur={(e) => { if (e.target.value.trim() !== author) setAuthor(e.target.value); }} />
         </Section>
 
         <ResetSectionButton title="przypomnienia" keys={VIEW_PREF_GROUPS.przypomnienia} />

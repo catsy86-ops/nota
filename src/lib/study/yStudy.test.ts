@@ -567,3 +567,15 @@ describe("podpis klienta w karcie budowy (P2.4)", () => {
   });
 
 });
+
+describe("autor wpisu (H5.1)", () => {
+  it("autor jedzie z wpisem na drugi telefon i zostaje po poprawce treści", () => {
+    const { a, b, sync } = pair();
+    a.addEntry(entry("m", 1, { by: "Marek" }));
+    sync();
+    expect(b.get().journal.find((e) => e.id === "m")?.by).toBe("Marek");
+    a.updateEntry({ ...entry("m", 1, { text: "poprawione" }), by: "Marek" });
+    sync();
+    expect(b.get().journal.find((e) => e.id === "m")).toMatchObject({ text: "poprawione", by: "Marek" });
+  });
+});

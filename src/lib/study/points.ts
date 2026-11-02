@@ -1,3 +1,4 @@
+import { cleanAuthor } from "./companyPrefs";
 /**
  * Punkty w pomieszczeniach budowy (H2.1, plan 2026-10-29): pomieszczenie (Łazienka parter, Kuchnia)
  * z punktami wodnymi — typ, strony (zimna, ciepła, kanalizacja), wysokość i stan w trzech krokach:
@@ -63,6 +64,8 @@ export interface WaterPoint {
   /** Moment zrobienia kroku (ms) po nazwie kroku. */
   steps: Partial<Record<PointStep, number>>;
   order: number;
+  /** H5.1: kto ostatni zmienił kroki punktu; brak = nie ustawiono. */
+  by?: string;
 }
 
 export const ROOM_NAME_MAX = 40;
@@ -95,7 +98,8 @@ export function cleanPoint(raw: unknown): WaterPoint | null {
     if (typeof at !== "number" || !Number.isFinite(at)) break;
     steps[s] = at;
   }
-  return { id: p.id, room: p.room, type, sides, ...(height !== undefined ? { height } : {}), steps, order: num(p.order) };
+  const by = cleanAuthor(p.by);
+  return { id: p.id, room: p.room, type, sides, ...(height !== undefined ? { height } : {}), steps, order: num(p.order), ...(by ? { by } : {}) };
 }
 
 /** Ile kroków punktu jest zrobionych (0–3). */

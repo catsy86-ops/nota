@@ -9,6 +9,7 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { setSiteShortages, useStudy } from "@/lib/study/store";
 import { pluralPl } from "@/lib/plural";
 import type { SiteInfo } from "@/lib/study/sites";
+import { currentAuthor, otherAuthor, useAuthor } from "@/lib/study/companyPrefs";
 import {
   addShortage, clearDelivered, dueDayValue, dueFromDayValue, nextStatus, removeShortage, setShortageDue, setShortageStatus,
   shortagesText, spokenShortageLabel, SHORTAGE_QTY_MAX, SHORTAGE_TEXT_MAX, SHORTAGES_MAX, STATUS_LABEL, type ShortageStatus,
@@ -28,6 +29,8 @@ const STATUS_CLASS: Record<ShortageStatus, string> = {
  * niedostarczone idą też do raportu budowy.
  */
 export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
+  /** H5.1: imię na tym urządzeniu — swoich braków nie podpisujemy. */
+  const me = useAuthor();
   const list = site.shortages ?? [];
   // Pozycje ponad limit od innego urządzenia: nie są widoczne (zostają najstarsze), więc mówimy o tym wprost.
   const dropped = useStudy().shortagesDropped?.[site.id] ?? 0;
@@ -46,7 +49,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
     const label = spokenShortageLabel(spoken);
     if (!label) return;
     const cur = listRef.current;
-    const next = addShortage(cur, label, "", Date.now());
+    const next = addShortage(cur, label, "", Date.now(), undefined, currentAuthor());
     if (next.length === cur.length) { toast("Nie udało się dodać braku", { id: "shortage-dictation", description: `Usłyszałem: „${spoken}”.` }); return; }
     listRef.current = next;
     setSiteShortages(site.id, next, cur);
@@ -55,7 +58,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
   });
 
   function add() {
-    const next = addShortage(list, text, qty, Date.now());
+    const next = addShortage(list, text, qty, Date.now(), undefined, currentAuthor());
     if (next.length === list.length && next.every((s, i) => s.qty === list[i]?.qty)) return;
     setSiteShortages(site.id, next, list);
     setText("");
@@ -120,6 +123,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
             <li key={s.id} className="flex items-center gap-1.5" data-shortage-status={s.status}>
               <span className={cn("min-w-0 flex-1 text-sm", s.status === "delivered" && "text-muted-foreground line-through decoration-muted-foreground/50")}>
                 {s.text}{s.qty && <span className="text-muted-foreground"> · {s.qty}</span>}
+                {otherAuthor(s.by, me) && <span className="text-2xs text-muted-foreground" data-testid="shortage-by"> · {s.by}</span>}
               </span>
               {s.status === "ordered" && (
                 <input

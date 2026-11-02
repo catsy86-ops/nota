@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
+import { currentAuthor } from "./companyPrefs";
 import { yjsStore } from "@/lib/yjsStore";
 import { newPoint, pointType, ROOM_TEMPLATES, toggleStep, type Room, type WaterPoint } from "./points";
 import { createYPoints, type SitePoints } from "./yPoints";
@@ -44,7 +45,9 @@ export const removePoint = (site: string, pointId: string) => yPoints.removePoin
 
 /** Stuknięcie kratki kroku punktu (`toggleStep`). Zwraca punkt sprzed zmiany — do „Cofnij”. */
 export function togglePointStep(site: string, point: WaterPoint, index: number, now: number = Date.now()): WaterPoint {
-  yPoints.savePoint(site, toggleStep(point, index, now));
+  const by = currentAuthor();
+  const { by: _prev, ...next } = toggleStep(point, index, now);
+  yPoints.savePoint(site, { ...next, ...(by ? { by } : {}) });
   return point;
 }
 
