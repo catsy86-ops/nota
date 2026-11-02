@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { weekSeparators } from "@/lib/study/journalWeeks";
-import { Archive, Clock, ChevronRight, FileText, MapPin, PackageCheck, Plus, Search, Truck, Wrench, X } from "lucide-react";
+import { Archive, Clock, ChevronRight, FileText, Images, MapPin, PackageCheck, Plus, Search, Truck, Wrench, X } from "lucide-react";
 import { studyReminders } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import { ReminderRow } from "./ReminderRow";
 import { readSiteParam, takeSiteParam } from "@/lib/study/siteLink";
 import { NewSiteDialog } from "./NewSiteDialog";
 import { SitePackageImportDialog } from "./SitePackageDialogs";
+import { PhotoDayDialog } from "./PhotoDayDialog";
 import type { SitePackage } from "@/lib/study/sitePackage";
 import { JobsDialog } from "./JobsDialog";
 import { WholesaleOrderDialog } from "./WholesaleOrderDialog";
@@ -146,6 +147,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   // H1.3: materiał w aucie — poniżej minimum idzie do listy hurtowni jako „Do auta”.
   const van = useVan();
   const [vanOpen, setVanOpen] = useState(false);
+  const [photoDayOpen, setPhotoDayOpen] = useState(false);
   const vanBuy = useMemo(
     () => van.items.map((i) => vanStock(i, van.events, study.journal)).filter((s) => s.toBuy > 0).map((s) => ({ name: s.item.name, qty: s.toBuy, unit: s.item.unit })),
     [van, study.journal],
@@ -322,6 +324,15 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   >
                     <Truck className="h-3.5 w-3.5 shrink-0" aria-hidden />Auto{vanBuy.length > 0 && <span className="text-warning-ink"> · dokupić {vanBuy.length}</span>}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setPhotoDayOpen(true)}
+                    data-testid="photo-day-open"
+                    title="Zdjęcia z galerii jako wpisy z godziną zrobienia"
+                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                  >
+                    <Images className="h-3.5 w-3.5 shrink-0" aria-hidden />Zdjęcia z dnia
+                  </button>
                   {wholesaleCount > 0 && (
                     <button
                       type="button"
@@ -492,6 +503,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
       <SitePackageImportDialog pkg={sitePackage} onClose={() => setSitePackage(null)} onDone={(id) => { setSitePackage(null); setCard(id); }} />
       <WholesaleOrderDialog open={wholesaleOpen} onOpenChange={setWholesaleOpen} groups={wholesale} van={vanBuy} dir={dir} />
       <VanDialog open={vanOpen} onOpenChange={setVanOpen} journal={study.journal} />
+      <PhotoDayDialog open={photoDayOpen} onOpenChange={setPhotoDayOpen} />
       <JobsDialog open={jobsOpen} onOpenChange={setJobsOpen} jobs={jobs} dir={dir}
         onOpen={(id) => { setJobsOpen(false); setCard(id); }}
         onNew={() => { setJobsOpen(false); setNewSiteJob(true); setNewSiteOpen(true); }} />

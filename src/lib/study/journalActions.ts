@@ -41,6 +41,8 @@ export interface NewJournalEntry {
   geo?: GeoPoint | null;
   /** Punkt w pomieszczeniu (H2.3) — zdjęcie punktu z karty budowy; brak = bez punktu. */
   point?: string;
+  /** Budowa wpisu (nazwa; H4.3 zdjęcia z dnia); przy nowym wpisie brak = bieżąca budowa. */
+  site?: string;
 }
 
 /** Wejście z arkusza → pola wpisu przefiltrowane przez materiał; `null` = pusty wpis. */
@@ -89,7 +91,7 @@ export function addJournalEntry(input: NewJournalEntry, now: number = Date.now()
   const fields = entryFields(input, now);
   if (!fields) return null;
   const s = getStudy();
-  const { siteId, site, card } = resolveSite(siteDirectoryOf(s), s.site, now);
+  const { siteId, site, card } = resolveSite(siteDirectoryOf(s), input.site ?? s.site, now);
   const point = typeof input.point === "string" && input.point && input.point.length <= 64 ? input.point : undefined;
   const by = currentAuthor();
   const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, site, ...(siteId ? { siteId } : {}), ...(point ? { point } : {}), ...(by ? { by } : {}) };
