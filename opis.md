@@ -2850,7 +2850,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi.** Gdy notatka dnia istnieje, karta zmiany na Dziś pokazuje przycisk „Dopisz” (zamiast „Notatka dnia”), pod nim pierwsze dwie niepuste linie treści i licznik odhaczeń („Odhaczone: 1 z 2”). Prywatna notatka dnia pokazuje tylko „Notatka dnia jest w skarbcu.”, bo jej treść nie jest jawna. Bez notatki dnia wszystko jak dawniej.
 - **Gdzie.** `TodayCards.tsx` wylicza notatkę dnia (`findDailyNote(notes, dailyKey())`) i przekazuje ją jako prop `dailyNote`; `TodayShiftCard.tsx` (`dailyPreview`, blok `today-daily-preview`).
 - **Testy.** `src/components/review/TodayShiftCard.test.tsx` (bez notatki, z notatką, prywatna).
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `97174a3` (2026-11-02).
 
 ## Najmniejsze punkty planów: przegląd tygodnia i nowy rekord (Skrzynka 5.2, Ćwiczenia 3.3, 2026-11-02)
 
