@@ -2852,7 +2852,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - **Ćwiczenia 3.3:** po zapisie serii, w której najcięższy ciężar przebija dotychczasowy rekord tego ćwiczenia, pojawia się komunikat „Nowy rekord: <ćwiczenie> — <kg> kg” i wibracja. Pierwszy zapis ćwiczenia rekordem nie jest. Komunikat nie jest wyłączalny w efektach — to jeszcze do decyzji.
 - **Gdzie.** `src/lib/weeklyReview.ts` (`inbox` w `ReviewCategoryKey`, `META`, `ORDER`, budowa listy), etykiety w `ReviewWalkthrough.tsx` i ikona/szczegół w `WeeklyReviewCard.tsx`; `TrainingSection.tsx` (`LogForm.save`, porównanie z `bestKg` wpisów tego ćwiczenia).
 - **Testy.** `src/lib/weeklyReview.test.ts` (skrzynka: tylko nieposortowane, z treścią, od 7 dni), `src/components/cwiczenia/TrainingSection.test.tsx` (rekord vs. lżejsza seria i pierwsze ćwiczenie), `e2e/weekly-review.spec.ts` bez zmian.
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `16947b2` (2026-11-02).
 
 ## Ustawienia — naprawy, wyszukiwarka z historią i opisami, więcej zestawów wyglądu (2026-11-02)
 
