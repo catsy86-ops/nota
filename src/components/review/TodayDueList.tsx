@@ -1,4 +1,5 @@
-import { BellRing, ChevronRight } from "lucide-react";
+import { BellRing, ChevronRight, Lock } from "lucide-react";
+import { noteListTitle } from "@/lib/noteListTitle";
 import { Button } from "@/components/ui/button";
 import type { Note } from "@/hooks/useNotes";
 import { useDayClock } from "@/lib/dayClock";
@@ -31,6 +32,9 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
   // Archiwum też: jego przypomnienia nadal dzwonią, więc muszą być widoczne i liczone jak reszta.
   const groups = groupReminders(notes.filter((n) => !n.trashed), Date.now()).filter((g) => g.key === "overdue" || g.key === "missed" || g.key === "today");
   const total = groups.reduce((n, g) => n + g.notes.length, 0);
+  // Dziś 2.3: przy pustym dniu najbliższy termin (najwcześniejszy przyszły, poza koszem).
+  const now = Date.now();
+  const next = total > 0 ? null : notes.reduce<Note | null>((best, n) => (!n.trashed && n.reminder !== null && n.reminder > now && (!best || n.reminder < best.reminder!) ? n : best), null);
 
   return (
     <section aria-label="Przypomnienia" data-testid="today-due" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-3">
@@ -46,7 +50,17 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
       </div>
 
       {total === 0 ? (
-        <p className="text-sm text-muted-foreground">Nic nie czeka na dziś.</p>
+        <p className="text-sm text-muted-foreground">
+          Nic nie czeka na dziś.
+          {next && (
+            <>
+              {" "}Najbliższy:{" "}
+              <button type="button" onClick={() => onOpen(next.id)} className="font-medium text-foreground underline-offset-2 hover:underline coarse:min-h-11" data-testid="today-next">
+                <span className="font-mono tabular-nums">{formatReminderShort(next.reminder!)}</span> — {noteListTitle(next)}
+              </button>
+            </>
+          )}
+        </p>
       ) : (
         groups.map((g) => {
           const key = g.key as "overdue" | "missed" | "today";
@@ -63,7 +77,10 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
                       onClick={() => onOpen(n.id)}
                       className="pressable flex min-w-0 flex-1 items-center gap-3 text-left coarse:min-h-11"
                     >
-                      <span className="min-w-0 flex-1 truncate text-sm">{n.title || n.content.trim().split("\n")[0] || "Bez tytułu"}</span>
+                      <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
+                        {n.locked && <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />}
+                        <span className="truncate">{noteListTitle(n)}</span>
+                      </span>
                       <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
                         {n.reminder !== null ? formatReminderShort(n.reminder) : ""}
                       </span>

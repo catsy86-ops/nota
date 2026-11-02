@@ -19,3 +19,12 @@ describe("TodayStudyCardView", () => {
     expect(onPractice).toHaveBeenCalledOnce();
   });
 });
+
+describe("TodayStudyCardView — szacunek czasu (Dziś 1.5)", () => {
+  it("ok. 20 s na pytanie, najmniej 1 min", () => {
+    const { container, rerender } = render(<TodayStudyCardView due={9} onPractice={() => {}} />);
+    expect(container.textContent).toContain("ok. 3 min");
+    rerender(<TodayStudyCardView due={1} onPractice={() => {}} />);
+    expect(container.textContent).toContain("ok. 1 min");
+  });
+});

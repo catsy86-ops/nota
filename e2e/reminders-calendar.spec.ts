@@ -9,7 +9,8 @@ test("kalendarz otwiera się z paska bocznego i pozwala przechodzić po miesiąc
   await page.getByRole("button", { name: /Kalendarz/ }).first().click();
 
   const heading = page.getByRole("heading", { level: 2 });
-  await expect(heading).toBeVisible();
+  // Najpierw nagłówek miesiąca kalendarza (z rokiem) — wcześniej mógł się trafić nagłówek pustych Notatek.
+  await expect(heading).toHaveText(/ 20[0-9][0-9]$/);
   const startMonth = (await heading.textContent())?.trim();
 
   // Bieżący miesiąc nie potrzebuje skrótu „Dziś".

@@ -10,7 +10,7 @@ import { useShifts, useShiftsReady } from "@/lib/shifts";
  * (przed pracą / po pracy), przycisk otwarcia Neuroklik i przypomnienie na właściwą porę.
  * Leniwa — nie dokłada się do paczki startowej.
  */
-export function BrainTrainingCard({ onRemind }: { onRemind: (at: number, title: string) => void }) {
+export function BrainTrainingCard({ onRemind, hasReminder }: { onRemind: (at: number, title: string) => void; /** Dziś 1.4: czy przypomnienie na tę porę już jest. */ hasReminder?: (at: number, title: string) => boolean }) {
   useDayClock();
   const ready = useShiftsReady();
   const data = useShifts();
@@ -28,7 +28,11 @@ export function BrainTrainingCard({ onRemind }: { onRemind: (at: number, title: 
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {plan.remindAt !== null && (
+          {plan.remindAt !== null && hasReminder?.(plan.remindAt, plan.remindLabel ?? plan.title) ? (
+            <Button variant="outline" size="sm" className="coarse:h-11" disabled>
+              <BellRing className="mr-1.5 h-4 w-4" aria-hidden />Przypomnienie ustawione
+            </Button>
+          ) : plan.remindAt !== null && (
             <Button
               variant="outline"
               size="sm"

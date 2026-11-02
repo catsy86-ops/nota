@@ -741,7 +741,7 @@ const Index = () => {
             <TodayCards searching={!!deferredSearch} go={go} notes={notes} folders={folders} reminderNotes={reminderNotes} todayCards={todayCards}
               openNote={openNote} openDailyNote={openDailyNote} addNote={addNote} updateNote={updateNote} togglePin={togglePin}
               archiveNote={archiveNote} unarchiveNote={unarchiveNote} trashNote={trashNote} restoreFromTrash={restoreFromTrash}
-              handleArchiveSingle={handleArchiveSingle} handleMoveToFolderGlow={handleMoveToFolderGlow} />
+              handleArchiveSingle={handleArchiveSingle} handleMoveToFolderGlow={handleMoveToFolderGlow} inboxCount={inboxCount} />
           )}
 
           {view === "widget" && (

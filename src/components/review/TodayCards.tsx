@@ -16,6 +16,7 @@ export const StudyDueRows = lazy(() => import("@/components/review/StudyDueRows"
 const TodaySiteCard = lazy(() => import("@/components/review/TodaySiteCard").then((m) => ({ default: m.TodaySiteCard })));
 const TodayStudyCard = lazy(() => import("@/components/review/TodayStudyCard").then((m) => ({ default: m.TodayStudyCard })));
 const BrainTrainingCard = lazy(() => import("@/components/review/BrainTrainingCard").then((m) => ({ default: m.BrainTrainingCard })));
+const TodayPersonalRows = lazy(() => import("@/components/review/TodayPersonalRows").then((m) => ({ default: m.TodayPersonalRows })));
 const WeeklyReviewCard = lazy(() => import("@/components/review/WeeklyReviewCard").then((m) => ({ default: m.WeeklyReviewCard })));
 
 export interface TodayCardsProps {
@@ -37,10 +38,12 @@ export interface TodayCardsProps {
   restoreFromTrash: NotesApi["restoreFromTrash"];
   handleArchiveSingle: (id: string) => void;
   handleMoveToFolderGlow: (id: string, folderId: string | null) => void;
+  /** Dziś 4.4: notatki w Skrzynce (licznik z `Index`). */
+  inboxCount: number;
 }
 
 /** Karty widoku Dziś (Grafik, przypomnienia, Praca, powtórki, przegląd tygodnia). Każda ma własną granicę błędu. */
-export function TodayCards({ searching, go, notes, folders, reminderNotes, todayCards, openNote, openDailyNote, addNote, updateNote, togglePin, archiveNote, unarchiveNote, trashNote, restoreFromTrash, handleArchiveSingle, handleMoveToFolderGlow }: TodayCardsProps) {
+export function TodayCards({ searching, go, notes, folders, reminderNotes, todayCards, openNote, openDailyNote, addNote, updateNote, togglePin, archiveNote, unarchiveNote, trashNote, restoreFromTrash, handleArchiveSingle, handleMoveToFolderGlow, inboxCount }: TodayCardsProps) {
   const navigate = useNavigate();
   return (
     <>
@@ -77,7 +80,19 @@ export function TodayCards({ searching, go, notes, folders, reminderNotes, today
                 <TodayStudyCard onPractice={() => navigate("/praca?powtorka=1")} />
               </Suspense>
               <Suspense fallback={null}>
-                {todayCards.brainTraining && <BrainTrainingCard onRemind={(at, title) => addNote(title, "", "default", [], at)} />}
+                {todayCards.brainTraining && <BrainTrainingCard
+                  onRemind={(at, title) => addNote(title, "", "default", [], at)}
+                  // Dziś 1.4: ta sama pora i tytuł już mają przypomnienie — bez drugiej notatki.
+                  hasReminder={(at, title) => reminderNotes.some((n) => !n.trashed && n.reminder === at && n.title === title)}
+                />}
+              </Suspense>
+            </ViewErrorBoundary>
+          )}
+
+          {!searching && (
+            <ViewErrorBoundary name="Skrzynka i Ćwiczenia">
+              <Suspense fallback={null}>
+                <TodayPersonalRows inboxCount={inboxCount} onOpenInbox={() => go("inbox")} onOpenCwiczenia={() => go("cwiczenia")} />
               </Suspense>
             </ViewErrorBoundary>
           )}

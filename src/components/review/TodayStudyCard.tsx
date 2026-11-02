@@ -8,6 +8,9 @@ import { useStudyReady } from "@/lib/study/data";
 export const STUDY_DUE_PARAM = "powtorka";
 
 /** Sam widok karty — testowany bez danych. Bez powtórek na dziś karty nie ma. */
+/** Dziś 1.5: szacunek czasu — ok. 20 s na pytanie, najmniej 1 min. */
+const studyMinutes = (questions: number) => Math.max(1, Math.round((questions * 20) / 60));
+
 export function TodayStudyCardView({ due, onPractice }: { due: number; onPractice: () => void }) {
   if (due <= 0) return null;
   return (
@@ -17,7 +20,7 @@ export function TodayStudyCardView({ due, onPractice }: { due: number; onPractic
           <GraduationCap className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <span>
             Powtórki na dziś: <span className="font-mono font-semibold tabular-nums" data-testid="today-study-count">{due}</span>{" "}
-            <span className="text-muted-foreground">{pluralPl(due, ["pytanie", "pytania", "pytań"])} · kilka minut</span>
+            <span className="text-muted-foreground">{pluralPl(due, ["pytanie", "pytania", "pytań"])} · ok. {studyMinutes(due)} min</span>
           </span>
         </p>
         <Button size="sm" onClick={onPractice} className="coarse:h-11">Powtórz</Button>

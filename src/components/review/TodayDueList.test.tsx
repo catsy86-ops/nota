@@ -40,9 +40,24 @@ describe("TodayDueList", () => {
     expect(screen.getByTestId("today-due-count").textContent).toBe("3");
   });
 
-  it("gdy nic nie czeka, mówi to wprost", () => {
-    render(<TodayDueList notes={[note("week", now + 3 * 24 * HOUR)]} onOpen={() => {}} onOpenReminders={() => {}} />);
-    expect(screen.getByText("Nic nie czeka na dziś.")).toBeTruthy();
+  it("gdy nic nie czeka, mówi to wprost i podaje najbliższy termin (Dziś 2.3)", () => {
+    const opened: string[] = [];
+    render(<TodayDueList notes={[note("week", now + 3 * 24 * HOUR), note("later", now + 5 * 24 * HOUR)]} onOpen={(id) => opened.push(id)} onOpenReminders={() => {}} />);
+    expect(screen.getByTestId("today-due").textContent).toContain("Nic nie czeka na dziś.");
+    const next = screen.getByTestId("today-next");
+    expect(next.textContent).toContain("T-week");
+    next.click();
+    expect(opened).toEqual(["week"]);
+  });
+
+  it("bez przyszłych terminów — sam komunikat", () => {
+    render(<TodayDueList notes={[]} onOpen={() => {}} onOpenReminders={() => {}} />);
+    expect(screen.queryByTestId("today-next")).toBeNull();
+  });
+
+  it("prywatna notatka to „Notatka prywatna”, nie „Bez tytułu” (Dziś 1.2)", () => {
+    render(<TodayDueList notes={[note("p", now - HOUR, { title: "", locked: true })]} onOpen={() => {}} onOpenReminders={() => {}} />);
+    expect(screen.getByText("Notatka prywatna")).toBeTruthy();
   });
 
   it("ucina do czterech pozycji z grupy i wskazuje resztę", () => {

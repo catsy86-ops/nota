@@ -2845,6 +2845,22 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Nie zrobione:** agenda na komputerze (na desktopie siatka zostaje, a tryb „Lista” nie jest widoczny); oś godzin tygodnia (3.3).
 - **Testy:** `src/components/calendar/MonthAgenda.test.tsx`; e2e `e2e/calendar-agenda.spec.ts` (telefon: Lista ↔ Miesiąc).
 
+## Dziś — prywatna notatka, czas powtórek, najbliższy termin, trening bez duplikatów, Skrzynka i Ćwiczenia (1.2–1.5, 2.3, 4.3, 4.4, 2026-11-02)
+
+- **Co robi.**
+  - **1.2:** termin z notatki prywatnej to „Notatka prywatna” z kłódką zamiast „Bez tytułu” — na Dziś i w Terminach jako lista (`noteListTitle`, `src/lib/noteListTitle.ts`).
+  - **1.3:** zanim Grafik się wczyta, karta zmiany pokazuje szkielet (`CardSkeleton`, `aria-busy`) zamiast napisu „Grafik się wczytuje…”.
+  - **1.4:** „Przypomnij” w treningu mózgu: gdy przypomnienie na tę porę z tym tytułem już jest, przycisk mówi „Przypomnienie ustawione” (wyłączony) — bez drugiej notatki.
+  - **1.5:** karta powtórek podaje „ok. N min” (20 s na pytanie, najmniej 1 min) zamiast „kilka minut”.
+  - **2.3:** gdy nic nie czeka, karta Terminów dopisuje „Najbliższy: <termin> — <tytuł>” (klik otwiera notatkę).
+  - **4.3 i 4.4:** nowa karta „Skrzynka i Ćwiczenia”: „Skrzynka: N do posortowania” z „Porządkuj” (przechodzi do Skrzynki) i „Odżywki: 2 z 5 · Trening: 6 serii dziś” (klik → Ćwiczenia). Każdy wiersz tylko, gdy jest o czym mówić.
+- **Gdzie.** `TodayShiftCard.tsx`, `TodayDueList.tsx`, `ReminderListGroups.tsx`, `BrainTrainingCard.tsx` (prop `hasReminder`), `TodayStudyCard.tsx`, nowy `TodayPersonalRows.tsx` (leniwy, w `TodayCards.tsx`; `inboxCount` z `Index.tsx`).
+- **Jak działa.** Karta osobista ładuje się leniwie, więc magazyny Ćwiczeń nie trafiają do paczki startowej. Najbliższy termin: najwcześniejszy przyszły poza koszem (też z archiwum, bo jego przypomnienia dzwonią).
+- **Stan planu Dziś.** Zrobione wcześniej 1.1 (D-1), część 2.1 (stan zmiany w karcie), 4.1 (ustawienia kart). Otwarte: 2.2, 2.4–2.6, Etap 3 (3.4 czeka na D-3), 4.2, 4.5.
+- **Testy.** `src/lib/noteListTitle.test.ts`, `TodayDueList.test.tsx` (najbliższy termin, prywatna notatka), `TodayStudyCard.test.tsx` (szacunek), `TodayShiftCard.test.tsx` (szkielet), `e2e/inbox-today.spec.ts` (wiersz Skrzynki → „Porządkuj”), zrzuty `dzis-*` odświeżone.
+- **Przy okazji:** `e2e/reminders-calendar.spec.ts` czekał na nagłówek z rokiem — wcześniej czasem odczytywał nagłówek pustych Notatek, zanim kalendarz się pokazał.
+- **Commit.** `do uzupełnienia` (2026-11-02).
+
 ## Ćwiczenia — 7 dni zgodności odżywki i tydzień treningowy (3.2, 3.5, 2026-11-02)
 
 - **Co robi.**

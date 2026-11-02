@@ -48,7 +48,9 @@ describe("TodayShiftCard", () => {
   it("przed wczytaniem Grafiku nie udaje brak zmiany", () => {
     shiftsState.ready = false;
     render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} />);
-    expect(screen.getByTestId("today-shift").textContent).toContain("Grafik się wczytuje");
+    // Dziś 1.3: szkielet z aria-busy zamiast napisu; nie ma „nie ma zmiany”.
+    expect(screen.getByLabelText("Wczytuję grafik").getAttribute("aria-busy")).toBe("true");
+    expect(screen.queryByText(/nie ma zmiany/)).toBeNull();
   });
 
   it("przyciski wywołują podane akcje", () => {

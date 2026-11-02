@@ -6,6 +6,7 @@ import { dayType } from "@/lib/shifts/model";
 import { useShiftNow } from "@/lib/shifts/useShiftNow";
 import { format, formatDistanceStrict } from "date-fns";
 import { pl } from "date-fns/locale";
+import { CardSkeleton } from "@/components/ViewSkeleton";
 
 /**
  * Pierwsza rzecz w widoku „Dziś”: dzisiejsza zmiana z Grafiku (albo „wolne”), obok skrótów
@@ -27,9 +28,11 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote }: { onOpenShifts: ()
     : next ? `Zaczynasz za ${formatDistanceStrict(next.start, now, { locale: pl })}, o ${format(next.start, "HH:mm")}`
     : null;
 
+  // Dziś 1.3: zanim Grafik się wczyta — ten sam szkielet co przy leniwym ładowaniu karty, zamiast napisu.
+  if (!ready) return <div aria-busy="true" aria-label="Wczytuję grafik"><CardSkeleton /></div>;
+
   let shift: string;
-  if (!ready) shift = "Grafik się wczytuje…";
-  else if (!entry) shift = "Dziś nie ma zmiany w grafiku.";
+  if (!entry) shift = "Dziś nie ma zmiany w grafiku.";
   // Godziny wpisane na ten dzień wygrywają z godzinami rodzaju (tak jak w Kalendarzu); nieobecność bez godzin.
   else if (type) {
     const t = dayType(type, entry);

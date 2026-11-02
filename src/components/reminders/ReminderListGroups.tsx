@@ -2,6 +2,7 @@ import { Archive, BellRing, CalendarClock, CalendarDays, CalendarRange, HardHat,
 import type { Note } from "@/hooks/useNotes";
 import { ReminderQuickActions } from "@/components/ReminderQuickActions";
 import { formatReminderShort } from "@/lib/reminderTime";
+import { noteListTitle } from "@/lib/noteListTitle";
 import { REPEAT_KIND_LABELS, ruleOf } from "@/lib/reminderRepeat";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +45,7 @@ export function ReminderListGroups({ groups, onOpen, onUpdate }: ReminderListGro
             {g.notes.map((n) => (
               <li key={n.id} className="flex items-center gap-2 px-3 py-2">
                 <button type="button" onClick={() => onOpen(n.id)} className="pressable flex min-w-0 flex-1 items-center gap-2 text-left coarse:min-h-11">
-                  <span className="min-w-0 flex-1 truncate text-sm">{n.title || n.content.trim().split("\n")[0] || "Bez tytułu"}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm">{noteListTitle(n)}</span>
                   {ruleOf(n).kind !== "none" && (
                     <span className="inline-flex shrink-0 items-center gap-1 text-2xs text-muted-foreground" title={REPEAT_KIND_LABELS[ruleOf(n).kind]}>
                       <Repeat className="h-3 w-3" aria-hidden />

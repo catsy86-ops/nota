@@ -37,3 +37,16 @@ test("dziś: karta zmiany i sekcja przypomnień na pustym koncie", async ({ page
   await page.getByRole("button", { name: /Grafik/ }).first().click();
   await expect(page).toHaveURL(/\/grafik$/);
 });
+
+test("Dziś: wiersz „Skrzynka: N do posortowania” z „Porządkuj” (plan Dziś 4.4)", async ({ page }) => {
+  await page.goto("/skrzynka");
+  const input = page.getByLabel("Przechwyć do skrzynki");
+  await input.fill(`Do Dziś ${Date.now()}`);
+  await input.press("Enter");
+  await expect(page.getByText("Zapisano w skrzynce")).toBeVisible();
+  await page.goto("/dzis");
+  const row = page.getByTestId("today-personal");
+  await expect(row).toContainText("Skrzynka: 1 do posortowania");
+  await row.getByRole("button", { name: "Porządkuj" }).click();
+  await expect(page).toHaveURL(/\/skrzynka/);
+});
