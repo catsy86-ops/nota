@@ -836,7 +836,7 @@ Dział Praca to dziennik instalatora wod-kan połączony z nauką materiału G-H
   - **Gwinty rurowe (H6.3):** tabela cale → DN → średnica zewnętrzna gwintu → zwoje na cal od 1/8″ do 2″ (`PIPE_THREADS`, PN-EN ISO 228-1).
   - Pod każdym kalkulatorem jest źródło liczb: materiał G-HEAT (`content.ts`), norma albo karta producenta. Wartości nie zapisują się. Brak doboru średnic — materiał każe brać je z projektu.
   - **Pułapka:** liczby z H6.3–H6.4 dodane bez potwierdzenia źródeł przez właściciela (polecenie 2026-11-02 „rób bez sprawdzenia”) — do przejrzenia z kartami używanych systemów.
-  - Testy: `src/lib/study/calc.test.ts`, `src/lib/study/cheats.test.ts`, `e2e/calculators.spec.ts` (z axe). Commit: `do uzupełnienia` (2026-11-02).
+  - Testy: `src/lib/study/calc.test.ts`, `src/lib/study/cheats.test.ts`, `e2e/calculators.spec.ts` (z axe). Commit: `1440d16` (2026-11-02).
 
 ### Zdjęcia, protokół, kształtki (wpis z budowy)
 
