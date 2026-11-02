@@ -827,12 +827,16 @@ Dział Praca to dziennik instalatora wod-kan połączony z nauką materiału G-H
 - Zielony „OK” i znaki punktów krytycznych biorą kolor z motywu (`success-ink`, `warning-ink`: `color-mix` z czernią, wg `--ink-mix`). Punkty krytyczne mają jedną ikonę `TriangleAlert`.
 - Quiz na telefonie: odpowiedzi co najmniej 56 px wysokości, „Dalej” przyklejone nad dolnym paskiem (`data-sticky-action`, `phone:sticky` jako bezpośrednie dziecko sekcji). Plakietka „Zapisano” (`save-status`) przesuwa się wyżej, gdy akcja jest przyklejona (`html:has([data-sticky-action])`).
 - Ściąga „Wysokości podejść” (standard G-HEAT, `HeightsSheet`, `HeightsButton`) z nagłówka działu i z arkusza wpisu, gdy temat to „Punkty wodne i wysokości”.
-- Kalkulatory (`CalculatorsSheet`, `src/lib/study/calc.ts`):
+- Kalkulatory (`CalculatorsSheet`, `src/lib/study/calc.ts`, `src/lib/study/cheats.ts`):
   - **Spadek kanalizacji:** z długości i spadku — różnica wysokości (szybkie 2 / 2,5 / 3%), albo z długości i różnicy — spadek w %. Poza typowym zakresem podpowiedź „sprawdź wymagany spadek dla tej średnicy”.
   - **Próba wodna:** z ciśnienia roboczego — ciśnienie próbne (1,5 × robocze) i najmniejszy zakres manometru (+50%), z przypomnieniem o podziałce 0,1 bar.
-  - **Pojemność instalacji:** kilka odcinków rur (16×2, 20×2, 25×2,5, 32×3, inna średnica wewnętrzna) i suma litrów.
-  - Liczby normowe tylko z materiału G-HEAT (`content.ts`); reszta to geometria. Wartości nie zapisują się.
-  - Brak doboru średnic — materiał każe brać je z projektu.
+  - **Pojemność instalacji:** kilka odcinków rur i suma litrów. Rury (`PIPES`: `od`, `wall`, `innerMm` = od − 2 × ścianka): PEX i wielowarstwowe 16×2, 20×2, 25×2,5, 32×3; PP-R PN20 20×3,4, 25×4,2, 32×5,4 (PN-EN ISO 15874); miedź 15×1, 18×1, 22×1, 28×1 (PN-EN 1057); albo inna średnica wewnętrzna (H6.3).
+  - **Wydłużenie cieplne (H6.4):** materiał (PEX, wielowarstwowa z Al, PP-R, PP-R stabilizowana, miedź), długość [m], różnica temperatur [K] → wydłużenie [mm] = α × L × ΔT. Wybór materiału wpisuje α do pola (`EXPANSION`), ale pole da się zmienić — wartości są typowe z kart producentów (PEX 0,15, z Al 0,025, PP-R 0,15, PP-R Stabi 0,03, miedź 0,017 mm/(m·K)) i **wymagają potwierdzenia** w karcie używanego systemu. Pod wynikiem podpowiedź o kompensacji (ramię elastyczne, kompensator U, punkty stałe wg karty systemu), bez liczenia długości ramienia — wzór i stała zależą od producenta.
+  - **Jednostki ciśnienia (H6.3):** wartość i jednostka → pozostałe (bar, MPa, kPa, m H₂O, psi; `convertPressure`, `PRESSURE_KPA`). Z definicji jednostek: 1 bar = 100 kPa, 1 m H₂O = 9,80665 kPa (umowny), 1 psi = 6,894757 kPa.
+  - **Gwinty rurowe (H6.3):** tabela cale → DN → średnica zewnętrzna gwintu → zwoje na cal od 1/8″ do 2″ (`PIPE_THREADS`, PN-EN ISO 228-1).
+  - Pod każdym kalkulatorem jest źródło liczb: materiał G-HEAT (`content.ts`), norma albo karta producenta. Wartości nie zapisują się. Brak doboru średnic — materiał każe brać je z projektu.
+  - **Pułapka:** liczby z H6.3–H6.4 dodane bez potwierdzenia źródeł przez właściciela (polecenie 2026-11-02 „rób bez sprawdzenia”) — do przejrzenia z kartami używanych systemów.
+  - Testy: `src/lib/study/calc.test.ts`, `src/lib/study/cheats.test.ts`, `e2e/calculators.spec.ts` (z axe). Commit: `do uzupełnienia` (2026-11-02).
 
 ### Zdjęcia, protokół, kształtki (wpis z budowy)
 

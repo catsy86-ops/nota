@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 
 // Kalkulatory na budowę: spadek (w obie strony), próba wodna, pojemność kilku odcinków.
 
@@ -42,4 +43,28 @@ test("kalkulatory: spadek, próba wodna i pojemność instalacji", async ({ page
   await volume.getByLabel("Rura 2", { exact: true }).selectOption("20x2");
   await volume.getByLabel("Rura 2: długość").fill("5,0");
   await expect(calc.getByTestId("calc-volume-total")).toContainText("2,14l");
+
+  // H6.3: PP i miedź w pojemności (wewn. 13,2 mm i 13 mm).
+  await volume.getByLabel("Rura 2", { exact: true }).selectOption("pp20x3.4");
+  await expect(volume.getByLabel("Rura 2", { exact: true })).toHaveValue("pp20x3.4");
+
+  // H6.4: wydłużenie — 10 m PEX przy 50 K = 75 mm; zmiana materiału wpisuje jego α.
+  const exp = calc.getByRole("region", { name: "Wydłużenie cieplne" });
+  await exp.getByLabel("Długość [m]").fill("10");
+  await exp.getByLabel("Różnica temp. [K]").fill("50");
+  await expect(calc.getByTestId("calc-expansion-result")).toContainText("75mm");
+  await exp.getByRole("button", { name: "PP-R stabilizowana (Al)" }).click();
+  await expect(exp.getByLabel("α [mm/(m·K)]")).toHaveValue("0,03");
+  await expect(calc.getByTestId("calc-expansion-result")).toContainText("15mm");
+
+  // H6.3: ciśnienie — 6 bar = 0,6 MPa = 600 kPa; gwint 1/2″ = DN15.
+  const pressure = calc.getByRole("region", { name: "Jednostki ciśnienia" });
+  await pressure.getByLabel("Ciśnienie").fill("6");
+  await expect(calc.getByTestId("calc-pressure-result")).toContainText("MPa0,6");
+  await expect(calc.getByTestId("calc-pressure-result")).toContainText("kPa600");
+  await expect(calc.getByTestId("calc-threads").getByRole("row", { name: /^1\/2″/ })).toContainText("15");
+
+  const axe = await new AxeBuilder({ page }).include("[data-testid='calculators']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
+  expect(axe.violations).toEqual([]);
 });
+

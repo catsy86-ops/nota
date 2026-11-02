@@ -4,6 +4,7 @@ import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { parseNum, pipeLiters, PIPES, plNum, SLOPE_TYPICAL, slopeDrop, slopeFromDrop, slopeNote, waterTest } from "@/lib/study/calc";
+import { convertPressure, EXPANSION, PIPE_THREADS, PRESSURE_LABEL, PRESSURE_SOURCE, PRESSURE_UNITS, thermalExpansionMm, THREADS_SOURCE, type PressureUnit } from "@/lib/study/cheats";
 
 const fieldClass =
   "h-11 w-full min-w-0 rounded-field border border-input bg-background px-3 font-mono text-base tabular-nums outline-hidden focus:ring-2 focus:ring-ring";
@@ -22,7 +23,7 @@ export function CalculatorsButton({ variant = "pill", className }: { variant?: "
         type="button"
         onClick={() => setOpen(true)}
         aria-label={variant === "icon" ? "Kalkulatory" : undefined}
-        title="Spadek, próba wodna, pojemność instalacji"
+        title="Spadek, próba wodna, pojemność, wydłużenie, ciśnienie, gwinty"
         className={cn(
           "pressable inline-flex items-center gap-2 text-muted-foreground hover:text-foreground",
           variant === "pill" && "rounded-full border border-border px-3 py-1.5 text-sm hover:bg-muted coarse:min-h-11",
@@ -37,11 +38,14 @@ export function CalculatorsButton({ variant = "pill", className }: { variant?: "
         <ResponsiveDialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-lg" data-testid="calculators">
           <div className="pr-8">
             <DialogTitle className="font-display text-lg">Kalkulatory</DialogTitle>
-            <DialogDescription className="text-xs">Liczby z materiału G-HEAT. W razie wątpliwości — projekt albo Grzegorz.</DialogDescription>
+            <DialogDescription className="text-xs">Liczby z materiału G-HEAT, norm i kart producentów — źródło pod każdym kalkulatorem. W razie wątpliwości — projekt albo Grzegorz.</DialogDescription>
           </div>
           <SlopeCalc />
           <WaterTestCalc />
           <VolumeCalc />
+          <ExpansionCalc />
+          <PressureCalc />
+          <ThreadsCheat />
         </ResponsiveDialogContent>
       </Dialog>
     </>
@@ -209,6 +213,118 @@ function VolumeCalc() {
       </button>
       <Result label="Razem" value={total !== null ? plNum(total, total < 10 ? 2 : 1) : null} unit="l" testId="calc-volume-total" />
       <p className="text-xs text-muted-foreground">Ile wody wejdzie przy napełnianiu i płukaniu. Średnica wewnętrzna = zewnętrzna − 2 × ścianka.</p>
+    </section>
+  );
+}
+
+function ExpansionCalc() {
+  const [material, setMaterial] = useState(EXPANSION[0].id);
+  const [alpha, setAlpha] = useState(plNum(EXPANSION[0].mmPerMK, 3));
+  const [length, setLength] = useState("");
+  const [delta, setDelta] = useState("");
+  const m = EXPANSION.find((x) => x.id === material) ?? EXPANSION[0];
+  const a = parseNum(alpha);
+  const L = parseNum(length);
+  const dT = parseNum(delta);
+  const mm = a !== null && L !== null && dT !== null ? thermalExpansionMm(a, L, dT) : null;
+
+  return (
+    <section className="space-y-2 border-t border-border pt-3" aria-label="Wydłużenie cieplne">
+      <h3 className="font-semibold">Wydłużenie cieplne</h3>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Materiał rury">
+        {EXPANSION.map((x) => (
+          <button
+            key={x.id}
+            type="button"
+            aria-pressed={material === x.id}
+            onClick={() => { setMaterial(x.id); setAlpha(plNum(x.mmPerMK, 3)); }}
+            className={cn(chipClass, material === x.id ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:bg-muted")}
+          >
+            {x.label}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <label className="space-y-1 text-xs text-muted-foreground">
+          Długość [m]
+          <input inputMode="decimal" value={length} onChange={(e) => setLength(e.target.value)} placeholder="np. 10" className={fieldClass} />
+        </label>
+        <label className="space-y-1 text-xs text-muted-foreground">
+          Różnica temp. [K]
+          <input inputMode="decimal" value={delta} onChange={(e) => setDelta(e.target.value)} placeholder="np. 50" className={fieldClass} />
+        </label>
+        <label className="space-y-1 text-xs text-muted-foreground">
+          α [mm/(m·K)]
+          <input inputMode="decimal" value={alpha} onChange={(e) => setAlpha(e.target.value)} className={fieldClass} />
+        </label>
+      </div>
+      <Result label="Wydłużenie" value={mm !== null ? plNum(mm, mm < 10 ? 1 : 0) : null} unit="mm" testId="calc-expansion-result" />
+      <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+        <li>Różnica temperatur: między montażem a pracą (np. montaż 20 °C, ciepła woda 70 °C → 50 K).</li>
+        <li>Wydłużenie przejmuje ramię elastyczne, kompensator U albo pętla; punkty stałe i przesuwne rozmieść wg karty systemu.</li>
+        <li>α: wartość typowa ({m.source}) — sprawdź w karcie swojego systemu i popraw pole, jeśli inna.</li>
+      </ul>
+    </section>
+  );
+}
+
+function PressureCalc() {
+  const [value, setValue] = useState("");
+  const [unit, setUnit] = useState<PressureUnit>("bar");
+  const v = parseNum(value);
+  return (
+    <section className="space-y-2 border-t border-border pt-3" aria-label="Jednostki ciśnienia">
+      <h3 className="font-semibold">Jednostki ciśnienia</h3>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
+        <label className="space-y-1 text-xs text-muted-foreground">
+          Ciśnienie
+          <input inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} placeholder="np. 6" className={fieldClass} />
+        </label>
+        <select value={unit} onChange={(e) => setUnit(e.target.value as PressureUnit)} aria-label="Jednostka" className={cn(fieldClass, "w-auto font-sans")}>
+          {PRESSURE_UNITS.map((u) => <option key={u} value={u}>{PRESSURE_LABEL[u]}</option>)}
+        </select>
+      </div>
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-1 rounded-field bg-muted/50 px-3 py-2 sm:grid-cols-4" data-testid="calc-pressure-result">
+        {PRESSURE_UNITS.filter((u) => u !== unit).map((u) => {
+          const out = v !== null ? convertPressure(v, unit, u) : null;
+          return (
+            <div key={u} className="flex items-baseline justify-between gap-1.5">
+              <dt className="text-xs text-muted-foreground">{PRESSURE_LABEL[u]}</dt>
+              <dd className="font-mono text-sm font-semibold tabular-nums">{out !== null ? plNum(out, out !== 0 && Math.abs(out) < 1 ? 3 : out < 100 ? 2 : 0) : "—"}</dd>
+            </div>
+          );
+        })}
+      </dl>
+      <p className="text-xs text-muted-foreground">{PRESSURE_SOURCE}</p>
+    </section>
+  );
+}
+
+function ThreadsCheat() {
+  return (
+    <section className="space-y-2 border-t border-border pt-3" aria-label="Gwinty rurowe">
+      <h3 className="font-semibold">Gwinty rurowe: cale, DN, mm</h3>
+      <table className="w-full text-sm" data-testid="calc-threads">
+        <thead>
+          <tr className="text-left text-xs text-muted-foreground">
+            <th scope="col" className="py-1 font-normal">Cale</th>
+            <th scope="col" className="py-1 font-normal">DN</th>
+            <th scope="col" className="py-1 text-right font-normal">Gwint zewn. [mm]</th>
+            <th scope="col" className="py-1 text-right font-normal">Zwoje/cal</th>
+          </tr>
+        </thead>
+        <tbody className="font-mono tabular-nums">
+          {PIPE_THREADS.map((t) => (
+            <tr key={t.inch} className="border-t border-border/60">
+              <th scope="row" className="py-1 text-left font-semibold">{t.inch}″</th>
+              <td className="py-1">{t.dn}</td>
+              <td className="py-1 text-right">{plNum(t.majorMm, 2)}</td>
+              <td className="py-1 text-right">{t.tpi}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="text-xs text-muted-foreground">{THREADS_SOURCE}</p>
     </section>
   );
 }

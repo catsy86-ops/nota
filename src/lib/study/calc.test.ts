@@ -44,9 +44,8 @@ describe("kalkulatory na budowę", () => {
     expect(p16.innerMm).toBe(12);
     expect(pipeLiters(12, 10)).toBeCloseTo(1.131, 3);
     expect(pipeLiters(16, 1)).toBeCloseTo(0.201, 3);
-    for (const p of PIPES) {
-      const [od, wall] = p.id.split("x").map(Number);
-      expect(p.innerMm).toBeCloseTo(od - 2 * wall, 5);
-    }
+    for (const p of PIPES) expect(p.innerMm).toBeCloseTo(p.od - 2 * p.wall, 5);
+    expect(PIPES.find((p) => p.id === "pp20x3.4")!.innerMm).toBe(13.2);
+    expect(PIPES.find((p) => p.id === "cu15x1")!.innerMm).toBe(13);
   });
 });
