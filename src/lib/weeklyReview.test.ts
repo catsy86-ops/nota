@@ -52,6 +52,17 @@ describe("buildWeeklyReview", () => {
     expect(r?.notes.map((n) => n.id)).toEqual([b.id, a.id]);
   });
 
+  it("skrzynka starsza niż tydzień: tylko nieposortowane, bez zmian od 7 dni (5.2)", () => {
+    const notes = [
+      note({ folderId: null, labels: [], updatedAt: NOW - 8 * DAY }),
+      note({ folderId: null, labels: [], updatedAt: NOW - 2 * DAY }),
+      note({ folderId: null, labels: [], updatedAt: NOW - 8 * DAY, title: "", content: "" }),
+      note({ folderId: "f", labels: [], updatedAt: NOW - 8 * DAY }),
+    ];
+    expect(cat(notes, "inbox")?.count).toBe(1);
+    expect(cat(notes, "inbox")?.label).toBe("Skrzynka starsza niż tydzień");
+  });
+
   it("do posegregowania: bez folderu i etykiet, bez notatek dnia i pustych", () => {
     const notes = [
       note({ folderId: null, labels: [] }),

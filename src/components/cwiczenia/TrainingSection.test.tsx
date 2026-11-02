@@ -31,6 +31,7 @@ vi.mock("@/lib/training/store", () => ({
 
 const { hapticMock } = vi.hoisted(() => ({ hapticMock: vi.fn() }));
 vi.mock("@/lib/haptics", () => ({ haptic: (kind: string) => hapticMock(kind) }));
+vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn(), info: vi.fn() }) }));
 
 import { act } from "@testing-library/react";
 import { TrainingSection } from "./TrainingSection";
@@ -43,6 +44,7 @@ afterEach(() => {
   fixture.equipment = {};
   setEquipmentMock.mockReset();
   addEntryMock.mockReset();
+  hapticMock.mockClear();
   setReminderMock.mockReset();
   notesMock.notes = [];
   notesMock.addNote.mockClear();
@@ -67,6 +69,29 @@ describe("TrainingSection", () => {
       exerciseId: "klatka-hantle-plasko",
       sets: [{ reps: 10, kg: 12.5 }, { reps: 8 }],
     }));
+  });
+
+  it("cięższy ciężar niż dotychczas = nowy rekord; pierwszy zapis ćwiczenia nim nie jest (3.3)", async () => {
+    const { toast } = await import("sonner");
+    fixture.entries = [{ id: "old", day: "2026-10-01", exerciseId: "klatka-hantle-plasko", sets: [{ reps: 8, kg: 20 }], note: "", created: 1 }];
+    addEntryMock.mockReturnValue({ id: "t2" });
+    render(<TrainingSection />);
+    fireEvent.change(screen.getByLabelText("Powtórki, seria 1"), { target: { value: "8" } });
+    fireEvent.change(screen.getByLabelText("Ciężar kg, seria 1"), { target: { value: "22,5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz serie" }));
+    expect(vi.mocked(toast.success)).toHaveBeenCalledWith(expect.stringContaining("Nowy rekord"));
+  });
+
+  it("lżejsza seria albo pierwsze ćwiczenie — bez komunikatu o rekordzie", async () => {
+    const { toast } = await import("sonner");
+    vi.mocked(toast.success).mockClear();
+    fixture.entries = [{ id: "old", day: "2026-10-01", exerciseId: "klatka-hantle-plasko", sets: [{ reps: 8, kg: 20 }], note: "", created: 1 }];
+    addEntryMock.mockReturnValue({ id: "t3" });
+    render(<TrainingSection />);
+    fireEvent.change(screen.getByLabelText("Powtórki, seria 1"), { target: { value: "8" } });
+    fireEvent.change(screen.getByLabelText("Ciężar kg, seria 1"), { target: { value: "15" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz serie" }));
+    expect(vi.mocked(toast.success)).not.toHaveBeenCalledWith(expect.stringContaining("Nowy rekord"));
   });
 
   it("powtórki ułamkowe blokują zapis", () => {

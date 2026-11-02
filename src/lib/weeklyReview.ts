@@ -2,6 +2,7 @@ import type { Note } from "@/hooks/useNotes";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { localDayKey } from "@/lib/dayDone";
 import { termStatus } from "@/lib/dueTerms";
+import { isInboxNote } from "@/lib/inbox";
 
 /**
  * Cotygodniowy przegląd notatek: czysta logika (co pokazać i kiedy).
@@ -13,7 +14,7 @@ export const STALE_DAYS = 30;
 export const OPEN_LIST_DAYS = 7;
 export const MAX_EXAMPLES = 5;
 
-export type ReviewCategoryKey = "stale" | "openLists" | "overdue" | "unsorted";
+export type ReviewCategoryKey = "stale" | "openLists" | "overdue" | "unsorted" | "inbox";
 
 export interface ReviewCategory {
   key: ReviewCategoryKey;
@@ -37,9 +38,10 @@ const META: Record<ReviewCategoryKey, { label: string; hint: string }> = {
   openLists: { label: "Listy do dokończenia", hint: "Nieodhaczone pozycje, bez ruchu od tygodnia" },
   stale: { label: "Nietknięte od miesiąca", hint: "Ostatnia zmiana ponad 30 dni temu" },
   unsorted: { label: "Do posegregowania", hint: "Bez folderu i bez etykiet" },
+  inbox: { label: "Skrzynka starsza niż tydzień", hint: "Przechwycone, a nadal nieposortowane" },
 };
 
-const ORDER: ReviewCategoryKey[] = ["overdue", "openLists", "stale", "unsorted"];
+const ORDER: ReviewCategoryKey[] = ["overdue", "openLists", "inbox", "stale", "unsorted"];
 
 function isLive(n: Note): boolean {
   // Notatki prywatne nie trafiają do przeglądu (nie ma tu czego pokazać bez ujawniania treści).
@@ -52,7 +54,7 @@ function hasText(n: Note): boolean {
 
 export function buildWeeklyReview(notes: Note[], now: number = Date.now()): WeeklyReview {
   const live = notes.filter(isLive);
-  const lists: Record<ReviewCategoryKey, Note[]> = { overdue: [], openLists: [], stale: [], unsorted: [] };
+  const lists: Record<ReviewCategoryKey, Note[]> = { overdue: [], openLists: [], stale: [], unsorted: [], inbox: [] };
 
   for (const n of live) {
     if (n.reminder !== null && termStatus(n.reminder, now, n.reminderAllDay === true) === "overdue") lists.overdue.push(n);
@@ -61,10 +63,12 @@ export function buildWeeklyReview(notes: Note[], now: number = Date.now()): Week
     if (n.dailyDate) continue;
     if (!n.pinned && n.updatedAt <= now - STALE_DAYS * DAY_MS) lists.stale.push(n);
     if (n.folderId === null && n.labels.length === 0 && hasText(n)) lists.unsorted.push(n);
+    // 5.2: skrzynka, do której nikt nie wrócił od tygodnia — osobno, żeby było widać, co utknęło.
+    if (isInboxNote(n) && hasText(n) && n.updatedAt <= now - OPEN_LIST_DAYS * DAY_MS) lists.inbox.push(n);
   }
 
   lists.overdue.sort((a, b) => (a.reminder as number) - (b.reminder as number));
-  for (const k of ["openLists", "stale", "unsorted"] as const) lists[k].sort((a, b) => a.updatedAt - b.updatedAt);
+  for (const k of ["openLists", "inbox", "stale", "unsorted"] as const) lists[k].sort((a, b) => a.updatedAt - b.updatedAt);
 
   const categories: ReviewCategory[] = ORDER.filter((k) => lists[k].length > 0).map((k) => ({
     key: k,

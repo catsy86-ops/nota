@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Archive, BellRing, ExternalLink, FolderInput, ListChecks, Pin, PinOff, Sparkles } from "lucide-react";
+import { Archive, BellRing, ExternalLink, FolderInput, Inbox, ListChecks, Pin, PinOff, Sparkles } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import type { Folder, Note } from "@/hooks/useNotes";
@@ -38,6 +38,7 @@ const ICONS: Record<ReviewCategoryKey, typeof BellRing> = {
   openLists: ListChecks,
   stale: Archive,
   unsorted: FolderInput,
+  inbox: Inbox,
 };
 
 function detail(key: ReviewCategoryKey, n: Note): string {
@@ -49,6 +50,7 @@ function detail(key: ReviewCategoryKey, n: Note): string {
     const open = (n.checklist ?? []).filter((i) => !i.checked).length;
     return `${open} ${pluralPl(open, ["pozycja", "pozycje", "pozycji"])} do zrobienia${days > 0 ? ` · ${days} ${pluralPl(days, ["dzień", "dni", "dni"])} bez zmian` : ""}`;
   }
+  if (key === "inbox") return `w skrzynce · ${days} ${pluralPl(days, ["dzień", "dni", "dni"])} bez zmian`;
   if (key === "unsorted") return days === 0 ? "bez folderu i etykiet · dziś" : `bez folderu i etykiet · ${days} ${pluralPl(days, ["dzień", "dni", "dni"])} temu`;
   return `${days} ${pluralPl(days, ["dzień", "dni", "dni"])} bez zmian`;
 }

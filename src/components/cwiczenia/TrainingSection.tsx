@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { nextReminderAt } from "@/lib/timeOfDay";
 import { CUSTOM_HINT_MAX, CUSTOM_NAME_MAX, CUSTOM_PREFIX, EQUIPMENT_LIST, EXERCISES, exerciseById, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS, type Equipment, type MuscleGroup } from "@/lib/training/catalog";
-import { bestKgSeries, byTrainingTime, trainingWeek, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
+import { bestKg, bestKgSeries, byTrainingTime, trainingWeek, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
 import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingEquipment, setTrainingReminder, useTrainingEntries, useTrainingEquipment, useTrainingPlans, useTrainingReminder, useCustomExercises, addCustomExercise, removeCustomExercise } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { toast } from "sonner";
@@ -238,7 +238,18 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
   const save = () => {
     if (!valid) return;
     const sets: TrainingSet[] = filled.map((p) => ({ reps: p.reps as number, ...(p.kg !== undefined && p.kg !== null ? { kg: p.kg } : {}) }));
+    // 3.3: nowy rekord — cięższa seria niż dotychczasowy najcięższy ciężar tego ćwiczenia (pierwszy zapis
+    // rekordem nie jest, bo nie ma czego pobić).
+    const prevBest = entries.filter((e) => e.exerciseId === exerciseId).reduce<number | undefined>((best, e) => {
+      const b = bestKg(e.sets);
+      return b !== undefined && (best === undefined || b > best) ? b : best;
+    }, undefined);
+    const newBest = bestKg(sets);
     if (!addTrainingEntry({ exerciseId, sets, note, time: nowHHMM() })) return;
+    if (newBest !== undefined && prevBest !== undefined && newBest > prevBest) {
+      haptic("success");
+      toast.success(`Nowy rekord: ${exerciseById(exerciseId)?.name ?? "ćwiczenie"} — ${newBest} kg`);
+    }
     setRows([emptyRow(), emptyRow(), emptyRow()]);
     setNote("");
     onSaved();

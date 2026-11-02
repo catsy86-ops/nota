@@ -2845,6 +2845,15 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Nie zrobione:** agenda na komputerze (na desktopie siatka zostaje, a tryb „Lista” nie jest widoczny); oś godzin tygodnia (3.3).
 - **Testy:** `src/components/calendar/MonthAgenda.test.tsx`; e2e `e2e/calendar-agenda.spec.ts` (telefon: Lista ↔ Miesiąc).
 
+## Najmniejsze punkty planów: przegląd tygodnia i nowy rekord (Skrzynka 5.2, Ćwiczenia 3.3, 2026-11-02)
+
+- **Co robi.**
+  - **Skrzynka 5.2:** w przeglądzie tygodnia nowa kategoria „Skrzynka starsza niż tydzień” — notatki bez folderu i etykiety, z treścią, nietknięte od 7 dni. Zwykła lista do przejrzenia jak pozostałe kategorie; kategoria „Do posegregowania” zostaje bez zmian (notatka może być w obu).
+  - **Ćwiczenia 3.3:** po zapisie serii, w której najcięższy ciężar przebija dotychczasowy rekord tego ćwiczenia, pojawia się komunikat „Nowy rekord: <ćwiczenie> — <kg> kg” i wibracja. Pierwszy zapis ćwiczenia rekordem nie jest. Komunikat nie jest wyłączalny w efektach — to jeszcze do decyzji.
+- **Gdzie.** `src/lib/weeklyReview.ts` (`inbox` w `ReviewCategoryKey`, `META`, `ORDER`, budowa listy), etykiety w `ReviewWalkthrough.tsx` i ikona/szczegół w `WeeklyReviewCard.tsx`; `TrainingSection.tsx` (`LogForm.save`, porównanie z `bestKg` wpisów tego ćwiczenia).
+- **Testy.** `src/lib/weeklyReview.test.ts` (skrzynka: tylko nieposortowane, z treścią, od 7 dni), `src/components/cwiczenia/TrainingSection.test.tsx` (rekord vs. lżejsza seria i pierwsze ćwiczenie), `e2e/weekly-review.spec.ts` bez zmian.
+- **Commit.** `do uzupełnienia` (2026-11-02).
+
 ## Ustawienia — naprawy, wyszukiwarka z historią i opisami, więcej zestawów wyglądu (2026-11-02)
 
 Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj notatek i szybko zestawy”. Usterki znalezione na zrzutach okna Ustawień (390 i 1440 px) i wyszukiwarki.

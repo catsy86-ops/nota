@@ -28,6 +28,7 @@ const REASON: Record<ReviewCategoryKey, string> = {
   openLists: "Lista do dokończenia",
   stale: "Nietknięta od miesiąca",
   unsorted: "Do posegregowania",
+  inbox: "Skrzynka starsza niż tydzień",
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
