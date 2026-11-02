@@ -2854,7 +2854,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie.** `.n-mark*` w `src/index.css` (osobne klatki `n-mark-draw-again` / `n-mark-dot-again` do powtórki), klasa `n-mark` w `NMonogramLogo.tsx`; `searchAfterClose` w `BottomNav.tsx`; `body` w `index.css`, klasy w `BottomNav.tsx` i `AppSidebar.tsx`.
 - **Stan planu Powłoki.** 1.7 (kolor paska przy starcie) robi już `public/prepaint.js`; 1.3, 2.1 zrobione wcześniej (VIEW_META, PW-1/PW-4). W `index.css` zostają inne pętle (fala hasła, puls „teraz”, połysk paska) — poza 1.1.
 - **Testy.** `src/test/logoMotion.test.ts` (brak `infinite` w `.n-mark*`), `e2e/mobile.spec.ts` („Więcej → Szukaj” ustawia kursor).
-- **Commit.** `do uzupełnienia` (2026-11-02).
+- **Commit.** `dc80318` (2026-11-02).
 
 ## Dziś — prywatna notatka, czas powtórek, najbliższy termin, trening bez duplikatów, Skrzynka i Ćwiczenia (1.2–1.5, 2.3, 4.3, 4.4, 2026-11-02)
 
