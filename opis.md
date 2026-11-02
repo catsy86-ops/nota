@@ -3823,7 +3823,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpoznawany po bajtach, nie po zapisanym typie: PNG z wymiarami z IHDR do 4000 px, JPEG, do 2 MB; reszta = PDF bez obrazu.
 - **Ograniczenia.** Podpis dla fuchy i dla protokołu to ten sam podpis — nowy zastępuje stary. PDF raz wysłany zostaje u odbiorcy także po usunięciu podpisu. Pole „Co zrobić” zapisuje się jako jedna linia (nowe linie stają się spacjami).
 - **Testy.** Vitest: `src/lib/study/jobs.test.ts` („poprawki po przeglądzie bezpieczeństwa”: ważność podpisu po zmianach, `safeLine`, rozpoznanie obrazu). E2E: `e2e/jobs.spec.ts` („H3.5”: podpis po „Zrobione”, PDF z obrazem `/Subtype /Image`, „Podpisz ponownie” po zmianie wyceny), `e2e/site-handover.spec.ts` (protokół z podpisem bez zmian).
-- **Commit.** COMMIT_H35 (2026-11-02).
+- **Commit.** `5678579` (2026-11-02).
 
 ## Praca: „Dla szefa” i „Moje” (H3.6, plan 2026-10-29)
 
