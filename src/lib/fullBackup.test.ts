@@ -14,6 +14,7 @@ import { entryCheckDump, saveEntryCheckItems, resetEntryCheckItems, toggleEntryC
 import { getKits, removeKit, saveKit } from "./study/kitsStore";
 import { addRoom, getSitePoints, removeRoom } from "./study/pointsStore";
 import { getSiteBilling, setLump, setPointRate } from "./study/billingStore";
+import { getJobs, removeJob, saveQuoteItem, setJobMeta } from "./study/jobsStore";
 import { addTrainingEntry, addPlanDay, removeTrainingEntry, trainingDump } from "./training/store";
 import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
@@ -337,6 +338,16 @@ describe("Nauka w pełnej kopii", () => {
     expect(getSiteBilling("site-1").lump).toBeUndefined();
     await restoreFullBackup(backup, ALL);
     expect(getSiteBilling("site-1")).toMatchObject({ lump: 8000, typeRates: { "wc-stelaz": 250 } });
+  });
+
+  it("zlecenia własne z wyceną wracają z kopii (H3.4)", async () => {
+    setJobMeta("fucha-1", { status: "done", scope: "Wymiana baterii" });
+    saveQuoteItem("fucha-1", { id: "q1", kind: "labor", name: "Wymiana baterii", qty: 1, unit: "usł.", price: 150, order: 0 });
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    removeJob("fucha-1");
+    expect(getJobs().has("fucha-1")).toBe(false);
+    await restoreFullBackup(backup, ALL);
+    expect(getJobs().get("fucha-1")).toMatchObject({ status: "done", scope: "Wymiana baterii", items: [{ id: "q1", price: 150 }] });
   });
 
   it("zestawy materiału wracają z kopii (H1.2)", async () => {

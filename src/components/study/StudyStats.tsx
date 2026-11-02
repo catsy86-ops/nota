@@ -12,6 +12,8 @@ import { activeStreak, columnOf, openProblems, siteDirectoryOf, useStudy, useStu
 import { buildExperience, experienceText, type ExperienceCard } from "@/lib/study/experience";
 import { accuracyByTopic, daysInLast, entriesByMonth, entriesBySite, hardestQuestions, overallAccuracy, studyDaysGrid } from "@/lib/study/stats";
 import { downloadBlob } from "@/lib/downloadBlob";
+import { useJobs } from "@/lib/study/jobsStore";
+import { entrySiteId } from "@/lib/study/sites";
 
 const topicName = (id: string) => topicTitle(id) ?? id;
 const WEEKDAYS = ["pn", "wt", "śr", "cz", "pt", "sb", "nd"];
@@ -44,7 +46,10 @@ function StatsBody() {
   const study = useStudy();
   const lists = useStudyLists();
   const today = localDayKey();
+  const jobs = useJobs();
   const s = useMemo(() => {
+    // H3.6: wpisy z budów szefa i z własnych zleceń liczone osobno.
+    const isJob = (e: { site: string }) => jobs.has(entrySiteId(e));
     const overall = overallAccuracy(study.review);
     return {
       overall,
@@ -53,7 +58,8 @@ function StatsBody() {
       grid: studyDaysGrid(study.days, today, 12),
       days30: daysInLast(study.days, today, 30),
       months: entriesByMonth(study.journal, Date.now(), 6),
-      sites: entriesBySite(study.journal, 6),
+      sites: entriesBySite(jobs.size ? study.journal.filter((e) => !isJob(e)) : study.journal, 6),
+      jobSites: jobs.size ? entriesBySite(study.journal.filter(isJob), 6) : [],
       card: buildExperience({
         journal: study.journal,
         review: study.review,
@@ -62,12 +68,12 @@ function StatsBody() {
         totalTopics: TOPICS.length,
       }),
     };
-  }, [study, today, lists]);
+  }, [study, today, lists, jobs]);
   const cardText = useMemo(() => experienceText(s.card, today), [s.card, today]);
   const streak = activeStreak(study);
   const open = openProblems(study.journal);
   const maxMonth = Math.max(1, ...s.months.map((m) => m.count));
-  const maxSite = Math.max(1, ...s.sites.map((r) => r.count));
+  const maxSite = Math.max(1, ...s.sites.map((r) => r.count), ...s.jobSites.map((r) => r.count));
 
   return (
     <div className="space-y-6">
@@ -165,10 +171,10 @@ function StatsBody() {
         </div>
       </Section>
 
-      {s.sites.length > 0 && (
-        <Section title="Wpisy per budowa">
-          <ul className="space-y-2" data-testid="stats-sites">
-            {s.sites.map((r) => (
+      {([["Wpisy per budowa", s.sites, "stats-sites"], ["Wpisy per zlecenie własne", s.jobSites, "stats-job-sites"]] as const).map(([title, rows, testId]) => rows.length > 0 && (
+        <Section key={testId} title={title}>
+          <ul className="space-y-2" data-testid={testId}>
+            {rows.map((r) => (
               <BarRow
                 key={r.site}
                 label={r.site}
@@ -180,7 +186,7 @@ function StatsBody() {
             ))}
           </ul>
         </Section>
-      )}
+      ))}
 
       <Section title="Karta doświadczenia" note="Budowy, próby szczelności, opanowane tematy i trafność — do pokazania albo wysłania.">
         <ExperienceRows card={s.card} />

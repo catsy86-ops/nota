@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, PenLine, Phone, Send, Share2, Plus, Camera } from "lucide-react";
+import { Archive, ArchiveRestore, Wrench, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, PenLine, Phone, Send, Share2, Plus, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -34,6 +34,8 @@ import { SiteFaultsPanel } from "./SiteFaultsPanel";
 import { SiteMaterialPanel } from "./SiteMaterialPanel";
 import { SiteTimePanel } from "./SiteTimePanel";
 import { SiteBillingPanel } from "./SiteBillingPanel";
+import { SiteJobPanel } from "./SiteJobPanel";
+import { setJobMeta, useJob } from "@/lib/study/jobsStore";
 import { SiteStorageLine } from "./SiteStorageLine";
 import { StageDots } from "./StageDots";
 import { NoteImage } from "@/components/NoteImage";
@@ -80,6 +82,8 @@ export function SiteCardDialog({
   const shifts = useShifts();
   const dir = useSiteDirectory();
   const site = siteId ? dir.find((s) => s.id === siteId) ?? null : null;
+  /** H3.4: karta jest fuchą, gdy ma wpis w mapie zleceń. */
+  const job = useJob(siteId ?? "");
   const [form, setForm] = useState<SiteForm>(EMPTY_FORM);
   /** Formularz danych rozwinięty; każda karta otwiera się zwinięta. */
   const [editing, setEditing] = useState(false);
@@ -287,13 +291,15 @@ export function SiteCardDialog({
                 <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void addPhotoEntry(file); }} />
               </div>
               {tally && <SiteTallyBar tally={tally} points={sitePointsProgress} />}
+              {job && <SiteJobPanel site={site} job={job} />}
               <SiteStagesPanel site={site} />
               <SitePointsPanel site={site} journal={study.journal} />
               <SiteShortagesPanel site={site} />
               <SiteFaultsPanel site={site} journal={study.journal} />
               <SiteMaterialPanel site={site} journal={study.journal} />
               {hours && <SiteTimePanel site={site} today={hours.today} monthLabel={new Date(`${hours.today}T12:00`).toLocaleDateString("pl-PL", { month: "long", year: "numeric" })} monthDays={hours.monthDays} />}
-              <SiteBillingPanel site={site} hours={hours?.total} />
+              {/* Fucha rozlicza się wyceną w panelu zlecenia — „Rozliczenie” jest dla budów szefa. */}
+              {!job && <SiteBillingPanel site={site} hours={hours?.total} />}
               <SiteOrderPanel site={site} />
             </div>
 
@@ -502,6 +508,12 @@ export function SiteCardDialog({
               >
                 <PenLine className="mr-1.5 h-4 w-4" aria-hidden />{site.signature ? "Podpisany" : "Podpis klienta"}
               </Button>
+              {!job && (
+                <Button variant="ghost" onClick={() => setJobMeta(site.id, {})} className="col-span-2 text-muted-foreground coarse:h-11"
+                  title="Twoje zlecenie, nie budowa szefa: wycena, status, termin i PDF dla klienta">
+                  <Wrench className="mr-1.5 h-4 w-4" aria-hidden />To zlecenie własne (fucha)
+                </Button>
+              )}
               <Button variant="ghost" onClick={toggleArchive} className="col-span-2 text-muted-foreground coarse:h-11">
                 {site.archived === undefined
                   ? <><Archive className="mr-1.5 h-4 w-4" aria-hidden />Do archiwum</>

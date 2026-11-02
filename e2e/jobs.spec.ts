@@ -1,0 +1,164 @@
+import AxeBuilder from "@axe-core/playwright";
+import { test, expect, type Page } from "@playwright/test";
+
+// H3.4 Zlecenia własne (fuchy): założenie z listy „Zlecenia”, wycena z marżą, statusy, „Niezapłacone”,
+// PDF wyceny, termin w Kalendarzu, „To nie jest fucha” z „Cofnij”.
+
+test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 10, 2, 12, 0).getTime());
+  await page.addInitScript(() => {
+    localStorage.setItem("kaczy.tour.seen.v1", "1");
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({
+      journal: [{ id: "a", at: new Date(2026, 10, 1, 9).getTime(), kind: "ok", topic: null, text: "Start", site: "Lipowa 5", checked: [], images: [] }],
+    }));
+  });
+});
+
+async function newJob(page: Page) {
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  const list = page.getByTestId("jobs-dialog");
+  // WebKit: pierwsze stuknięcie w przewijany pasek pigułek bywa zjadane przez przewinięcie — ponów.
+  await expect(async () => {
+    await page.getByTestId("jobs-open").click();
+    await expect(list).toBeVisible({ timeout: 1000 });
+  }).toPass();
+  await expect(list.getByText("Nie masz jeszcze zleceń własnych.", { exact: false })).toBeVisible();
+  await list.getByRole("button", { name: "Nowe zlecenie" }).click();
+  await page.getByLabel("Nazwa zlecenia").fill("Kowalski kran");
+  await page.getByLabel("Klient").fill("Jan Kowalski");
+  await page.getByLabel("Adres").fill("Polna 3, Kraków");
+  await page.getByLabel("Co zrobić").fill("Wymiana baterii w kuchni");
+  await page.getByRole("button", { name: "Utwórz zlecenie" }).click();
+  const card = page.getByTestId("site-card");
+  await expect(card.getByTestId("site-job")).toBeVisible();
+  return card;
+}
+
+async function addItem(card: ReturnType<Page["getByTestId"]>, kind: "Robocizna" | "Materiał", name: string, price: string) {
+  const form = card.getByRole("form", { name: "Nowa pozycja wyceny" });
+  await form.getByRole("button", { name: kind }).click();
+  await form.getByLabel("Nazwa pozycji").fill(name);
+  await form.getByLabel("Cena za jednostkę (zł)").fill(price);
+  await form.getByRole("button", { name: "Dodaj" }).click();
+}
+
+test("fucha: wycena z marżą, status „Zrobione” liczy się do niezapłaconych, „Zapłacone” zdejmuje @mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const card = await newJob(page);
+  const job = card.getByTestId("site-job");
+  await expect(job.getByLabel("Co zrobić")).toHaveValue("Wymiana baterii w kuchni");
+  // Fucha rozlicza się wyceną — panelu „Rozliczenie” budowy szefa nie ma.
+  await expect(card.getByTestId("site-billing")).toHaveCount(0);
+
+  await addItem(card, "Robocizna", "Wymiana baterii", "150");
+  await addItem(card, "Materiał", "Bateria", "250");
+  await job.getByLabel("Marża na materiał (%)").fill("20");
+  await job.getByLabel("Marża na materiał (%)").press("Enter");
+  await expect(job.getByTestId("job-item")).toHaveCount(2);
+  await expect(job.getByTestId("job-total")).toHaveText("450 zł");
+
+  const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  expect(wide, "przewijanie w bok przy 390 px").toBe(false);
+
+  await job.getByRole("group", { name: "Status zlecenia" }).getByRole("button", { name: "Zrobione" }).click();
+  await expect(job.getByTestId("site-job-summary")).toHaveText("Zrobione · 450 zł");
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("jobs-open")).toContainText("Zlecenia (1)");
+  await expect(page.getByTestId("jobs-open")).toContainText("450 zł");
+
+  await page.getByTestId("jobs-open").click();
+  await expect(page.getByTestId("jobs-unpaid")).toHaveText("Niezapłacone: 450 zł");
+  await page.getByTestId("jobs-dialog").getByRole("button", { name: /Kowalski kran/ }).click();
+  await card.getByTestId("site-job").getByRole("button", { name: "Zapłacone" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("jobs-open")).not.toContainText("zł");
+
+  // Po odświeżeniu wszystko zostaje (Yjs).
+  await page.reload();
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("jobs-open").click();
+  await expect(page.getByTestId("jobs-dialog").getByRole("button", { name: /Kowalski kran.*Zapłacone.*450 zł/ })).toBeVisible();
+});
+
+test("fucha: PDF wyceny, termin w Kalendarzu, „To nie jest fucha” z „Cofnij”, axe", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const card = await newJob(page);
+  const job = card.getByTestId("site-job");
+  await addItem(card, "Robocizna", "Wymiana baterii", "150");
+
+  const axe = await new AxeBuilder({ page }).include("[data-testid='site-job']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
+  expect(axe.violations).toEqual([]);
+
+  const download = page.waitForEvent("download", { timeout: 30000 });
+  await job.getByRole("button", { name: "PDF wyceny" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe("Wycena - Kowalski kran.pdf");
+  const fs = await import("node:fs");
+  expect(fs.readFileSync((await file.path())!).subarray(0, 5).toString("ascii")).toBe("%PDF-");
+
+  // Termin przy wycenie przestawia status na „Umówione”.
+  await job.getByLabel("Termin zlecenia").fill("2026-11-05T14:00");
+  await expect(job.getByTestId("site-job-summary")).toHaveText("Umówione · 150 zł");
+
+  await job.getByRole("button", { name: "To nie jest fucha" }).click();
+  await expect(card.getByTestId("site-job")).toHaveCount(0);
+  await expect(card.getByTestId("site-billing")).toBeVisible();
+  await page.getByRole("button", { name: "Cofnij" }).click();
+  await expect(card.getByTestId("site-job")).toBeVisible();
+  await expect(card.getByTestId("job-item")).toHaveCount(1);
+
+  await page.keyboard.press("Escape");
+  await page.goto("/kalendarz");
+  // Komórka dnia mówi o zleceniu w opisie dla czytnika ekranu („…, Praca: 1 zlecenie, …”).
+  await expect(page.locator('[aria-label*="5 listopada 2026"][aria-label*="Praca: 1 zlecenie"]').first()).toBeAttached();
+});
+
+test("karta budowy szefa: „To zlecenie własne (fucha)” zamienia ją w fuchę", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
+  const card = page.getByTestId("site-card");
+  await expect(card.getByTestId("site-job")).toHaveCount(0);
+  await card.getByRole("button", { name: "To zlecenie własne (fucha)" }).click();
+  await expect(card.getByTestId("site-job")).toBeVisible();
+  await expect(card.getByTestId("site-job-summary")).toHaveText("Wycena");
+});
+
+test("H3.6: raport „Wszystkie budowy szefa” bez fuch, „Wszystkie moje zlecenia” bez wysyłki szefowi", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded-h36")) return;
+    sessionStorage.setItem("seeded-h36", "1");
+    const at = new Date(2026, 10, 2, 9).getTime();
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({
+      journal: [
+        { id: "a", at, kind: "ok", topic: null, text: "Pion kanalizacji", site: "Lipowa 5", checked: [], images: [] },
+        { id: "b", at: at + 3600_000, kind: "ok", topic: null, text: "Bateria wymieniona", site: "Kowalski kran", checked: [], images: [] },
+      ],
+    }));
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Kowalski kran: karta budowy" }).first().click();
+  await page.getByTestId("site-card").getByRole("button", { name: "To zlecenie własne (fucha)" }).click();
+  await expect(page.getByTestId("site-job")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.getByTestId("study-journal").getByRole("button", { name: "Raport" }).click();
+  const dialog = page.getByTestId("journal-report");
+  const pick = dialog.getByLabel("Budowa raportu");
+  await pick.selectOption("all");
+  await expect(dialog.getByText("Pion kanalizacji")).toBeVisible();
+  await expect(dialog.getByText("Bateria wymieniona")).toHaveCount(0);
+  await expect(dialog.getByTestId("own-report-note")).toHaveCount(0);
+
+  await pick.selectOption("jobs");
+  await expect(dialog.getByText("Bateria wymieniona")).toBeVisible();
+  await expect(dialog.getByText("Pion kanalizacji")).toHaveCount(0);
+  await expect(dialog.getByTestId("own-report-note")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /Szefowi|dodaj szefa/ })).toHaveCount(0);
+});

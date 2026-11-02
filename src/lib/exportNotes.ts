@@ -169,6 +169,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   const { kitsDump } = await import("@/lib/study/kitsStore");
   const { pointsDump } = await import("@/lib/study/pointsStore");
   const { billingDump } = await import("@/lib/study/billingStore");
+  const { jobsDump } = await import("@/lib/study/jobsStore");
   const { plansDump } = await import("@/lib/plans/plansStore");
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES, opts.planImages ?? getViewPrefs().backupPlanImages);
   const study = yStudy.dump();
@@ -209,6 +210,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     points: JSON.stringify(pointsDump()),
     // Sposób rozliczenia budów (H3.1) — osobna mapa, scalana bez nadpisywania.
     billing: JSON.stringify(billingDump()),
+    // Zlecenia własne — fuchy (H3.4): status, wycena; osobna mapa, scalana bez nadpisywania.
+    jobs: JSON.stringify(jobsDump()),
     // Analizy planów (mapa `plans`) — scalane bez nadpisywania.
     plans: JSON.stringify(plansDump()),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
@@ -363,6 +366,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   if (backup.points) await import("@/lib/study/pointsStore").then((m) => m.mergePointsDump(JSON.parse(backup.points!))).catch(() => {});
   if (backup.plans) await import("@/lib/plans/plansStore").then((m) => m.mergePlansDump(JSON.parse(backup.plans!))).catch(() => {});
   if (backup.billing) await import("@/lib/study/billingStore").then((m) => m.mergeBillingDump(JSON.parse(backup.billing!))).catch(() => {});
+  if (backup.jobs) await import("@/lib/study/jobsStore").then((m) => m.mergeJobsDump(JSON.parse(backup.jobs!))).catch((err) => logDiag("warn", "backup", "restore jobs failed", err));
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
   if (opts.versions && backup.versions) {

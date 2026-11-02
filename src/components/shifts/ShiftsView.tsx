@@ -356,10 +356,12 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
   // Godziny na budowach z kosztem robocizny (2.6): te same dane Nauki, co na karcie budowy.
   const study = useStudy();
-  function exportSiteCsv() {
+  async function exportSiteCsv() {
     const y = shownMonth.getFullYear();
     const m = shownMonth.getMonth();
-    const csv = buildSiteTimesheetCsv({ shifts: data, sites: study.sites, journal: study.journal, year: y, month: m });
+    // H3.6: plik dla szefa — bez zleceń własnych (mapa zleceń dociągana dopiero tu, poza paczką Grafiku).
+    const { getJobs } = await import("@/lib/study/jobsStore");
+    const csv = buildSiteTimesheetCsv({ shifts: data, sites: study.sites, journal: study.journal, year: y, month: m, exclude: new Set(getJobs().keys()) });
     download(csv, `godziny-na-budowach-${format(shownMonth, "yyyy-MM")}.csv`, "text/csv;charset=utf-8");
     toast.success("Pobrano godziny na budowach (.csv)", { description: "Z kosztem robocizny wg stawki z Grafiku." });
   }

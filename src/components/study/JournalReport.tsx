@@ -22,6 +22,7 @@ import { presetOf, presetRange, REPORT_PRESETS } from "@/lib/study/reportPresets
 import type { JournalReportRequest } from "@/lib/study/reportLink";
 import { reportToNote } from "@/lib/study/toNote";
 import { RecipientsForm } from "./RecipientsForm";
+import { useJobs } from "@/lib/study/jobsStore";
 import { ReportPaper, ReportPrint } from "./ReportPaper";
 
 /** Ile zdjęć dołączać do „Udostępnij” — komunikatory i tak tną więcej. */
@@ -52,6 +53,9 @@ export function JournalReportDialog({
   const { boss, group } = useStudy();
   const [bossEdit, setBossEdit] = useState(false);
   const [site, setSite] = useState<string | null>(null);
+  /** H3.6: „Wszystkie moje zlecenia” zamiast budów szefa (gdy `site` = null). */
+  const [allJobs, setAllJobs] = useState(false);
+  const jobs = useJobs();
   const card = site ? sites.find((x) => x.id === site) ?? null : null;
   const [range, setRange] = useState<[string, string]>(() => { const t = dayKeyOf(Date.now()); return [t, t]; });
   const [printing, setPrinting] = useState(false);
@@ -66,6 +70,7 @@ export function JournalReportDialog({
     const last = journal.filter((e) => s === null || entrySiteId(e) === s).reduce((m, e) => Math.max(m, e.at), 0);
     const day = last ? dayKeyOf(last) : dayKeyOf(Date.now());
     setSite(s);
+    setAllJobs(false);
     setRange(initialRequest?.range === "week" ? presetRange("week", dayKeyOf(Date.now())) : [day, day]);
     setCustom(false);
     setBossEdit(false);
@@ -75,9 +80,16 @@ export function JournalReportDialog({
 
   // Karty wszystkich budów — podział godzin dnia między budowy (`siteHours.ts`).
   const cards = useMemo(() => Object.fromEntries(sites.map((x) => [x.id, x])), [sites]);
+  // H3.6: „Wszystkie budowy” to budowy szefa — raport do szefa nigdy nie pokazuje fuch; „Moje zlecenia” odwrotnie.
+  // Odfiltrowany dziennik dzieli też godziny dnia z Grafiku tylko między budowy z danej grupy.
+  const ownReport = allJobs || (site !== null && jobs.has(site));
+  const scoped = useMemo(() => {
+    if (site !== null || jobs.size === 0) return journal;
+    return journal.filter((e) => jobs.has(entrySiteId(e)) === allJobs);
+  }, [journal, site, jobs, allJobs]);
   const report = useMemo(
-    () => buildJournalReport(journal, { siteId: site, siteCard: card, sites: cards, from: range[0], to: range[1], shifts, topicTitle }),
-    [journal, site, card, cards, range, shifts],
+    () => buildJournalReport(scoped, { siteId: site, siteCard: card, sites: cards, from: range[0], to: range[1], shifts, topicTitle }),
+    [scoped, site, card, cards, range, shifts],
   );
   const preset = presetOf(range[0], range[1], today);
   const showDates = custom || preset === "custom";
@@ -176,15 +188,27 @@ export function JournalReportDialog({
               <span className="sr-only">Budowa</span>
               <select
                 aria-label="Budowa raportu"
-                value={site === null ? "all" : `s:${site}`}
-                onChange={(ev) => setSite(ev.target.value === "all" ? null : ev.target.value.slice(2))}
+                value={allJobs ? "jobs" : site === null ? "all" : `s:${site}`}
+                onChange={(ev) => {
+                  const v = ev.target.value;
+                  setAllJobs(v === "jobs");
+                  setSite(v === "all" || v === "jobs" ? null : v.slice(2));
+                }}
                 className={fieldClass}
               >
-                <option value="all">Wszystkie budowy</option>
-                {sites.filter((s) => s.count > 0 || s.id === site).map((s) => (
+                <option value="all">{jobs.size > 0 ? "Wszystkie budowy szefa" : "Wszystkie budowy"}</option>
+                {jobs.size > 0 && <option value="jobs">Wszystkie moje zlecenia</option>}
+                {sites.filter((s) => (s.count > 0 || s.id === site) && !jobs.has(s.id)).map((s) => (
                   <option key={s.id} value={`s:${s.id}`}>{s.archived !== undefined ? `${s.name} (archiwum)` : s.name}</option>
                 ))}
                 {hasUnsited && <option value="s:">Bez budowy</option>}
+                {jobs.size > 0 && (
+                  <optgroup label="Zlecenia własne">
+                    {sites.filter((s) => (s.count > 0 || s.id === site) && jobs.has(s.id)).map((s) => (
+                      <option key={s.id} value={`s:${s.id}`}>{s.archived !== undefined ? `${s.name} (archiwum)` : s.name}</option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </label>
             <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]" role="group" aria-label="Okres raportu">
@@ -233,7 +257,9 @@ export function JournalReportDialog({
           {/* Jedna główna akcja — wysłanie przez WhatsApp; „Udostępnij” obok, reszta w „Więcej”. */}
           <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row-reverse sm:items-center sm:justify-between sm:px-6">
             <div className="flex items-center gap-2 sm:justify-end" data-testid="whatsapp-row">
-              {boss || group ? (
+              {ownReport ? (
+                <p className="min-w-0 flex-1 text-xs text-muted-foreground" data-testid="own-report-note">Twoje zlecenie — bez wysyłki szefowi ani do grupy.</p>
+              ) : boss || group ? (
                 <>
                   {boss && (
                     // Na telefonie sam „Szefowi” — imię nie mieści się obok drugiego przycisku; zostaje w nazwie dla czytnika.

@@ -164,7 +164,7 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
           {work && (
             <span aria-hidden className={cn("flex items-center gap-0.5 text-2xs leading-4 text-muted-foreground", !inMonth && "opacity-50")} title={work}>
               <HardHat className="size-3" />
-              {(study?.service ?? 0) + (study?.delivery ?? 0)}
+              {(study?.service ?? 0) + (study?.delivery ?? 0) + (study?.jobs ?? 0)}
             </span>
           )}
           {/* Ten sam kolor i skrót co w Grafiku; nieobecność jako jasne tło z ramką, tak jak tam. */}

@@ -6,6 +6,8 @@ import { getSiteBilling, subscribeBilling } from "@/lib/study/billingStore";
 import { getSitePoints, subscribePoints } from "@/lib/study/pointsStore";
 import { money, monthSiteEarnings } from "@/lib/study/billing";
 import { siteStages } from "@/lib/study/stages";
+import { useJobs } from "@/lib/study/jobsStore";
+import { quoteTotals } from "@/lib/study/jobs";
 
 /** Licznik zmian rozliczeń i punktów — przelicza linię, gdy coś się zmieni w Pracy. */
 let tick = 0;
@@ -20,6 +22,8 @@ const getTick = () => tick;
 /**
  * H3.3 „Z budów” w podsumowaniu Grafiku: punkty po białym montażu, odhaczone etapy i ryczałt za skończoną
  * budowę w oglądanym miesiącu. Bez godzin — te są już w zarobku Grafiku. Brak takich zarobków = nic.
+ * H3.6: fuchy (zlecenia własne) nie wchodzą do „Z budów” ani do sumy z Grafikiem — osobna linia
+ * „Moje zlecenia” z wycenami zapłaconymi w tym miesiącu.
  */
 export function SiteMonthEarnings({ monthKey, base }: {
   /** „2026-10”. */
@@ -32,22 +36,45 @@ export function SiteMonthEarnings({ monthKey, base }: {
   useEffect(() => { void studyReady(); }, []);
   const dir = useSiteDirectory();
   const t = useSyncExternalStore(subscribe, getTick);
+  const jobs = useJobs();
+  const [from, to] = useMemo(() => {
+    const [y, m] = monthKey.split("-").map(Number);
+    return [new Date(y, m - 1, 1).getTime(), new Date(y, m, 1).getTime()];
+  }, [monthKey]);
   const rows = useMemo(() => {
     void t;
-    const [y, m] = monthKey.split("-").map(Number);
-    const from = new Date(y, m - 1, 1).getTime(), to = new Date(y, m, 1).getTime();
     // Archiwalne też — budowę zwykle archiwizuje się po końcu, a jej ostatni miesiąc ma się policzyć.
     return dir.flatMap((s) => {
+      if (jobs.has(s.id)) return [];
       const points = getSitePoints(s.id).points.map((p) => ({ type: p.type, doneAt: p.steps.montaz }));
       const e = monthSiteEarnings({ billing: getSiteBilling(s.id), points, stages: siteStages(s) }, from, to);
       return e.total > 0 || e.pointsNoRate > 0 ? [{ site: s, e }] : [];
     });
-  }, [dir, monthKey, t]);
-  if (!ready || rows.length === 0) return null;
+  }, [dir, from, to, jobs, t]);
+  const own = useMemo(() => {
+    let sum = 0, count = 0;
+    for (const j of jobs.values()) {
+      if (j.status !== "paid" || j.statusAt < from || j.statusAt >= to) continue;
+      sum += quoteTotals(j).total;
+      count++;
+    }
+    return { sum: Math.round(sum * 100) / 100, count };
+  }, [jobs, from, to]);
+  if (!ready || (rows.length === 0 && own.count === 0)) return null;
+  const ownLine = own.count > 0 && (
+    <p className="flex items-baseline gap-2 px-3 text-sm" data-testid="own-month-earnings">
+      <span className="font-medium">Moje zlecenia</span>
+      <span className="text-xs text-muted-foreground">{own.count} {pluralPl(own.count, ["zapłacone", "zapłacone", "zapłaconych"])}, poza Grafikiem</span>
+      <span aria-hidden className="min-w-4 flex-1 translate-y-[-0.2em] border-b border-dotted border-muted-foreground/50" />
+      <span className="font-mono font-semibold tabular-nums">{money(own.sum)}</span>
+    </p>
+  );
+  if (rows.length === 0) return ownLine;
   const total = Math.round(rows.reduce((sum, r) => sum + r.e.total, 0) * 100) / 100;
   const noRate = rows.reduce((sum, r) => sum + r.e.pointsNoRate, 0);
 
   return (
+    <>
     <details className="group rounded-card border border-dashed border-border px-3 py-2" data-testid="site-month-earnings">
       <summary className="flex cursor-pointer list-none items-baseline gap-2 text-sm coarse:min-h-11 coarse:items-center">
         <span className="font-medium">Z budów</span>
@@ -76,5 +103,7 @@ export function SiteMonthEarnings({ monthKey, base }: {
         <span className="font-mono font-semibold tabular-nums" data-testid="site-month-grand">{money(Math.round((base + total) * 100) / 100)}</span>
       </p>
     </details>
+    {ownLine}
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { weekSeparators } from "@/lib/study/journalWeeks";
-import { Archive, Clock, ChevronRight, FileText, MapPin, Plus, Search, X } from "lucide-react";
+import { Archive, Clock, ChevronRight, FileText, MapPin, Plus, Search, Wrench, X } from "lucide-react";
 import { studyReminders } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,10 @@ import { PhotoGalleryDialog } from "./PhotoGallery";
 import { ReminderRow } from "./ReminderRow";
 import { readSiteParam, takeSiteParam } from "@/lib/study/siteLink";
 import { NewSiteDialog } from "./NewSiteDialog";
+import { JobsDialog } from "./JobsDialog";
+import { useJobs } from "@/lib/study/jobsStore";
+import { money } from "@/lib/study/billing";
+import { unpaidTotal } from "@/lib/study/jobs";
 import { DayHoursDialog } from "./DayHoursDialog";
 import { EntryCheckCard } from "./EntryCheck";
 import { useShifts } from "@/lib/shifts";
@@ -123,6 +127,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   // Budowy z wpisami i zapisane karty bez wpisów (nowa budowa), żeby nowa była od razu na liście.
   const used = useMemo(() => dir.filter((x) => x.count > 0 || x.stored), [dir]);
   const [newSiteOpen, setNewSiteOpen] = useState(false);
+  /** „Nowe zlecenie” z listy zleceń otwiera to samo okno od razu jako fuchę (H3.4). */
+  const [newSiteJob, setNewSiteJob] = useState(false);
+  const [jobsOpen, setJobsOpen] = useState(false);
+  const jobs = useJobs();
+  const unpaid = useMemo(() => unpaidTotal(jobs.values()), [jobs]);
   const archivedCount = used.filter((x) => x.archived !== undefined).length;
   const sites = used.filter((x) => x.archived === undefined || showArchived || x.id === filter.site);
   const hasUnsited = useMemo(() => used.length > 0 && study.journal.some((e) => !entrySiteId(e)), [used, study.journal]);
@@ -265,17 +274,26 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                           on ? "border-primary bg-primary/10 font-medium text-primary-ink" : "border-border text-muted-foreground hover:text-foreground",
                         )}
                       >
-                        {s && <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />}
+                        {s && (id && jobs.has(id) ? <Wrench className="h-3.5 w-3.5 shrink-0" aria-label="Zlecenie własne" /> : <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />)}
                         <span className="truncate">{s === null ? "Wszystkie budowy" : s || "Bez budowy"}</span>
                       </button>
                     );
                   })}
                   <button
                     type="button"
-                    onClick={() => setNewSiteOpen(true)}
+                    onClick={() => { setNewSiteJob(false); setNewSiteOpen(true); }}
                     className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-primary-ink hover:bg-primary/10 coarse:min-h-11 coarse:px-4 coarse:text-sm"
                   >
                     + Nowa budowa
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setJobsOpen(true)}
+                    data-testid="jobs-open"
+                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                  >
+                    <Wrench className="h-3.5 w-3.5 shrink-0" aria-hidden />Zlecenia{jobs.size > 0 && ` (${jobs.size})`}
+                    {unpaid > 0 && <span className="font-mono tabular-nums text-primary-ink">· {money(unpaid)}</span>}
                   </button>
                   {archivedCount > 0 && (
                     <button
@@ -433,7 +451,10 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         )}
       </section>
       <JournalEntrySheet onPractice={onPractice} />
-      <NewSiteDialog open={newSiteOpen} onOpenChange={setNewSiteOpen} dir={dir} onCreated={(id) => setCard(id)} />
+      <NewSiteDialog key={newSiteJob ? "job" : "site"} open={newSiteOpen} onOpenChange={setNewSiteOpen} dir={dir} initialJob={newSiteJob} onCreated={(id) => setCard(id)} />
+      <JobsDialog open={jobsOpen} onOpenChange={setJobsOpen} jobs={jobs} dir={dir}
+        onOpen={(id) => { setJobsOpen(false); setCard(id); }}
+        onNew={() => { setJobsOpen(false); setNewSiteJob(true); setNewSiteOpen(true); }} />
       <JournalReportDialog open={report} onOpenChange={setReport} journal={study.journal} sites={dir} initialSite={reportSite ?? filter.site} initialRequest={reportRequest} />
       <DayHoursDialog day={hoursDay?.key ?? null} label={hoursDay?.label ?? ""} onOpenChange={(o) => { if (!o) setHoursDay(null); }} />
       <SiteCardDialog

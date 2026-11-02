@@ -3,12 +3,14 @@ import { cell } from "@/lib/shifts/timesheet";
 import type { JournalEntry } from "./yStudy";
 import { dayHours, type DayHours, type SiteHours } from "./siteHours";
 import { dayKeyOf, workOn } from "./report";
+import { entrySiteId } from "./sites";
 
 /**
  * Godziny na budowach w miesiącu jako CSV z kosztem robocizny (2.6 planu Praca 2026-10-24).
  * Godziny dnia (z Grafiku) dzielone między budowy zasadą z `dayHours` (wpisane ręcznie albo równo),
  * koszt = godziny × stawka z Grafiku (`hourlyRate`). Dni bez zmiany pomijane.
  * Osobne wiersze: dzień i budowa, potem podsumowanie per budowa, „Bez budowy” i „Bez podziału”.
+ * H3.6: `exclude` (zlecenia własne) wypada w całości — także z podziału godzin dnia, bo plik idzie do szefa.
  */
 export interface SiteTimesheetInput {
   shifts: ShiftData;
@@ -16,13 +18,17 @@ export interface SiteTimesheetInput {
   journal: readonly JournalEntry[];
   year: number;
   month: number;
+  /** Id budów pominiętych w pliku (fuchy). */
+  exclude?: ReadonlySet<string>;
 }
 
 const hoursText = (min: number) => (min / 60).toFixed(2).replace(".", ",");
 const moneyText = (zl: number) => zl.toFixed(2).replace(".", ",");
 const pad = (n: number) => String(n).padStart(2, "0");
 
-export function buildSiteTimesheetCsv({ shifts, sites, journal, year, month }: SiteTimesheetInput): string {
+export function buildSiteTimesheetCsv({ shifts, sites: allSites, journal: allJournal, year, month, exclude }: SiteTimesheetInput): string {
+  const sites = exclude?.size ? Object.fromEntries(Object.entries(allSites).filter(([id]) => !exclude.has(id))) : allSites;
+  const journal = exclude?.size ? allJournal.filter((e) => !exclude.has(entrySiteId(e))) : allJournal;
   const rate = shifts.hourlyRate > 0 ? shifts.hourlyRate : 0;
   const detail: (string | number)[][] = [["Data", "Budowa", "Godziny", "Koszt (zł)"]];
   const perSite = new Map<string, { name: string; minutes: number }>();

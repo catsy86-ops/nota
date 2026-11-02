@@ -88,6 +88,8 @@ export default tseslint.config(
       "src/lib/study/yKits.ts",
       "src/lib/study/yPoints.ts",
       "src/lib/study/yBilling.ts",
+      "src/lib/study/yJobs.ts",
+      "src/lib/study/jobs.test.ts",
       "src/lib/study/billing.test.ts",
       "src/lib/study/points.test.ts",
       "src/lib/study/kits.test.ts",

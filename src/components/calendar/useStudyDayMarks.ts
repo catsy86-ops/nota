@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { studyReady, useStudyReady } from "@/lib/study/data";
 import { studyDayMarks, type StudyDayMarks } from "@/lib/study/calendarMarks";
 import { useStudy } from "@/lib/study/store";
+import { useJobs } from "@/lib/study/jobsStore";
 
 /**
  * Znaczniki Pracy dla kalendarza (K2). Dokument Pracy dociąga się leniwie, więc do gotowości
@@ -10,6 +11,7 @@ import { useStudy } from "@/lib/study/store";
 export function useStudyDayMarks(): Map<string, StudyDayMarks> {
   const ready = useStudyReady();
   const sites = useStudy().sites;
+  const jobs = useJobs();
   useEffect(() => { void studyReady(); }, []);
-  return useMemo(() => (ready ? studyDayMarks(sites) : new Map<string, StudyDayMarks>()), [ready, sites]);
+  return useMemo(() => (ready ? studyDayMarks(sites, jobs) : new Map<string, StudyDayMarks>()), [ready, sites, jobs]);
 }

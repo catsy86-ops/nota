@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { EMPTY_SHIFT_DATA, type ShiftData } from "@/lib/shifts/model";
 import { buildSiteTimesheetCsv } from "./siteTimesheet";
 import type { JournalEntry } from "./yStudy";
+import { entrySiteId } from "./sites";
 
 const work = { id: "d", name: "Dzień", short: "D", color: "#000", start: "06:00", end: "14:00", breakMin: 0, kind: "work" as const };
 const day = new Date(2026, 9, 5, 12).getTime();
@@ -16,6 +17,13 @@ describe("godziny na budowach CSV (2.6)", () => {
     expect(csv).toContain("2026-10-05;Lipowa;8,00;400,00");
     expect(csv).toContain("Razem;8,00;400,00");
     expect(csv).toContain("Stawka (zł/h);50,00");
+  });
+
+  it("H3.6: zlecenie własne wypada z pliku dla szefa, a godziny dnia idą do budowy szefa", () => {
+    const job = { ...entry, id: "f", site: "Kowalski kran" } as JournalEntry;
+    const csv = buildSiteTimesheetCsv({ shifts, sites: {}, journal: [entry, job], year: 2026, month: 9, exclude: new Set([entrySiteId(job)]) });
+    expect(csv).not.toContain("Kowalski");
+    expect(csv).toContain("2026-10-05;Lipowa;8,00;400,00");
   });
 
   it("bez stawki koszt zostaje 0 i stawka oznaczona jako nieustawiona", () => {
