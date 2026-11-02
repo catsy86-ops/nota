@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { balances, cleanDebt, formatAmount, knownPeople, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
+import { balances, cleanDebt, debtSide, doubleSettle, formatAmount, knownPeople, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
 
 const e = (over: Partial<DebtEntry>): DebtEntry => ({
   id: "d-1", person: "Anna", kind: "lent", amount: 10000, at: "2026-10-10", note: "", created: 1, ...over,
@@ -129,5 +129,29 @@ describe("repaidShare — pasek spłaty z obu stron", () => {
   it("99,6% nie jest 100%; zero salda to 100%", () => {
     expect(repaidShare([e("lent", 10000), e("repaid", 9960)])).toBe(99);
     expect(repaidShare([e("lent", 1000), e("repaid", 1000)])).toBe(100);
+  });
+});
+
+describe("strona salda i podwójne rozliczenie (1.3, 1.6)", () => {
+  it("debtSide: przy samym „Pożyczyłem od” strona winna to nasz dług", () => {
+    expect(debtSide([e({ id: "a", kind: "borrowed", amount: 50_000 }), e({ id: "b", kind: "returned", amount: 20_000 })]))
+      .toEqual({ side: 50_000, done: 20_000, balance: -30_000 });
+    expect(repaidShare([e({ id: "a", kind: "borrowed", amount: 50_000 }), e({ id: "b", kind: "returned", amount: 20_000 })])).toBe(40);
+    expect(debtSide([e({ id: "a", kind: "lent", amount: 10_000 })])).toEqual({ side: 10_000, done: 0, balance: 10_000 });
+  });
+
+  it("cleanDebt zachowuje tylko settle: true", () => {
+    expect(cleanDebt({ ...e({ id: "a" }), settle: true })?.settle).toBe(true);
+    expect(cleanDebt({ ...e({ id: "a" }), settle: "tak" })).not.toHaveProperty("settle");
+  });
+
+  it("doubleSettle: dwa „całość” w minutę, saldo po drugiej stronie → nowszy; inaczej null", () => {
+    const lent = e({ id: "l", kind: "lent", amount: 10_000, created: 1 });
+    const s1 = e({ id: "s1", kind: "repaid", amount: 10_000, created: 1_000, settle: true });
+    const s2 = e({ id: "s2", kind: "repaid", amount: 10_000, created: 30_000, settle: true });
+    expect(doubleSettle([lent, s1, s2])?.id).toBe("s2");
+    expect(doubleSettle([lent, s1])).toBeNull();
+    expect(doubleSettle([lent, s1, { ...s2, created: 200_000 }])).toBeNull();
+    expect(doubleSettle([lent, s1, { ...s2, settle: undefined }])).toBeNull();
   });
 });

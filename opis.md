@@ -1258,25 +1258,28 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 ### Co robi
 
 - **Widok.** Góra: „Są nam winni” i „Jesteś winien” (D-1, 2026-10-26; dawniej „My jesteśmy winni”). Pod spodem lista osób z saldem i paskiem spłaty. Stuknięcie w osobę otwiera arkusz z historią.
-- **Cztery rodzaje wpisu** (siatka 2×2 w formularzu):
+- **Cztery rodzaje wpisu** (siatka 2×2 w formularzu; `KindPicker` na `ToggleGroup` z `ui/` — jeden przystanek Tab, strzałki, 44 px na dotyku, plan Długów 1.4):
   - „Pożyczyłem” (`lent`) — ta osoba jest nam winna (+).
   - „Oddał mi” (`repaid`) — spłata od tej osoby (−).
   - „Pożyczyłem od” (`borrowed`) — my jesteśmy winni (−).
   - „Oddałem” (`returned`) — spłata z naszej strony (+).
   
   Jedna osoba może mieć długi w obie strony. Saldo to suma znaków; dodatnie = jest nam winna, ujemne = my jesteśmy winni.
-- **Formularz dodawania:** rodzaj, osoba (z podpowiedziami z wcześniejszych wpisów), kwota, dzień, „za co”. Po zapisie zostaje osoba i data, czyszczona jest kwota i notatka, fokus wraca do kwoty. „Cofnij” w toście usuwa właśnie dodany wpis.
-- **Oddał całość / Oddałem całość.** Dodaje wpis wyrównujący saldo do zera. Toast ma „Cofnij”, które usuwa ten wpis.
+- **Formularz dodawania:** rodzaj, osoba (z podpowiedziami z wcześniejszych wpisów), kwota, dzień, „za co”. Po zapisie zostaje osoba, czyszczona jest kwota i notatka, fokus wraca do kwoty. „Cofnij” w toście usuwa właśnie dodany wpis. Dzień idzie za zegarem (`useDayClock`): po północy domyślny dzień to nowe „dziś”, dopóki nie wybrano innego (1.7).
+- **Termin zwrotu** (przy „Pożyczyłem” i „Pożyczyłem od”) tworzy notatkę z przypomnieniem o 9:00 z etykietą **`długi`** (`DEBT_NOTE_LABEL`), więc nie trafia do Skrzynki. Przy ukrytych kwotach tytuł notatki jest bez kwoty („Zwrot od Ania”), bo tytuł widać w powiadomieniu i na Dziś (1.2). Starsze notatki zostają bez zmian.
+- **Pasek spłaty** przy osobie pokazuje stronę, która jest winna — także przy samym „Pożyczyłem od” (wtedy w kolorze ostrzeżenia). `aria-label` „Oddano 40% z 500,00 zł” podaje kwotę tej strony (`debtSide`, 1.3).
+- **Oddał całość / Oddałem całość.** Dodaje wpis wyrównujący saldo do zera z polem `settle: true`. Toast ma „Cofnij”, które usuwa ten wpis.
+- **Podwójne rozliczenie (1.6).** Gdy „Oddał całość” stuknięto na dwóch telefonach naraz, po synchronizacji arkusz osoby pokazuje baner „Rozliczono dwa razy — usunąć drugi wpis?” z przyciskiem „Usuń drugi wpis” (z „Cofnij”), a przycisk „całość” chowa się. Warunek (`doubleSettle`): dwa wpisy `settle` w ciągu minuty, ten sam rodzaj i kwota, saldo po drugiej stronie dokładnie o tę kwotę.
 - **Historia osoby.** Lista wpisów z usuwaniem (z „Cofnij”, które przywraca wpis z tym samym id i datą) i edycją.
-- **Edycja wpisu.** Ołówek przy wpisie otwiera `EditDebtForm` w miejscu: rodzaj, osoba, kwota, dzień, notatka. Zapis zachowuje id i datę dodania. Zła kwota blokuje zapis z komunikatem.
+- **Edycja wpisu (1.5 — jak dodawanie).** Ołówek przy wpisie otwiera `EditDebtForm` w miejscu: rodzaj, osoba (z podpowiedziami), kwota, dzień, notatka i termin zwrotu. Błąd oznacza pole (`aria-invalid` + `aria-describedby`). Termin zwrotu tworzy notatkę (z etykietą `długi`), zmienia jej termin albo go zdejmuje (puste pole). Zapis zachowuje id i datę dodania; toast „Wpis poprawiony” ma „Cofnij”, które oddaje poprzedni wpis i poprzedni termin.
 - **Kopia zapasowa.** Pożyczki są w pełnej kopii. Przywracanie tylko dodaje brakujące wpisy (po id), niczego nie kasuje i nie nadpisuje wpisu o tym samym id, który już jest na telefonie.
 
 ### Gdzie jest
 
-- `src/lib/debts/model.ts` — czysty model: `DebtKind`, `DEBT_KINDS`, `KIND_SIGN`, `DebtEntry`, `cleanDebt`, `normalizeName`, `personKey` (grupowanie bez wielkości liter), `parseAmount`, `formatAmount`, `byNewest`, `balances`, `totals`, `knownPeople`. Stałe: `DEBT_MAX_ENTRIES` 2000, `DEBT_PERSON_MAX` 40, `DEBT_NOTE_MAX` 200, `DEBT_MAX_AMOUNT` 100 000 000 gr (1 000 000 zł).
+- `src/lib/debts/model.ts` — czysty model: `DebtKind`, `DEBT_KINDS`, `KIND_SIGN`, `DebtEntry` (z `dueNoteId` i `settle`), `cleanDebt`, `normalizeName`, `personKey` (grupowanie bez wielkości liter), `parseAmount`, `formatAmount`, `byNewest`, `balances`, `totals`, `knownPeople`, `debtSide`, `repaidShare`, `doubleSettle` (`DOUBLE_SETTLE_MS`), `runningBalances`, `DEBT_NOTE_LABEL`. Stałe: `DEBT_MAX_ENTRIES` 2000, `DEBT_PERSON_MAX` 40, `DEBT_NOTE_MAX` 200, `DEBT_MAX_AMOUNT` 100 000 000 gr (1 000 000 zł).
 - `src/lib/debts/yDebts.ts` — `createYDebts(doc)`: mapa Y `debts` (klucz = id wpisu), origin `DEBTS_ORIGIN`. `get`, `add`, `remove`, `restore`, `replace` (zmiana w miejscu), `dump`, `mergeDump`.
 - `src/lib/debts/store.ts` — `useDebts()`, `addDebt`, `addDebtFromText`, `removeDebt`, `restoreDebt`, `updateDebt` (przez `cleanDebt`), `debtsDump`, `mergeDebtsDump`. Działają na `yjsStore.doc`.
-- `src/components/debts/DebtsView.tsx` — `Summary`, `AddForm`, `People`, `PersonSheet`, `PersonHistory` (historia, „Oddał całość”, cofnięcie), `EditDebtForm`.
+- `src/components/debts/DebtsView.tsx` — `Summary`, `KindPicker`, `AddForm`, `People`, `PersonSheet`, `PersonHistory` (historia, „Oddał całość”, baner podwójnego rozliczenia, cofnięcie), `EditDebtForm`. `DebtReminderApi` (`clear`, `restore`, `get`) i `addReminderNote(title, content, at, labels)` przychodzą z `Index.tsx` — etykietę dokłada widok, żeby `Index` (paczka startowa) nie importował modelu Długów.
 - **Podpięcie:** `src/hooks/useFilteredNotes.ts` (typ `View` = `"debts"`), `src/pages/Index.tsx` (leniwy widok, bez listy notatek i wyszukiwarki), `src/components/BottomNav.tsx` (kafel „Długi” w „Więcej”), `src/components/sidebar/sidebarItems.ts`, `src/components/CommandPalette.tsx`, `src/components/AppHeader.tsx` (tytuł), `src/lib/viewRoute.ts` (adres `/dlugi`).
 - **Kopia:** `src/lib/noteSchema.ts` (pole `debts` w `fullBackupSchema`), `src/lib/exportNotes.ts` (zapis w `buildFullBackupWithReport`, scalanie w `restoreFullBackup`, przez dynamiczny import).
 
@@ -1301,7 +1304,8 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - `src/lib/debts/model.test.ts` — kwoty, czyszczenie, znaki salda dla czterech rodzajów, sortowanie.
 - `src/lib/debts/yDebts.test.ts` — scalanie dwóch dokumentów, usunięcie i przywrócenie, śmieci od peera, powiadomienia.
 - `src/lib/debts/yDebts.edit.test.ts` — `replace` i scalanie z kopii bez nadpisania.
-- `src/components/debts/DebtsView.test.tsx` — podsumowanie, pusta lista, edycja kwoty (ten sam id i grosze), zła kwota, zmiana rodzaju, „Oddał całość”.
+- `src/components/debts/DebtsView.test.tsx` — podsumowanie, pusta lista, edycja kwoty (ten sam id i grosze), zła kwota (`aria-invalid`), zmiana rodzaju, „Oddał całość” (z `settle`), pasek przy „Pożyczyłem od”, baner podwójnego rozliczenia, termin w edycji (zdjęcie i nowa notatka z etykietą).
+- `e2e/debts-due.spec.ts`, `e2e/debts-plan.spec.ts` — termin zwrotu w Terminach, notatka poza Skrzynką, rodzaj strzałkami (axe formularza), termin dodany w edycji.
 - `src/lib/fullBackup.test.ts` — długi w kopii, przywracanie scala.
 - Ręcznie w przeglądarce na szerokości telefonu: zapis, saldo, „Cofnij”, cztery rodzaje, „Oddałem całość”.
 
@@ -1315,6 +1319,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - `dada7f1` (2026-10-19) — rodzaje „Pożyczyłem od” i „Oddałem”.
 - `011be10` (2026-10-20) — kopia zapasowa, edycja wpisu, cofnięcie rozliczenia.
 - `1b8bcf8` (2026-10-20) — poprawka L9 (usuwanie uszkodzonego wpisu).
+- `do uzupełnienia` (2026-11-02) — plan Długów, Etap 1 (1.2–1.7).
 
 ## Budżet paczki startowej — próg 386 KB (decyzja właściciela, 2026-10-19)
 

@@ -241,7 +241,10 @@ const Index = () => {
       return n.reminder;
     },
     restore: (id, at) => updateNote(id, { reminder: at }),
-  }), [notes, archivedNotes, trashedNotes, updateNote]);
+    get: (id) => [...notes, ...archivedNotes, ...trashedNotes].find((x) => x.id === id)?.reminder ?? null,
+    has: (id) => [...notes, ...archivedNotes, ...trashedNotes].some((x) => x.id === id),
+    remove: (id) => deleteNote(id),
+  }), [notes, archivedNotes, trashedNotes, updateNote, deleteNote]);
   const pushEnabled = pushPrefs.use().enabled;
   useReminderNotifications(
     reminderNotes,
@@ -935,7 +938,7 @@ const Index = () => {
           {view === "debts" && (
             <ViewErrorBoundary name="Długi">
               <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
-                <DebtsView addReminderNote={(title, content, at) => addNote(title, content, prefs.defaultNoteColor, [], at)} reminders={debtReminders} />
+                <DebtsView addReminderNote={(title, content, at, labels) => addNote(title, content, prefs.defaultNoteColor, labels, at)} reminders={debtReminders} />
               </Suspense>
             </ViewErrorBoundary>
           )}

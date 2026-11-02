@@ -22,6 +22,8 @@ export interface NewDebtInput {
   /** Dzień `YYYY-MM-DD`; domyślnie dziś. */
   at?: string;
   note?: string;
+  /** Wpis z „Oddał całość” (1.6). */
+  settle?: true;
 }
 
 /** `null` = niepoprawne dane (pusta osoba, za długa nazwa, zły dzień, pełna lista). */
@@ -37,6 +39,7 @@ export function addDebt(input: NewDebtInput): DebtEntry | null {
     at,
     note: (input.note ?? "").trim().slice(0, DEBT_NOTE_MAX),
     created: Date.now(),
+    ...(input.settle ? { settle: true as const } : {}),
   };
   return yDebts.add(entry) ? entry : null;
 }

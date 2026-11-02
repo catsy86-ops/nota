@@ -29,7 +29,12 @@ export interface DebtEntry {
   created: number;
   /** Notatka z przypomnieniem o zwrocie (termin ustawiony przy dodawaniu). Brak = bez terminu. */
   dueNoteId?: string;
+  /** Wpis z „Oddał całość / Oddałem całość” (1.6) — do wykrycia podwójnego rozliczenia z dwóch telefonów. */
+  settle?: true;
 }
+
+/** Etykieta notatki z terminem zwrotu (1.2) — notatka nie ląduje w Skrzynce. */
+export const DEBT_NOTE_LABEL = "długi";
 
 export const DEBT_PERSON_MAX = 40;
 export const DEBT_NOTE_MAX = 200;
@@ -53,7 +58,7 @@ export function cleanDebt(raw: unknown): DebtEntry | null {
   const created = typeof e.created === "number" && Number.isFinite(e.created) ? e.created : 0;
   const note = typeof e.note === "string" ? e.note.trim().slice(0, DEBT_NOTE_MAX) : "";
   const dueNoteId = typeof e.dueNoteId === "string" && e.dueNoteId && e.dueNoteId.length <= ID_MAX ? e.dueNoteId : undefined;
-  return { id: e.id, person, kind: e.kind as DebtKind, amount: e.amount, at: e.at, note, created, ...(dueNoteId ? { dueNoteId } : {}) };
+  return { id: e.id, person, kind: e.kind as DebtKind, amount: e.amount, at: e.at, note, created, ...(dueNoteId ? { dueNoteId } : {}), ...(e.settle === true ? { settle: true as const } : {}) };
 }
 
 /** Spacje na brzegach i w środku → jedna spacja. */
@@ -116,23 +121,48 @@ export function balances(entries: readonly DebtEntry[]): PersonDebts[] {
 }
 
 /**
- * Procent rozliczenia z jednej strony salda. Kwoty „nam winna” (lent, returned) zwiększają saldo,
- * kwoty „my winni” (repaid, borrowed) je zmniejszają. Liczymy spłaconą część tej strony, która
- * jest winna: przy dodatnim saldzie — spłaty od niej, przy ujemnym — nasze spłaty jej.
- * 100 tylko przy zerowym saldzie; `floor` i maks. 99, żeby 99,6% nie wyglądało na zamknięte.
+ * Strona salda, która jest winna (1.3). Kwoty „nam winna” (lent, returned) zwiększają saldo, kwoty
+ * „my winni” (repaid, borrowed) je zmniejszają. `side` — suma strony winnej (przy dodatnim saldzie
+ * to, co ta osoba pożyczyła od nas, przy ujemnym — to, co my od niej), `done` — ile z tego oddano.
+ * Przy zerowym saldzie obie strony są równe, `side` = obrót jednej strony.
  */
-export function repaidShare(entries: readonly DebtEntry[]): number {
+export function debtSide(entries: readonly DebtEntry[]): { side: number; done: number; balance: number } {
   let owed = 0; // kwoty, które zwiększają saldo (nam winna)
   let settled = 0; // kwoty, które je zmniejszają (spłaty / zaciągnięte przez nas)
   for (const e of entries) {
     if (KIND_SIGN[e.kind] > 0) owed += e.amount; else settled += e.amount;
   }
   const balance = owed - settled;
+  return balance >= 0 ? { side: owed, done: settled, balance } : { side: settled, done: owed, balance };
+}
+
+/**
+ * Procent rozliczenia strony winnej (`debtSide`). 100 tylko przy zerowym saldzie; `floor` i maks. 99,
+ * żeby 99,6% nie wyglądało na zamknięte.
+ */
+export function repaidShare(entries: readonly DebtEntry[]): number {
+  const { side, done, balance } = debtSide(entries);
   if (balance === 0) return 100;
-  const side = balance > 0 ? owed : settled;
   if (side <= 0) return 0;
-  const done = balance > 0 ? settled : owed;
   return Math.min(99, Math.floor((done / side) * 100));
+}
+
+/** Dwa „całość” w ciągu minuty (dwa telefony naraz) — ten sam rodzaj i kwota. */
+export const DOUBLE_SETTLE_MS = 60_000;
+
+/**
+ * Podwójne rozliczenie (1.6): dwa wpisy „całość” tej osoby w ciągu minuty, ten sam rodzaj i kwota,
+ * a saldo przeszło na drugą stronę dokładnie o tę kwotę. Zwraca nowszy (do usunięcia) albo `null`.
+ */
+export function doubleSettle(entries: readonly DebtEntry[]): DebtEntry | null {
+  const balance = entries.reduce((s, e) => s + KIND_SIGN[e.kind] * e.amount, 0);
+  const settles = entries.filter((e) => e.settle).sort((a, b) => a.created - b.created);
+  for (let i = 1; i < settles.length; i++) {
+    const a = settles[i - 1];
+    const b = settles[i];
+    if (b.created - a.created <= DOUBLE_SETTLE_MS && a.kind === b.kind && a.amount === b.amount && balance === KIND_SIGN[b.kind] * b.amount) return b;
+  }
+  return null;
 }
 
 /**

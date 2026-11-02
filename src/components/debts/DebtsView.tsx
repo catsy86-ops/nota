@@ -1,16 +1,18 @@
 import { useId, useMemo, useRef, useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Check, Eye, EyeOff, HandCoins, Pencil, Trash2, Undo2 } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Check, Eye, EyeOff, HandCoins, Pencil, Trash2, TriangleAlert, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useDayClock } from "@/lib/dayClock";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { localDayKey } from "@/lib/dayDone";
 import { addDebt, addDebtFromText, removeDebt, restoreDebt, updateDebt, useDebts } from "@/lib/debts/store";
 import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
-import { balances, runningBalances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
+import { balances, debtSide, doubleSettle, runningBalances, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -24,9 +26,27 @@ import { balances, runningBalances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, 
 export interface DebtReminderApi {
   clear: (noteId: string) => number | null;
   restore: (noteId: string, at: number) => void;
+  /** Bieżący termin notatki (1.5: edycja terminu zwrotu); `null` = bez terminu albo notatki nie ma. */
+  get: (noteId: string) => number | null;
+  /** Czy notatka jeszcze istnieje (także w archiwum i koszu) — usunięta nie przyjmie nowego terminu. */
+  has: (noteId: string) => boolean;
+  /** Usuwa notatkę utworzoną przez edycję, gdy użytkownik ją cofnie (bez osieroconych notatek). */
+  remove: (noteId: string) => void;
 }
 
-export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: (title: string, content: string, at: number) => string; reminders?: DebtReminderApi }) {
+/** Notatka z przypomnieniem (`Index`); `labels` — etykiety notatki (1.2: `długi`, poza Skrzynką). */
+type AddReminderNote = (title: string, content: string, at: number, labels: string[]) => string;
+
+/** Tytuł notatki terminu; przy ukrytych kwotach bez kwoty (1.2) — tytuł widać w powiadomieniu i na Dziś. */
+const dueTitle = (kind: DebtKind, person: string, amount: number, hidden: boolean) =>
+  `${kind === "lent" ? "Zwrot od" : "Oddać"} ${person}${hidden ? "" : `: ${formatAmount(amount)}`}`;
+
+/** Termin zwrotu: dzień o 9:00 (ms). */
+const dueAt = (day: string) => new Date(`${day}T09:00:00`).getTime();
+
+const hasDue = (kind: DebtKind) => kind === "lent" || kind === "borrowed";
+
+export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: AddReminderNote; reminders?: DebtReminderApi }) {
   const entries = useDebts();
   const people = useMemo(() => balances(entries), [entries]);
   const sums = useMemo(() => totals(people), [people]);
@@ -53,10 +73,10 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: (t
       </header>
 
       <Summary owedToMe={sums.owedToMe} iOwe={sums.iOwe} hidden={hidden} />
-      <AddForm entries={entries} addReminderNote={addReminderNote} />
+      <AddForm entries={entries} addReminderNote={addReminderNote} hidden={hidden} />
       <People people={people} onOpen={setOpenKey} hidden={hidden} />
 
-      <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} reminders={reminders} hidden={hidden} />
+      <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} reminders={reminders} addReminderNote={addReminderNote} people={entries} hidden={hidden} />
     </section>
   );
 }
@@ -78,12 +98,36 @@ function Summary({ owedToMe, iOwe, hidden }: { owedToMe: number; iOwe: number; h
 
 const KIND_LABEL: Record<DebtKind, string> = { lent: "Pożyczyłem", repaid: "Oddał mi", borrowed: "Pożyczyłem od", returned: "Oddałem" };
 
+/**
+ * Wybór rodzaju (1.4): `ToggleGroup` z `ui/` — jeden przystanek Tab, strzałki, 44 px na dotyku.
+ * Pieniądze wychodzą od nas (pożyczka, zwrot): strzałka w górę. Wracają (spłata, dług u kogoś): w dół.
+ */
+function KindPicker({ value, onChange }: { value: DebtKind; onChange: (k: DebtKind) => void }) {
+  return (
+    <ToggleGroup value={value} onValueChange={(v) => onChange(v as DebtKind)} aria-label="Rodzaj wpisu" className="grid-flow-row grid-cols-2">
+      {DEBT_KINDS.map((k) => {
+        const Icon = KIND_SIGN[k] > 0 ? ArrowUpRight : ArrowDownLeft;
+        return (
+          <ToggleGroupItem key={k} value={k} className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+            <Icon className="h-4 w-4" aria-hidden />
+            {KIND_LABEL[k]}
+          </ToggleGroupItem>
+        );
+      })}
+    </ToggleGroup>
+  );
+}
+
 /** Dodawanie: osoba, rodzaj, kwota, dzień i notatka. Po zapisie zostaje osoba — kolejne pozycje dopisuje się szybciej. */
-function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addReminderNote?: (title: string, content: string, at: number) => string }) {
+function AddForm({ entries, addReminderNote, hidden }: { entries: DebtEntry[]; addReminderNote?: AddReminderNote; hidden: boolean }) {
   const [person, setPerson] = useState("");
   const [kind, setKind] = useState<DebtKind>("lent");
   const [amount, setAmount] = useState("");
-  const [at, setAt] = useState(localDayKey());
+  // 1.7: dzień formularza idzie za zegarem (po północy „dziś” to nowy dzień), dopóki nie wybrano innego.
+  useDayClock();
+  const today = localDayKey();
+  const [pickedAt, setPickedAt] = useState<string | null>(null);
+  const at = pickedAt ?? today;
   const [note, setNote] = useState("");
   // Termin zwrotu (dzień, 9:00) — tylko przy pożyczce i długu; zapisuje się jako notatka z przypomnieniem.
   const [due, setDue] = useState("");
@@ -96,21 +140,20 @@ function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addRemind
     e.preventDefault();
     if (!person.trim()) { haptic("warn"); setError({ field: "person", text: "Podaj, kto to jest — imię albo nazwę." }); return; }
     if (parseAmount(amount) === null) { haptic("warn"); setError({ field: "amount", text: "Wpisz kwotę większą od zera, np. 150 albo 99,90." }); return; }
-    const withDue = (kind === "lent" || kind === "borrowed") && !!due;
-    if (withDue && due < localDayKey()) { setError({ field: "due", text: "Termin zwrotu nie może być w przeszłości." }); return; }
+    const withDue = hasDue(kind) && !!due;
+    if (withDue && due < today) { setError({ field: "due", text: "Termin zwrotu nie może być w przeszłości." }); return; }
     const entry = addDebtFromText(person, kind, amount, note, at || undefined);
     if (!entry) { setError({ field: "person", text: "Nie udało się zapisać — sprawdź nazwę i datę." }); return; }
     if (withDue && addReminderNote) {
       // Notatka z przypomnieniem trafia do Dziś, Terminów i powiadomień; wpis pamięta jej id.
-      const reminderAt = new Date(`${due}T09:00:00`).getTime();
-      const title = kind === "lent" ? `Zwrot od ${entry.person}: ${formatAmount(entry.amount)}` : `Oddać ${entry.person}: ${formatAmount(entry.amount)}`;
-      const noteId = addReminderNote(title, entry.note, reminderAt);
+      const noteId = addReminderNote(dueTitle(kind, entry.person, entry.amount, hidden), entry.note, dueAt(due), [DEBT_NOTE_LABEL]);
       updateDebt({ ...entry, dueNoteId: noteId });
     }
     setError(null);
     setAmount("");
     setNote("");
     setDue("");
+    setPickedAt(null);
     haptic("success");
     toast.success(`${KIND_LABEL[kind]}: ${entry.person}, ${formatAmount(entry.amount)}`, {
       action: { label: "Cofnij", onClick: () => { removeDebt(entry.id); } },
@@ -120,29 +163,7 @@ function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addRemind
 
   return (
     <form onSubmit={submit} noValidate aria-label="Nowy wpis" className="mb-6 space-y-4 rounded-card border border-border/70 bg-card p-4">
-      <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-2 gap-1 rounded-card bg-muted p-1">
-        {DEBT_KINDS.map((k) => {
-          const selected = kind === k;
-          // Pieniądze wychodzą od nas (pożyczka, zwrot): strzałka w górę. Wracają (spłata, dług u kogoś): w dół.
-          const Icon = KIND_SIGN[k] > 0 ? ArrowUpRight : ArrowDownLeft;
-          return (
-            <button
-              key={k}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() => setKind(k)}
-              className={cn(
-                "tap-target flex items-center justify-center gap-1.5 whitespace-nowrap rounded-field px-2 py-2 text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-                selected ? "bg-card text-foreground shadow-elevation-up" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Icon className="h-4 w-4" aria-hidden />
-              {KIND_LABEL[k]}
-            </button>
-          );
-        })}
-      </div>
+      <KindPicker value={kind} onChange={setKind} />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
@@ -179,7 +200,7 @@ function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addRemind
       <div className="grid gap-3 sm:grid-cols-[auto_1fr]">
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-date`} className="text-sm font-medium">Dzień</label>
-          <Input id={`${uid}-date`} type="date" value={at} max={localDayKey()} onChange={(e) => setAt(e.target.value)} />
+          <Input id={`${uid}-date`} type="date" value={at} max={today} onChange={(e) => setPickedAt(e.target.value || null)} />
         </div>
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-note`} className="text-sm font-medium">Za co <span className="font-normal text-muted-foreground">(nieobowiązkowe)</span></label>
@@ -187,14 +208,14 @@ function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addRemind
         </div>
       </div>
 
-      {(kind === "lent" || kind === "borrowed") && (
+      {hasDue(kind) && (
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-due`} className="text-sm font-medium">Termin zwrotu <span className="font-normal text-muted-foreground">(z przypomnieniem o 9:00, nieobowiązkowe)</span></label>
           <Input
             id={`${uid}-due`}
             type="date"
             value={due}
-            min={localDayKey()}
+            min={today}
             aria-invalid={error?.field === "due" || undefined}
             aria-describedby={error?.field === "due" ? `${uid}-err` : undefined}
             onChange={(e) => { setDue(e.target.value); setError(null); }}
@@ -224,7 +245,8 @@ function People({ people, onOpen, hidden }: { people: PersonDebts[]; onOpen: (ke
   return (
     <ul className="space-y-2" aria-label="Osoby i salda">
       {people.map((p) => {
-        const lent = p.entries.filter((e) => e.kind === "lent").reduce((s, e) => s + e.amount, 0);
+        // 1.3: pasek strony winnej — także przy samym „Pożyczyłem od”.
+        const { side } = debtSide(p.entries);
         const share = repaidShare(p.entries);
         const settled = p.balance === 0;
         return (
@@ -246,9 +268,9 @@ function People({ people, onOpen, hidden }: { people: PersonDebts[]; onOpen: (ke
               </div>
               <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="shrink-0">{settled ? "Oddane w całości" : p.balance > 0 ? "Do oddania" : "Jesteś winien"}</span>
-                {lent > 0 && (
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" role="img" aria-label={`Oddano ${share}% z ${formatAmount(lent)}`}>
-                    <div className="h-full rounded-full bg-success transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${share}%` }} />
+                {side > 0 && (
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" role="img" aria-label={`Oddano ${share}% z ${amountText(side, hidden)}`}>
+                    <div className={cn("h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none", p.balance < 0 ? "bg-warning" : "bg-success")} style={{ width: `${share}%` }} />
                   </div>
                 )}
               </div>
@@ -260,11 +282,19 @@ function People({ people, onOpen, hidden }: { people: PersonDebts[]; onOpen: (ke
   );
 }
 
-function PersonSheet({ person, onClose, reminders, hidden }: { person: PersonDebts | null; onClose: () => void; reminders?: DebtReminderApi; hidden: boolean }) {
+interface HistoryProps {
+  reminders?: DebtReminderApi;
+  addReminderNote?: AddReminderNote;
+  /** Wszystkie wpisy — podpowiedzi osób w edycji (1.5). */
+  people: DebtEntry[];
+  hidden: boolean;
+}
+
+function PersonSheet({ person, onClose, ...rest }: { person: PersonDebts | null; onClose: () => void } & HistoryProps) {
   return (
     <Sheet open={!!person} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" snap className="overflow-y-auto rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
-        {person && <PersonHistory person={person} onDone={onClose} reminders={reminders} hidden={hidden} />}
+        {person && <PersonHistory person={person} onDone={onClose} {...rest} />}
       </SheetContent>
     </Sheet>
   );
@@ -282,13 +312,15 @@ function clearDueReminders(entries: DebtEntry[], reminders: DebtReminderApi | un
   return cleared;
 }
 
-function PersonHistory({ person, onDone, reminders, hidden }: { person: PersonDebts; onDone: () => void; reminders?: DebtReminderApi; hidden: boolean }) {
+function PersonHistory({ person, onDone, reminders, addReminderNote, people, hidden }: { person: PersonDebts; onDone: () => void } & HistoryProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [askRemove, setAskRemove] = useState<DebtEntry | null>(null);
   const running = useMemo(() => runningBalances(person.entries), [person.entries]);
+  const twice = useMemo(() => doubleSettle(person.entries), [person.entries]);
+  const names = useMemo(() => knownPeople(people), [people]);
   const settle = () => {
     // Saldo dodatnie: oni oddają nam. Ujemne: oddajemy my.
-    const created = addDebt({ person: person.name, kind: person.balance > 0 ? "repaid" : "returned", amount: Math.abs(person.balance) });
+    const created = addDebt({ person: person.name, kind: person.balance > 0 ? "repaid" : "returned", amount: Math.abs(person.balance), settle: true });
     // M7: `null` = zapis odrzucony (np. pełna lista) — saldo nie zeruje się, więc nie mówimy „rozliczone”.
     if (!created) {
       haptic("warn");
@@ -328,7 +360,16 @@ function PersonHistory({ person, onDone, reminders, hidden }: { person: PersonDe
         </SheetDescription>
       </SheetHeader>
 
-      {person.balance !== 0 && (
+      {twice && (
+        // 1.6: „Oddał całość” na dwóch telefonach naraz — saldo przeskoczyło na drugą stronę.
+        <div role="status" className="mt-4 flex flex-wrap items-center gap-3 rounded-card border border-warning/50 bg-warning/10 p-3 text-sm" data-testid="debts-double-settle">
+          <TriangleAlert className="h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+          <span className="min-w-0 flex-1">Rozliczono dwa razy — usunąć drugi wpis?</span>
+          <Button size="sm" variant="outline" className="h-11" onClick={() => remove(twice, false)}>Usuń drugi wpis</Button>
+        </div>
+      )}
+
+      {person.balance !== 0 && !twice && (
         <Button className="mt-4 w-full h-11 gap-2" onClick={() => { settle(); onDone(); }}>
           <Check />
           {person.balance > 0 ? `Oddał całość (${amountText(person.balance, hidden)})` : `Oddałem całość (${amountText(-person.balance, hidden)})`}
@@ -339,7 +380,7 @@ function PersonHistory({ person, onDone, reminders, hidden }: { person: PersonDe
         {person.entries.map((e, i) =>
           editingId === e.id ? (
             <li key={e.id}>
-              <EditDebtForm entry={e} onDone={() => setEditingId(null)} />
+              <EditDebtForm entry={e} people={names} reminders={reminders} addReminderNote={addReminderNote} hidden={hidden} onDone={() => setEditingId(null)} />
             </li>
           ) : (
             <li key={e.id} className="flex items-center gap-3 rounded-card border border-border/60 bg-background p-3">
@@ -387,69 +428,96 @@ function PersonHistory({ person, onDone, reminders, hidden }: { person: PersonDe
 }
 
 /**
- * Poprawka wpisu w miejscu: kwota, dzień, notatka, rodzaj i nazwa osoby. Zmiana imienia przenosi wpis
- * do innej osoby (grupowanie idzie po nazwie bez wielkości liter).
+ * Poprawka wpisu w miejscu (1.5 — jak dodawanie): kwota, dzień, notatka, rodzaj, nazwa osoby i termin
+ * zwrotu. Zmiana imienia przenosi wpis do innej osoby (grupowanie idzie po nazwie bez wielkości liter).
+ * Termin tworzy, zmienia albo zdejmuje przypomnienie notatki; „Cofnij” oddaje wpis i termin.
  */
-function EditDebtForm({ entry, onDone }: { entry: DebtEntry; onDone: () => void }) {
+function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, onDone }: {
+  entry: DebtEntry;
+  people: string[];
+  reminders?: DebtReminderApi;
+  addReminderNote?: AddReminderNote;
+  hidden: boolean;
+  onDone: () => void;
+}) {
   const uid = useId();
   const [person, setPerson] = useState(entry.person);
   const [kind, setKind] = useState<DebtKind>(entry.kind);
   const [amount, setAmount] = useState((entry.amount / 100).toFixed(2).replace(".", ","));
   const [at, setAt] = useState(entry.at);
   const [note, setNote] = useState(entry.note);
-  const [error, setError] = useState<string | null>(null);
+  // Notatka terminu, która jeszcze istnieje; usunięta liczy się jak brak notatki (nowy termin = nowa notatka).
+  const liveNoteId = entry.dueNoteId && reminders?.has(entry.dueNoteId) ? entry.dueNoteId : undefined;
+  const prevDueAt = liveNoteId ? reminders?.get(liveNoteId) ?? null : null;
+  const initialDue = prevDueAt !== null ? localDayKey(new Date(prevDueAt)) : "";
+  const [due, setDue] = useState(initialDue);
+  const [error, setError] = useState<{ field: "person" | "amount" | "at" | "due" | "save"; text: string } | null>(null);
+  // Termin da się ustawić, gdy jest gdzie go zapisać: istniejąca notatka albo tworzenie nowej.
+  const dueEditable = hasDue(kind) && (liveNoteId ? !!reminders : !!addReminderNote);
 
   const save = () => {
-    if (!normalizeName(person)) { setError("Podaj, kto to jest — imię albo nazwę."); return; }
+    if (!normalizeName(person)) { setError({ field: "person", text: "Podaj, kto to jest — imię albo nazwę." }); return; }
     const grosze = parseAmount(amount);
-    if (grosze === null) { setError("Wpisz kwotę większą od zera, np. 150 albo 99,90."); return; }
-    if (!at) { setError("Podaj dzień wpisu."); return; }
+    if (grosze === null) { setError({ field: "amount", text: "Wpisz kwotę większą od zera, np. 150 albo 99,90." }); return; }
+    if (!at) { setError({ field: "at", text: "Podaj dzień wpisu." }); return; }
+    const wantDue = dueEditable && due ? due : "";
+    if (wantDue && wantDue !== initialDue && wantDue < localDayKey()) { setError({ field: "due", text: "Termin zwrotu nie może być w przeszłości." }); return; }
     const updated = updateDebt({ ...entry, person: normalizeName(person), kind, amount: grosze, at, note: note.trim() });
-    if (!updated) { setError("Nie udało się zapisać — wpis mógł zostać usunięty."); return; }
+    if (!updated) { setError({ field: "save", text: "Nie udało się zapisać — wpis mógł zostać usunięty." }); return; }
+
+    // Termin zwrotu: zmiana w istniejącej notatce albo nowa notatka (z etykietą jak przy dodawaniu).
+    // Rodzaj bez terminu („Oddał mi”, „Oddałem”) zdejmuje przypomnienie, które zostało z pożyczki.
+    let undoDue = () => {};
+    const target = hasDue(kind) ? wantDue : "";
+    if (liveNoteId && reminders && target !== initialDue) {
+      if (target) reminders.restore(liveNoteId, dueAt(target)); else reminders.clear(liveNoteId);
+      undoDue = () => { if (prevDueAt !== null) reminders.restore(liveNoteId, prevDueAt); else reminders.clear(liveNoteId); };
+    } else if (!liveNoteId && target && addReminderNote) {
+      const created = addReminderNote(dueTitle(kind, updated.person, updated.amount, hidden), updated.note, dueAt(target), [DEBT_NOTE_LABEL]);
+      updateDebt({ ...updated, dueNoteId: created });
+      undoDue = () => { reminders?.remove(created); };
+    }
     haptic("tap");
-    toast.success("Wpis poprawiony");
+    toast.success("Wpis poprawiony", { action: { label: "Cofnij", onClick: () => { updateDebt(entry); undoDue(); } } });
     onDone();
   };
+
+  const invalid = (f: NonNullable<typeof error>["field"]) => (error?.field === f ? { "aria-invalid": true as const, "aria-describedby": `${uid}-err` } : {});
 
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); save(); }}
+      noValidate
       aria-label="Edycja wpisu"
       className="space-y-3 rounded-card border border-primary/40 bg-background p-3"
     >
-      <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-2 gap-1 rounded-field bg-muted p-1">
-        {DEBT_KINDS.map((k) => (
-          <button
-            key={k}
-            type="button"
-            role="radio"
-            aria-checked={kind === k}
-            onClick={() => setKind(k)}
-            className={cn("rounded-control px-2 py-1.5 text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring", kind === k ? "bg-card shadow-elevation-up" : "text-muted-foreground")}
-          >
-            {KIND_LABEL[k]}
-          </button>
-        ))}
-      </div>
+      <KindPicker value={kind} onChange={setKind} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-person`} className="text-sm font-medium">Kto</label>
-          <Input id={`${uid}-person`} value={person} maxLength={DEBT_PERSON_MAX} onChange={(e) => setPerson(e.target.value)} />
+          <Input id={`${uid}-person`} list={`${uid}-people`} autoComplete="off" value={person} maxLength={DEBT_PERSON_MAX} {...invalid("person")} onChange={(e) => { setPerson(e.target.value); setError(null); }} />
+          <datalist id={`${uid}-people`}>{people.map((p) => <option key={p} value={p} />)}</datalist>
         </div>
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-amount`} className="text-sm font-medium">Kwota (zł)</label>
-          <Input id={`${uid}-amount`} inputMode="decimal" value={amount} className="tabular-nums" onChange={(e) => setAmount(e.target.value)} />
+          <Input id={`${uid}-amount`} inputMode="decimal" value={amount} className="tabular-nums" {...invalid("amount")} onChange={(e) => { setAmount(e.target.value); setError(null); }} />
         </div>
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-date`} className="text-sm font-medium">Dzień</label>
-          <Input id={`${uid}-date`} type="date" value={at} max={localDayKey()} onChange={(e) => setAt(e.target.value)} />
+          <Input id={`${uid}-date`} type="date" value={at} max={localDayKey()} {...invalid("at")} onChange={(e) => { setAt(e.target.value); setError(null); }} />
         </div>
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-note`} className="text-sm font-medium">Za co</label>
           <Input id={`${uid}-note`} value={note} maxLength={DEBT_NOTE_MAX} onChange={(e) => setNote(e.target.value)} />
         </div>
+        {dueEditable && (
+          <div className="space-y-1.5 sm:col-span-2">
+            <label htmlFor={`${uid}-due`} className="text-sm font-medium">Termin zwrotu <span className="font-normal text-muted-foreground">(9:00; puste — bez przypomnienia)</span></label>
+            <Input id={`${uid}-due`} type="date" value={due} {...invalid("due")} onChange={(e) => { setDue(e.target.value); setError(null); }} />
+          </div>
+        )}
       </div>
-      {error && <p role="alert" className="text-sm text-destructive-ink">{error}</p>}
+      {error && <p id={`${uid}-err`} role="alert" className="text-sm text-destructive-ink">{error.text}</p>}
       <div className="flex gap-2">
         <Button type="submit" size="sm" className="h-11 flex-1">Zapisz zmiany</Button>
         <Button type="button" variant="ghost" size="sm" className="h-11" onClick={onDone}>Anuluj</Button>
