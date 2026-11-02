@@ -496,6 +496,24 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   }
 
   /**
+   * 2.4: sprawdzenie kodu awaryjnego bez zmiany sesji — tylko przy odblokowanym skarbcu z kodem. Zły kod liczy się
+   * do tego samego dławienia co odblokowanie (`recordFailure`); klucz z kodu nie jest nigdzie zachowywany.
+   */
+  async function verifyRecoveryCode(code: string): Promise<boolean> {
+    const m = meta();
+    if (!m?.recovery || !key || locking) return false;
+    checkThrottle();
+    try {
+      await unlockWithRecovery(m, code);
+    } catch (err) {
+      if (err instanceof VaultError && err.code === "bad-recovery") { recordFailure("vault-recovery-failed"); return false; }
+      throw err;
+    }
+    recordSuccess();
+    return true;
+  }
+
+  /**
    * Blokada: najpierw UI przechodzi na kafle z kłódką (karty odmontowują się i
    * zatwierdzają szkice, póki klucz jeszcze jest), potem zapisujemy oczekujące
    * zmiany i dopiero wtedy klucz oraz jawna treść znikają z pamięci.
@@ -659,6 +677,9 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     peek: (id: string): PrivateContent | undefined => (key && !locking ? cache.get(id)?.content : undefined),
     peekToken: (id: string): string | undefined => (key && !locking ? cache.get(id)?.vault : undefined),
     isUndecryptable: (id: string) => failed.has(id),
+    /** 2.5: liczba notatek prywatnych w dokumencie i tych, których nie da się odszyfrować w tej sesji. */
+    stats: () => ({ locked: store.lockedNoteIds().length, undecryptable: failed.size }),
+    verifyRecoveryCode,
     /**
      * 1.2: szyfrogram notatki, której nie da się odszyfrować tym kluczem — do pobrania i ręcznego odzysku.
      * Tylko dla takich notatek; to te same bajty, które są w dokumencie i w pełnej kopii (nic jawnego).

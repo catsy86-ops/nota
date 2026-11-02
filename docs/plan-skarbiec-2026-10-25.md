@@ -12,7 +12,7 @@
 > 7. Przy zmianie hasła opcja „hasło wyciekło — nie zachowuj starego klucza” (czyści łańcuch).
 > Testy: spóźniony zapis po `rekey`, dwa skarbce offline, łańcuch przez dwie epoki, odrzucenie podrzuconych wpisów, zgodność odcisku i starego klienta, wyścigi, dławienie, brak sekretów w danych.
 >
-> Zostają też: 1.1 (sekcja „Skarbiec — stan aktualny”), 1.6, 2.2–2.5, 3.3, Etap 4.
+> Zrobione też 2026-11-02: 1.1 („Skarbiec — stan aktualny” w `opis.md`), 1.6, 2.3 (filtr `ma:prywatne`; bez pozycji w pasku bocznym), 2.4, 2.5. Zostają: 1.2 część 2, 2.2, 3.3, Etap 4.
 
 Dziesiąty plan z serii „dział po dziale”, w tym samym układzie. Skarbiec to szyfrowanie notatek prywatnych: `lib/vault.ts` (kryptografia), `lib/privateNotes.ts` (sesja, kolejka zapisu, blokada), `lib/vaultAutoLock.ts`, `components/vault/*`.
 

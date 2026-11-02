@@ -15,6 +15,7 @@ import { extractWikiLinks } from "@/lib/wikiLinks";
  *   lista:otwarte             (checklista z nieodhaczoną pozycją)
  *   starsze:30d  nowsze:7d    (d = dni, t = tygodnie, m = miesiące; sama liczba = dni)
  *   priorytet:wysoki|sredni|niski   ma:zalacznik   brak:etykiety  brak:folderu
+ *   ma:prywatne               (notatka zablokowana w skarbcu — sam kafel, treść nadal poza wyszukiwaniem)
  *   pole:Nazwa=wartość        (własne pole notatki; bez „=” = pole ma jakąkolwiek wartość;
  *                             wartość ze spacją: pole:"Status=w toku")
  *   pole:Nazwa>5  <  >=  <=   (porównanie: liczby numerycznie, daty i tekst leksykalnie)
@@ -40,6 +41,7 @@ export type Clause =
   | { type: "newer"; days: number }
   | { type: "priority"; value: "low" | "medium" | "high" }
   | { type: "attachment" }
+  | { type: "private" }
   | { type: "noLabel" }
   | { type: "noFolder" }
   | { type: "prop"; name: string; value?: string }
@@ -111,6 +113,7 @@ function clauseFor(key: string, rawValue: string): Clause | null {
       if (["obraz", "obrazy", "obrazek", "zdjecie", "zdjecia", "image", "images"].includes(v)) return { type: "image" };
       if (["lista", "checklista", "checklist"].includes(v)) return { type: "checklist" };
       if (["zalacznik", "zalaczniki", "plik", "pliki", "attachment", "attachments"].includes(v)) return { type: "attachment" };
+      if (["prywatne", "prywatna", "private", "zablokowane"].includes(v)) return { type: "private" };
       return null;
     case "brak":
       if (["przypomnienia", "przypomnienie", "reminder"].includes(v)) return { type: "noReminder" };
@@ -195,6 +198,8 @@ export interface MatchNote {
   pinned: boolean;
   updatedAt: number;
   props?: NoteProps;
+  /** Notatka prywatna (skarbiec) — operator `ma:prywatne`. */
+  locked?: boolean;
 }
 export interface MatchFolder { id: string; name: string; parentId?: string | null }
 export interface MatchContext { folders?: MatchFolder[]; now?: number; propDefs?: PropDef[] }
@@ -277,6 +282,7 @@ export function matchesClauses(note: MatchNote, clauses: Clause[], ctx: MatchCon
       case "not": return !test(c.clause);
       case "priority": return (note.priority ?? "none") === c.value;
       case "attachment": return (note.attachments ?? []).length > 0;
+      case "private": return note.locked === true;
       case "noLabel": return note.labels.length === 0;
       case "noFolder": return !note.folderId;
       case "label": { const v = fold(c.value); return note.labels.some((l) => fold(l) === v); }

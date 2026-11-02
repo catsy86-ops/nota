@@ -139,6 +139,12 @@ describe("operatory: priorytet, załącznik, brak etykiety/folderu, negacja", ()
     expect(test("ma:zalacznik", {})).toBe(false);
   });
 
+  it("ma:prywatne — tylko notatki ze skarbca (Skarbiec 2.3)", () => {
+    expect(test("ma:prywatne", { locked: true })).toBe(true);
+    expect(test("ma:prywatne", {})).toBe(false);
+    expect(test("-ma:prywatne", { locked: true })).toBe(false);
+  });
+
   it("brak etykiety i folderu", () => {
     expect(test("brak:etykiety", {})).toBe(true);
     expect(test("brak:etykiety", { labels: ["x"] })).toBe(false);

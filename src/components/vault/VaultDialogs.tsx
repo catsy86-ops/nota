@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { privateNotes, VaultThrottledError } from "@/lib/privateNotes";
 import { MIN_PASSWORD_LENGTH, VaultError, formatRecoveryInput, passwordStrength } from "@/lib/vault";
 import { printRecoveryCode } from "@/lib/recoveryPrint";
+import { getRecoveryCheck, markRecoveryChecked, markRecoveryNudged, recoveryCheckDue } from "@/lib/vaultRecoveryCheck";
 import { passkeyApiAvailable } from "@/lib/passkey";
 import { vaultUi, type VaultUiKind } from "@/lib/vaultUi";
 import { downloadBlob } from "@/lib/downloadBlob";
@@ -25,12 +26,24 @@ export function VaultDialog({ kind, onDone }: { kind: VaultUiKind; onDone?: () =
     const done = onDone;
     vaultUi.close();
     done?.();
+    // 2.4: po odblokowaniu raz na 90 dni pytanie o kod awaryjny (wyłączalne w Ustawieniach).
+    if (mode === "unlock" && privateNotes.hasRecovery() && recoveryCheckDue(getRecoveryCheck(), Date.now())) {
+      const checked = getRecoveryCheck().checkedAt;
+      markRecoveryNudged();
+      toast("Masz zapisany kod awaryjny?", {
+        id: "vault-recovery-nudge",
+        duration: 12_000,
+        description: `Ostatnio sprawdzany: ${checked ? new Date(checked).toLocaleDateString("pl-PL") : "nigdy"}. Sprawdzenie nie zmienia hasła.`,
+        action: { label: "Sprawdź", onClick: () => vaultUi.open("checkRecovery") },
+      });
+    }
   }
 
   const title = recoveryCode ? "Zapisz kod awaryjny"
     : mode === "setup" ? "Ustaw hasło skarbca"
     : mode === "change" ? "Zmień hasło skarbca"
     : mode === "recover" ? "Odzyskaj dostęp kodem awaryjnym"
+    : mode === "checkRecovery" ? "Sprawdź kod awaryjny"
     : "Odblokuj prywatne notatki";
 
   return (
@@ -56,6 +69,8 @@ export function VaultDialog({ kind, onDone }: { kind: VaultUiKind; onDone?: () =
           <ChangeForm onChanged={(code) => (code ? setRecoveryCode(code) : finish())} />
         ) : mode === "recover" ? (
           <RecoverForm onBack={() => setMode("unlock")} onDone={(code) => (code ? setRecoveryCode(code) : finish())} />
+        ) : mode === "checkRecovery" ? (
+          <CheckRecoveryForm onClose={finish} />
         ) : (
           <UnlockForm onUnlocked={finish} onRecover={() => setMode("recover")} />
         )}
@@ -360,6 +375,51 @@ function RecoverForm({ onBack, onDone }: { onBack: () => void; onDone: (recovery
       <ResponsiveDialogFooter className="gap-2 sm:justify-between">
         <Button type="button" variant="ghost" size="sm" onClick={onBack}>Wróć</Button>
         <Button type="submit" disabled={!canSubmit}>{busy ? "Przeszyfrowuję…" : "Ustaw nowe hasło"}</Button>
+      </ResponsiveDialogFooter>
+    </form>
+  );
+}
+
+/**
+ * 2.4: sprawdzenie, czy zapisany kod awaryjny działa — bez zmiany hasła i sesji (`verifyRecoveryCode`).
+ * Udane sprawdzenie zapisuje datę na tym urządzeniu; zły kod liczy się do limitu prób.
+ */
+function CheckRecoveryForm({ onClose }: { onClose: () => void }) {
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy || !code.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      if (await privateNotes.verifyRecoveryCode(code)) {
+        markRecoveryChecked();
+        toast.success("Kod awaryjny działa", { description: "Trzymaj go dalej osobno od urządzeń." });
+        onClose();
+      } else {
+        setError("To nie jest kod tego skarbca. Sprawdź zapis — jeśli go nie masz, wygeneruj nowy przy zmianie hasła.");
+      }
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      <p className="text-sm text-muted-foreground">Wpisz kod z kartki albo menedżera haseł. Sprawdzenie nie zmienia hasła ani kodu.</p>
+      <div className="space-y-1.5">
+        <Label htmlFor="vault-check-code">Kod awaryjny</Label>
+        <Input id="vault-check-code" autoFocus autoComplete="off" spellCheck={false} autoCapitalize="characters" placeholder="XXXX-XXXX-XXXX-…" className="font-mono uppercase" value={code} onChange={(e) => { setCode(formatRecoveryInput(e.target.value)); setError(null); }} aria-invalid={!!error || undefined} aria-describedby={error ? "vault-check-err" : undefined} />
+      </div>
+      {error && <p id="vault-check-err" role="alert" className="text-xs text-destructive-ink">{error}</p>}
+      <ResponsiveDialogFooter className="gap-2">
+        <Button type="button" variant="ghost" size="sm" onClick={onClose}>Anuluj</Button>
+        <Button type="submit" disabled={busy || !code.trim()}>{busy ? "Sprawdzam…" : "Sprawdź"}</Button>
       </ResponsiveDialogFooter>
     </form>
   );

@@ -9,6 +9,8 @@ import { KeyRound, Lock, ShieldCheck } from "lucide-react";
 import { useVault } from "@/hooks/usePrivateNotes";
 import { AUTOLOCK_CHOICES, HIDDEN_LOCK_CHOICES, lockEverywhere, setAutoLockMinutes, setHiddenLockMinutes, useAutoLockMinutes, useHiddenLockMinutes } from "@/lib/vaultAutoLock";
 import { vaultUi } from "@/lib/vaultUi";
+import { Checkbox } from "@/components/ui/checkbox";
+import { setRecoveryNudgeOff, useRecoveryCheck } from "@/lib/vaultRecoveryCheck";
 import { Section } from "./SettingsShared";
 
 const HIDDEN_LABEL = (m: number) => (m === 0 ? "Nie blokuj" : m === 1 ? "Po 1 minucie" : `Po ${m} minutach`);
@@ -37,6 +39,7 @@ export function VaultSettings() {
           <span>{vault.corrupt ? STATUS.corrupt : STATUS[vault.phase]}</span>
         </p>
 
+        {has && <VaultState />}
         {has && <PasskeyEnroll />}
         <div className="flex flex-wrap gap-2">
           {vault.phase === "none" && !vault.corrupt && (
@@ -60,7 +63,7 @@ export function VaultSettings() {
         </div>
 
         <div className="flex items-center justify-between gap-3">
-          <label htmlFor="vault-autolock" className="text-sm font-semibold">Blokuj automatycznie</label>
+          <label htmlFor="vault-autolock" className="text-sm font-semibold">Blokuj automatycznie <span className="font-normal text-muted-foreground">(na tym urządzeniu)</span></label>
           <select
             id="vault-autolock"
             value={minutes}
@@ -71,7 +74,7 @@ export function VaultSettings() {
           </select>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <label htmlFor="vault-hidden-lock" className="text-sm font-semibold">Blokuj po schowaniu karty</label>
+          <label htmlFor="vault-hidden-lock" className="text-sm font-semibold">Blokuj po schowaniu karty <span className="font-normal text-muted-foreground">(na tym urządzeniu)</span></label>
           <select
             id="vault-hidden-lock"
             value={hiddenMinutes}
@@ -110,6 +113,48 @@ export function VaultSettings() {
         </div>
       </details>
     </Section>
+  );
+}
+
+/**
+ * 2.5 Karta stanu skarbca: kod awaryjny (jest / brak, kiedy sprawdzony — 2.4), liczba notatek prywatnych
+ * i nieodszyfrowywalnych (z podpowiedzią 1.2), przypomnienie o kodzie co 90 dni.
+ */
+function VaultState() {
+  const vault = useVault();
+  const check = useRecoveryCheck();
+  const hasRecovery = privateNotes.hasRecovery();
+  const { locked, undecryptable } = privateNotes.stats();
+  const unlocked = vault.phase === "unlocked";
+  const checked = check.checkedAt ? new Date(check.checkedAt).toLocaleDateString("pl-PL") : "nigdy";
+  return (
+    <div className="space-y-2" data-testid="vault-state">
+      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-sm">
+        <dt className="text-muted-foreground">Kod awaryjny</dt>
+        <dd>{hasRecovery ? `jest · sprawdzony: ${checked}` : "brak — wygenerujesz go przy zmianie hasła"}</dd>
+        <dt className="text-muted-foreground">Notatki prywatne</dt>
+        <dd>{locked}{locked > 0 && <span className="text-muted-foreground"> · w wyszukiwarce: <code className="font-mono text-xs">ma:prywatne</code></span>}</dd>
+        {unlocked && undecryptable > 0 && (
+          <>
+            <dt className="text-destructive-ink">Nie do odszyfrowania</dt>
+            <dd className="text-destructive-ink">{undecryptable} — na kaflu „Pobierz szyfrogram”</dd>
+          </>
+        )}
+      </dl>
+      {hasRecovery && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {unlocked && (
+            <Button type="button" size="sm" variant="outline" onClick={() => vaultUi.open("checkRecovery")}>
+              <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />Sprawdź kod awaryjny
+            </Button>
+          )}
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={!check.off} onCheckedChange={(v) => setRecoveryNudgeOff(v !== true)} />
+            Przypominaj co 90 dni
+          </label>
+        </div>
+      )}
+    </div>
   );
 }
 

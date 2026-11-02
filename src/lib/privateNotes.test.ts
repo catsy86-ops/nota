@@ -293,6 +293,23 @@ describe("privateNotes — zmiana hasła i próby", () => {
     expect(pn.peek("n1")?.content).toBe("ODZYSKANA");
   });
 
+  it("2.4: sprawdzenie kodu awaryjnego bez zmiany sesji; zły kod liczy się do limitu prób; 2.5: statystyki", async () => {
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ content: "TAJNE" }));
+    const { recoveryCode } = await pn.setup(PW);
+    await pn.lockNote("n1");
+    expect(pn.stats()).toEqual({ locked: 1, undecryptable: 0 });
+    expect(await pn.verifyRecoveryCode(recoveryCode!)).toBe(true);
+    expect(pn.phase()).toBe("unlocked");
+    expect(pn.peek("n1")?.content).toBe("TAJNE");
+    expect(await pn.verifyRecoveryCode("AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA")).toBe(false);
+    expect(localStorage.getItem("kaczy.vault.attempts.v1")).toContain("fails");
+    // Zablokowany skarbiec: sprawdzenie nie działa (nie jest drogą do odblokowania).
+    await pn.lock();
+    expect(await pn.verifyRecoveryCode(recoveryCode!)).toBe(false);
+    expect(pn.phase()).toBe("locked");
+  });
+
   it("limit prób: po kilku błędach rosnące opóźnienie, zapisane w localStorage", async () => {
     const { pn } = fresh();
     await pn.setup(PW);

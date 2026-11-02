@@ -267,6 +267,8 @@ export const SETTINGS_KEYS = [
   ...APPEARANCE_KEYS,
   // Dzień przeglądu, odznaka, auto-blokada skarbca — zwykłe preferencje, bez sekretów.
   "kaczy:review.day", "kaczy:badge.enabled", "kaczy.vault.autolock.v1",
+  // Skarbiec 1.6 i 2.4: blokada po schowaniu karty i daty sprawdzenia kodu awaryjnego (bez kodu) — na tym urządzeniu.
+  "kaczy.vault.hiddenLock.v1", "kaczy.vault.recoveryCheck.v1",
   // Flagi funkcji w przygotowaniu (src/lib/featureFlags.ts) — zwykłe przełączniki.
   "kaczy.features.v1",
   // Push: wpis jest, ale przy przywracaniu push wyłączamy (patrz `PUSH_RESTORE_KEY`) — subskrypcja jest na urządzeniu.

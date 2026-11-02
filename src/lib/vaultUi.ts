@@ -5,7 +5,7 @@ import { useSyncExternalStore } from "react";
  * Jedno miejsce, bo kafelek, menu notatki, paleta i Ustawienia chcą tego samego
  * okna; `VaultDialogHost` (montowany raz w Index) je rysuje.
  */
-export type VaultUiKind = "setup" | "unlock" | "change" | "recover";
+export type VaultUiKind = "setup" | "unlock" | "change" | "recover" | "checkRecovery";
 
 export interface VaultUiRequest {
   kind: VaultUiKind;

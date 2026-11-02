@@ -31,7 +31,7 @@ async function openMenu(page: Page, text: string) {
 }
 
 /** Zakłada skarbiec i blokuje notatkę (pierwsze użycie). */
-async function setUpVaultAndLock(page: Page) {
+async function setUpVaultAndLock(page: Page): Promise<string> {
   const c = await openMenu(page, TITLE);
   await c.getByRole("button", { name: "Zablokuj (notatka prywatna)" }).click();
 
@@ -61,6 +61,7 @@ async function setUpVaultAndLock(page: Page) {
   await recovery.getByLabel("Zapisałem kod w bezpiecznym miejscu.").check();
   await recovery.getByRole("button", { name: "Gotowe" }).click();
   await expect(page.getByText("Notatka zablokowana")).toBeVisible();
+  return code;
 }
 
 async function lockNowFromPalette(page: Page) {
@@ -252,4 +253,36 @@ test("kłódka skarbca w nagłówku: odblokowany → stuknięcie blokuje; zablok
   await unlock.getByLabel("Hasło skarbca").fill(PASSWORD);
   await unlock.getByRole("button", { name: "Odblokuj" }).click();
   await expect(page.getByRole("button", { name: /^Skarbiec odblokowany/ })).toBeVisible();
+});
+
+test("Skarbiec 2.3–2.5: karta stanu, sprawdzenie kodu awaryjnego i filtr ma:prywatne", async ({ page }) => {
+  await addNote(page, TITLE, `Treść z ${SECRET} do ukrycia`);
+  await addNote(page, "Zwykła notatka", "jawna treść");
+  const code = await setUpVaultAndLock(page);
+
+  // 2.3: filtr zwraca tylko notatkę prywatną.
+  const search = page.getByRole("searchbox").first();
+  await search.fill("ma:prywatne");
+  await expect(card(page, TITLE)).toBeVisible();
+  await expect(card(page, "Zwykła notatka")).toHaveCount(0);
+  await search.fill("");
+
+  // 2.5: karta stanu w Ustawieniach.
+  await page.getByRole("button", { name: "Ustawienia" }).first().click();
+  await page.getByRole("tab", { name: "Ogólne" }).click();
+  const state = page.getByTestId("vault-state");
+  await expect(state).toContainText("jest · sprawdzony: nigdy");
+  await expect(state).toContainText("Notatki prywatne1");
+
+  // 2.4: zły kod — komunikat; dobry — data sprawdzenia.
+  await state.getByRole("button", { name: "Sprawdź kod awaryjny" }).click();
+  const dialog = page.getByRole("dialog", { name: "Sprawdź kod awaryjny" });
+  await dialog.getByLabel("Kod awaryjny").fill("aaaa aaaa");
+  await dialog.getByRole("button", { name: "Sprawdź" }).click();
+  await expect(dialog.getByRole("alert")).toContainText("To nie jest kod tego skarbca");
+  await dialog.getByLabel("Kod awaryjny").fill(code.toLowerCase().replace(/-/g, " "));
+  await expect(dialog.getByLabel("Kod awaryjny")).toHaveValue(code);
+  await dialog.getByRole("button", { name: "Sprawdź" }).click();
+  await expect(page.getByText("Kod awaryjny działa")).toBeVisible();
+  await expect(state).not.toContainText("sprawdzony: nigdy");
 });

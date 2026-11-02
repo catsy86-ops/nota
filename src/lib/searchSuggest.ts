@@ -20,6 +20,7 @@ const OPERATORS: Suggestion[] = [
   { label: "ma:obraz", insert: "ma:obraz " },
   { label: "ma:lista", insert: "ma:lista " },
   { label: "ma:zalacznik", insert: "ma:zalacznik " },
+  { label: "ma:prywatne", insert: "ma:prywatne " },
   { label: "brak:przypomnienia", insert: "brak:przypomnienia " },
   { label: "brak:etykiety", insert: "brak:etykiety " },
   { label: "brak:folderu", insert: "brak:folderu " },
