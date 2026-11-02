@@ -1258,6 +1258,11 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 ### Co robi
 
 - **Widok.** Góra: „Są nam winni” i „Jesteś winien” (D-1, 2026-10-26; dawniej „My jesteśmy winni”). Pod spodem formularz i lista osób z saldem i paskiem spłaty. Stuknięcie w osobę otwiera arkusz z historią.
+  - **Podsumowanie (4.1):** kwoty przeliczają się płynnie (`AnimatedNumber` z `format`; przy ukrytych kwotach „•••” bez animacji), a pod nimi jeden pasek proporcji: lewa część „nam winni” (zielona), prawa „Ty winien” (bursztynowa), `aria-label` z procentami.
+  - **Osoba na liście (4.2):** kółko z inicjałem w barwie z palety notatek (`avatarHue` — stała barwa dla tej samej nazwy, `[data-avatar]` korzysta z `--note-ink` dla jasnego i ciemnego schematu; inicjał `aria-hidden`), saldo w JetBrains Mono (`font-mono`).
+  - **Pasek spłaty w Zeszycie (4.3):** kreska długopisu — tor jako linijka 1 px, wypełnienie 3 px, lekko pochylone i wyrysowywane od lewej krzywą stylu (`.debt-bar` w `styles/skins/signatures.css`); przy ograniczonym ruchu od razu w stanie końcowym. W innych stylach bez zmian.
+  - **Pusty stan (4.4):** szkic portfela z monetą rysowany kreską (`EmptySketch`, `.debt-sketch` w `index.css`, `pathLength=1`) i jedno wezwanie „Dodaj pierwszy wpis” — otwiera formularz z kursorem w „Kto”. Przy pustej liście telefon nie pokazuje drugiego przycisku „Nowy wpis”.
+  - **Duży krój (4.5):** formularze są `@container`; gdy pole ma mniej niż 18rem (np. tekst 125% na 390 px), wybór rodzaju przechodzi z 2×2 na jedną kolumnę.
   - **Na telefonie formularz jest zwinięty (2.1):** przycisk „Nowy wpis” / „Zwiń formularz” (`aria-expanded`), stan zapamiętany na urządzeniu (`kaczy.debts.formOpen.v1`); lista osób jest od razu pod podsumowaniem. Na komputerze formularz zawsze widać. W arkuszu osoby „Wpis z {imię}” zamyka arkusz i otwiera formularz z tą osobą (kursor w kwocie).
   - **Rozliczeni (2.4)** są na dole w zwiniętej sekcji „Rozliczeni (N)”.
   - **Szukanie osoby (2.5)** przy więcej niż 8 osobach: pole nad listą, bez wielkości liter i polskich znaków (`foldName`: „lukasz” znajdzie „Łukasz”); przy szukaniu rozliczeni nie są zwinięci.
@@ -1318,6 +1323,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - `src/lib/debts/yDebts.test.ts` — scalanie dwóch dokumentów, usunięcie i przywrócenie, śmieci od peera, powiadomienia.
 - `src/lib/debts/yDebts.edit.test.ts` — `replace` i scalanie z kopii bez nadpisania.
 - `src/components/debts/DebtsView.test.tsx` — podsumowanie, pusta lista, edycja kwoty (ten sam id i grosze), zła kwota (`aria-invalid`), zmiana rodzaju, „Oddał całość” (z `settle`), pasek przy „Pożyczyłem od”, baner podwójnego rozliczenia, termin w edycji (zdjęcie i nowa notatka z etykietą).
+- Etap 4: `model.test.ts` (stała barwa i inicjał), `DebtsView.test.tsx` (pasek proporcji, pusty stan, kółko), `e2e/debts-plan.spec.ts` (pusty stan na 390 px — fokus w „Kto”), zrzuty `e2e/visual.spec.ts` (`dlugi-*`, odświeżone 2026-11-02).
 - `model.test.ts` (Etap 3) — wiadomość osoby, CSV (BOM, kolejność, znak salda, apostrof przed formułą, cudzysłów przy średniku, puste pole); `yDebts.test.ts` — `replaceMany` jedną transakcją; `DebtsView.test.tsx` — „Wyślij”.
 - `src/lib/debts/settleFromNote.test.ts` — pytanie i spłata dla „Zwrot od” i „Oddać”, brak pytania przy rozliczonej osobie i saldzie po drugiej stronie.
 - `DebtsView.test.tsx` (Etap 2) — rozliczeni zwinięci, szukanie bez polskich znaków, nagłówki miesięcy, „Wpis z {imię}”.
@@ -1337,6 +1343,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - `1b8bcf8` (2026-10-20) — poprawka L9 (usuwanie uszkodzonego wpisu).
 - `0755b9a` (2026-11-02) — plan Długów, Etap 1 (1.2–1.7).
 - `dd1cead` (2026-11-02) — plan Długów, Etap 2 (2.1–2.5).
+- `do uzupełnienia` (2026-11-02) — plan Długów, Etap 4 (4.1–4.5, wygląd).
 - `6f6ccf4` (2026-11-02) — plan Długów, Etap 3 (3.1, 3.2, 3.4).
 
 ## Budżet paczki startowej — próg 386 KB (decyzja właściciela, 2026-10-19)

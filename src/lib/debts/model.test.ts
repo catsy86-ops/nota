@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { balances, cleanDebt, debtsCsv, debtSide, doubleSettle, foldName, personStatement, formatAmount, knownPeople, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
+import { avatarHue, balances, cleanDebt, debtsCsv, initialOf, debtSide, doubleSettle, foldName, personStatement, formatAmount, knownPeople, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
 
 const e = (over: Partial<DebtEntry>): DebtEntry => ({
   id: "d-1", person: "Anna", kind: "lent", amount: 10000, at: "2026-10-10", note: "", created: 1, ...over,
@@ -187,5 +187,14 @@ describe("wiadomość i CSV (3.2, 3.4)", () => {
     expect(rows[1]).toBe("2026-10-01;Ania;Pożyczyłem;100,00;'=SUMA(A1);74,50");
     expect(rows[2]).toBe('2026-10-03;Marek;Pożyczyłem od;40,00;"obiad; kino";-40,00');
     expect(rows[3]).toBe("2026-10-05;Ania;Oddał mi;25,50;;74,50");
+  });
+});
+
+describe("kółko osoby (4.2)", () => {
+  it("ta sama osoba zawsze ma tę samą barwę z palety; inicjał wielką literą", () => {
+    expect(avatarHue("Ania")).toBe(avatarHue(" ania "));
+    expect(["coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"]).toContain(avatarHue("Łukasz"));
+    expect(initialOf("łukasz")).toBe("Ł");
+    expect(initialOf("  ")).toBe("?");
   });
 });

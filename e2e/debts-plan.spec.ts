@@ -73,8 +73,10 @@ test("2.3: „Gotowe” w Terminach przy zwrocie pyta o spłatę i rozlicza osob
 });
 
 test("2.1: na telefonie formularz zwinięty, „Nowy wpis” go rozwija i to zapamiętuje", async ({ page }) => {
+  // Z pustą listą jest tylko „Dodaj pierwszy wpis” (4.4) — najpierw jeden wpis na komputerze.
+  await addLent(page, `Telefon ${Date.now()}`);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/dlugi");
+  await page.reload();
   const form = page.getByRole("form", { name: "Nowy wpis" });
   await expect(form).toBeHidden();
   const toggle = page.getByRole("button", { name: "Nowy wpis" });
@@ -115,3 +117,12 @@ test("3.4: eksport CSV wszystkich wpisów", async ({ page }) => {
   const text = await (await import("node:fs/promises")).readFile(await download.path(), "utf8");
   expect(text).toContain(`;${person};Pożyczyłem;120,00;;120,00`);
 });
+
+test("4.4: pusty stan — „Dodaj pierwszy wpis” otwiera formularz z kursorem w „Kto” (też na telefonie)", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/dlugi");
+  await expect(page.getByRole("button", { name: "Nowy wpis" })).toBeHidden();
+  await page.getByRole("button", { name: "Dodaj pierwszy wpis" }).click();
+  await expect(page.getByRole("form", { name: "Nowy wpis" }).getByLabel("Kto")).toBeFocused();
+});
+

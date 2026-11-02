@@ -1,6 +1,6 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Długi” (2026-10-25)
 
-> **Status (2026-11-02):** Etap 1 zrobiony: 1.1 i D-1, D-4 (2026-10-26), 1.2–1.7 (2026-11-02; „Prywatne” z 1.7 nie występuje — dział jest w grupie „Osobiste”). Zrobione wcześniej: 3.3 (ukrywanie kwot) i saldo po wpisie z 2.2. Etap 2 zrobiony 2026-11-02 (2.1–2.5). Etap 3 zrobiony 2026-11-02 (3.1, 3.2, 3.4; 3.5 odłożone wg D-3). Dalej Etap 4 (wygląd — przed kodem skill `frontend-design`) i Etap 5 (QA).
+> **Status (2026-11-02):** Etap 1 zrobiony: 1.1 i D-1, D-4 (2026-10-26), 1.2–1.7 (2026-11-02; „Prywatne” z 1.7 nie występuje — dział jest w grupie „Osobiste”). Zrobione wcześniej: 3.3 (ukrywanie kwot) i saldo po wpisie z 2.2. Etap 2 zrobiony 2026-11-02 (2.1–2.5). Etap 3 zrobiony 2026-11-02 (3.1, 3.2, 3.4; 3.5 odłożone wg D-3). Etap 4 zrobiony 2026-11-02 (4.1–4.5; sygnatura: pasek spłaty jako kreska długopisu w Zeszycie). Zostaje Etap 5 (QA na telefonie).
 
 Ósmy plan z serii „dział po dziale”, w tym samym układzie. Dział jest mały (`DebtsView.tsx` 394 linie, `lib/debts` ~320), więc plan też.
 

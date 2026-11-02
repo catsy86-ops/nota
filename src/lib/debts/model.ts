@@ -74,6 +74,19 @@ export function foldName(name: string): string {
   return personKey(name).replace(/ł/g, "l").normalize("NFD").replace(/\p{Diacritic}/gu, "");
 }
 
+/** Barwy kółka z inicjałem (4.2) — te same nazwy co kolory notatek (`--note-ink` w `index.css`). */
+export const AVATAR_HUES = ["coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"] as const;
+
+/** Stała barwa osoby: ta sama nazwa (bez wielkości liter) zawsze daje ten sam kolor. */
+export function avatarHue(name: string): (typeof AVATAR_HUES)[number] {
+  let h = 0;
+  for (const ch of personKey(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return AVATAR_HUES[h % AVATAR_HUES.length];
+}
+
+/** Pierwsza litera nazwy (wielka) do kółka. */
+export const initialOf = (name: string) => (normalizeName(name).charAt(0) || "?").toLocaleUpperCase("pl");
+
 /** Klucz grupowania: ta sama osoba, niezależnie od wielkości liter („Anna” = „anna”). */
 export function personKey(name: string): string {
   return normalizeName(name).toLocaleLowerCase("pl");

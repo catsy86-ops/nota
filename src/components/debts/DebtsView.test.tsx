@@ -255,3 +255,27 @@ describe("DebtsView — plan Długów, Etap 3", () => {
     expect(shareMock).toHaveBeenCalledWith({ title: "Ania — rozliczenie", text: expect.stringContaining("Do oddania: 100,00 zł") });
   });
 });
+
+describe("DebtsView — plan Długów, Etap 4", () => {
+  it("4.1: pasek proporcji z opisem, gdy są kwoty po obu stronach", () => {
+    fixture.entries = [debt("1", "Ania", "lent", 15_000), debt("2", "Marek", "borrowed", 5_000)];
+    render(<DebtsView />);
+    expect(screen.getByRole("img", { name: "Proporcja: 75% to, co nam winni, 25% to, co jesteś winien" })).toBeTruthy();
+  });
+
+  it("4.4: pusty stan ma jedno wezwanie „Dodaj pierwszy wpis”", () => {
+    render(<DebtsView />);
+    expect(screen.getByRole("button", { name: "Dodaj pierwszy wpis" })).toBeTruthy();
+    expect(screen.queryByTestId("debts-ratio")).toBeNull();
+  });
+
+  it("4.2: kółko z inicjałem w barwie osoby, ukryte dla czytnika", () => {
+    fixture.entries = [debt("1", "Ania", "lent", 1_000)];
+    const { container } = render(<DebtsView />);
+    const avatar = container.querySelector(".debt-avatar")!;
+    expect(avatar.textContent).toBe("A");
+    expect(avatar.getAttribute("aria-hidden")).toBe("true");
+    expect(avatar.getAttribute("data-avatar")).toBeTruthy();
+  });
+});
+

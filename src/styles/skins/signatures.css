@@ -477,3 +477,22 @@ html[data-skin="tablica"] .nav-active-bar {
 html[data-skin="neon"] .fab-brand {
   box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--brand-to) 70%, transparent), 0 0 18px color-mix(in srgb, var(--brand-to) 55%, transparent);
 }
+
+/* Długi 4.3 — w Zeszycie pasek spłaty to kreska długopisu: tor jako linijka (1 px), wypełnienie cieńsze, lekko
+   pochylone i wyrysowywane od lewej krzywą stylu. Kolor zostaje znaczeniowy (spłata / nasz dług). */
+html[data-skin="zeszyt"] .debt-bar {
+  overflow: visible;
+  background: linear-gradient(var(--border), var(--border)) 0 100% / 100% 1px no-repeat;
+  border-radius: 0;
+}
+html[data-skin="zeszyt"] .debt-bar > .debt-bar-fill {
+  height: 3px;
+  border-radius: 3px 1px 2px 1px;
+  transform-origin: left center;
+  rotate: -0.6deg;
+  animation: zeszyt-pen var(--sig-dur) var(--sig-ease) 1 both;
+}
+html[data-motion="reduced"][data-skin="zeszyt"] .debt-bar > .debt-bar-fill { animation: none; transform: scaleX(1); }
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="zeszyt"] .debt-bar > .debt-bar-fill { animation: none; transform: scaleX(1); }
+}

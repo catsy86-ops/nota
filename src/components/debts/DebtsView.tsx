@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDayClock } from "@/lib/dayClock";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ import { addDebt, addDebtFromText, removeDebt, renamePeople, restoreDebt, restor
 import { shareOrCopy } from "@/lib/shareOrCopy";
 import { downloadBlob } from "@/lib/downloadBlob";
 import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
-import { balances, debtsCsv, debtSide, doubleSettle, foldName, personKey, personStatement, runningBalances, DEBT_KIND_LABEL, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
+import { avatarHue, balances, debtsCsv, initialOf, debtSide, doubleSettle, foldName, personKey, personStatement, runningBalances, DEBT_KIND_LABEL, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -67,11 +68,16 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
   const formOpen = formOpenStore.use();
   const formId = useId();
   // 2.1: „+ Wpis z {imię}” z arkusza osoby — nowy formularz z tą osobą (klucz wymusza świeży stan).
-  const [prefill, setPrefill] = useState<{ name: string; n: number } | null>(null);
+  const [prefill, setPrefill] = useState<{ name: string; n: number; focus: "person" | "amount" } | null>(null);
   const newEntryFor = (name: string) => {
     setOpenKey(null);
     formOpenStore.set(true);
-    setPrefill({ name, n: Date.now() });
+    setPrefill({ name, n: Date.now(), focus: "amount" });
+  };
+  // 4.4: „Dodaj pierwszy wpis” z pustego stanu — formularz otwarty, kursor w „Kto”.
+  const startFirst = () => {
+    formOpenStore.set(true);
+    setPrefill({ name: "", n: Date.now(), focus: "person" });
   };
 
   return (
@@ -93,16 +99,17 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
       </header>
 
       <Summary owedToMe={sums.owedToMe} iOwe={sums.iOwe} hidden={hidden} />
-      <div className="mt-4 sm:hidden">
+      {/* Pusta lista ma własne „Dodaj pierwszy wpis” (4.4) — bez drugiego przycisku obok. */}
+      <div className={cn("mt-4 sm:hidden", entries.length === 0 && !formOpen && "hidden")}>
         <Button variant="outline" className="h-11 w-full gap-2" aria-expanded={formOpen} aria-controls={formId} onClick={() => { formOpenStore.set(!formOpen); haptic("tap"); }}>
           {formOpen ? <ChevronDown className="h-4 w-4 rotate-180" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
           {formOpen ? "Zwiń formularz" : "Nowy wpis"}
         </Button>
       </div>
       <div id={formId} className={cn("mt-4", !formOpen && "max-sm:hidden")}>
-        <AddForm key={prefill?.n ?? 0} entries={entries} addReminderNote={addReminderNote} hidden={hidden} initialPerson={prefill?.name} focusAmount={!!prefill} />
+        <AddForm key={prefill?.n ?? 0} entries={entries} addReminderNote={addReminderNote} hidden={hidden} initialPerson={prefill?.name} focusAmount={prefill?.focus === "amount"} focusPerson={prefill?.focus === "person"} />
       </div>
-      <People people={people} onOpen={setOpenKey} hidden={hidden} />
+      <People people={people} onOpen={setOpenKey} hidden={hidden} onStart={startFirst} />
       {entries.length > 0 && (
         <div className="mt-6 flex justify-end">
           <Button variant="ghost" size="sm" className="tap-target gap-1.5 text-muted-foreground" onClick={() => {
@@ -121,20 +128,34 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
 }
 
 function Summary({ owedToMe, iOwe, hidden }: { owedToMe: number; iOwe: number; hidden: boolean }) {
+  const total = owedToMe + iOwe;
+  const owedShare = total > 0 ? Math.round((owedToMe / total) * 100) : 0;
+  // Kwota przelicza się płynnie (4.1); przy ukrytych kwotach — „•••” bez animacji.
+  const money = (v: number, testId: string) => hidden
+    ? <span data-testid={testId}>{amountText(v, true)}</span>
+    : <AnimatedNumber value={v} format={formatAmount} data-testid={testId} />;
   return (
-    <div className="grid grid-cols-2 gap-3 rounded-card border border-border/70 bg-card p-4 shadow-elevation-up" role="group" aria-label="Podsumowanie">
-      <div>
-        <p className="text-xs text-muted-foreground">Są nam winni</p>
-        <p className="mt-1 font-display text-xl font-bold tabular-nums text-success-ink" data-testid="debts-owed">{amountText(owedToMe, hidden)}</p>
+    <div className="rounded-card border border-border/70 bg-card p-4 shadow-elevation-up" role="group" aria-label="Podsumowanie">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-xs text-muted-foreground">Są nam winni</p>
+          <p className="mt-1 font-display text-xl font-bold tabular-nums text-success-ink">{money(owedToMe, "debts-owed")}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-muted-foreground">Jesteś winien</p>
+          <p className="mt-1 font-display text-xl font-bold tabular-nums text-warning-ink">{money(iOwe, "debts-owe")}</p>
+        </div>
       </div>
-      <div>
-        <p className="text-xs text-muted-foreground">Jesteś winien</p>
-        <p className="mt-1 font-display text-xl font-bold tabular-nums text-warning-ink" data-testid="debts-owe">{amountText(iOwe, hidden)}</p>
-      </div>
+      {total > 0 && (
+        // 4.1: proporcja w jednym pasku — lewa część „nam winni”, prawa „Ty winien”.
+        <div className="mt-3 flex h-2 gap-0.5 overflow-hidden rounded-full" role="img" aria-label={`Proporcja: ${owedShare}% to, co nam winni, ${100 - owedShare}% to, co jesteś winien`} data-testid="debts-ratio">
+          {owedToMe > 0 && <div className="h-full rounded-full bg-success transition-[flex-grow] duration-500 motion-reduce:transition-none" style={{ flexGrow: owedToMe }} />}
+          {iOwe > 0 && <div className="h-full rounded-full bg-warning transition-[flex-grow] duration-500 motion-reduce:transition-none" style={{ flexGrow: iOwe }} />}
+        </div>
+      )}
     </div>
   );
 }
-
 
 /**
  * Wybór rodzaju (1.4): `ToggleGroup` z `ui/` — jeden przystanek Tab, strzałki, 44 px na dotyku.
@@ -142,7 +163,7 @@ function Summary({ owedToMe, iOwe, hidden }: { owedToMe: number; iOwe: number; h
  */
 function KindPicker({ value, onChange }: { value: DebtKind; onChange: (k: DebtKind) => void }) {
   return (
-    <ToggleGroup value={value} onValueChange={(v) => onChange(v as DebtKind)} aria-label="Rodzaj wpisu" className="grid-flow-row grid-cols-2">
+    <ToggleGroup value={value} onValueChange={(v) => onChange(v as DebtKind)} aria-label="Rodzaj wpisu" className="grid-flow-row grid-cols-2 @max-[18rem]:grid-cols-1">
       {DEBT_KINDS.map((k) => {
         const Icon = KIND_SIGN[k] > 0 ? ArrowUpRight : ArrowDownLeft;
         return (
@@ -157,14 +178,15 @@ function KindPicker({ value, onChange }: { value: DebtKind; onChange: (k: DebtKi
 }
 
 /** Dodawanie: osoba, rodzaj, kwota, dzień i notatka. Po zapisie zostaje osoba — kolejne pozycje dopisuje się szybciej. */
-function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount }: {
+function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount, focusPerson }: {
   entries: DebtEntry[];
   addReminderNote?: AddReminderNote;
   hidden: boolean;
   /** 2.1: osoba z „+ Wpis z {imię}”. */
   initialPerson?: string;
-  /** Po otwarciu z arkusza osoby: kursor w kwocie i formularz na ekranie. */
+  /** Po otwarciu z arkusza osoby: kursor w kwocie; z pustego stanu (4.4): w polu „Kto”. */
   focusAmount?: boolean;
+  focusPerson?: boolean;
 }) {
   const [person, setPerson] = useState(initialPerson ?? "");
   const [kind, setKind] = useState<DebtKind>("lent");
@@ -181,13 +203,14 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount 
   const amountRef = useRef<HTMLInputElement>(null);
   const uid = useId();
   const people = useMemo(() => knownPeople(entries), [entries]);
+  const personRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (!focusAmount) return;
-    const el = amountRef.current;
+    if (!focusAmount && !focusPerson) return;
+    const el = focusPerson ? personRef.current : amountRef.current;
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     el?.scrollIntoView?.({ block: "center", behavior: reduce ? "auto" : "smooth" });
     el?.focus({ preventScroll: true });
-  }, [focusAmount]);
+  }, [focusAmount, focusPerson]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,7 +238,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount 
   };
 
   return (
-    <form onSubmit={submit} noValidate aria-label="Nowy wpis" className="mb-6 space-y-4 rounded-card border border-border/70 bg-card p-4">
+    <form onSubmit={submit} noValidate aria-label="Nowy wpis" className="@container mb-6 space-y-4 rounded-card border border-border/70 bg-card p-4">
       <KindPicker value={kind} onChange={setKind} />
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -223,6 +246,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount 
           <label htmlFor={`${uid}-person`} className="text-sm font-medium">Kto</label>
           <Input
             id={`${uid}-person`}
+            ref={personRef}
             list={`${uid}-people`}
             value={person}
             maxLength={DEBT_PERSON_MAX}
@@ -286,15 +310,17 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount 
   );
 }
 
-function People({ people, onOpen, hidden }: { people: PersonDebts[]; onOpen: (key: string) => void; hidden: boolean }) {
+function People({ people, onOpen, hidden, onStart }: { people: PersonDebts[]; onOpen: (key: string) => void; hidden: boolean; onStart?: () => void }) {
   const [query, setQuery] = useState("");
   const [showSettled, setShowSettled] = useState(false);
   const settledId = useId();
   if (people.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-border p-8 text-center">
-        <p className="font-display text-lg font-semibold">Jeszcze nikogo tu nie ma</p>
-        <p className="mt-1 text-sm text-muted-foreground">Dodaj pierwszą pożyczkę — zobaczysz od razu, kto ile jest winien.</p>
+      <div className="rounded-card border border-dashed border-border p-8 text-center" data-testid="debts-empty">
+        <EmptySketch />
+        <p className="mt-3 font-display text-lg font-semibold">Jeszcze nikogo tu nie ma</p>
+        <p className="mt-1 text-sm text-muted-foreground">Zapisz pierwszą pożyczkę — od razu zobaczysz, kto ile jest winien.</p>
+        {onStart && <Button className="mt-4 h-11 gap-2" onClick={onStart}><Plus className="h-4 w-4" aria-hidden />Dodaj pierwszy wpis</Button>}
       </div>
     );
   }
@@ -353,12 +379,15 @@ function PersonList({ people, onOpen, hidden, label }: { people: PersonDebts[]; 
               onClick={() => onOpen(p.key)}
               className="pressable group w-full rounded-card border border-border/70 bg-card p-4 text-left transition-colors hover:border-primary/50 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="font-display text-base font-semibold truncate">{p.name}</span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <span className="debt-avatar grid size-8 shrink-0 place-items-center rounded-full font-display text-sm font-bold" data-avatar={avatarHue(p.name)} aria-hidden>{initialOf(p.name)}</span>
+                  <span className="font-display text-base font-semibold truncate">{p.name}</span>
+                </span>
                 {settled ? (
                   <span className="shrink-0 rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-medium text-success-ink">Rozliczone</span>
                 ) : (
-                  <span className={cn("shrink-0 font-display text-base font-bold tabular-nums", p.balance > 0 ? "text-success-ink" : "text-warning-ink")}>
+                  <span className={cn("shrink-0 font-mono text-base font-semibold tabular-nums", p.balance > 0 ? "text-success-ink" : "text-warning-ink")}>
                     {p.balance > 0 ? amountText(p.balance, hidden) : `− ${amountText(-p.balance, hidden)}`}
                   </span>
                 )}
@@ -366,8 +395,8 @@ function PersonList({ people, onOpen, hidden, label }: { people: PersonDebts[]; 
               <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="shrink-0">{settled ? "Oddane w całości" : p.balance > 0 ? "Do oddania" : "Jesteś winien"}</span>
                 {side > 0 && (
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" role="img" aria-label={`Oddano ${share}% z ${amountText(side, hidden)}`}>
-                    <div className={cn("h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none", p.balance < 0 ? "bg-warning" : "bg-success")} style={{ width: `${share}%` }} />
+                  <div className="debt-bar h-1.5 flex-1 overflow-hidden rounded-full bg-muted" role="img" aria-label={`Oddano ${share}% z ${amountText(side, hidden)}`}>
+                    <div className={cn("debt-bar-fill h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none", p.balance < 0 ? "bg-warning" : "bg-success")} style={{ width: `${share}%` }} />
                   </div>
                 )}
               </div>
@@ -616,7 +645,7 @@ function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, onDon
       onSubmit={(e) => { e.preventDefault(); save(); }}
       noValidate
       aria-label="Edycja wpisu"
-      className="space-y-3 rounded-card border border-primary/40 bg-background p-3"
+      className="@container space-y-3 rounded-card border border-primary/40 bg-background p-3"
     >
       <KindPicker value={kind} onChange={setKind} />
       <div className="grid gap-3 sm:grid-cols-2">
@@ -650,6 +679,20 @@ function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, onDon
         <Button type="button" variant="ghost" size="sm" className="h-11" onClick={onDone}>Anuluj</Button>
       </div>
     </form>
+  );
+}
+
+/** 4.4: portfel i moneta kreską — rysują się przy pojawieniu (`.debt-sketch` w `index.css`). */
+function EmptySketch() {
+  return (
+    <svg viewBox="0 0 120 80" className="debt-sketch mx-auto h-20 w-28 text-primary" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path pathLength={1} d="M18 26 C18 21 21 18 26 18 L86 18 C91 18 94 21 94 26 L94 62 C94 67 91 70 86 70 L26 70 C21 70 18 67 18 62 Z" />
+      <path pathLength={1} d="M18 30 L70 30" />
+      <path pathLength={1} d="M78 38 L100 38 C102 38 103 39 103 41 L103 51 C103 53 102 54 100 54 L78 54 C75 54 73 52 73 49 L73 43 C73 40 75 38 78 38 Z" />
+      <circle pathLength={1} cx="82" cy="46" r="2.5" />
+      <circle pathLength={1} cx="104" cy="16" r="9" />
+      <path pathLength={1} d="M101 16 L107 16 M104 12 L104 20" />
+    </svg>
   );
 }
 

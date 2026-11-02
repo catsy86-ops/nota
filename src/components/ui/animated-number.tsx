@@ -5,7 +5,7 @@ import { animate, useReducedMotion } from "framer-motion";
  * Liczba, która przelicza się do nowej wartości zamiast przeskakiwać (mikrointerakcja liczników).
  * Przy `prefers-reduced-motion` od razu pokazuje wynik. Zaokrągla do liczby całkowitej.
  */
-export function AnimatedNumber({ value, className, ...rest }: { value: number } & HTMLAttributes<HTMLSpanElement>) {
+export function AnimatedNumber({ value, format, className, ...rest }: { value: number; /** Zapis liczby (np. kwota z groszy); domyślnie sama liczba. */ format?: (n: number) => string } & HTMLAttributes<HTMLSpanElement>) {
   const reduce = useReducedMotion();
   const [shown, setShown] = useState(value);
   const from = useRef(value);
@@ -23,5 +23,5 @@ export function AnimatedNumber({ value, className, ...rest }: { value: number } 
     from.current = value;
     return () => controls.stop();
   }, [value, reduce]);
-  return <span className={className} {...rest}>{shown}</span>;
+  return <span className={className} {...rest}>{format ? format(shown) : shown}</span>;
 }
