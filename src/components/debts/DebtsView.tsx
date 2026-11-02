@@ -1,5 +1,5 @@
-import { useId, useMemo, useRef, useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Check, Eye, EyeOff, HandCoins, Pencil, Trash2, TriangleAlert, Undo2 } from "lucide-react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { ArrowDownLeft, ArrowUpRight, Check, ChevronDown, Eye, EyeOff, HandCoins, Pencil, Plus, Search, Trash2, TriangleAlert, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +7,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDayClock } from "@/lib/dayClock";
+import { createPersistedStore } from "@/lib/persistedStore";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { localDayKey } from "@/lib/dayDone";
 import { addDebt, addDebtFromText, removeDebt, restoreDebt, updateDebt, useDebts } from "@/lib/debts/store";
 import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
-import { balances, debtSide, doubleSettle, runningBalances, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
+import { balances, debtSide, doubleSettle, foldName, runningBalances, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -46,6 +47,14 @@ const dueAt = (day: string) => new Date(`${day}T09:00:00`).getTime();
 
 const hasDue = (kind: DebtKind) => kind === "lent" || kind === "borrowed";
 
+// 2.1: formularz rozwinięty na telefonie — zapamiętany na tym urządzeniu (na komputerze zawsze widać).
+const formOpenStore = createPersistedStore<boolean>("kaczy.debts.formOpen.v1", false, {
+  merge: (defaults, stored) => (typeof stored === "boolean" ? stored : defaults),
+});
+
+/** Powyżej tylu osób nad listą jest pole szukania (2.5). */
+const SEARCH_FROM = 8;
+
 export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: AddReminderNote; reminders?: DebtReminderApi }) {
   const entries = useDebts();
   const people = useMemo(() => balances(entries), [entries]);
@@ -53,6 +62,15 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
   const [openKey, setOpenKey] = useState<string | null>(null);
   const openPerson = people.find((p) => p.key === openKey) ?? null;
   const hidden = useHideAmounts();
+  const formOpen = formOpenStore.use();
+  const formId = useId();
+  // 2.1: „+ Wpis z {imię}” z arkusza osoby — nowy formularz z tą osobą (klucz wymusza świeży stan).
+  const [prefill, setPrefill] = useState<{ name: string; n: number } | null>(null);
+  const newEntryFor = (name: string) => {
+    setOpenKey(null);
+    formOpenStore.set(true);
+    setPrefill({ name, n: Date.now() });
+  };
 
   return (
     // Tytuł i grupa są w główce kartki (`ViewTitle`); tu zostaje opis i „Ukryj kwoty”.
@@ -73,10 +91,18 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
       </header>
 
       <Summary owedToMe={sums.owedToMe} iOwe={sums.iOwe} hidden={hidden} />
-      <AddForm entries={entries} addReminderNote={addReminderNote} hidden={hidden} />
+      <div className="mt-4 sm:hidden">
+        <Button variant="outline" className="h-11 w-full gap-2" aria-expanded={formOpen} aria-controls={formId} onClick={() => { formOpenStore.set(!formOpen); haptic("tap"); }}>
+          {formOpen ? <ChevronDown className="h-4 w-4 rotate-180" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
+          {formOpen ? "Zwiń formularz" : "Nowy wpis"}
+        </Button>
+      </div>
+      <div id={formId} className={cn("mt-4", !formOpen && "max-sm:hidden")}>
+        <AddForm key={prefill?.n ?? 0} entries={entries} addReminderNote={addReminderNote} hidden={hidden} initialPerson={prefill?.name} focusAmount={!!prefill} />
+      </div>
       <People people={people} onOpen={setOpenKey} hidden={hidden} />
 
-      <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} reminders={reminders} addReminderNote={addReminderNote} people={entries} hidden={hidden} />
+      <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} reminders={reminders} addReminderNote={addReminderNote} people={entries} hidden={hidden} onNewEntry={newEntryFor} />
     </section>
   );
 }
@@ -119,8 +145,16 @@ function KindPicker({ value, onChange }: { value: DebtKind; onChange: (k: DebtKi
 }
 
 /** Dodawanie: osoba, rodzaj, kwota, dzień i notatka. Po zapisie zostaje osoba — kolejne pozycje dopisuje się szybciej. */
-function AddForm({ entries, addReminderNote, hidden }: { entries: DebtEntry[]; addReminderNote?: AddReminderNote; hidden: boolean }) {
-  const [person, setPerson] = useState("");
+function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount }: {
+  entries: DebtEntry[];
+  addReminderNote?: AddReminderNote;
+  hidden: boolean;
+  /** 2.1: osoba z „+ Wpis z {imię}”. */
+  initialPerson?: string;
+  /** Po otwarciu z arkusza osoby: kursor w kwocie i formularz na ekranie. */
+  focusAmount?: boolean;
+}) {
+  const [person, setPerson] = useState(initialPerson ?? "");
   const [kind, setKind] = useState<DebtKind>("lent");
   const [amount, setAmount] = useState("");
   // 1.7: dzień formularza idzie za zegarem (po północy „dziś” to nowy dzień), dopóki nie wybrano innego.
@@ -135,6 +169,13 @@ function AddForm({ entries, addReminderNote, hidden }: { entries: DebtEntry[]; a
   const amountRef = useRef<HTMLInputElement>(null);
   const uid = useId();
   const people = useMemo(() => knownPeople(entries), [entries]);
+  useEffect(() => {
+    if (!focusAmount) return;
+    const el = amountRef.current;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    el?.scrollIntoView?.({ block: "center", behavior: reduce ? "auto" : "smooth" });
+    el?.focus({ preventScroll: true });
+  }, [focusAmount]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,16 +275,60 @@ function AddForm({ entries, addReminderNote, hidden }: { entries: DebtEntry[]; a
 }
 
 function People({ people, onOpen, hidden }: { people: PersonDebts[]; onOpen: (key: string) => void; hidden: boolean }) {
+  const [query, setQuery] = useState("");
+  const [showSettled, setShowSettled] = useState(false);
+  const settledId = useId();
   if (people.length === 0) {
     return (
       <div className="rounded-card border border-dashed border-border p-8 text-center">
         <p className="font-display text-lg font-semibold">Jeszcze nikogo tu nie ma</p>
-        <p className="mt-1 text-sm text-muted-foreground">Dodaj pierwszą pożyczkę powyżej — zobaczysz od razu, kto ile jest winien.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Dodaj pierwszą pożyczkę — zobaczysz od razu, kto ile jest winien.</p>
       </div>
     );
   }
+  // 2.5: szukanie przy dłuższej liście; wynik obejmuje też rozliczonych (bez zwijania).
+  const q = foldName(query);
+  const found = q ? people.filter((p) => foldName(p.name).includes(q)) : people;
+  const active = found.filter((p) => p.balance !== 0);
+  const settled = found.filter((p) => p.balance === 0);
   return (
-    <ul className="space-y-2" aria-label="Osoby i salda">
+    <div className="space-y-2">
+      {people.length > SEARCH_FROM && (
+        <label className="relative block">
+          <span className="sr-only">Szukaj osoby</span>
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Input type="search" enterKeyHint="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Szukaj osoby" className="h-11 pl-9" />
+        </label>
+      )}
+      {q && found.length === 0 && <p className="py-4 text-center text-sm text-muted-foreground" role="status">Nikogo takiego — sprawdź imię.</p>}
+      {active.length > 0 && <PersonList people={active} onOpen={onOpen} hidden={hidden} label="Osoby i salda" />}
+      {settled.length > 0 && (q ? (
+        <PersonList people={settled} onOpen={onOpen} hidden={hidden} label="Rozliczeni" />
+      ) : (
+        // 2.4: rozliczeni na dole, domyślnie zwinięci.
+        <div className="pt-2">
+          <button
+            type="button"
+            aria-expanded={showSettled}
+            aria-controls={settledId}
+            onClick={() => setShowSettled((v) => !v)}
+            className="pressable inline-flex items-center gap-1.5 rounded-field px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground coarse:min-h-11"
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform motion-reduce:transition-none", showSettled && "rotate-180")} aria-hidden />
+            Rozliczeni ({settled.length})
+          </button>
+          <div id={settledId} hidden={!showSettled} className="mt-2">
+            <PersonList people={settled} onOpen={onOpen} hidden={hidden} label="Rozliczeni" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PersonList({ people, onOpen, hidden, label }: { people: PersonDebts[]; onOpen: (key: string) => void; hidden: boolean; label: string }) {
+  return (
+    <ul className="space-y-2" aria-label={label}>
       {people.map((p) => {
         // 1.3: pasek strony winnej — także przy samym „Pożyczyłem od”.
         const { side } = debtSide(p.entries);
@@ -288,6 +373,8 @@ interface HistoryProps {
   /** Wszystkie wpisy — podpowiedzi osób w edycji (1.5). */
   people: DebtEntry[];
   hidden: boolean;
+  /** 2.1: „+ Wpis z {imię}” — formularz z tą osobą. */
+  onNewEntry?: (name: string) => void;
 }
 
 function PersonSheet({ person, onClose, ...rest }: { person: PersonDebts | null; onClose: () => void } & HistoryProps) {
@@ -312,12 +399,22 @@ function clearDueReminders(entries: DebtEntry[], reminders: DebtReminderApi | un
   return cleared;
 }
 
-function PersonHistory({ person, onDone, reminders, addReminderNote, people, hidden }: { person: PersonDebts; onDone: () => void } & HistoryProps) {
+function PersonHistory({ person, onDone, reminders, addReminderNote, people, hidden, onNewEntry }: { person: PersonDebts; onDone: () => void } & HistoryProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [askRemove, setAskRemove] = useState<DebtEntry | null>(null);
   const running = useMemo(() => runningBalances(person.entries), [person.entries]);
   const twice = useMemo(() => doubleSettle(person.entries), [person.entries]);
   const names = useMemo(() => knownPeople(people), [people]);
+  // 2.2: historia z nagłówkami miesięcy; indeks zostaje ten z listy (saldo po wpisie).
+  const months = useMemo(() => {
+    const out: { key: string; items: { e: DebtEntry; i: number }[] }[] = [];
+    person.entries.forEach((e, i) => {
+      const key = e.at.slice(0, 7);
+      const last = out[out.length - 1];
+      if (last?.key === key) last.items.push({ e, i }); else out.push({ key, items: [{ e, i }] });
+    });
+    return out;
+  }, [person.entries]);
   const settle = () => {
     // Saldo dodatnie: oni oddają nam. Ujemne: oddajemy my.
     const created = addDebt({ person: person.name, kind: person.balance > 0 ? "repaid" : "returned", amount: Math.abs(person.balance), settle: true });
@@ -376,36 +473,50 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
         </Button>
       )}
 
-      <ol className="mt-5 space-y-2" aria-label="Historia">
-        {person.entries.map((e, i) =>
-          editingId === e.id ? (
-            <li key={e.id}>
-              <EditDebtForm entry={e} people={names} reminders={reminders} addReminderNote={addReminderNote} hidden={hidden} onDone={() => setEditingId(null)} />
-            </li>
-          ) : (
-            <li key={e.id} className="flex items-center gap-3 rounded-card border border-border/60 bg-background p-3">
-              <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-success/15 text-success-ink" : "bg-warning/15 text-warning-ink")} aria-hidden>
-                {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{KIND_LABEL[e.kind]} · <span className="tabular-nums">{amountText(e.amount, hidden)}</span></p>
-                <p className="text-xs text-muted-foreground">
-                  {formatDay(e.at)}{e.note ? ` · ${e.note}` : ""}
-                </p>
-                <p className="text-xs text-muted-foreground tabular-nums">
-                  Saldo po tym: {running[i] === 0 ? "0" : `${running[i] > 0 ? "" : "− "}${amountText(Math.abs(running[i]), hidden)}`}
-                </p>
-              </div>
-              <Button variant="ghost" size="icon" aria-label={`Edytuj wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => setEditingId(e.id)}>
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" aria-label={`Usuń wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => requestRemove(e)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </li>
-          ),
-        )}
-      </ol>
+      {onNewEntry && (
+        <Button variant="outline" className="mt-2 w-full h-11 gap-2" onClick={() => onNewEntry(person.name)}>
+          <Plus className="h-4 w-4" aria-hidden />
+          Wpis z {person.name}
+        </Button>
+      )}
+
+      <div className="mt-5 space-y-4" role="group" aria-label="Historia">
+        {months.map((m) => (
+          <section key={m.key} aria-label={monthLabel(m.key)}>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{monthLabel(m.key)}</h3>
+            <ol className="space-y-2">
+              {m.items.map(({ e, i }) =>
+                editingId === e.id ? (
+                  <li key={e.id}>
+                    <EditDebtForm entry={e} people={names} reminders={reminders} addReminderNote={addReminderNote} hidden={hidden} onDone={() => setEditingId(null)} />
+                  </li>
+                ) : (
+                  <li key={e.id} className="flex items-center gap-3 rounded-card border border-border/60 bg-background p-3">
+                    <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-success/15 text-success-ink" : "bg-warning/15 text-warning-ink")} aria-hidden>
+                      {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{KIND_LABEL[e.kind]} · <span className="tabular-nums">{amountText(e.amount, hidden)}</span></p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDay(e.at)}{e.note ? ` · ${e.note}` : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        Saldo po tym: {running[i] === 0 ? "0" : `${running[i] > 0 ? "" : "− "}${amountText(Math.abs(running[i]), hidden)}`}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon" aria-label={`Edytuj wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => setEditingId(e.id)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" aria-label={`Usuń wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => requestRemove(e)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ),
+              )}
+            </ol>
+          </section>
+        ))}
+      </div>
       <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Undo2 className="h-3.5 w-3.5" aria-hidden />
         Usunięty wpis można cofnąć z komunikatu na dole ekranu.
@@ -525,5 +636,8 @@ function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, onDon
     </form>
   );
 }
+
+/** „2026-11” → „listopad 2026”. */
+const monthLabel = (key: string) => new Date(`${key}-01T12:00:00`).toLocaleDateString("pl-PL", { month: "long", year: "numeric" });
 
 const formatDay = (at: string) => new Date(`${at}T12:00:00`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });

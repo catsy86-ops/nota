@@ -13,6 +13,10 @@ export function setHideAmounts(value: boolean) {
   store.set(value);
 }
 
+export function getHideAmounts(): boolean {
+  return store.get();
+}
+
 export function useHideAmounts(): boolean {
   return store.use();
 }

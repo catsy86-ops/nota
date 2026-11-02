@@ -1,6 +1,6 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Długi” (2026-10-25)
 
-> **Status (2026-11-02):** Etap 1 zrobiony: 1.1 i D-1, D-4 (2026-10-26), 1.2–1.7 (2026-11-02; „Prywatne” z 1.7 nie występuje — dział jest w grupie „Osobiste”). Zrobione wcześniej: 3.3 (ukrywanie kwot) i saldo po wpisie z 2.2. Dalej Etap 2: 2.1, 2.2 (nagłówki miesięcy), 2.4, 2.3, 2.5.
+> **Status (2026-11-02):** Etap 1 zrobiony: 1.1 i D-1, D-4 (2026-10-26), 1.2–1.7 (2026-11-02; „Prywatne” z 1.7 nie występuje — dział jest w grupie „Osobiste”). Zrobione wcześniej: 3.3 (ukrywanie kwot) i saldo po wpisie z 2.2. Etap 2 zrobiony 2026-11-02 (2.1–2.5). Dalej Etap 3: 3.2, 3.1, 3.4 (3.5 odłożone wg D-3).
 
 Ósmy plan z serii „dział po dziale”, w tym samym układzie. Dział jest mały (`DebtsView.tsx` 394 linie, `lib/debts` ~320), więc plan też.
 

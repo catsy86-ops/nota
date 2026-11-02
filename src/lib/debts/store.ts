@@ -14,6 +14,11 @@ export function useDebts(): DebtEntry[] {
   return useSyncExternalStore(yDebts.subscribe, yDebts.get);
 }
 
+/** Wpisy bez subskrypcji — dla akcji spoza widoku (2.3: „Gotowe” w Terminach). */
+export function getDebts(): DebtEntry[] {
+  return yDebts.get();
+}
+
 export interface NewDebtInput {
   person: string;
   kind: DebtKind;

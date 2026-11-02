@@ -66,6 +66,11 @@ export function normalizeName(name: string): string {
   return name.replace(/\s+/g, " ").trim();
 }
 
+/** Do szukania osoby (2.5): małe litery, bez polskich znaków („Łukasz” = „lukasz”). */
+export function foldName(name: string): string {
+  return personKey(name).replace(/ł/g, "l").normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+
 /** Klucz grupowania: ta sama osoba, niezależnie od wielkości liter („Anna” = „anna”). */
 export function personKey(name: string): string {
   return normalizeName(name).toLocaleLowerCase("pl");

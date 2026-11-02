@@ -57,3 +57,31 @@ test("1.5: termin zwrotu dodany w edycji pojawia się w Terminach, „Cofnij” 
   await page.goto("/przypomnienia");
   await expect(page.getByText(`Zwrot od ${person}: 120,00 zł`).first()).toBeVisible();
 });
+
+test("2.3: „Gotowe” w Terminach przy zwrocie pyta o spłatę i rozlicza osobę", async ({ page }) => {
+  const person = `Zwrot ${Date.now()}`;
+  await addLent(page, person, inDays(1));
+  await page.goto("/przypomnienia");
+  const tile = page.locator("[data-note-id-wrap]").filter({ hasText: `Zwrot od ${person}` }).first();
+  await tile.getByRole("button", { name: "Gotowe" }).click();
+  await expect(page.getByText("Oznaczyć jako oddane?")).toBeVisible();
+  await page.getByRole("button", { name: "Oddane" }).click();
+  await expect(page.getByText(`Oddane w całości: ${person}`)).toBeVisible();
+  await page.goto("/dlugi");
+  await page.getByRole("button", { name: "Rozliczeni (1)" }).click();
+  await expect(page.getByRole("list", { name: "Rozliczeni" }).getByText(person)).toBeVisible();
+});
+
+test("2.1: na telefonie formularz zwinięty, „Nowy wpis” go rozwija i to zapamiętuje", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/dlugi");
+  const form = page.getByRole("form", { name: "Nowy wpis" });
+  await expect(form).toBeHidden();
+  const toggle = page.getByRole("button", { name: "Nowy wpis" });
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await toggle.click();
+  await expect(form).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("form", { name: "Nowy wpis" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Zwiń formularz" })).toHaveAttribute("aria-expanded", "true");
+});

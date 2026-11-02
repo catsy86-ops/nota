@@ -23,6 +23,12 @@ function focusAfterRemoval(el: HTMLElement): () => void {
   });
 }
 
+/**
+ * Notatka terminu zwrotu z Długów (etykieta `DEBT_NOTE_LABEL` z `lib/debts/model.ts`; starsze notatki bez
+ * etykiety po tytule). Stała wpisana tu, żeby nie ciągnąć modelu Długów do paczki startowej.
+ */
+const isDebtNote = (note: Note) => note.labels.includes("długi") || /^(Zwrot od|Oddać) /.test(note.title);
+
 interface ReminderQuickActionsProps {
   note: Note;
   onUpdate: (id: string, patch: Partial<ReminderFields>) => void;
@@ -49,6 +55,8 @@ export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuic
           haptic("success");
           onUpdate(id, patch);
           toastWithUndo(message, () => onUpdate(id, prev), { id: `rem-done-${id}` });
+          // Długi 2.3: zwrot odhaczony w Terminach — zapytaj, czy zapisać spłatę.
+          if (isDebtNote(note)) void import("@/lib/debts/settleFromNote").then((m) => m.offerSettleFromNote(id), () => {});
           focus();
         }}
         className="pressable inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-primary-ink hover:bg-primary/20"

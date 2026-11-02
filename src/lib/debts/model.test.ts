@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { balances, cleanDebt, debtSide, doubleSettle, formatAmount, knownPeople, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
+import { balances, cleanDebt, debtSide, doubleSettle, foldName, formatAmount, knownPeople, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
 
 const e = (over: Partial<DebtEntry>): DebtEntry => ({
   id: "d-1", person: "Anna", kind: "lent", amount: 10000, at: "2026-10-10", note: "", created: 1, ...over,
@@ -153,5 +153,12 @@ describe("strona salda i podwójne rozliczenie (1.3, 1.6)", () => {
     expect(doubleSettle([lent, s1])).toBeNull();
     expect(doubleSettle([lent, s1, { ...s2, created: 200_000 }])).toBeNull();
     expect(doubleSettle([lent, s1, { ...s2, settle: undefined }])).toBeNull();
+  });
+});
+
+describe("foldName (2.5)", () => {
+  it("małe litery bez polskich znaków", () => {
+    expect(foldName("  Łukasz  Żółć ")).toBe("lukasz zolc");
+    expect(foldName("ŚWIĘTY")).toBe("swiety");
   });
 });

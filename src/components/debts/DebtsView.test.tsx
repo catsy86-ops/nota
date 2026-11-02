@@ -206,3 +206,40 @@ describe("DebtsView — plan Długów, Etap 1", () => {
     expect(reminders.remove).toHaveBeenCalledWith("n2");
   });
 });
+
+describe("DebtsView — plan Długów, Etap 2", () => {
+  it("2.4: rozliczeni zwinięci na dole, rozwijani przyciskiem", () => {
+    fixture.entries = [debt("1", "Ania", "lent", 10_000), debt("2", "Ola", "lent", 5_000), debt("3", "Ola", "repaid", 5_000)];
+    render(<DebtsView />);
+    const toggle = screen.getByRole("button", { name: "Rozliczeni (1)" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("button", { name: /^Ola/ })).toBeNull();
+    fireEvent.click(toggle);
+    expect(screen.getByRole("button", { name: /^Ola/ })).toBeTruthy();
+  });
+
+  it("2.5: przy ponad 8 osobach szukanie bez polskich znaków", () => {
+    fixture.entries = ["Łukasz", "Anna", "Beata", "Celina", "Darek", "Edek", "Franek", "Gosia", "Henio"].map((n, i) => debt(String(i), n, "lent", 1_000));
+    render(<DebtsView />);
+    fireEvent.change(screen.getByPlaceholderText("Szukaj osoby"), { target: { value: "lukasz" } });
+    expect(screen.getByRole("button", { name: /^Łukasz/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Anna/ })).toBeNull();
+  });
+
+  it("2.2: historia z nagłówkami miesięcy", () => {
+    fixture.entries = [debt("1", "Ania", "lent", 10_000, { at: "2026-10-10" }), debt("2", "Ania", "repaid", 2_000, { at: "2026-11-01", created: 2 })];
+    render(<DebtsView />);
+    fireEvent.click(screen.getByRole("button", { name: /Ania/ }));
+    const history = screen.getByRole("group", { name: "Historia" });
+    expect(within(history).getAllByRole("heading").map((h) => h.textContent)).toEqual(["listopad 2026", "październik 2026"]);
+  });
+
+  it("2.1: „Wpis z {imię}” otwiera formularz z tą osobą", () => {
+    fixture.entries = [debt("1", "Ania", "lent", 10_000)];
+    render(<DebtsView />);
+    fireEvent.click(screen.getByRole("button", { name: /Ania/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Wpis z Ania" }));
+    const form = screen.getByRole("form", { name: "Nowy wpis" });
+    expect((within(form).getByLabelText("Kto") as HTMLInputElement).value).toBe("Ania");
+  });
+});
