@@ -2970,7 +2970,7 @@ Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj nota
 - **Przy okazji.** Chipy rozpoznanych fraz z paska nowej notatki wydzielone do `src/components/CaptureChips.tsx` (`CaptureChips`, `toggledSet`), pod pole Skrzynki (plan Skrzynki 2.1). Na dotyku mają 44 px wysokości.
 - **Ograniczenia i zgodność.** Starsza wersja aplikacji nie zna pola. Przypomina tylko o samej porze terminu i zapisując termin przez `mergeSpec`, gubi sygnał, bo przepisuje cały `reminderSpec`. Odznaka na kaflu nie pokazuje sygnału, widać go po otwarciu wyboru terminu. Szkic paska nowej notatki nie zapamiętuje sygnału po przeładowaniu. Paczka startowa 482 688 B gzip (budżet 500 KB).
 - **Testy.** Vitest: `src/lib/reminderLead.test.ts` (okno odpalania, `updatedAt`, `reminderBase`, nowy klucz dla wystąpienia, przycinanie bez listy notatek, frazy, `readSpec`, `mergeSpec`, push z odłożonym wystąpieniem, `.ics`), `src/lib/yjsStore.reminder.test.ts` (tylko w `reminderSpec`, synchronizacja, zostaje przy zmianie terminu, gaśnie z terminem). E2E: `e2e/reminder-lead.spec.ts` (dymek przed terminem bez dymku terminu, brak powtórki po przeładowaniu; wybór „1 h” w pickerze zapisuje się i wraca).
-- **Commit.** `HASH` (2026-11-03).
+- **Commit.** `b1beade` (2026-11-03).
 
 ## Skarbiec — stan aktualny (notatki prywatne; plan Skarbca 1.1, 2026-11-02)
 
