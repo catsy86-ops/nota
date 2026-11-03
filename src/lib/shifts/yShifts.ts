@@ -41,7 +41,11 @@ export interface DeletedShiftType {
 
 const localDayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-const byOrder = <T extends { order?: number }>(a: T, b: T) => (a.order ?? 0) - (b.order ?? 0);
+/** Kolejność wpisu; od peera może przyjść cokolwiek, więc nie-liczba to 0. */
+const orderOf = (v: { order?: unknown }) => (typeof v.order === "number" && Number.isFinite(v.order) ? v.order : 0);
+const byOrder = <T extends { order?: unknown }>(a: T, b: T) => orderOf(a) - orderOf(b);
+/** Wartości mapy bez śmieci od peera (`null`, napisy) — `migrate` dostaje same obiekty, sortowanie się nie wywraca. */
+const objectValues = <T extends object>(m: Y.Map<T>): T[] => Array.from(m.values()).filter((v): v is T => !!v && typeof v === "object");
 
 /** Nazwy map jednego grafiku (bez prefiksu). Pierwszy grafik („main”) używa ich wprost — dane sprzed wielu grafików zostają na miejscu. */
 export const SHIFTS_MAP_BASE_NAMES = ["shiftTypes", "shiftDays", "shiftPatterns", "shiftBonuses", "shiftMeta", "shiftMigrations"] as const;
@@ -78,10 +82,10 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
     snapshot = migrate({
       version: 2,
       ...settings,
-      types: meta.get("typesInit") ? Array.from(types.values()).sort(byOrder) : undefined,
-      patterns: meta.get("patternsInit") ? Array.from(patterns.values()).sort(byOrder) : undefined,
+      types: meta.get("typesInit") ? objectValues(types).sort(byOrder) : undefined,
+      patterns: meta.get("patternsInit") ? objectValues(patterns).sort(byOrder) : undefined,
       days: Object.fromEntries(days.entries()),
-      bonuses: Array.from(bonuses.values()),
+      bonuses: objectValues(bonuses),
       paidGross: readPaidGross(meta),
     });
     return snapshot;
@@ -112,7 +116,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
     meta.set("patternsInit", true);
   }
 
-  const nextOrder = <T extends { order?: number }>(m: Y.Map<T>) => Math.max(-1, ...Array.from(m.values(), (v) => v.order ?? 0)) + 1;
+  const nextOrder = <T extends { order?: number }>(m: Y.Map<T>) => Math.max(-1, ...objectValues(m).map(orderOf)) + 1;
 
   /** Godziny zmiany, którą urlop zastępuje w tym dniu (`plannedMin`); `undefined`, gdy to nie urlop nad pracą. */
   function plannedMinutesFor(typeId: string, prev: DayEntry | undefined): number | undefined {

@@ -61,7 +61,7 @@
 | 1.6 | ✅ **Gałęzie:** lokalny `master` = `origin/master` (083bb5f). Usunięte scalone `ui/*` i 5 × `worktree-agent-*`. Zostają `feat/checklist-wklejanie-konwersja` i `wip/d2-react-compiler` (po 1 niescalonym commicie) oraz `wip/matryca-hydraulika` (lokalnie inna niż zdalna). W `.claude/worktrees/` leżą 4 katalogi bez `.git` (resztki, jeden blokowany przez OneDrive) do ręcznego usunięcia. | git | 2 | S |
 | 1.7 | ✅ **CLAUDE.md:** próg „394 KB” jest nieaktualny, obowiązuje `e2e/bundle.spec.ts` (500 KB). | `CLAUDE.md` | 1 | S |
 | 1.8 | **Bezpieczeństwo: `/share` z obcej strony (§10.3 p. 2).** SW odrzuca POST z `Sec-Fetch-Site` innym niż `none` i `same-origin`. GET `/share?…` pyta „Zapisać?” zamiast zapisywać od razu. Przed kodem `security-reviewer`. | `public/sw-share.js`, `useLaunchIntents.ts` | 3 | S |
-| 1.9 | **Odporność Grafiku na złe dane od peera (§10.3 p. 4):** filtrować przez `isShiftType` / `isPattern` przed sortowaniem. Test Vitest z `null` w mapie. | `src/lib/shifts/yShifts.ts:81,115` | 3 | S |
+| 1.9 | ✅ **Odporność Grafiku na złe dane od peera (§10.3 p. 4):** filtrować przez `isShiftType` / `isPattern` przed sortowaniem. Test Vitest z `null` w mapie. | `src/lib/shifts/yShifts.ts:81,115` | 3 | S |
 | 1.10 | **Limity plików:** `sw-share.js` przycina do 30 plików i 10 MB na plik, przy starcie czyści stare wpisy inboxu. `file.size` sprawdzany przed `text()` w trzech importach (§10.3 p. 5 i 7). | SW, importy | 2 | S |
 | 1.11 | **CSP egzekwowane (§10.3 p. 1):** `Content-Security-Policy` zamiast `-Report-Only` w `netlify.toml` i `vercel.json`. Najpierw e2e na buildzie z nagłówkiem, bo hostingu jeszcze nie ma. | konfiguracja | 2 | S |
 

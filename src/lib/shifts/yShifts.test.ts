@@ -191,3 +191,25 @@ describe("Wypłaty brutto w Yjs (B5)", () => {
     expect(b.get().paidGross).toEqual({});
   });
 });
+
+describe("złe wpisy od peera (Plan-nowy 1.9)", () => {
+  it("null i zła kolejność w mapach rodzajów i cykli nie wywracają Grafiku", () => {
+    const doc = new Y.Doc();
+    const s = createYShifts(doc);
+    s.saveShiftType({ ...TEST_SHIFT_TYPES[0], name: "Ranna" });
+    s.savePattern({ id: "p1", name: "Cykl", steps: ["d"] } as never);
+    doc.transact(() => {
+      doc.getMap("shiftTypes").set("zly", null);
+      doc.getMap("shiftTypes").set("napis", "śmieć");
+      doc.getMap("shiftTypes").set("zlaKolejnosc", { ...TEST_SHIFT_TYPES[1], id: "zlaKolejnosc", order: "x" });
+      doc.getMap("shiftPatterns").set("zly", null);
+      doc.getMap("shiftDays").set("2026-11-03", null);
+      doc.getMap("shiftBonuses").set("zly", null);
+    }, "peer");
+    expect(() => s.get()).not.toThrow();
+    expect(s.get().types.some((t) => t.name === "Ranna")).toBe(true);
+    expect(() => s.saveShiftType({ ...TEST_SHIFT_TYPES[2], id: "nowy" })).not.toThrow();
+    expect(() => s.savePattern({ id: "p2", name: "Drugi", steps: ["d"] } as never)).not.toThrow();
+    expect(s.get().types.some((t) => t.id === "nowy")).toBe(true);
+  });
+});
