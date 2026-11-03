@@ -88,10 +88,18 @@ test("„Cofnij rysunek” przywraca oryginał zdjęcia, także po zapisie wpisu
   await expect(sheet.getByRole("button", { name: /Cofnij rysunek/ })).toHaveCount(0);
 });
 
-/** Odcisk bajtów zdjęcia z miniatury (adres `blob:` jest za każdym razem inny). */
+/**
+ * Odcisk pikseli zdjęcia z miniatury (adres `blob:` jest za każdym razem inny). Przez kanwę, nie `fetch`:
+ * egzekwowane CSP (`connect-src`) nie zezwala na `fetch("blob:…")`.
+ */
 async function bytesOf(img: import("@playwright/test").Locator): Promise<string> {
   return img.evaluate(async (el: HTMLImageElement) => {
-    const buf = new Uint8Array(await (await fetch(el.src)).arrayBuffer());
+    await el.decode();
+    const c = document.createElement("canvas");
+    c.width = el.naturalWidth; c.height = el.naturalHeight;
+    const x = c.getContext("2d")!;
+    x.drawImage(el, 0, 0);
+    const buf = x.getImageData(0, 0, c.width, c.height).data;
     let h = 0;
     for (const b of buf) h = (h * 31 + b) >>> 0;
     return `${buf.length}:${h}`;

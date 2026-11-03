@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { NoteImage } from "@/components/NoteImage";
 import { DrawingCanvas } from "@/components/DrawingCanvas";
-import { imageStore } from "@/lib/imageStore";
+import { dataUrlToBlob, imageStore } from "@/lib/imageStore";
 import { prepareImage } from "@/lib/imagePrepare";
 import { downloadAttachment, formatFileSize } from "@/lib/attachments";
 import { haptic } from "@/lib/haptics";
@@ -37,7 +37,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
     if (!from) return;
     if (docs.length >= SITE_DOCS_MAX) { toast.error(`Na budowie jest już ${SITE_DOCS_MAX} plików`); return; }
     try {
-      const blob = await (await fetch(dataUrl)).blob();
+      const blob = dataUrlToBlob(dataUrl);
       const fitted = await prepareImage(new File([blob], "zaznaczony.jpg", { type: blob.type || "image/jpeg" }));
       if (!fitted) { toast.error("Nie udało się zapisać zaznaczenia"); return; }
       const id = await imageStore.putBlob(fitted);

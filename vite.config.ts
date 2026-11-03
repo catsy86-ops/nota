@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 import { execSync } from "child_process";
+import { readFileSync } from "fs";
 
 // Identyfikator builda do raportu diagnostycznego: commit + data budowania.
 function buildId(): string {
@@ -28,10 +29,25 @@ function preloadTextFont(): Plugin {
   };
 }
 
+// Nagłówki bezpieczeństwa hostingu (vercel.json, reguła "/(.*)") także w `vite preview`: e2e biegnie na buildzie
+// pod egzekwowanym CSP (Plan-nowy 1.11). Lokalny przekaźnik e2e (http://127.0.0.1:4466) jest po `http:`/`ws:`, których
+// produkcja nie potrzebuje (strona po https łączy się tylko przez https:/wss:), więc dochodzą tylko tutaj.
+function previewSecurityHeaders(): Record<string, string> {
+  const vercel = JSON.parse(readFileSync(path.resolve(__dirname, "vercel.json"), "utf8")) as { headers: { source: string; headers: { key: string; value: string }[] }[] };
+  const rule = vercel.headers.find((h) => h.source === "/(.*)");
+  const out = Object.fromEntries((rule?.headers ?? []).map((h) => [h.key, h.value]));
+  const csp = out["Content-Security-Policy"];
+  if (csp) out["Content-Security-Policy"] = csp.replace(/connect-src ([^;]+)/, "connect-src $1 http://127.0.0.1:* ws://127.0.0.1:*");
+  return out;
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
   define: {
     __APP_BUILD__: JSON.stringify(buildId()),
+  },
+  preview: {
+    headers: previewSecurityHeaders(),
   },
   server: {
     host: "::",

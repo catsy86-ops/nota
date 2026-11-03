@@ -2,7 +2,7 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { prepareImage } from "@/lib/imagePrepare";
-import { imageStore } from "@/lib/imageStore";
+import { dataUrlToBlob, imageStore } from "@/lib/imageStore";
 import type { JournalDraft } from "@/lib/study/draft";
 
 /** Błąd zapisu zdjęcia (brak miejsca w przeglądarce) — wspólny komunikat dla podpisu i rysunku. */
@@ -77,7 +77,7 @@ export function useJournalPhotoEdits({ getForm, patch, setProcessing, setCaption
     if (!ref) return;
     setProcessing((n) => n + 1);
     try {
-      const blob = await (await fetch(dataUrl)).blob();
+      const blob = dataUrlToBlob(dataUrl);
       const fitted = await prepareImage(new File([blob], "rysunek.jpg", { type: blob.type || "image/jpeg" }));
       if (!fitted) { toast.error("Nie udało się zapisać rysunku na zdjęciu"); return; }
       const next = await imageStore.putBlob(fitted);

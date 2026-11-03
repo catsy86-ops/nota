@@ -1,16 +1,40 @@
 import { test, expect, type Page } from "@playwright/test";
 
 /** Sygnatury ruchu stylów (plan rozbudowy, Faza 1b). Efekty w transform/opacity; ograniczony ruch = stan końcowy bez animacji. */
-async function open(page: Page, skin: string, motion: "full" | "reduced" = "full") {
+/**
+ * `dawn: false` (domyślnie) oznacza dzień jako już otwarty: sygnał „dawn” z montowania aplikacji nie nadpisze
+ * wtedy sygnału, który sprawdza test (wyścig „dawn” z „view” przy kliknięciu tuż po starcie, Plan-nowy 1.2).
+ */
+async function open(page: Page, skin: string, motion: "full" | "reduced" = "full", { dawn = false } = {}) {
   await page.addInitScript(
-    ([s, m]) => {
+    ([s, m, d]) => {
       localStorage.setItem("kaczy.tour.seen.v1", "1");
       localStorage.setItem("kaczy.skin.v1", JSON.stringify(s));
       localStorage.setItem("kaczy.motion.v1", JSON.stringify(m));
+      const t = new Date();
+      if (!d) localStorage.setItem("kaczy.sig.dawn.v1", `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`);
     },
-    [skin, motion] as const,
+    [skin, motion, dawn] as const,
   );
   await page.goto("/");
+}
+
+/**
+ * Zapisuje każdy sygnał stylu (`html[data-sig]`) z animacją `.paper-grid::before` w chwili ustawienia.
+ * Sygnał trwa 1,4 s, a zmiana widoku idzie przez View Transition — odczyt zaraz po kliknięciu bywał za wcześnie albo za późno.
+ */
+async function recordSignals(page: Page): Promise<() => Promise<{ sig: string; name: string }[]>> {
+  await page.evaluate(() => {
+    const w = window as Window & { __sigs?: { sig: string; name: string }[] };
+    w.__sigs = [];
+    const root = document.documentElement;
+    new MutationObserver(() => {
+      const sig = root.dataset.sig;
+      const grid = document.querySelector(".paper-grid");
+      if (sig && grid) w.__sigs!.push({ sig, name: getComputedStyle(grid, "::before").animationName });
+    }).observe(root, { attributes: true, attributeFilter: ["data-sig"] });
+  });
+  return () => page.evaluate(() => (window as Window & { __sigs?: { sig: string; name: string }[] }).__sigs ?? []);
 }
 
 test("Zeszyt: pióro podkreśla nagłówek (animacja na ::after)", async ({ page }) => {
@@ -98,24 +122,20 @@ test("Hydraulika: zapis wypełnia rurę falą, a przy ograniczonym ruchu nie ma 
 
 test("Matryca: zmiana widoku spływa kaskadą kolumn (sygnał view)", async ({ page }) => {
   await open(page, "matrix");
+  const seen = await recordSignals(page);
   await page.getByRole("button", { name: "Dziś", exact: true }).first().click();
-  const anim = await page.locator(".paper-grid").evaluate((el) => ({
-    sig: document.documentElement.dataset.sig,
-    name: getComputedStyle(el, "::before").animationName,
-  }));
-  expect(anim.sig).toBe("view");
-  expect(anim.name).toBe("matrix-cascade");
+  await expect.poll(seen).toContainEqual({ sig: "view", name: "matrix-cascade" });
 });
 
 test("Zeszyt: zmiana widoku przewraca kartkę", async ({ page }) => {
   await open(page, "zeszyt");
+  const seen = await recordSignals(page);
   await page.getByRole("button", { name: "Dziś", exact: true }).first().click();
-  const name = await page.locator(".paper-grid").evaluate((el) => getComputedStyle(el, "::before").animationName);
-  expect(name).toBe("zeszyt-flip");
+  await expect.poll(seen).toContainEqual({ sig: "view", name: "zeszyt-flip" });
 });
 
 test("Neon: pierwsze uruchomienie dnia rozbłyska nagłówek", async ({ page }) => {
-  await open(page, "neon");
+  await open(page, "neon", "full", { dawn: true });
   const info = await page.evaluate(() => ({
     sig: document.documentElement.dataset.sig,
     anim: getComputedStyle(document.querySelector("h1")!).animationName,

@@ -66,15 +66,16 @@
     Cache-Control = "no-cache, must-revalidate"
     Content-Type = "application/manifest+json"
 
-# Nagłówki bezpieczeństwa. CSP idzie najpierw jako Report-Only: naruszenia trafiają do
-# diagnostyki (`securitypolicyviolation`), a po tygodniu bez zgłoszeń zmień nazwę
-# nagłówka na Content-Security-Policy. `connect-src` zostawia wss:/https: — adresy
-# serwerów sygnalizacyjnych ustawia użytkownik. Skrypt public/offline.html jest w
-# public/offline.js (bez inline), więc nie ma naruszeń do zgłoszenia z tej strony.
+# Nagłówki bezpieczeństwa (Plan-nowy 1.11: CSP egzekwowane). Źródłem jest vercel.json — `vite preview`
+# czyta stamtąd te same nagłówki, więc e2e biegnie pod tą polityką, a `securityHeaders.test.ts` pilnuje,
+# żeby oba pliki się zgadzały. Naruszenia trafiają do diagnostyki (`securitypolicyviolation`).
+# `connect-src` zostawia wss:/https: — adresy serwerów sygnalizacyjnych ustawia użytkownik.
+# Permissions-Policy: kamera (skan kodu QR przy parowaniu) i lokalizacja („Tu jestem”, przyjazd
+# na budowę) tylko dla tej strony; mikrofon (dyktowanie) bez ograniczeń nagłówka.
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https: wss:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https: wss:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
-    Permissions-Policy = "camera=(), geolocation=(), payment=()"
+    Permissions-Policy = "camera=(self), geolocation=(self), payment=()"

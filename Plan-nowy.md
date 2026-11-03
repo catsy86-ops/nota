@@ -1,6 +1,6 @@
 # Plan rozwoju i dopracowania NOTKI (2026-11-03)
 
-> **Status (2026-11-03, wersja 2):** ustalenia czterech agentów (dwa inwentarze, bezpieczeństwo, wydajność) są wpisane w §10, a Cykl 1 ma nowe punkty 1.8–1.11. Zrobione: 1.1–1.10 (bramka ok. 3 min). Agentów architektury, testów i UX nie uruchamiano ponownie: ich zakres pokrywają inwentarze i punkty 1.2, 3.1 i 3.3.
+> **Status (2026-11-03, wersja 2):** ustalenia czterech agentów (dwa inwentarze, bezpieczeństwo, wydajność) są wpisane w §10, a Cykl 1 ma nowe punkty 1.8–1.11. Cykl 1 zrobiony: 1.1–1.11 (bramka ok. 3 min). Agentów architektury, testów i UX nie uruchamiano ponownie: ich zakres pokrywają inwentarze i punkty 1.2, 3.1 i 3.3.
 >
 > Wersja 1: To jedno źródło prawdy o tym, co zostało. Plany działów w `docs/plan-*.md` zostają jako szczegóły punktów, a ich linia „Status” ma się zgadzać z tym planem. Raporty siedmiu agentów (dwa inwentarze planów, architektura, wydajność, bezpieczeństwo, testy, UX i dostępność) były w toku przy zapisie tej wersji. Ich ustalenia trzeba dopisać w sekcji „Ustalenia agentów” i według nich poprawić kolejność.
 
@@ -63,7 +63,7 @@
 | 1.8 | ✅ **Bezpieczeństwo: `/share` z obcej strony (§10.3 p. 2).** Wykonanie odbiega od raportu, bo `Sec-Fetch-Site` nie dochodzi do SW (sprawdzone w e2e). SW odrzuca POST z obcym `Origin`, a przepuszcza `null` i brak nagłówka. GET pyta „Zapisać w NOTKACH?”. **Zostaje:** luka dla nieprzezroczystego originu (`null`) i sprawdzenie na telefonie, jaki `Origin` wysyła systemowe „Udostępnij” (Cykl 4). | `public/sw-share.js`, `useLaunchIntents.ts` | 3 | S |
 | 1.9 | ✅ **Odporność Grafiku na złe dane od peera (§10.3 p. 4):** filtrować przez `isShiftType` / `isPattern` przed sortowaniem. Test Vitest z `null` w mapie. | `src/lib/shifts/yShifts.ts:81,115` | 3 | S |
 | 1.10 | ✅ **Limity plików:** `sw-share.js` przycina do 30 plików i 10 MB na plik, przy starcie czyści stare wpisy inboxu. `file.size` sprawdzany przed `text()` w trzech importach (§10.3 p. 5 i 7). | SW, importy | 2 | S |
-| 1.11 | **CSP egzekwowane (§10.3 p. 1):** `Content-Security-Policy` zamiast `-Report-Only` w `netlify.toml` i `vercel.json`. Najpierw e2e na buildzie z nagłówkiem, bo hostingu jeszcze nie ma. | konfiguracja | 2 | S |
+| 1.11 | ✅ **CSP egzekwowane:** `Content-Security-Policy` w `netlify.toml` i `vercel.json`. `vite preview` wysyła te same nagłówki, więc całe e2e biegnie pod CSP. Poprawione przy okazji: `fetch(dataUrl)` (rysunek na zdjęciu, zaznaczony plan) i `Permissions-Policy`, które blokowało kamerę (QR) i lokalizację. Testy: `e2e/csp.spec.ts`, `src/lib/securityHeaders.test.ts`. | konfiguracja | 2 | S |
 
 ## 4. Cykl 2 — dokończyć działy bez decyzji (apetyt: 1–2 tygodnie)
 

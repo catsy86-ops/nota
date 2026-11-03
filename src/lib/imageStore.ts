@@ -52,6 +52,15 @@ export function isEmbeddableImageDataUrl(s: string): boolean {
   return /^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/]*={0,2}$/.test(s);
 }
 
+/**
+ * Data URL (np. z `canvas.toDataURL`) → Blob bez `fetch`: egzekwowane CSP (`connect-src`) nie zezwala
+ * na `fetch("data:…")` (Plan-nowy 1.11).
+ */
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const { bytes, type } = dataUrlToBytes(dataUrl);
+  return new Blob([bytes as Uint8Array<ArrayBuffer>], { type });
+}
+
 export function dataUrlToBytes(dataUrl: string): { bytes: Uint8Array; type: string } {
   const comma = dataUrl.indexOf(",");
   if (!dataUrl.startsWith("data:") || comma < 0) throw new Error("Nieprawidłowy data URL");
