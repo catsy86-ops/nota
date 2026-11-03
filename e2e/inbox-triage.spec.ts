@@ -103,3 +103,37 @@ test("skrzynka 2.5: upuszczony obraz zapisuje notatkę ze zdjęciem i tytułem z
   const card = page.locator("[data-note-id]").filter({ hasText: `Kotłownia ${stamp}` });
   await expect(card.locator("img").first()).toBeVisible();
 });
+
+test("skrzynka 3.1: filtr chipów — Enter wybiera pierwszy, „Nowa etykieta” tworzy i nadaje", async ({ page }) => {
+  const stamp = Date.now();
+  await capture(page, `Klej ${stamp}`);
+  await capture(page, `Rury ${stamp}`);
+  await page.getByRole("button", { name: /Porządkuj skrzynkę \(2\)/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Porządkowanie skrzynki" });
+
+  const filter = dialog.getByLabel("Szukaj folderu lub etykiety");
+  await filter.fill("#hurt");
+  await expect(dialog.getByRole("button", { name: "Nowa etykieta #hurt" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Nowy folder „hurt”" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Nowa etykieta #hurt" }).click();
+  await expect(dialog).toContainText("2 z 2");
+  // Filtr czyści się przy następnej notatce, a nowa etykieta jest już chipem.
+  await expect(filter).toHaveValue("");
+  await filter.fill("HUR");
+  await filter.press("Enter");
+  await expect(dialog).toContainText("Gotowe — skrzynka opróżniona.");
+});
+
+test("skrzynka 3.4: „Przypomnij…” → „Jutro 9:00” ustawia termin, notatka zostaje w Skrzynce", async ({ page }) => {
+  const stamp = Date.now();
+  await capture(page, `Oddzwonić ${stamp}`);
+  await page.getByRole("button", { name: /Porządkuj skrzynkę \(1\)/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Porządkowanie skrzynki" });
+  await dialog.getByRole("button", { name: "Przypomnij…" }).click();
+  await dialog.getByRole("group", { name: "Termin przypomnienia" }).getByRole("button", { name: "Jutro 9:00" }).click();
+  await expect(dialog).toContainText("Gotowe — skrzynka opróżniona.");
+  await page.keyboard.press("Escape");
+  const card = page.locator("[data-note-id]").filter({ hasText: `Oddzwonić ${stamp}` });
+  await expect(card).toHaveCount(1);
+  await expect(card).toContainText(/jutro|9:00/i);
+});

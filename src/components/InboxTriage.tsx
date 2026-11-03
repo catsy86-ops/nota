@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Archive, Clock, PencilLine, RotateCcw, Trash } from "lucide-react";
+import { Archive, Bell, Clock, PencilLine, Plus, RotateCcw, Trash } from "lucide-react";
 import { m } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import type { Note } from "@/hooks/useNotes";
 import { isInboxNote, triageHeadline } from "@/lib/inbox";
+import { cleanLabelPath } from "@/lib/labelTree";
+import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
+import { filterTriageChips, hasExact, rankTriageChips, triageQuery, TRIAGE_TOP, type TriageChip } from "@/lib/triageChips";
+import { QuickReminderInput } from "@/components/QuickReminderInput";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
@@ -17,12 +21,24 @@ interface InboxTriageProps {
 }
 
 
-/** Skrót 1–9 dotyczy pierwszych dziewięciu chipów: najpierw foldery, potem etykiety. */
-const SHORTCUT_COUNT = 9;
+/** Skrót 1–9 dotyczy pierwszych dziewięciu widocznych chipów (najczęściej używane, 3.1). */
+const SHORTCUT_COUNT = TRIAGE_TOP;
 
-type Chip =
-  | { kind: "folder"; id: string; label: string }
-  | { kind: "label"; label: string };
+type Chip = TriageChip;
+const chipKey = (c: Chip) => (c.kind === "folder" ? `f-${c.id}` : `l-${c.label}`);
+
+/** Szybkie terminy „Przypomnij…” (3.4): dziś 18:00 (tylko przed 18:00) i jutro 9:00. */
+function quickReminders(now: Date): { label: string; at: number }[] {
+  const evening = new Date(now);
+  evening.setHours(18, 0, 0, 0);
+  const morning = new Date(now);
+  morning.setDate(morning.getDate() + 1);
+  morning.setHours(9, 0, 0, 0);
+  return [
+    ...(now.getTime() < evening.getTime() ? [{ label: "Dziś 18:00", at: evening.getTime() }] : []),
+    { label: "Jutro 9:00", at: morning.getTime() },
+  ];
+}
 
 interface UndoStep {
   /** Cofa jedną akcję (przywraca notatkę do poprzedniego stanu). */
@@ -37,7 +53,7 @@ interface UndoStep {
  * zamrożona na otwarcie okna, więc notatka znika z ekranu dopiero po własnej akcji.
  */
 export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps) {
-  const { notes, folders, allLabels, updateNote, archiveNote, unarchiveNote, trashNote, restoreFromTrash } = useNotesContext();
+  const { notes, folders, allLabels, updateNote, archiveNote, unarchiveNote, trashNote, restoreFromTrash, addFolder, addLabel: createLabel } = useNotesContext();
   // Kolejka zamrożona przy otwarciu: akcja usuwa notatkę z Skrzynki, ale nie zmienia listy pod spodem.
   const [queue, setQueue] = useState<Note[]>([]);
   const [index, setIndex] = useState(0);
@@ -45,10 +61,24 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
   // Przesunięcie karty tylko na dotyku; myszą karta stoi w miejscu (przyciski wystarczają).
   const [coarse] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches);
 
-  const chips = useMemo<Chip[]>(() => [
+  // 3.1: kolejność wg użycia zamrożona przy otwarciu (skróty 1–9 nie skaczą po każdej akcji);
+  // folder albo etykieta dodane w trakcie idą na koniec.
+  const [order, setOrder] = useState<Map<string, number>>(new Map());
+  const [query, setQuery] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const baseChips = useMemo<Chip[]>(() => [
     ...folders.map((f) => ({ kind: "folder" as const, id: f.id, label: f.name })),
     ...allLabels.map((l) => ({ kind: "label" as const, label: l })),
   ], [folders, allLabels]);
+  const chips = useMemo(() => [...baseChips].sort((a, b) => (order.get(chipKey(a)) ?? Infinity) - (order.get(chipKey(b)) ?? Infinity)), [baseChips, order]);
+  const filtered = useMemo(() => filterTriageChips(chips, query), [chips, query]);
+  const q = triageQuery(query);
+  const visible = q ? filtered : showAll ? chips : chips.slice(0, TRIAGE_TOP);
+  const hidden = q ? 0 : chips.length - visible.length;
+  const newFolder = q && !hasExact(chips, q, "folder") ? q : null;
+  const cleanQ = q ? cleanLabelPath(q) : "";
+  const newLabel = cleanQ && !hasExact(chips, cleanQ, "label") ? cleanQ : null;
 
   // Kolejka i stos cofania liczone przy każdym otwarciu (rodzic otwiera okno ustawiając `open`).
   useEffect(() => {
@@ -56,6 +86,7 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
     setQueue(notes.filter(isInboxNote));
     setIndex(0);
     setUndoStack([]);
+    setOrder(new Map(rankTriageChips(baseChips, notes).map((c, i) => [chipKey(c), i])));
     // Tylko przy otwarciu: zmiany notatek w trakcie porządkowania nie przebudowują kolejki.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -63,6 +94,13 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
   const current = queue[index];
   const done = queue.length > 0 && index >= queue.length;
   const position = Math.min(index + 1, queue.length);
+
+  // Filtr i panel terminu dotyczą jednej notatki — przy następnej zaczynamy od czysta.
+  useEffect(() => {
+    setQuery("");
+    setShowAll(false);
+    setReminderOpen(false);
+  }, [index]);
 
   function advance(undo: () => void) {
     setUndoStack((s) => [...s, { undo, index }]);
@@ -77,7 +115,7 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
     advance(() => updateNote(id, prev));
   }
 
-  function addLabel(label: string) {
+  function tagLabel(label: string) {
     if (!current) return;
     const id = current.id;
     const prevLabels = current.labels;
@@ -126,7 +164,27 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
 
   function chooseChip(chip: Chip) {
     if (chip.kind === "folder") assignFolder(chip.id);
-    else addLabel(chip.label);
+    else tagLabel(chip.label);
+  }
+
+  /** 3.1: „Nowy folder „…”” — tworzy folder i od razu przenosi do niego notatkę. */
+  function chooseNewFolder(name: string) {
+    assignFolder(addFolder(name));
+  }
+
+  function chooseNewLabel(label: string) {
+    createLabel(label);
+    tagLabel(label);
+  }
+
+  /** 3.4: termin z porządkowania. Notatka z samym terminem zostaje w Skrzynce (reguła `isInboxNote`), kolejka idzie dalej. */
+  function remind(at: number) {
+    if (!current) return;
+    const id = current.id;
+    const prev = current.reminder;
+    updateNote(id, { reminder: at });
+    requestNotificationPermissionOnIntent();
+    advance(() => updateNote(id, { reminder: prev }));
   }
 
   // Skróty 1–9 działają tylko w otwartym oknie, a nie w polu tekstowym.
@@ -135,9 +193,9 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
     if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const n = Number(e.key);
-    if (Number.isInteger(n) && n >= 1 && n <= Math.min(SHORTCUT_COUNT, chips.length)) {
+    if (Number.isInteger(n) && n >= 1 && n <= Math.min(SHORTCUT_COUNT, visible.length)) {
       e.preventDefault();
-      chooseChip(chips[n - 1]);
+      chooseChip(visible[n - 1]);
     }
   }
 
@@ -175,14 +233,27 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
             </m.div>
             {coarse && <p className="-mt-2 text-xs text-muted-foreground">Przesuń w lewo: archiwizuj. W prawo: zostaw.</p>}
 
-            {chips.length > 0 && (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key !== "Enter") return;
+                  e.preventDefault();
+                  if (q && filtered[0]) chooseChip(filtered[0]);
+                  else if (newLabel) chooseNewLabel(newLabel);
+                }}
+                placeholder="Folder lub etykieta…"
+                aria-label="Szukaj folderu lub etykiety"
+                className="h-9 w-full rounded-field border border-border bg-background px-3 text-base outline-hidden placeholder:text-muted-foreground focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+              />
               <div role="group" aria-label="Przenieś do folderu lub nadaj etykietę" className="flex flex-wrap gap-1.5">
-                {chips.map((chip, i) => {
-                  const key = chip.kind === "folder" ? `f-${chip.id}` : `l-${chip.label}`;
+                {visible.map((chip, i) => {
                   const shortcut = i < SHORTCUT_COUNT ? String(i + 1) : null;
                   return (
                     <Button
-                      key={key}
+                      key={chipKey(chip)}
                       type="button"
                       variant="outline"
                       size="sm"
@@ -195,8 +266,23 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
                     </Button>
                   );
                 })}
+                {hidden > 0 && (
+                  <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={() => setShowAll(true)}>
+                    Więcej ({hidden})
+                  </Button>
+                )}
+                {newFolder && (
+                  <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => chooseNewFolder(newFolder)}>
+                    <Plus className="h-4 w-4" aria-hidden /> Nowy folder „{newFolder}”
+                  </Button>
+                )}
+                {newLabel && (
+                  <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => chooseNewLabel(newLabel)}>
+                    <Plus className="h-4 w-4" aria-hidden /> Nowa etykieta #{newLabel}
+                  </Button>
+                )}
               </div>
-            )}
+            </div>
 
             <div className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={archive}>
@@ -211,6 +297,9 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => snooze(7)}>
                 <Clock className="h-4 w-4" aria-hidden /> Za tydzień
               </Button>
+              <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" aria-expanded={reminderOpen} onClick={() => setReminderOpen((o) => !o)}>
+                <Bell className="h-4 w-4" aria-hidden /> Przypomnij…
+              </Button>
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={leave}>
                 Zostaw w skrzynce
               </Button>
@@ -223,6 +312,17 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
                 <RotateCcw className="h-4 w-4" aria-hidden /> Cofnij
               </Button>
             </div>
+            {reminderOpen && (
+              <div role="group" aria-label="Termin przypomnienia" className="space-y-2 rounded-card border border-border/60 p-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {quickReminders(new Date()).map((r) => (
+                    <Button key={r.label} type="button" variant="outline" size="sm" className="coarse:h-11" onClick={() => remind(r.at)}>{r.label}</Button>
+                  ))}
+                </div>
+                <QuickReminderInput onParsed={(d) => remind(d.getTime())} />
+                <p className="text-xs text-muted-foreground">Notatka z terminem zostaje w Skrzynce, dopóki nie dostanie folderu albo etykiety.</p>
+              </div>
+            )}
           </div>
         )}
 

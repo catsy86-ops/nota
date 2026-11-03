@@ -1,8 +1,8 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Skrzynka” (2026-10-25)
 
-> **Status (2026-11-03):** zrobione 1.1, 1.3, 1.4, 2.1, 2.2, 2.4, 2.5, 3.2, 3.3, 3.5, 4.5, 5.1–5.3; częściowo 2.4 (brak ikony linku na kaflu), 4.3 (jest „najstarsze najpierw”, brak „od 3 dni” i znacznika po 14 dniach); otwarte 1.2 (błysk liczony tylko z `[data-add-note-bar]`), 3.1, 3.4, 4.1, 4.2, 4.4, 4.6; czeka QA. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
+> **Status (2026-11-03):** zrobione 1.1, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.4, 3.2, 3.3, 3.5, 4.5, 5.1–5.3; częściowo 2.4 (brak ikony linku na kaflu), 4.3 (jest „najstarsze najpierw”, brak „od 3 dni” i znacznika po 14 dniach); otwarte 1.2 (błysk liczony tylko z `[data-add-note-bar]`), 4.1, 4.2, 4.4, 4.6; czeka QA. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
 
-> **Status (2026-11-03):** zrobione 2.1, 2.4 (bez ikony linku na kaflu), 2.5 (2026-11-03), 1.1, 1.3, 2.2, 3.2, 4.5, 5.2, 5.3 (2026-11-02) oraz wcześniej 3.3 (S-1, „Odłóż”) i 3.5 (gesty w trybie porządkowania). Nie sprawdzone w tej rundzie: 1.2, 1.4 (część testów jest w `e2e/inbox-triage.spec.ts`), 5.1 (`e2e/inbox-today.spec.ts`). Zrobione 2.3 (2026-11-03: `Alt+K`, paleta, skrót PWA `?skrzynka=1`). Otwarte: 3.1, 3.4, 4.1–4.4, 4.6.
+> **Status (2026-11-03):** zrobione 2.1, 2.4 (bez ikony linku na kaflu), 2.5 (2026-11-03), 1.1, 1.3, 2.2, 3.2, 4.5, 5.2, 5.3 (2026-11-02) oraz wcześniej 3.3 (S-1, „Odłóż”) i 3.5 (gesty w trybie porządkowania). Nie sprawdzone w tej rundzie: 1.2, 1.4 (część testów jest w `e2e/inbox-triage.spec.ts`), 5.1 (`e2e/inbox-today.spec.ts`). Zrobione 2.3 (2026-11-03: `Alt+K`, paleta, skrót PWA `?skrzynka=1`), 3.1 i 3.4 (2026-11-03). Otwarte: 4.1–4.4, 4.6.
 
 Drugi plan z serii „dział po dziale” (po `docs/plan-notatki-2026-10-25.md`), w tym samym układzie.
 
@@ -65,10 +65,10 @@ Legenda: W = wartość (1–3), N = nakład (S/M/L).
 
 | # | Co | W | N |
 |---|----|---|---|
-| 3.1 | **Filtr chipów:** pole „Folder lub etykieta…” nad chipami (pisanie filtruje, Enter wybiera pierwszy). Domyślnie widać 9 najczęściej używanych (liczone z notatek), reszta po „Więcej”. Na końcu listy „Nowy folder „…”” i „Nowa etykieta #…”. | 3 | M |
+| 3.1 | ✅ **Filtr chipów:** pole „Folder lub etykieta…” nad chipami (pisanie filtruje, Enter wybiera pierwszy). Domyślnie widać 9 najczęściej używanych (liczone z notatek), reszta po „Więcej”. Na końcu listy „Nowy folder „…”” i „Nowa etykieta #…”. | 3 | M |
 | 3.2 | **Edycja w miejscu:** tytuł i treść w trybie porządkowania jako pola edycji (zapis przy przejściu dalej), przycisk „Otwórz notatkę” (zamyka okno, otwiera edytor). | 2 | S |
 | 3.3 | **„Odłóż”:** przycisk „Jutro” / „Za tydzień” — notatka znika ze Skrzynki do daty. Wymaga pola `snoozedUntil` w notatce i warunku w `isInboxNote`. **Decyzja S-1.** Bez niej „Zostaw” pozostaje jedyną opcją. | 2 | M |
-| 3.4 | **Przypomnienie z trybu porządkowania:** „Przypomnij…” z szybkim wyborem (dziś wieczorem, jutro 9:00, data) przez istniejący `QuickReminderInput`. Notatka z samym przypomnieniem zostaje w Skrzynce (reguła się nie zmienia) — chyba że S-2 zdecyduje inaczej. | 2 | S |
+| 3.4 | ✅ **Przypomnienie z trybu porządkowania:** „Przypomnij…” z szybkim wyborem (dziś wieczorem, jutro 9:00, data) przez istniejący `QuickReminderInput`. Notatka z samym przypomnieniem zostaje w Skrzynce (reguła się nie zmienia) — chyba że S-2 zdecyduje inaczej. | 2 | S |
 | 3.5 | **Gesty na telefonie:** przesunięcie karty w prawo = Archiwizuj, w lewo = „Zostaw”; przyciski zostają jako dostępny odpowiednik. Zgodne z decyzją 4.1 z planu mobile (swipe) — jeśli tam „nie”, punkt odpada. | 1 | M |
 
 ## Etap 4: wygląd i informacja zwrotna (po fundamencie z planu przekrojowego)
