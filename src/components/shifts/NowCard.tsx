@@ -2,25 +2,9 @@ import { useEffect } from "react";
 import { format, formatDistanceStrict, isToday, isTomorrow } from "date-fns";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
 import { pl } from "date-fns/locale";
-import { toast } from "sonner";
-import { formatDuration, setDayEntry, shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
+import { shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
+import { finishShiftNow as finishNow } from "@/lib/shifts/finishNow";
 import { useShiftNow } from "@/lib/shifts/useShiftNow";
-import { toastWithUndo } from "@/lib/undoToast";
-import { haptic } from "@/lib/haptics";
-
-/** Kończy zmianę „teraz”: odchylenie od planu = różnica między teraz a planowanym końcem. */
-function finishNow(occ: ShiftOccurrence): void {
-  const plannedEnd = occ.end.getTime() - (occ.entry.extraMin ?? 0) * 60_000;
-  const extra = Math.round((Date.now() - plannedEnd) / 60_000);
-  if (extra === (occ.entry.extraMin ?? 0)) { toast("Zmiana już ma taki koniec"); return; }
-  const before = occ.entry;
-  const { extraMin: _drop, ...rest } = before;
-  setDayEntry(occ.dayKey, extra === 0 ? rest : { ...rest, extraMin: extra });
-  const label = extra === 0 ? "zgodnie z planem" : `${extra > 0 ? "+" : "−"}${formatDuration(Math.abs(extra))} względem planu`;
-  toastWithUndo(`Zakończono zmianę: ${label}`, () => setDayEntry(occ.dayKey, before));
-  haptic("success");
-}
-
 
 function when(occ: ShiftOccurrence): string {
   const time = format(occ.start, "HH:mm");

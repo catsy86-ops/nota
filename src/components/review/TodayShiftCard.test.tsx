@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 
-const shiftsState = vi.hoisted(() => ({ ready: true, data: { types: [] as unknown[], days: {} as Record<string, unknown> }, current: null as unknown, next: null as unknown }));
+const shiftsState = vi.hoisted(() => ({ ready: true, data: { types: [] as unknown[], days: {} as Record<string, unknown> }, current: null as unknown, next: null as unknown, ended: null as unknown, now: null as Date | null }));
 
 vi.mock("@/lib/shifts", () => ({
   useShifts: () => shiftsState.data,
@@ -10,7 +10,7 @@ vi.mock("@/lib/shifts", () => ({
 
 // Czas zmiany (G2.1) liczy hook; tu podajemy gotowy wynik.
 vi.mock("@/lib/shifts/useShiftNow", () => ({
-  useShiftNow: () => ({ now: new Date(), current: shiftsState.current, next: shiftsState.next, ended: null }),
+  useShiftNow: () => ({ now: shiftsState.now ?? new Date(), current: shiftsState.current, next: shiftsState.next, ended: shiftsState.ended }),
 }));
 
 import { TodayShiftCard } from "./TodayShiftCard";
@@ -22,6 +22,8 @@ afterEach(() => {
   shiftsState.data = { types: [], days: {} };
   shiftsState.current = null;
   shiftsState.next = null;
+  shiftsState.ended = null;
+  shiftsState.now = null;
 });
 
 describe("TodayShiftCard", () => {
@@ -103,5 +105,47 @@ describe("TodayShiftCard — notatka dnia na karcie (Dziś 2.6)", () => {
   it("prywatna notatka dnia nie pokazuje treści", () => {
     render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} dailyNote={dayNote({ locked: true, content: "" })} />);
     expect(screen.getByTestId("today-daily-preview").textContent).toContain("Notatka dnia jest w skarbcu.");
+  });
+});
+
+describe("TodayShiftCard — Dziś 2.1, 2.2, 3.1", () => {
+  const types = [
+    { id: "r", name: "Ranna", short: "R", color: "#f59e0b", start: "06:00", end: "14:00", breakMin: 0 },
+    { id: "u", name: "Urlop", short: "U", color: "#10b981", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" },
+  ];
+
+  it("znaczek zmiany w jej kolorze, a urlop spokojnie (bez koloru zmiany)", () => {
+    shiftsState.data = { types, days: { [localDayKey()]: { type: "r" } } };
+    render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} />);
+    expect(screen.getByTestId("today-badge").textContent).toBe("R");
+    expect(screen.getByTestId("today-badge").style.backgroundColor).not.toBe("");
+    cleanup();
+    shiftsState.data = { types, days: { [localDayKey()]: { type: "u" } } };
+    render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} />);
+    expect(screen.getByTestId("today-badge").style.backgroundColor).toBe("");
+    expect(screen.getByTestId("today-shift").textContent).toBe("Urlop");
+  });
+
+  it("po zmianie: „skończyła się o” i „Skończyłem teraz”", () => {
+    shiftsState.ended = { start: new Date(2026, 9, 27, 6, 0), end: new Date(2026, 9, 27, 14, 0), dayKey: "2026-10-27", entry: { type: "r" }, type: types[0] };
+    render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} />);
+    expect(screen.getByTestId("today-timing").textContent).toBe("Zmiana skończyła się o 14:00");
+    expect(screen.getByRole("button", { name: "Skończyłem teraz" })).toBeTruthy();
+  });
+
+  it("wieczorem wiersz „Jutro” z jutrzejszą zmianą i terminami; rano go nie ma", () => {
+    const evening = new Date(2026, 10, 3, 19, 0);
+    shiftsState.now = evening;
+    shiftsState.data = { types, days: { [localDayKey(new Date(2026, 10, 4))]: { type: "r" } } };
+    const reminderNotes = [{ reminder: new Date(2026, 10, 4, 9, 0).getTime(), trashed: false }];
+    let opened = 0;
+    render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} reminderNotes={reminderNotes} onOpenTomorrow={() => { opened++; }} />);
+    expect(screen.getByTestId("today-tomorrow").textContent).toBe("Jutro: R 06:00–14:00 · 1 termin");
+    screen.getByTestId("today-tomorrow").click();
+    expect(opened).toBe(1);
+    cleanup();
+    shiftsState.now = new Date(2026, 10, 3, 9, 0);
+    render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} reminderNotes={reminderNotes} onOpenTomorrow={() => {}} />);
+    expect(screen.queryByTestId("today-tomorrow")).toBeNull();
   });
 });

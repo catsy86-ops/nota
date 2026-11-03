@@ -274,7 +274,8 @@ const Index = () => {
 
   // Pasek dodawania jest też w folderze i etykiecie — nowa notatka dziedziczy
   // ten kontekst (`handleAddNoteGlow`), zamiast lądować poza widokiem.
-  const canCompose = view === "notes" || (view === "folder" && !!activeFolder) || (view === "label" && !!activeLabel);
+  // Dziś 2.5: także w Dziś — nowa notatka jest „dzisiejsza”, więc zostaje na ekranie, a „+” nie przenosi do Notatek.
+  const canCompose = view === "notes" || view === "today" || (view === "folder" && !!activeFolder) || (view === "label" && !!activeLabel);
   const composeDestination = view === "folder"
     ? folders.find((f) => f.id === activeFolder)?.name ?? null
     : view === "label" ? `#${activeLabel}` : null;

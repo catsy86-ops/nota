@@ -7,6 +7,7 @@ import type { useNotesContext } from "@/hooks/NotesProvider";
 import type { useViewRoute } from "@/hooks/useViewRoute";
 import type { useTodayCards } from "@/lib/todayCards";
 import { dailyKey, findDailyNote } from "@/lib/dailyNote";
+import { localDayKey } from "@/lib/dayDone";
 
 type NotesApi = ReturnType<typeof useNotesContext>;
 
@@ -52,7 +53,8 @@ export function TodayCards({ searching, go, notes, folders, reminderNotes, today
           {!searching && (
             <ViewErrorBoundary name="Grafik">
               <Suspense fallback={<CardSkeleton />}>
-                <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} dailyNote={findDailyNote(notes, dailyKey()) ?? null} />
+                <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} dailyNote={findDailyNote(notes, dailyKey()) ?? null}
+                  reminderNotes={reminderNotes} onOpenTomorrow={() => navigate(`/kalendarz?dzien=${localDayKey(((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1))(new Date()))}`)} />
               </Suspense>
             </ViewErrorBoundary>
           )}
