@@ -57,3 +57,26 @@ describe("InboxCapture — przycisk „Zapisz” (Skrzynka 1.1)", () => {
     expect(screen.queryByRole("button", { name: "Zapisz do skrzynki" })).toBeNull();
   });
 });
+
+describe("InboxCapture — frazy (2.1)", () => {
+  it("#etykieta, @folder, ! i data idą w extras i znikają z tytułu", () => {
+    const got: [string, string, unknown][] = [];
+    render(<InboxCapture onCapture={(t, c, e) => got.push([t, c, e])} labels={["budowa"]} folders={[{ id: "f1", name: "Lipowa" }]} />);
+    const input = screen.getByLabelText("Przechwyć do skrzynki");
+    fireEvent.change(input, { target: { value: "Zamówić kolana #budowa #pilne @Lipowa !" } });
+    expect(screen.getByRole("group", { name: "Rozpoznane w tekście" })).toBeTruthy();
+    fireEvent.submit(input.closest("form") as HTMLFormElement);
+    expect(got).toEqual([["Zamówić kolana", "", { labels: ["budowa", "pilne"], newLabels: ["pilne"], folderId: "f1", priority: "medium", reminder: null }]]);
+  });
+
+  it("zignorowany chip zostawia tekst bez zmian", () => {
+    const got: [string, unknown][] = [];
+    render(<InboxCapture onCapture={(t, _c, e) => got.push([t, e])} labels={["budowa"]} />);
+    const input = screen.getByLabelText("Przechwyć do skrzynki");
+    fireEvent.change(input, { target: { value: "Zamówić kolana #budowa" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zignoruj: Etykieta budowa" }));
+    fireEvent.submit(input.closest("form") as HTMLFormElement);
+    expect(got).toEqual([["Zamówić kolana #budowa", { labels: [], newLabels: [], folderId: null, priority: null, reminder: null }]]);
+    expect(screen.queryByRole("group", { name: "Rozpoznane w tekście" })).toBeNull();
+  });
+});

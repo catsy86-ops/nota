@@ -63,3 +63,22 @@ test("skrzynka: pusty stan „Zapisz pomysł” daje kursor w polu; „Otwórz n
   // Edytor otwiera się w miejscu kafla (pole tytułu w karcie notatki).
   await expect(page.getByRole("article", { name: `Pomysł ${stamp}` }).getByRole("textbox", { name: "Tytuł" })).toHaveValue(`Pomysł ${stamp}`);
 });
+
+test("skrzynka 2.1: fraza #etykieta zapisuje z etykietą i mówi, dokąd trafiła notatka; chip da się zignorować", async ({ page }) => {
+  const stamp = Date.now();
+  const input = page.getByLabel("Przechwyć do skrzynki");
+  await input.fill(`Kolana ${stamp} #hurtownia jutro 9:00`);
+  const chips = page.getByRole("group", { name: "Rozpoznane w tekście" });
+  await expect(chips).toContainText("#hurtownia");
+  await expect(chips).toContainText("Przypomnienie");
+  await input.press("Enter");
+  await expect(page.getByText(/Zapisano w #hurtownia · jutro/)).toBeVisible();
+  // Z etykietą notatka wychodzi ze Skrzynki od razu.
+  await expect(page.getByRole("main").getByText(`Kolana ${stamp}`)).toHaveCount(0);
+
+  await input.fill(`Rury ${stamp} #hurtownia`);
+  await page.getByRole("button", { name: "Zignoruj: Etykieta hurtownia" }).click();
+  await input.press("Enter");
+  await expect(page.getByText("Zapisano w skrzynce")).toBeVisible();
+  await expect(page.getByRole("main").getByText(`Rury ${stamp} #hurtownia`)).toBeVisible();
+});

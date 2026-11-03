@@ -910,14 +910,14 @@ Dział opisany w jednym miejscu. Skrzynka to widok „do posortowania”: notatk
 ### Co robi
 
 - **Widok „Skrzynka”** w pasku bocznym, w palecie poleceń i w menu „Więcej” na telefonie. Licznik = liczba notatek do posortowania (na telefonie też na kafelku w „Więcej”).
-- **Szybkie przechwycenie.** Na górze widoku pole: Enter zapisuje tekst od razu, bez tytułu, folderu i etykiet. Pierwsza linia staje się tytułem (do 120 znaków), reszta treścią. Dymek „Zapisano w skrzynce” ma „Cofnij”. Pusty tekst nic nie robi. Pole czyści się po zapisie.
+- **Szybkie przechwycenie.** Na górze widoku pole: Enter zapisuje tekst od razu. Pierwsza linia staje się tytułem (do 120 znaków), reszta treścią. Dymek „Zapisano w skrzynce” ma „Cofnij”. **Frazy (2.1, 2026-11-03):** `#etykieta`, `@folder`, `!`/`!!` i data na końcu („jutro 9:00”) działają jak w pasku nowej notatki. Pod polem pojawiają się chipy, a klik albo Backspace na chipie zostawia tekst bez zmian. Dymek mówi, dokąd trafiła notatka: „Zapisano w #budowa · jutro 9:00”, a z samą datą „Zapisano w skrzynce · jutro 9:00”. Notatka z etykietą albo folderem od razu wychodzi ze Skrzynki, to zamierzone. Nowa etykieta z `#` tworzy się przy zapisie. Pusty tekst nic nie robi. Pole czyści się po zapisie.
 - **Co jest w skrzynce:** aktywne notatki bez folderu, bez etykiet i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuwa notatkę ze skrzynki.
 - **Prywatność.** Notatka prywatna (zablokowana) nigdy nie trafia do skrzynki: ani na liście, ani w liczniku. Wcześniej prywatna notatka bez folderu i etykiet była liczona i pokazywana jako pusta karta.
 
 ### Gdzie jest
 
 - `src/lib/inbox.ts` — `isInboxNote` (reguła; warunek `!n.locked`), `captureParts` (tekst → tytuł i treść), `INBOX_TITLE_MAX`.
-- `src/components/InboxCapture.tsx` — pole na górze widoku.
+- `src/components/InboxCapture.tsx` — pole na górze widoku (`InboxCaptureExtras`: etykiety, nowe etykiety, folder, priorytet, termin; props `labels`, `folders`). Frazy: `extractCapture`/`applyCapture` z `src/lib/quickCapture.ts` na wyniku `captureParts`, chipy we wspólnym `src/components/CaptureChips.tsx`. Zapis i dymek: `captureToInbox` w `src/pages/Index.tsx`. Testy: `InboxCapture.test.tsx` (frazy, „zignoruj”), `e2e/inbox-triage.spec.ts` („skrzynka 2.1”).
 - `src/hooks/useFilteredNotes.ts` — typ `View` z `"inbox"`, filtr w `filterNotes`.
 - `src/lib/viewRoute.ts` — adres `/skrzynka`.
 - `src/components/EmptyState.tsx` — nagłówek i opis pustej skrzynki.

@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowUp, Inbox, Mic, MicOff } from "lucide-react";
 import { captureParts, INBOX_TITLE_MAX } from "@/lib/inbox";
+import { applyCapture, extractCapture, type CaptureToken } from "@/lib/quickCapture";
+import type { NotePriority } from "@/lib/notePriority";
+import { CaptureChips, toggledSet } from "./CaptureChips";
 import { useDictation } from "@/hooks/useDictation";
 import { cn } from "@/lib/utils";
 
@@ -10,20 +13,49 @@ import { cn } from "@/lib/utils";
  * Zapis robi rodzic (`onCapture`), tu tylko wpis i czyszczenie.
  * Plan Skrzynki 1.1: przy niepustym polu przycisk „Zapisz” (44 px na dotyku) — na telefonie Enter klawiatury
  * bywa nową linią. 2.2: mikrofon dopisuje podyktowany tekst do pola; zapis dalej Enterem albo „Zapisz”.
+ * 2.1: frazy jak w pasku nowej notatki (`#etykieta`, `@folder`, `!`, data na końcu) jako chipy pod polem;
+ * przyjęte idą w `extras`. Notatka z etykietą albo folderem od razu wychodzi ze Skrzynki — to zamierzone.
  */
-export function InboxCapture({ onCapture }: { onCapture: (title: string, content: string) => void }) {
+export interface InboxCaptureExtras {
+  labels: string[];
+  /** Podzbiór `labels` do utworzenia. */
+  newLabels: string[];
+  folderId: string | null;
+  priority: NotePriority | null;
+  reminder: number | null;
+}
+
+interface InboxCaptureProps {
+  onCapture: (title: string, content: string, extras: InboxCaptureExtras) => void;
+  /** Istniejące etykiety i foldery do rozpoznania fraz; bez nich `#słowo` to nowa etykieta, `@` nic nie znaczy. */
+  labels?: string[];
+  folders?: { id: string; name: string }[];
+}
+
+const NO_LABELS: string[] = [];
+const NO_FOLDERS: { id: string; name: string }[] = [];
+
+export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDERS }: InboxCaptureProps) {
   const [text, setText] = useState("");
+  const [ignored, setIgnored] = useState<ReadonlySet<string>>(new Set());
+  const tokens = useMemo<CaptureToken[]>(() => {
+    const parts = captureParts(text);
+    return parts ? extractCapture(parts, { labels, folders }) : [];
+  }, [text, labels, folders]);
   const dictation = useDictation((spoken) => {
     if (spoken) setText((t) => (t.trim() ? `${t.trimEnd()} ${spoken}` : spoken));
   });
   const submit = () => {
     const parts = captureParts(text);
     if (!parts) return;
-    onCapture(parts.title, parts.content);
+    const r = applyCapture(parts, tokens, ignored);
+    onCapture(r.title, r.content, { labels: r.labels, newLabels: r.newLabels, folderId: r.folderId, priority: r.priority, reminder: r.reminder ? r.reminder.getTime() : null });
     setText("");
+    setIgnored(new Set());
   };
   const hasText = text.trim().length > 0;
   return (
+    <div className="space-y-2">
     <form
       className="flex items-start gap-2 rounded-card border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-ring"
       onSubmit={(e) => { e.preventDefault(); submit(); }}
@@ -69,5 +101,7 @@ export function InboxCapture({ onCapture }: { onCapture: (title: string, content
         </button>
       )}
     </form>
+    <CaptureChips tokens={tokens} ignored={ignored} onToggle={(key) => setIgnored((prev) => toggledSet(prev, key))} />
+    </div>
   );
 }

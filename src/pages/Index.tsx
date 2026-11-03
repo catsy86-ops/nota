@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { effectiveRemindersLayout, useRemindersLayoutChoice } from "@/lib/remindersLayout";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
-import { InboxCapture } from "@/components/InboxCapture";
+import { InboxCapture, type InboxCaptureExtras } from "@/components/InboxCapture";
 import { useReaderNav } from "@/hooks/useReaderNav";
 import { setSearchTerms } from "@/lib/searchTerms";
 import { highlightTokens } from "@/lib/searchQuery";
@@ -72,6 +72,7 @@ import { useNextBoundary } from "@/hooks/useNextBoundary";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { formatReminderShort } from "@/lib/reminderTime";
+import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { downloadNotesZip } from "@/lib/exportZip";
 import { pluralPl } from "@/lib/plural";
 import { DndContext, pointerWithin } from "@dnd-kit/core";
@@ -655,10 +656,17 @@ const Index = () => {
   // Skrzynka: notatki do posortowania (bez folderu i etykiet); licznik w pasku bocznym.
   const inboxCount = useMemo(() => notes.reduce((n, note) => n + (isInboxNote(note) ? 1 : 0), 0), [notes]);
   // Pole Skrzynki: Enter zapisuje od razu, bez pytań; „Cofnij” w dymku kasuje świeżą notatkę.
-  const captureToInbox = useCallback((title: string, content: string) => {
-    const id = handleAddNoteGlow(title, content);
-    toastWithUndo("Zapisano w skrzynce", () => deleteNote(id), { icon: "📥", duration: 4000, id: "inbox-capture" });
-  }, [handleAddNoteGlow, deleteNote]);
+  const captureToInbox = useCallback((title: string, content: string, extras?: InboxCaptureExtras) => {
+    extras?.newLabels.forEach((l) => addLabel(l));
+    const id = handleAddNoteGlow(title, content, undefined, extras?.labels, extras?.reminder ?? null, undefined, undefined, extras?.priority ?? undefined, extras?.folderId ?? null);
+    if (extras?.reminder) requestNotificationPermissionOnIntent();
+    // 2.1: dymek mówi, dokąd trafiła notatka — z etykietą albo folderem nie ma jej już w Skrzynce.
+    const folderName = extras?.folderId ? folders.find((f) => f.id === extras.folderId)?.name : undefined;
+    const where = [...(extras?.labels ?? []).map((l) => `#${l}`), ...(folderName ? [folderName] : []), ...(extras?.reminder ? [formatReminderShort(extras.reminder)] : [])];
+    const filed = (extras?.labels.length ?? 0) > 0 || !!folderName;
+    const msg = where.length === 0 ? "Zapisano w skrzynce" : filed ? `Zapisano w ${where.join(" · ")}` : `Zapisano w skrzynce · ${where.join(" · ")}`;
+    toastWithUndo(msg, () => deleteNote(id), { icon: "📥", duration: 4000, id: "inbox-capture" });
+  }, [handleAddNoteGlow, deleteNote, addLabel, folders]);
 
   const hiddenViews = useHiddenViews();
   const todayCards = useTodayCards();
@@ -727,7 +735,7 @@ const Index = () => {
             </div>
           )}
           {view === "notes" && <InstallBanner ready={notes.length >= 3} />}
-          {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} />}
+          {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} labels={allLabels} folders={folders} />}
           {view === "inbox" && !deferredSearch && inboxCount > 0 && (
             <button type="button" onClick={() => { setTriageMounted(true); setTriageOpen(true); }}
               className="self-start inline-flex items-center gap-1.5 rounded-field px-2.5 py-1.5 text-sm font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
