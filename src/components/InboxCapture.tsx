@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
  * bywa nową linią. 2.2: mikrofon dopisuje podyktowany tekst do pola; zapis dalej Enterem albo „Zapisz”.
  * 2.1: frazy jak w pasku nowej notatki (`#etykieta`, `@folder`, `!`, data na końcu) jako chipy pod polem;
  * przyjęte idą w `extras`. Notatka z etykietą albo folderem od razu wychodzi ze Skrzynki — to zamierzone.
+ * 2.5: wklejony obraz albo upuszczony plik (obraz, PDF) idzie do `onFiles` razem z tekstem z pola (tytuł notatki).
  */
 export interface InboxCaptureExtras {
   labels: string[];
@@ -30,13 +31,24 @@ interface InboxCaptureProps {
   /** Istniejące etykiety i foldery do rozpoznania fraz; bez nich `#słowo` to nowa etykieta, `@` nic nie znaczy. */
   labels?: string[];
   folders?: { id: string; name: string }[];
+  /** Wklejone albo upuszczone pliki i tekst pola; bez tej funkcji pole przyjmuje tylko tekst. */
+  onFiles?: (files: File[], text: string) => void;
 }
 
 const NO_LABELS: string[] = [];
 const NO_FOLDERS: { id: string; name: string }[] = [];
 
-export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDERS }: InboxCaptureProps) {
+export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDERS, onFiles }: InboxCaptureProps) {
   const [text, setText] = useState("");
+  const [dragging, setDragging] = useState(false);
+  /** Pliki z wklejenia albo upuszczenia → rodzic; pole się czyści. `false` = nie było plików (zwykłe wklejenie tekstu). */
+  const takeFiles = (list: FileList | null | undefined): boolean => {
+    if (!onFiles || !list || list.length === 0) return false;
+    onFiles(Array.from(list), text);
+    setText("");
+    setIgnored(new Set());
+    return true;
+  };
   const [ignored, setIgnored] = useState<ReadonlySet<string>>(new Set());
   const tokens = useMemo<CaptureToken[]>(() => {
     const parts = captureParts(text);
@@ -65,8 +77,11 @@ export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDE
   return (
     <div className="space-y-2">
     <form
-      className="flex items-start gap-2 rounded-card border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-ring"
+      className={cn("flex items-start gap-2 rounded-card border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-ring", dragging ? "border-primary ring-2 ring-primary/40" : "border-border")}
       onSubmit={(e) => { e.preventDefault(); submit(); }}
+      onDragOver={(e) => { if (onFiles && e.dataTransfer.types.includes("Files")) { e.preventDefault(); setDragging(true); } }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => { setDragging(false); if (takeFiles(e.dataTransfer.files)) e.preventDefault(); }}
     >
       <Inbox className="mt-2.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
       <textarea
@@ -74,6 +89,7 @@ export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDE
         enterKeyHint="send"
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onPaste={(e) => { if (takeFiles(e.clipboardData.files)) e.preventDefault(); }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submit(); }
         }}

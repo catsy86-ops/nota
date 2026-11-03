@@ -91,3 +91,27 @@ describe("InboxCapture — wklejony link (2.4)", () => {
     expect(got).toEqual([["example.com/oferta", "https://www.example.com/oferta/"]]);
   });
 });
+
+describe("InboxCapture — wklejony obraz i upuszczony plik (2.5)", () => {
+  const png = () => new File([new Uint8Array([137, 80, 78, 71])], "zdjecie.png", { type: "image/png" });
+
+  it("wklejony obraz idzie do onFiles z tekstem pola, pole się czyści", () => {
+    const got: [string[], string][] = [];
+    render(<InboxCapture onCapture={() => {}} onFiles={(files, text) => got.push([files.map((f) => f.name), text])} />);
+    const input = screen.getByLabelText("Przechwyć do skrzynki") as HTMLTextAreaElement;
+    fireEvent.change(input, { target: { value: "Kotłownia Lipowa" } });
+    fireEvent.paste(input, { clipboardData: { files: [png()] } });
+    expect(got).toEqual([[["zdjecie.png"], "Kotłownia Lipowa"]]);
+    expect(input.value).toBe("");
+  });
+
+  it("upuszczony plik też, a wklejony sam tekst zostaje zwykłym wklejeniem", () => {
+    const got: string[][] = [];
+    render(<InboxCapture onCapture={() => {}} onFiles={(files) => got.push(files.map((f) => f.name))} />);
+    const input = screen.getByLabelText("Przechwyć do skrzynki");
+    fireEvent.paste(input, { clipboardData: { files: [] } });
+    expect(got).toEqual([]);
+    fireEvent.drop(input.closest("form") as HTMLFormElement, { dataTransfer: { files: [png()], types: ["Files"] } });
+    expect(got).toEqual([["zdjecie.png"]]);
+  });
+});

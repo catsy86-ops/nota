@@ -82,3 +82,24 @@ test("skrzynka 2.1: fraza #etykieta zapisuje z etykietą i mówi, dokąd trafił
   await expect(page.getByText("Zapisano w skrzynce")).toBeVisible();
   await expect(page.getByRole("main").getByText(`Rury ${stamp} #hurtownia`)).toBeVisible();
 });
+
+test("skrzynka 2.5: upuszczony obraz zapisuje notatkę ze zdjęciem i tytułem z pola", async ({ page }) => {
+  const stamp = Date.now();
+  await page.getByLabel("Przechwyć do skrzynki").fill(`Kotłownia ${stamp}`);
+  await page.evaluate(async () => {
+    // Prawdziwy PNG 8×8 z canvas — `prepareImage` musi go zdekodować.
+    const c = document.createElement("canvas");
+    c.width = 8; c.height = 8;
+    c.getContext("2d")!.fillRect(0, 0, 8, 8);
+    const blob: Blob = await new Promise((r) => c.toBlob((b) => r(b!), "image/png"));
+    const dt = new DataTransfer();
+    dt.items.add(new File([blob], "kotlownia.png", { type: "image/png" }));
+    const form = document.querySelector("[data-inbox-capture]")!.closest("form")!;
+    form.dispatchEvent(new DragEvent("dragover", { dataTransfer: dt, bubbles: true, cancelable: true }));
+    form.dispatchEvent(new DragEvent("drop", { dataTransfer: dt, bubbles: true, cancelable: true }));
+  });
+  await expect(page.getByText("Zapisano w skrzynce z plikiem")).toBeVisible();
+  await expect(page.getByLabel("Przechwyć do skrzynki")).toHaveValue("");
+  const card = page.locator("[data-note-id]").filter({ hasText: `Kotłownia ${stamp}` });
+  await expect(card.locator("img").first()).toBeVisible();
+});

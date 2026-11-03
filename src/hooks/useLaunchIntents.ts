@@ -5,9 +5,8 @@ import type { ComposerAction } from "@/components/AddNoteBar";
 import { whenNotesReady, type useNotes } from "@/hooks/useNotes";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
-import { takeShareInbox, importSharedFiles } from "@/lib/shareInbox";
-import { describeRejections } from "@/lib/attachments";
-import { yjsStore } from "@/lib/yjsStore";
+import { takeShareInbox } from "@/lib/shareInbox";
+import { importNoteFiles, warnImportedFiles } from "@/lib/inboxFiles";
 import { yStudy } from "@/lib/study/data";
 
 type AddNote = ReturnType<typeof useNotes>["addNote"];
@@ -45,24 +44,13 @@ export function useLaunchIntents(deps: LaunchIntentsDeps) {
           toast.error("Nie udało się odebrać udostępnionych plików", { description: "Spróbuj udostępnić jeszcze raz." });
           return;
         }
-        const used = new Map<string, number>();
-        yjsStore.referencedAttachments().forEach((a, hash) => used.set(hash, a.size));
-        const imported = await importSharedFiles(received.files, used);
+        const imported = await importNoteFiles(received.files);
         const text = parseShare(SHARE_PATH, received.query) ?? { title: "", content: "" };
         if (!text.title && !text.content && imported.images.length === 0 && imported.attachments.length === 0) {
           toast.error("Z udostępnienia nie ma czego zapisać");
           return;
         }
-        const warn = () => {
-          if (imported.unsupported.length) {
-            toast.error(`Nie przyjęto: ${imported.unsupported.join(", ")}`, { description: "Z plików przyjmuję obrazy i PDF.", duration: 9000 });
-          }
-          if (imported.skippedImages > 0) {
-            toast.error(imported.skippedImages === 1 ? "Nie udało się zmniejszyć obrazka do 2 MB" : `${imported.skippedImages} obrazków nie udało się zmniejszyć do 2 MB`);
-          }
-          const problem = describeRejections(imported.rejected);
-          if (problem) toast.error("Część plików nie została dodana", { description: problem, duration: 9000 });
-        };
+        const warn = () => warnImportedFiles(imported);
         const saveAsNote = () => {
           const id = add(text.title, text.content, "default", [], null, imported.images, [], "none", null, imported.attachments);
           warn();

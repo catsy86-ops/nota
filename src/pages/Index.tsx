@@ -12,7 +12,7 @@ import { InboxCapture, type InboxCaptureExtras } from "@/components/InboxCapture
 import { useReaderNav } from "@/hooks/useReaderNav";
 import { setSearchTerms } from "@/lib/searchTerms";
 import { highlightTokens } from "@/lib/searchQuery";
-import { isInboxNote } from "@/lib/inbox";
+import { captureParts, isInboxNote } from "@/lib/inbox";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
@@ -668,6 +668,19 @@ const Index = () => {
     toastWithUndo(msg, () => deleteNote(id), { icon: "📥", duration: 4000, id: "inbox-capture" });
   }, [handleAddNoteGlow, deleteNote, addLabel, folders]);
 
+  // Skrzynka 2.5: wklejony obraz albo upuszczony plik — zdjęcia i PDF jak przy udostępnianiu, tekst z pola to tytuł.
+  const captureFilesToInbox = useCallback((files: File[], text: string) => {
+    void import("@/lib/inboxFiles").then(async ({ importNoteFiles, warnImportedFiles }) => {
+      const imported = await importNoteFiles(files);
+      warnImportedFiles(imported);
+      const count = imported.images.length + imported.attachments.length;
+      if (count === 0) return;
+      const parts = captureParts(text) ?? { title: "", content: "" };
+      const id = handleAddNoteGlow(parts.title, parts.content, undefined, [], null, imported.images, [], undefined, null, imported.attachments);
+      toastWithUndo(count === 1 ? "Zapisano w skrzynce z plikiem" : `Zapisano w skrzynce z ${count} plikami`, () => deleteNote(id), { icon: "📥", duration: 4000, id: "inbox-capture" });
+    }, () => toast.error("Nie udało się wczytać plików", { description: "Sprawdź połączenie i spróbuj jeszcze raz." }));
+  }, [handleAddNoteGlow, deleteNote]);
+
   const hiddenViews = useHiddenViews();
   const todayCards = useTodayCards();
   const navItems = sidebarItems({ inbox: inboxCount, overdue: overdueCount, trash: trashedNotes.length }).filter((i) => isViewShown(hiddenViews, i.view));
@@ -735,7 +748,7 @@ const Index = () => {
             </div>
           )}
           {view === "notes" && <InstallBanner ready={notes.length >= 3} />}
-          {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} labels={allLabels} folders={folders} />}
+          {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} onFiles={captureFilesToInbox} labels={allLabels} folders={folders} />}
           {view === "inbox" && !deferredSearch && inboxCount > 0 && (
             <button type="button" onClick={() => { setTriageMounted(true); setTriageOpen(true); }}
               className="self-start inline-flex items-center gap-1.5 rounded-field px-2.5 py-1.5 text-sm font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
