@@ -10,7 +10,7 @@ import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
 import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, useScheduleData, useSchedules, monthSummaryToDate, shortRests, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, planWeekCopy, restoreDays, shiftStore, subscribeShiftDay, takeShiftDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type WeekCopyPlan } from "@/lib/shifts";
-import { download } from "@/lib/exportNotes";
+import { download } from "@/lib/downloadBlob";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { pluralPl } from "@/lib/plural";

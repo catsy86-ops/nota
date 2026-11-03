@@ -17,3 +17,8 @@ export function downloadBlob(blob: Blob, filename: string): void {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), DOWNLOAD_REVOKE_MS);
 }
+
+/** Pobranie tekstu jako pliku. Tu, nie w `exportNotes`, żeby drobne pobrania (kalendarz, Grafik, sync z pliku) nie wciągały eksportu do startu. */
+export function download(content: string, filename: string, type: string): void {
+  downloadBlob(new Blob([content], { type }), filename);
+}

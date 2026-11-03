@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { pluralPl } from "@/lib/plural";
 import { buildIcs, exportableReminders } from "@/lib/icsExport";
-import { download } from "@/lib/exportNotes";
+import { download } from "@/lib/downloadBlob";
 import type { Note } from "@/hooks/useNotes";
 
 /** Eksport kalendarza do pliku .ics (K5.2): jedno wystąpienie i wszystkie nadchodzące terminy. */

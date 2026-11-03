@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import type { Note } from "@/hooks/useNotes";
-import { describeSkippedAttachments, exportFullBackup } from "@/lib/exportNotes";
+/** Eksport poza paczką startową (Plan-nowy 1.5) — ładowany dopiero, gdy kopia jest potrzebna. */
+const loadExport = () => import("@/lib/exportNotes");
 import { isBackupDue, markBackup, daysSinceBackup, getLastBackup, oldestCreatedAt } from "@/lib/backupReminder";
 
 export interface BackupReminderPrefs {
@@ -22,6 +23,7 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
         // Bez gestu użytkownika działa tylko zapis do wybranego pliku
         // (File System Access). Inaczej nie udajemy pobrania „w tle” —
         // prosimy o jedno kliknięcie, a backup liczy się dopiero wtedy.
+        const { exportFullBackup, describeSkippedAttachments } = await loadExport();
         const { filename, size, savedToFile, attachments } = await exportFullBackup(undefined, { allowDownload: false });
         const count = notes.length + archivedNotes.length;
         if (savedToFile) {
@@ -67,6 +69,8 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
     if (sessionStorage.getItem("kaczy.autoBackupDone") === "1") return;
     sessionStorage.setItem("kaczy.backupNudge", "1");
     const t = setTimeout(() => {
+      // Moduł z wyprzedzeniem: „Zrób backup” ma ruszyć od razu, w geście użytkownika.
+      void loadExport();
       const days = daysSinceBackup();
       const desc = days === null
         ? "Nie masz jeszcze żadnej kopii zapasowej."
@@ -78,7 +82,7 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
           label: "Zrób backup",
           onClick: async () => {
             try {
-              const { savedToFile } = await exportFullBackup();
+              const { savedToFile } = await (await loadExport()).exportFullBackup();
               markBackup();
               toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾");
             } catch {

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Note, useNotes } from "@/hooks/useNotes";
-import { importFromJSON } from "@/lib/exportNotes";
 import { yjsStore } from "@/lib/yjsStore";
 import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
@@ -16,7 +15,8 @@ type AddNote = ReturnType<typeof useNotes>["addNote"];
 export function useImportExport(importNotes: (notes: Note[]) => void, addNote: AddNote) {
   const handleImport = useCallback(async () => {
     try {
-      const imported = await importFromJSON();
+      // Moduł jest już w pamięci po otwarciu menu (ImportExportMenu), więc okno pliku dostaje gest użytkownika.
+      const imported = await (await import("@/lib/exportNotes")).importFromJSON();
       importNotes(imported);
       toast.success(`Zaimportowano ${imported.length} notatek`);
     } catch (err: unknown) {

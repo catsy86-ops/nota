@@ -2,7 +2,8 @@ import type { ReactElement } from "react";
 import { FileBraces, FileText, NotebookPen, Upload } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNotesContext } from "@/hooks/NotesProvider";
-import { exportToJSON, exportToMarkdown, exportToHTML } from "@/lib/exportNotes";
+/** Eksport poza paczką startową (Plan-nowy 1.5). Ładowany przy otwarciu menu, żeby klik działał w geście użytkownika. */
+const loadExport = () => import("@/lib/exportNotes");
 import { markBackup } from "@/lib/backupReminder";
 import { downloadNotesZip } from "@/lib/exportZip";
 import { toast } from "sonner";
@@ -23,10 +24,10 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
   const all = () => [...notes, ...archivedNotes];
   const run = (fn: () => void) => () => { fn(); onDone?.(); };
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => { if (open) void loadExport(); }}>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="w-60">
-        <DropdownMenuItem onClick={run(() => { void exportToJSON(all()).then(markBackup); })}>
+        <DropdownMenuItem onClick={run(() => { void loadExport().then((m) => m.exportToJSON(all())).then(markBackup); })}>
           <FileBraces className="w-4 h-4 mr-2" />
           Eksportuj jako JSON
         </DropdownMenuItem>
@@ -34,7 +35,7 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
           <FileText className="w-4 h-4 mr-2" />
           Eksportuj jako PDF
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={run(() => exportToMarkdown(all(), propDefs))}>
+        <DropdownMenuItem onClick={run(() => { void loadExport().then((m) => m.exportToMarkdown(all(), propDefs)); })}>
           <FileText className="w-4 h-4 mr-2" />
           Eksportuj jako Markdown
         </DropdownMenuItem>
@@ -47,7 +48,7 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
           <FileText className="w-4 h-4 mr-2" />
           Eksportuj jako ZIP z plikami .md
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={run(() => exportToHTML(all()))}>
+        <DropdownMenuItem onClick={run(() => { void loadExport().then((m) => m.exportToHTML(all())); })}>
           <FileText className="w-4 h-4 mr-2" />
           Eksportuj jako HTML
         </DropdownMenuItem>

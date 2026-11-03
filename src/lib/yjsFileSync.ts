@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { mayLeaveDevice, sizeCappedRefsIn } from "@/lib/plans/planRefs";
 import { yjsStore, type YjsStore } from "@/lib/yjsStore";
-import { download } from "@/lib/exportNotes";
+import { download } from "@/lib/downloadBlob";
 import { logDiag } from "@/lib/diagnostics";
 import { hashImage } from "@/lib/imageHash";
 
