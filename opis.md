@@ -211,7 +211,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 - Jednostkowe: `src/lib/keyboardInset.test.ts`, `haptics.test.ts`, `pageHidden.test.ts`, `viewPreload.test.ts`, `inputModality.test.ts`, `appFont.test.ts`, `siteMode.test.ts`, `skins.test.ts`, `useTheme.test.ts`, `contrastTokens.test.ts`, `push/schedule.test.ts`, `push-server/core.test.js`.
 - E2E: `mobile.spec.ts`, `mobile-layout.spec.ts`, `touch-targets.spec.ts`, `desktop-columns.spec.ts`, `toggle-group.spec.ts`, `skins.spec.ts`, `site-mode.spec.ts`, `a11y.spec.ts`, `view-skeleton.spec.ts`, `pwa.spec.ts`, `push.spec.ts`, `view-change.spec.ts`.
-- **Bramka `npm run check`** (`package.json`): typecheck, lint, Vitest i e2e `@smoke` na 3 workerach (`--workers=3`). Trwa ok. 3 min. Pełne `test:e2e` zostaje na 1 workerze (`PW_WORKERS` w `playwright.config.ts`).
+- **Bramka `npm run check`** (`package.json`): typecheck, lint, Vitest i e2e `@smoke` na 3 workerach (`--workers=3`). Trwa ok. 3 min. Pełne `test:e2e` zostaje na 1 workerze (`PW_WORKERS` w `playwright.config.ts`). `e2e/global-setup.ts` przed testami pobiera raz wszystkie pliki z precache (`warmUp`). Bez tego po świeżym buildzie pierwsze `goto` na trzech workerach naraz przekraczało 60 s.
 - **Zapis przed przeładowaniem w e2e:** `page.reload()` albo `goto` zaraz po zmianie przerywa transakcję IndexedDB, więc ostatnia zmiana ginie. Test czeka wtedy na pigułkę „Zapisano” (`getByText("Zapisano", { exact: true })`, `OfflineStatus.tsx`), tak jak `site-faults.spec.ts` i `study-delivery.spec.ts`. Użytkownika chroni ostrzeżenie `beforeunload` (`hasUnsavedWork`), którego Playwright nie pokazuje.
 - **Zrzuty wyglądu** (`e2e/visual.spec.ts`): zrzut `fullPage` w Chromium na chwilę zmienia okno na 1×1. `useIsMobile` brał to za telefon i zamykał pasek boczny, a pod obciążeniem zrzut łapał go zwiniętego. Dlatego `prepare()` zamraża `window.matchMedia` na wartości z pierwszego odczytu. Trzy zrzuty bazowe zapisane ze zwiniętym paskiem (`praca-komputer-{miedz,plan,kafle}`) są poprawione. Commit 4334d60 (2026-11-03).
 
@@ -2122,12 +2122,25 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/components/study/StudyJournal.tsx` (`openTestEntry`, gałąź `no-test` w `ReminderRow`); reguła przypomnienia w `src/lib/study/reminders.ts`.
 - **Testy:** `e2e/study-test-reminder.spec.ts`; cały `study.spec.ts` 30/30.
 
-## Praca — zapis wpisu nie kasuje pól z nowszej wersji (Faza 0.5, 2026-10-22)
+## Zgodność danych ze starszą wersją (Faza 0.5, 2026-10-22; Plan-nowy 1.4, 2026-11-03)
 
-- **Co robi:** zapis wpisu dziennika usuwa tylko pola, które ta wersja zna (`JOURNAL_ENTRY_KEYS`). Pole dodane w nowszej wersji zostaje, gdy starsza edycja zapisze wpis bez niego.
-- **Gdzie:** `src/lib/study/yStudy.ts` (`JOURNAL_ENTRY_KEYS`, `writeEntry`).
-- **Ograniczenie:** to chroni tylko przed nową wersją zapisującą pola starszej. Starsza wersja, która już działa na telefonie, dalej kasuje nieznane pola — to nie da się naprawić bez jej aktualizacji.
-- **Testy:** `src/lib/study/yStudy.test.ts` (zachowanie pola nieznanego; usunięcie znanego pola nadal działa).
+- **Co robi:** edycja w jednej wersji aplikacji nie wycina pól, które dopisała inna wersja na drugim urządzeniu.
+- **Gdzie:**
+  - Notatki: `src/lib/yjsStore.ts` (`applyPatch` zapisuje pole po polu, `reminderSpec` z zapasowymi polami `reminder` i `reminderRepeat`).
+  - Wpisy dziennika: `src/lib/study/journalEntry.ts` (`JOURNAL_ENTRY_KEYS`), `yStudy.ts` (`writeEntry`).
+  - Karty budów: `src/lib/study/sites.ts` (`SITE_CARD_KEYS`), `yStudy.ts` (`writeCard`).
+- **Jak działa:**
+  - Notatka, wpis i karta to `Y.Map` pól. Zapis zmienia tylko pola, które się różnią.
+  - Wpis i karta kasują tylko pola znane tej wersji, więc nieznane pole z nowszej wersji zostaje. Dla kart brakowało tego do 1.4: `writeCard` kasował każde pole spoza zapisu.
+  - `SITE_CARD_KEYS` powstaje z obiektu z `satisfies Record<keyof SiteCard, 1>`. Nowe pole `SiteCard` bez wpisu w tym obiekcie nie przejdzie typecheck.
+  - Przypomnienie: nowa reguła powtarzania (`reminderRule`) zapisuje też zapasowy `reminderRepeat` (`fallbackRepeat`). Wersja, która reguły nie zna, czyta więc poprawny rodzaj.
+- **Świadome wyjątki:**
+  - Zmiana terminu w wersji sprzed Terminy 3.2 (b1beade) zdejmuje wcześniejsze przypomnienie (`reminderLead`), bo ta wersja przepisuje cały `reminderSpec` bez niego. Reguła zostaje.
+  - Zmiana terminu w wersji sprzed Terminy 3.1 (01c9ac8) zdejmuje regułę. Seria trwa w zapasowym rodzaju (np. „co tydzień” zamiast „pon., śr.”).
+  - Pozycje list karty (`studySiteItems`: etapy, braki, zamówienia…), własne pytania (`studyCustom`) i powtórki (`studyReview`) są zapisywane jako cała wartość na klucz. Zmiana pozycji w starszej wersji gubi pola tej pozycji, które dodała nowsza.
+  - Wersja sprzed 9020901 kasowała każde nieznane pole wpisu. Tego nie da się naprawić bez aktualizacji tamtego telefonu.
+- **Testy:** `src/lib/dataCompat.test.ts`: starsza wersja to drugi `Y.Doc` piszący surowymi operacjami Yjs tak jak dawny kod (tytuł i lista, odczyt terminu, oba wyjątki przypomnień, wpis z kluczami z 9020901, karta i wpis z polem z nowszej wersji). Do tego `src/lib/study/yStudy.test.ts` (pole nieznane we wpisie).
+- **Commit:** zobacz Plan-nowy 1.4 w historii (2026-11-03).
 
 ## Praca — braki: fokus i komunikat dla czytnika (Faza 1.1, 2026-10-22)
 

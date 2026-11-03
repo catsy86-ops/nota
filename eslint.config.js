@@ -100,6 +100,8 @@ export default tseslint.config(
       "src/lib/shifts/leaveHours.test.ts",
       "src/lib/tabSync.ts",
       "src/lib/tabSync.test.ts",
+      // Zgodność ze starszą wersją (Plan-nowy 1.4): „stary klient” pisze surowymi operacjami Yjs.
+      "src/lib/dataCompat.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.
       "e2e/images.spec.ts",
       "src/hooks/useNotes.ts",

@@ -21,7 +21,28 @@ function newestMtime(path: string): number {
   return newest;
 }
 
-export default function globalSetup() {
+const BASE = "http://localhost:4173";
+
+/**
+ * Rozgrzewka (Plan-nowy 1.2): po świeżym buildzie pierwsze `goto` na kilku workerach naraz
+ * przekraczało 60 s, bo każda karta ściągała cały precache z zimnego `vite preview`.
+ * Jedno przejście po plikach z `sw.js` przed testami zdejmuje ten koszt z pierwszych testów.
+ */
+async function warmUp() {
+  let sw: string;
+  try { sw = await (await fetch(`${BASE}/sw.js`)).text(); } catch { return; }
+  const urls = [...new Set(Array.from(sw.matchAll(/\{url:"([^"]+)"/g), (m) => m[1]))];
+  for (let i = 0; i < urls.length; i += 8) {
+    await Promise.all(urls.slice(i, i + 8).map((u) => fetch(`${BASE}/${u}`).then((r) => r.arrayBuffer()).catch(() => null)));
+  }
+}
+
+export default async function globalSetup() {
+  checkFresh();
+  await warmUp();
+}
+
+function checkFresh() {
   if (process.env.PW_ALLOW_STALE) return;
   const dist = join(process.cwd(), "dist", "index.html");
   if (!existsSync(dist)) return; // brak buildu — webServer zbuduje

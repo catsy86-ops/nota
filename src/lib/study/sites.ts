@@ -67,6 +67,17 @@ export interface SiteCard {
   signature?: SiteSignature;
 }
 
+/**
+ * Pola karty, które ta wersja zna (Plan-nowy 1.4). `writeCard` kasuje tylko te, których brak w zapisie;
+ * pola z nowszej wersji zostają, żeby edycja karty tutaj ich nie wycinała (jak `JOURNAL_ENTRY_KEYS`).
+ * `satisfies` pilnuje kompletności: nowe pole `SiteCard` bez wpisu tutaj nie przejdzie typecheck.
+ */
+export const SITE_CARD_KEYS: ReadonlySet<string> = new Set(Object.keys({
+  id: 1, name: 1, address: 1, investor: 1, geo: 1, phone: 1, manager: 1, managerPhone: 1, supplierPhone: 1,
+  access: 1, created: 1, archived: 1, orderedAt: 1, stages: 1, shortages: 1, orders: 1, hours: 1, docs: 1,
+  service: 1, plan: 1, warranty: 1, rate: 1, signature: 1,
+} satisfies Record<keyof SiteCard, 1>));
+
 export const SITE_NAME_MAX = 120;
 export const SITE_FIELD_MAX = 200;
 

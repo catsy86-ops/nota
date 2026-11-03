@@ -1,6 +1,6 @@
 import * as Y from "yjs";
 import { journalFields } from "./journalFields";
-import { foldName, type SiteCard } from "./sites";
+import { foldName, SITE_CARD_KEYS, type SiteCard } from "./sites";
 import { cleanDump, stateFromDump, type Column, type DeviceRounds, type StudyDump, type StudyState } from "./studyDump";
 import {
   cleanEntry, DAY_RE, FAULT_AFTER_MAX, FAULT_OWNER_MAX, JOURNAL_ENTRY_KEYS, JOURNAL_SOLUTION_MAX, ORDERED_ENTRY_LISTS,
@@ -92,7 +92,8 @@ export function createYStudy(doc: Y.Doc) {
       return;
     }
     for (const [k, v] of fields) if (JSON.stringify(cur.get(k)) !== JSON.stringify(v)) cur.set(k, v);
-    for (const k of Array.from(cur.keys())) if (!fields.some(([f]) => f === k)) cur.delete(k);
+    // Kasujemy tylko pola znane tej wersji — pola z nowszej zostają (Plan-nowy 1.4).
+    for (const k of Array.from(cur.keys())) if (SITE_CARD_KEYS.has(k) && !fields.some(([f]) => f === k)) cur.delete(k);
   }
 
   /** Wpis jako mapa pól: zmiana jednego pola nie kasuje zmian innych pól z drugiego telefonu (D5). */
