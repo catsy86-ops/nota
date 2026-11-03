@@ -1,4 +1,6 @@
-import { currentAndNextShift, type ShiftData } from "@/lib/shifts";
+import { currentAndNextShift } from "@/lib/shifts/summary";
+import type { ShiftData } from "@/lib/shifts/model";
+import { shiftStore } from "@/lib/shifts/store";
 
 const dayKeyOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
@@ -19,4 +21,9 @@ export function shiftPresets(data: ShiftData, now: Date): { label: string; at: D
     out.push({ label: "30 min przed jutrzejszą zmianą", at: new Date(tomorrow.start.getTime() - 30 * 60_000) });
   }
   return out;
+}
+
+/** Presety z aktywnego grafiku w tej chwili — dla `useShiftPresets` (moduł ładowany leniwie). */
+export function currentShiftPresets(now: Date): { label: string; at: Date }[] {
+  return shiftPresets(shiftStore.get(), now);
 }

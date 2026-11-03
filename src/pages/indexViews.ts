@@ -34,6 +34,9 @@ export const SiteArrivalPrompt = lazy(() => import("@/components/study/SiteArriv
 export const DailyReportNudge = lazy(() => import("@/components/study/DailyReportNudge"));
 // Harmonogram dla serwera push — tylko przy włączonych powiadomieniach przy zamkniętej aplikacji.
 export const PushScheduleSync = lazy(() => import("@/components/PushScheduleSync"));
+export const ShiftEveningNudge = lazy(() => import("@/components/ShiftEveningNudge"));
+/** Grafik (store, Cofnij/Ponów) — doczytywany w tle po starcie i przy wejściu na widok Grafiku. */
+export const loadShiftsStore = () => import("@/lib/shifts/store");
 export const StudyOverdueSync = lazy(() => import("@/components/review/StudyOverdueSync"));
 // Czytnik notatek poza paczką startową; doczytywany w tle, gdy przeglądarka odpocznie (patrz efekt w `Index`),
 // więc pierwsze otwarcie notatki nie czeka.

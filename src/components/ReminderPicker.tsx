@@ -15,8 +15,7 @@ import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermiss
 import { composeReminderTimestamp, dayInputValue, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME, readLastReminderTime, writeLastReminderTime } from "@/lib/reminderTime";
 import { QuickReminderInput } from "@/components/QuickReminderInput";
 import { useReminderPassed } from "@/hooks/useReminderPassed";
-import { useShifts, type ShiftData } from "@/lib/shifts";
-import { shiftPresets } from "@/lib/reminderShiftPresets";
+import { useShiftPresets } from "@/hooks/useShiftPresets";
 import { LEAD_OPTIONS, leadShort } from "@/lib/reminderLead";
 
 interface ReminderPickerProps {
@@ -48,7 +47,7 @@ interface ReminderBadgeProps {
 }
 
 /** Szybkie terminy: pierwszy przyszły z listy trafia do pól daty i godziny. */
-function presets(now = new Date(), shifts?: ShiftData, quickHour = false): { label: string; at: Date }[] {
+function presets(now = new Date(), shiftList: { label: string; at: Date }[] = [], quickHour = false): { label: string; at: Date }[] {
   const at = (days: number, h: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, h, 0, 0, 0);
   // Q4: na telefonie po 8:00 pierwszy szybki termin to „Za godzinę”, zaokrąglony w górę do 5 minut.
   const inAnHour = new Date(now.getTime() + 60 * 60_000);
@@ -59,7 +58,7 @@ function presets(now = new Date(), shifts?: ShiftData, quickHour = false): { lab
     { label: "Dziś wieczorem", at: at(0, 18) },
     { label: "Jutro rano", at: at(1, 9) },
     { label: "Za tydzień", at: at(7, 9) },
-    ...(shifts ? shiftPresets(shifts, now) : []),
+    ...shiftList,
   ];
   return list.filter((p) => p.at.getTime() > now.getTime());
 }
@@ -122,7 +121,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
   const [allDay, setAllDay] = useState(reminderAllDay === true);
   const [lead, setLead] = useState<number | undefined>(reminderLead);
   const [untilText, setUntilText] = useState(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
-  const shifts = useShifts();
+  const shiftList = useShiftPresets(new Date());
   // F2.2: na telefonie kalendarz pokazuje się po „Wybierz…” albo gdy wybrano dzień spoza chipów.
   // Na komputerze jest zawsze (jest na niego miejsce, a testy i nawyki tego oczekują).
   const mobile = useMediaQuery("(max-width: 639px)");
@@ -222,7 +221,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
         )}>
         <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Szybkie terminy">
-          {presets(new Date(), shifts, mobile).map((p) => (
+          {presets(new Date(), shiftList, mobile).map((p) => (
             <button
               key={p.label}
               type="button"

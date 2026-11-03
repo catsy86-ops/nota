@@ -1,3 +1,4 @@
+import { loadShiftPresets } from "@/hooks/useShiftPresets";
 import { pulseSkinSignal } from "@/lib/skinSignal";
 import { isAppView } from "@/lib/viewMeta";
 import { Activity, useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, Suspense } from "react";
@@ -46,7 +47,6 @@ import { useAchievementToasts } from "@/hooks/useAchievementToasts";
 import { useSelection } from "@/hooks/useSelection";
 import { useSelectionGestures } from "@/hooks/useSelectionGestures";
 import { useBackupReminders } from "@/hooks/useBackupReminders";
-import { useShiftEveningNudge } from "@/hooks/useShiftEveningNudge";
 import { pushPrefs } from "@/lib/push/prefs";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
@@ -88,7 +88,6 @@ import { QuickTemplates } from "@/components/QuickTemplates";
 import { useConfirmAction } from "@/components/ConfirmActionDialog";
 import { BulkActionBar } from "@/components/BulkActionBar";
 import { registerUndoHandlers, undoLastAction } from "@/lib/actionHistory";
-import { canRedoShifts, canUndoShifts, redoShifts, undoShifts } from "@/lib/shifts/store";
 import { BottomNav } from "@/components/BottomNav";
 import { VaultHost } from "@/components/vault/VaultHost";
 import { TodayCards } from "@/components/review/TodayCards";
@@ -96,7 +95,7 @@ import { OlderDeviceBanner } from "@/components/sync/OlderDeviceBanner";
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
-import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, PlansView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
+import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, PlansView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -225,8 +224,10 @@ const Index = () => {
   // Czytnik w tle po starcie — kliknięcie notatki go nie czeka.
   useEffect(() => {
     const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
-    if (!w.requestIdleCallback) { const t = window.setTimeout(() => void loadNoteReader(), 1500); return () => window.clearTimeout(t); }
-    const id = w.requestIdleCallback(() => void loadNoteReader(), { timeout: 4000 });
+    // Też presety Grafiku w pickerze terminu (Plan-nowy 1.5) — chipy „po zmianie” są od razu przy pierwszym otwarciu.
+    const warm = () => { void loadNoteReader(); void loadShiftPresets(); };
+    if (!w.requestIdleCallback) { const t = window.setTimeout(warm, 1500); return () => window.clearTimeout(t); }
+    const id = w.requestIdleCallback(warm, { timeout: 4000 });
     return () => w.cancelIdleCallback?.(id);
   }, []);
 
@@ -261,7 +262,12 @@ const Index = () => {
 
   useBackupReminders(prefs, notes, archivedNotes);
   useDailyWeeklyNudges(prefs, notes, setView);
-  useShiftEveningNudge(useCallback(() => setView("shifts"), [setView]));
+  const openShifts = useCallback(() => setView("shifts"), [setView]);
+  // Store Grafiku dla Ctrl+Z / Ctrl+Shift+Z — na widoku Grafiku jest już załadowany (ShiftsView), skrót sprawdza synchronicznie.
+  const shiftsStore = useRef<Awaited<ReturnType<typeof loadShiftsStore>> | null>(null);
+  useEffect(() => {
+    if (view === "shifts" && !shiftsStore.current) void loadShiftsStore().then((m) => { shiftsStore.current = m; });
+  }, [view]);
 
   // Pasek dodawania jest też w folderze i etykiecie — nowa notatka dziedziczy
   // ten kontekst (`handleAddNoteGlow`), zamiast lądować poza widokiem.
@@ -288,15 +294,17 @@ const Index = () => {
     hasSelection: () => selectedIds.size > 0,
     onEscapeSelection: clearSelection,
     onRedo: () => {
-      if (view === "shifts" && canRedoShifts()) {
-        redoShifts();
+      const s = shiftsStore.current;
+      if (view === "shifts" && s?.canRedoShifts()) {
+        s.redoShifts();
         toast("Ponowiono zmianę w Grafiku", { icon: "↪️" });
       }
     },
     onUndo: () => {
       // Na widoku Grafiku Ctrl+Z cofa ostatnią zmianę w Grafiku (zanim sięgnie po kosz/archiwum).
-      if (view === "shifts" && canUndoShifts()) {
-        undoShifts();
+      const s = shiftsStore.current;
+      if (view === "shifts" && s?.canUndoShifts()) {
+        s.undoShifts();
         toast("Cofnięto zmianę w Grafiku", { icon: "↩️" });
         return;
       }
@@ -991,6 +999,7 @@ const Index = () => {
 
     <Suspense fallback={null}>
       <DailyReportNudge onOpenWork={() => setView("study")} />
+      <ShiftEveningNudge onOpenShifts={openShifts} />
       <SiteArrivalPrompt />
       {pushEnabled && <PushScheduleSync notes={reminderNotes} />}
       <Suspense fallback={null}>
