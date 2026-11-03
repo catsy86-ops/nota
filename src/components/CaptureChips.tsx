@@ -33,10 +33,3 @@ export function CaptureChips({ tokens, ignored, onToggle }: { tokens: CaptureTok
     </div>
   );
 }
-
-/** Przełącza klucz w zbiorze „zignorowanych” (nowy zbiór, żeby React widział zmianę). */
-export function toggledSet(prev: ReadonlySet<string>, key: string): Set<string> {
-  const next = new Set(prev);
-  if (next.has(key)) next.delete(key); else next.add(key);
-  return next;
-}

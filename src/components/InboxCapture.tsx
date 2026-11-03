@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { ArrowUp, Inbox, Mic, MicOff } from "lucide-react";
 import { captureParts, INBOX_TITLE_MAX } from "@/lib/inbox";
-import { applyCapture, extractCapture, type CaptureToken } from "@/lib/quickCapture";
+import { applyCapture, extractCapture, toggledSet, type CaptureToken } from "@/lib/quickCapture";
 import type { NotePriority } from "@/lib/notePriority";
-import { CaptureChips, toggledSet } from "./CaptureChips";
+import { CaptureChips } from "./CaptureChips";
 import { useDictation } from "@/hooks/useDictation";
 import { cn } from "@/lib/utils";
 

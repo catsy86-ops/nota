@@ -289,3 +289,10 @@ export function describeToken(t: CaptureToken, formatDate: (d: Date) => string):
     case "date": return { label: `Przypomnienie: ${formatDate(t.date)}`, aria: `Przypomnienie ${formatDate(t.date)}` };
   }
 }
+
+/** Przełącza klucz w zbiorze „zignorowanych” chipów (nowy zbiór, żeby React widział zmianę). */
+export function toggledSet(prev: ReadonlySet<string>, key: string): Set<string> {
+  const next = new Set(prev);
+  if (next.has(key)) next.delete(key); else next.add(key);
+  return next;
+}
