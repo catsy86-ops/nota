@@ -1501,6 +1501,15 @@ Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapi
 - **Stan weryfikacji:** pełny przebieg e2e nie został dotąd zakończony bez przerwania (brak pamięci). Zmiany sprawdzone osobno: `shifts`, `routes` i powiązane specy przechodzą.
 - **Commit:** bdba60c, 2026-10-19.
 
+## Bramka jakości — `npm run check` (Plan-nowy 1.3, 2026-11-03)
+
+- **Co robi:** jedno polecenie przed pushem. Po kolei uruchamia `typecheck`, `lint`, Vitest (`npm test`) i e2e `@smoke` (`test:e2e:smoke`) i zatrzymuje się na pierwszym błędzie (`&&`).
+- **Gdzie:** `package.json` (skrypt `check`).
+- **Czas (2026-11-03):** około 5,5 min. Typecheck i lint zajmują około 1 min, Vitest (393 pliki, 3007 testów) około 1,5 min, a smoke (41 testów, komputer i telefon) 2,6 min. Cel 3 min z planu nie jest jeszcze spełniony.
+- **Lint:** 0 błędów i 21 starych ostrzeżeń (Fast Refresh, zależności hooków). Cztery błędy `no-unused-expressions` w e2e (`appearance-code`, `night-skin`, `seasons`, `skins`) wzięły się z dwóch `localStorage.setItem` połączonych przecinkiem w nawiasie. Teraz to dwie osobne instrukcje.
+- **Chwiejny próg czasu:** test „D1: łączenie odcinków jest liniowe” w `src/lib/plans/security.test.ts` miał próg 1,5 s i padał przy pełnym przebiegu równoległym. Próg wynosi teraz 5 s. Nadal wykrywa wersję kwadratową, która przy 10 000 kawałkach trwałaby dziesiątki sekund.
+- **Commit:** zobacz `git log --grep "npm run check"`, 2026-11-03.
+
 ## Kalendarz — stan aktualny (siatka, dzień, oś godzin, skróty, wydruk, eksport)
 
 Dział opisany w jednym miejscu. Kalendarz pokazuje terminy przypomnień (`reminderSpec`), znaczniki dnia z Pracy i zmiany z Grafiku.

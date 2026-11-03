@@ -1,6 +1,8 @@
 # Plan rozwoju i dopracowania NOTKI (2026-11-03)
 
-> **Status (2026-11-03):** wersja 1. To jedno źródło prawdy o tym, co zostało. Plany działów w `docs/plan-*.md` zostają jako szczegóły punktów, a ich linia „Status” ma się zgadzać z tym planem. Raporty siedmiu agentów (dwa inwentarze planów, architektura, wydajność, bezpieczeństwo, testy, UX i dostępność) były w toku przy zapisie tej wersji. Ich ustalenia trzeba dopisać w sekcji „Ustalenia agentów” i według nich poprawić kolejność.
+> **Status (2026-11-03, wersja 2):** ustalenia czterech agentów (dwa inwentarze, bezpieczeństwo, wydajność) są wpisane w §10, a Cykl 1 ma nowe punkty 1.8–1.11. Zrobione: 1.3 (bramka, ale trwa ok. 5,5 min), 1.6, 1.7. Agentów architektury, testów i UX nie uruchamiano ponownie: ich zakres pokrywają inwentarze i punkty 1.2, 3.1 i 3.3.
+>
+> Wersja 1: To jedno źródło prawdy o tym, co zostało. Plany działów w `docs/plan-*.md` zostają jako szczegóły punktów, a ich linia „Status” ma się zgadzać z tym planem. Raporty siedmiu agentów (dwa inwentarze planów, architektura, wydajność, bezpieczeństwo, testy, UX i dostępność) były w toku przy zapisie tej wersji. Ich ustalenia trzeba dopisać w sekcji „Ustalenia agentów” i według nich poprawić kolejność.
 
 ## 1. Zasady pracy
 
@@ -53,11 +55,15 @@
 |---|----|-------|---|---|
 | 1.1 | **Inwentarz z dowodami:** linia Status w planach Notatek, Ustawień i Powłoki (każdy punkt sprawdzony w kodzie); aktualny status planu Kalendarza, Grafiku i Pracy z 27.10. Źródło: raporty inwentarza. | `docs/plan-*.md` | 3 | S |
 | 1.2 | **Chwiejne testy:** wyścig zwijania paska bocznego przy starcie na 1440 px, `site-faults`, `study-delivery`, „praca — odblask”. Najpierw przyczyna (czekanie na stan zamiast `waitForTimeout`), potem poprawka. | `e2e/`, powłoka | 3 | M |
-| 1.3 | **Bramka jakości lokalnie:** jedno polecenie `npm run check` (typecheck, lint, Vitest, e2e `@smoke`) poniżej 3 min, uruchamiane przed pushem. | `package.json` | 3 | S |
+| 1.3 | ✅ **Bramka jakości lokalnie:** `npm run check` (typecheck, lint, Vitest, e2e `@smoke`). Lint ma 0 błędów (poprawione 4 wyrażenia z przecinkiem w e2e), a próg czasu w `plans/security.test.ts` podniesiony z 1,5 do 5 s, bo padał pod obciążeniem. **Czas: ok. 5,5 min** (lint i tsc ok. 1 min, Vitest ok. 1,5 min, smoke 2,6 min). Cel 3 min wymaga przycięcia smoke albo uruchamiania kroków równolegle; do zrobienia przy 1.2. | `package.json` | 3 | S |
 | 1.4 | **Test zgodności danych:** dokument z nowymi polami (`reminderLead`, `reminderRule`, mapy Pracy) czytany i zapisywany przez kod udający starszą wersję; nic nie ginie poza świadomie opisanymi wyjątkami. | `src/lib/*.test.ts` | 3 | M |
-| 1.5 | **Zapas paczki:** przegląd chunka wejściowego i co najmniej 20 KB z powrotem (leniwe okna i rzadkie działy), bez szkody dla offline. | `vite.config.ts`, importy | 2 | M |
-| 1.6 | **Gałęzie:** lokalny `master` zgodny z `origin/master`, jedna gałąź robocza, zrobione `worktree-agent-*` i stare gałęzie posprzątane (po sprawdzeniu, że są scalone). | git | 2 | S |
-| 1.7 | **CLAUDE.md:** próg „394 KB” jest nieaktualny, obowiązuje `e2e/bundle.spec.ts` (500 KB). | `CLAUDE.md` | 1 | S |
+| 1.5 | **Zapas paczki:** co najmniej 20 KB z powrotem według §10.4, w kolejności: `exportNotes` dynamicznie, zawężenie `vendor-radix`, łańcuch Grafiku, łańcuch Pracy (ten z testem GC obrazów). **Uwaga:** zapas precache to tylko około 18 KiB. | `vite.config.ts`, importy | 2 | M |
+| 1.6 | ✅ **Gałęzie:** lokalny `master` = `origin/master` (083bb5f). Usunięte scalone `ui/*` i 5 × `worktree-agent-*`. Zostają `feat/checklist-wklejanie-konwersja` i `wip/d2-react-compiler` (po 1 niescalonym commicie) oraz `wip/matryca-hydraulika` (lokalnie inna niż zdalna). W `.claude/worktrees/` leżą 4 katalogi bez `.git` (resztki, jeden blokowany przez OneDrive) do ręcznego usunięcia. | git | 2 | S |
+| 1.7 | ✅ **CLAUDE.md:** próg „394 KB” jest nieaktualny, obowiązuje `e2e/bundle.spec.ts` (500 KB). | `CLAUDE.md` | 1 | S |
+| 1.8 | **Bezpieczeństwo: `/share` z obcej strony (§10.3 p. 2).** SW odrzuca POST z `Sec-Fetch-Site` innym niż `none` i `same-origin`. GET `/share?…` pyta „Zapisać?” zamiast zapisywać od razu. Przed kodem `security-reviewer`. | `public/sw-share.js`, `useLaunchIntents.ts` | 3 | S |
+| 1.9 | **Odporność Grafiku na złe dane od peera (§10.3 p. 4):** filtrować przez `isShiftType` / `isPattern` przed sortowaniem. Test Vitest z `null` w mapie. | `src/lib/shifts/yShifts.ts:81,115` | 3 | S |
+| 1.10 | **Limity plików:** `sw-share.js` przycina do 30 plików i 10 MB na plik, przy starcie czyści stare wpisy inboxu. `file.size` sprawdzany przed `text()` w trzech importach (§10.3 p. 5 i 7). | SW, importy | 2 | S |
+| 1.11 | **CSP egzekwowane (§10.3 p. 1):** `Content-Security-Policy` zamiast `-Report-Only` w `netlify.toml` i `vercel.json`. Najpierw e2e na buildzie z nagłówkiem, bo hostingu jeszcze nie ma. | konfiguracja | 2 | S |
 
 ## 4. Cykl 2 — dokończyć działy bez decyzji (apetyt: 1–2 tygodnie)
 
@@ -81,6 +87,7 @@
 | 3.2 | **Wyszukiwanie w Workerze** i zrzut indeksu do IndexedDB (odłożone z planu rozbudowy 3.x). Najpierw przejście wywołań na asynchroniczne. | 2 | L |
 | 3.3 | **Pomiar reakcji:** INP i LCP na `pixel-7` w Playwright (web-vitals w trybie debug) jako stały test z progiem. | 2 | M |
 | 3.4 | **ADR:** krótko spisane decyzje — `reminderSpec` jako jedna wartość LWW, CSP `connect-src` szerokie, Web Push lokalnie, brak hostingu, model stylów i motywów. | 2 | S |
+| 3.6 | **Drobne z pomiaru renderu (§10.4):** `ShiftsView` dostaje memoizowane `reminderNotes` zamiast `[...notes, ...archivedNotes]` (`Index.tsx:974`); jedno liczenie `inboxBadge`/`inboxCount` (`Index.tsx:589,657`). | 2 | S |
 | 3.5 | **`<Activity>` dla ostatniego działu** (powrót bez przeładowania), tylko po pomiarze pamięci na telefonie. | 1 | M |
 
 ## 6. Cykl 4 — telefon i wdrożenie (gdy właściciel ma czas)
@@ -101,12 +108,13 @@
 | H-1 | Materiał w aucie (H1.3) — zakres. | Z planu hydraulika. |
 | H-6 | H5.3: godziny z autorem. | Odłożone. |
 | D-3 | Dziś 3.4. | Z planu Dziś. |
-| P0.2 | `shareOrCopy` na telefonie otwiera arkusz zamiast kopiować. | Do potwierdzenia. |
 | Skarbiec 1.2 cz. 2 | Nowy projekt kryptografii. | Osobna decyzja i przegląd bezpieczeństwa. |
 | C-1 | Ćwiczenia 2.7. | Z planu Ćwiczeń. |
 | K-4 | Tydzień z osią godzin (K3.6). | Po QA. |
 | — | „Gotowe” kończy serię? | Otwarte od 19.10. |
 | — | Hosting serwera push i przekaźnika. | Odłożony. |
+| S-1 | Nazwa pokoju WebRTC z PBKDF2 (§10.3 p. 3). Zmiana nazwy rozłącza parę ze starszą wersją aplikacji. | Rekomendacja: nowa nazwa przez PBKDF2 i okres przejściowy, w którym obie nazwy są słuchane. |
+| S-2 | push-server: limit zapytań, jawna lista originów, „ogólne tytuły” (§10.3 p. 6). | Przy wdrożeniu serwera. |
 | — | Zapis nowego „Mój N” po usunięciu „Zestawów” z Ustawień. | Dodać „Zapisz bieżący” do okienka „Zestaw wyglądu” albo zostawić bez zapisu. |
 
 ## 8. Miary (sprawdzane po każdym cyklu)
@@ -123,14 +131,84 @@
 - Bez funkcji, które wymagają własnego serwera, dopóki nie ma decyzji o hostingu.
 - Bez wirtualizacji list ani Workerów „na zapas”: najpierw pomiar.
 
-## 10. Ustalenia agentów (do uzupełnienia)
+## 10. Ustalenia agentów (2026-11-03)
 
-Raporty z 2026-11-03, w toku przy zapisie tej wersji. Każdy dopisać tu w skrócie (3–8 punktów z dowodem `plik:linia`), a punkty przenieść do cykli 1–3:
+Cztery raporty, każdy sprawdzony w `src/` i `git log` przy HEAD 083bb5f. Gotowe linie „Status (2026-11-03)” dla planów działów są w 10.1 i 10.2. Trzeba je jeszcze wkleić do `docs/plan-*.md` (punkt 1.1).
 
-- Inwentarz A (Notatki, Ustawienia, Powłoka, plany UI, motywy, mobile, dane Yjs) — w toku.
-- Inwentarz B (Praca, Kalendarz, Grafik, Dziś, Skrzynka, Terminy, Ćwiczenia, Skarbiec, Długi, roadmap, TODO, dług techniczny) — w toku.
-- Architektura (granice modułów, model danych Yjs, ADR) — w toku.
-- Wydajność (paczka, render, start, precache) — w toku.
-- Bezpieczeństwo (Yjs i sync, Skarbiec, XSS, service worker, CSP, push) — w toku.
-- Testy (liczby, luki, chwiejność, bramki jakości) — w toku.
-- UX i dostępność (cele dotyku, fokus, komunikaty, formularze, heurystyki) — w toku.
+### 10.1 Inwentarz A: Notatki, Ustawienia, Powłoka, UI/QoL, mobile, dane Yjs
+
+- **Notatki** (najwięcej otwartych punktów):
+  - częściowo: 1.2, 1.3, 2.5, 2.6, 3.3, 3.4, 4.2, 4.3;
+  - otwarte: 1.4–1.6, 2.1–2.3, 2.7, 2.8, 3.1, 3.2, 3.5, 4.4, 4.8 oraz Etapy 5–8;
+  - czeka: N-2, N-4.
+  - Najtańsze z W2: dokończyć 1.2 („Cofnij” w dymku, `aria-expanded`), 1.3 (Esc i tło w rysowaniu), 2.3 (klawisze M i L, `gridKeyboardNav.ts:225`), 2.7 i 4.3 (70ch). Najcenniejsze: 2.1 (przeciąganie zadań, W3/M) i 6.2 (zapisane widoki, W3/L).
+- **Ustawienia:**
+  - częściowo: 1.1 (surowe „Błąd połączenia: {lastError}”, `SyncSettings.tsx:139`), 2.5, 3.2–3.4;
+  - otwarte: 1.2, 1.3, 2.2, 2.4, 4.1 (stopka „NOTKI v1.0” na sztywno, `AppSidebar.tsx:375`), 5.1–5.3.
+- **Powłoka:**
+  - częściowo: 1.2 (resztki „G” w `ClipperSettings.tsx:17–29`, brak `APP_NAME`), 2.5 (polecenia palety);
+  - otwarte: 2.6, 4.1 (88 × `uppercase tracking-wider`), 4.2.
+- **UI/QoL:** otwarte D-3 (38 plików nadal na framer-motion), 2.7 (pełny zestaw mikrointerakcji), 4.2 (`size-adjust` dla fontów).
+- **Mobile:** zostaje QA. Linia „Do sprawdzenia” w planie jest nieaktualna, bo D2, D3, D5, B5, E4 i A4 są w kodzie. Drobne: C5 i E2.
+- **Dane Yjs:** zamknięte. Opcjonalnie test migracji na prawdziwych starych kopiach.
+- **Uwaga:** marka zmieniła się z „hydra” na „NOTKI” (e21fb99), więc U-1 i PW 1.2 trzeba czytać pod nową nazwę.
+
+### 10.2 Inwentarz B: Praca, Kalendarz, Grafik, Dziś, Skrzynka, Terminy, Ćwiczenia, Skarbiec, Długi, TODO, dług techniczny
+
+- **Plan 27.10 zaniża stan.** Kalendarz K1–K4 i Grafik G2–G4.7 są zrobione, a z Pracy większość P2–P5 ma commity.
+  - Otwarte: P2.1 (część), P2.2 (zdjęcia przed zakryciem, W3/M), P4.6, akcja „Skończyłem” przy G4.1, miniatury w protokole.
+  - Czeka: G4.8, P4.1 (P-6), P4.4, P2.11 i P3.3 (telefon). P0.2 rozstrzygnięte: zostaje arkusz udostępniania.
+  - Punkt 2.6 tego planu zmniejsza się więc do tych pozycji.
+- **Dziś:** otwarte 2.1 (część), 2.2, 2.4, 2.5 (`canCompose` bez `today`, `Index.tsx:268`), 3.1–3.3, 3.5, 3.6, 4.2.
+- **Skrzynka:** otwarte 1.2 (błysk liczony tylko z `[data-add-note-bar]`, `Index.tsx:536`), 2.3, 3.1, 3.4, 4.1, 4.2, 4.4, 4.6; częściowo 2.4 (ikona linku na kaflu) i 4.3.
+- **Terminy:** otwarte tylko 3.4 i 4.5.
+- **Ćwiczenia:** w kodzie otwarte 1.2–1.4, 2.1–2.6, 3.4 i 4.1–4.5, a w planie są oznaczone „do sprawdzenia”. Najtańsze z W3: 2.4 („Powtórz wczoraj”) i 2.1 (plan dnia prowadzi przez trening).
+- **Skarbiec:** otwarte 2.2 (brak „Prywatna” w `AddNoteBar`), 3.3, 4.2, 4.4; częściowo 4.1 i 4.3.
+- **Długi:** zamknięte poza QA (Etap 5).
+- **TECH-DEBT:** otwarte domknięcia w `createYStudy`, cykl `sites.ts` → `yStudy`, `touch-audit` także poza projektem `chromium` (`playwright.config.ts:45`), testy `data.ts`. Do tego chwiejny test 50 ms (`searchNotes.test.ts:215`, z TODO).
+
+### 10.3 Bezpieczeństwo (OWASP ASVS L1)
+
+Dobrze:
+- `npm audit` czysty w aplikacji i w obu serwerach;
+- Skarbiec: PBKDF2 600 tys. iteracji, AES-GCM z AAD, klucze niewyodrębnialne, `vaultPin.ts`;
+- markdown bez `dangerouslySetInnerHTML`;
+- przekaźnik: walidacja, porównanie tokenu w stałym czasie, limit zapytań;
+- notatki prywatne nie wychodzą jawnie;
+- ZIP ma limit rozpakowanych bajtów.
+
+Ustalenia:
+
+1. **Ważne:** CSP działa tylko jako `Report-Only` (`netlify.toml:77`, `vercel.json:101`). → punkt 1.11.
+2. **Ważne:** obca strona może dopisać notatkę przez `/share`:
+   - POST bez sprawdzenia `Sec-Fetch-Site` (`public/sw-share.js:12–16`);
+   - GET zapisuje bez pytania (`useLaunchIntents.ts:96`).
+   → punkt 1.8.
+3. **Ważne:** nazwę pokoju WebRTC da się złamać offline:
+   - to jeden SHA-256 z kodu o około 59 bitach (`yjsSync.ts:196–199`, `:23–26`);
+   - przekaźnik używa już PBKDF2.
+   → decyzja S-1, bo zmiana rozłącza parę ze starszą wersją.
+4. **Drobne:** wpis `null` od peera wywraca Grafik, bo `byOrder` działa przed `migrate()` (`yShifts.ts:44,81,115`). → punkt 1.9.
+5. **Drobne:** SW zapisuje udostępnione pliki bez limitu, a od 30. pliku zostają w cache na zawsze (`sw-share.js:27–36`, `shareInbox.ts:50`). → punkt 1.10.
+6. **Drobne:** push-server ma `ALLOWED_ORIGINS="*"`, brak limitu zapytań, a tytuły leżą jawnie w `store.json`. → decyzja S-2 przy wdrożeniu.
+7. **Drobne:** `file.text()` bez sprawdzenia rozmiaru (`ShiftsIcsImport.tsx:25`, `icsImport.ts:149`, `CustomQuestionsDialog.tsx:20`). → punkt 1.10.
+8. **Informacyjnie:** serwer deweloperski Vite ma `host: "::"` (`vite.config.ts:37`). Zostawić, bo jest potrzebny do testów na telefonie w sieci domowej.
+
+### 10.4 Wydajność (build z sourcemapami)
+
+- **Stan startu:**
+  - wejście to `index` (182 KB gzip) plus około 85 chunków z modulepreload: vendor-react 81, radix 41, yjs 26, dnd 15, yjsStore 13 KB;
+  - **precache: 4077,5 KiB z 4096**, więc zapas to tylko około 18 KiB.
+- **Kandydaci do 1.5** (szacunek gzip; razem 25–32 KB, bo łańcuchy częściowo się nakładają):
+  1. **Łańcuch Grafiku (10–13 KB).** Trzeba zmienić wszystkie cztery importery: `useShiftEveningNudge.ts:6` (leniwy komponent bez UI), `Index.tsx:91`, `ReminderPicker.tsx:18–19` i `exportNotes.ts:19–20`.
+  2. **Łańcuch Pracy (14–17 KB).** Importery: `useNotes.ts:11` → `study/images.ts:4–5`, `study/data.ts:12` (efekt uboczny `createYStudy`), `useLaunchIntents.ts:10` i `exportNotes.ts:15–18`. **Ryzyko:** sprzątanie obrazów w `useNotes.ts:219` musi czekać (`await`) na referencje dziennika, więc najpierw test Vitest.
+  3. **`exportNotes` dynamicznie (4,7 KB).** Dziś import w `Index.tsx:600` nic nie daje (INEFFECTIVE_DYNAMIC_IMPORT) przez statyczne importy w `useImportExport.ts:4`, `useBackupReminders.ts:4` i `ImportExportMenu.tsx:5`. Ryzyko niskie.
+  4. **Zawężenie `vendor-radix` (5 KB).** Slider, switch, tabs i progress nie są potrzebne przy starcie. Ryzyko niskie.
+  5. Dalsze: leniwy `ReminderPicker` (3–4 KB), arkusz „Więcej” w `BottomNav` (2–3 KB), `NoteEditor` z `NoteCard` (2–4 KB). Nie ruszać `vendor-dnd`.
+- **Render:** dwie drobne poprawki w `Index.tsx`, opisane w punkcie 3.6. Moduły przeniesione na leniwe ładowanie mają wchodzić do kolejki idle (`prefetchViewsWhenIdle`), a nie do efektów przy montowaniu.
+
+### 10.5 Kolejność po ustaleniach
+
+1. Cykl 1: najpierw 1.8, 1.9 i 1.10 (bezpieczeństwo i dane, każdy S). Potem 1.1 (wkleić linie statusu), 1.5 w kolejności z 10.4, a na końcu 1.2, 1.4 i 1.11.
+2. Cykl 2: punkt 2.6 zmniejsza się do P2.1, P2.2 i miniatur w protokole. Do 2.9 wchodzą najtańsze punkty W2–W3 z 10.1 i 10.2: Ćwiczenia 2.4 i 2.1, Notatki 1.2, 1.3, 2.3 i 2.1, Ustawienia 1.1 i 4.1, Powłoka 1.2.
+3. Decyzje: nowe S-1 i S-2, a P0.2 usunąć jako rozstrzygnięte.

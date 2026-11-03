@@ -26,7 +26,7 @@ Stos: Vite + React + TypeScript, Yjs (dane), Vitest (unit), Playwright (e2e, zrz
 - **Zmiany wyglądu:** skill `frontend-design` przed kodem (reguła z pamięci), potem `refactoring-ui` i `ux-heuristics` przy przeglądzie.
 - **Dostępność:** `design:accessibility-review` oraz `e2e/a11y.spec.ts` (axe, WCAG 2.2 AA) przed zamknięciem działu.
 - **Testy:** agent `testing-engineer` do e2e i zrzutów; Vitest dla logiki (`src/lib/**`).
-- **Wydajność:** agent `performance-engineer` przy nowych zależnościach albo wzroście paczki (próg 394 KB, patrz `opis.md`).
+- **Wydajność:** agent `performance-engineer` przy nowych zależnościach albo wzroście paczki (budżety w `e2e/bundle.spec.ts`: wejściowy JS ≤ 500 KB gzip, precache ≤ 4,0 MiB).
 - **Bezpieczeństwo:** agent `security-reviewer` przy Yjs, sync, udostępnianiu plików, CSP i przekaźniku.
 - **Architektura:** agent `architect` tylko przed dużą zmianą granic modułów.
 - **Dokumentacja:** skill `technical-documentation` przy `opis.md` i README.

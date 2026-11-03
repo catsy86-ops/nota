@@ -51,7 +51,8 @@ describe("Plany — poprawki po przeglądzie bezpieczeństwa", () => {
     pieces.sort((a, b) => ((a.pts[0] * 7919) % 10007) - ((b.pts[0] * 7919) % 10007));
     const t0 = performance.now();
     const joined = joinPolylines(pieces, 2);
-    expect(performance.now() - t0).toBeLessThan(1500);
+    // Próg z zapasem na pełny przebieg równoległy: wersja kwadratowa trwałaby tu dziesiątki sekund.
+    expect(performance.now() - t0).toBeLessThan(5000);
     expect(joined).toHaveLength(1);
     expect(joined[0].length).toBeCloseTo(99_999, 0);
   });

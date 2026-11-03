@@ -4,7 +4,8 @@ import { test, expect } from "@playwright/test";
 test("harmonogram obejmujący bieżącą porę przełącza na styl nocny zaraz po starcie", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-27T22:30:00"));
   await page.addInitScript(() => {
-    (localStorage.setItem("kaczy.tour.seen.v1", "1"), localStorage.setItem("kaczy.appearance.advanced.v1", "1"));
+    localStorage.setItem("kaczy.tour.seen.v1", "1");
+    localStorage.setItem("kaczy.appearance.advanced.v1", "1");
     localStorage.setItem("kaczy.skin.v1", JSON.stringify("zeszyt"));
     localStorage.setItem("kaczy.skinSchedule.v1", JSON.stringify({ enabled: true, day: "zeszyt", night: "neon", mode: "hours", from: "20:00", to: "07:00" }));
   });
