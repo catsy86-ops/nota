@@ -2140,7 +2140,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - Pozycje list karty (`studySiteItems`: etapy, braki, zamówienia…), własne pytania (`studyCustom`) i powtórki (`studyReview`) są zapisywane jako cała wartość na klucz. Zmiana pozycji w starszej wersji gubi pola tej pozycji, które dodała nowsza.
   - Wersja sprzed 9020901 kasowała każde nieznane pole wpisu. Tego nie da się naprawić bez aktualizacji tamtego telefonu.
 - **Testy:** `src/lib/dataCompat.test.ts`: starsza wersja to drugi `Y.Doc` piszący surowymi operacjami Yjs tak jak dawny kod (tytuł i lista, odczyt terminu, oba wyjątki przypomnień, wpis z kluczami z 9020901, karta i wpis z polem z nowszej wersji). Do tego `src/lib/study/yStudy.test.ts` (pole nieznane we wpisie).
-- **Commit:** zobacz Plan-nowy 1.4 w historii (2026-11-03).
+- **Commit:** d3acad4 (2026-11-03); wcześniej 9020901 (2026-10-22).
 
 ## Praca — braki: fokus i komunikat dla czytnika (Faza 1.1, 2026-10-22)
 
