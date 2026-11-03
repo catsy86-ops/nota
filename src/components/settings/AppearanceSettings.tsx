@@ -25,12 +25,9 @@ import { SKIN_SCHEME } from "@/lib/skins";
 import { trySkin } from "@/lib/skinTry";
 import { NightSkinSettings } from "./NightSkinSettings";
 import { AppearanceCode } from "./AppearanceCode";
-import { AppearancePreview } from "./AppearancePreview";
 import { setOled, useOled } from "@/lib/oled";
 import { setSectionColors, useSectionColors, type SectionColors } from "@/lib/sectionColors";
 import { setUiDensity, useUiDensity, type UiDensity } from "@/lib/uiDensity";
-import { PRESETS, SLOT_COUNT, applyValues, isPresetActive, readSlot, saveSlot, slotSummary } from "@/lib/appearancePresets";
-import { PRESET_ICON } from "./presetIcons";
 import { resetAppearance, applyAppearanceValues } from "@/lib/appearanceCode";
 import { toastWithUndo } from "@/lib/undoToast";
 import { setBackdrop, useBackdrop, type Backdrop } from "@/lib/backdrop";
@@ -123,9 +120,6 @@ const APPEARANCE_GROUPS = [
 const ADVANCED_KEY = "kaczy.appearance.advanced.v1";
 const readAdvanced = () => { try { return localStorage.getItem(ADVANCED_KEY) === "1"; } catch { return false; } };
 
-/** Zapisane sloty „Mój 1–3” (`null` = pusty) — do przycisków zestawów. */
-const readAllSlots = () => Array.from({ length: SLOT_COUNT }, (_, i) => readSlot(i + 1));
-
 /** Pory roku: ikony zamiast emoji (spójnie z resztą Ustawień). */
 const SEASON_ICON = { auto: CalendarDays, spring: Flower2, summer: Sun, autumn: Leaf, winter: Snowflake } as const;
 
@@ -150,12 +144,6 @@ export function AppearanceSettings() {
     const before = resetAppearance();
     toastWithUndo("Przywrócono domyślny wygląd", () => applyAppearanceValues(before, { replace: true }));
   }
-  // Zestawy (1.3): sloty „Mój 1–3” odświeżają się po zapisie; „Cofnij” wraca do wartości sprzed zestawu.
-  const [slots, setSlots] = useState(readAllSlots);
-  function applyPreset(name: string, before: Record<string, string>) {
-    setSlots(readAllSlots());
-    toastWithUndo(`Zastosowano zestaw: ${name}`, () => applyAppearanceValues(before, { replace: true }));
-  }
   const { schemeMode, setMode: setThemeMode, skin } = useTheme();
   const skinScheme = SKIN_SCHEME[skin];
   const hiddenViews = useHiddenViews();
@@ -171,7 +159,7 @@ export function AppearanceSettings() {
   const oled = useOled();
   const sectionColors = useSectionColors();
   const uiDensity = useUiDensity();
-  // Przyklejony pasek części z podglądem ma zmienną wysokość. Ta wysokość jako `scroll-padding-top` karty:
+  // Przyklejony pasek części ma zmienną wysokość (zawija się na wąskim telefonie). Ta wysokość jako `scroll-padding-top` karty:
   // fokus z klawiatury i skok do grupy nie chowają już elementu pod paskiem (WCAG 2.4.11).
   const stickyRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -189,8 +177,7 @@ export function AppearanceSettings() {
     <div className="space-y-8">
       {/* Pasek skoku do grup (plan motywów 3.4): przyklejony u góry przewijanej karty. Kontener przewijania
           nie ma górnego odstępu (jest nad nim, w `SettingsDialog`), więc `top-0` nie zostawia szczeliny. */}
-      {/* Podgląd na żywo (1.2) przyklejony razem z paskiem grup: widać skutek każdej zmiany niżej. */}
-      <div ref={stickyRef} className="sticky top-0 z-sticky -mx-1 space-y-2 bg-background px-1 pb-2 pt-1.5">
+      <div ref={stickyRef} className="sticky top-0 z-sticky -mx-1 bg-background px-1 pb-2 pt-1.5">
       {/* Bez przewijania w bok: na wąskim telefonie (320 px) części zawijają się do drugiego rzędu, nic nie ucieka za krawędź. */}
       <nav aria-label="Części Wyglądu" className="flex flex-wrap gap-1.5">
         {APPEARANCE_GROUPS.map((g) => (
@@ -206,58 +193,9 @@ export function AppearanceSettings() {
           >{g.label}</a>
         ))}
       </nav>
-      <AppearancePreview />
       </div>
 
       <SettingsGroup id="wyglad-szybko" title="Szybko">
-        <Section title="Zestawy">
-          <div className="grid grid-cols-2 gap-2">
-            {PRESETS.map((p) => {
-              const Icon = PRESET_ICON[p.id];
-              const on = isPresetActive(p.values);
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => applyPreset(p.label, applyValues(p.values, { full: false }))}
-                  className={cn(
-                    "pressable rounded-card border px-3 py-2 text-left hover:bg-muted/60 coarse:min-h-11",
-                    on ? "border-primary/60 bg-primary/10" : "border-border/60 bg-muted/30",
-                  )}
-                >
-                  <span className="flex items-center gap-1.5 text-sm font-semibold">
-                    <Icon className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
-                    {p.label}
-                    {on && <span className="stamp-tag ml-auto normal-case text-primary-ink">Włączony</span>}
-                  </span>
-                  <span className="mt-0.5 block text-2xs text-muted-foreground">{p.desc}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-2 space-y-1.5" role="group" aria-label="Moje zestawy">
-            {Array.from({ length: SLOT_COUNT }, (_, i) => i + 1).map((n) => {
-              const saved = slots[n - 1];
-              return (
-                <div key={n} className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={!saved}
-                    onClick={() => saved && applyPreset(`Mój ${n}`, applyValues(saved, { full: true }))}
-                    className="pressable min-w-0 flex-1 rounded-card border border-border/60 bg-muted/30 px-3 py-2 text-left text-sm hover:bg-muted/60 disabled:opacity-60 coarse:min-h-11"
-                  >
-                    {saved ? <><span className="font-medium">Mój {n}</span><span className="block truncate text-2xs text-muted-foreground">{slotSummary(saved)}</span></> : `Mój ${n} — pusty`}
-                  </button>
-                  <Button variant="outline" size="sm" className="coarse:h-11" onClick={() => { saveSlot(n); setSlots(readAllSlots()); toast.success(`Zapisano w „Mój ${n}”`); }}>
-                    Zapisz tu
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        </Section>
-
         <Section title="Galeria stylów">
           <SkinPicker value={skin} onChange={trySkin} />
         </Section>

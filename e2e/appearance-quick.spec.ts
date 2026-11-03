@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-// Plan motywów 2026-10-30, Fala 1: Wygląd w „Szybko” i zwiniętych „Zaawansowanych”, podgląd na żywo,
+// Plan motywów 2026-10-30, Fala 1: Wygląd w „Szybko” i zwiniętych „Zaawansowanych”,
 // „Przywróć domyślny wygląd” bez przeładowania i z „Cofnij”.
 
 test.use({ isMobile: true, hasTouch: true, viewport: { width: 390, height: 844 } });
@@ -16,9 +16,11 @@ async function openAppearance(page: import("@playwright/test").Page) {
   await page.getByRole("tab", { name: "Wygląd" }).click();
 }
 
-test("Szybko na górze, Zaawansowane zwinięte i zapamiętane, podgląd na żywo @mobile", async ({ page }) => {
+test("Szybko na górze, Zaawansowane zwinięte i zapamiętane, bez podglądu @mobile", async ({ page }) => {
   await openAppearance(page);
-  await expect(page.getByTestId("appearance-preview")).toBeVisible();
+  // Podgląd na żywo i „Zestawy” usunięte z Ustawień (2026-11-03).
+  await expect(page.getByTestId("appearance-preview")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Zestawy" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Galeria stylów" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Poświata" })).toHaveCount(0);
   const more = page.getByRole("button", { name: /^Pokaż: kształt/ });
