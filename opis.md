@@ -211,6 +211,9 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 - Jednostkowe: `src/lib/keyboardInset.test.ts`, `haptics.test.ts`, `pageHidden.test.ts`, `viewPreload.test.ts`, `inputModality.test.ts`, `appFont.test.ts`, `siteMode.test.ts`, `skins.test.ts`, `useTheme.test.ts`, `contrastTokens.test.ts`, `push/schedule.test.ts`, `push-server/core.test.js`.
 - E2E: `mobile.spec.ts`, `mobile-layout.spec.ts`, `touch-targets.spec.ts`, `desktop-columns.spec.ts`, `toggle-group.spec.ts`, `skins.spec.ts`, `site-mode.spec.ts`, `a11y.spec.ts`, `view-skeleton.spec.ts`, `pwa.spec.ts`, `push.spec.ts`, `view-change.spec.ts`.
+- **Bramka `npm run check`** (`package.json`): typecheck, lint, Vitest i e2e `@smoke` na 3 workerach (`--workers=3`). Trwa ok. 3 min. Pełne `test:e2e` zostaje na 1 workerze (`PW_WORKERS` w `playwright.config.ts`).
+- **Zapis przed przeładowaniem w e2e:** `page.reload()` albo `goto` zaraz po zmianie przerywa transakcję IndexedDB, więc ostatnia zmiana ginie. Test czeka wtedy na pigułkę „Zapisano” (`getByText("Zapisano", { exact: true })`, `OfflineStatus.tsx`), tak jak `site-faults.spec.ts` i `study-delivery.spec.ts`. Użytkownika chroni ostrzeżenie `beforeunload` (`hasUnsavedWork`), którego Playwright nie pokazuje.
+- **Zrzuty wyglądu** (`e2e/visual.spec.ts`): zrzut `fullPage` w Chromium na chwilę zmienia okno na 1×1. `useIsMobile` brał to za telefon i zamykał pasek boczny, a pod obciążeniem zrzut łapał go zwiniętego. Dlatego `prepare()` zamraża `window.matchMedia` na wartości z pierwszego odczytu. Trzy zrzuty bazowe zapisane ze zwiniętym paskiem (`praca-komputer-{miedz,plan,kafle}`) są poprawione.
 
 ### Commity
 

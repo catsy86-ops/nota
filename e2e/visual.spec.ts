@@ -55,6 +55,22 @@ async function prepare(page: Page, skin: string, theme: "light" | "dark") {
     localStorage.setItem("kaczy-theme", t);
     localStorage.setItem("kaczy.motion.v1", "reduced");
   }, [skin, theme]);
+  // Zrzut `fullPage` w Chromium na chwilę zmienia okno na 1×1: `useIsMobile` widział wtedy telefon i zamykał
+  // pasek boczny, a pod obciążeniem zrzut łapał go zwiniętego (Plan-nowy 1.2). Okno w tych testach jest stałe,
+  // więc zapytania mediów zostają przy pierwszym odczycie (motyw i ruch ustawia `emulateMedia` przed `goto`).
+  await page.addInitScript(() => {
+    const real = window.matchMedia.bind(window);
+    const frozen = new Map<string, boolean>();
+    window.matchMedia = (query: string) => {
+      if (!frozen.has(query)) frozen.set(query, real(query).matches);
+      const matches = frozen.get(query)!;
+      return {
+        matches, media: query, onchange: null,
+        addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {},
+        dispatchEvent: () => false,
+      } as MediaQueryList;
+    };
+  });
   await page.emulateMedia({ reducedMotion: "reduce" });
 }
 

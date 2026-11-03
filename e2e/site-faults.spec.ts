@@ -41,6 +41,8 @@ test("usterka: odpowiedzialny i termin zapisują się, po terminie jest czerwony
   await faults.locator('input[type="file"]').setInputFiles({ name: "po.png", mimeType: "image/png", buffer: Buffer.from(PNG_B64, "base64") });
   await expect(faults).toContainText("po naprawie: 1");
 
+  // Przeładowanie przed końcem zapisu do IndexedDB gubi ostatnią zmianę (przerwana transakcja), więc czekamy jak użytkownik.
+  await expect(page.getByText("Zapisano", { exact: true })).toBeVisible();
   // Po przeładowaniu dane zostają.
   await page.reload();
   await page.getByRole("tab", { name: "Dziennik" }).click();

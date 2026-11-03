@@ -29,6 +29,8 @@ test("dostawa dziś: wiersz na Dziś otwiera kartę budowy", async ({ page }) =>
   await panel.getByRole("button", { name: "Klej PCV: Brakuje. Zmień status" }).click();
   await panel.getByLabel("Data dostawy: Klej PCV").fill("2026-10-14");
   await page.keyboard.press("Escape");
+  // Przejście przed końcem zapisu do IndexedDB gubi datę dostawy (przerwana transakcja).
+  await expect(page.getByText("Zapisano", { exact: true })).toBeVisible();
 
   await page.goto("/dzis");
   // Dziś ładuje sekcje leniwie (także kartę przed wejściem), więc dajemy im chwilę.
