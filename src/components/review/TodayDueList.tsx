@@ -18,6 +18,13 @@ const GROUP_TONE: Record<Extract<AgendaGroupKey, "overdue" | "missed" | "today">
   today: "text-primary-ink",
 };
 
+/** Dziś 3.3: kropka przy nazwie grupy — kolor niesie stan, tekst zostaje czytelny w kolorze nagłówka. */
+const GROUP_DOT: Record<keyof typeof GROUP_TONE, string> = {
+  overdue: "bg-destructive",
+  missed: "bg-destructive/60",
+  today: "bg-primary",
+};
+
 /**
  * Zaległe i dzisiejsze przypomnienia w widoku „Dziś”. Grupowanie to samo co w widoku
  * Przypomnień (`groupReminders`), więc liczby się zgadzają. Pokazujemy tylko te dwie grupy —
@@ -35,6 +42,9 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
   // Dziś 2.3: przy pustym dniu najbliższy termin (najwcześniejszy przyszły, poza koszem).
   const now = Date.now();
   const next = total > 0 ? null : notes.reduce<Note | null>((best, n) => (!n.trashed && n.reminder !== null && n.reminder > now && (!best || n.reminder < best.reminder!) ? n : best), null);
+
+  // Dziś 3.6: bez dzisiejszych i bez przyszłych terminów karta nic nie mówi — pusty dzień pokazuje karta zmiany.
+  if (total === 0 && !next) return null;
 
   return (
     <section aria-label="Przypomnienia" data-testid="today-due" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-3">
@@ -68,7 +78,11 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
           const rest = g.notes.length - shown.length;
           return (
             <div key={g.key} data-due-group={g.key}>
-              <h3 className={cn("text-xs font-medium", GROUP_TONE[key])}>{g.label}</h3>
+              <h3 className={cn("section-label text-xs", GROUP_TONE[key])}>
+                <span aria-hidden className={cn("size-1.5 rounded-full", GROUP_DOT[key])} />
+                {g.label}
+                <span className="font-mono font-normal tabular-nums text-muted-foreground">{g.notes.length}</span>
+              </h3>
               <ul className="mt-1 divide-y divide-border/50">
                 {shown.map((n) => (
                   <li key={n.id} className="flex items-center gap-2 py-2">

@@ -29,11 +29,12 @@ test("skrzynka: pusty tekst nic nie tworzy", async ({ page }) => {
   await expect(page.getByText("Skrzynka jest pusta")).toBeVisible();
 });
 
-test("dziś: karta zmiany i sekcja przypomnień na pustym koncie", async ({ page }) => {
+test("dziś: pusty dzień to jedna karta „Wolne. Nic nie czeka.” bez pustej sekcji terminów (3.6)", async ({ page }) => {
   await page.goto("/dzis");
   await expect(page.getByTestId("today-card")).toBeVisible();
+  await expect(page.getByTestId("today-shift")).toContainText("Wolne. Nic nie czeka.");
   await expect(page.getByTestId("today-shift")).toContainText("Dziś nie ma zmiany w grafiku.");
-  await expect(page.getByTestId("today-due")).toContainText("Nic nie czeka na dziś.");
+  await expect(page.getByTestId("today-due")).toHaveCount(0);
   await page.getByRole("button", { name: /Grafik/ }).first().click();
   await expect(page).toHaveURL(/\/grafik$/);
 });

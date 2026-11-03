@@ -9,6 +9,7 @@ import { useShiftNow } from "@/lib/shifts/useShiftNow";
 import { finishShiftNow } from "@/lib/shifts/finishNow";
 import { readEveningNudgeTime } from "@/lib/shifts/eveningNudge";
 import { countRemindersOn, isTomorrowPreviewTime, tomorrowLine } from "@/lib/todayTomorrow";
+import { countDueToday } from "@/lib/reminderAgenda";
 import { format, formatDistanceStrict } from "date-fns";
 import { pl } from "date-fns/locale";
 import { CardSkeleton } from "@/components/ViewSkeleton";
@@ -37,7 +38,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
   /** Notatka dnia, jeśli już jest (dopisz zamiast zakładać). */
   dailyNote?: Note | null;
   /** Notatki z terminami — do licznika jutra (2.2). */
-  reminderNotes?: readonly Pick<Note, "reminder" | "trashed">[];
+  reminderNotes?: readonly Note[];
   /** Klik w wiersz „Jutro” (Kalendarz na jutrzejszym dniu); bez niego wiersza nie ma. */
   onOpenTomorrow?: () => void;
 }) {
@@ -70,8 +71,12 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
   let tomorrow: string | null = null;
   if (onOpenTomorrow && isTomorrowPreviewTime(now, readEveningNudgeTime())) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    tomorrow = tomorrowLine(data.days[localDayKey(d)], data.types, countRemindersOn(reminderNotes, d));
+    const terms = countRemindersOn(reminderNotes, d);
+    // Bez Grafiku i bez terminów „Jutro: wolne” nic nie mówi — wiersza nie ma.
+    if (terms > 0 || Object.keys(data.days).length > 0) tomorrow = tomorrowLine(data.days[localDayKey(d)], data.types, terms);
   }
+  // Dziś 3.6: pusty dzień (bez zmiany i bez terminów) — jedna spokojna karta zamiast kilku pustych sekcji.
+  const quiet = !entry && countDueToday([...reminderNotes]) === 0;
 
   return (
     <section aria-label="Dziś" data-testid="today-card" className="rounded-card border border-border bg-card p-4 sm:p-5">
@@ -84,7 +89,8 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
             {badge}
           </span>
           <p className="min-w-0 text-sm sm:text-base" data-testid="today-shift">
-            {!entry ? "Dziś nie ma zmiany w grafiku."
+            {quiet ? <><span className="font-display font-semibold">Wolne. Nic nie czeka.</span><span className="sr-only"> Dziś nie ma zmiany w grafiku.</span></>
+              : !entry ? "Dziś nie ma zmiany w grafiku."
               : !t ? "Zaplanowana zmiana (rodzaj usunięty)."
               // Godziny wpisane na ten dzień wygrywają z godzinami rodzaju (tak jak w Kalendarzu); nieobecność bez godzin.
               : t.kind === "absence" ? <span className="font-semibold">{t.name}</span>
@@ -100,7 +106,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
           <Button variant="outline" size="sm" onClick={onOpenShifts} className="coarse:h-11">
             <CalendarClock className="mr-1.5 h-4 w-4" aria-hidden />Grafik
           </Button>
-          <Button variant="outline" size="sm" onClick={onDailyNote} className="coarse:h-11">
+          <Button variant={quiet && !dailyNote ? "default" : "outline"} size="sm" onClick={onDailyNote} className="coarse:h-11">
             <NotebookPen className="mr-1.5 h-4 w-4" aria-hidden />{dailyNote ? "Dopisz" : "Notatka dnia"}
           </Button>
         </div>

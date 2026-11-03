@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import type { Note } from "@/hooks/useNotes";
 
 const shiftsState = vi.hoisted(() => ({ ready: true, data: { types: [] as unknown[], days: {} as Record<string, unknown> }, current: null as unknown, next: null as unknown, ended: null as unknown, now: null as Date | null }));
 
@@ -137,7 +138,7 @@ describe("TodayShiftCard — Dziś 2.1, 2.2, 3.1", () => {
     const evening = new Date(2026, 10, 3, 19, 0);
     shiftsState.now = evening;
     shiftsState.data = { types, days: { [localDayKey(new Date(2026, 10, 4))]: { type: "r" } } };
-    const reminderNotes = [{ reminder: new Date(2026, 10, 4, 9, 0).getTime(), trashed: false }];
+    const reminderNotes = [{ id: "t", reminder: new Date(2026, 10, 4, 9, 0).getTime(), trashed: false, labels: [], checklist: [] }] as unknown as Note[];
     let opened = 0;
     render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} reminderNotes={reminderNotes} onOpenTomorrow={() => { opened++; }} />);
     expect(screen.getByTestId("today-tomorrow").textContent).toBe("Jutro: R 06:00–14:00 · 1 termin");
