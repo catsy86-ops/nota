@@ -17,6 +17,8 @@ export interface LaunchIntentsDeps {
   addNote: AddNote;
   openNote: (id: string) => void;
   expandComposer: (action?: ComposerAction) => void;
+  /** Skrót PWA „Do skrzynki” (`?skrzynka=1`, Skrzynka 2.3). */
+  openQuickInbox?: () => void;
 }
 
 /**
@@ -120,6 +122,10 @@ export function useLaunchIntents(deps: LaunchIntentsDeps) {
       // Skrót „Nowa lista” (`?new=list`) otwiera kompozytor od razu w trybie listy.
       expandComposer(params.get("new") === "list" ? "list" : undefined);
       window.history.replaceState(null, "", window.location.pathname);
+    } else if (params.get("skrzynka")) {
+      // Skrót „Do skrzynki”: małe okno z polem Skrzynki nad widokiem startowym.
+      window.history.replaceState(null, "", window.location.pathname);
+      latest.current.openQuickInbox?.();
     } else if (params.get("szukaj")) {
       // Skrót „Szukaj”: kursor w polu wyszukiwania (widocznym — na telefonie i komputerze to inne pola).
       // Bez gestu iOS nie otworzy klawiatury; Android tak.

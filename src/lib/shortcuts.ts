@@ -16,6 +16,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["Alt", "N"], label: "Nowa notatka" },
       { keys: [MOD_KEY, ","], label: "Ustawienia" },
       { keys: ["Alt", "I"], label: "Statystyki" },
+      { keys: ["Alt", "K"], label: "Do skrzynki (z każdego miejsca)" },
       { keys: ["/"], label: "Fokus na wyszukiwarkę" },
       { keys: ["Alt", "S"], label: "Wyszukiwarka (gdy „/” nie działa)" },
       { keys: ["Alt", "T"], label: "Przejdź do „Dziś”" },

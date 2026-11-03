@@ -10,6 +10,8 @@ export interface GlobalShortcutHandlers {
   onOpenSettings?: () => void;
   /** Alt+I — statystyki. */
   onOpenStats?: () => void;
+  /** Alt+K — okno „Do skrzynki” (Skrzynka 2.3), także z pola tekstowego. */
+  onQuickInbox?: () => void;
   onFocusSearch?: () => void;
   onGoToday: () => void;
   onGoWeek: () => void;
@@ -70,6 +72,13 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
       if (key === "s") {
         e.preventDefault();
         focusSearchInput();
+        return;
+      }
+      // `code`, bo Option+K na macOS daje inny znak. Nie nad innym oknem — okna by się piętrzyły.
+      if (key === "k" || e.code === "KeyK") {
+        if (document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]')) return;
+        e.preventDefault();
+        handlers.onQuickInbox?.();
         return;
       }
       if (inField) return;

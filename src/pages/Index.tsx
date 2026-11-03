@@ -95,7 +95,7 @@ import { OlderDeviceBanner } from "@/components/sync/OlderDeviceBanner";
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
-import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, PlansView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
+import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, QuickInboxDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, PlansView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -197,6 +197,8 @@ const Index = () => {
     return params.has("pair") || settingsTabFromParam(params.get(SETTINGS_PARAM)) !== null;
   });
   const [statsOpen, setStatsOpen] = useState(false);
+  /** Skrzynka 2.3: małe okno „Do skrzynki” (Alt+K, paleta, skrót PWA) — widok pod spodem zostaje. */
+  const [quickInboxOpen, setQuickInboxOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [propDefsOpen, setPropDefsOpen] = useState(false);
   const [presentingNoteId, setPresentingNoteId] = useState<string | null>(null);
@@ -287,6 +289,7 @@ const Index = () => {
     onNewNote: expandAddNote,
     onOpenSettings: () => setSettingsOpen(true),
     onOpenStats: () => setStatsOpen(true),
+    onQuickInbox: () => setQuickInboxOpen(true),
     onGoToday: () => go("today"),
     onGoWeek: () => go("week"),
     onGoView: (v) => go(v),
@@ -588,7 +591,7 @@ const Index = () => {
     moveNoteToFolder(id, folderId);
   }, [moveNoteToFolder]);
 
-  useLaunchIntents({ navigate, addNote: handleAddNoteGlow, openNote, expandComposer: expandAddNote });
+  useLaunchIntents({ navigate, addNote: handleAddNoteGlow, openNote, expandComposer: expandAddNote, openQuickInbox: () => setQuickInboxOpen(true) });
 
   // Licznik w pasku bocznym tylko przy tym, co wymaga uwagi: zaległe przypomnienia i Kosz.
   // Ta sama liczba ląduje w tytule karty i na ikonie aplikacji (useOverdueBadge).
@@ -1022,6 +1025,7 @@ const Index = () => {
           onToggleTheme={toggleTheme}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenStats={() => setStatsOpen(true)}
+          onQuickInbox={() => setQuickInboxOpen(true)}
           onOpenFocusMode={() => setFocusModeOpen(true)}
           onOpenShortcuts={() => setShortcutsOpen(true)}
           onCopyNote={copyTarget ? (fmt) => { void copyNoteToClipboard(copyTarget, fmt); } : undefined}
@@ -1032,6 +1036,11 @@ const Index = () => {
       </Suspense>
     )}
     <AchievementStamp />
+    {quickInboxOpen && (
+      <Suspense fallback={null}>
+        <QuickInboxDialog open={quickInboxOpen} onOpenChange={setQuickInboxOpen} onCapture={captureToInbox} onFiles={captureFilesToInbox} labels={allLabels} folders={folders} />
+      </Suspense>
+    )}
     {statsOpen && (
       <Suspense fallback={null}>
         <StatsDialog

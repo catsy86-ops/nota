@@ -57,6 +57,8 @@ interface Props {
   onToggleTheme: () => void;
   onOpenSettings: () => void;
   onOpenStats: () => void;
+  /** Skrzynka 2.3: okno „Do skrzynki” bez zmiany widoku. */
+  onQuickInbox: () => void;
   onOpenFocusMode: () => void;
   onOpenShortcuts: () => void;
   onGoFilter: (query: string) => void;
@@ -97,6 +99,7 @@ export function CommandPalette({
   onToggleTheme,
   onOpenSettings,
   onOpenStats,
+  onQuickInbox,
   onOpenFocusMode,
   onOpenShortcuts,
   onGoFilter,
@@ -312,6 +315,9 @@ export function CommandPalette({
         <CommandGroup heading="Akcje">
           <CommandItem onSelect={() => run(onNewNote)}>
             <Plus className="w-4 h-4 mr-2" /> Nowa notatka <span className="ml-auto text-xs text-muted-foreground">{modShortcut("N")}</span>
+          </CommandItem>
+          <CommandItem value="do skrzynki zapisz pomysl przechwyc" onSelect={() => run(onQuickInbox)}>
+            <Inbox className="w-4 h-4 mr-2" /> Do skrzynki… <span className="ml-auto text-xs text-muted-foreground">Alt+K</span>
           </CommandItem>
           <CommandItem onSelect={() => run(onDailyNote)}>
             <BookOpen className="w-4 h-4 mr-2" /> Notatka dnia

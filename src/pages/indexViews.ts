@@ -13,6 +13,7 @@ export const OnboardingTour = lazy(() => import("@/components/OnboardingTour").t
 export const CommandPalette = lazy(() => import("@/components/CommandPalette").then((m) => ({ default: m.CommandPalette })));
 export const ImportExternalDialog = lazy(() => import("@/components/ImportExternalDialog").then((m) => ({ default: m.ImportExternalDialog })));
 export const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then((m) => ({ default: m.SettingsDialog })));
+export const QuickInboxDialog = lazy(() => import("@/components/QuickInboxDialog").then((m) => ({ default: m.QuickInboxDialog })));
 export const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({ default: m.StatsDialog })));
 export const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ default: m.FocusMode })));
 // Kalendarz wchodzi tylko po wejściu w swój widok — siatka notatek go nie potrzebuje.
