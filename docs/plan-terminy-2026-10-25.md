@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Terminy” (przypomnienia) (2026-10-25)
 
+> **Status (2026-11-03):** zrobione 1.1–1.6, 2.1–2.6, 3.1–3.3, 4.1–4.4; otwarte 3.4 i 4.5; czeka 3.5 (tylko na życzenie) i QA. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
+
 > **Status (2026-11-03):** zrobione 1.1–1.6, 2.1–2.6, 3.1, 3.2 (2026-11-03), 3.3, 4.1–4.4 (opis w `opis.md`). Otwarte: 3.4 (termin z treści), 3.5 (w razie potrzeby), 4.5 (animacja odhaczenia).
 
 Piąty plan z serii „dział po dziale” (po Notatkach, Skrzynce, Dziś i Kalendarzu), w tym samym układzie. Obejmuje widok Terminy (`/przypomnienia`, `view === "reminders"`), wybór terminu (`ReminderPicker`), dymki i powiadomienia, logikę serii i parser dat. Kalendarz ma osobny plan.

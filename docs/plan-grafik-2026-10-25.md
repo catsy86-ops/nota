@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Grafik” (2026-10-25)
 
+> **Status (2026-11-03):** otwarte punkty przeniesione do planu z 27.10 i tam zrobione (G2–G4.7); otwarte nic; czeka G4.8 (G-7) i QA Grafiku na telefonie. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
+
 Szósty plan z serii „dział po dziale” (po Notatkach, Skrzynce, Dziś, Kalendarzu i Terminach), w tym samym układzie.
 
 > **Status 2026-10-27:** Etapy 1–5 zrobione (9c34c15…bff2fdb), z resztkami i drobnymi błędami. Te resztki, Etap 6 (QA) i nowa rozbudowa są w `docs/plan-praca-kalendarz-grafik-2026-10-27.md` (Grafik G0, G2–G4) — tam aktualny stan.

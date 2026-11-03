@@ -1,5 +1,7 @@
 # Plan mobile 2026-10-28: UI/UX, nowe funkcje, QoL, grafika, logika
 
+> **Status (2026-11-03):** zrobione A1, A2, A4–A6, B1, B3–B5, C1–C4, C6, D1–D5, E1, E3, E4, F2, F3; częściowo B2 (bez etapu, zgodnie z decyzją), C5 (brak `warn` w Grafiku i Ćwiczeniach), E2 (scalenie `fold`, niski priorytet); czeka F1 (ręczne QA) i A3 (dotyk, wake lock, cele 56 px na telefonie). Linia „Do sprawdzenia” niżej jest nieaktualna. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
+
 ## Context
 Prośba: przeanalizować obecne UI i ułożyć plan na telefon (UI/UX, nowe funkcje, QoL, grafika i wizualizacja, logika i algorytmy), z podziałem na to, co jest jeszcze potrzebne, a co nie.
 Źródła: trzy rozpoznania kodu (powłoka mobilna, wizualizacje i algorytmy, otwarte punkty w `roadmap.md`, `docs/plan-*.md`, `TODO.md`).

@@ -1,5 +1,7 @@
 # Plan: ulepszenie, rozbudowa i upiększenie działów Praca, Kalendarz i Grafik (2026-10-27)
 
+> **Status (2026-11-03):** zrobione Fala A (K0.1–K0.4, G0, P0.1), Fala B (P6.2, P6.3, P6.4), Kalendarz K1–K4 w całości (K3.6 4e2ef52, K4.1 a3b4656, K4.5 24f9ce8), Grafik G2.1–G2.6 i G4.1–G4.7, Praca P2.3–P2.10, P3.1, P3.2, P4.2, P4.3, P4.5, P5.1–P5.4; otwarte P2.1 (część), P2.2, P4.6, akcja „Skończyłem” przy G4.1, miniatury w protokole (P6.4); czeka G4.8 (G-7), P4.1 (P-6), P4.4 (źródła pytań), P2.11 i P3.3 (telefon), QA telefonu; P0.2 rozstrzygnięte (zostaje arkusz udostępniania). Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
+
 > **Status wykonania (2026-10-27):**
 > - **Zrobione:** K0.1 (`5b4d8d6`), K0.2, K0.3, K0.4 — część: data końca się czyści (`5ecf8c2`), pole „Do kiedy” w dialogu kalendarza (zrobione 2026-10-27, bez commita — patrz `opis.md`), G0.1–G0.6 i A.1 (`827a1cd`). Testy: vitest 265/265 w dotkniętych obszarach, typecheck i lint czyste.
 > - **Odłożone:** P0.1 (rysunek zastępuje zdjęcie — zmiana modelu Yjs, 8 plików, wymaga osobnej sesji z testami scalania); P0.2 (świadomie nie zrobione: `shareOrCopy` na telefonie otwiera arkusz udostępniania zamiast kopiować — decyzja produktowa, do potwierdzenia).

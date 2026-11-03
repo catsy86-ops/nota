@@ -1,5 +1,7 @@
 # Plan: ulepszenie i upiększenie UI/UX oraz QoL (2026-10-25)
 
+> **Status (2026-11-03):** zrobione Faza 0, 1.1–1.7, 2.1, 2.2, 2.4–2.6, 3.1–3.12, 4.1, Faza 5; częściowo 2.3/D-3 (38 plików nadal z framer-motion), 2.7 (brak pełnego zestawu mikrointerakcji), 2.8 (`warn` tylko w Długach, Pracy i menu notatki), 4.2 (brak `size-adjust`); odrzucone D-2; otwarte 4.4 (tylko po pomiarze), Faza 6 QA; czeka QA na telefonie. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
+
 ## Kontekst
 
 Poprzednie plany UI (`roadmap.md`: „Plan dopracowania UI” 09.10, „Plan dopracowania UI: telefon i komputer” 15.10, plan mobile 11.10) są w większości zrobione. Ten plan nie powtarza ich punktów. Zbiera to, co w kodzie widać dziś: rozjechany system projektowy, nowe techniki przeglądarek, których aplikacja jeszcze nie używa, i drobne tarcia w codziennej pracy.

@@ -1,5 +1,7 @@
 # Etap 6: model danych Nauki w Yjs (plan, bez zmian w kodzie)
 
+> **Status (2026-11-03):** zrobione kroki 1–3 opcji A (341ac6f, 20e6eb3) i opcja B (aef2443); otwarte nic; czeka opcjonalny test migracji na prawdziwych kopiach z kilku wersji. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
+
 Status: **opcje A i B wdrożone (2026-10-25).** Szczegóły w `opis.md`, sekcja Nauka. Każda zmiana formatu w Yjs wymaga migracji
 i decyzji o zakresie (decyzja 24.10). Ten dokument przygotowuje tę decyzję.
 

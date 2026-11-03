@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Kalendarz” (2026-10-25)
 
+> **Status (2026-11-03):** otwarte punkty przeniesione do planu z 27.10 i tam zrobione (K1–K4); otwarte nic; czeka QA na telefonie. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
+
 Czwarty plan z serii „dział po dziale” (po Notatkach, Skrzynce i Dziś), w tym samym układzie.
 
 > **Status 2026-10-27:** zrobione 1.5, 1.7, część 2.5, 2.7, 3.4, 4.1, 4.5, 4.6. Otwarte punkty przeniesione do `docs/plan-praca-kalendarz-grafik-2026-10-27.md` (Kalendarz K1–K4) — tam aktualny stan.

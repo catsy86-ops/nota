@@ -53,7 +53,7 @@
 
 | # | Co | Gdzie | W | N |
 |---|----|-------|---|---|
-| 1.1 | **Inwentarz z dowodami:** linia Status w planach Notatek, Ustawień i Powłoki (każdy punkt sprawdzony w kodzie); aktualny status planu Kalendarza, Grafiku i Pracy z 27.10. Źródło: raporty inwentarza. | `docs/plan-*.md` | 3 | S |
+| 1.1 | ✅ **Inwentarz z dowodami:** (linie „Status (2026-11-03)” wklejone w 15 planach) linia Status w planach Notatek, Ustawień i Powłoki (każdy punkt sprawdzony w kodzie); aktualny status planu Kalendarza, Grafiku i Pracy z 27.10. Źródło: raporty inwentarza. | `docs/plan-*.md` | 3 | S |
 | 1.2 | **Chwiejne testy:** wyścig zwijania paska bocznego przy starcie na 1440 px, `site-faults`, `study-delivery`, „praca — odblask”. Najpierw przyczyna (czekanie na stan zamiast `waitForTimeout`), potem poprawka. | `e2e/`, powłoka | 3 | M |
 | 1.3 | ✅ **Bramka jakości lokalnie:** `npm run check` (typecheck, lint, Vitest, e2e `@smoke`). Lint ma 0 błędów (poprawione 4 wyrażenia z przecinkiem w e2e), a próg czasu w `plans/security.test.ts` podniesiony z 1,5 do 5 s, bo padał pod obciążeniem. **Czas: ok. 5,5 min** (lint i tsc ok. 1 min, Vitest ok. 1,5 min, smoke 2,6 min). Cel 3 min wymaga przycięcia smoke albo uruchamiania kroków równolegle; do zrobienia przy 1.2. | `package.json` | 3 | S |
 | 1.4 | **Test zgodności danych:** dokument z nowymi polami (`reminderLead`, `reminderRule`, mapy Pracy) czytany i zapisywany przez kod udający starszą wersję; nic nie ginie poza świadomie opisanymi wyjątkami. | `src/lib/*.test.ts` | 3 | M |
