@@ -72,7 +72,7 @@
 | 2.1 | ✅ **Skrzynka 2.3:** skrót `Alt+K` i polecenie „Do skrzynki…” w palecie (małe okno bez zmiany widoku), skrót PWA `?skrzynka=1`. | 3 | M |
 | 2.2 | ✅ **Skrzynka 3.1, 3.4:** filtr chipów folderu i etykiety w porządkowaniu (9 najczęstszych, „Nowy…”); „Przypomnij…” z porządkowania. | 3 | M |
 | 2.3 | ✅ **Skrzynka 4.1–4.4, 4.6:** pole jak zwinięty kompozytor, pasek z licznikiem i „Porządkuj”, wiek notatki i sortowanie „najstarsze najpierw”, pieczątka „Posortowane”, karta porządkowania z postępem. | 2 | M |
-| 2.4 | **Dziś:** 2.1 (reszta), 2.2, 2.4, 2.5, 4.2 i Etap 3 bez 3.4 (czeka na D-3). | 2 | M |
+| 2.4 | ⏳ **Dziś (w toku: zrobione 2.1, 2.2, 2.5, 3.1, 3.3, 3.6; zostają 2.4 podpięcie osi, 3.2, 3.5, 4.2, zrzuty `dzis-*`):** 2.1 (reszta), 2.2, 2.4, 2.5, 4.2 i Etap 3 bez 3.4 (czeka na D-3). | 2 | M |
 | 2.5 | **Terminy:** 4.5 (odhaczenie z ruchem, bez ruchu przy redukcji), 3.4 (termin z treści jako podpowiedź w edytorze). | 2 | M |
 | 2.6 | **Kalendarz, Grafik, Praca (plan 27.10):** K3.6 (po QA, K-4), K4.1, K4.5, reszta G2–G4 i P2–P5, P6.2, P6.3 — tylko punkty, które inwentarz potwierdzi jako otwarte. | 2 | L |
 | 2.7 | **Skarbiec:** 2.2, 3.3, Etap 4 (1.2 część 2 czeka na decyzję). | 2 | M |

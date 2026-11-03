@@ -1963,6 +1963,20 @@ Testy zielone: `npx vitest run` 1826/1826, `npx eslint .` bez błędów (16 ostr
 
 **Budżet paczki startowej: przekroczony** (410 791 B wobec progu 410 624 B, +167 B). Zmiany w komponentach ładowanych od razu: `ReminderPicker.tsx` (~52 B), `Index.tsx` (~19 B), `NoteCardBody.tsx` (~20 B) i drobne pozostałe. Próg podnosi wyłącznie właściciel — decyzja otwarta.
 
+## Dziś — karta zmiany jako bohater, „Skończyłem teraz”, podgląd jutra, kompozytor, pusty dzień (2.1, 2.2, 2.5, 3.1, 3.3, 3.6, 2026-11-03)
+
+- **Co robi:**
+  - *Karta zmiany (3.1):* data jest nagłówkiem karty („Wtorek, 3 listopada”), obok nazwy zmiany stoi duży znaczek ze skrótem w kolorze zmiany (`shiftInk`), a godziny są w kroju mono. Urlop, L4 i dzień bez zmiany mają spokojny, szary znaczek.
+  - *„Skończyłem teraz” (2.1):* w trakcie zmiany i tuż po niej (okno `recentlyEndedShift`) zapisuje koniec zmiany tak samo jak karta „Teraz” w Grafiku. Po zmianie napis mówi „Zmiana skończyła się o 14:00”. Pasek postępu ma kolor zmiany.
+  - *Podgląd jutra (2.2):* od godziny wieczornego przypomnienia o Grafiku (`readEveningNudgeTime`), a bez niego od 18:00, karta ma wiersz „Jutro: R 06:00–14:00 · 2 terminy”. Klik otwiera Kalendarz na jutrzejszym dniu (`/kalendarz?dzien=`). Bez Grafiku i bez terminów wiersza nie ma. Dostaw Pracy w wierszu jeszcze nie ma.
+  - *Kompozytor (2.5):* pasek „Zapisz notatkę…” jest także w Dziś. Nowa notatka jest dzisiejsza, więc zostaje na ekranie, a „+” nie przenosi do Notatek.
+  - *Nagłówki grup terminów (3.3):* „Zaległe”, „Przegapione” i „Dziś” jako `section-label` z kropką stanu i liczbą.
+  - *Pusty dzień (3.6):* bez zmiany i bez terminów karta mówi „Wolne. Nic nie czeka.”, a „Notatka dnia” jest głównym przyciskiem. Karta Terminów znika, gdy nie ma ani dzisiejszych, ani przyszłych terminów. Rysunku w karcie nie ma, bo słońce jest już w pustym stanie notatek pod kartami.
+- **Gdzie:** `src/components/review/TodayShiftCard.tsx` (props `reminderNotes`, `onOpenTomorrow`), `TodayCards.tsx`, `TodayDueList.tsx` (`GROUP_DOT`). Logika: `src/lib/todayTomorrow.ts` (`isTomorrowPreviewTime`, `countRemindersOn`, `tomorrowLine`), `src/lib/shifts/finishNow.ts` (`finishShiftNow`, wspólne z `NowCard.tsx`). Kompozytor: `canCompose` w `src/pages/Index.tsx`.
+- **W toku (2.4):** `src/components/review/TodayTimeline.tsx` (oś dnia: `DayTimeline` z Kalendarza, zwijana, stan w `kaczy.today.timeline.v1`, domyślnie zwinięta na telefonie) jest napisany, ale jeszcze niepodpięty w `TodayCards` i bez testów.
+- **Testy:** `src/lib/todayTomorrow.test.ts`, `src/components/review/TodayShiftCard.test.tsx` (znaczek, „skończyła się”, wiersz „Jutro”), `e2e/dzis-composer.spec.ts`, `e2e/inbox-today.spec.ts` (pusty dzień). Zrzuty `dzis-*` w `e2e/visual.spec.ts-snapshots` nie są jeszcze zaktualizowane.
+- **Commity:** 52fe529, 16e748f (2026-11-03).
+
 ## Dziś — karta „Trening mózgu” (Neuroklik, 2026-10-22)
 
 Co robi: na stronie Dziś karta z podpowiedzią względem dzisiejszej zmiany z Grafiku: „Rozgrzewka przed pracą” (do 3 h przed startem), „Trening mózgu po zmianie” (w trakcie zmiany), „Trening po pracy” (do 2 h po końcu) albo „Codzienny trening mózgu” (dzień bez zmiany). Przycisk „Otwórz trening” otwiera https://neuroklik.vercel.app/ w nowej karcie. „Przypomnij” tworzy notatkę z przypomnieniem: 30 min przed startem, albo 10 min po końcu zmiany w trakcie pracy.
