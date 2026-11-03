@@ -4,7 +4,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { useDictation } from "@/hooks/useDictation";
 import { useOverlayHistory } from "@/hooks/useOverlayHistory";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
-import { AudioLines, Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash, CornerDownRight, Repeat, CopyPlus } from "lucide-react";
+import { AudioLines, Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, CornerDownRight, Repeat, CopyPlus } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { format as formatDate } from "date-fns";
 import { pl as plLocale } from "date-fns/locale";
