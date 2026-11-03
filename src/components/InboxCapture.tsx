@@ -77,13 +77,16 @@ export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDE
   return (
     <div className="space-y-2">
     <form
-      className={cn("flex items-start gap-2 rounded-card border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-ring", dragging ? "border-primary ring-2 ring-primary/40" : "border-border")}
+      // 4.1: ten sam kształt, cień i obrys co zwinięty pasek „Zapisz notatkę…” (AddNoteBar), żeby oba pola czytały się jako jedno.
+      className={cn("flex w-full max-w-xl items-start gap-3 rounded-card border bg-card px-3 py-2 note-shadow transition-[box-shadow] focus-ring-gradient hover:shadow-elevation-3", dragging ? "border-primary ring-2 ring-primary/40" : "border-border")}
       onSubmit={(e) => { e.preventDefault(); submit(); }}
       onDragOver={(e) => { if (onFiles && e.dataTransfer.types.includes("Files")) { e.preventDefault(); setDragging(true); } }}
       onDragLeave={() => setDragging(false)}
       onDrop={(e) => { setDragging(false); if (takeFiles(e.dataTransfer.files)) e.preventDefault(); }}
     >
-      <Inbox className="mt-2.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+      <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-card bg-primary/12 text-primary-ink ring-1 ring-primary/20">
+        <Inbox className="h-4 w-4" />
+      </span>
       <textarea
         rows={1}
         enterKeyHint="send"

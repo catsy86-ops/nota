@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { captureParts, INBOX_TITLE_MAX, isInboxNote, linkCapture, triageHeadline } from "./inbox";
+import { captureParts, inboxAgeDays, inboxAgeLabel, INBOX_TITLE_MAX, isInboxNote, linkCapture, triageHeadline } from "./inbox";
 
 describe("isInboxNote", () => {
   it("skrzynka to notatki bez folderu, bez etykiet i nie będące podnotatką", () => {
@@ -83,5 +83,19 @@ describe("linkCapture (2.4)", () => {
     expect(linkCapture("zobacz https://example.com")).toBeNull();
     expect(linkCapture("javascript:alert(1)")).toBeNull();
     expect(linkCapture("Kupić rury")).toBeNull();
+  });
+});
+
+describe("wiek notatki w Skrzynce (4.3)", () => {
+  const now = new Date(2026, 10, 3, 8, 0).getTime();
+  it("liczy dni kalendarzowe: dziś, od wczoraj, od N dni", () => {
+    expect(inboxAgeLabel(new Date(2026, 10, 3, 0, 5).getTime(), now)).toBe("dziś");
+    expect(inboxAgeLabel(new Date(2026, 10, 2, 23, 50).getTime(), now)).toBe("od wczoraj");
+    expect(inboxAgeLabel(new Date(2026, 9, 31, 9, 0).getTime(), now)).toBe("od 3 dni");
+    expect(inboxAgeLabel(new Date(2026, 9, 12, 9, 0).getTime(), now)).toBe("od 22 dni");
+  });
+  it("zmiana czasu (koniec października) nie gubi dnia, przyszłość to 0", () => {
+    expect(inboxAgeDays(new Date(2026, 9, 24, 12).getTime(), new Date(2026, 9, 26, 12).getTime())).toBe(2);
+    expect(inboxAgeDays(now + 86_400_000, now)).toBe(0);
   });
 });

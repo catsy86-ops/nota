@@ -38,6 +38,8 @@ export interface NoteViewActions {
   animateLayout?: boolean;
   /** Widok Terminy: „Gotowe” przy każdym terminie, nie tylko zaległym (decyzja D2). */
   reminderActions?: boolean;
+  /** Skrzynka 4.3: kafel pokazuje, od ilu dni notatka czeka („od 3 dni”), zamiast daty zmiany. */
+  inboxAge?: boolean;
 }
 
 const NoteViewActionsContext = createContext<NoteViewActions | null>(null);

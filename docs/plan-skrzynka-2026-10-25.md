@@ -1,8 +1,8 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Skrzynka” (2026-10-25)
 
-> **Status (2026-11-03):** zrobione 1.1, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.4, 3.2, 3.3, 3.5, 4.5, 5.1–5.3; częściowo 2.4 (brak ikony linku na kaflu), 4.3 (jest „najstarsze najpierw”, brak „od 3 dni” i znacznika po 14 dniach); otwarte 1.2 (błysk liczony tylko z `[data-add-note-bar]`), 4.1, 4.2, 4.4, 4.6; czeka QA. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
+> **Status (2026-11-03):** zrobione 1.1, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.4, 4.1, 4.2, 4.3, 4.4, 4.6, 3.2, 3.3, 3.5, 4.5, 5.1–5.3; częściowo 2.4 (brak ikony linku na kaflu); otwarte 1.2 (błysk liczony tylko z `[data-add-note-bar]`); czeka QA. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
 
-> **Status (2026-11-03):** zrobione 2.1, 2.4 (bez ikony linku na kaflu), 2.5 (2026-11-03), 1.1, 1.3, 2.2, 3.2, 4.5, 5.2, 5.3 (2026-11-02) oraz wcześniej 3.3 (S-1, „Odłóż”) i 3.5 (gesty w trybie porządkowania). Nie sprawdzone w tej rundzie: 1.2, 1.4 (część testów jest w `e2e/inbox-triage.spec.ts`), 5.1 (`e2e/inbox-today.spec.ts`). Zrobione 2.3 (2026-11-03: `Alt+K`, paleta, skrót PWA `?skrzynka=1`), 3.1 i 3.4 (2026-11-03). Otwarte: 4.1–4.4, 4.6.
+> **Status (2026-11-03):** zrobione 2.1, 2.4 (bez ikony linku na kaflu), 2.5 (2026-11-03), 1.1, 1.3, 2.2, 3.2, 4.5, 5.2, 5.3 (2026-11-02) oraz wcześniej 3.3 (S-1, „Odłóż”) i 3.5 (gesty w trybie porządkowania). Nie sprawdzone w tej rundzie: 1.2, 1.4 (część testów jest w `e2e/inbox-triage.spec.ts`), 5.1 (`e2e/inbox-today.spec.ts`). Zrobione 2.3 (2026-11-03: `Alt+K`, paleta, skrót PWA `?skrzynka=1`), 3.1, 3.4, 4.1–4.4 i 4.6 (2026-11-03). Otwarte: 1.2, ikona linku na kaflu (2.4).
 
 Drugi plan z serii „dział po dziale” (po `docs/plan-notatki-2026-10-25.md`), w tym samym układzie.
 
@@ -75,12 +75,12 @@ Legenda: W = wartość (1–3), N = nakład (S/M/L).
 
 | # | Co | W | N |
 |---|----|---|---|
-| 4.1 | **Pole jak zwinięty kompozytor:** ten sam kształt, cień i obrys co pasek „Zapisz notatkę…”, ikona skrzynki w kolorze akcentu, w Zeszycie linia kratki. | 2 | S |
-| 4.2 | **Pasek nad listą:** „Do posortowania” + licznik jako `stamp-tag` + przycisk „Porządkuj” jako `Button` (nie goły tekst), na telefonie przyklejony pod polem. | 2 | S |
-| 4.3 | **Wiek notatki:** na kaflu w Skrzynce „od 3 dni” zamiast daty zmiany; domyślne sortowanie w Skrzynce „najstarsze najpierw” (osobne `ViewPrefs` dla widoku, jeśli dziś są wspólne). Notatka starsza niż 14 dni z dyskretnym znacznikiem. | 2 | S |
-| 4.4 | **Pieczątka „Posortowane”** przy zejściu licznika do 0 (w trybie porządkowania i w widoku), animacja odbicia pieczątki z tokenów ruchu, przy redukcji ruchu samo pojawienie się. | 1 | S |
+| 4.1 | ✅ **Pole jak zwinięty kompozytor:** ten sam kształt, cień i obrys co pasek „Zapisz notatkę…”, ikona skrzynki w kolorze akcentu, w Zeszycie linia kratki. | 2 | S |
+| 4.2 | ✅ **Pasek nad listą:** „Do posortowania” + licznik jako `stamp-tag` + przycisk „Porządkuj” jako `Button` (nie goły tekst), na telefonie przyklejony pod polem. | 2 | S |
+| 4.3 | ✅ **Wiek notatki:** na kaflu w Skrzynce „od 3 dni” zamiast daty zmiany; domyślne sortowanie w Skrzynce „najstarsze najpierw” (osobne `ViewPrefs` dla widoku, jeśli dziś są wspólne). Notatka starsza niż 14 dni z dyskretnym znacznikiem. | 2 | S |
+| 4.4 | ✅ **Pieczątka „Posortowane”** przy zejściu licznika do 0 (w trybie porządkowania i w widoku), animacja odbicia pieczątki z tokenów ruchu, przy redukcji ruchu samo pojawienie się. | 1 | S |
 | 4.5 | **Pusty stan z działaniem** (po N-3): „Skrzynka jest pusta” + przycisk „Zapisz pomysł” (fokus w polu) i podpowiedź `Alt+K`. | 1 | S |
-| 4.6 | **Tryb porządkowania jako karta:** większa karta notatki z okładką (pierwszy obraz), pasek postępu „3 z 12” zamiast samego tekstu, przejście do następnej karty przesunięciem (`view-transition` albo `motion`, przy redukcji ruchu bez animacji). | 2 | M |
+| 4.6 | ✅ **Tryb porządkowania jako karta:** większa karta notatki z okładką (pierwszy obraz), pasek postępu „3 z 12” zamiast samego tekstu, przejście do następnej karty przesunięciem (`view-transition` albo `motion`, przy redukcji ruchu bez animacji). | 2 | M |
 
 ## Etap 5: Skrzynka w innych działach
 

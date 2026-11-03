@@ -113,3 +113,20 @@ for (const size of SIZES) {
     }
   });
 }
+
+test("a11y: Skrzynka z paskiem i oknem porządkowania (filtr, termin, postęp)", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+  await seedNotes(page, [
+    { id: "ib1", title: "Oddzwonić", content: "do hurtowni", color: "default", pinned: false, archived: false, labels: [], createdAt: 1, updatedAt: 1 },
+    { id: "ib2", title: "Zamówić", content: "", color: "default", pinned: false, archived: false, labels: ["dom"], createdAt: 2, updatedAt: 2 },
+  ]);
+  await page.goto("/skrzynka");
+  await expect(page.getByTestId("inbox-bar")).toBeVisible();
+  const view = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+  expect(view.violations.map((v) => v.id)).toEqual([]);
+  await page.getByRole("button", { name: /Porządkuj skrzynkę/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Porządkowanie skrzynki" });
+  await dialog.getByRole("button", { name: "Przypomnij…" }).click();
+  const triage = await new AxeBuilder({ page }).include('[role="dialog"]').withTags(TAGS).analyze();
+  expect(triage.violations.map((v) => v.id)).toEqual([]);
+});

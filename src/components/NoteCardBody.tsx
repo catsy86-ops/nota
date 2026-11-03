@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
-import { CornerLeftUp, Link2, Lock, RotateCcw, Trash } from "lucide-react";
+import { CornerLeftUp, Hourglass, Link2, Lock, RotateCcw, Trash } from "lucide-react";
+import { inboxAgeDays, inboxAgeLabel, INBOX_STALE_DAYS } from "@/lib/inbox";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import type { Note } from "@/hooks/useNotes";
@@ -51,11 +52,14 @@ export function NoteCardBody({
   wordCount,
   readMin,
   reminderActions,
+  inboxAge,
 }: {
   note: Note;
   isArchived: boolean | undefined;
   /** Widok Terminy — „Gotowe” przy każdym terminie. */
   reminderActions?: boolean;
+  /** Skrzynka 4.3: wiek notatki zamiast daty zmiany. */
+  inboxAge?: boolean;
   /** Kafel ma zaznaczanie — tytuł zostawia miejsce na pole wyboru. */
   selectable: boolean;
   snippet: ReturnType<typeof firstSnippet>;
@@ -191,7 +195,16 @@ export function NoteCardBody({
               {/* Liczba słów jest w czytniku — na wąskim kaflu łamała stopkę na trzy linie. */}
               <div className="card-meta flex items-center gap-1.5 mt-1.5 font-mono text-2xs text-muted-foreground whitespace-nowrap">
                 {showReadingTime && wordCount > 0 && readMin >= 2 && <><span>~{readMin} min</span><span aria-hidden>·</span></>}
-                <span className="tabular-nums">{format(new Date(note.updatedAt), "d MMM, HH:mm", { locale: pl })}</span>
+                {inboxAge ? (
+                  // Ile notatka czeka na posortowanie; po 14 dniach klepsydra w kolorze akcentu (dyskretny znacznik).
+                  <span className={cn("inline-flex items-center gap-1 tabular-nums", inboxAgeDays(note.createdAt) >= INBOX_STALE_DAYS && "text-primary-ink")}
+                    title={`Zapisano ${format(new Date(note.createdAt), "d MMM, HH:mm", { locale: pl })}`} data-inbox-age>
+                    {inboxAgeDays(note.createdAt) >= INBOX_STALE_DAYS && <><Hourglass className="h-3 w-3" aria-hidden /><span className="sr-only">Czeka długo: </span></>}
+                    {inboxAgeLabel(note.createdAt)}
+                  </span>
+                ) : (
+                  <span className="tabular-nums">{format(new Date(note.updatedAt), "d MMM, HH:mm", { locale: pl })}</span>
+                )}
               </div>
     </>
   );

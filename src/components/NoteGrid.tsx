@@ -102,10 +102,12 @@ interface NoteGridProps extends Omit<NoteViewActions, "selectionMode" | "onToggl
   navOrder?: number;
   /** Widok Terminy — patrz `NoteViewActions.reminderActions`. */
   reminderActions?: boolean;
+  /** Skrzynka — patrz `NoteViewActions.inboxAge`. */
+  inboxAge?: boolean;
 }
 
 export function NoteGrid({
-  notes, onUpdate, onDelete: onDeleteProp, onTogglePin, onDuplicate, onArchive: onArchiveProp, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectedIds, selectionMode, onToggleSelect, navOrder = 0, reminderActions,
+  notes, onUpdate, onDelete: onDeleteProp, onTogglePin, onDuplicate, onArchive: onArchiveProp, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectedIds, selectionMode, onToggleSelect, navOrder = 0, reminderActions, inboxAge,
 }: NoteGridProps) {
   // Zapamiętujemy, co użytkownik zrobił z kartą, żeby jej wyjście (AnimatePresence `custom`)
   // „leciało” w stronę celu: kosz albo archiwum. Dotyczy też skrótów i przesunięcia palcem.
@@ -122,9 +124,9 @@ export function NoteGrid({
   const animateLayout = notes.length <= LAYOUT_ANIMATION_LIMIT;
   const noteViewActions = useMemo<NoteViewActions>(() => ({
     onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
-    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout, reminderActions,
+    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout, reminderActions, inboxAge,
   }), [onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
-    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout, reminderActions]);
+    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout, reminderActions, inboxAge]);
   const storedPrefs = useViewPrefs();
   // Tablica renderuje każdą kolumnę jako jednokolumnową listę; tabela nie używa siatki.
   const prefs = useMemo(

@@ -10,6 +10,7 @@ import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { effectiveRemindersLayout, useRemindersLayoutChoice } from "@/lib/remindersLayout";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { InboxCapture, type InboxCaptureExtras } from "@/components/InboxCapture";
+import { InboxBar } from "@/components/InboxBar";
 import { useReaderNav } from "@/hooks/useReaderNav";
 import { setSearchTerms } from "@/lib/searchTerms";
 import { highlightTokens } from "@/lib/searchQuery";
@@ -649,6 +650,7 @@ const Index = () => {
       onUnarchive={view === "archive" ? unarchiveNote : view === "trash" ? restoreFromTrash : undefined}
       isArchived={view === "archive" || view === "trash"}
       reminderActions={view === "reminders"}
+      inboxAge={view === "inbox"}
       onMoveToFolder={view === "trash" ? undefined : handleMoveToFolderGlow}
       getVersions={getVersions}
       onSaveVersion={addVersion}
@@ -760,12 +762,7 @@ const Index = () => {
           )}
           {view === "notes" && <InstallBanner ready={notes.length >= 3} />}
           {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} onFiles={captureFilesToInbox} labels={allLabels} folders={folders} />}
-          {view === "inbox" && !deferredSearch && inboxCount > 0 && (
-            <button type="button" onClick={() => { setTriageMounted(true); setTriageOpen(true); }}
-              className="self-start inline-flex items-center gap-1.5 rounded-field px-2.5 py-1.5 text-sm font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-              Porządkuj skrzynkę ({inboxCount})
-            </button>
-          )}
+          {view === "inbox" && !deferredSearch && <InboxBar count={inboxCount} onTriage={() => { setTriageMounted(true); setTriageOpen(true); }} />}
           {triageMounted && (
             <Suspense fallback={null}>
               <InboxTriage open={triageOpen} onOpenChange={setTriageOpen} onOpenNote={(id) => openNote(id, false, true)} />

@@ -12,6 +12,9 @@ import { filterTriageChips, hasExact, rankTriageChips, triageQuery, TRIAGE_TOP, 
 import { QuickReminderInput } from "@/components/QuickReminderInput";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
+import { tween } from "@/lib/motion";
+import { useImageUrl } from "@/hooks/useImageUrl";
+import { SortedStamp } from "@/components/SortedStamp";
 
 interface InboxTriageProps {
   open: boolean;
@@ -38,6 +41,13 @@ function quickReminders(now: Date): { label: string; at: number }[] {
     ...(now.getTime() < evening.getTime() ? [{ label: "Dziś 18:00", at: evening.getTime() }] : []),
     { label: "Jutro 9:00", at: morning.getTime() },
   ];
+}
+
+/** 4.6: okładka karty — pierwsze zdjęcie notatki (bez zdjęcia na tym urządzeniu nic nie rysujemy). */
+function TriageCover({ imageRef }: { imageRef: string }) {
+  const url = useImageUrl(imageRef);
+  if (!url) return null;
+  return <img src={url} alt="" className="-mx-4 -mt-4 mb-3 h-36 w-[calc(100%+2rem)] max-w-none rounded-t-[inherit] object-cover" />;
 }
 
 interface UndoStep {
@@ -209,12 +219,23 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
           <DialogDescription id="inbox-triage-desc" className="text-xs tabular-nums">
             {queue.length === 0 ? "Skrzynka jest pusta." : done ? "Gotowe — skrzynka opróżniona." : `${position} z ${queue.length}`}
           </DialogDescription>
+          {/* 4.6: postęp jako pasek — ile notatek już za nami. */}
+          {queue.length > 0 && (
+            <div role="progressbar" aria-label="Postęp porządkowania" aria-valuemin={0} aria-valuemax={queue.length} aria-valuenow={Math.min(index, queue.length)}
+              className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-primary transition-[width] duration-(--dur-base) ease-out motion-reduce:transition-none" style={{ width: `${(Math.min(index, queue.length) / queue.length) * 100}%` }} />
+            </div>
+          )}
         </DialogHeader>
 
         {current && !done && (
           <div className="space-y-4 pt-2">
+            {/* 4.6: każda notatka to nowa karta — wjeżdża z prawej (przy ograniczonym ruchu MotionConfig ją wycisza). */}
             <m.div
-              className="rounded-card border border-border/60 bg-muted/30 p-3"
+              key={current.id}
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0, transition: tween.enter }}
+              className="overflow-hidden rounded-card border border-border/60 bg-card p-4 note-shadow"
               drag={coarse ? "x" : false}
               dragDirectionLock
               dragElastic={0.25}
@@ -228,7 +249,8 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
                 else if (info.offset.x > threshold) { haptic("tap"); leave(); }
               }}
             >
-              <p className="font-display font-semibold text-base leading-snug wrap-anywhere">{title}</p>
+              {current.images[0] && <TriageCover imageRef={current.images[0]} />}
+              <p className="font-display font-semibold text-lg leading-snug wrap-anywhere">{title}</p>
               {preview && <p className="mt-1 line-clamp-6 text-sm text-muted-foreground whitespace-pre-line wrap-anywhere">{preview}</p>}
             </m.div>
             {coarse && <p className="-mt-2 text-xs text-muted-foreground">Przesuń w lewo: archiwizuj. W prawo: zostaw.</p>}
@@ -328,6 +350,8 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
 
         {done && (
           <div className="space-y-3 pt-2">
+            {/* 4.4: pieczątka, gdy Skrzynka naprawdę jest pusta („Zostaw” zostawia notatki — wtedy bez pieczątki). */}
+            {!notes.some(isInboxNote) && <SortedStamp />}
             <p className="text-sm text-muted-foreground">Wszystko, co było w skrzynce, ma już folder, etykietę albo zostało zarchiwizowane.</p>
             {undoStack.length > 0 && (
               <Button type="button" variant="outline" size="sm" className="coarse:h-11 gap-1.5" onClick={undo}>

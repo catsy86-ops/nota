@@ -137,3 +137,22 @@ test("skrzynka 3.4: „Przypomnij…” → „Jutro 9:00” ustawia termin, not
   await expect(card).toHaveCount(1);
   await expect(card).toContainText(/jutro|9:00/i);
 });
+
+test("skrzynka 4.2–4.4: pasek z licznikiem, wiek na kaflu, pieczątka „Posortowane” po opróżnieniu", async ({ page }) => {
+  const stamp = Date.now();
+  await capture(page, `Pomysł ${stamp}`);
+  const bar = page.getByTestId("inbox-bar");
+  await expect(bar).toContainText("Do posortowania");
+  await expect(bar.getByTestId("inbox-count")).toHaveText("1");
+  await expect(page.locator("[data-note-id]").filter({ hasText: `Pomysł ${stamp}` }).locator("[data-inbox-age]")).toHaveText("dziś");
+
+  await bar.getByRole("button", { name: "Porządkuj skrzynkę (1)" }).click();
+  const dialog = page.getByRole("dialog", { name: "Porządkowanie skrzynki" });
+  await expect(dialog.getByRole("progressbar", { name: "Postęp porządkowania" })).toHaveAttribute("aria-valuenow", "0");
+  await dialog.getByRole("button", { name: "Archiwizuj" }).click();
+  await expect(dialog.getByTestId("sorted-stamp")).toHaveText("Posortowane");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByTestId("sorted-stamp")).toBeVisible();
+  await expect(bar).toHaveCount(0);
+});

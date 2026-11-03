@@ -66,3 +66,21 @@ export function linkCapture(raw: string): { title: string; content: string } | n
   const title = (u.hostname.replace(/^www\./, "") + path).slice(0, INBOX_TITLE_MAX);
   return { title, content: text };
 }
+
+/** Po tylu dniach notatka w Skrzynce dostaje dyskretny znacznik (plan Skrzynki 4.3). */
+export const INBOX_STALE_DAYS = 14;
+
+/** Pełne dni kalendarzowe od zapisu do dziś (zmiana czasu nie przesuwa wyniku). */
+export function inboxAgeDays(createdAt: number, now: number = Date.now()): number {
+  const a = new Date(createdAt); a.setHours(12, 0, 0, 0);
+  const b = new Date(now); b.setHours(12, 0, 0, 0);
+  return Math.max(0, Math.round((b.getTime() - a.getTime()) / 86_400_000));
+}
+
+/** Wiek notatki na kaflu w Skrzynce: „dziś”, „od wczoraj”, „od 3 dni” — ile czeka na posortowanie. */
+export function inboxAgeLabel(createdAt: number, now: number = Date.now()): string {
+  const d = inboxAgeDays(createdAt, now);
+  if (d === 0) return "dziś";
+  if (d === 1) return "od wczoraj";
+  return `od ${d} dni`;
+}
