@@ -75,8 +75,12 @@ test("skróty PWA „Nowa lista” i „Szukaj”: lista od razu w kompozytorze,
   expect(new URL(page.url()).search).toBe("");
 });
 
-test("udostępnienie /share tworzy notatkę, pokazuje toast i wraca do Notatek", async ({ page }) => {
+test("udostępnienie /share pyta „Zapisać?”, po „Zapisz” tworzy notatkę i wraca do Notatek", async ({ page }) => {
   await page.goto("/share?title=Zebranie%20jutrzejsze&text=Agenda%20spotkania&url=https%3A%2F%2Fexample.com%2Fa");
+  // Plan-nowy 1.8: adres /share może otworzyć każda strona, więc nic nie zapisuje się bez zgody.
+  await expect(page.getByText("Zapisać w NOTKACH?")).toBeVisible();
+  await expect(page.locator("[data-note-id]").filter({ hasText: "Zebranie jutrzejsze" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText("Zapisano w NOTKACH")).toBeVisible();
   await expect(page.getByRole("button", { name: "Otwórz" })).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
@@ -87,6 +91,14 @@ test("udostępnienie /share tworzy notatkę, pokazuje toast i wraca do Notatek",
   await page.goto("/share?title=Zebranie%20jutrzejsze&text=Agenda%20spotkania&url=https%3A%2F%2Fexample.com%2Fa");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator("[data-note-id]").filter({ hasText: "Zebranie jutrzejsze" })).toHaveCount(1);
+});
+
+test("„Pomiń” przy udostępnieniu /share nie zapisuje notatki", async ({ page }) => {
+  await page.goto("/share?title=Obca%20strona&text=Kliknij%20tutaj");
+  await expect(page.getByText("Zapisać w NOTKACH?")).toBeVisible();
+  await page.getByRole("button", { name: "Pomiń" }).click();
+  await expect(page.getByText("Zapisać w NOTKACH?")).toHaveCount(0);
+  await expect(page.locator("[data-note-id]").filter({ hasText: "Obca strona" })).toHaveCount(0);
 });
 
 test("skróty PWA do widoków otwierają Dziś, Grafik i Przypomnienia", async ({ page }) => {

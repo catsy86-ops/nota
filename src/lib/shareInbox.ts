@@ -18,9 +18,34 @@ export interface SharedInbox {
   /** Pola tekstowe w formie adresu, żeby przejść przez `parseShare` jak zwykłe udostępnienie. */
   query: string;
   files: File[];
+  /** Pliki, które service worker pominął (ponad 30 albo za duże) — do komunikatu. */
+  skipped: number;
 }
 
-interface Meta { title?: unknown; text?: unknown; url?: unknown; files?: unknown }
+interface Meta { title?: unknown; text?: unknown; url?: unknown; files?: unknown; skipped?: unknown }
+
+/** Wpis starszy niż to został porzucony (błąd odbioru, zamknięta karta) — `sweepShareInbox` go kasuje. */
+const STALE_MS = 60 * 60_000;
+
+/**
+ * Sprząta `share-inbox-v1`: kasuje wpisy starsze niż godzina albo bez znacznika `x-at`
+ * (sprzed limitu w SW). Świeże zostają, bo mogą właśnie czekać na odbiór w innej karcie.
+ * Zwraca liczbę skasowanych wpisów.
+ */
+export async function sweepShareInbox(openCache: (name: string) => Promise<Cache> = (n) => caches.open(n), now = Date.now()): Promise<number> {
+  let removed = 0;
+  try {
+    const cache = await openCache(SHARE_INBOX_CACHE);
+    for (const req of await cache.keys()) {
+      const at = Number((await cache.match(req))?.headers.get("x-at"));
+      if (at > 0 && now - at < STALE_MS) continue;
+      if (await cache.delete(req)) removed++;
+    }
+  } catch {
+    // Cache Storage niedostępny albo zamknięty w trakcie — sprzątanie spróbuje przy następnym starcie.
+  }
+  return removed;
+}
 
 function str(v: unknown): string {
   return typeof v === "string" ? v : "";
@@ -72,7 +97,8 @@ export async function takeShareInbox(id: string, openCache: (name: string) => Pr
   if (title) params.set("title", title);
   if (text) params.set("text", text);
   if (url) params.set("url", url);
-  return { query: params.toString() ? `?${params}` : "", files };
+  const skipped = typeof meta.skipped === "number" && meta.skipped > 0 ? Math.floor(meta.skipped) : 0;
+  return { query: params.toString() ? `?${params}` : "", files, skipped };
 }
 
 export interface ImportedFiles {

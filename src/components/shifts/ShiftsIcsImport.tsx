@@ -1,3 +1,4 @@
+import { readTextFile } from "@/lib/readTextFile";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,8 @@ export function ShiftsIcsImport() {
   const input = useRef<HTMLInputElement>(null);
 
   async function pick(file: File) {
-    const text = await file.text();
+    let text: string;
+    try { text = await readTextFile(file); } catch (e) { toast.error((e as Error).message); return; }
     const isCsv = /\.csv$/i.test(file.name);
     const next = isCsv ? planShiftsFromCsv(text, data) : planShiftsFromIcs(text, data, typeId);
     if (!next) { toast.error("To nie jest karta czasu z Grafiku (brak kolumn „Data” i „Zmiana”)"); return; }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { takeShareInbox, importSharedFiles, isShareableAttachment, isShareableImage } from "./shareInbox";
+import { takeShareInbox, importSharedFiles, isShareableAttachment, isShareableImage, sweepShareInbox } from "./shareInbox";
 import type { ImageStore } from "./imageStore";
 
 const ID = "3f2c1a9e-7b4d-4e8a-9c21-5d6e7f8a9b0c";
@@ -10,8 +10,9 @@ function fakeCache(entries: Record<string, Response>) {
   const map = new Map(Object.entries(entries));
   return {
     map,
-    async match(key: string) { return map.get(key)?.clone(); },
-    async delete(key: string) { return map.delete(key); },
+    async match(key: string | Request) { return map.get(typeof key === "string" ? key : new URL(key.url).pathname)?.clone(); },
+    async delete(key: string | Request) { return map.delete(typeof key === "string" ? key : new URL(key.url).pathname); },
+    async keys() { return Array.from(map.keys(), (k) => new Request(`http://localhost${k}`)); },
   } as unknown as Cache & { map: Map<string, Response> };
 }
 
@@ -82,5 +83,25 @@ describe("importSharedFiles", () => {
     expect(isShareableAttachment("text/plain")).toBe(false);
     expect(isShareableImage("image/png")).toBe(true);
     expect(isShareableImage("application/pdf")).toBe(false);
+  });
+});
+
+describe("sweepShareInbox (Plan-nowy 1.10)", () => {
+  const NOW = 1_800_000_000_000;
+  const at = (ms: number) => ({ headers: { "x-at": String(ms) } });
+
+  it("kasuje wpisy starsze niż godzina i bez znacznika czasu, świeże zostawia", async () => {
+    const cache = fakeCache({
+      [`${base}/meta`]: new Response("{}", at(NOW - 5 * 60_000)),
+      [`${base}/f0`]: new Response("x", at(NOW - 5 * 60_000)),
+      "/share-inbox/stary/meta": new Response("{}", at(NOW - 2 * 60 * 60_000)),
+      "/share-inbox/sprzed-limitu/f31": new Response("x"),
+    });
+    expect(await sweepShareInbox(async () => cache, NOW)).toBe(2);
+    expect(Array.from(cache.map.keys()).sort()).toEqual([`${base}/f0`, `${base}/meta`]);
+  });
+
+  it("niedostępny Cache Storage → 0, bez błędu", async () => {
+    expect(await sweepShareInbox(async () => { throw new Error("brak"); }, NOW)).toBe(0);
   });
 });

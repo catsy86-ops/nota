@@ -81,3 +81,42 @@ test("udostępnione zdjęcie trafia do obrazów notatki, nie do załączników",
   // Obraz nie jest załącznikiem.
   await expect(card.getByText("zdjecie.png")).toHaveCount(0);
 });
+
+// Plan-nowy 1.8: formularz z obcej strony (nagłówek Origin innej domeny) nie może dopisać notatki
+// ani zostawić plików w cache. Obca strona to adres podstawiony przez `page.route`.
+test("POST na /share z obcej strony nie zapisuje niczego", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+  await page.goto("/");
+  await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+  await page.reload();
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  const origin = new URL(page.url()).origin;
+
+  await page.route("http://obca.test/**", (route) => route.fulfill({ contentType: "text/html", body: "<!doctype html><title>Obca</title><body></body>" }));
+  await page.goto("http://obca.test/");
+  await page.evaluate((target) => {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = target + "/share";
+    form.enctype = "multipart/form-data";
+    const input = document.createElement("input");
+    input.name = "title";
+    input.value = "Obcy formularz";
+    form.append(input);
+    const file = document.createElement("input");
+    file.type = "file";
+    file.name = "files";
+    const dt = new DataTransfer();
+    dt.items.add(new File(["%PDF-1.4 obcy"], "obcy.pdf", { type: "application/pdf" }));
+    file.files = dt.files;
+    form.append(file);
+    document.body.append(form);
+    form.submit();
+  }, origin);
+
+  await page.waitForURL((u) => u.origin === origin);
+  await expect(page.locator("main")).toBeVisible();
+  await expect(page.locator("[data-note-id]").filter({ hasText: "Obcy formularz" })).toHaveCount(0);
+  const left = await page.evaluate(async () => (await (await caches.open("share-inbox-v1")).keys()).map((r) => r.url));
+  expect(left.filter((u) => u.includes("/share-inbox/"))).toEqual([]);
+});

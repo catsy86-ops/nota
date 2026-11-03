@@ -5,7 +5,7 @@ import type { ComposerAction } from "@/components/AddNoteBar";
 import { whenNotesReady, type useNotes } from "@/hooks/useNotes";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
-import { takeShareInbox } from "@/lib/shareInbox";
+import { sweepShareInbox, takeShareInbox } from "@/lib/shareInbox";
 import { importNoteFiles, warnImportedFiles } from "@/lib/inboxFiles";
 import { yStudy } from "@/lib/study/data";
 
@@ -34,6 +34,8 @@ export function useLaunchIntents(deps: LaunchIntentsDeps) {
     const params = new URLSearchParams(window.location.search);
     const shared = parseShare(window.location.pathname, window.location.search);
     const inbox = params.get("inbox");
+    // Porzucone wpisy udostępnień z plikami (Plan-nowy 1.10) — po starcie, bez pośpiechu.
+    const sweep = window.setTimeout(() => void sweepShareInbox(), 10_000);
     if (inbox !== null && window.location.pathname === SHARE_PATH) {
       // Udostępnienie z plikami: service worker odłożył je pod `?inbox=<id>` (sw-share.js).
       // `0` = SW nie zdołał zapisać, nie ma czego odbierać.
@@ -44,6 +46,7 @@ export function useLaunchIntents(deps: LaunchIntentsDeps) {
           toast.error("Nie udało się odebrać udostępnionych plików", { description: "Spróbuj udostępnić jeszcze raz." });
           return;
         }
+        if (received.skipped > 0) toast.warning(received.skipped === 1 ? "Jeden plik pominięty" : `Pominięte pliki: ${received.skipped}`, { description: "Jedno udostępnienie przyjmuje do 30 plików, każdy do 10 MB." });
         const imported = await importNoteFiles(received.files);
         const text = parseShare(SHARE_PATH, received.query) ?? { title: "", content: "" };
         if (!text.title && !text.content && imported.images.length === 0 && imported.attachments.length === 0) {
@@ -91,10 +94,23 @@ export function useLaunchIntents(deps: LaunchIntentsDeps) {
       // Adres czyścimy od razu — odświeżenie nie ma co powtarzać; `claimShare`
       // łapie jeszcze przypadek odświeżenia, zanim router zdążył zamienić wpis.
       navigate("/", { replace: true });
+      // Adres `/share?…` może otworzyć każda strona (link, zakładka-clipper), więc zapis czeka na „Zapisz”:
+      // obca strona nie dopisze po cichu notatki, która rozeszłaby się synchronizacją (Plan-nowy 1.8).
       if (claimShare(shared)) {
         void whenNotesReady().then(() => {
-          const id = add(shared.title, shared.content);
-          toast.success("Zapisano w NOTKACH", { action: { label: "Otwórz", onClick: () => open(id) } });
+          toast("Zapisać w NOTKACH?", {
+            id: "share-confirm",
+            duration: 30_000,
+            description: shared.title || shared.content.slice(0, 120),
+            action: {
+              label: "Zapisz",
+              onClick: () => {
+                const id = add(shared.title, shared.content);
+                toast.success("Zapisano w NOTKACH", { action: { label: "Otwórz", onClick: () => open(id) } });
+              },
+            },
+            cancel: { label: "Pomiń", onClick: () => {} },
+          });
         });
       }
     } else if (window.location.pathname === SHARE_PATH) {
@@ -113,5 +129,6 @@ export function useLaunchIntents(deps: LaunchIntentsDeps) {
         input?.focus();
       }, 300);
     }
+    return () => window.clearTimeout(sweep);
   }, [latest]);
 }

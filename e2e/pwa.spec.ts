@@ -66,6 +66,7 @@ test("/share (Web Share Target) renders the app shell offline, not offline.html"
   await context.setOffline(true);
   try {
     await page.goto("/share?title=Zebranie%20offline&text=tresc");
+    await page.getByRole("button", { name: "Zapisz", exact: true }).click();
     await expect(page.getByText("Zapisano w NOTKACH")).toBeVisible();
     await expect(page.locator("[data-note-id]").filter({ hasText: "Zebranie offline" })).toHaveCount(1);
   } finally {

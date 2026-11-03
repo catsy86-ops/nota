@@ -60,9 +60,9 @@
 | 1.5 | **Zapas paczki:** co najmniej 20 KB z powrotem według §10.4, w kolejności: `exportNotes` dynamicznie, zawężenie `vendor-radix`, łańcuch Grafiku, łańcuch Pracy (ten z testem GC obrazów). **Uwaga:** zapas precache to tylko około 18 KiB. | `vite.config.ts`, importy | 2 | M |
 | 1.6 | ✅ **Gałęzie:** lokalny `master` = `origin/master` (083bb5f). Usunięte scalone `ui/*` i 5 × `worktree-agent-*`. Zostają `feat/checklist-wklejanie-konwersja` i `wip/d2-react-compiler` (po 1 niescalonym commicie) oraz `wip/matryca-hydraulika` (lokalnie inna niż zdalna). W `.claude/worktrees/` leżą 4 katalogi bez `.git` (resztki, jeden blokowany przez OneDrive) do ręcznego usunięcia. | git | 2 | S |
 | 1.7 | ✅ **CLAUDE.md:** próg „394 KB” jest nieaktualny, obowiązuje `e2e/bundle.spec.ts` (500 KB). | `CLAUDE.md` | 1 | S |
-| 1.8 | **Bezpieczeństwo: `/share` z obcej strony (§10.3 p. 2).** SW odrzuca POST z `Sec-Fetch-Site` innym niż `none` i `same-origin`. GET `/share?…` pyta „Zapisać?” zamiast zapisywać od razu. Przed kodem `security-reviewer`. | `public/sw-share.js`, `useLaunchIntents.ts` | 3 | S |
+| 1.8 | ✅ **Bezpieczeństwo: `/share` z obcej strony (§10.3 p. 2).** Wykonanie odbiega od raportu, bo `Sec-Fetch-Site` nie dochodzi do SW (sprawdzone w e2e). SW odrzuca POST z obcym `Origin`, a przepuszcza `null` i brak nagłówka. GET pyta „Zapisać w NOTKACH?”. **Zostaje:** luka dla nieprzezroczystego originu (`null`) i sprawdzenie na telefonie, jaki `Origin` wysyła systemowe „Udostępnij” (Cykl 4). | `public/sw-share.js`, `useLaunchIntents.ts` | 3 | S |
 | 1.9 | ✅ **Odporność Grafiku na złe dane od peera (§10.3 p. 4):** filtrować przez `isShiftType` / `isPattern` przed sortowaniem. Test Vitest z `null` w mapie. | `src/lib/shifts/yShifts.ts:81,115` | 3 | S |
-| 1.10 | **Limity plików:** `sw-share.js` przycina do 30 plików i 10 MB na plik, przy starcie czyści stare wpisy inboxu. `file.size` sprawdzany przed `text()` w trzech importach (§10.3 p. 5 i 7). | SW, importy | 2 | S |
+| 1.10 | ✅ **Limity plików:** `sw-share.js` przycina do 30 plików i 10 MB na plik, przy starcie czyści stare wpisy inboxu. `file.size` sprawdzany przed `text()` w trzech importach (§10.3 p. 5 i 7). | SW, importy | 2 | S |
 | 1.11 | **CSP egzekwowane (§10.3 p. 1):** `Content-Security-Policy` zamiast `-Report-Only` w `netlify.toml` i `vercel.json`. Najpierw e2e na buildzie z nagłówkiem, bo hostingu jeszcze nie ma. | konfiguracja | 2 | S |
 
 ## 4. Cykl 2 — dokończyć działy bez decyzji (apetyt: 1–2 tygodnie)
@@ -98,7 +98,8 @@
   - udostępnianie 5.3;
   - prawdziwy rysunek DWG w Analizatorze;
   - Terminy 3.2: sygnał na ekranie blokady;
-  - Skrzynka 2.5: wklejenie zdjęcia z galerii.
+  - Skrzynka 2.5: wklejenie zdjęcia z galerii;
+  - 1.8: „Udostępnij” zdjęcia i PDF-u z systemu nadal działa (nagłówek `Origin` w SW).
 - **Wdrożenie serwera push i przekaźnika:** po decyzji o hostingu, z `security-reviewer` przed uruchomieniem.
 
 ## 7. Decyzje właściciela

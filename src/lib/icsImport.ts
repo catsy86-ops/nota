@@ -1,3 +1,4 @@
+import { readTextFile } from "./readTextFile";
 import type { Note } from "@/hooks/useNotes";
 import { yjsStore } from "@/lib/yjsStore";
 import { DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
@@ -146,7 +147,7 @@ export async function importIcsFiles(files: File[], existing: readonly Note[]): 
   let skipped = 0;
   const known = [...existing];
   for (const file of files) {
-    const parsed = parseIcs(await file.text());
+    const parsed = parseIcs(await readTextFile(file));
     skipped += parsed.skipped;
     const n = importIcsEvents(parsed.events, known);
     created += n;

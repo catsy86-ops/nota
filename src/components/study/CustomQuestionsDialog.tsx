@@ -1,3 +1,4 @@
+import { readTextFile } from "@/lib/readTextFile";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
@@ -17,7 +18,9 @@ import { deleteCustom } from "@/lib/study/customActions";
 
 /** Import z .md (P4.5): każde poprawne pytanie idzie przez `addCustomQuestion` (walidacja, limit); błędy z numerami wierszy. */
 async function importQuestionsMd(file: File, topic: string) {
-  const { questions, errors } = parseQuestionsMd(await file.text());
+  let text: string;
+  try { text = await readTextFile(file); } catch (e) { toast.error((e as Error).message); return; }
+  const { questions, errors } = parseQuestionsMd(text);
   let added = 0;
   for (const q of questions) {
     if (addCustomQuestion({ topic, question: q.question, correct: q.correct, wrong: q.wrong, explanation: q.explanation })) added += 1;
