@@ -1,5 +1,6 @@
 import type { Note } from "@/hooks/useNotes";
 import { ruleOf, seriesDay, weekdaysOf, type RepeatRule } from "@/lib/reminderRepeat";
+import { isLeadMinutes, leadPhrase } from "@/lib/reminderLead";
 
 /**
  * Eksport terminów do iCalendar (RFC 5545).
@@ -143,8 +144,19 @@ function vevent(note: Note, now: number, start: number, opts: { allDay: boolean;
     // Całodniowy: alarm o godzinie terminu (9:00), a nie w chwili wybicia dnia.
     opts.allDay ? `TRIGGER;VALUE=DATE-TIME:${formatLocal(start)}` : "TRIGGER:PT0M",
     "END:VALARM",
-    "END:VEVENT",
   );
+  // T 3.2: wcześniejszy sygnał jako drugi alarm. Odłożone wystąpienie (RECURRENCE-ID) go nie ma, jak w aplikacji.
+  if (isLeadMinutes(note.reminderLead) && opts.recurrenceId === undefined) {
+    lines.push(
+      "BEGIN:VALARM",
+      "ACTION:DISPLAY",
+      `DESCRIPTION:${escapeText(`${leadPhrase(note.reminderLead)}: ${titleOf(note)}`)}`,
+      // Całodniowy liczy się od 9:00 (termin), nie od północy (DTSTART jako data).
+      opts.allDay ? `TRIGGER;VALUE=DATE-TIME:${formatLocal(start - note.reminderLead * 60_000)}` : `TRIGGER:-PT${note.reminderLead}M`,
+      "END:VALARM",
+    );
+  }
+  lines.push("END:VEVENT");
   return lines;
 }
 

@@ -545,13 +545,14 @@ const Index = () => {
     const extras = args.length > 10 ? (args[10] as ComposerExtras | undefined) : undefined;
     const id = handleAddNoteGlow(...(args.slice(0, 10) as Parameters<typeof addNote>));
     // Seria przypomnienia i rodzic nie mieszczą się w `addNote` — dopisujemy je zaraz po utworzeniu.
-    if (extras?.reminderRepeat || extras?.parentId || extras?.reminderAllDay) {
+    if (extras?.reminderRepeat || extras?.parentId || extras?.reminderAllDay || extras?.reminderLead) {
       updateNote(id, {
         ...(extras.reminderRepeat ? { reminderRepeat: extras.reminderRepeat } : {}),
         ...(extras.reminderRule ? { reminderRule: extras.reminderRule } : {}),
         ...(extras.reminderRepeatUntil !== undefined ? { reminderRepeatUntil: extras.reminderRepeatUntil } : {}),
         ...(extras.parentId ? { parentId: extras.parentId } : {}),
         ...(extras.reminderAllDay ? { reminderAllDay: true } : {}),
+        ...(extras.reminderLead ? { reminderLead: extras.reminderLead } : {}),
       });
     }
     // Q1: z terminem toast mówi, kiedy zadzwoni; „Cofnij” działa tak samo jak przy zwykłej notatce.

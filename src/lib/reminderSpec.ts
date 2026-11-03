@@ -1,3 +1,4 @@
+import { isLeadMinutes } from "./reminderLead";
 import { fallbackRepeat, weekdaysOf, type RepeatKind, type RepeatRule, type ReminderRepeat } from "./reminderRepeat";
 
 /**
@@ -15,7 +16,7 @@ import { fallbackRepeat, weekdaysOf, type RepeatKind, type RepeatRule, type Remi
 const REPEATS: readonly ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 const RULE_KINDS: readonly RepeatKind[] = [...REPEATS, "workdays", "biweekly", "yearly", "weekdays", "every"];
 
-export const REMINDER_FIELDS = ["reminder", "reminderRepeat", "reminderRule", "reminderDay", "reminderRepeatUntil", "reminderAllDay", "reminderBase"] as const;
+export const REMINDER_FIELDS = ["reminder", "reminderRepeat", "reminderRule", "reminderDay", "reminderRepeatUntil", "reminderAllDay", "reminderBase", "reminderLead"] as const;
 
 export interface ReminderState {
   reminder: number | null;
@@ -35,6 +36,11 @@ export interface ReminderState {
    * nie przesuwa całej serii. Zapis `reminder` bez tego pola go czyści (`mergeSpec`).
    */
   reminderBase?: number;
+  /**
+   * Wcześniejsze przypomnienie (Terminy 3.2): drugi sygnał tyle minut przed terminem. Tylko w `reminderSpec` —
+   * starsza wersja go nie zna i przypomina jak dawniej, o samej porze terminu.
+   */
+  reminderLead?: number;
 }
 
 /** Zapisany kształt: bez pól `undefined`, żeby Yjs i JSON się zgadzały. */
@@ -50,6 +56,7 @@ export function specOf(state: ReminderState): ReminderSpec {
   // Flaga zapisana tylko gdy prawdziwa: brak pola = zwykły termin z godziną.
   if (state.reminderAllDay === true) out.reminderAllDay = true;
   if (state.reminderBase !== undefined) out.reminderBase = state.reminderBase;
+  if (state.reminderLead !== undefined) out.reminderLead = state.reminderLead;
   return out;
 }
 
@@ -67,6 +74,8 @@ export function mergeSpec(current: ReminderState, updates: Partial<ReminderState
   else if ("reminderRepeat" in updates) next.reminderRule = undefined;
   // Nowy termin bez jawnego `reminderBase` to nowy termin serii — odłożenie przestaje obowiązywać.
   if ("reminder" in updates && !("reminderBase" in updates)) next.reminderBase = undefined;
+  // Usunięty termin nie zostawia wcześniejszego sygnału dla następnego, ustawianego od zera.
+  if ("reminder" in updates && updates.reminder === null && !("reminderLead" in updates)) next.reminderLead = undefined;
   return specOf(next as unknown as ReminderState);
 }
 
@@ -83,6 +92,7 @@ export function readSpec(raw: unknown): ReminderSpec | null {
   if (typeof r.reminderRepeatUntil === "number" && Number.isFinite(r.reminderRepeatUntil)) spec.reminderRepeatUntil = r.reminderRepeatUntil;
   if (r.reminderAllDay === true) spec.reminderAllDay = true;
   if (typeof r.reminderBase === "number" && Number.isFinite(r.reminderBase)) spec.reminderBase = r.reminderBase;
+  if (isLeadMinutes(r.reminderLead)) spec.reminderLead = r.reminderLead;
   return spec;
 }
 

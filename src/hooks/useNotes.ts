@@ -71,6 +71,8 @@ export interface Note {
   reminderAllDay?: boolean;
   /** Odłożone wystąpienie serii: termin serii, który `reminder` zastępuje (patrz `reminderSpec.ts`). */
   reminderBase?: number;
+  /** Wcześniejsze przypomnienie w minutach przed terminem (Terminy 3.2, `lib/reminderLead.ts`). */
+  reminderLead?: number;
   /** Godzina serii w minutach od północy (T 1.2): kotwica, żeby seria nie dryfowała po zmianie czasu. */
   reminderTime?: number;
   /** S-1 (Skrzynka „Odłóż”): notatka nie jest w Skrzynce do tej chwili (ms). Brak lub minęła = w Skrzynce. */

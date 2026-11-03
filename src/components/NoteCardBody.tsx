@@ -113,7 +113,8 @@ export function NoteCardBody({
                     reminderRule={note.reminderRule}
                     reminderRepeatUntil={note.reminderRepeatUntil}
                     reminderAllDay={note.reminderAllDay}
-                    onSet={(r, repeat, until, allDay) => onUpdate(note.id, { reminder: r, ...repeatUpdate(repeat), reminderRepeatUntil: until, reminderAllDay: allDay })}
+                    reminderLead={note.reminderLead}
+                    onSet={(r, repeat, until, allDay, lead) => onUpdate(note.id, { reminder: r, ...repeatUpdate(repeat), reminderRepeatUntil: until, reminderAllDay: allDay, reminderLead: lead })}
                     trigger={<ReminderBadge interactive reminder={note.reminder} reminderRepeat={note.reminderRepeat} reminderAllDay={note.reminderAllDay} />}
                   />
                 ) : (

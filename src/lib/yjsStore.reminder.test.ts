@@ -69,3 +69,20 @@ describe("przypomnienie na cały dzień (reminderAllDay w reminderSpec)", () => 
     expect(b.projectNotes().find((n) => n.id === "r1")?.reminderBase).toBeUndefined();
   });
 });
+
+describe("wcześniejsze przypomnienie (reminderLead w reminderSpec, T 3.2)", () => {
+  it("zapisuje się tylko w reminderSpec, wraca po synchronizacji, zostaje przy zmianie terminu i gaśnie z terminem", () => {
+    const a = createYjsStore(`lead-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`lead-b-${crypto.randomUUID()}`);
+    a.upsertNote(note({ reminder: 1000, reminderLead: 60 }));
+    expect(a.doc.getMap("notes").get("r1")).toBeInstanceOf(Y.Map);
+    expect((a.doc.getMap("notes").get("r1") as Y.Map<unknown>).has("reminderLead")).toBe(false);
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    expect(b.projectNotes().find((n) => n.id === "r1")!.reminderLead).toBe(60);
+
+    a.patchNote("r1", { reminder: 2000 });
+    expect(a.projectNotes().find((n) => n.id === "r1")!.reminderLead).toBe(60);
+    a.patchNote("r1", { reminder: null });
+    expect(a.projectNotes().find((n) => n.id === "r1")!.reminderLead).toBeUndefined();
+  });
+});

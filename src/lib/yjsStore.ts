@@ -276,7 +276,7 @@ function yNoteFromPlain(note: Note): YNote {
   if (legacyRepeat !== undefined) y.set("reminderRepeat", legacyRepeat);
   if (note.reminderDay !== undefined) y.set("reminderDay", note.reminderDay);
   if (note.reminderRepeatUntil !== undefined) y.set("reminderRepeatUntil", note.reminderRepeatUntil);
-  y.set("reminderSpec", specOf({ reminder: note.reminder, reminderRepeat: legacyRepeat, reminderRule: note.reminderRule, reminderDay: note.reminderDay, reminderRepeatUntil: note.reminderRepeatUntil, reminderAllDay: note.reminderAllDay, reminderBase: note.reminderBase }));
+  y.set("reminderSpec", specOf({ reminder: note.reminder, reminderRepeat: legacyRepeat, reminderRule: note.reminderRule, reminderDay: note.reminderDay, reminderRepeatUntil: note.reminderRepeatUntil, reminderAllDay: note.reminderAllDay, reminderBase: note.reminderBase, reminderLead: note.reminderLead }));
   y.set("priority", note.priority);
   if (note.dailyDate !== undefined) y.set("dailyDate", note.dailyDate);
   if (note.reminderTime !== undefined) y.set("reminderTime", note.reminderTime);
@@ -344,6 +344,7 @@ function plainFromYNote(id: string, y: YNote): Note {
     reminderRepeatUntil: rem.reminderRepeatUntil,
     reminderAllDay: rem.reminderAllDay,
     reminderBase: rem.reminderBase,
+    ...(rem.reminderLead !== undefined ? { reminderLead: rem.reminderLead } : {}),
     priority: safeEnum(y.get("priority"), PRIORITIES, "none"),
     folderId: safeNullableString(y.get("folderId"), LIM.id),
     order: safeNumber(y.get("order")),

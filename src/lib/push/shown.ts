@@ -10,6 +10,8 @@ const SHOWN_MAX = 200;
 
 export const pushKey = {
   note: (id: string, at: number) => `n:${id}:${at}`,
+  /** Wcześniejszy sygnał terminu `at` (T 3.2) — ten sam prefiks `n:id`, więc ta sama kategoria i ten sam `tag`. */
+  noteLead: (id: string, at: number) => `n:${id}:${at}:lead`,
   evening: (forKey: string) => `e:${forKey}`,
   shiftCheck: (dayKey: string) => `z:${dayKey}`,
   shiftAlarm: (dayKey: string) => `a:${dayKey}`,

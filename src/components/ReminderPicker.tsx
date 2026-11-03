@@ -17,6 +17,7 @@ import { QuickReminderInput } from "@/components/QuickReminderInput";
 import { useReminderPassed } from "@/hooks/useReminderPassed";
 import { useShifts, type ShiftData } from "@/lib/shifts";
 import { shiftPresets } from "@/lib/reminderShiftPresets";
+import { LEAD_OPTIONS, leadShort } from "@/lib/reminderLead";
 
 interface ReminderPickerProps {
   reminder: number | null;
@@ -26,8 +27,13 @@ interface ReminderPickerProps {
   reminderRepeatUntil?: number;
   /** Cały dzień: termin to 9:00 wybranego dnia, bez pola godziny. */
   reminderAllDay?: boolean;
-  /** `until` — koniec serii (koniec dnia) albo `undefined` = bez końca. `allDay` tylko gdy włączony. */
-  onSet: (timestamp: number | null, repeat: RepeatInput, until?: number, allDay?: boolean) => void;
+  /** Wcześniejszy sygnał w minutach (T 3.2). */
+  reminderLead?: number;
+  /**
+   * `until` — koniec serii (koniec dnia) albo `undefined` = bez końca. `allDay` tylko gdy włączony.
+   * `lead` — minuty wcześniejszego sygnału albo `undefined` = bez niego.
+   */
+  onSet: (timestamp: number | null, repeat: RepeatInput, until?: number, allDay?: boolean, lead?: number) => void;
   /** Własny przycisk otwierający (np. w pasku nowej notatki); domyślnie ikona dzwonka z kafla. */
   trigger?: ReactNode;
   /** Każda zmiana (np. z akcji „Przypomnienie” w kompozytorze) otwiera okno; pierwsze renderowanie nie otwiera. */
@@ -107,13 +113,14 @@ function ReminderSurface({ open, onOpenChange, trigger, children }: { open: bool
   );
 }
 
-export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminderRepeatUntil, reminderAllDay, onSet, trigger, openSignal }: ReminderPickerProps) {
+export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminderRepeatUntil, reminderAllDay, reminderLead, onSet, trigger, openSignal }: ReminderPickerProps) {
   const [open, setOpen] = useState(false);
   const uid = useId();
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
   const [time, setTime] = useState(reminder ? toTimeInputValue(reminder) : readLastReminderTime());
   const [repeat, setRepeat] = useState<RepeatRule>(reminderRule ?? { kind: reminderRepeat ?? "none" });
   const [allDay, setAllDay] = useState(reminderAllDay === true);
+  const [lead, setLead] = useState<number | undefined>(reminderLead);
   const [untilText, setUntilText] = useState(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
   const shifts = useShifts();
   // F2.2: na telefonie kalendarz pokazuje się po „Wybierz…” albo gdy wybrano dzień spoza chipów.
@@ -133,6 +140,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
       setTime(reminder ? toTimeInputValue(reminder) : readLastReminderTime());
       setRepeat(reminderRule ?? { kind: reminderRepeat ?? "none" });
       setAllDay(reminderAllDay === true);
+      setLead(reminderLead);
       setUntilText(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
       setPickingDate(false);
     }
@@ -176,15 +184,15 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
     if (timestamp === null || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
     if (!allDay) writeLastReminderTime(time);
-    onSet(timestamp, repeat, until, allDay || undefined);
+    onSet(timestamp, repeat, until, allDay || undefined, lead);
     setOpen(false);
-  }, [saveAfterTyping, timestamp, untilTooEarly, repeat, until, allDay, time, onSet]);
+  }, [saveAfterTyping, timestamp, untilTooEarly, repeat, until, allDay, lead, time, onSet]);
 
   function handleSave() {
     if (timestamp === null || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
     if (!allDay) writeLastReminderTime(time);
-    onSet(timestamp, repeat, until, allDay || undefined);
+    onSet(timestamp, repeat, until, allDay || undefined, lead);
     setOpen(false);
   }
 
@@ -195,6 +203,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
     setTime(DEFAULT_REMINDER_TIME);
     setRepeat({ kind: "none" });
     setAllDay(false);
+    setLead(undefined);
     setOpen(false);
   }
 
@@ -315,6 +324,16 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
             {untilTooEarly ? "Koniec serii musi być po pierwszym terminie." : untilText ? "Ostatni termin serii najpóźniej tego dnia." : "Puste pole — seria bez końca."}
           </p>
         )}
+        {/* T 3.2: drugi sygnał przed terminem; termin dalej dzwoni o swojej porze. */}
+        <div role="group" aria-label="Przypomnij wcześniej" className="flex flex-wrap items-center gap-1.5">
+          <span aria-hidden className="text-xs text-muted-foreground">Wcześniej:</span>
+          <button type="button" aria-pressed={lead === undefined} onClick={() => setLead(undefined)} className={chipClass}>Nie</button>
+          {LEAD_OPTIONS.map((o) => (
+            <button key={o.min} type="button" aria-pressed={lead === o.min} onClick={() => setLead(o.min)} className={chipClass}>
+              {o.label}
+            </button>
+          ))}
+        </div>
         {pastTime && (
           <p aria-live="polite" className="text-2xs text-destructive-ink">Ten termin jest w przeszłości — przypomnienie odezwie się przy najbliższym otwarciu aplikacji.</p>
         )}
@@ -324,7 +343,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
         {/* Wynik przed zapisem: to samo co „Zapiszę” wyżej, ale tuż nad przyciskiem, który to zapisze. */}
         <p aria-live="polite" data-testid="reminder-preview" className="rounded-field border border-dashed border-border/70 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
           {timestamp !== null
-            ? <>Zapiszę: <span className="font-semibold text-foreground">{formatReminderShort(timestamp)}</span>{allDay ? " · cały dzień" : ""}</>
+            ? <>Zapiszę: <span className="font-semibold text-foreground">{formatReminderShort(timestamp)}</span>{allDay ? " · cały dzień" : ""}{lead !== undefined ? ` · sygnał ${leadShort(lead)}` : ""}</>
             : "Wybierz dzień i godzinę."}
         </p>
         <div className="flex gap-2">

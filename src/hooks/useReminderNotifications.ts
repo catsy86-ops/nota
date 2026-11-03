@@ -14,6 +14,7 @@ import { loadFired, saveFired, reconcileFired } from "@/lib/firedReminders";
 import { showSystemNotification } from "@/lib/systemNotification";
 import { pushKey } from "@/lib/push/shown";
 import { parsePendingAction, withoutActionParam } from "@/lib/notificationAction";
+import { leadKey, leadPhrase, loadFiredLeads, planLeadReminders, saveFiredLeads } from "@/lib/reminderLead";
 
 /**
  * „Gotowe” na przypomnieniu. Seria przechodzi do następnego wystąpienia (`doneTarget`); koniec serii
@@ -59,6 +60,8 @@ export function useReminderNotifications(
   trashedRef.current = trashed;
   // id → termin już obsłużony (`planDueReminders`), żeby opóźniony zapis nie odpalił go drugi raz.
   const handledRef = useRef(new Map<string, number>());
+  // Wcześniejsze sygnały już pokazane (T 3.2): `id:termin`, żeby każde wystąpienie serii dostało swój.
+  const firedLeadsRef = useRef(loadFiredLeads());
 
   // Przyciski akcji z powiadomienia systemowego (public/sw-notifications.js).
   // T 1.5: odłożenie i „Gotowe” działają też na prywatnej notatce — zmieniają tylko pola terminu
@@ -124,6 +127,30 @@ export function useReminderNotifications(
       const steps = planDueReminders(notes, fired, now, handledRef.current);
       const due = steps.map((s) => s.note);
       const mobile = window.matchMedia("(max-width: 767px)").matches;
+
+      // T 3.2: „Za godzinę: …” przed terminem. Sam termin i tak zadzwoni o swojej porze (niżej).
+      const leads = planLeadReminders(notes, firedLeadsRef.current, now);
+      for (const n of leads) {
+        firedLeadsRef.current.add(leadKey(n.id, n.reminder!));
+        const name = n.locked ? "przypomnienie z notatki prywatnej" : n.title.trim() || "Bez tytułu";
+        const title = `${leadPhrase(n.reminderLead!)}: ${name}`;
+        toast(title, {
+          id: `reminder-lead-${n.id}`,
+          description: formatReminderShort(n.reminder!),
+          duration: 15000,
+          action: onOpenRef.current ? { label: "Otwórz", onClick: () => onOpenRef.current?.(n.id) } : undefined,
+          position: mobile ? "top-center" : undefined,
+        });
+        // Ten sam `tag` co termin: powiadomienie o samej porze zastąpi wcześniejsze, zamiast dokładać drugie.
+        showSystemNotification(title, {
+          body: formatReminderShort(n.reminder!),
+          tag: n.id,
+          key: pushKey.noteLead(n.id, n.reminder!),
+          url: notePath(n.id),
+          data: { noteId: n.id },
+        });
+      }
+      if (leads.length > 0 || firedLeadsRef.current.size > 0) saveFiredLeads(firedLeadsRef.current, now, leads.length > 0);
       // Stos kilku dymków u góry zasłaniał nagłówek i treść na każdej trasie — przy ≥ 2 jeden dymek.
       const grouped = due.length >= 2;
       if (grouped) {

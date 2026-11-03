@@ -15,6 +15,7 @@ import type { ServiceCall } from "@/lib/study/service";
 import type { SiteHours } from "@/lib/study/siteHours";
 import type { JournalEntry } from "@/lib/study/yStudy";
 import { notePath } from "@/lib/viewRoute";
+import { isLeadMinutes, leadPhrase } from "@/lib/reminderLead";
 import { pushKey } from "./shown";
 
 /**
@@ -72,6 +73,9 @@ export interface PushNote {
   reminderRepeat?: ReminderRepeat;
   reminderRepeatUntil?: number;
   reminderTime?: number;
+  /** Wcześniejszy sygnał (T 3.2) w minutach; odłożone wystąpienie serii (`reminderBase`) go nie ma. */
+  reminderLead?: number;
+  reminderBase?: number;
   locked?: boolean;
 }
 
@@ -120,10 +124,16 @@ function noteItems(notes: readonly PushNote[], now: number, end: number): PushIt
     const title = n.locked ? "Przypomnienie z notatki prywatnej" : clip(n.title.trim() || firstLine(n.content) || "Przypomnienie", 120);
     const body = n.locked ? "Otwórz notki i odblokuj skarbiec, aby zobaczyć notatkę." : "Przypomnienie z notki";
     const repeat = ruleOf(n).kind;
+    const lead = isLeadMinutes(n.reminderLead) ? n.reminderLead : 0;
     let at: number | null = n.reminder;
     // Seria: kolejne terminy też — strona przesuwa `reminder` dopiero, gdy jest otwarta.
     for (let i = 0; at !== null && at <= end && i < 60; i++) {
       if (at > now) out.push({ key: pushKey.note(n.id, at), at, title, body, url: notePath(n.id), snooze: true });
+      // T 3.2: osobny wpis przed terminem. Bez „Odłóż” — odkłada się sam termin, nie zapowiedź.
+      const leadMs = lead > 0 && !(i === 0 && n.reminderBase !== undefined) ? at - lead * 60_000 : null;
+      if (leadMs !== null && leadMs > now) {
+        out.push({ key: pushKey.noteLead(n.id, at), at: leadMs, title: clip(`${leadPhrase(lead)}: ${title}`, 120), body, url: notePath(n.id) });
+      }
       if (repeat === "none") break;
       at = nextOccurrence(n, at);
     }

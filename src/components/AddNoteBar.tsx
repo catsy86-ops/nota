@@ -28,7 +28,8 @@ import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { FormatToolbar } from "./MarkdownRenderer";
 import { PriorityPicker } from "./PriorityPicker";
 import type { NotePriority } from "@/lib/notePriority";
-import { applyCapture, describeToken, extractCapture, type CaptureToken } from "@/lib/quickCapture";
+import { applyCapture, extractCapture, type CaptureToken } from "@/lib/quickCapture";
+import { CaptureChips, toggledSet } from "./CaptureChips";
 import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste";
 import { ReminderPicker } from "./ReminderPicker";
 import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
@@ -52,6 +53,7 @@ export type ComposerAction = "note" | "list" | "dictate" | "image" | "draw" | "r
 /** Pola, których nie niesie lista pozycyjna `onAdd` — seria przypomnienia i rodzic. */
 export interface ComposerExtras {
   reminderAllDay?: boolean;
+  reminderLead?: number;
   reminderRepeat?: ReminderRepeat;
   reminderRule?: RepeatRule;
   reminderRepeatUntil?: number;
@@ -182,6 +184,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   const [reminderUntil, setReminderUntil] = useState<number | undefined>(draft0?.reminderRepeatUntil);
   // 2.5: „Cały dzień” z wyboru terminu (termin 9:00 tego dnia, pokazywany jako sama data).
   const [reminderAllDay, setReminderAllDay] = useState(false);
+  const [reminderLead, setReminderLead] = useState<number | undefined>(undefined);
   const [reminderOpenSignal, setReminderOpenSignal] = useState(0);
   const [parentId, setParentId] = useState<string | null>(draft0?.parentId ?? null);
   const [newLabel, setNewLabel] = useState("");
@@ -211,7 +214,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   }));
 
   const reset = useCallback(() => {
-    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderRepeat("none"); setReminderRule(undefined); setReminderUntil(undefined); setReminderAllDay(false); setParentId(null); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setRestored(false); setExpanded(false);
+    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderRepeat("none"); setReminderRule(undefined); setReminderUntil(undefined); setReminderAllDay(false); setReminderLead(undefined); setParentId(null); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setRestored(false); setExpanded(false);
   }, []);
 
   // Lista robocza: odłożone szkice nowych notatek (wznawiane z rzędu nad tytułem).
@@ -313,12 +316,13 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
       const extras: ComposerExtras = {
         ...(remindAt !== null && reminderRepeat !== "none" ? { reminderRepeat, ...(reminderRule ? { reminderRule } : {}), ...(reminderUntil !== undefined ? { reminderRepeatUntil: reminderUntil } : {}) } : {}),
         ...(remindAt !== null && reminderAllDay ? { reminderAllDay: true } : {}),
+        ...(remindAt !== null && reminderLead !== undefined ? { reminderLead } : {}),
         ...(parentId && (!parentOptions || parentOptions.some((o) => o.id === parentId)) ? { parentId } : {}),
       };
       onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments, extras);
     }
     reset();
-  }, [draftKey, title, content, images, attachments, checklist, color, labels, reminder, reminderRepeat, reminderRule, reminderUntil, reminderAllDay, parentId, parentOptions, priority, capture, ignored, onAdd, onCreateLabel, reset]);
+  }, [draftKey, title, content, images, attachments, checklist, color, labels, reminder, reminderRepeat, reminderRule, reminderUntil, reminderAllDay, reminderLead, parentId, parentOptions, priority, capture, ignored, onAdd, onCreateLabel, reset]);
 
   const handleClose = commit;
 
@@ -391,11 +395,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   }
 
   function toggleIgnored(key: string) {
-    setIgnored((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
-      return next;
-    });
+    setIgnored((prev) => toggledSet(prev, key));
   }
 
   /** Sam URL wklejony w pusty szkic: tytuł z domeny (bez sieci), adres w treści. */
@@ -567,29 +567,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             </div>
             {content.length > 0 && <EditorStats textareaRef={textareaRef} value={content} className="block text-2xs text-muted-foreground" />}
 
-            {capture.length > 0 && (
-              <div role="group" aria-label="Rozpoznane w tekście" aria-live="polite" className="flex flex-wrap items-center gap-1.5">
-                {capture.map((t) => {
-                  const off = ignored.has(t.key);
-                  const d = describeToken(t, (date) => formatReminderShort(date.getTime()));
-                  const Icon = t.kind === "label" ? Hash : t.kind === "folder" ? Folder : t.kind === "priority" ? Flag : Bell;
-                  return (
-                    <button key={`${t.field}-${t.start}-${t.key}`} type="button"
-                      aria-label={off ? `Przywróć: ${d.aria}` : `Zignoruj: ${d.aria}`}
-                      title={off ? "Przywróć rozpoznanie" : "Zignoruj — tekst zostanie bez zmian"}
-                      onClick={() => toggleIgnored(t.key)}
-                      onKeyDown={(e) => { if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); toggleIgnored(t.key); } }}
-                      className={cn("pressable inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-primary",
-                        off ? "border-border text-muted-foreground line-through" : "border-primary/40 bg-primary/10 text-primary-ink hover:bg-primary/15")}>
-                      <Icon className="w-3 h-3 shrink-0" aria-hidden />
-                      <span>{d.label}</span>
-                      {t.kind === "label" && t.isNew && !off && <span className="text-2xs opacity-70">nowa</span>}
-                      <X className="w-3 h-3 shrink-0 opacity-70" aria-hidden />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <CaptureChips tokens={capture} ignored={ignored} onToggle={toggleIgnored} />
 
             {/* Szablony tylko nad pustym szkicem — wybór tworzy osobną notatkę, więc nic by nie zastąpił. */}
             {templates && isDraftEmpty && templates(reset)}
@@ -640,7 +618,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                 <Bell className="w-3 h-3" />
                 {formatReminderShort(reminder)}
                 {reminderRepeat !== "none" && <Repeat className="w-3 h-3" aria-label="Powtarzane" />}
-                <button onClick={() => { setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setReminderAllDay(false); }} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground coarse:inline-flex coarse:h-11 coarse:w-11 coarse:items-center coarse:justify-center">×</button>
+                <button onClick={() => { setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setReminderAllDay(false); setReminderLead(undefined); }} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground coarse:inline-flex coarse:h-11 coarse:w-11 coarse:items-center coarse:justify-center">×</button>
               </div>
             )}
 
@@ -721,7 +699,8 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                   reminderRule={reminderRule}
                   reminderRepeatUntil={reminderUntil}
                   reminderAllDay={reminderAllDay}
-                  onSet={(ts, repeat, until, allDay) => { setReminder(ts); const u = ts === null ? { reminderRepeat: "none" as const, reminderRule: undefined } : repeatUpdate(repeat); setReminderRepeat(u.reminderRepeat); setReminderRule(u.reminderRule); setReminderUntil(ts === null ? undefined : until); setReminderAllDay(ts !== null && allDay === true); }}
+                  reminderLead={reminderLead}
+                  onSet={(ts, repeat, until, allDay, lead) => { setReminderLead(ts === null ? undefined : lead); setReminder(ts); const u = ts === null ? { reminderRepeat: "none" as const, reminderRule: undefined } : repeatUpdate(repeat); setReminderRepeat(u.reminderRepeat); setReminderRule(u.reminderRule); setReminderUntil(ts === null ? undefined : until); setReminderAllDay(ts !== null && allDay === true); }}
                   openSignal={reminderOpenSignal}
                   trigger={
                     <IconButton size="sm" tone={reminder ? "active" : "muted"} title="Przypomnienie" aria-label="Przypomnienie">

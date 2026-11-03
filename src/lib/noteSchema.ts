@@ -35,6 +35,7 @@ export const noteSchema = z.object({
   reminderRepeatUntil: z.catch(z.optional(z.number()), undefined),
   reminderAllDay: z.catch(z.optional(z.boolean()), undefined),
   reminderBase: z.catch(z.optional(z.number()), undefined),
+  reminderLead: z.catch(z.optional(z.int().check(z.gte(1), z.lte(10080))), undefined),
   reminderTime: z.catch(z.optional(z.int().check(z.gte(0), z.lte(1439))), undefined),
   snoozedUntil: z.catch(z.optional(z.number()), undefined),
   priority: z.catch(z.enum(["none", "low", "medium", "high"]), "none"),
