@@ -173,7 +173,9 @@ export default defineConfig(() => ({
           groups: [
             { name: "vendor-react", test: /[/\\]node_modules[/\\](react|react-dom|scheduler|react-router|react-router-dom)[/\\]/ },
             { name: "vendor-dnd", test: /[/\\]node_modules[/\\]@dnd-kit[/\\]/ },
-            { name: "vendor-radix", test: /[/\\]node_modules[/\\]@radix-ui[/\\]/ },
+            // Bez suwaka, przełącznika, zakładek i paska postępu: są tylko w Ustawieniach, Pracy i Statystykach,
+            // więc nie muszą jechać w starcie (Plan-nowy 1.5). Wspólne części Radix zostają w grupie.
+            { name: "vendor-radix", test: /[/\\]node_modules[/\\]@radix-ui[/\\](?!react-(slider|switch|tabs|progress)[/\\])/ },
           ],
         },
       },

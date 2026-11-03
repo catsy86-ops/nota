@@ -1055,6 +1055,12 @@ czytniku 378,7 KB — zapas 5,3 KB do progu 384. Precache 4,37 → 4,03 MB (pró
 1,5 MB nieosiągnięty — wymagałby Nauki (`StudyView`), Grafiku (`ShiftsView`) i Markdownu poza precache, a to psuje
 offline-first tych działów. Wirtualizacja listy: nie robimy (`content-visibility` + render progresywny wystarczają).
 
+**Stan 2026-11-03 (Plan-nowy 1.5):** wejściowy JS **484 234 → 473 715 B gzip** (−10,5 KB). Budżet 500 KB. Precache 4084,8 KiB z 4096. Dwa kroki:
+- **`exportNotes` poza startem (−5,6 KB):** mały `download()` przeniesiony do `src/lib/downloadBlob.ts` (`exportNotes` go re-eksportuje). Kalendarz, Grafik i `yjsFileSync` biorą go stamtąd. `ImportExportMenu` ładuje eksport dynamicznie i z wyprzedzeniem przy otwarciu menu (`onOpenChange`), żeby zapis albo okno pliku działały w geście użytkownika. Tak samo działa `useImportExport` (import JSON) i `useBackupReminders` (moduł pobierany przy pokazaniu dymku). Koszt: precache +6,8 KB, czyli narzut nowego chunka (lista `__vite__mapDeps` 3,2 KB i kod łączący).
+- **Węższa grupa `vendor-radix` (−4,9 KB, precache −1,8 KB):** `vite.config.ts` → `codeSplitting.groups` wyłącza z grupy `@radix-ui/react-slider`, `-switch`, `-tabs` i `-progress`. Używają ich tylko Ustawienia, Praca i Statystyki.
+- **Pułapka:** każde kolejne wydzielenie modułu z wieloma dynamicznymi importami dokłada do precache kilka KB narzutu. Przy zapasie około 11 KiB łańcuchy Grafiku i Pracy (Plan-nowy §10.4) trzeba mierzyć po każdym kroku.
+- **Testy:** `bundle.spec.ts`, eksport, kopia i import (`images`, `note-props`, `private-notes`, `search-backup`, `settings-links`, `import-external`, `ics-import`), przełączniki, suwaki i zakładki oraz `a11y.spec.ts`: 240/240 + 69/69. Vitest `src/lib` i `src/hooks` 2723/2723.
+
 **Ograniczenia i pułapki.**
 - `study/data.ts` (z `yStudy.ts`) zostaje w paczce startowej celowo: odśmiecanie zdjęć (`useNotes`) potrzebuje od startu
   wiedzy, czy stary dziennik przeniesiono do dokumentu (`legacyStudyMerged`) — inaczej mogłoby usunąć jego zdjęcia.
