@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { captureParts, INBOX_TITLE_MAX, isInboxNote, triageHeadline } from "./inbox";
+import { captureParts, INBOX_TITLE_MAX, isInboxNote, linkCapture, triageHeadline } from "./inbox";
 
 describe("isInboxNote", () => {
   it("skrzynka to notatki bez folderu, bez etykiet i nie będące podnotatką", () => {
@@ -69,5 +69,19 @@ describe("triageHeadline (Skrzynka 1.3)", () => {
   });
   it("bez tytułu i treści — „Bez tytułu”", () => {
     expect(triageHeadline({ title: " ", content: " " })).toEqual({ title: "Bez tytułu", preview: "" });
+  });
+});
+
+describe("linkCapture (2.4)", () => {
+  it("sam adres: tytuł z domeny i ścieżki, adres w treści", () => {
+    expect(linkCapture(" https://www.castorama.pl/kolano-16mm/ ")).toEqual({ title: "castorama.pl/kolano-16mm", content: "https://www.castorama.pl/kolano-16mm/" });
+    expect(linkCapture("https://pl.wikipedia.org/wiki/Mied%C5%BA?x=1")).toEqual({ title: "pl.wikipedia.org/wiki/Miedź", content: "https://pl.wikipedia.org/wiki/Mied%C5%BA?x=1" });
+    expect(linkCapture("http://example.com")).toEqual({ title: "example.com", content: "http://example.com" });
+  });
+
+  it("tekst z linkiem, inne schematy i zwykły tekst to nie link", () => {
+    expect(linkCapture("zobacz https://example.com")).toBeNull();
+    expect(linkCapture("javascript:alert(1)")).toBeNull();
+    expect(linkCapture("Kupić rury")).toBeNull();
   });
 });

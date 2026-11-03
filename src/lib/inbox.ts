@@ -50,3 +50,19 @@ export function triageHeadline(note: { title: string; content: string }): { titl
   if (first < 0) return { title: "Bez tytułu", preview: "" };
   return { title: lines[first].trim().slice(0, 120), preview: lines.slice(first + 1).join(NL).trim().slice(0, 300) };
 }
+
+/**
+ * 2.4: w polu sam adres http(s) → tytuł „domena/ścieżka” (bez `www.`, końcowego `/` i parametrów), adres w treści.
+ * Tytułu strony nie pobieramy (brak serwera; CSP i CORS i tak by nie pozwoliły). `null` = to nie jest sam link.
+ */
+export function linkCapture(raw: string): { title: string; content: string } | null {
+  const text = raw.trim();
+  if (!text || /\s/.test(text)) return null;
+  let u: URL;
+  try { u = new URL(text); } catch { return null; }
+  if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+  let path = u.pathname.replace(/\/+$/, "");
+  try { path = decodeURIComponent(path); } catch { /* zły zapis % — zostaje jak jest */ }
+  const title = (u.hostname.replace(/^www\./, "") + path).slice(0, INBOX_TITLE_MAX);
+  return { title, content: text };
+}

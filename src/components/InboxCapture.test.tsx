@@ -80,3 +80,14 @@ describe("InboxCapture — frazy (2.1)", () => {
     expect(screen.queryByRole("group", { name: "Rozpoznane w tekście" })).toBeNull();
   });
 });
+
+describe("InboxCapture — wklejony link (2.4)", () => {
+  it("sam adres daje tytuł z domeny i adres w treści", () => {
+    const got: [string, string][] = [];
+    render(<InboxCapture onCapture={(t, c) => got.push([t, c])} />);
+    const input = screen.getByLabelText("Przechwyć do skrzynki");
+    fireEvent.change(input, { target: { value: "https://www.example.com/oferta/" } });
+    fireEvent.submit(input.closest("form") as HTMLFormElement);
+    expect(got).toEqual([["example.com/oferta", "https://www.example.com/oferta/"]]);
+  });
+});

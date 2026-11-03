@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ArrowUp, Inbox, Mic, MicOff } from "lucide-react";
-import { captureParts, INBOX_TITLE_MAX } from "@/lib/inbox";
+import { captureParts, INBOX_TITLE_MAX, linkCapture } from "@/lib/inbox";
 import { applyCapture, extractCapture, toggledSet, type CaptureToken } from "@/lib/quickCapture";
 import type { NotePriority } from "@/lib/notePriority";
 import { CaptureChips } from "./CaptureChips";
@@ -46,6 +46,14 @@ export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDE
     if (spoken) setText((t) => (t.trim() ? `${t.trimEnd()} ${spoken}` : spoken));
   });
   const submit = () => {
+    // 2.4: sam wklejony adres — tytuł z domeny i ścieżki, adres w treści, bez rozpoznawania fraz.
+    const link = linkCapture(text);
+    if (link) {
+      onCapture(link.title, link.content, { labels: [], newLabels: [], folderId: null, priority: null, reminder: null });
+      setText("");
+      setIgnored(new Set());
+      return;
+    }
     const parts = captureParts(text);
     if (!parts) return;
     const r = applyCapture(parts, tokens, ignored);
