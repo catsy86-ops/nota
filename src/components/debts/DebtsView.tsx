@@ -91,7 +91,7 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
         <Button
           variant="ghost"
           size="sm"
-          className="tap-target shrink-0 gap-1.5"
+          className="tap-target shrink-0 gap-1.5 coarse:h-11"
           onClick={() => { setHideAmounts(!hidden); haptic("tap"); }}
         >
           {hidden ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}

@@ -861,7 +861,13 @@ html[data-motion="reduced"] .fab-ring[data-pressing="true"] { stroke-dashoffset:
   .card-actions:not([data-more]) .card-primary { display: none; }
   /* Zwinięta stopka (sam „⋯”) siedzi w rogu karty zamiast dokładać cały wiersz. */
   .card-actions:not([data-more]):not([data-open]):not([data-editing]) { position: absolute; right: 0; bottom: 0; padding: 0; }
-  .card-actions:not([data-more]):not([data-open]):not([data-editing]) .card-action { padding: 0.75rem; }
+  .card-actions:not([data-more]):not([data-open]):not([data-editing]) .card-action { padding: 0.75rem; position: relative; }
+  /* 40 px widocznego „⋯” w rogu kafla + 2 px niewidocznego obrzeża z każdej strony = 44 px celu dotyku (Plan-nowy 2.8). */
+  .card-actions:not([data-more]):not([data-open]):not([data-editing]) .card-action::after { content: ""; position: absolute; inset: -2px; }
+  /* Toast: „×” (20 px) i przycisk akcji (24 px) rosną do 44 px celu dotyku bez zmiany wyglądu. */
+  [data-sonner-toast] [data-close-button]::after { content: ""; position: absolute; inset: -12px; }
+  [data-sonner-toast] [data-button] { position: relative; }
+  [data-sonner-toast] [data-button]::after { content: ""; position: absolute; inset: -10px -4px; }
   .card-body { padding-bottom: 0.75rem; }
   .card-meta { padding-right: 2.25rem; }
 }

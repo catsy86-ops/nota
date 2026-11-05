@@ -4866,3 +4866,20 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **Bez zmian:** chipy na szerokiej komórce (z godziną każdego wystąpienia) i opis komórki dla czytnika ekranu (liczba wszystkich terminów).
 - **Testy:** `src/components/calendar/dayDots.test.ts`.
 
+## Plan-nowy: 2.8, 3.4, 3.6 (2026-11-05)
+
+- **2.8 Cele dotyku na telefonie.** `e2e/touch-targets-phone.spec.ts` przegląda widoczne elementy do stuknięcia na 7 ekranach przy 390 px (Pixel 7, iPhone 14 i emulacja w `chromium`) i wymaga co najmniej 44 × 44 px, licząc niewidzialne `::after` jak `touch-targets.spec.ts`. Poprawione cele:
+  - zwinięte „⋯” w rogu kafla: `::after` o 2 px (40 → 44);
+  - „×” i przycisk akcji toastu: `::after` (20 i 24 → 44);
+  - „Jutro rano”, „Za godzinę” i „⋯” przy terminie: `coarse:min-w-11`;
+  - „Ukryj kwoty” w Długach: `coarse:h-11`. Klasa `tap-target` działa tylko w trybie budowa.
+- **3.4 ADR.** `docs/adr.md`: pięć decyzji z powodem, skutkami i miejscem w kodzie:
+  - `reminderSpec` jako jedna wartość LWW;
+  - CSP egzekwowane z szerokim `connect-src`;
+  - Web Push z własnego serwera;
+  - brak hostingu;
+  - model styl × schemat × akcent.
+- **3.6 Render.** W `Index.tsx`:
+  - `ShiftsView` i paleta dostają zapamiętaną `reminderNotes` zamiast nowej tablicy `[...notes, ...archivedNotes]` przy każdym renderze. Wcześniej `useMemo` w palecie liczył się za każdym razem.
+  - `inboxCount` to ten sam licznik co `inboxBadge` (jedno liczenie).
+

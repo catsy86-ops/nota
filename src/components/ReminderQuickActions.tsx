@@ -82,7 +82,7 @@ export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuic
           onUpdate(id, patch);
           toastWithUndo(message, () => onUpdate(id, prev), { id: `rem-snooze-${id}` });
         }}
-        className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-muted-foreground hover:text-foreground"
+        className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:min-w-11 justify-center text-2xs font-medium text-muted-foreground hover:text-foreground"
         aria-label="Jutro rano"
       >
         {/* Na telefonie samo „Jutro” — z „rano” oba przyciski nie mieściły się w wąskim kaflu i szły w pion. */}
@@ -97,7 +97,7 @@ export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuic
           onUpdate(id, patch);
           toastWithUndo(message, () => onUpdate(id, prev), { id: `rem-snooze-${id}` });
         }}
-        className="pressable inline-flex items-center rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-muted-foreground hover:text-foreground"
+        className="pressable inline-flex items-center rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:min-w-11 justify-center text-2xs font-medium text-muted-foreground hover:text-foreground"
         aria-label="Za godzinę"
       >
         +1 h
@@ -107,7 +107,7 @@ export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuic
           <button
             type="button"
             aria-label="Więcej sposobów odłożenia"
-            className="pressable inline-flex items-center rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-muted-foreground hover:text-foreground"
+            className="pressable inline-flex items-center rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:min-w-11 justify-center text-2xs font-medium text-muted-foreground hover:text-foreground"
           >
             <MoreHorizontal className="w-3 h-3" aria-hidden />
           </button>

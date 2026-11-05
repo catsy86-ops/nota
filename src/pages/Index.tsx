@@ -721,7 +721,8 @@ const Index = () => {
   );
 
   // Skrzynka: notatki do posortowania (bez folderu i etykiet); licznik w pasku bocznym.
-  const inboxCount = useMemo(() => notes.reduce((n, note) => n + (isInboxNote(note) ? 1 : 0), 0), [notes]);
+  // Plan-nowy 3.6: jedno liczenie Skrzynki (wcześniej osobno `inboxBadge` i `inboxCount` z tym samym wzorem).
+  const inboxCount = inboxBadge;
   // Pole Skrzynki: Enter zapisuje od razu, bez pytań; „Cofnij” w dymku kasuje świeżą notatkę.
   const captureToInbox = useCallback((title: string, content: string, extras?: InboxCaptureExtras) => {
     extras?.newLabels.forEach((l) => addLabel(l));
@@ -1044,7 +1045,7 @@ const Index = () => {
             {(view === "shifts" || keptViews.includes("shifts")) && (
               <ViewErrorBoundary name="Grafik">
                 <Suspense fallback={<ViewSkeleton view="shifts" />}>
-                  <ShiftsView notes={[...notes, ...archivedNotes]} />
+                  <ShiftsView notes={reminderNotes} />
                 </Suspense>
               </ViewErrorBoundary>
             )}
@@ -1081,7 +1082,7 @@ const Index = () => {
         <CommandPalette
           open={paletteOpen}
           onOpenChange={setPaletteOpen}
-          notes={[...notes, ...archivedNotes]}
+          notes={reminderNotes}
           onOpenNote={openNote}
           onNewNote={(title) => expandAddNote(undefined, title)}
           onDailyNote={openDailyNote}
