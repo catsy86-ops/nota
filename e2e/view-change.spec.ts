@@ -53,8 +53,10 @@ async function expectAnchorKept(page: Page, change: () => Promise<void>) {
   const before = await topVisible(page);
   await change();
   const el = page.locator(`[data-note-id-wrap="${before.id}"], [data-note-row="${before.id}"]`);
+  // Pod koniec długiego przebiegu maszyna zwalnia i przywrócenie pozycji przychodzi później — czekamy do 8 s,
+  // ale sama tolerancja (±2 px) zostaje.
   await expect.poll(async () => Math.abs(((await el.boundingBox())?.y ?? Infinity) - before.top), {
-    timeout: 3000,
+    timeout: 8000,
     message: `kafel ${before.id} (było y=${Math.round(before.top)}, scrollY=${await page.evaluate(() => `${scrollY}/${document.documentElement.scrollHeight - innerHeight}`)})`,
   }).toBeLessThan(3);
 }
