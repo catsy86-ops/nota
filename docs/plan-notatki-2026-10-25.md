@@ -4,6 +4,8 @@
 
 > **Uzupełnienie (2026-11-05, nowy plan Etap 5, 12035f1):** zrobione 1.2, 1.3 (ochrona przed Esc i tłem, „Wyczyść” z „Cofnij”), 1.4, 1.5, 2.1 (przeciąganie listy), 2.3 (M i L), 2.7 (ostatnie i Alt+←/→), 2.8 (domyślny szablon folderu). Opis: `opis.md`, sekcja „QoL na co dzień, Etap 5”.
 
+> **Uzupełnienie (2026-11-05, nowy plan Etap 6, HASH):** zrobione 5.1 (porównanie wersji słowami, „Przywróć tylko ten akapit”), 5.2 („Opisz na zdjęciu”), 6.2 (zapisane widoki w Yjs i pasku; bez kopii JSON i bez wyboru kolumn).
+
 Pierwszy z serii planów „dział po dziale”. Kolejne działy dostaną osobne pliki `docs/plan-<dział>-2026-10-xx.md` w tym samym układzie.
 
 ## Kontekst

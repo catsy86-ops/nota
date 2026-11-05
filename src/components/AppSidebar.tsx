@@ -3,7 +3,7 @@ import { folderProgress } from "@/lib/folderProgress";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import {
-  Settings as SettingsIcon, CircleQuestionMark, Tag, Moon, Sun, FolderOpen, Command, RotateCcwClock, Trophy, Brain, BrainCircuit, ExternalLink, Ellipsis, ChevronDown, Funnel, Star,
+  Settings as SettingsIcon, LayoutDashboard, CircleQuestionMark, Tag, Moon, Sun, FolderOpen, Command, RotateCcwClock, Trophy, Brain, BrainCircuit, ExternalLink, Ellipsis, ChevronDown, Funnel, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sectionIconClass } from "@/lib/sections";
@@ -34,6 +34,10 @@ import { APP_VERSION } from "@/content/changelog";
 import { AboutPanel } from "@/components/AboutPanel";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { recentOpenedIds, useLastOpened } from "@/lib/lastOpened";
+import { removeView, renameView, sameSource, saveView, useSavedViews, viewFromCurrent, viewSummary, type SavedView, type ViewSource } from "@/lib/savedViews";
+import { getViewPrefs, useViewPrefs } from "@/lib/viewPrefs";
+import { toast } from "sonner";
+import { toastWithUndo } from "@/lib/undoToast";
 
 const MAX_FAVORITES = 10;
 /** 5.1: ostatnio otwierane notatki w pasku (grupa domyślnie zwinięta, żeby pasek nie rósł). */
@@ -127,6 +131,8 @@ interface AppSidebarProps {
   onGoFolder: (folderId: string) => void;
   /** Zapisany filtr: widok Notatki z tym zapytaniem. */
   onGoFilter: (query: string) => void;
+  /** Zapisany widok (6.1): przejście do źródła z zapytaniem i ustawieniami widoku. */
+  onOpenView: (v: SavedView) => void;
   /** Ulubiona notatka z paska bocznego: otwiera ją w edytorze. */
   onOpenNote: (id: string) => void;
   /** Bieżące zapytanie wyszukiwarki — wyznacza aktywny filtr. */
@@ -143,7 +149,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({
-  open, onClose, view, activeLabel, activeFolder, onGoView, onGoLabel, onGoFolder, onGoFilter, onOpenNote, search,
+  open, onClose, view, activeLabel, activeFolder, onGoView, onGoLabel, onGoFolder, onGoFilter, onOpenView, onOpenNote, search,
   sidebarItems, onLogoClick, dark, onToggleTheme, onOpenPalette, onOpenActions,
   onOpenStats, onOpenFocusMode, onSettingsOpenChange,
 }: AppSidebarProps) {
@@ -205,6 +211,12 @@ export function AppSidebar({
     return recentOpenedIds(lastOpened, MAX_RECENT * 3).map((id) => byId.get(id)).filter((n) => n !== undefined).slice(0, MAX_RECENT);
   }, [recentCollapsed, lastOpened, notes]);
   const hasRecent = useMemo(() => Object.keys(lastOpened).length > 0, [lastOpened]);
+  const savedViews = useSavedViews();
+  const viewsCollapsed = !!collapsedGroups.widoki;
+  // Widok da się zapisać tylko z list notatek (wszystkie, folder, etykieta).
+  const viewSource: ViewSource | null = view === "notes" ? { kind: "all" } : view === "folder" && activeFolder ? { kind: "folder", id: activeFolder } : view === "label" && activeLabel ? { kind: "label", label: activeLabel } : null;
+  const prefsNow = useViewPrefs();
+  const activeViewId = viewSource ? savedViews.find((v) => sameSource(v.source, viewSource) && sameQuery(v.query, search) && v.layout === prefsNow.layout && v.sortKey === prefsNow.sortKey && v.groupBy === prefsNow.groupBy)?.id ?? null : null;
   // Jedna pigułka aktywna naraz: gdy zapytanie jest zapisanym filtrem, „Notatki” gasną.
   const activeFilterId = view === "notes" ? filters.find((f) => sameQuery(search, f.query))?.id ?? null : null;
   // Jak w grupach: otwarty wpis zawsze widać, zwinięcie go nie chowa.
@@ -349,6 +361,41 @@ export function AppSidebar({
                   </div>
                 </div>
               )}
+
+              {/* Zapisane widoki (nowy plan 6.1): źródło, zapytanie, układ, sortowanie i filtry pod nazwą; w Yjs. */}
+              <div className="pt-5" data-saved-views>
+                <SidebarHeading label="Widoki" icon={<LayoutDashboard className="w-3 h-3" />} collapsed={viewsCollapsed}
+                  onToggle={() => setGroupCollapsed("widoki", !viewsCollapsed)}
+                  action={<SidebarAddFolderButton kind="view" disabled={!viewSource} onAdd={(name) => {
+                    if (!viewSource) return;
+                    const v = viewFromCurrent(crypto.randomUUID(), name, viewSource, search, getViewPrefs(), Date.now());
+                    if (!v || !saveView(v)) { toast.error("Nie udało się zapisać widoku — jest już najwięcej widoków"); return; }
+                    if (viewsCollapsed) setGroupCollapsed("widoki", false);
+                    toast.success(`Zapisano widok „${v.name}”`);
+                  }} />} />
+                {!viewsCollapsed && (
+                  <div className="space-y-0.5">
+                    {savedViews.map((v) => (
+                      <SidebarFilterItem
+                        key={v.id}
+                        kind="view"
+                        name={v.name}
+                        query={viewSummary(v, (id) => folders.find((f) => f.id === id)?.name)}
+                        isActive={activeViewId === v.id}
+                        onSelect={() => onOpenView(v)}
+                        onRename={(n) => renameView(v.id, n)}
+                        onDelete={() => {
+                          const removed = removeView(v.id);
+                          if (removed) toastWithUndo(`Usunięto widok „${removed.name}”`, () => saveView(removed));
+                        }}
+                      />
+                    ))}
+                    {savedViews.length === 0 && (
+                      <p className="px-3 pt-1 text-2xs text-muted-foreground">Ustaw notatki (folder, szukaj, układ) i zapisz je przyciskiem obok.</p>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {allLabels.length > 0 && (
                 <div className="pt-5">

@@ -1,5 +1,5 @@
 import { cleanSchemaClaim, cleanVersionClaim, localDeviceSchema, setDeviceSource, type DeviceSchema } from "@/lib/formatSchema";
-import { recordSeenDevices } from "@/lib/syncSeen";
+import { cleanDeviceName, recordSeenDevices } from "@/lib/syncSeen";
 import { clearLegacyIdle, legacyIdleExpired, markLegacyEnabled, markLegacySeen, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
@@ -311,8 +311,10 @@ function refreshDevices() {
   awareness.getStates().forEach((s, id) => {
     const dev = (s as { device?: { name?: unknown; version?: unknown; schema?: unknown } }).device;
     const name = dev?.name;
-    if (id !== awareness.clientID && typeof name === "string" && name) {
-      devices.push({ id, name: name.slice(0, DEVICE_NAME_MAX), version: cleanVersionClaim(dev?.version), schema: cleanSchemaClaim(dev?.schema) });
+    // Nazwa od innego urządzenia bez znaków sterujących (podszywanie się odwróconym tekstem), przegląd bezpieczeństwa Etapu 5.
+    const shown = typeof name === "string" ? cleanDeviceName(name).slice(0, DEVICE_NAME_MAX) : "";
+    if (id !== awareness.clientID && shown) {
+      devices.push({ id, name: shown, version: cleanVersionClaim(dev?.version), schema: cleanSchemaClaim(dev?.schema) });
     }
   });
   const ids = new Set(devices.map((d) => d.id));

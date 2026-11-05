@@ -1,15 +1,23 @@
 import { useState, useEffect, useRef } from "react";
-import { Bookmark, Pencil, Trash, Check, X } from "lucide-react";
+import { Bookmark, LayoutDashboard, Pencil, Trash, Check, X } from "lucide-react";
 import { SidebarRow, SidebarRowMenu, SidebarCount } from "@/components/sidebar/SidebarRow";
 import { IconButton } from "@/components/ui/icon-button";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { MAX_FILTER_NAME } from "@/lib/savedFilters";
 
-/** Zapisany filtr w pasku bocznym: nazwa, licznik dopasowanych notatek, zmiana nazwy i usuwanie. */
-export function SidebarFilterItem({ name, query, count, isActive, onSelect, onRename, onDelete }: {
-  name: string; query: string; count: number; isActive: boolean;
+/** Słowa w etykietach: zapisany filtr albo zapisany widok (nowy plan 6.1 — ten sam wiersz). */
+const NOUN = {
+  filter: { of: "filtra", del: "Usuń filtr" },
+  view: { of: "widoku", del: "Usuń widok" },
+} as const;
+
+/** Zapisany filtr (albo widok) w pasku bocznym: nazwa, licznik dopasowanych notatek, zmiana nazwy i usuwanie. */
+export function SidebarFilterItem({ name, query, count, isActive, onSelect, onRename, onDelete, kind = "filter" }: {
+  name: string; query: string; /** Brak = bez licznika (widok). */ count?: number; isActive: boolean;
   onSelect: () => void; onRename: (n: string) => void; onDelete: () => void;
+  kind?: keyof typeof NOUN;
 }) {
+  const noun = NOUN[kind];
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,33 +38,33 @@ export function SidebarFilterItem({ name, query, count, isActive, onSelect, onRe
           ref={inputRef}
           value={draft}
           maxLength={MAX_FILTER_NAME}
-          aria-label="Nazwa filtra"
+          aria-label={`Nazwa ${noun.of}`}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setDraft(name); setEditing(false); } }}
           className="flex-1 text-sm bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground min-w-0"
         />
-        <IconButton size="sm" tone="active" onClick={save} aria-label="Zapisz nazwę filtra"><Check className="w-3.5 h-3.5" /></IconButton>
-        <IconButton size="sm" onClick={() => { setDraft(name); setEditing(false); }} aria-label="Anuluj edycję filtra"><X className="w-3.5 h-3.5" /></IconButton>
+        <IconButton size="sm" tone="active" onClick={save} aria-label={`Zapisz nazwę ${noun.of}`}><Check className="w-3.5 h-3.5" /></IconButton>
+        <IconButton size="sm" onClick={() => { setDraft(name); setEditing(false); }} aria-label={`Anuluj edycję ${noun.of}`}><X className="w-3.5 h-3.5" /></IconButton>
       </div>
     );
   }
 
   return (
     <SidebarRow
-      icon={<Bookmark className="w-3.5 h-3.5" />}
+      icon={kind === "view" ? <LayoutDashboard className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
       label={name}
       active={isActive}
       onClick={onSelect}
       buttonProps={{ title: query }}
-      trailing={<SidebarCount value={count} active={isActive} />}
+      trailing={count === undefined ? undefined : <SidebarCount value={count} active={isActive} />}
       actions={
-        <SidebarRowMenu label={`filtra ${name}`} onCloseAutoFocus={keepInputFocus}>
+        <SidebarRowMenu label={`${noun.of} ${name}`} onCloseAutoFocus={keepInputFocus}>
           <DropdownMenuItem onSelect={() => { focusInput.current = true; setDraft(name); setEditing(true); }}>
             <Pencil className="w-4 h-4 mr-2" />Zmień nazwę
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={onDelete} className="text-destructive-ink focus:text-destructive-ink focus:bg-destructive/10">
-            <Trash className="w-4 h-4 mr-2" />Usuń filtr
+            <Trash className="w-4 h-4 mr-2" />{noun.del}
           </DropdownMenuItem>
         </SidebarRowMenu>
       }

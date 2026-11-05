@@ -332,6 +332,54 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 - e2e: `e2e/reminders-calendar.spec.ts` (rząd akcji pod tytułem na telefonie), `e2e/inbox-triage.spec.ts`, `e2e/plans.spec.ts`, `e2e/csp.spec.ts`, `e2e/visual.spec.ts` (selektory po przeniesieniu akcji).
 - Zrzuty `e2e/visual.spec.ts` odświeżone po przeglądzie (Kalendarz, Grafik, Terminy, Długi, Ćwiczenia, Plany, Skrzynka, Dziś, Skarbiec).
 
+## Notatki — zapisane widoki, porównanie wersji, opis na zdjęciu (nowy plan 2026-11-05, Etap 6)
+
+Commit: HASH (2026-11-05), na wip/mobile-fala1.
+
+Plan: `nowyplan.md`, Etap 6 (6.1–6.3; źródła: Notatki 6.2, 5.1, 5.2). W tym samym commicie są poprawki z przeglądu bezpieczeństwa Etapu 5 (opis na końcu sekcji).
+
+### Co robi, gdzie jest i jak działa
+
+- **6.1 Zapisane widoki.**
+  - Pasek boczny ma grupę „Widoki” pod Filtrami. Przycisk „Zapisz bieżący widok” (aktywny tylko na liście notatek: Notatki, folder, etykieta) zapisuje pod nazwą:
+    - źródło (`ViewSource`: wszystkie, folder albo etykieta);
+    - zapytanie wyszukiwarki;
+    - układ, sortowanie i grupowanie;
+    - filtry koloru, etykiety, przypomnienia i priorytetu.
+  - Klik w widok ustawia te preferencje widoku (`setViewPref`) i przechodzi do źródła z zapytaniem (`openSavedView` w `Index.tsx`). Widok z folderem, którego już nie ma, pokazuje komunikat. Wiersz widoku świeci jako aktywny, gdy źródło, zapytanie, układ, sortowanie i grupowanie są takie same jak na ekranie. Zmiana nazwy i usuwanie (z „Cofnij”) są w menu wiersza.
+  - Dane: mapa `views` w dokumencie Yjs (`src/lib/savedViews.ts`). Każdy widok to jedna wartość LWW (cały obiekt), synchronizowana między urządzeniami. Limit: 30 widoków, nazwa do 40 znaków. Wpis od peera przechodzi przez `sanitizeView`: nieznany układ, sortowanie czy grupowanie wracają do domyślnych, a wpis bez nazwy jest pomijany. Moduł jest na liście plików z dostępem do Yjs w `eslint.config.js`, jak `yPlans`.
+  - Wiersz w pasku to uogólniony `SidebarFilterItem` (`kind="view"`, bez licznika), a przycisk to uogólniony `SidebarAddFolderButton` (`kind="view"`).
+- **6.2 Porównanie wersji słowami.**
+  - `src/lib/wordDiff.ts`: `diffWords` (LCS na tokenach słowo/odstęp, bez biblioteki; wspólny początek i koniec obcinane przed tablicą). Powyżej 2 mln komórek przechodzi na diff linii, żeby nie zamrozić karty.
+  - `paragraphHunks` dzieli treść na akapity (pusta linia), układa wspólne i zmienione bloki. `restoreHunk` składa treść z jednym blokiem wziętym z wersji.
+  - `VersionHistoryDialog.tsx`: przy rozwiniętej wersji przełącznik „Treść”, „Zmiany w tekście” i „Obok”:
+    - „Zmiany w tekście” pokazuje usunięte słowa przekreślone na czerwonym tle, a dopisane podkreślone na zielonym. Kolor nie jest jedyną wskazówką.
+    - „Obok” to bloki „Ta wersja” i „Teraz”, a przy każdej zmianie „Przywróć tylko ten akapit” (`onRestoreContent` z `NoteCardActions.tsx`, z „Cofnij”).
+- **6.3 Opis na zdjęciu.** Galeria obrazów notatki w czytniku (`PhotoGalleryDialog`, właściwość `onAnnotate`) ma „Opisz na zdjęciu”. Przycisk otwiera `DrawingCanvas` z obrazem jako tłem. Zapis dodaje opisaną kopię tuż za oryginałem (`saveAnnotate` w `NoteReader.tsx`, `imageStore.putDataUrl`), a oryginał zostaje. Toast ma „Cofnij”. Przycisku nie ma w koszu ani w notatce prywatnej.
+
+### Poprawki z przeglądu bezpieczeństwa Etapu 5 (agent `security-reviewer`)
+
+- Przegląd nie znalazł nic krytycznego, wysokiego ani średniego. Poprawione drobne uwagi:
+  - `openAttachment`: przy błędzie odczytu karta `about:blank` się zamyka.
+  - Nazwy urządzeń od peera są bez znaków sterujących i formatujących (`cleanDeviceName` w `syncSeen.ts`, także w dymku „Połączono z” w `yjsSync.ts`).
+  - `mergeSeen` nie zapisuje ponownie tych samych urządzeń częściej niż raz na minutę (awareness zmienia się często).
+  - Limit `templateId` przy odczycie z Yjs jest ujednolicony z kopią (100 znaków).
+- Do sprawdzenia ręcznie: czy CSP `object-src 'none'`, dziedziczona przez dokument `blob:`, nie blokuje wbudowanego podglądu PDF w Chromium na wdrożeniu. Polityki nie luzować.
+
+### Ograniczenia i pułapki
+
+- **Widoki nie trafiają do kopii zapasowej JSON ani do resetu.** Są w dokumencie Yjs i synchronizują się, ale eksport i import kopii ich nie znają.
+- **Otwarcie widoku zmienia globalne preferencje widoku** (układ, sortowanie, filtry) — tak jak ręczna zmiana w pasku narzędzi. Po wyjściu z widoku zostają.
+- **„Widoczne kolumny” tabeli** z planu nie są w widoku: tabela nie ma jeszcze wyboru kolumn.
+- **Dwie zmiany tego samego widoku naraz** (dwa urządzenia): zostaje jedna, cała.
+- **Diff akapitów** porównuje całe akapity. Zmiana jednego słowa daje blok „zmieniony”, a przywrócenie bierze cały akapit z wersji.
+- **Opisana kopia zdjęcia** to nowy obraz w `imageStore` (więcej miejsca). Usunięcie kopii nie rusza oryginału.
+
+### Testy
+
+- Vitest: `src/lib/wordDiff.test.ts` (składanie tekstu, wstawienia, długie teksty, akapity, przywrócenie jednego bloku), `savedViews.test.ts` (widok z bieżącego stanu, wpis od peera, projekcja mapy), `syncSeen.test.ts` (ograniczenie zapisów, znaki sterujące, `__proto__`).
+- e2e: `e2e/etap6.spec.ts` (zmiany w tekście i „Obok” z przywróceniem akapitu, opis na zdjęciu, zapis i otwarcie widoku).
+
 ## Wspólne — QoL na co dzień, Etap 5 (nowy plan 2026-11-05)
 
 Commit: 12035f1 (2026-11-05), na wip/mobile-fala1.

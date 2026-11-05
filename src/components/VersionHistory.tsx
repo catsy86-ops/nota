@@ -9,9 +9,12 @@ const VersionHistoryDialog = lazy(() => import("./VersionHistoryDialog"));
 interface VersionHistoryProps {
   versions: NoteVersion[];
   onRestore: (version: NoteVersion) => void;
+  /** Bieżąca treść i przywracanie akapitu (6.2) — przekazywane do okna. */
+  current?: string;
+  onRestoreContent?: (content: string) => void;
 }
 
-export function VersionHistory({ versions, onRestore }: VersionHistoryProps) {
+export function VersionHistory({ versions, onRestore, current, onRestoreContent }: VersionHistoryProps) {
   const [open, setOpen] = useState(false);
   // Montowane przy pierwszym otwarciu i zostaje — zamknięcie ma swoją animację.
   const [mounted, setMounted] = useState(false);
@@ -35,7 +38,7 @@ export function VersionHistory({ versions, onRestore }: VersionHistoryProps) {
 
       {mounted && (
         <Suspense fallback={null}>
-          <VersionHistoryDialog versions={versions} open={open} onOpenChange={setOpen} onRestore={onRestore} />
+          <VersionHistoryDialog versions={versions} open={open} onOpenChange={setOpen} onRestore={onRestore} current={current} onRestoreContent={onRestoreContent} />
         </Suspense>
       )}
     </>

@@ -399,7 +399,7 @@ function plainFromYFolder(id: string, y: YFolder): Folder {
     order: safeNumber(y.get("order")),
     createdAt,
     updatedAt: safeOptionalNumber(y.get("updatedAt")) ?? createdAt,
-    ...(() => { const t = safeNullableString(y.get("templateId"), LIM.id); return t ? { templateId: t } : {}; })(),
+    ...(() => { const t = safeNullableString(y.get("templateId"), 100); return t ? { templateId: t } : {}; })(),
   };
 }
 

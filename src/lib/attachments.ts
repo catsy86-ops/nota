@@ -323,7 +323,8 @@ export async function openAttachment(a: Attachment, store: ImageStore = defaultS
   // Blokada wyskakujących okien: nie przenosimy karty aplikacji na `blob:` (zgubiłaby otwarty edytor) — pobieramy plik.
   if (!win) return downloadAttachment(a, store);
   win.opener = null;
-  const bytes = await readAttachment(a.hash, store);
+  let bytes: Awaited<ReturnType<typeof readAttachment>>;
+  try { bytes = await readAttachment(a.hash, store); } catch (e) { win.close(); throw e; }
   if (!bytes) { win.close(); return false; }
   const url = URL.createObjectURL(new Blob([bytes], { type }));
   win.location.href = url;

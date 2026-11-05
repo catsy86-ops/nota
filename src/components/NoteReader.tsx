@@ -10,6 +10,8 @@ import { ChevronLeft, ChevronRight, Copy, CornerDownRight, FilePlusCorner, Link2
 import { ancestorsOf, canSetParent, childrenOf, parentIdOf } from "@/lib/subpages";
 import { setParent } from "@/lib/subpageActions";
 import { useNotesContext } from "@/hooks/NotesProvider";
+import { toast } from "sonner";
+import { imageStore } from "@/lib/imageStore";
 import { findUnlinkedMentions, linkFirstMention, type UnlinkedMention } from "@/lib/unlinkedMentions";
 import { toastWithUndo } from "@/lib/undoToast";
 import { format } from "date-fns";
@@ -25,6 +27,7 @@ import { tween } from "@/lib/motion";
 import { wordsPl } from "@/lib/plural";
 import { NoteImage } from "./NoteImage";
 // Galeria obrazów (5.5) — ten sam komponent co zdjęcia z budowy, leniwie: czytnik bez obrazów go nie pobiera.
+const DrawingCanvas = lazy(() => import("./DrawingCanvas").then((m) => ({ default: m.DrawingCanvas })));
 const PhotoGalleryDialog = lazy(() => import("./study/PhotoGallery").then((m) => ({ default: m.PhotoGalleryDialog })));
 import { ReaderToc } from "./ReaderToc";
 import { AttachmentsReadOnlyList } from "./AttachmentsList";
@@ -131,6 +134,8 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   const wide = useMediaQuery("(min-width: 1280px)") && !present;
   const [sideTab, setSideTab] = useState<SideTab>("links");
   const [gallery, setGallery] = useState<{ refs: string[]; index: number } | null>(null);
+  // 6.3 „Opisz na zdjęciu”: rysunek po obrazie notatki zapisuje się jako nowy obraz tuż za oryginałem.
+  const [annotate, setAnnotate] = useState<{ ref: string; url: string } | null>(null);
   const [sideEl, setSideEl] = useState<HTMLDivElement | null>(null);
   const sideSlot = (tab: SideTab, node: ReactNode) => (!wide ? node : sideEl && sideTab === tab ? createPortal(node, sideEl) : null);
   const canEdit = !note.trashed;
@@ -182,6 +187,32 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   const backlinks = showBacklinks ? backlinksOf(note, wikiIndex) : [];
   const words = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
   const { notes: liveNotes, archivedNotes, updateNote, addSubpage, folders } = useNotesContext();
+
+  async function startAnnotate(ref: string) {
+    const rec = await imageStore.get(ref);
+    if (!rec) { toast.error("Tego obrazu nie ma na tym urządzeniu"); return; }
+    setGallery(null);
+    setAnnotate({ ref, url: URL.createObjectURL(new Blob([rec.bytes], { type: rec.type })) });
+  }
+  function closeAnnotate() {
+    if (annotate) URL.revokeObjectURL(annotate.url);
+    setAnnotate(null);
+  }
+  async function saveAnnotate(dataUrl: string) {
+    const from = annotate?.ref;
+    closeAnnotate();
+    if (!from) return;
+    try {
+      const ref = await imageStore.putDataUrl(dataUrl);
+      const before = note.images;
+      const at = before.indexOf(from);
+      const next = at === -1 ? [...before, ref] : [...before.slice(0, at + 1), ref, ...before.slice(at + 1)];
+      updateNote(note.id, { images: next });
+      toastWithUndo("Dodano opisane zdjęcie — oryginał został", () => updateNote(note.id, { images: before }));
+    } catch {
+      toast.error("Nie udało się zapisać rysunku", { description: "Brakuje miejsca w pamięci przeglądarki." });
+    }
+  }
   // Drzewo podstron: okruszki nad tytułem i lista dzieci pod treścią.
   const treeNotes = useMemo(() => [...liveNotes, ...archivedNotes], [liveNotes, archivedNotes]);
   const crumbs = useMemo(() => {
@@ -445,7 +476,13 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             )}
             {gallery && (
               <Suspense fallback={null}>
-                <PhotoGalleryDialog zoom={gallery} label="Obraz notatki" onIndex={(index) => setGallery((g) => (g ? { ...g, index } : g))} onClose={() => setGallery(null)} />
+                <PhotoGalleryDialog zoom={gallery} label="Obraz notatki" onIndex={(index) => setGallery((g) => (g ? { ...g, index } : g))} onClose={() => setGallery(null)}
+                  onAnnotate={canEdit && !note.locked ? (ref) => void startAnnotate(ref) : undefined} />
+              </Suspense>
+            )}
+            {annotate && (
+              <Suspense fallback={null}>
+                <DrawingCanvas open onOpenChange={(o) => { if (!o) closeAnnotate(); }} initialImage={annotate.url} onSave={(dataUrl) => void saveAnnotate(dataUrl)} />
               </Suspense>
             )}
 

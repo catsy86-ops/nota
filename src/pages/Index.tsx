@@ -21,7 +21,7 @@ import type { NoteVersion } from "@/hooks/useNoteVersions";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
 import { useOverdueBadge } from "@/hooks/useOverdueBadge";
 import { useTheme } from "@/hooks/useTheme";
-import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
+import { useViewPrefs, toggleGroupCollapsed, setViewPref } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
@@ -68,6 +68,7 @@ import { markNoteOpened } from "@/lib/lastOpened";
 import { noteHistory } from "@/lib/noteHistory";
 import { folderCrumbs, labelCrumbs } from "@/lib/breadcrumbs";
 import { FolderTemplateActions } from "@/components/FolderTemplateActions";
+import type { SavedView } from "@/lib/savedViews";
 import { EmptyState } from "@/components/EmptyState";
 import { DeleteForeverDialog, EmptyTrashDialog } from "@/components/TrashConfirmDialogs";
 import { sidebarItems } from "@/components/sidebar/sidebarItems";
@@ -432,6 +433,27 @@ const Index = () => {
       if (edit) document.querySelector<HTMLElement>(`[data-note-id-wrap="${id}"] .cursor-pointer`)?.click();
     }, 150);
   }, [go, replaceWith]);
+  /** Zapisany widok (6.1): ustawienia widoku, potem źródło z zapytaniem. Folder, którego nie ma, = komunikat. */
+  const openSavedView = useCallback((v: SavedView) => {
+    const src = v.source;
+    if (src.kind === "folder" && !folders.some((f) => f.id === src.id)) {
+      toast.info(`Folderu z widoku „${v.name}” już nie ma`);
+      return;
+    }
+    setViewPref("layout", v.layout);
+    setViewPref("sortKey", v.sortKey);
+    setViewPref("sortDir", v.sortDir);
+    setViewPref("groupBy", v.groupBy);
+    setViewPref("filterColor", v.filterColor);
+    setViewPref("filterLabel", v.filterLabel);
+    setViewPref("filterHasReminder", v.filterHasReminder);
+    setViewPref("filterPriority", v.filterPriority);
+    setSearch(v.query);
+    if (src.kind === "folder") go("folder", { folder: src.id, search: v.query });
+    else if (src.kind === "label") go("label", { label: src.label, search: v.query });
+    else go("notes", { search: v.query });
+    if (isMobile) setSidebarOpen(false);
+  }, [folders, go, isMobile]);
   /** Zapisany filtr: widok Notatki z jego zapytaniem w polu wyszukiwania. */
   const goFilter = useCallback((query: string) => {
     setSearch(query);
@@ -738,6 +760,7 @@ const Index = () => {
         onGoLabel={(label) => { go("label", { label }); if (isMobile) setSidebarOpen(false); }}
         onGoFolder={(id) => { go("folder", { folder: id }); if (isMobile) setSidebarOpen(false); }}
         onGoFilter={goFilter}
+        onOpenView={openSavedView}
         search={search}
         sidebarItems={navItems}
         onLogoClick={handleLogoClick}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { RotateCcwClock, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,17 +7,67 @@ import { MarkdownRenderer } from "./MarkdownRenderer";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { diffWords, paragraphHunks, restoreHunk } from "@/lib/wordDiff";
+import { cn } from "@/lib/utils";
+
+type Look = "content" | "inline" | "side";
+
+/** Słowa dopisane i usunięte między wersją a bieżącą treścią — kolory z tokenów, plus przekreślenie/podkreślenie dla czytelności bez koloru. */
+function InlineDiff({ before, after }: { before: string; after: string }) {
+  const ops = useMemo(() => diffWords(before, after), [before, after]);
+  return (
+    <p className="whitespace-pre-wrap wrap-break-word text-xs leading-relaxed" data-testid="version-diff-inline">
+      {ops.map((o, i) =>
+        o.type === "eq" ? <span key={i}>{o.text}</span>
+          : o.type === "del" ? <del key={i} className="rounded-control bg-destructive/15 text-destructive-ink decoration-destructive/60">{o.text}</del>
+          : <ins key={i} className="rounded-control bg-success/15 text-foreground underline decoration-success decoration-2 underline-offset-2">{o.text}</ins>,
+      )}
+    </p>
+  );
+}
+
+/** Akapity wersji i bieżącej treści obok siebie; zmieniony blok można przywrócić osobno. */
+function SideBySide({ version, current, onRestore }: { version: string; current: string; onRestore?: (content: string) => void }) {
+  const hunks = useMemo(() => paragraphHunks(current, version), [current, version]);
+  if (!hunks.some((h) => h.kind === "changed")) return <p className="text-xs text-muted-foreground">Treść jest taka sama jak teraz.</p>;
+  return (
+    <div className="space-y-1.5 text-xs" data-testid="version-diff-side">
+      <div className="hidden grid-cols-2 gap-2 font-medium text-muted-foreground sm:grid"><span>Ta wersja</span><span>Teraz</span></div>
+      {hunks.map((h, i) => h.kind === "same" ? (
+        <p key={i} className="truncate text-muted-foreground" title={h.text}>{h.text || " "}</p>
+      ) : (
+        <div key={i} className="rounded-field border border-border/60 p-2 space-y-2">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-control bg-destructive/10 p-1.5 whitespace-pre-wrap wrap-break-word"><span className="sr-only">Ta wersja: </span>{h.version.join("\n\n") || <em className="text-muted-foreground">brak</em>}</div>
+            <div className="rounded-control bg-success/10 p-1.5 whitespace-pre-wrap wrap-break-word"><span className="sr-only">Teraz: </span>{h.current.join("\n\n") || <em className="text-muted-foreground">brak</em>}</div>
+          </div>
+          {onRestore && (
+            <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs coarse:h-11" onClick={() => onRestore(restoreHunk(hunks, i))}>
+              <RotateCcw className="w-3 h-3" aria-hidden />Przywróć tylko ten akapit
+            </Button>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface VersionHistoryDialogProps {
   versions: NoteVersion[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRestore: (version: NoteVersion) => void;
+  /** Bieżąca treść notatki — do porównania (6.2). Brak = tylko podgląd wersji. */
+  current?: string;
+  /** „Przywróć tylko ten akapit”: nowa treść notatki. */
+  onRestoreContent?: (content: string) => void;
 }
 
 /** Okno „Historia wersji” z „Więcej”. Ładowane leniwie przez `VersionHistory.tsx`. */
-export default function VersionHistoryDialog({ versions, open, onOpenChange, onRestore }: VersionHistoryDialogProps) {
+export default function VersionHistoryDialog({ versions, open, onOpenChange, onRestore, current, onRestoreContent }: VersionHistoryDialogProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [look, setLook] = useState<Look>("content");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -64,8 +114,19 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
                     className="overflow-hidden"
                   >
                     <div className="px-3 pb-3 space-y-2">
-                      <div className="bg-muted/30 rounded-field p-2 max-h-40 overflow-y-auto">
-                        {v.content ? (
+                      {current !== undefined && (
+                        <ToggleGroup value={look} onValueChange={(x) => x && setLook(x as Look)} aria-label="Jak pokazać wersję" className="inline-grid">
+                          <ToggleGroupItem value="content" className="px-2.5 text-xs">Treść</ToggleGroupItem>
+                          <ToggleGroupItem value="inline" className="px-2.5 text-xs">Zmiany w tekście</ToggleGroupItem>
+                          <ToggleGroupItem value="side" className="px-2.5 text-xs">Obok</ToggleGroupItem>
+                        </ToggleGroup>
+                      )}
+                      <div className={cn("bg-muted/30 rounded-field p-2 overflow-y-auto", look === "side" ? "max-h-80" : "max-h-48")}>
+                        {current !== undefined && look === "inline" ? (
+                          <InlineDiff before={v.content} after={current} />
+                        ) : current !== undefined && look === "side" ? (
+                          <SideBySide version={v.content} current={current} onRestore={onRestoreContent ? (c) => { onRestoreContent(c); onOpenChange(false); } : undefined} />
+                        ) : v.content ? (
                           <MarkdownRenderer content={v.content} className="text-xs" />
                         ) : (
                           <p className="text-xs text-muted-foreground italic">Brak treści</p>

@@ -1,5 +1,5 @@
 import { useRef, useState, type TouchEvent } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, PenTool } from "lucide-react";
 import { NoteImage } from "@/components/NoteImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
@@ -15,8 +15,10 @@ const TAP_MS = 260;
 
 interface Zoom { refs: string[]; index: number }
 
-export function PhotoGalleryDialog({ zoom, onIndex, onClose, label = "Zdjęcie z budowy" }: {
+export function PhotoGalleryDialog({ zoom, onIndex, onClose, label = "Zdjęcie z budowy", onAnnotate }: {
   zoom: Zoom | null;
+  /** „Opisz na zdjęciu” (nowy plan 6.3): rysowanie po bieżącym zdjęciu; brak = bez przycisku. */
+  onAnnotate?: (ref: string) => void;
   /** Nazwa zdjęcia dla czytnika ekranu („Zdjęcie z budowy”, „Obraz notatki”). */
   label?: string;
   onIndex: (index: number) => void;
@@ -103,6 +105,12 @@ export function PhotoGalleryDialog({ zoom, onIndex, onClose, label = "Zdjęcie z
                 className="max-h-[92dvh] max-w-[100vw] object-contain"
               />
             </div>
+            {onAnnotate && (
+              <button type="button" onClick={() => onAnnotate(zoom.refs[zoom.index])}
+                className="pressable absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 inline-flex h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-white/15 px-4 text-sm font-medium text-white">
+                <PenTool className="h-4 w-4" aria-hidden />Opisz na zdjęciu
+              </button>
+            )}
             {count > 1 && (
               <>
                 <button type="button" onClick={() => go(-1)} aria-label="Poprzednie zdjęcie"

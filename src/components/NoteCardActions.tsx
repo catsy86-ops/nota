@@ -257,7 +257,12 @@ export function MoreActions({
       )}
       <PrivateNoteButton noteId={note.id} locked={!!note.locked} />
       {!note.locked && noteVersions && onRestoreVersion && (
-        <VersionHistory versions={noteVersions} onRestore={(v) => onRestoreVersion(note.id, v)} />
+        <VersionHistory versions={noteVersions} onRestore={(v) => onRestoreVersion(note.id, v)} current={note.content}
+          onRestoreContent={onUpdate ? (content) => {
+            const before = note.content;
+            onUpdate(note.id, { content });
+            toastWithUndo("Przywrócono akapit z wersji", () => onUpdate(note.id, { content: before }));
+          } : undefined} />
       )}
       </MoreGroup>
     </>
