@@ -1,6 +1,6 @@
 # Nowy plan: dopracowanie, wygląd i QoL (2026-11-05)
 
-> **Status (2026-11-05):** cały plan zrobiony — Etapy 0–7 (Etap 3: fc5310f, Etap 4: d495ac2, Etap 5: 12035f1, Etap 6: d09405a1, Etap 7: HASH). Zostaje ręczne QA na telefonie (Cykl 4 `Plan-nowy.md`). Otwarte: okruszek Praca → budowa (5.8; karta budowy to okno), widoki poza kopią JSON i bez wyboru kolumn (6.1). NP-5 przyjęte według rekomendacji.
+> **Status (2026-11-05):** cały plan zrobiony — Etapy 0–7 (Etap 3: fc5310f, Etap 4: d495ac2, Etap 5: 12035f1, Etap 6: d09405a1, Etap 7: 89aab69b). Zostaje ręczne QA na telefonie (Cykl 4 `Plan-nowy.md`). Otwarte: okruszek Praca → budowa (5.8; karta budowy to okno), widoki poza kopią JSON i bez wyboru kolumn (6.1). NP-5 przyjęte według rekomendacji.
 
 ## 1. Skąd ten plan
 

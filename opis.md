@@ -334,7 +334,7 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 
 ## Wspólne — QA, Etap 7 (nowy plan 2026-11-05)
 
-Commit: HASH (2026-11-05), na wip/mobile-fala1.
+Commit: 89aab69b (2026-11-05), na wip/mobile-fala1.
 
 Plan: `nowyplan.md`, Etap 7. Przegląd zrzutów, a11y, testy na telefonach i poprawki znalezionych usterek.
 
