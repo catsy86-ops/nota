@@ -3,9 +3,16 @@
  * służą do czego innego). Bez zapisu: telefon zaczyna od Dziennika (wpis z budowy),
  * komputer od Quizu.
  */
-export const STUDY_TABS = ["quiz", "board", "list", "journal"] as const;
+export const STUDY_TABS = ["quiz", "board", "list", "journal", "plans"] as const;
 export type StudyTab = (typeof STUDY_TABS)[number];
 export const STUDY_TAB_KEY = "kaczy.study.tab.v1";
+
+/**
+ * Zakładka z adresu: `/praca?zakladka=plany`. Plany są zakładką Pracy (2026-11-05), więc `go("plans")`, paleta,
+ * skrót `g r` i stary adres `/plany` prowadzą tutaj. Praca zdejmuje parametr po otwarciu zakładki.
+ */
+export const STUDY_TAB_PARAM = "zakladka";
+export const PLANS_TAB_VALUE = "plany";
 
 export function readStudyTab(phone: boolean): StudyTab {
   try {

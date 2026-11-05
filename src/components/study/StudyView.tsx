@@ -19,10 +19,15 @@ import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJourna
 import { readSiteParam } from "@/lib/study/siteLink";
 import { CUSTOM_PREFILL_EVENT, type CustomPrefill } from "@/lib/study/customPrefill";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
+import { useHiddenViews, isViewShown } from "@/lib/hiddenViews";
+import { loadPlansView, preloadView } from "@/lib/viewPreload";
+import { PLAN_PARAM } from "@/lib/plans/planParam";
 import { useDayClock } from "@/lib/dayClock";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
-import { readStudyTab, writeStudyTab } from "@/lib/study/tab";
+import { PLANS_TAB_VALUE, readStudyTab, STUDY_TAB_PARAM, writeStudyTab } from "@/lib/study/tab";
 import { QuizPanel, type QuizScope } from "./QuizPanel";
 import { StudyBoard } from "./StudyBoard";
 import { StudyChecklist } from "./StudyChecklist";
@@ -141,7 +146,10 @@ function StudySkeleton() {
   );
 }
 
-/** Dział „Praca” (dawniej „Nauka”): quiz, tablica tematów i lista do nauki z materiałów G-HEAT. */
+// Plany (Analizator planów) poza precache (D2) — zakładka ładuje je dopiero przy wejściu.
+const PlansView = lazy(loadPlansView);
+
+/** Dział „Praca” (dawniej „Nauka”): quiz, tablica tematów, lista do nauki z materiałów G-HEAT, dziennik i Plany. */
 export default function StudyView() {
   // Do wczytania dokumentu szkielet o kształcie widoku, a nie pusty ekran — pusta Nauka mignęłaby zerami (§8 D3).
   return useStudyReady() ? <StudyScreen /> : <StudySkeleton />;
@@ -149,8 +157,37 @@ export default function StudyView() {
 
 function StudyScreen() {
   // Zapamiętana zakładka; bez zapisu telefon zaczyna od Dziennika (`lib/study/tab.ts`).
-  const [tab, setTabState] = useState<string>(() => readStudyTab(window.matchMedia?.(MOBILE_QUERY).matches ?? false));
-  const setTab = (t: string) => { setTabState(t); writeStudyTab(t); };
+  const hiddenViews = useHiddenViews();
+  const plansShown = isViewShown(hiddenViews, "plans");
+  const [storedTab, setTabState] = useState<string>(() => readStudyTab(window.matchMedia?.(MOBILE_QUERY).matches ?? false));
+  // Ukryte Plany (Ustawienia → widoki) chowają zakładkę; zapamiętana zakładka „plans” wraca wtedy do Quizu.
+  const tab = storedTab === "plans" && !plansShown ? "quiz" : storedTab;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const setTab = (t: string) => {
+    setTabState(t);
+    writeStudyTab(t);
+    // Wyjście z Planów zdejmuje otwartą analizę z adresu — inaczej „wstecz” i odświeżenie wracałyby do edytora.
+    if (t !== "plans" && new URLSearchParams(window.location.search).has(PLAN_PARAM)) {
+      const params = new URLSearchParams(window.location.search);
+      params.delete(PLAN_PARAM);
+      const rest = params.toString();
+      navigate({ pathname: window.location.pathname, search: rest ? `?${rest}` : "" }, { replace: true });
+    }
+  };
+  // Plany z adresu: `?zakladka=plany` (go("plans"), paleta, `g r`), stary `/plany` albo link do analizy `?analiza=`.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const fromOldPath = location.pathname.replace(/\/+$/, "") === "/plany";
+    const wantsPlans = fromOldPath || params.get(STUDY_TAB_PARAM) === PLANS_TAB_VALUE || params.has(PLAN_PARAM);
+    if (!wantsPlans || !plansShown) return;
+    setTabState("plans");
+    writeStudyTab("plans");
+    if (!fromOldPath && !params.has(STUDY_TAB_PARAM)) return;
+    params.delete(STUDY_TAB_PARAM);
+    const rest = params.toString();
+    navigate({ pathname: "/praca", search: rest ? `?${rest}` : "" }, { replace: true, state: location.state });
+  }, [location.pathname, location.search, location.state, plansShown, navigate]);
   const [scope, setScope] = useState<QuizScope>({ kind: "all" });
   const [statsOpen, setStatsOpen] = useState(false);
   const study = useStudy();
@@ -228,7 +265,8 @@ function StudyScreen() {
       <CustomQuestionsDialog open={ownOpen} onOpenChange={setOwnOpen} prefill={prefill} />
       {/* Na Dzienniku nauka schodzi do jednego wiersza — na budowie liczy się „+ Wpis” i lista, nie pasek opanowania.
           Bez własnego tytułu: „Praca” jest w główce kartki, „Dziennik” w zakładce (plan wyglądu, Faza 1). */}
-      {tab === "journal" ? (
+      {/* Plany nie mają nic wspólnego z nauką: bez paska opanowania nad nimi, edytor planu dostaje całą wysokość. */}
+      {tab === "plans" ? null : tab === "journal" ? (
         <header className="flex flex-wrap items-center gap-x-3 gap-y-2" data-study-header="compact">
           <button
             type="button"
@@ -295,6 +333,10 @@ function StudyScreen() {
           <TabsTrigger value="board" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Tablica</TabsTrigger>
           <TabsTrigger value="list" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11" aria-label="Lista kontrolna"><span className="sm:hidden">Lista</span><span className="max-sm:hidden">Lista kontrolna</span></TabsTrigger>
           <TabsTrigger value="journal" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Dziennik</TabsTrigger>
+          {plansShown && (
+            <TabsTrigger value="plans" onPointerDown={() => preloadView("plans")} onFocus={() => preloadView("plans")}
+              className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Plany</TabsTrigger>
+          )}
         </TabsList>
         {/* forceMount: runda w toku nie ginie po zajrzeniu do tablicy lub listy. */}
         <TabsContent value="quiz" forceMount className="mt-4 data-[state=inactive]:hidden">
@@ -305,6 +347,15 @@ function StudyScreen() {
         <TabsContent value="journal" className="mt-4">
           <StudyJournal onPractice={practice} />
         </TabsContent>
+        {plansShown && (
+          <TabsContent value="plans" className="mt-4">
+            <ViewErrorBoundary name="Plany">
+              <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
+                <PlansView />
+              </Suspense>
+            </ViewErrorBoundary>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

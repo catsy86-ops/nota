@@ -5,13 +5,12 @@ import { yjsStore } from "@/lib/yjsStore";
 import { NewAnalysisDialog } from "./NewAnalysisDialog";
 import { PlanEditor } from "./PlanEditor";
 import { PlansList } from "./PlansList";
+import { PLAN_PARAM } from "@/lib/plans/planParam";
 
-/** Otwarta analiza w adresie (`/plany?analiza=<id>`): odświeżenie zostaje w edytorze, „wstecz” wraca do listy. */
-export const PLAN_PARAM = "analiza";
 
 /**
- * Dział „Plany” — Analizator planów hydraulicznych (`docs/plan-analizator-planow-2026-11-01.md`):
- * lista analiz albo edytor jednej. Ładowany leniwie, poza precache (D2). Otwarta analiza wynika z adresu
+ * Zakładka „Plany” w Pracy (do 2026-11-05 osobny dział) — Analizator planów hydraulicznych
+ * (`docs/plan-analizator-planow-2026-11-01.md`): lista analiz albo edytor jednej. Ładowany leniwie, poza precache (D2). Otwarta analiza wynika z adresu
  * routera, więc systemowe „wstecz” i odświeżenie działają bez własnego stanu.
  */
 export default function PlansView() {
@@ -46,7 +45,7 @@ export default function PlansView() {
   useEffect(() => { if (missing) navigate({ pathname: window.location.pathname, search: "" }, { replace: true }); }, [missing, navigate]);
 
   return (
-    <div className="mx-auto w-full max-w-6xl" data-testid="plans-view">
+    <div className="w-full" data-testid="plans-view">
       {plan ? <PlanEditor plan={plan} onBack={close} /> : <PlansList plans={plans} onOpen={open} onNew={() => setCreating(true)} />}
       <NewAnalysisDialog open={creating} onOpenChange={setCreating} onCreated={open} />
     </div>

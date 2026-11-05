@@ -97,7 +97,7 @@ import { OlderDeviceBanner } from "@/components/sync/OlderDeviceBanner";
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
-import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, QuickInboxDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, PlansView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
+import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, QuickInboxDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -953,14 +953,6 @@ const Index = () => {
               </ViewErrorBoundary>
             )}
           </Activity>
-
-          {view === "plans" && (
-            <ViewErrorBoundary name="Plany">
-              <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
-                <PlansView />
-              </Suspense>
-            </ViewErrorBoundary>
-          )}
 
           {view === "cwiczenia" && (
             <ViewErrorBoundary name="Ćwiczenia">

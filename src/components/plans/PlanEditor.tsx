@@ -362,11 +362,18 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     [selected, plan.texts, project.image.w, project.image.h],
   );
 
+  // Plany są zakładką Pracy: nad edytorem stoją główka i zakładki, więc na komputerze płótno (wysokość okna
+  // minus pasek) zaczynałoby się w połowie ekranu. Po otwarciu analizy strona przewija się do edytora.
+  const sectionRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (window.matchMedia?.("(min-width: 640px)").matches) sectionRef.current?.scrollIntoView({ block: "start" });
+  }, [project.id]);
+
   const hint = picking ? "Stuknij linię rury, żeby pobrać jej kolor" : mode === "symbol" ? "Stuknij miejsce symbolu" : mode === "route" ? "Stuknij kolejne punkty rury" : mode === "calibrate" ? "Stuknij dwa końce znanego wymiaru" : "Stuknij trasę, żeby ją zaznaczyć";
 
   return (
     // Na telefonie `fixed inset-0`: płótno nie dzieli ekranu z główką kartki, paskiem u góry i dolnym paskiem.
-    <section aria-label={`Analiza: ${project.name}`} className="flex flex-col overflow-hidden bg-card max-sm:fixed max-sm:inset-0 max-sm:z-overlay max-sm:pt-[env(safe-area-inset-top)] max-sm:pb-[env(safe-area-inset-bottom)] sm:h-[calc(100dvh-7rem)] sm:min-h-[28rem] sm:rounded-card sm:border sm:border-border/60" data-testid="plan-editor">
+    <section ref={sectionRef} aria-label={`Analiza: ${project.name}`} className="sm:scroll-mt-24 flex flex-col overflow-hidden bg-card max-sm:fixed max-sm:inset-0 max-sm:z-overlay max-sm:pt-[env(safe-area-inset-top)] max-sm:pb-[env(safe-area-inset-bottom)] sm:h-[calc(100dvh-7rem)] sm:min-h-[28rem] sm:rounded-card sm:border sm:border-border/60" data-testid="plan-editor">
       <div className="flex flex-wrap items-center gap-1 border-b border-border/60 px-1.5 py-1">
         <button type="button" onClick={onBack} className={toolBtn} aria-label="Wróć do listy analiz">
           <ArrowLeft className="h-4 w-4" aria-hidden /><span className="hidden sm:inline">Analizy</span>

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import type { View } from "@/hooks/useFilteredNotes";
 import { parseViewRoute, viewPath, withSearch } from "@/lib/viewRoute";
 import { SITE_PARAM } from "@/lib/study/siteLink";
+import { PLANS_TAB_VALUE, STUDY_TAB_PARAM } from "@/lib/study/tab";
 
 /** Stan widoku (widok, folder, etykieta, wyszukiwanie) trzymany w adresie. */
 export function useViewRoute() {
@@ -20,6 +21,12 @@ export function useViewRoute() {
       const params = new URLSearchParams(query);
       params.set(SITE_PARAM, opts.site);
       to = `${path}?${params.toString()}`;
+    }
+    // Plany to zakładka Pracy: `/praca?zakladka=plany` (Praca zdejmuje parametr po przełączeniu).
+    if (view === "plans") {
+      const params = new URLSearchParams(withSearch(window.location.search, q));
+      params.set(STUDY_TAB_PARAM, PLANS_TAB_VALUE);
+      to = `${viewPath("study")}?${params.toString()}`;
     }
     if (to === window.location.pathname + window.location.search) return;
     navigate(to);

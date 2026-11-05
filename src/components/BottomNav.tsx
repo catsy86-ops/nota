@@ -301,7 +301,6 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
             {isViewShown(hiddenViews, "calendar") && <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onPointerDown={() => preloadView("calendar")} onFocus={() => preloadView("calendar")} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />}
             {isViewShown(hiddenViews, "shifts") && <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onPointerDown={() => preloadView("shifts")} onFocus={() => preloadView("shifts")} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />}
             {isViewShown(hiddenViews, "study") && <SheetTile Icon={HardHat} label="Praca" active={view === "study"} onPointerDown={() => preloadView("study")} onFocus={() => preloadView("study")} onClick={() => { onGo("study"); setMoreOpen(false); }} />}
-            {isViewShown(hiddenViews, "plans") && <SheetTile Icon={Ruler} label="Plany" active={view === "plans"} onPointerDown={() => preloadView("plans")} onFocus={() => preloadView("plans")} onClick={() => { onGo("plans"); setMoreOpen(false); }} />}
             {isViewShown(hiddenViews, "debts") && <SheetTile Icon={HandCoins} label="Długi" active={view === "debts"} onClick={() => { onGo("debts"); setMoreOpen(false); }} />}
             {isViewShown(hiddenViews, "cwiczenia") && <SheetTile Icon={Dumbbell} label="Ćwiczenia" active={view === "cwiczenia"} onClick={() => { onGo("cwiczenia"); setMoreOpen(false); }} />}
           </SheetGroup>

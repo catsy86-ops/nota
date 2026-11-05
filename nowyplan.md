@@ -104,6 +104,8 @@ Zapas precache jest mniejszy niż 29 KiB zakładane w §3 p. 8. Etapy 1–2 musz
 - **1.4:** tabliczka jako ostatni element `<main>`; zniknął wyjątek dla Grafiku.
 - **Miary po Etapie 1:** wejściowy JS 442,4 KB gzip, precache 3,988 MiB (zapas 12,6 KiB, czyli 3,7 KiB mniej, razem z osią dnia). axe 241/241, Vitest 3045/3045, zrzuty 227/227. Smoke `tabs.spec.ts` padał 5. dnia miesiąca (nazwa dnia z „dziś”); test poprawiony.
 
+**Poza planem (2026-11-05, prośba właściciela):** Plany to teraz zakładka Pracy. Nie ma ich w pasku bocznym ani w „Więcej”, a `/plany`, paleta i `g r` otwierają zakładkę. Opis w `opis.md` („Plany jako zakładka Pracy”). Precache po zmianie: 3,989 MiB (zapas 11,6 KiB). Smoke `composer.spec:18` pada pod 3 workerami także na commicie sprzed sesji (4f4c4a2), czyli to istniejąca niestabilność.
+
 ### Etap 2: wspólne elementy
 
 | # | Co | Gdzie | W | N |

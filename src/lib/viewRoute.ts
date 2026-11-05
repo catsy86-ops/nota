@@ -24,7 +24,8 @@ const SIMPLE: Record<string, View> = {
   grafik: "shifts",
   dlugi: "debts",
   cwiczenia: "cwiczenia",
-  plany: "plans",
+  // Plany są zakładką Pracy (2026-11-05): stary adres otwiera Pracę, a ona przełącza się na zakładkę „Plany”.
+  plany: "study",
   // Dawny adres działu Praca (był „Nauka”) — stare zakładki i skróty dalej działają.
   nauka: "study",
   praca: "study",
@@ -32,7 +33,7 @@ const SIMPLE: Record<string, View> = {
   kosz: "trash",
   skrzynka: "inbox",
 };
-// Przy kilku adresach jednego widoku wygrywa ostatni (`praca` po `nauka`).
+// Przy kilku adresach jednego widoku wygrywa ostatni (`praca` po `plany` i `nauka`).
 const SLUG: Partial<Record<View, string>> = Object.fromEntries(Object.entries(SIMPLE).map(([k, v]) => [v, k]));
 
 function decode(s: string): string {

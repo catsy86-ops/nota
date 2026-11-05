@@ -17,4 +17,9 @@ describe("zakładka działu Praca", () => {
     localStorage.setItem(STUDY_TAB_KEY, "zła");
     expect(readStudyTab(false)).toBe("quiz");
   });
+
+  it("Plany to zakładka Pracy i też się zapamiętują", () => {
+    writeStudyTab("plans");
+    expect(readStudyTab(true)).toBe("plans");
+  });
 });

@@ -1,8 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
 
-// Analizator planów (faza 2): dział /plany, import zrzutu z walidacją, edytor z zoomem i dopasowaniem,
-// adres `?analiza=`, usunięcie z „Cofnij”.
+// Analizator planów (faza 2): zakładka „Plany” w Pracy (do 2026-11-05 dział /plany; stary adres przekierowuje),
+// import zrzutu z walidacją, edytor z zoomem i dopasowaniem, adres `?analiza=`, usunięcie z „Cofnij”.
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -30,6 +30,9 @@ test("Plany: import zrzutu, edytor z zoomem, odświeżenie, powrót i usunięcie
   await page.goto("/plany");
   const list = page.getByTestId("plans-list");
   await expect(list.getByText("Brak analiz")).toBeVisible();
+  // Stary adres otwiera Pracę na zakładce „Plany”.
+  await expect(page).toHaveURL(/\/praca$/);
+  await expect(page.getByRole("tab", { name: "Plany" })).toHaveAttribute("aria-selected", "true");
 
   await page.getByRole("button", { name: "Nowa analiza" }).click();
   const dialog = page.getByTestId("plan-new");
@@ -48,7 +51,7 @@ test("Plany: import zrzutu, edytor z zoomem, odświeżenie, powrót i usunięcie
 
   const editor = page.getByTestId("plan-editor");
   await expect(editor.getByRole("heading", { name: "Parter wod-kan" })).toBeVisible();
-  await expect(page).toHaveURL(/\/plany\?analiza=plan-/);
+  await expect(page).toHaveURL(/\/praca\?analiza=plan-/);
   const canvas = editor.getByTestId("plan-canvas");
   await expect(canvas).toHaveAttribute("data-scale", /\d/);
   const fitted = Number(await canvas.getAttribute("data-scale"));
@@ -67,7 +70,7 @@ test("Plany: import zrzutu, edytor z zoomem, odświeżenie, powrót i usunięcie
   await expect(page.locator("[data-testid='plan-canvas'] image")).toHaveAttribute("href", /^blob:/);
 
   await page.getByRole("button", { name: "Wróć do listy analiz" }).click();
-  await expect(page).toHaveURL(/\/plany$/);
+  await expect(page).toHaveURL(/\/praca$/);
   await expect(list.getByText("1 analiza")).toBeVisible();
   await expect(list.getByText(/0 tras · bez skali/)).toBeVisible();
   const axeList = await new AxeBuilder({ page }).include("[data-testid='plans-view']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
@@ -79,17 +82,31 @@ test("Plany: import zrzutu, edytor z zoomem, odświeżenie, powrót i usunięcie
   await expect(list.getByText("1 analiza")).toBeVisible();
 });
 
-test("Plany: dział jest w pasku bocznym, „wstecz” z edytora wraca do listy", async ({ page }) => {
+test("Plany: zakładka w Pracy (nie ma ich w pasku bocznym), „wstecz” z edytora wraca do listy", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("complementary").getByRole("button", { name: "Plany", exact: true }).click();
-  await expect(page).toHaveURL(/\/plany$/);
+  const sidebar = page.getByRole("complementary");
+  await expect(sidebar.getByRole("button", { name: "Plany", exact: true })).toHaveCount(0);
+  // „Praca” to też nagłówek grupy — pozycja działu jest druga.
+  await sidebar.getByRole("button", { name: "Praca", exact: true }).nth(1).click();
+  await page.getByRole("tab", { name: "Plany" }).click();
+  await expect(page).toHaveURL(/\/praca$/);
   await page.getByRole("button", { name: "Nowa analiza" }).click();
   await page.getByTestId("plan-new").getByTestId("plan-file").setInputFiles({ name: "a.png", mimeType: "image/png", buffer: await planPng(page, 400, 300) });
   await page.getByTestId("plan-new").getByRole("button", { name: "Utwórz analizę" }).click();
   await expect(page.getByTestId("plan-editor")).toBeVisible();
   await page.goBack();
   await expect(page.getByTestId("plans-list")).toBeVisible();
-  await expect(page).toHaveURL(/\/plany$/);
+  await expect(page).toHaveURL(/\/praca$/);
+});
+
+test("Plany: skrót „g r” otwiera zakładkę Plany w Pracy i zdejmuje parametr zakładki", async ({ page }) => {
+  await page.goto("/");
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press("g");
+  await page.keyboard.press("r");
+  await expect(page.getByTestId("plans-list")).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Plany" })).toHaveAttribute("aria-selected", "true");
+  await expect(page).toHaveURL(/\/praca$/);
 });
 
 /** Klik w punkt obrazu (piksele oryginału) — przeliczenie przez widok z atrybutów płótna. */

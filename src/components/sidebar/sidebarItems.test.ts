@@ -14,7 +14,7 @@ describe("grupy paska bocznego (PW-4)", () => {
       ["archiwum", ""],
     ]);
     expect(groups[0].items.map((i) => i.label)).toEqual(["Notatki", "Skrzynka", "Dziś", "Terminy", "Kalendarz"]);
-    expect(groups[1].items.map((i) => i.label)).toEqual(["Grafik", "Praca", "Plany"]);
+    expect(groups[1].items.map((i) => i.label)).toEqual(["Grafik", "Praca"]); // Plany są zakładką Pracy (2026-11-05).
     expect(groups[2].items.map((i) => i.label)).toEqual(["Długi", "Ćwiczenia"]);
     expect(groups[3].items.map((i) => i.label)).toEqual(["Archiwum", "Kosz"]);
   });

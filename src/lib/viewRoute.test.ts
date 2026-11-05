@@ -8,6 +8,11 @@ describe("viewRoute", () => {
     for (const v of views) expect(parseViewRoute(viewPath(v), "").view).toBe(v);
   });
 
+  it("stary adres /plany otwiera Pracę (Plany są jej zakładką)", () => {
+    expect(parseViewRoute("/plany", "?analiza=p1").view).toBe("study");
+    expect(viewPath("study")).toBe("/praca");
+  });
+
   it("round-trips folders and labels with special characters", () => {
     expect(parseViewRoute(viewPath("folder", { folder: "a/b c" }), "")).toMatchObject({ view: "folder", folder: "a/b c" });
     expect(parseViewRoute(viewPath("label", { label: "praca #1 ż" }), "")).toMatchObject({ view: "label", label: "praca #1 ż" });

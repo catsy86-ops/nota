@@ -16,7 +16,6 @@ const DATED_VIEWS: ReadonlySet<View> = new Set<View>(["calendar", "shifts", "stu
 /** Jedno zdanie pod tytułem (nowy plan 1.1): tylko tam, gdzie nazwa działu nie mówi, do czego służy. */
 const VIEW_LEAD: Partial<Record<View, string>> = {
   debts: "Kto ile pożyczył i ile już oddał.",
-  plans: "Wyznaczaj trasy rur na zrzutach planów i licz ich długość.",
 };
 
 /** Linijka nad tytułem: grupa działu, folder albo etykieta. */
