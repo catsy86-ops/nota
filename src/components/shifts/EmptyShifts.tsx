@@ -1,3 +1,5 @@
+import { CalendarPlus } from "lucide-react";
+import { StatusPanel } from "@/components/StatusPanel";
 import { addDaysToKey } from "@/lib/week";
 import type { DayEntry } from "@/lib/shifts";
 
@@ -24,21 +26,25 @@ export function EmptyShifts({ days, isWeek, weekStart, monthKey, onPattern, onTe
   if (!empty) return null;
   const extend = !isWeek && Object.keys(days).some((k) => k < `${monthKey}-01`);
   return (
-    <section aria-label={isWeek ? "Pusty tydzień" : "Pusty miesiąc"} className="mb-3 rounded-card border border-border/60 bg-card p-4 space-y-3">
-      <p className="text-sm text-muted-foreground">{isWeek ? "W tym tygodniu nie ma zmian." : "W tym miesiącu nie ma jeszcze zmian."}</p>
-      <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={onPattern} className={primaryBtn}>
-          {extend ? "Przedłuż cykl" : "Nałóż cykl"}
-        </button>
-        <button type="button" onClick={onTemplate} className={secondaryBtn}>
-          Szablon tygodnia
-        </button>
-        {!isWeek && (
-          <button type="button" onClick={onCopyPreviousMonth} className={secondaryBtn}>
-            Skopiuj poprzedni miesiąc
-          </button>
-        )}
-      </div>
+    // Ten sam pusty stan co w innych działach (`StatusPanel`, nowy plan 2.5): przerywana ramka, szkic kalendarza.
+    <section aria-label={isWeek ? "Pusty tydzień" : "Pusty miesiąc"} className="mb-3">
+      <StatusPanel size="inline" icon={CalendarPlus} className="p-4"
+        title={isWeek ? "W tym tygodniu nie ma zmian." : "W tym miesiącu nie ma jeszcze zmian."}
+        actions={
+          <>
+            <button type="button" onClick={onPattern} className={primaryBtn}>
+              {extend ? "Przedłuż cykl" : "Nałóż cykl"}
+            </button>
+            <button type="button" onClick={onTemplate} className={secondaryBtn}>
+              Szablon tygodnia
+            </button>
+            {!isWeek && (
+              <button type="button" onClick={onCopyPreviousMonth} className={secondaryBtn}>
+                Skopiuj poprzedni miesiąc
+              </button>
+            )}
+          </>
+        } />
     </section>
   );
 }

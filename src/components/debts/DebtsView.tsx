@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { StatusPanel } from "@/components/StatusPanel";
 import { Stat } from "@/components/ui/stat";
 import { ArrowDownLeft, ArrowUpRight, Check, ChevronDown, Combine, Download, Eye, EyeOff, HandCoins, Pencil, Plus, Search, Send, Trash2, TriangleAlert, Undo2 } from "lucide-react";
 import { toast } from "sonner";
@@ -311,11 +312,12 @@ function People({ people, onOpen, hidden, onStart }: { people: PersonDebts[]; on
   const settledId = useId();
   if (people.length === 0) {
     return (
-      <div className="rounded-card border border-dashed border-border p-8 text-center" data-testid="debts-empty">
-        <EmptySketch />
-        <p className="mt-3 font-display text-lg font-semibold">Jeszcze nikogo tu nie ma</p>
-        <p className="mt-1 text-sm text-muted-foreground">Zapisz pierwszą pożyczkę — od razu zobaczysz, kto ile jest winien.</p>
-        {onStart && <Button className="mt-4 h-11 gap-2" onClick={onStart}><Plus className="h-4 w-4" aria-hidden />Dodaj pierwszy wpis</Button>}
+      // Ten sam pusty stan co w innych działach (`StatusPanel`, nowy plan 2.5), z własnym szkicem portfela.
+      <div data-testid="debts-empty">
+        <StatusPanel size="inline" art={<EmptySketch />} className="p-8"
+          title="Jeszcze nikogo tu nie ma"
+          description="Zapisz pierwszą pożyczkę — od razu zobaczysz, kto ile jest winien."
+          actions={onStart && <Button className="h-11 gap-2" onClick={onStart}><Plus className="h-4 w-4" aria-hidden />Dodaj pierwszy wpis</Button>} />
       </div>
     );
   }

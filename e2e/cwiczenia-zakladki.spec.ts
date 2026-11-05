@@ -7,13 +7,13 @@ test.beforeEach(async ({ page }) => {
 test("telefon: Ćwiczenia pokazują jedną sekcję naraz (zakładki) @mobile", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes("iphone"), "zakładki tylko na telefonie");
   await page.goto("/cwiczenia");
-  const tabs = page.getByRole("group", { name: "Dział Ćwiczeń" });
-  await expect(tabs.getByRole("button", { name: "Odżywki" })).toHaveAttribute("aria-pressed", "true");
+  const tabs = page.getByRole("tablist", { name: "Dział Ćwiczeń" });
+  await expect(tabs.getByRole("tab", { name: "Odżywki" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("heading", { name: "Odżywki" })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Dieta|Trening/ }).first()).toBeHidden();
 
-  await tabs.getByRole("button", { name: "Dieta" }).click();
-  await expect(tabs.getByRole("button", { name: "Dieta" })).toHaveAttribute("aria-pressed", "true");
+  await tabs.getByRole("tab", { name: "Dieta" }).click();
+  await expect(tabs.getByRole("tab", { name: "Dieta" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("heading", { name: "Odżywki" })).toBeHidden();
   await expect(page.getByRole("heading", { name: "Dieta" }).first()).toBeVisible();
 });
@@ -21,6 +21,6 @@ test("telefon: Ćwiczenia pokazują jedną sekcję naraz (zakładki) @mobile", a
 test("komputer: wszystkie sekcje Ćwiczeń widoczne, bez zakładek", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name.includes("iphone"), "układ komputera");
   await page.goto("/cwiczenia");
-  await expect(page.getByRole("group", { name: "Dział Ćwiczeń" })).toBeHidden();
+  await expect(page.getByRole("tablist", { name: "Dział Ćwiczeń" })).toBeHidden();
   await expect(page.getByRole("heading", { name: "Odżywki" })).toBeVisible();
 });

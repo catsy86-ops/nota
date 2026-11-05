@@ -1,4 +1,6 @@
 import { ImagePlus, Plus, Ruler, Spline, Trash } from "lucide-react";
+import { EmptyIllustration } from "@/components/EmptyIllustration";
+import { StatusPanel } from "@/components/StatusPanel";
 import { PageActions } from "@/components/PageActions";
 import { Button } from "@/components/ui/button";
 import type { PlanImage } from "@/lib/plans/model";
@@ -36,9 +38,9 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
 
       {plans.length === 0 ? (
         // Pusty stan jako trzy kroki (plan wyglądu, Faza 7): to prawdziwa kolejność pracy, więc numeracja coś mówi.
-        <div className="rounded-card border border-dashed border-border p-5 sm:p-6">
-          <p className="font-display text-lg">Brak analiz</p>
-          <ol className="mt-3 grid gap-3 sm:grid-cols-3 sm:gap-4">
+        // Ramka, szkic i tytuł ze `StatusPanel` jak w innych działach (nowy plan 2.5).
+        <StatusPanel size="inline" className="p-5 sm:p-6" art={<EmptyIllustration view="plans" />} title="Brak analiz">
+          <ol className="mt-4 grid gap-3 text-left sm:grid-cols-3 sm:gap-4">
             {EMPTY_STEPS.map(({ Icon, title, text }, i) => (
               <li key={title} className="flex gap-3 sm:flex-col sm:gap-2">
                 <span className="grid size-9 shrink-0 place-items-center rounded-full border border-border text-muted-foreground" aria-hidden>
@@ -51,7 +53,7 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
               </li>
             ))}
           </ol>
-        </div>
+        </StatusPanel>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {plans.map((d) => {

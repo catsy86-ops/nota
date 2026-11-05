@@ -5,18 +5,23 @@ import { cn } from "@/lib/utils";
  * te same komórki, nagłówki dni, znacznik „dziś”, weekendy i święta.
  */
 
-/** Nagłówek dnia tygodnia; sobota i niedziela (indeks 5 i 6) w kolorze marki. */
+/** Nagłówek dnia tygodnia („Pon”, zdaniem — nowy plan 2.6); sobota i niedziela (indeks 5 i 6) w kolorze marki. */
 export const weekdayHeadClass = (i: number) =>
-  cn("text-xs text-center py-1", i >= 5 ? "text-primary-ink" : "text-muted-foreground");
+  cn("text-xs capitalize text-center py-1", i >= 5 ? "text-primary-ink" : "text-muted-foreground");
 
-/** Komórka dnia bez rozmiaru — wysokość zależy od tego, co komórka pokazuje. Pełne tło: kratka tła nie prześwituje. */
-export const dayCellClass = (inMonth: boolean, today = false) => cn(
+/**
+ * Komórka dnia bez rozmiaru — wysokość zależy od tego, co komórka pokazuje. Pełne tło: kratka tła nie prześwituje.
+ * `empty` (Kalendarz, nowy plan 2.5): dzień bez niczego to przerywany obrys bez białego kafla — 35 pustych białych
+ * kafli wyglądało jak niewczytana siatka.
+ */
+export const dayCellClass = (inMonth: boolean, today = false, empty = false) => cn(
   "relative rounded-card border text-left transition-colors outline-hidden",
   // Obramowanie „dziś” oddycha — bardzo subtelnie (CSS `today-breath`, wyłączone przy reduced motion).
   today && inMonth && "today-breath",
   "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
   // Dzień spoza miesiąca: szary tekst, nie przezroczystość — przy opacity czerwone święto znikało w ciemnym motywie.
   inMonth ? "border-border/50 bg-card dark:border-transparent" : "border-transparent text-muted-foreground",
+  inMonth && empty && !today && "border-dashed bg-transparent dark:border-border/40",
 );
 
 /** Numer dnia: „dziś” w kółku marki, święto pogrubione (czerwone w bieżącym miesiącu). */

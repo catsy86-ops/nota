@@ -109,6 +109,17 @@ test("Plany: skrót „g r” otwiera zakładkę Plany w Pracy i zdejmuje parame
   await expect(page).toHaveURL(/\/praca$/);
 });
 
+test("Plany: link z ?analiza= otwiera zakładkę, wyjście na inną zakładkę zdejmuje analizę z adresu", async ({ page }) => {
+  await newPlan(page, "Link");
+  await expect(page).toHaveURL(/\/praca\?analiza=plan-/);
+  const url = page.url();
+  await page.goto(url);
+  await expect(page.getByTestId("plan-editor")).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Plany" })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { name: "Quiz" }).click();
+  await expect(page).toHaveURL(/\/praca$/);
+});
+
 /** Klik w punkt obrazu (piksele oryginału) — przeliczenie przez widok z atrybutów płótna. */
 async function clickImage(page: Page, x: number, y: number) {
   const canvas = page.getByTestId("plan-canvas");

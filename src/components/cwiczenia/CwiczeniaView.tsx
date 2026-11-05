@@ -1,7 +1,8 @@
 import { useId, useMemo, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SectionCard } from "@/components/ui/section-card";
 import { MissingHint } from "@/components/ui/missing-hint";
-import { Pill, Trash } from "lucide-react";
+import { Pill, Plus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -64,29 +65,26 @@ export function CwiczeniaView() {
   const notes = useNotesContext();
   const today = localDayKey();
   const doneToday = supplements.filter((s) => taken.has(logKey(today, s.id))).length;
-  // Na telefonie jedna sekcja naraz (zakładki); na większym ekranie wszystkie jak dotąd. Sekcje są w DOM zawsze.
+  // Na telefonie jedna sekcja naraz (zakładki `ui/tabs`, nowy plan 2.2); na większym ekranie wszystkie jak dotąd.
+  // Panele mają `forceMount`, więc sekcje są w DOM zawsze; nieaktywne chowa tylko telefon.
   const [tab, setTab] = useState<CwiczeniaTab>("odzywki");
-  const phoneHide = (id: CwiczeniaTab) => (tab === id ? undefined : "max-sm:hidden");
+  const panel = "mt-0 max-sm:data-[state=inactive]:hidden";
+  // NP-7 (nowy plan 2.5): przy pustej liście formularz od razu otwarty; gdy odżywki już są — najpierw przycisk.
+  const [formOpen, setFormOpen] = useState(false);
 
   return (
     // Tytuł i grupa są w główce kartki (`ViewTitle`).
     <section aria-label="Ćwiczenia" className="w-full max-w-(--page-form) pb-32">
 
-      <div role="group" aria-label="Dział Ćwiczeń" className="mb-4 flex gap-1 rounded-card bg-muted p-0.5 sm:hidden">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as CwiczeniaTab)}>
+      <TabsList aria-label="Dział Ćwiczeń" className="mb-4 flex h-auto w-full sm:hidden">
         {CWICZENIA_TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            aria-pressed={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex-1 h-11 rounded-[0.65rem] text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
-          >
-            {t.label}
-          </button>
+          <TabsTrigger key={t.id} value={t.id} className="h-11 flex-1">{t.label}</TabsTrigger>
         ))}
-      </div>
+      </TabsList>
 
-      <SectionCard icon={Pill} title="Odżywki" className={phoneHide("odzywki")} bodyClassName="space-y-4"
+      <TabsContent value="odzywki" forceMount className={panel}>
+      <SectionCard icon={Pill} title="Odżywki" bodyClassName="space-y-4"
         meta={supplements.length > 0 ? <span data-testid="supplements-count">dziś {doneToday} z {supplements.length}</span> : undefined}>
 
         {supplements.length === 0 ? (
@@ -95,14 +93,22 @@ export function CwiczeniaView() {
           <SupplementList supplements={supplements} taken={taken} day={today} notes={notes} />
         )}
 
-        <AddSupplementForm notes={notes} />
+        {supplements.length === 0 || formOpen ? (
+          <AddSupplementForm notes={notes} />
+        ) : (
+          <Button variant="outline" size="sm" className="gap-1.5 coarse:h-11" aria-expanded={false} onClick={() => setFormOpen(true)}>
+            <Plus className="h-4 w-4" aria-hidden />Dodaj odżywkę
+          </Button>
+        )}
       </SectionCard>
+      </TabsContent>
 
-      <div className="mt-6 space-y-6">
-        <div className={phoneHide("trening")}><TrainingSection /></div>
-        <div className={phoneHide("dieta")}><DietSection /></div>
-        <div className={phoneHide("waga")}><WeightSection /></div>
+      <div className="mt-6 space-y-6 max-sm:mt-0">
+        <TabsContent value="trening" forceMount className={panel}><TrainingSection /></TabsContent>
+        <TabsContent value="dieta" forceMount className={panel}><DietSection /></TabsContent>
+        <TabsContent value="waga" forceMount className={panel}><WeightSection /></TabsContent>
       </div>
+      </Tabs>
     </section>
   );
 }

@@ -144,7 +144,7 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
       // K4.5: zaznaczony dzień dostaje wspólną nazwę przejścia — podświetlenie przesuwa się między dniami.
       style={selected ? ({ viewTransitionName: "day-active" } as CSSProperties) : undefined}
       className={cn(
-        dayCellClass(inMonth, today), "@container flex flex-col gap-0.5 min-h-14 sm:min-h-24 p-1 sm:p-1.5 cursor-pointer",
+        dayCellClass(inMonth, today, occurrences.length === 0 && !shift && !holiday && !work), "@container flex flex-col gap-0.5 min-h-14 sm:min-h-24 p-1 sm:p-1.5 cursor-pointer",
         // Pełne tło z domieszką marki (nie przezroczystość) — inaczej prześwituje kratka tła.
         // Warianty `dark:` z linii wyżej są silniejsze od zwykłych klas —
         // bez własnych `dark:` zaznaczenie w ciemnym motywie byłoby niewidoczne.

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { filterChipClass } from "@/components/ui/chip";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { flushSync } from "react-dom";
 import { CalendarLegend } from "./CalendarLegend";
@@ -368,9 +369,9 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
               type="button"
               aria-pressed={layers[l]}
               onClick={() => toggleLayer(l)}
-              className={`rounded-field border px-2.5 py-1 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${layers[l] ? "border-primary/40 bg-primary/10 text-primary-ink" : "border-border/60 text-muted-foreground line-through hover:text-foreground"}`}
+              className={filterChipClass(layers[l], layerCounts[l])}
             >
-              {LAYER_LABEL[l]} <span className="tabular-nums">{layerCounts[l]}</span>
+              {LAYER_LABEL[l]} <span className="font-mono tabular-nums">{layerCounts[l]}</span>
             </button>
           ))}
           <input
@@ -384,6 +385,12 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
             className="h-8 coarse:h-11 min-w-0 flex-1 basis-40 rounded-field border border-border bg-background px-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
+        {/* Nowy plan 2.5: pusty miesiąc to jedna linijka nad siatką, nie 35 pustych kafli bez słowa. */}
+        {layerCounts.terms === 0 && (
+          <p className="order-2 px-1 text-sm text-muted-foreground" data-testid="calendar-month-empty">
+            W tym miesiącu nie ma terminów. Wybierz dzień i „Dodaj termin”.
+          </p>
+        )}
 
         {/* Telefon: bieżący tydzień i tak jest wierszem siatki miesiąca tuż pod spodem — pasek go dublował. */}
         <div className={phoneView === "week" ? "order-4" : "order-4 max-sm:hidden"}>

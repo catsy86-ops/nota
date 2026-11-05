@@ -1,6 +1,6 @@
 # Nowy plan: dopracowanie, wygląd i QoL (2026-11-05)
 
-> **Status (2026-11-05):** Etapy 0 i 1 zrobione (wyniki pod tabelami etapów). Dalej Etap 2. Uzupełnia `Plan-nowy.md`, którego Cykl 2 jest w toku (Dziś 2.4), i go nie zastępuje. Każda z decyzji NP-1…NP-7 ma rekomendację i czeka na właściciela.
+> **Status (2026-11-05):** Etapy 0, 1 i 2 zrobione (wyniki pod tabelami etapów). Dalej Etapy 3 i 5 dział po dziale. Uzupełnia `Plan-nowy.md`, którego Cykl 2 jest w toku (Dziś 2.4), i go nie zastępuje. Każda z decyzji NP-1…NP-7 ma rekomendację i czeka na właściciela.
 
 ## 1. Skąd ten plan
 
@@ -116,6 +116,16 @@ Zapas precache jest mniejszy niż 29 KiB zakładane w §3 p. 8. Etapy 1–2 musz
 | 2.4 | **Nieaktywny przycisk mówi, czego brakuje.** Zamiast `opacity-50`: neutralne tło i tekst w pełnym kontraście. Pod formularzem jedna linijka, np. „Wpisz nazwę” (`aria-describedby`). Druga możliwość: przycisk zostaje aktywny, a walidacja rusza po kliknięciu. **Nowe** (V7). | `src/components/ui/button.tsx:9`, formularze | 2 | S |
 | 2.5 | **Jeden pusty stan:** `EmptyState` i `EmptyIllustration` we wszystkich działach. <ul><li>Plany: szkic zamiast samego tekstu.</li><li>Kalendarz: miesiąc bez terminów to jedna linijka nad siatką, a puste dni nie mają białych kafli.</li><li>Grafik: miesiąc bez zmian.</li><li>Ćwiczenia: najpierw przycisk, formularz po kliknięciu.</li><li>Skarbiec.</li><li>Szukanie bez trafień: z „Szukaj też w archiwum”.</li></ul> **Nowe** (V5). | `src/components/EmptyState.tsx`, widoki | 3 | M |
 | 2.6 | **Wersaliki → zdania** (93 miejsca), z testem strażnikiem i listą wyjątków. Źródła: Powłoka 4.1, Ustawienia 5.2, Ćwiczenia 4.5 (`h3 text-xs`). | cały `src/` | 2 | M |
+
+**Wynik Etapu 2 (2026-11-05):** 2.1–2.6 zrobione, opis w `opis.md` („Wspólne — elementy wspólne”). Próg precache podniesiony do 4,2 MiB (decyzja właściciela).
+
+- **2.1:** `SectionCard` w kartach Dziś, sekcjach Ćwiczeń i premiach Grafiku. Karty „Dziś / Jutro” w Kalendarzu, oś dnia i Ustawienia zostają na Etap 3.
+- **2.2:** `ToggleGroup` w Terminach, Kalendarzu (3 przełączniki) i Grafiku; `Tabs` w Ćwiczeniach; chip filtra z zerem przygaszony (`filterChipClass`).
+- **2.3:** `Stat` w Długach, Grafiku i Pracy.
+- **2.4:** nieaktywny przycisk bez `opacity-50`; `MissingHint` w Ćwiczeniach, premii i Skarbcu.
+- **2.5:** `StatusPanel` w Planach, Długach i Grafiku; pusty miesiąc i puste dni w Kalendarzu; formularz odżywek zwinięty, gdy są wpisy (NP-7). Skarbiec i „Szukaj też w archiwum” bez zmian (patrz `opis.md`).
+- **2.6:** 96 linijek bez wersalików, strażnik `src/test/sentenceCase.test.ts`.
+- **Miary:** `uppercase` poza wyjątkami 0 (było 88), `disabled:opacity-50` na głównym przycisku 0, precache 3,987 MiB z 4,2 MiB.
 
 ### Etap 3: działy (każdy M, niezależne od siebie)
 

@@ -20,7 +20,7 @@ import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJourna
 import { readSiteParam } from "@/lib/study/siteLink";
 import { CUSTOM_PREFILL_EVENT, type CustomPrefill } from "@/lib/study/customPrefill";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { useHiddenViews, isViewShown } from "@/lib/hiddenViews";
@@ -163,17 +163,19 @@ function StudyScreen() {
   const tab = storedTab === "plans" && !plansShown ? "quiz" : storedTab;
   const location = useLocation();
   const navigate = useNavigate();
-  const setTab = (t: string) => {
-    setTabState(t);
-    writeStudyTab(t);
-    // Wyjście z Planów zdejmuje otwartą analizę z adresu — inaczej „wstecz” i odświeżenie wracałyby do edytora.
-    if (t !== "plans" && new URLSearchParams(window.location.search).has(PLAN_PARAM)) {
-      const params = new URLSearchParams(window.location.search);
-      params.delete(PLAN_PARAM);
-      const rest = params.toString();
-      navigate({ pathname: window.location.pathname, search: rest ? `?${rest}` : "" }, { replace: true });
-    }
-  };
+  const setTab = (t: string) => { setTabState(t); writeStudyTab(t); };
+  // Wyjście z Planów zdejmuje otwartą analizę z adresu — inaczej „wstecz” i odświeżenie wracałyby do edytora.
+  // Tylko przy przejściu z „plans” na inną zakładkę: link `?analiza=` przy wejściu ma najpierw otworzyć Plany.
+  const prevTab = useRef(tab);
+  useEffect(() => {
+    const left = prevTab.current === "plans" && tab !== "plans";
+    prevTab.current = tab;
+    const params = new URLSearchParams(location.search);
+    if (!left || !params.has(PLAN_PARAM)) return;
+    params.delete(PLAN_PARAM);
+    const rest = params.toString();
+    navigate({ pathname: location.pathname, search: rest ? `?${rest}` : "" }, { replace: true });
+  }, [tab, location.pathname, location.search, navigate]);
   // Plany z adresu: `?zakladka=plany` (go("plans"), paleta, `g r`), stary `/plany` albo link do analizy `?analiza=`.
   useEffect(() => {
     const params = new URLSearchParams(location.search);

@@ -332,6 +332,54 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 - e2e: `e2e/reminders-calendar.spec.ts` (rząd akcji pod tytułem na telefonie), `e2e/inbox-triage.spec.ts`, `e2e/plans.spec.ts`, `e2e/csp.spec.ts`, `e2e/visual.spec.ts` (selektory po przeniesieniu akcji).
 - Zrzuty `e2e/visual.spec.ts` odświeżone po przeglądzie (Kalendarz, Grafik, Terminy, Długi, Ćwiczenia, Plany, Skrzynka, Dziś, Skarbiec).
 
+## Wspólne — elementy wspólne (nowy plan 2026-11-05, Etap 2)
+
+Plan: `nowyplan.md`, Etap 2 (punkty 2.1–2.6, V5–V7).
+
+### Co robi
+
+- **Jedna karta (2.1).** `SectionCard`: nagłówek z ikoną, tytułem zdaniem, meta (licznik w mono) i akcją po prawej, pod nim treść i opcjonalna stopka. Pusta karta to sam nagłówek z jedną linijką opisu. Używają jej karty Dziś (Terminy, Powtórki na dziś, Trening mózgu), sekcje Ćwiczeń (Odżywki, Dieta, Trening) i „Premie w tym miesiącu” w Grafiku.
+- **Kontrolki wyboru (2.2).**
+  - Tryb widoku to przełącznik segmentowy `ToggleGroup`: Terminy („Kafle / Lista”), Kalendarz (telefon: „Miesiąc / Tydzień / Lista”; komputer: „Siatka / Lista / Oś tygodnia”; panel dnia: „Lista / Oś godzin”), Grafik („Miesiąc / Tydzień”).
+  - Części działu to zakładki `Tabs`: Praca (już były) i Ćwiczenia na telefonie.
+  - Filtry Kalendarza to chipy z licznikiem. Włączony filtr z zerem jest przygaszony (bez bursztynu), wyłączony — przekreślony.
+- **Jeden wygląd liczby (2.3).** `Stat`: etykieta zdaniem, liczba w mono z cyframi tabelarycznymi, mniejsza jednostka, dopisek i linijka. Długi (saldo), Grafik („Przepracowane”, „Razem brutto”, kafelki podsumowania), Praca (opanowane tematy).
+- **Nieaktywny przycisk (2.4).** Bez `opacity-50`: wypełniony przycisk ma neutralne tło i tekst `muted-foreground`, obrysowy tylko szarzeje. Miedź nie maluje gradientu na nieaktywnym. Pod formularzem `MissingHint` mówi, czego brakuje: Ćwiczenia („Wpisz nazwę odżywki.”), premia w Grafiku (nazwa, kwota), hasło Skarbca (długość, powtórzenie, zgoda).
+- **Jeden pusty stan (2.5).** Pusty stan każdego działu idzie przez `StatusPanel` (rysunek kreską, tytuł, opis, akcje):
+  - Plany: szkic rzutu z trasą (`EMPTY_GLYPHS.plans`) i trzy kroki pod nim;
+  - Długi: szkic portfela w tej samej ramce;
+  - Grafik: pusty miesiąc albo tydzień z ikoną i trzema akcjami;
+  - Kalendarz: pusty miesiąc to jedna linijka nad siatką, a dzień bez niczego ma przerywany obrys zamiast białego kafla;
+  - Ćwiczenia (NP-7): przy pustej liście formularz odżywki jest otwarty, gdy odżywki już są — najpierw przycisk „Dodaj odżywkę”.
+- **Zdania, nie wersaliki (2.6).** 96 linijek bez `uppercase tracking-wider`; małe etykiety (dawniej 10–11 px) mają 12 px. `.section-caps` (nagłówki grup paska bocznego, dolnego paska, tablicy) pisze zdaniem.
+
+### Gdzie jest
+
+- Nowe: `src/components/ui/section-card.tsx` (`SectionCard`), `src/components/ui/stat.tsx` (`Stat`), `src/components/ui/missing-hint.tsx` (`MissingHint`), `filterChipClass` w `src/components/ui/chip.ts`.
+- Zmienione: `ui/button.tsx` (stany nieaktywne w wariantach), `styles/skins/miedz.css` (`:not(:disabled)`), `calendar/dayCellStyles.ts` (`dayCellClass(inMonth, today, empty)`), `calendar/DayCell.tsx`, `calendar/ReminderCalendarView.tsx`, `calendar/DayPanel.tsx`, `reminders/RemindersView.tsx`, `shifts/ShiftsView.tsx`, `shifts/ShiftSummary.tsx`, `shifts/EmptyShifts.tsx`, `cwiczenia/*`, `review/TodayDueList.tsx`, `TodayStudyCard.tsx`, `BrainTrainingCard.tsx`, `debts/DebtsView.tsx`, `plans/PlansList.tsx`, `study/StudyView.tsx`, `lib/emptyGlyphs.ts`, `index.css` (`.section-caps`), `vault/VaultDialogs.tsx`, `SearchBar.tsx`.
+
+### Jak działa i dlaczego
+
+- **`SectionCard` nazywa sekcję tytułem** (`aria-labelledby`), chyba że widok poda własne `aria-label` (karty Dziś mają je z testów i czytnika). Poziom nagłówka `level` (2 w widoku, 3 w karcie w karcie).
+- **`Stat` nie animuje sam:** `AnimatedNumber` i `CountUp` zostają w `value`, więc komponent nie ciągnie framer-motion. Prop `term` daje parę `dt`/`dd` do listy opisów (siatka podsumowania Grafiku).
+- **`ToggleGroup` zamiast przycisków `aria-pressed`:** jeden przystanek Tab, strzałki, rola `radiogroup`/`radio` z `aria-checked`. Testy szukają teraz `radio`.
+- **Zakładki Ćwiczeń z `forceMount`:** sekcje są w DOM zawsze (jak dotąd). Telefon chowa nieaktywne (`max-sm:data-[state=inactive]:hidden`), a komputer pokazuje wszystkie i nie ma listy zakładek.
+- **`MissingHint` zawsze jest w DOM** (pusty jako `sr-only`), więc `aria-describedby` przycisku ma cel, a `aria-live` ogłasza zmianę.
+- **Strażnik wersalików** (`src/test/sentenceCase.test.ts`): `uppercase` tylko w wyjątkach zasady 6 — linijka mono w główce (`ViewTitle`), pieczątki (`SortedStamp`, `AchievementStamp`, linie ze słowem `stamp`), pola kodów (`input-otp`, kod awaryjny w `VaultDialogs`). `first-letter:uppercase` jest dozwolone.
+
+### Ograniczenia i pułapki
+
+- **Nie wszystkie karty przeszły na `SectionCard`.** Karty „Dziś / Jutro” w Kalendarzu, karta zmiany i oś dnia w Dziś oraz sekcje Ustawień zostały przy swoim układzie (inne nagłówki: przycisk zwijania, data). Dojdą przy działach w Etapie 3.
+- **Style mogą dalej pisać wersalikami w CSS** (np. nagłówki Odblasku w `skins/odblask.css`). Strażnik pilnuje tylko klas w komponentach.
+- **Skarbiec i „Szukaj też w archiwum” bez zmian:** pusty Skarbiec nie ma osobnego widoku, a szukanie bez trafień już podaje trafienia w Archiwum i Koszu.
+- **Budżet precache:** 4,2 MiB od 2026-11-05 (decyzja właściciela). Po Etapie 2 precache ma 3,987 MiB (237 plików).
+
+### Testy
+
+- `src/test/sentenceCase.test.ts` (strażnik wersalików), istniejące testy komponentów (Dziś, Ćwiczenia, Długi, Grafik) po zmianie kart.
+- e2e: `reminders-layout`, `calendar-agenda`, `calendar-phase2`, `calendar-week-axis`, `shifts-week`, `shifts-template`, `touch-targets`, `shifts-landscape` (role `radio`/`radiogroup`), `cwiczenia-zakladki` (`tablist`/`tab`).
+- Zrzuty `e2e/visual.spec.ts` odświeżone po przeglądzie.
+
 ## Wspólne — fundament skórek (Faza 0 planu motywów, 2026-10-27)
 
 Plan: `docs/plan-ui-motywy-2026-10-27.md`. Faza 0 porządkuje, jak skórki są zbudowane, żeby dało się dodać akcent, drugi schemat i nowe skórki bez ręcznego pilnowania sześciu miejsc.
@@ -4470,7 +4518,7 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 
 - **Co robi.** Plany nie są już osobnym działem. Praca ma piątą zakładkę „Plany” obok Quiz, Tablica, Lista kontrolna i Dziennik. Z paska bocznego i arkusza „Więcej” zniknęła pozycja „Plany”. Paleta („Plany”), skrót `g r` i stary adres `/plany` otwierają Pracę na tej zakładce. Na zakładce Plany nie ma paska opanowania nauki, a „Nowa analiza” stoi w akcjach główki Pracy. Po otwarciu analizy na komputerze strona przewija się do edytora.
 - **Gdzie.**
-  - `src/components/study/StudyView.tsx`: zakładka i `TabsContent` „plans” z leniwym `PlansView` (`lazy(loadPlansView)`, własna granica błędu „Plany”); efekt czytający adres; `setTab` zdejmujący `?analiza=` przy wyjściu z zakładki.
+  - `src/components/study/StudyView.tsx`: zakładka i `TabsContent` „plans” z leniwym `PlansView` (`lazy(loadPlansView)`, własna granica błędu „Plany”); efekt czytający adres; efekt zdejmujący `?analiza=` przy przejściu z zakładki „plans” na inną (porównanie z poprzednią zakładką w `useRef`, żeby link z `?analiza=` przy wejściu najpierw otworzył Plany).
   - `src/lib/study/tab.ts`: `"plans"` w `STUDY_TABS`, `STUDY_TAB_PARAM` (`zakladka`), `PLANS_TAB_VALUE` (`plany`).
   - `src/hooks/useViewRoute.ts`: `go("plans")` prowadzi do `/praca?zakladka=plany`.
   - `src/lib/viewRoute.ts`: `plany` → widok `study`.
@@ -4480,7 +4528,7 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Jak działa.** Typ `View` dalej ma `"plans"`: na nim stoją ukrywanie w Ustawieniach (`hiddenViews`), paleta, skrót i wstępne ładowanie (`preloadView("plans")` przy najechaniu na zakładkę). Adres nigdy już nie daje widoku `plans`, tylko `study` z prośbą o zakładkę. Praca czyta prośbę z `?zakladka=plany`, ze starej ścieżki `/plany` albo z `?analiza=`. Ustawia zakładkę, zapisuje ją w `kaczy.study.tab.v1` i zastępuje adres `/praca` z resztą parametrów (`replace`, stan historii zostaje, więc „Wróć do listy” cofa jak dotąd). Wyjście na inną zakładkę zdejmuje `?analiza=`, żeby „wstecz” i odświeżenie nie wracały do edytora.
 - **Dlaczego osobny moduł `planParam.ts`.** Statyczny import `PLAN_PARAM` z `PlansView.tsx` wciągnąłby Plany do fragmentu Pracy, a Plany mają zostać poza precache (D2).
 - **Ograniczenia.** Ukryta Praca chowa też Plany, bo nie ma już innego wejścia. Ukryte Plany chowają zakładkę, a zapamiętana zakładka „plans” wraca wtedy do Quizu. Na telefonie pięć zakładek dzieli szerokość po równo.
-- **Testy.** `src/lib/viewRoute.test.ts` (`/plany` → Praca), `src/lib/study/tab.test.ts` (zapamiętanie „plans”), `src/components/sidebar/sidebarItems.test.ts` (grupa Praca bez Planów). E2E `e2e/plans.spec.ts`: stary adres otwiera zakładkę, wejście przez pasek boczny i zakładkę, „wstecz” z edytora, skrót `g r` (adres bez `zakladka`), istniejące testy edytora po przewinięciu do niego.
+- **Testy.** `src/lib/viewRoute.test.ts` (`/plany` → Praca), `src/lib/study/tab.test.ts` (zapamiętanie „plans”), `src/components/sidebar/sidebarItems.test.ts` (grupa Praca bez Planów). E2E `e2e/plans.spec.ts`: stary adres otwiera zakładkę, wejście przez pasek boczny i zakładkę, „wstecz” z edytora, skrót `g r` (adres bez `zakladka`), link z `?analiza=` otwiera zakładkę, a wyjście na Quiz zdejmuje analizę z adresu; istniejące testy edytora po przewinięciu do niego.
 
 ## Plany — kalibracja skali, rysowanie i korekta tras (faza 3, 2026-11-01)
 
