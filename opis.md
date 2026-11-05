@@ -334,6 +334,8 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 
 ## Wspólne — działy, Etap 3 (nowy plan 2026-11-05)
 
+Commit: fc5310f (2026-11-05), na master.
+
 Plan: `nowyplan.md`, Etap 3 (punkty 3.1–3.8). Każdy dział dostał zmiany z jego punktu; komunikaty i liczby mają wspólny wygląd z Etapów 1–2.
 
 ### Co robi, gdzie jest i jak działa

@@ -1,6 +1,6 @@
 # Nowy plan: dopracowanie, wygląd i QoL (2026-11-05)
 
-> **Status (2026-11-05):** Etapy 0, 1 i 2 zrobione (wyniki pod tabelami etapów). Dalej Etapy 3 i 5 dział po dziale. Uzupełnia `Plan-nowy.md`, którego Cykl 2 jest w toku (Dziś 2.4), i go nie zastępuje. Każda z decyzji NP-1…NP-7 ma rekomendację i czeka na właściciela.
+> **Status (2026-11-05):** Etapy 0–3 zrobione (Etap 3 w commicie fc5310f, na master). Dalej Etap 4 i 5. Uzupełnia `Plan-nowy.md`, którego Cykl 2 jest w toku (Dziś 2.4), i go nie zastępuje. Każda z decyzji NP-1…NP-7 ma rekomendację i czeka na właściciela.
 
 ## 1. Skąd ten plan
 
@@ -116,6 +116,8 @@ Zapas precache jest mniejszy niż 29 KiB zakładane w §3 p. 8. Etapy 1–2 musz
 | 2.4 | **Nieaktywny przycisk mówi, czego brakuje.** Zamiast `opacity-50`: neutralne tło i tekst w pełnym kontraście. Pod formularzem jedna linijka, np. „Wpisz nazwę” (`aria-describedby`). Druga możliwość: przycisk zostaje aktywny, a walidacja rusza po kliknięciu. **Nowe** (V7). | `src/components/ui/button.tsx:9`, formularze | 2 | S |
 | 2.5 | **Jeden pusty stan:** `EmptyState` i `EmptyIllustration` we wszystkich działach. <ul><li>Plany: szkic zamiast samego tekstu.</li><li>Kalendarz: miesiąc bez terminów to jedna linijka nad siatką, a puste dni nie mają białych kafli.</li><li>Grafik: miesiąc bez zmian.</li><li>Ćwiczenia: najpierw przycisk, formularz po kliknięciu.</li><li>Skarbiec.</li><li>Szukanie bez trafień: z „Szukaj też w archiwum”.</li></ul> **Nowe** (V5). | `src/components/EmptyState.tsx`, widoki | 3 | M |
 | 2.6 | **Wersaliki → zdania** (93 miejsca), z testem strażnikiem i listą wyjątków. Źródła: Powłoka 4.1, Ustawienia 5.2, Ćwiczenia 4.5 (`h3 text-xs`). | cały `src/` | 2 | M |
+
+**Wynik Etapu 3 (2026-11-05, commit fc5310f na master):** 3.1–3.8 zrobione poza dwoma punktami 3.1 (maska na końcu treści i 70ch w edytorze). Opis w `opis.md` („Wspólne — działy, Etap 3”). Zrzuty 227/227 odświeżone, axe 239/241 przed poprawką (Miedź: tło aktywnego wiersza 10%) i potem zielone.
 
 **Wynik Etapu 2 (2026-11-05):** 2.1–2.6 zrobione, opis w `opis.md` („Wspólne — elementy wspólne”). Próg precache podniesiony do 4,2 MiB (decyzja właściciela).
 
