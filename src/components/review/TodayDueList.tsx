@@ -1,3 +1,4 @@
+import { useBump } from "@/hooks/useBump";
 import { BellRing, ChevronRight, Lock } from "lucide-react";
 import { SectionCard } from "@/components/ui/section-card";
 import { noteListTitle } from "@/lib/noteListTitle";
@@ -40,6 +41,8 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
   // Archiwum też: jego przypomnienia nadal dzwonią, więc muszą być widoczne i liczone jak reszta.
   const groups = groupReminders(notes.filter((n) => !n.trashed), Date.now()).filter((g) => g.key === "overdue" || g.key === "missed" || g.key === "today");
   const total = groups.reduce((n, g) => n + g.notes.length, 0);
+  // Dziś 3.5: licznik „pyka” przy zmianie (nie przy wejściu w widok).
+  const bump = useBump(total);
   // Dziś 2.3: przy pustym dniu najbliższy termin (najwcześniejszy przyszły, poza koszem).
   const now = Date.now();
   const next = total > 0 ? null : notes.reduce<Note | null>((best, n) => (!n.trashed && n.reminder !== null && n.reminder > now && (!best || n.reminder < best.reminder!) ? n : best), null);
@@ -49,7 +52,7 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
 
   return (
     <SectionCard aria-label="Przypomnienia" data-testid="today-due" icon={BellRing} bodyClassName="space-y-3"
-      title={<>Terminy{total > 0 && <span className="stamp-tag normal-case text-primary-ink" data-testid="today-due-count">{total}</span>}</>}
+      title={<>Terminy{total > 0 && <span key={bump} className={cn("stamp-tag normal-case text-primary-ink", bump > 0 && "count-bump")} data-testid="today-due-count">{total}</span>}</>}
       action={
         <Button variant="ghost" size="sm" onClick={onOpenReminders} className="coarse:h-11">
           Wszystkie<ChevronRight className="ml-0.5 h-4 w-4" aria-hidden />

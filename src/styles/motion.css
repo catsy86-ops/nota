@@ -182,3 +182,13 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
 @media (hover: hover) {
   .lift-hover:hover:not(:active) { translate: 0 -2px; }
 }
+
+/* Dziś 3.5: karty widoku wchodzą kolejno (40 ms na kartę), raz przy wejściu w widok — leniwe karty
+   animują się przy swoim zamontowaniu. Ograniczony ruch skraca to regułą `html[data-motion]`. */
+.today-stagger > * { animation: rise-in var(--dur-base) var(--ease-out) backwards; }
+.today-stagger > :nth-child(2) { animation-delay: 40ms; }
+.today-stagger > :nth-child(3) { animation-delay: 80ms; }
+.today-stagger > :nth-child(4) { animation-delay: 120ms; }
+.today-stagger > :nth-child(5) { animation-delay: 160ms; }
+.today-stagger > :nth-child(n + 6) { animation-delay: 200ms; }
+

@@ -4893,3 +4893,9 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **Ograniczenia:** tylko jeden (pierwszy) termin w treści; ukrycie trwa do zamknięcia edytora; brak podpowiedzi w notatce prywatnej i w koszu.
 - **Testy:** `src/lib/dateInText.test.ts`, `e2e/date-hint.spec.ts`.
 
+## Dziś — listy na dziś i ruch kart (Dziś 4.2 i 3.5, Plan-nowy 2.4, 2026-11-05)
+
+- **Listy na dziś (4.2).** Karta „Listy na dziś” (`src/components/review/TodayListsCard.tsx`, w `TodayCards.tsx` pod Terminami, leniwie, z własną granicą błędu). Pokazuje nieodhaczone pozycje list z notatek zmienionych dziś albo z terminem dziś, najwyżej 8, a reszta jako „i jeszcze N w notatkach”. Bez notatek prywatnych, archiwum i kosza (`todayListRows` w `src/lib/todayLists.ts`). Odhaczenie działa jak „Gotowe” w Terminach: rysowany ptaszek, zwinięcie wiersza (`collapseRowThen`), zapis listy i toast z „Cofnij”. Nazwa notatki przy pozycji ją otwiera. Karta znika, gdy nie ma czego odhaczać. Nagroda „Dzień zamknięty” liczy listy jak dotąd.
+- **Ruch kart (3.5).** Karty Dziś wchodzą kolejno, co 40 ms (`.today-stagger` w `src/styles/motion.css`). Licznik w nagłówku Terminów „pyka” przy zmianie (`useBump` w `TodayDueList.tsx`). Zwinięcie odhaczonego terminu było już w nowym planie 4.2. Przy ograniczonym ruchu bez animacji.
+- **Testy:** `src/lib/todayLists.test.ts`, `e2e/today-lists.spec.ts` (odhaczenie, „Cofnij”, audyt axe karty — Dziś nie ma go w `a11y.spec.ts`).
+

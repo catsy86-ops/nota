@@ -15,6 +15,7 @@ type NotesApi = ReturnType<typeof useNotesContext>;
 const TodayShiftCard = lazy(() => import("@/components/review/TodayShiftCard").then((m) => ({ default: m.TodayShiftCard })));
 const TodayTimeline = lazy(() => import("@/components/review/TodayTimeline").then((m) => ({ default: m.TodayTimeline })));
 const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
+const TodayListsCard = lazy(() => import("@/components/review/TodayListsCard").then((m) => ({ default: m.TodayListsCard })));
 export const StudyDueRows = lazy(() => import("@/components/review/StudyDueRows"));
 const TodaySiteCard = lazy(() => import("@/components/review/TodaySiteCard").then((m) => ({ default: m.TodaySiteCard })));
 const TodayStudyCard = lazy(() => import("@/components/review/TodayStudyCard").then((m) => ({ default: m.TodayStudyCard })));
@@ -50,7 +51,8 @@ export function TodayCards({ searching, go, notes, folders, reminderNotes, today
   const navigate = useNavigate();
   return (
     // Od `lg` dwie kolumny (nowyplan.md, Etap 3.2): przy pustym dniu cały Dziś mieści się na 1440 px.
-    <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+    // `today-stagger` (Dziś 3.5): karty wchodzą kolejno przy wejściu w widok (motion.css).
+    <div className="today-stagger grid gap-4 lg:grid-cols-2 lg:items-start">
           {/* Każda karta Dziś ma własną granicę: błąd w danych Pracy nie kładzie całego widoku, który jest punktem wejścia. */}
           {!searching && (
             <div className="lg:col-span-2">
@@ -76,6 +78,15 @@ export function TodayCards({ searching, go, notes, folders, reminderNotes, today
             <ViewErrorBoundary name="Przypomnienia">
               <Suspense fallback={<CardSkeleton />}>
                 <TodayDueList notes={reminderNotes} onOpen={openNote} onOpenReminders={() => go("reminders")} onUpdate={updateNote} />
+              </Suspense>
+            </ViewErrorBoundary>
+          )}
+
+          {/* Dziś 4.2: odhaczanie list na dziś bez otwierania notatki. */}
+          {!searching && (
+            <ViewErrorBoundary name="Listy na dziś">
+              <Suspense fallback={null}>
+                <TodayListsCard notes={notes} onOpen={openNote} onUpdate={updateNote} />
               </Suspense>
             </ViewErrorBoundary>
           )}
