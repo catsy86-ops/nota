@@ -26,7 +26,7 @@ test("kod wyglądu przenosi styl, akcent i kształt do innej przeglądarki", asy
   await expect(pb.locator("html")).toHaveAttribute("data-skin", "zeszyt");
   await pb.getByRole("button", { name: "Ustawienia" }).first().click();
   await pb.getByRole("tab", { name: "Wygląd" }).click();
-  await pb.getByLabel("Kod wyglądu").fill(code);
+  await pb.getByRole("textbox", { name: "Kod wyglądu" }).fill(code);
   await pb.getByRole("button", { name: "Wczytaj" }).click();
   const html = pb.locator("html");
   await expect(html).toHaveAttribute("data-skin", "kafle");

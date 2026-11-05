@@ -31,8 +31,13 @@ import { preloadView } from "@/lib/viewPreload";
 import { groupSidebarItems, type SidebarItem } from "@/components/sidebar/sidebarItems";
 import { NEUROKLIK_URL } from "@/lib/neuroklik";
 import { APP_VERSION } from "@/content/changelog";
+import { AboutPanel } from "@/components/AboutPanel";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { recentOpenedIds, useLastOpened } from "@/lib/lastOpened";
 
 const MAX_FAVORITES = 10;
+/** 5.1: ostatnio otwierane notatki w pasku (grupa domyślnie zwinięta, żeby pasek nie rósł). */
+const MAX_RECENT = 10;
 
 /** Zwinięte grupy paska (PW-4): zapamiętane per przeglądarka. Bez zapisu „Osobiste” są zwinięte (plan wyglądu,
  *  Faza 7) — pasek ma się mieścić na 900 px; błąd dostępu do pamięci daje ten sam stan domyślny. */
@@ -154,6 +159,7 @@ export function AppSidebar({
     });
   };
   const isMobile = useIsMobile();
+  const [aboutOpen, setAboutOpen] = useState(false);
   const asideRef = useRef<HTMLElement>(null);
   // Telefon: pasek to okno modalne — fokus wchodzi do środka, Tab zapętla się w nim, Esc zamyka,
   // a po zamknięciu fokus wraca na przycisk, który go otworzył.
@@ -191,6 +197,14 @@ export function AppSidebar({
   );
   const favoriteTotal = useMemo(() => notes.filter((n) => n.favorite).length, [notes]);
   const favorites = useMemo(() => notes.filter((n) => n.favorite).slice(0, MAX_FAVORITES), [notes]);
+  const lastOpened = useLastOpened();
+  const recentCollapsed = collapsedGroups.ostatnie ?? true;
+  const recentNotes = useMemo(() => {
+    if (recentCollapsed) return [];
+    const byId = new Map(notes.filter((n) => !n.locked && !n.trashed).map((n) => [n.id, n]));
+    return recentOpenedIds(lastOpened, MAX_RECENT * 3).map((id) => byId.get(id)).filter((n) => n !== undefined).slice(0, MAX_RECENT);
+  }, [recentCollapsed, lastOpened, notes]);
+  const hasRecent = useMemo(() => Object.keys(lastOpened).length > 0, [lastOpened]);
   // Jedna pigułka aktywna naraz: gdy zapytanie jest zapisanym filtrem, „Notatki” gasną.
   const activeFilterId = view === "notes" ? filters.find((f) => sameQuery(search, f.query))?.id ?? null : null;
   // Jak w grupach: otwarty wpis zawsze widać, zwinięcie go nie chowa.
@@ -290,6 +304,26 @@ export function AppSidebar({
                       <p className="px-3 pt-1 text-2xs text-muted-foreground" data-favorites-more>i {favoriteTotal - MAX_FAVORITES} więcej w Notatkach</p>
                     )}
                   </div>
+                </div>
+              )}
+
+              {hasRecent && (
+                <div className="pt-5" data-sidebar-recent>
+                  <SidebarHeading label="Ostatnie" icon={<RotateCcwClock className="w-3 h-3" />} collapsed={recentCollapsed}
+                    onToggle={() => setGroupCollapsed("ostatnie", !recentCollapsed)} />
+                  {!recentCollapsed && (
+                    <div className="space-y-0.5">
+                      {recentNotes.map((n) => (
+                        <SidebarRow
+                          key={n.id}
+                          icon={n.icon ? <span className="text-sm leading-none">{n.icon}</span> : <RotateCcwClock className="w-[18px] h-[18px]" />}
+                          label={n.title.trim() || "Notatka bez tytułu"}
+                          onClick={() => onOpenNote(n.id)}
+                        />
+                      ))}
+                      {recentNotes.length === 0 && <p className="px-3 pt-1 text-2xs text-muted-foreground">Otwarte notatki są w koszu albo zostały usunięte</p>}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -400,12 +434,26 @@ export function AppSidebar({
                     <InstallAppButton />
                   </div>
                 )}
-                <p className="px-3 pt-1 text-2xs text-muted-foreground">O aplikacji · wersja {APP_VERSION}</p>
+                {/* 5.7: wersja, build i stan pracy offline w oknie; tu tylko wejście. */}
+                <button type="button" onClick={() => { if (isMobile) onClose(); setAboutOpen(true); }}
+                  className="mx-3 mt-1 rounded-control text-left text-2xs text-muted-foreground hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11">
+                  O aplikacji · wersja {APP_VERSION}
+                </button>
               </div>
             </div>
           </motion.aside>
         )}
       </AnimatePresence>
+      {/* Poza paskiem: na telefonie pasek jest oknem z własną pułapką fokusu, więc zamykamy go przed otwarciem. */}
+      <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>O aplikacji</DialogTitle>
+            <DialogDescription>NOTKI — notatki, grafik i praca w jednym miejscu, także bez internetu.</DialogDescription>
+          </DialogHeader>
+          <AboutPanel />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -15,6 +15,7 @@ import { requestPersistentStorage, getStorageInfo, type StorageInfo } from "@/li
 import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName } from "@/lib/backupFileHandle";
 import { toast } from "sonner";
 import { ResetSectionButton, Section } from "./SettingsShared";
+import { AboutPanel } from "@/components/AboutPanel";
 import { viewLabel } from "@/lib/viewMeta";
 
 function formatBytes(bytes: number | null): string {
@@ -367,6 +368,10 @@ export function BackupSettings() {
         <p className="font-semibold text-foreground">💡 Wskazówka</p>
         <p>Pełny backup zawiera wszystkie notatki (w tym archiwum i kosz), etykiety, foldery, historię wersji, ustawienia oraz odznaki. Nie zawiera kodu parowania urządzeń. Przywrócenie zastąpi notatki w tej przeglądarce i odświeży aplikację.</p>
       </div>
+
+      <Section title="O aplikacji">
+        <AboutPanel />
+      </Section>
 
       <Section title="Diagnostyka">
         <div className="flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3">

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
-  addAttachmentFiles, attachmentKind, describeRejections, downloadAttachment, formatFileSize, isAttachmentSyncable,
+  openableType, addAttachmentFiles, attachmentKind, describeRejections, downloadAttachment, formatFileSize, isAttachmentSyncable,
   isTextPreviewable, MAX_ATTACHMENT_BYTES, MAX_ATTACHMENTS_PER_NOTE, MAX_ATTACHMENTS_TOTAL_BYTES, normalizeAttachments,
   resolveMimeType, safeDownloadType, sanitizeFileName, textPreview, ATTACHMENT_SYNC_MAX_BYTES, type Attachment,
 } from "./attachments";
@@ -72,6 +72,21 @@ describe("typy MIME", () => {
     const r = textPreview(Array.from({ length: 30 }, (_, i) => `l${i}`).join("\n"));
     expect(r.text.split("\n")).toHaveLength(20);
     expect(r.truncated).toBe(true);
+  });
+});
+
+describe("openableType (5.5: Otwórz w nowej karcie)", () => {
+  it("PDF i obrazy rastrowe tak", () => {
+    expect(openableType({ name: "plan.pdf", type: "application/pdf" })).toBe("application/pdf");
+    expect(openableType({ name: "foto.jpg", type: "" })).toBe("image/jpeg");
+    expect(openableType({ name: "x.png", type: "image/png" })).toBe("image/png");
+  });
+  it("nic, co mogłoby uruchomić skrypt w pochodzeniu aplikacji", () => {
+    expect(openableType({ name: "rysunek.svg", type: "image/svg+xml" })).toBeNull();
+    expect(openableType({ name: "strona.html", type: "text/html" })).toBeNull();
+    expect(openableType({ name: "plan.pdf", type: "text/html" })).toBeNull();
+    expect(openableType({ name: "dane.xml", type: "application/xml" })).toBeNull();
+    expect(openableType({ name: "plik.bin", type: "" })).toBeNull();
   });
 });
 

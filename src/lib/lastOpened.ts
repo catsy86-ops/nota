@@ -30,3 +30,8 @@ export function markNoteOpened(id: string, now = Date.now()) {
   }
   store.set(next);
 }
+
+/** Ostatnio otwierane id, najnowsze pierwsze (paleta i pasek boczny, nowy plan 5.1). */
+export function recentOpenedIds(map: LastOpenedMap, limit: number): string[] {
+  return Object.keys(map).sort((a, b) => map[b] - map[a]).slice(0, limit);
+}

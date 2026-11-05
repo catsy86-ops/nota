@@ -24,7 +24,7 @@ import { NoteLookPicker } from "./NoteLookPicker";
 type Actions = ReturnType<typeof useNoteViewActions>;
 
 /** Przycisk akcji na stopce kafla (ikona, bez tekstu; podpowiedź w `data-tip`). */
-export function ActionBtn({ icon, onClick, title, className = "", "aria-expanded": ariaExpanded, "aria-pressed": ariaPressed }: { icon: ReactNode; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; title: string; className?: string; "aria-expanded"?: boolean; "aria-pressed"?: boolean }) {
+export function ActionBtn({ icon, onClick, title, keys, className = "", "aria-expanded": ariaExpanded, "aria-pressed": ariaPressed }: { icon: ReactNode; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; title: string; /** Klawisz na siatce (5.4), pokazany w dymku jako <kbd>. */ keys?: string; className?: string; "aria-expanded"?: boolean; "aria-pressed"?: boolean }) {
   return (
     // Podpowiedź przez wspólny `HoverTip` (`data-tip`), nie osobny Radix Tooltip na każdy przycisk każdej karty.
     // `aria-pressed` podaje czytnikowi stan przełącznika (ulubione, szerokość, większy tekst, blokada).
@@ -35,6 +35,7 @@ export function ActionBtn({ icon, onClick, title, className = "", "aria-expanded
       aria-expanded={ariaExpanded}
       aria-pressed={ariaPressed}
       data-tip={title}
+      data-tip-keys={keys}
       className={cn("card-action text-muted-foreground", className)}
     >
       {icon}
@@ -88,6 +89,7 @@ export function PrimaryActions({
             if (inSheet) onClose?.();
           }}
           title={note.pinned ? "Odepnij" : "Przypnij"}
+          keys={inSheet ? undefined : "P"}
         />
       )}
       {!inSheet && <ActionBtn icon={<Palette className="w-4 h-4" />} onClick={() => onToggleColors?.()} title="Kolor" />}
@@ -111,12 +113,13 @@ export function PrimaryActions({
       {isArchived && onUnarchive ? (
         <ActionBtn icon={<ArchiveRestore className="w-4 h-4" />} onClick={() => { onUnarchive(note.id); if (inSheet) onClose?.(); }} title="Przywróć" />
       ) : onArchive ? (
-        <ActionBtn icon={<Archive className="w-4 h-4" />} onClick={() => { haptic("tap"); onArchive(note.id); if (inSheet) onClose?.(); }} title="Archiwizuj" />
+        <ActionBtn icon={<Archive className="w-4 h-4" />} onClick={() => { haptic("tap"); onArchive(note.id); if (inSheet) onClose?.(); }} title="Archiwizuj" keys={inSheet ? undefined : "A"} />
       ) : null}
       <ActionBtn
         icon={<Trash className="w-4 h-4" />}
         onClick={() => { if (note.trashed) onAskDeleteConfirm(); else { haptic("warn"); onDelete(note.id); } if (inSheet) onClose?.(); }}
         title="Usuń"
+        keys={inSheet ? undefined : "Del"}
         className="hover:text-destructive-ink"
       />
     </>
@@ -231,7 +234,7 @@ export function MoreActions({
         <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => { const prev = note.folderId; onMoveToFolder(note.id, fId); if (prev !== fId) toastWithUndo("Przeniesiono do folderu", () => onMoveToFolder(note.id, prev), { icon: "📁" }); }} />
       )}
       {onDuplicate && (
-        <ActionBtn icon={<Copy className="w-4 h-4" />} onClick={() => onDuplicate(note.id)} title="Duplikuj" />
+        <ActionBtn icon={<Copy className="w-4 h-4" />} onClick={() => onDuplicate(note.id)} title="Duplikuj" keys="D" />
       )}
       </MoreGroup>
       <MoreGroup title="Udostępnij">

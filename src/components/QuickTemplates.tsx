@@ -73,6 +73,27 @@ export const TEMPLATES: Template[] = [
   },
 ];
 
+/** Szablon do wyboru jako domyślny dla folderu (5.9): wbudowane i własne, z tym samym `build`. */
+export interface TemplateChoice {
+  id: string;
+  label: string;
+  emoji: string;
+  build: () => { title: string; content: string; color: NoteColor; checklist: ChecklistItem[]; labels: string[] };
+}
+
+export function templateChoices(custom: readonly CustomTemplate[]): TemplateChoice[] {
+  return [
+    ...TEMPLATES.map((t) => ({ id: t.id, label: t.label, emoji: t.emoji, build: () => ({ ...t.build(), color: t.color }) })),
+    ...custom.map((t) => ({
+      id: t.id, label: t.name, emoji: t.emoji || "📄",
+      build: () => {
+        const now = new Date();
+        return { title: renderTemplate(t.title, now), content: renderTemplate(t.content, now), color: "default" as NoteColor, checklist: [], labels: t.labels };
+      },
+    })),
+  ];
+}
+
 interface Props {
   onPick: (
     title: string,

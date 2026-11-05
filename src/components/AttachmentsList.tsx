@@ -1,10 +1,10 @@
 import { lazy, Suspense, useState } from "react";
-import { Archive, Download, File as FileIcon, FileImage, Mic, FileSpreadsheet, FileText, Paperclip, X } from "lucide-react";
+import { Archive, Download, ExternalLink, File as FileIcon, FileImage, Mic, FileSpreadsheet, FileText, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 import { IconButton } from "@/components/ui/icon-button";
 import { useAttachmentBlob } from "@/hooks/useAttachmentBlob";
 import {
-  attachmentKind, downloadAttachment, formatFileSize, isAttachmentSyncable, isTextPreviewable,
+  attachmentKind, downloadAttachment, formatFileSize, isAttachmentSyncable, isTextPreviewable, openAttachment, openableType,
   readAttachment, textPreview, type Attachment, type AttachmentKind,
 } from "@/lib/attachments";
 import { cn } from "@/lib/utils";
@@ -53,6 +53,14 @@ async function handleDownload(a: Attachment) {
   }
 }
 
+async function handleOpen(a: Attachment) {
+  try {
+    if (!(await openAttachment(a))) toast.error("Pliku nie ma na tym urządzeniu", { description: "Został dodany na innym urządzeniu i tu jeszcze nie dotarł." });
+  } catch {
+    toast.error("Nie udało się otworzyć pliku");
+  }
+}
+
 interface RowProps {
   attachment: Attachment;
   /** Brak = widok tylko do odczytu (czytnik). */
@@ -81,6 +89,17 @@ export function AttachmentRow({ attachment: a, onRemove, children }: RowProps) {
           {note && <> · <span data-testid="attachment-note">{note}</span></>}
         </p>
       </div>
+      {openableType(a) && (
+        <IconButton
+          size="sm"
+          disabled={blob === "missing"}
+          onClick={(e) => { e.stopPropagation(); void handleOpen(a); }}
+          title="Otwórz w nowej karcie"
+          aria-label={`Otwórz ${a.name}`}
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+        </IconButton>
+      )}
       <IconButton
         size="sm"
         disabled={blob === "missing"}

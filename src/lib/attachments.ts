@@ -300,6 +300,37 @@ export async function readAttachment(hash: string, store: ImageStore = defaultSt
  * Pobranie jako plik: Blob z bezpiecznym MIME, `download` z oczyszczoną nazwą,
  * bez `target=_blank` i bez nawigacji — aplikacja nigdy nie renderuje treści załącznika.
  */
+/**
+ * Typy, które wolno otworzyć w nowej karcie (nowy plan 5.5). Adres `blob:` ma pochodzenie aplikacji,
+ * więc HTML, SVG czy XML z załącznika uruchomiłyby skrypt w jej imieniu — tylko PDF i obrazy rastrowe.
+ */
+const OPENABLE_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/gif", "image/webp", "image/avif", "image/bmp"]);
+
+export function openableType(a: Pick<Attachment, "name" | "type">): string | null {
+  const t = resolveMimeType(a.name, a.type);
+  return OPENABLE_TYPES.has(t) ? t : null;
+}
+
+/**
+ * Otwiera PDF albo obraz w nowej karcie. Kartę otwieramy od razu (w geście kliknięcia — inaczej
+ * blokada wyskakujących okien), a adres podajemy po odczycie pliku. Gdy przeglądarka zablokuje kartę,
+ * plik się pobiera. `false` = pliku nie ma albo typ nie nadaje się do otwarcia (wtedy karta się zamyka).
+ */
+export async function openAttachment(a: Attachment, store: ImageStore = defaultStore): Promise<boolean> {
+  const type = openableType(a);
+  if (!type) return false;
+  const win = window.open("", "_blank");
+  // Blokada wyskakujących okien: nie przenosimy karty aplikacji na `blob:` (zgubiłaby otwarty edytor) — pobieramy plik.
+  if (!win) return downloadAttachment(a, store);
+  win.opener = null;
+  const bytes = await readAttachment(a.hash, store);
+  if (!bytes) { win.close(); return false; }
+  const url = URL.createObjectURL(new Blob([bytes], { type }));
+  win.location.href = url;
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  return true;
+}
+
 export async function downloadAttachment(a: Attachment, store: ImageStore = defaultStore): Promise<boolean> {
   const bytes = await readAttachment(a.hash, store);
   if (!bytes) return false;

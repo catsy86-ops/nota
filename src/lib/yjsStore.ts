@@ -78,7 +78,7 @@ const NOTE_SCALAR_FIELDS = [
 ] as const;
 
 const FOLDER_SCALAR_FIELDS = [
-  "name", "color", "emoji", "parentId", "order", "createdAt", "updatedAt",
+  "name", "color", "emoji", "parentId", "order", "createdAt", "updatedAt", "templateId",
 ] as const;
 
 /**
@@ -384,6 +384,7 @@ function yFolderFromPlain(folder: Folder): YFolder {
   y.set("order", folder.order);
   y.set("createdAt", folder.createdAt);
   y.set("updatedAt", folder.updatedAt ?? folder.createdAt);
+  if (folder.templateId) y.set("templateId", folder.templateId);
   return y;
 }
 
@@ -398,6 +399,7 @@ function plainFromYFolder(id: string, y: YFolder): Folder {
     order: safeNumber(y.get("order")),
     createdAt,
     updatedAt: safeOptionalNumber(y.get("updatedAt")) ?? createdAt,
+    ...(() => { const t = safeNullableString(y.get("templateId"), LIM.id); return t ? { templateId: t } : {}; })(),
   };
 }
 
@@ -824,7 +826,11 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     if (!y) return;
     doc.transact(() => {
       for (const field of FOLDER_SCALAR_FIELDS) {
-        if (field in updates) y.set(field, (updates as Record<string, unknown>)[field]);
+        if (!(field in updates)) continue;
+        const value = (updates as Record<string, unknown>)[field];
+        // `undefined` = zdjęcie pola (np. domyślnego szablonu, 5.9), nie zapis „undefined” do dokumentu.
+        if (value === undefined) y.delete(field);
+        else y.set(field, value);
       }
       y.set("updatedAt", Date.now());
     });

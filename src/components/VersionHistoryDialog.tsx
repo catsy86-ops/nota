@@ -38,6 +38,8 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
               className="border border-border/50 rounded-card overflow-hidden"
             >
               <button
+                type="button"
+                aria-expanded={expandedId === v.id}
                 onClick={() => setExpandedId(expandedId === v.id ? null : v.id)}
                 className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-muted/50 transition-colors"
               >

@@ -24,6 +24,8 @@ import { cn } from "@/lib/utils";
 import { tween } from "@/lib/motion";
 import { wordsPl } from "@/lib/plural";
 import { NoteImage } from "./NoteImage";
+// Galeria obrazów (5.5) — ten sam komponent co zdjęcia z budowy, leniwie: czytnik bez obrazów go nie pobiera.
+const PhotoGalleryDialog = lazy(() => import("./study/PhotoGallery").then((m) => ({ default: m.PhotoGalleryDialog })));
 import { ReaderToc } from "./ReaderToc";
 import { AttachmentsReadOnlyList } from "./AttachmentsList";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -128,6 +130,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   // Bloki renderuje się w jednym miejscu, a na szerokim ekranie przenosi je portal do panelu.
   const wide = useMediaQuery("(min-width: 1280px)") && !present;
   const [sideTab, setSideTab] = useState<SideTab>("links");
+  const [gallery, setGallery] = useState<{ refs: string[]; index: number } | null>(null);
   const [sideEl, setSideEl] = useState<HTMLDivElement | null>(null);
   const sideSlot = (tab: SideTab, node: ReactNode) => (!wide ? node : sideEl && sideTab === tab ? createPortal(node, sideEl) : null);
   const canEdit = !note.trashed;
@@ -141,6 +144,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
     if (!present) return;
     scrollRef.current?.focus({ preventScroll: true });
     function onKey(e: KeyboardEvent) {
+      if (e.defaultPrevented) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       if (e.key === "+" || e.key === "=") setZoom((z) => Math.min(2.4, z + 0.1));
@@ -159,7 +163,8 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   useEffect(() => {
     if (!onStep) return;
     function onArrow(e: KeyboardEvent) {
-      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+      // Galeria obrazów (5.5) przewija swoje zdjęcia strzałkami i oznacza klawisz jako obsłużony.
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
       if (e.key === "ArrowLeft") onStep?.(-1);
@@ -429,9 +434,19 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             {note.images && note.images.length > 0 && (
               <div className={cn("grid gap-2 mt-4", present ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2")}>
                 {note.images.map((img, i) => (
-                  <NoteImage key={i} imageRef={img} alt={`Obraz ${i + 1} z ${note.images.length}`} className="w-full rounded-field" placeholderClassName="aspect-video" />
+                  // 5.5: stuknięcie otwiera galerię (ta sama co zdjęcia z budowy: przesuwanie, szczypanie).
+                  <button key={i} type="button" onClick={() => setGallery({ refs: note.images, index: i })}
+                    aria-label={`Powiększ obraz ${i + 1} z ${note.images.length}`}
+                    className="block cursor-zoom-in rounded-field outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                    <NoteImage imageRef={img} alt={`Obraz ${i + 1} z ${note.images.length}`} className="w-full rounded-field" placeholderClassName="aspect-video" />
+                  </button>
                 ))}
               </div>
+            )}
+            {gallery && (
+              <Suspense fallback={null}>
+                <PhotoGalleryDialog zoom={gallery} label="Obraz notatki" onIndex={(index) => setGallery((g) => (g ? { ...g, index } : g))} onClose={() => setGallery(null)} />
+              </Suspense>
             )}
 
             <AttachmentsReadOnlyList attachments={note.attachments} />

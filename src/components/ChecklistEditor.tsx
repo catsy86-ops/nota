@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical, Plus, X } from "lucide-react";
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { moveOpenItem } from "@/lib/checklistOrder";
 import { cn } from "@/lib/utils";
 import { CheckMark, StrikeText } from "@/components/ui/check-mark";
 import { emojiShower } from "@/lib/celebrate";
@@ -17,8 +20,37 @@ interface ChecklistEditorProps {
   readOnly?: boolean;
 }
 
+/**
+ * Wiersz nieodhaczonej pozycji, który da się przeciągnąć za uchwyt (nowy plan 5.2). Ruch dnd-kit
+ * (tylko w pionie) jest na wewnętrznym `div`, bo zewnętrzny `motion.div` sam steruje `transform`
+ * (wejście, wyjście, `layout`) i nadpisałby przesunięcie.
+ */
+function SortableOpenRow({ id, children }: { id: string; children: (handle: React.HTMLAttributes<HTMLButtonElement>, dragging: boolean) => React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: transform ? `translate3d(0, ${Math.round(transform.y)}px, 0)` : undefined, transition }}
+      className={cn("relative", isDragging && "z-raised rounded-control bg-card shadow-elevation-2")}
+    >
+      {children({ ...attributes, ...listeners }, isDragging)}
+    </div>
+  );
+}
+
 export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorProps) {
   const [newItem, setNewItem] = useState("");
+  // 5.2: w trakcie przeciągania i chwilę po upuszczeniu `layout` framer-motion jest wyłączony —
+  // inaczej po zmianie kolejności wiersz wróciłby na stare miejsce i animował się drugi raz.
+  const [dragging, setDragging] = useState(false);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  function handleDragEnd(e: DragEndEvent) {
+    if (e.over) {
+      const next = moveOpenItem(items, String(e.active.id), String(e.over.id));
+      if (next !== items) { haptic("selection"); onChange(next); }
+    }
+    window.setTimeout(() => setDragging(false), 250);
+  }
   // Ostatnio odhaczona pozycja: jej wiersz w „ukończonych” montuje się na nowo,
   // więc ptaszek i kreskę gra animacja wejścia, nie przejście.
   const [justChecked, setJustChecked] = useState<string | null>(null);
@@ -157,16 +189,33 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
 
   return (
     <div className="space-y-1">
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={() => setDragging(true)} onDragEnd={handleDragEnd} onDragCancel={() => setDragging(false)}>
+      <SortableContext items={unchecked.map((i) => i.id)} strategy={verticalListSortingStrategy}>
       <AnimatePresence mode="popLayout">
         {unchecked.map((item) => (
           <motion.div
             key={item.id}
-            layout
+            layout={!dragging}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className={cn("flex items-center gap-2 group/item", item.indent === 1 && "ml-6")}
           >
+          <SortableOpenRow id={item.id}>
+            {(handle) => (
+          <div className={cn("flex items-center gap-2 group/item", item.indent === 1 && "ml-6")}>
+            {!readOnly && (
+              // Uchwyt: przeciąganie myszą i palcem (44 px na dotyku). Klawiatura: Alt+↑/↓ w polu pozycji.
+              <button
+                type="button"
+                {...handle}
+                tabIndex={-1}
+                aria-label={`Przeciągnij: ${item.text || "pusta"}`}
+                title="Przeciągnij, żeby zmienić kolejność (Alt+↑/↓)"
+                className="-ml-1 grid shrink-0 cursor-grab touch-none place-items-center rounded text-muted-foreground/50 opacity-0 transition-opacity hover:text-foreground group-hover/item:opacity-100 active:cursor-grabbing coarse:-ml-3 coarse:-mr-2 coarse:h-11 coarse:w-11 coarse:opacity-100"
+              >
+                <GripVertical className="w-3.5 h-3.5" aria-hidden />
+              </button>
+            )}
             <button
               type="button"
               role="checkbox"
@@ -242,9 +291,14 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 <X className="w-3 h-3" />
               </button>
             )}
+          </div>
+            )}
+          </SortableOpenRow>
           </motion.div>
         ))}
       </AnimatePresence>
+      </SortableContext>
+      </DndContext>
 
       {checked.length > 0 && (
         <div className="pt-1 border-t border-border/30 mt-2">

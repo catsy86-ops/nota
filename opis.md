@@ -332,6 +332,58 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 - e2e: `e2e/reminders-calendar.spec.ts` (rząd akcji pod tytułem na telefonie), `e2e/inbox-triage.spec.ts`, `e2e/plans.spec.ts`, `e2e/csp.spec.ts`, `e2e/visual.spec.ts` (selektory po przeniesieniu akcji).
 - Zrzuty `e2e/visual.spec.ts` odświeżone po przeglądzie (Kalendarz, Grafik, Terminy, Długi, Ćwiczenia, Plany, Skrzynka, Dziś, Skarbiec).
 
+## Wspólne — QoL na co dzień, Etap 5 (nowy plan 2026-11-05)
+
+Commit: HASH (2026-11-05), na wip/mobile-fala1.
+
+Plan: `nowyplan.md`, Etap 5 (punkty 5.1–5.10). Punkty przejęte z planów działów: Notatki 1.2, 1.3, 1.4, 1.5, 2.1, 2.3, 2.7, 2.8; Ustawienia 1.1, 2.2, 4.1; Powłoka 2.6.
+
+### Co robi, gdzie jest i jak działa
+
+- **5.1 Ostatnie notatki i historia.**
+  - Pusta paleta ma grupę „Ostatnie notatki” (10 pozycji) z `kaczy.lastOpened.v1` (`recentOpenedIds` w `src/lib/lastOpened.ts`; bez notatek prywatnych i z kosza).
+  - Pasek boczny ma zwijaną grupę „Ostatnie” pod Ulubionymi. Domyślnie jest zwinięta (klucz `ostatnie` w stanie grup paska, `collapsedGroups.ostatnie ?? true`), bo 10 wierszy wydłużyłoby pasek. Pokazuje się dopiero, gdy coś było otwierane.
+  - Alt+← / Alt+→ chodzą po historii otwieranych notatek. Stos jest w pamięci sesji (`src/lib/noteHistory.ts`, `createNoteHistory`), zasilany z `markNoteOpened` (czytnik i edytor kafla). Krok otwiera notatkę w podglądzie. Czytnik nie zmienia adresu, więc przeglądarka tej historii nie zna. Skrót przejmujemy tylko wtedy, gdy historia ma dokąd iść; inaczej zostaje przeglądarce (wstecz). Nie działa w polu tekstowym ani nad oknem Radix.
+- **5.2 Przeciąganie pozycji listy.** `ChecklistEditor.tsx`: uchwyt (`GripVertical`, 44 px na dotyku) przed polem wyboru. Własny `DndContext` z `PointerSensor` (próg 4 px), `SortableContext` z `verticalListSortingStrategy`. Przesunięcie dnd-kit (tylko oś Y) jest na wewnętrznym `div` (`SortableOpenRow`), bo zewnętrzny `motion.div` sam steruje `transform`. W czasie przeciągania i 250 ms po upuszczeniu `layout` framer-motion jest wyłączony, inaczej wiersz animowałby się drugi raz ze starego miejsca. Logika: `moveOpenItem` w `src/lib/checklistOrder.ts` (przestawia tylko nieodhaczone; odhaczone zostają na swoich indeksach). Alt+↑/↓ i strzałki zostały, a uchwyt ma `tabIndex=-1`, bo klawiatura ma już swój sposób.
+- **5.3 Szukaj wszędzie.**
+  - Wyniki palety są według rodzaju: notatki z terminem idą do grupy „Terminy” (z datą `formatReminderShort`), reszta do „Notatki”.
+  - Nowa grupa „Ustawienia”: `src/lib/settingsIndex.ts` (`SETTINGS_INDEX`, `searchSettings`) to ok. 40 sekcji z zakładką i słowami zastępczymi („czcionka” → „Krój tekstu”), szukanych bez polskich znaków.
+  - Wybór otwiera Ustawienia na właściwej zakładce i przewija do nagłówka o tym tytule z chwilowym podświetleniem (`requestSettingsSection` / `consumeRequestedSettingsSection` w `settingsDeepLink.ts`, efekt na `open` w `SettingsDialog.tsx`). Sekcja w zwiniętym „Zaawansowane” ma `expand` (`aria-controls` bloku), który okno najpierw rozwija.
+  - Przy okazji naprawione: okno Ustawień jest zamontowane cały czas, więc karta zamówiona przez `requestSettingsTab` (kropka synchronizacji) działała tylko przy pierwszym otwarciu. Teraz jest odbierana przy każdym.
+  - Budowy, wpisy Pracy, pytania i dni Grafiku były w palecie już wcześniej. Placeholder: „Szukaj notatek, terminów, Pracy, ustawień i akcji…”.
+- **5.4 Klawisze M i L na siatce.** `gridKeyboardNav.ts`: `onOpenFolder` i `onOpenLabels` w `GridNavHandlers`. `NoteGrid.tsx` klika przycisk „Folder” albo „Etykiety” kafla, tak jak R klika dzwonek (`clickCardControl`). Te przyciski są w „Więcej opcji”, które montuje się dopiero po rozwinięciu, więc funkcja najpierw je rozwija i czeka do 10 klatek. Bez folderów M pokazuje toast. Podpowiedzi przycisków kafla mają klawisze (`keys` w `ActionBtn` → `data-tip-keys`: P, A, Del, D; L w `LabelPicker`, M w dymku `FolderPicker`). `ShortcutsDialog` (`lib/shortcuts.ts`) ma R, F, M, L i Alt+←.
+- **5.5 Załączniki.**
+  - PDF i obraz mają „Otwórz w nowej karcie” (`openAttachment`, `openableType` w `src/lib/attachments.ts`). Karta otwiera się od razu, w geście kliknięcia (inaczej blokada wyskakujących okien), a adres `blob:` dostaje po odczycie pliku. Gdy przeglądarka zablokuje nową kartę, plik się pobiera — karta aplikacji nigdy nie przechodzi na `blob:`, bo zgubiłaby otwarty edytor.
+  - Obrazy notatki w czytniku otwierają galerię `PhotoGalleryDialog` (ta sama co zdjęcia budowy: przesuwanie, szczypanie, strzałki). Galeria jest ładowana leniwie i ma nową właściwość `label` („Obraz notatki”). Czytnik i podgląd siatki pomijają klawisze, które galeria już obsłużyła (`e.defaultPrevented`): Esc zamyka tylko galerię, a strzałki nie zmieniają notatki pod spodem.
+- **5.6 Sync bez zgadywania.**
+  - Diagnoza w karcie Sync mówi zdaniem, co się stało i co zrobić (`syncErrorText` w `src/lib/syncErrorText.ts`: brak sieci przy pobieraniu modułu, brak WebRTC, brak https, brak miejsca, inne). Surowy komunikat jest w zwiniętych „Szczegółach błędu”.
+  - Lista „Ostatnio widziane” pokazuje urządzenia, których teraz nie ma, z czasem względnym. Zapis jest lokalny, poza Yjs: `src/lib/syncSeen.ts`, klucz `kaczy.sync.seen.v1`, mapa nazwa → czas, najwyżej 20. Wołają go `refreshDevices` (obecne i te, które właśnie odeszły) i `disconnectProvider` w `yjsSync.ts`. Kluczem jest nazwa, bo id z awareness zmienia się przy każdym połączeniu.
+- **5.7 „O aplikacji”.** `src/components/AboutPanel.tsx` pokazuje wersję (`APP_VERSION`), build (`__APP_BUILD__`: skrót commita i czas builda w UTC, `formatBuild`), stan pracy offline oraz przycisk „Sprawdź aktualizację” albo „Odśwież do nowej wersji” (z ochroną niezapisanej pracy). Stan workera to mały magazyn w `src/lib/registerSW.ts` (`SwInfo`: `off` / `starting` / `ready` / `update`, `getSwInfo`, `subscribeSwInfo`, `checkForSwUpdate`). Panel jest w oknie otwieranym z „O aplikacji · wersja …” w stopce paska bocznego i w Ustawieniach → Kopia i dane. Na telefonie okno otwiera się po zamknięciu paska, bo pasek jest oknem z własną pułapką fokusu.
+- **5.8 Okruszki.** `ViewTitle` ma właściwość `crumbs`. Na komputerze pokazuje „Dom › Remont ›”, a na telefonie samo „‹ Remont” (44 px). Dane liczą `folderCrumbs` (przodkowie folderu po `parentId`, odporne na pętlę) i `labelCrumbs` (rodzice etykiety zagnieżdżonej) w `src/lib/breadcrumbs.ts`. Tytuł widoku etykiety zagnieżdżonej to teraz ostatni człon („#płytki”), a pełna ścieżka jest w okruszkach.
+- **5.9 Domyślny szablon folderu.**
+  - Folder ma pole `templateId?` (jedna wartość LWW w mapie `folders` w Yjs: `FOLDER_SCALAR_FIELDS`, `yFolderFromPlain`, `plainFromYFolder`, `folderSchema` w kopii). `patchFolder` z `undefined` usuwa pole z dokumentu.
+  - W widoku folderu akcje główki (`FolderTemplateActions.tsx`) mają wybór szablonu (wbudowane z `TEMPLATES` i własne, `templateChoices` w `QuickTemplates.tsx`; zmiana z „Cofnij”) i przycisk „Nowa: <szablon>”. Przycisk tworzy notatkę w tym folderze i otwiera ją do edycji bez zmiany widoku.
+- **5.10 „Cofnij” i Esc.**
+  - Przywrócenie wersji ma toast z „Cofnij” (wraca do treści sprzed przywrócenia, która i tak trafia do historii; `handleRestoreVersion` w `Index.tsx`). Rozwijanie wersji ma `aria-expanded` (`VersionHistoryDialog.tsx`).
+  - Płótno (`DrawingCanvas.tsx`) przy niezapisanych kreskach nie zamyka się po cichu na Esc, klik w tło ani „×”. Pokazuje pasek „Rysunek nie jest zapisany” z przyciskami „Zapisz rysunek”, „Porzuć” i „Rysuj dalej”.
+  - „Wyczyść” ma „Cofnij”. Klik w toast nie liczy się jako wyjście z płótna.
+
+### Ograniczenia i pułapki
+
+- **Praca → budowa nie ma okruszka:** karta budowy to okno, nie strona, więc nie ma czego „cofać” w główce.
+- **Szablon własny jest lokalny** (`kaczy.templates.v1`). Folder z takim szablonem na innym urządzeniu zachowuje się jak bez szablonu. Wbudowane działają wszędzie.
+- **Starsze urządzenie** nie zna pola `templateId`. Y.Map je zachowa, ale przy pełnym zapisie folderu (`upsertFolder`) ze starej wersji pole zniknie.
+- **„Otwórz w nowej karcie” tylko dla PDF i obrazów rastrowych.** Adres `blob:` ma pochodzenie aplikacji, więc SVG, HTML i XML z załącznika uruchomiłyby skrypt w jej imieniu (`openableType`, test). Reszta plików ma tylko „Pobierz”.
+- **Historia Alt+←/→ żyje do odświeżenia strony** i liczy także otwarcia edytora kafla. Krok zawsze otwiera podgląd, nie edytor.
+- **„Ostatnio widziane” po nazwie:** dwa urządzenia o tej samej nazwie są jednym wpisem, a zmiana nazwy tworzy nowy.
+- **Indeks Ustawień trzeba dopisywać ręcznie** przy nowej sekcji. Test pilnuje tylko, że wpisane tytuły nadal są w kodzie, a nie że każda sekcja jest w indeksie.
+- **Esc zwija też pasek boczny** (stare zachowanie globalnych skrótów). Testy e2e po Esc pokazują pasek przyciskiem „Pokaż panel”.
+
+### Testy
+
+- Vitest: `src/lib/noteHistory.test.ts`, `checklistOrder.test.ts`, `settingsIndex.test.ts` (każdy tytuł z indeksu istnieje w kodzie Ustawień), `breadcrumbs.test.ts`, `syncSeen.test.ts`, `syncErrorText.test.ts`, `attachments.test.ts` (`openableType`).
+- e2e: `e2e/qol-etap5.spec.ts` (paleta: ostatnie, terminy, ustawienia z przewinięciem i rozwinięciem; Alt+←/→; przeciąganie listy; M i L; okruszki podfolderu; szablon folderu; płótno pyta i „Wyczyść” z „Cofnij”).
+
 ## Wspólne — ruch i drobny szlif, Etap 4 (nowy plan 2026-11-05)
 
 Commit: d495ac2 (2026-11-05), na wip/mobile-fala1.

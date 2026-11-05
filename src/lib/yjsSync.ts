@@ -1,4 +1,5 @@
 import { cleanSchemaClaim, cleanVersionClaim, localDeviceSchema, setDeviceSource, type DeviceSchema } from "@/lib/formatSchema";
+import { recordSeenDevices } from "@/lib/syncSeen";
 import { clearLegacyIdle, legacyIdleExpired, markLegacyEnabled, markLegacySeen, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
@@ -316,6 +317,9 @@ function refreshDevices() {
   });
   const ids = new Set(devices.map((d) => d.id));
   devices.filter((d) => !previousDeviceIds.has(d.id)).forEach((d) => toast.success(`Połączono z: ${d.name}`));
+  // 5.6: „ostatnio widziane” — obecne teraz i te, które właśnie odeszły (lokalnie, nie w Yjs).
+  const left = state.devices.filter((d) => !ids.has(d.id)).map((d) => d.name);
+  recordSeenDevices([...devices.map((d) => d.name), ...left]);
   previousDeviceIds = ids;
   setState({ devices });
 }
@@ -413,6 +417,7 @@ function disconnectProvider() {
   stopImageSync();
   stopRelay();
   previousDeviceIds = new Set();
+  recordSeenDevices(state.devices.map((d) => d.name));
   setState({ signalingUp: 0, signalingTotal: 0, devices: [] });
 }
 

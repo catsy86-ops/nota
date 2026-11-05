@@ -34,8 +34,14 @@ import { addDays } from "date-fns";
 import { SKINS, useSkin } from "@/lib/skins";
 import { SKIN_META } from "@/lib/skinGallery";
 import { trySkin } from "@/lib/skinTry";
+import { recentOpenedIds, useLastOpened } from "@/lib/lastOpened";
+import { formatReminderShort } from "@/lib/reminderTime";
+import { searchSettings } from "@/lib/settingsIndex";
+import { requestSettingsSection } from "@/lib/settingsDeepLink";
 
 const NOTE_LIMIT = 30;
+/** 5.1: tyle ostatnio otwieranych notatek pokazuje pusta paleta. */
+const RECENT_NOTES = 10;
 
 export interface CommandAction {
   id: string;
@@ -120,6 +126,17 @@ export function CommandPalette({
   const matched = useMemo(() => searchNotes(publicNotes, search, { folders }), [publicNotes, search, folders, searchReady]);
   // Nagłówki i bloki pasujące do tekstu (bez operatorów): skok prosto do sekcji.
   const sections = useMemo(() => sectionHits(publicNotes, search, { folders }), [publicNotes, search, folders]);
+  // 5.3: wyniki według rodzaju — notatki z terminem idą do grupy „Terminy” (z datą), reszta do „Notatki”.
+  const dueHits = useMemo(() => matched.filter((n) => n.reminder !== null && !n.trashed), [matched]);
+  const noteHits = useMemo(() => matched.filter((n) => n.reminder === null || n.trashed), [matched]);
+  const settingsHits = useMemo(() => searchSettings(search), [search]);
+  // 5.1: ostatnio otwierane (lokalnie, `lastOpened.ts`), tylko notatki, które nadal są i nie są w koszu.
+  const lastOpened = useLastOpened();
+  const recentNotes = useMemo(() => {
+    if (!open) return [];
+    const byId = new Map(publicNotes.filter((n) => !n.trashed).map((n) => [n.id, n]));
+    return recentOpenedIds(lastOpened, RECENT_NOTES * 3).map((id) => byId.get(id)).filter((n): n is Note => n !== undefined).slice(0, RECENT_NOTES);
+  }, [open, lastOpened, publicNotes]);
   const vault = useVault();
   const navigate = useNavigate();
   // Praca w palecie (2.5): budowy i wpisy pasujące do tekstu, plus „Nowy wpis” i „Raport dnia”.
@@ -163,7 +180,7 @@ export function CommandPalette({
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Szukaj notatek, dni grafiku lub akcji…" value={search} onValueChange={setSearch} />
+      <CommandInput placeholder="Szukaj notatek, terminów, Pracy, ustawień i akcji…" value={search} onValueChange={setSearch} />
       <CommandList>
         <CommandEmpty>
           <div className="flex flex-col items-center gap-2 py-2">
@@ -190,6 +207,19 @@ export function CommandPalette({
                   <Pin className="w-4 h-4 mr-2" /> {currentNote.pinned ? "Odepnij" : "Przypnij"}
                 </CommandItem>
               )}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
+        {recentNotes.length > 0 && !search.trim() && (
+          <>
+            <CommandGroup heading="Ostatnie notatki">
+              {recentNotes.map((n) => (
+                <CommandItem key={`last-${n.id}`} value={`ostatnie ${n.id}`} onSelect={() => run(() => onOpenNote(n.id))}>
+                  <RotateCcwClock className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <span className="truncate">{n.title || n.content.slice(0, 60) || "(bez tytułu)"}</span>
+                </CommandItem>
+              ))}
             </CommandGroup>
             <CommandSeparator />
           </>
@@ -439,7 +469,35 @@ export function CommandPalette({
             </CommandGroup>
           </>
         )}
-        {matched.length > 0 && (
+        {dueHits.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Terminy" forceMount>
+              {dueHits.slice(0, 8).map((n) => (
+                <CommandItem key={`due-${n.id}`} forceMount value={`termin-${n.id}`} onSelect={() => { setRecent(saveRecentSearch(search)); run(() => onOpenNote(n.id)); }}>
+                  <Bell className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <span className="truncate">{n.title || n.content.slice(0, 60) || "(bez tytułu)"}</span>
+                  <span className="ml-auto shrink-0 pl-2 font-mono text-xs tabular-nums text-muted-foreground">{formatReminderShort(n.reminder!)}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+        {settingsHits.length > 0 && (
+          <>
+            <CommandSeparator />
+            {/* Jak Grafik: `searchSettings` filtruje sam (bez polskich znaków). */}
+            <CommandGroup heading="Ustawienia" forceMount>
+              {settingsHits.map((e) => (
+                <CommandItem key={`set-${e.title}`} forceMount value={`ustawienie-${e.title}`} onSelect={() => run(() => { requestSettingsSection(e.tab, e.title, e.expand); onOpenSettings(); })}>
+                  <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <span className="truncate">{e.title}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+        {noteHits.length > 0 && (
           <>
             <CommandSeparator />
             {/* Filtruje `searchNotes` (ten sam silnik co pasek wyszukiwania, z
@@ -447,10 +505,10 @@ export function CommandPalette({
                 paleta widziałaby tylko 30 najnowszych notatek. `forceMount`, bo
                 wynik wyszukiwania nie musi przejść wewnętrznego filtra cmdk. */}
             <CommandGroup
-              heading={matched.length > NOTE_LIMIT ? `Notatki — pokazano ${NOTE_LIMIT} z ${matched.length}` : "Notatki"}
-              forceMount={matched.length > 0}
+              heading={noteHits.length > NOTE_LIMIT ? `Notatki — pokazano ${NOTE_LIMIT} z ${noteHits.length}` : "Notatki"}
+              forceMount
             >
-              {matched.slice(0, NOTE_LIMIT).map((n) => (
+              {noteHits.slice(0, NOTE_LIMIT).map((n) => (
                 <CommandItem key={n.id} forceMount value={`note-${n.id}`} onSelect={() => { setRecent(saveRecentSearch(search)); run(() => onOpenNote(n.id)); }}>
                   <StickyNote className="w-4 h-4 mr-2 text-muted-foreground" />
                   <span className="truncate">{n.title || n.content.slice(0, 60) || "(bez tytułu)"}</span>

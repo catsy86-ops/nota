@@ -21,6 +21,10 @@ export interface GridNavHandlers {
   onToggleFavorite?: (id: string) => void;
   /** Otwiera okno przypomnienia kafla (klawisz R). */
   onOpenReminder?: (id: string) => void;
+  /** Otwiera wybór folderu kafla (klawisz M, nowy plan 5.4). */
+  onOpenFolder?: (id: string) => void;
+  /** Otwiera wybór etykiet kafla (klawisz L). */
+  onOpenLabels?: (id: string) => void;
   /** Otwiera edytor notatki (klika kafel). */
   openNote: (id: string) => void;
   /** Przewija kafel do widoku. */
@@ -193,6 +197,8 @@ export function handleGridNavKey(e: KeyboardEvent) {
   if (isTyping()) return;
 
   if (state.previewId) {
+    // Okno nad podglądem (galeria obrazów, 5.5) obsłużyło klawisz samo — Esc zamyka tylko je.
+    if (e.defaultPrevented) return;
     handlePreviewKeys(e, state.previewId);
     return;
   }
@@ -241,6 +247,14 @@ export function handleGridNavKey(e: KeyboardEvent) {
     case "f":
     case "F":
       if (hasFocus && section?.handlers.onToggleFavorite) { e.preventDefault(); section.handlers.onToggleFavorite(focusedId as string); }
+      return;
+    case "m":
+    case "M":
+      if (hasFocus && section?.handlers.onOpenFolder) { e.preventDefault(); section.handlers.onOpenFolder(focusedId as string); }
+      return;
+    case "l":
+    case "L":
+      if (hasFocus && section?.handlers.onOpenLabels) { e.preventDefault(); section.handlers.onOpenLabels(focusedId as string); }
       return;
     default: return;
   }

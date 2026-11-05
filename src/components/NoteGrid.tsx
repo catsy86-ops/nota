@@ -1,4 +1,5 @@
-﻿import { useRef, useEffect, useLayoutEffect, useCallback, memo, useMemo, useState, forwardRef } from "react";
+﻿import { toast } from "sonner";
+import { useRef, useEffect, useLayoutEffect, useCallback, memo, useMemo, useState, forwardRef } from "react";
 import type { CardExitIntent } from "@/lib/cardMotion";
 import { AnimatePresence } from "framer-motion";
 import { useSortable, SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
@@ -162,6 +163,20 @@ export function NoteGrid({
   // kolejności albo listy kafli, żeby zmiana `notes` albo callbacku jej nie wyrejestrowywała (a czyszczenie podglądu
   // przy wyrejestrowaniu zamykało czytnik po Ctrl+kliku na link w panelu „Obok”).
   const navHandlers = useRef<GridNavHandlers | null>(null);
+  const clickCardControl = (id: string, label: string, missing?: () => void) => {
+    const find = () => gridRef.current?.querySelector<HTMLElement>(`[data-note-id-wrap="${window.CSS.escape(id)}"] [aria-label="${label}"]`) ?? null;
+    const now = find();
+    if (now) { now.click(); return; }
+    gridRef.current?.querySelector<HTMLElement>(`[data-note-id-wrap="${window.CSS.escape(id)}"] [aria-label="Więcej opcji"]`)?.click();
+    let tries = 0;
+    const retry = () => {
+      const el = find();
+      if (el) { el.click(); return; }
+      if (++tries < 10) requestAnimationFrame(retry);
+      else missing?.();
+    };
+    requestAnimationFrame(retry);
+  };
   useLayoutEffect(() => {
   navHandlers.current = {
     onDelete,
@@ -173,6 +188,10 @@ export function NoteGrid({
       const bell = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"] [title="Przypomnienie"]`) as HTMLElement | null;
       bell?.click();
     },
+    // M i L (5.4): jak R — te same przyciski co na kaflu, więc okno otwiera się przy kaflu. Wybór folderu
+    // i etykiet jest w „Więcej opcji”, które montuje się dopiero po rozwinięciu — wtedy najpierw je rozwijamy.
+    onOpenFolder: (id) => clickCardControl(id, "Folder", () => toast.info("Nie ma jeszcze folderów — dodaj folder w pasku bocznym")),
+    onOpenLabels: (id) => clickCardControl(id, "Etykiety"),
     onToggleFavorite: (id) => {
       const note = notes.find((n) => n.id === id);
       if (note) onUpdate?.(id, { favorite: !note.favorite });

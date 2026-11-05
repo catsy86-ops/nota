@@ -31,3 +31,18 @@ export function consumeRequestedSettingsTab(): SettingsTab | null {
   requestedTab = null;
   return tab;
 }
+
+/** Sekcja do przewinięcia po otwarciu (paleta poleceń, nowy plan 5.3): dokładny tytuł nagłówka. Zużywana raz. */
+let requestedSection: { title: string; expand?: string } | null = null;
+
+/** `expand` — `aria-controls` zwiniętego bloku, w którym leży sekcja (np. „Zaawansowane” w Wyglądzie). */
+export function requestSettingsSection(tab: SettingsTab, title: string, expand?: string): void {
+  requestedTab = tab;
+  requestedSection = { title, expand };
+}
+
+export function consumeRequestedSettingsSection(): { title: string; expand?: string } | null {
+  const section = requestedSection;
+  requestedSection = null;
+  return section;
+}

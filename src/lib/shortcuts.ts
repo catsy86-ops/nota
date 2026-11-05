@@ -88,6 +88,11 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["A"], label: "Archiwizuj" },
       { keys: ["P"], label: "Przypnij / odepnij" },
       { keys: ["D"], label: "Duplikuj" },
+      { keys: ["R"], label: "Przypomnienie" },
+      { keys: ["F"], label: "Ulubiona / zwykła" },
+      { keys: ["M"], label: "Przenieś do folderu" },
+      { keys: ["L"], label: "Etykiety" },
+      { keys: ["Alt", "←"], label: "Poprzednio otwarta notatka (Alt+→ — następna)" },
     ],
   },
   {

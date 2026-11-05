@@ -31,7 +31,8 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
       <PopoverTrigger asChild>
         <button
           className="pressable p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
-          title="Etykiety"
+          data-tip="Etykiety"
+          data-tip-keys="L"
           aria-label="Etykiety"
         >
           <Tag className="w-4 h-4" />

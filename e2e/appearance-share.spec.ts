@@ -21,7 +21,7 @@ test("wczytanie kodu stosuje wygląd bez przeładowania i cofa się @mobile", as
   await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
   await page.getByRole("button", { name: "Ustawienia" }).click();
   await page.getByRole("tab", { name: "Wygląd" }).click();
-  await page.getByLabel("Kod wyglądu").fill(NEON_CODE);
+  await page.getByRole("textbox", { name: "Kod wyglądu" }).fill(NEON_CODE);
   await page.getByRole("button", { name: "Wczytaj", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("data-skin", "neon");
   expect(await page.evaluate(() => (window as unknown as { __mark?: number }).__mark)).toBe(42);

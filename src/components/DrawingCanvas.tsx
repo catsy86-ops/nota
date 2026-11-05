@@ -4,6 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { toastWithUndo } from "@/lib/undoToast";
 
 const COLORS = [
   "#1a1a2e", "#e74c3c", "#e67e22", "#f1c40f",
@@ -196,9 +197,25 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
   }
 
   function clearAll() {
+    const before = strokes;
     setStrokes([]);
     setCurrentStroke(null);
+    // 5.10 (Notatki 1.3): wyczyszczenie całego rysunku jednym stuknięciem da się cofnąć.
+    if (before.length > 0) toastWithUndo("Wyczyszczono rysunek", () => setStrokes(before), { id: "drawing-clear" });
   }
+
+  // 5.10: Esc, klik w tło i „×” przy niezapisanych kreskach nie zamykają po cichu — pytają.
+  const [askDiscard, setAskDiscard] = useState(false);
+  const requestClose = (next: boolean) => {
+    if (next) { onOpenChange(true); return; }
+    if (strokes.length > 0) { setAskDiscard(true); return; }
+    onOpenChange(false);
+  };
+  const guardOutside = (e: Event) => {
+    // Klik w toast („Cofnij” po „Wyczyść”) nie jest wyjściem z płótna.
+    if ((e.target as Element | null)?.closest?.("[data-sonner-toaster]")) return;
+    if (strokes.length > 0) { e.preventDefault(); setAskDiscard(true); }
+  };
 
   function handleSave() {
     const canvas = canvasRef.current;
@@ -217,8 +234,17 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-sm:max-w-[95vw] w-full max-h-[90dvh] h-full p-0 gap-0 overflow-hidden flex flex-col">
+    <Dialog open={open} onOpenChange={requestClose}>
+      <DialogContent onEscapeKeyDown={guardOutside} onInteractOutside={guardOutside}
+        className="max-w-[95vw] max-sm:max-w-[95vw] w-full max-h-[90dvh] h-full p-0 gap-0 overflow-hidden flex flex-col">
+        {askDiscard && (
+          <div role="alertdialog" aria-label="Niezapisany rysunek" className="flex flex-wrap items-center gap-2 border-b border-warning/50 bg-warning/10 px-3 py-2 text-sm">
+            <span className="flex-1 min-w-[12rem]">Rysunek nie jest zapisany.</span>
+            <Button size="sm" onClick={() => { setAskDiscard(false); handleSave(); }}>Zapisz rysunek</Button>
+            <Button size="sm" variant="outline" onClick={() => { setAskDiscard(false); setStrokes([]); onOpenChange(false); }}>Porzuć</Button>
+            <Button size="sm" variant="ghost" autoFocus onClick={() => setAskDiscard(false)}>Rysuj dalej</Button>
+          </div>
+        )}
         {/* Toolbar */}
         <div className="flex items-center gap-2 p-3 border-b border-border flex-wrap bg-card">
           <div className="flex items-center gap-1">

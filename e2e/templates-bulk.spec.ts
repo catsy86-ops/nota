@@ -35,7 +35,9 @@ test("własny szablon: zmienne podstawiają się przy tworzeniu notatki", async 
 });
 
 test("pasek zbiorczy: dodaj etykietę i przypnij zaznaczone", async ({ page }) => {
+  await page.getByRole("article", { name: "Alfa" }).hover();
   await page.getByRole("article", { name: "Alfa" }).getByRole("button", { name: "Zaznacz notatkę" }).click();
+  await page.getByRole("article", { name: "Beta" }).hover();
   await page.getByRole("article", { name: "Beta" }).getByRole("button", { name: "Zaznacz notatkę" }).click();
 
   await page.getByRole("button", { name: "Dodaj etykietę" }).click();
@@ -44,6 +46,8 @@ test("pasek zbiorczy: dodaj etykietę i przypnij zaznaczone", async ({ page }) =
   await expect(page.getByText("Dodano #wspolne do 2")).toBeVisible();
   await expect(page.getByRole("article", { name: "Alfa" })).toContainText("wspolne");
   await expect(page.getByRole("article", { name: "Gamma" })).not.toContainText("wspolne");
+
+  await page.getByRole("article", { name: "Gamma" }).hover();
 
   await page.getByRole("article", { name: "Gamma" }).getByRole("button", { name: "Zaznacz notatkę" }).click();
   await page.getByRole("button", { name: "Przypnij zaznaczone" }).click();

@@ -72,6 +72,7 @@ export const folderSchema = z.object({
   order: z.catch(z.number(), 0),
   createdAt: z.catch(z.number(), () => Date.now()),
   updatedAt: z.catch(z.optional(z.number()), undefined),
+  templateId: z.catch(z.optional(z.string().check(z.maxLength(100))), undefined),
 }) satisfies z.ZodMiniType<Folder, unknown>;
 
 /** Rejects anything that isn't even a plausible array-of-note-like-objects. */

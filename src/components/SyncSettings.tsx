@@ -13,6 +13,8 @@ import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/comp
 import { toast } from "sonner";
 import { checkRelay, getRelayUrl, setRelayUrl, startRelay, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
 import { formatDistanceToNow } from "date-fns";
+import { syncErrorText } from "@/lib/syncErrorText";
+import { seenOffline, useSeenDevices } from "@/lib/syncSeen";
 import { pl } from "date-fns/locale";
 import {
   useSyncState, type SyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing, formatCode,
@@ -22,7 +24,7 @@ import {
 
 /** Jedno zdanie o tym, na którym etapie synchronizacja stoi (bez żargonu). */
 function diagnosis(s: SyncState): string {
-  if (s.lastError) return "Nie udało się uruchomić połączenia. Sprawdź internet i spróbuj ponownie.";
+  if (s.lastError) return syncErrorText(s.lastError);
   if (s.status === "connected" && s.peerCount === 0) return "Połączono z serwerami. Drugie urządzenie jeszcze nie dołączyło — otwórz tu sam kod na nim.";
   if (s.signalingTotal > 0 && s.signalingUp === 0) return "Nie ma połączenia z serwerem łączącym urządzenia. Sprawdź internet; połączenie wznowi się samo.";
   if (s.status === "connecting") return `Łączenie z serwerami (${s.signalingUp} z ${s.signalingTotal || "?"}).`;
@@ -44,6 +46,8 @@ function deviceWord(n: number): string {
 
 export function SyncSettings({ prefillCode }: Props) {
   const syncState = useSyncState();
+  const seen = useSeenDevices();
+  const offline = seenOffline(seen, syncState.devices.map((d) => d.name));
   const [joinInput, setJoinInput] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -136,7 +140,11 @@ export function SyncSettings({ prefillCode }: Props) {
               </p>
             )}
             {syncState.lastError && (
-              <p className="text-2xs text-destructive-ink mt-0.5">Błąd połączenia: {syncState.lastError}</p>
+              // 5.6: zdanie z radą jest wyżej (diagnoza); surowy komunikat tylko dla zgłoszenia błędu.
+              <details className="mt-0.5 text-2xs text-muted-foreground">
+                <summary className="cursor-pointer text-destructive-ink">Szczegóły błędu</summary>
+                <code className="mt-0.5 block break-all font-mono">{syncState.lastError}</code>
+              </details>
             )}
           </div>
         </div>
@@ -162,6 +170,20 @@ export function SyncSettings({ prefillCode }: Props) {
           </ul>
         ) : (
           <p className="text-xs text-muted-foreground">Żadne inne urządzenie nie jest teraz połączone.</p>
+        )}
+        {offline.length > 0 && (
+          <div data-testid="sync-seen">
+            <p className="text-xs text-muted-foreground">Ostatnio widziane</p>
+            <ul className="mt-1 space-y-1 text-sm" aria-label="Ostatnio widziane urządzenia">
+              {offline.slice(0, 6).map((d) => (
+                <li key={d.name} className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/40 shrink-0" aria-hidden="true" />
+                  {d.name}
+                  <span className="text-xs text-muted-foreground">· {formatDistanceToNow(d.at, { addSuffix: true, locale: pl })}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         <form
           className="flex items-end gap-2"

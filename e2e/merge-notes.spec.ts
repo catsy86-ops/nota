@@ -25,7 +25,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("scalanie dwóch notatek: treść w pierwszej, druga w koszu, Cofnij przywraca", async ({ page }) => {
+  await page.getByRole("article", { name: "Alfa" }).hover();
   await page.getByRole("article", { name: "Alfa" }).getByRole("button", { name: "Zaznacz notatkę" }).click();
+  await page.getByRole("article", { name: "Beta" }).hover();
   await page.getByRole("article", { name: "Beta" }).getByRole("button", { name: "Zaznacz notatkę" }).click();
 
   await page.getByRole("button", { name: "Scal zaznaczone w jedną notatkę" }).click();
@@ -46,6 +48,7 @@ test("scalanie dwóch notatek: treść w pierwszej, druga w koszu, Cofnij przywr
 });
 
 test("scalanie pojedynczej notatki jest odmawiane z komunikatem", async ({ page }) => {
+  await page.getByRole("article", { name: "Alfa" }).hover();
   await page.getByRole("article", { name: "Alfa" }).getByRole("button", { name: "Zaznacz notatkę" }).click();
   await page.getByRole("button", { name: "Scal zaznaczone w jedną notatkę" }).click();
   await expect(page.getByText("Zaznacz co najmniej dwie notatki.")).toBeVisible();

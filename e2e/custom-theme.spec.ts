@@ -17,8 +17,8 @@ test("własny motyw: suwak zmienia akcent, przywrócenie zdejmuje", async ({ pag
   await page.getByRole("tab", { name: "Wygląd" }).click();
   await page.getByRole("button", { name: /^Pokaż: kształt/ }).click();
 
-  await expect(page.getByRole("heading", { name: "Własny motyw (eksperyment)" })).toBeVisible();
-  await page.getByRole("button", { name: "Zrób własny motyw z „Beton i patyna”" }).click();
+  await expect(page.getByRole("heading", { name: "Własny styl (eksperyment)" })).toBeVisible();
+  await page.getByRole("button", { name: "Zrób własny styl z „Beton i patyna”" }).click();
 
   const accent = page.getByRole("slider", { name: /Akcent/ });
   await accent.focus();
@@ -32,6 +32,6 @@ test("własny motyw: suwak zmienia akcent, przywrócenie zdejmuje", async ({ pag
   expect(axe.violations.map((v) => v.id)).toEqual([]);
 
   await page.getByRole("button", { name: "Przywróć styl „Beton i patyna”" }).click();
-  await expect(page.getByRole("button", { name: "Zrób własny motyw z „Beton i patyna”" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Zrób własny styl z „Beton i patyna”" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--primary"))).toBe("");
 });

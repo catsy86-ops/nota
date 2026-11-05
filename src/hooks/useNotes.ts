@@ -30,6 +30,12 @@ export interface Folder {
   order: number;
   createdAt: number;
   updatedAt?: number;
+  /**
+   * Domyślny szablon nowej notatki w tym folderze (nowy plan 5.9): id wbudowanego szablonu
+   * (`TEMPLATES` w QuickTemplates) albo własnego (`kaczy.templates.v1`). Własne szablony są
+   * lokalne — na urządzeniu, które go nie zna, folder zachowuje się jak bez szablonu.
+   */
+  templateId?: string;
 }
 
 export interface ChecklistItem {

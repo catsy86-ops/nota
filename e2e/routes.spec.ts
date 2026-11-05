@@ -16,6 +16,8 @@ async function addNote(page: Page, title: string) {
 }
 
 test("widok jest w adresie: odświeżenie go zachowuje, a „wstecz” wraca @smoke", async ({ page }) => {
+  // Archiwum i Kosz są w grupie „Osobiste”, domyślnie zwiniętej (nowy plan 3.7, NP-4).
+  await page.locator('[data-sidebar-group="osobiste"] button[aria-expanded="false"]').click();
   await page.getByRole("button", { name: "Archiwum" }).first().click();
   await expect(page).toHaveURL(/\/archiwum$/);
   await page.reload();

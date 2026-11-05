@@ -1,6 +1,6 @@
 # Nowy plan: dopracowanie, wygląd i QoL (2026-11-05)
 
-> **Status (2026-11-05):** Etapy 0–4 zrobione (Etap 3 w commicie fc5310f, Etap 4 w d495ac2). Dalej Etap 5. Z Etapu 4 otwarte tylko: toast nad otwartym arkuszem na telefonie (do Etapu 7). NP-5 przyjęte według rekomendacji. Uzupełnia `Plan-nowy.md`, którego Cykl 2 jest w toku (Dziś 2.4), i go nie zastępuje. Każda z decyzji NP-1…NP-7 ma rekomendację i czeka na właściciela.
+> **Status (2026-11-05):** Etapy 0–5 zrobione (Etap 3: fc5310f, Etap 4: d495ac2, Etap 5: HASH). Dalej Etap 6 (tylko po decyzji) i Etap 7 (QA). Otwarte: toast nad otwartym arkuszem na telefonie (4.5, do Etapu 7), okruszek Praca → budowa (5.8; karta budowy to okno). NP-5 przyjęte według rekomendacji.
 
 ## 1. Skąd ten plan
 

@@ -65,6 +65,9 @@ import { columnOfNote, NONE_COLUMN, PINNED_COLUMN } from "@/lib/boardColumns";
 import { NoteGroupSection } from "@/components/NoteGroupSection";
 import { groupNotes, type GroupBy } from "@/lib/groupNotes";
 import { markNoteOpened } from "@/lib/lastOpened";
+import { noteHistory } from "@/lib/noteHistory";
+import { folderCrumbs, labelCrumbs } from "@/lib/breadcrumbs";
+import { FolderTemplateActions } from "@/components/FolderTemplateActions";
 import { EmptyState } from "@/components/EmptyState";
 import { DeleteForeverDialog, EmptyTrashDialog } from "@/components/TrashConfirmDialogs";
 import { sidebarItems } from "@/components/sidebar/sidebarItems";
@@ -111,7 +114,7 @@ const Index = () => {
   const {
     notes, archivedNotes, trashedNotes, allLabels, folders, propDefs, addPropDef, updatePropDef, deletePropDef,
     addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote,
-    archiveNote, unarchiveNote, addLabel, importNotes, reorderNotes, moveNoteToFolder,
+    archiveNote, unarchiveNote, addLabel, importNotes, reorderNotes, moveNoteToFolder, updateFolder,
     bulkTrash, bulkArchive, bulkSetColor, bulkRestore,
   } = useNotesContext();
   const { addVersion, getVersions, deleteVersions } = useNoteVersions();
@@ -341,9 +344,11 @@ const Index = () => {
   const handleRestoreVersion = useCallback((noteId: string, version: NoteVersion) => {
     const current = notesRef.current.find((n) => n.id === noteId);
     if (current?.locked) return;
-    addVersion(noteId, current?.title || "", current?.content || "");
+    const before = { title: current?.title || "", content: current?.content || "" };
+    addVersion(noteId, before.title, before.content);
     updateNote(noteId, { title: version.title, content: version.content });
-    toast.success("Przywrócono wersję");
+    // 5.10 (Notatki 1.2): bieżąca treść jest już w historii, a „Cofnij” wraca do niej od razu.
+    toastWithUndo("Przywrócono wersję", () => updateNote(noteId, before), { id: `version-${noteId}` });
   }, [notesRef, updateNote, addVersion]);
 
   // Zmiana sortowania i układu (3.4): lista nadrabia, pasek ustawień reaguje od razu.
@@ -527,6 +532,23 @@ const Index = () => {
     void t.finished.finally(() => { card.style.viewTransitionName = ""; });
   }, [showInReader]);
   useEffect(() => { if (readerId) markNoteOpened(readerId); }, [readerId]);
+  // 5.1: Alt+← / Alt+→ po historii otwieranych notatek (czytnik). Tylko gdy historia ma dokąd iść —
+  // inaczej skrót zostaje przeglądarce (wstecz). Nie w polu tekstowym i nie nad innym oknem niż czytnik.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+      if (document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]')) return;
+      const known = new Set([...notesRef.current, ...archivedRef.current].filter((n) => !n.locked).map((n) => n.id));
+      const id = noteHistory.step(e.key === "ArrowLeft" ? -1 : 1, (x) => known.has(x));
+      if (!id) return;
+      e.preventDefault();
+      showInReader(id, "preview");
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [notesRef, archivedRef, showInReader]);
 
   // Undo fallbacks so history restored from localStorage stays actionable after reload
   useEffect(() => {
@@ -546,6 +568,7 @@ const Index = () => {
 
   // Notatka tworzona w folderze albo w widoku etykiety ląduje tam, gdzie
   // użytkownik patrzy — inaczej znika mu z oczu i wymaga przeciągnięcia.
+  const activeFolderObj = view === "folder" && activeFolder ? folders.find((f) => f.id === activeFolder) ?? null : null;
   const handleAddNoteGlow = useCallback((...args: Parameters<typeof addNote>) => {
     const p = centerOf(document.querySelector("[data-add-note-bar]"));
     if (p) glowPulse(p, "create", 260);
@@ -754,8 +777,25 @@ const Index = () => {
           {view !== "widget" && (
             <ViewTitle
               view={view}
-              title={view === "folder" ? folders.find((f) => f.id === activeFolder)?.name || "Folder" : view === "label" ? `#${activeLabel}` : undefined}
+              title={view === "folder" ? folders.find((f) => f.id === activeFolder)?.name || "Folder" : view === "label" ? `#${activeLabel?.split("/").pop() ?? ""}` : undefined}
+              crumbs={(view === "folder" ? folderCrumbs(folders, activeFolder) : view === "label" ? labelCrumbs(activeLabel) : []).map((c) => ({
+                label: c.label,
+                onClick: () => (c.target.kind === "folder" ? go("folder", { folder: c.target.id }) : go("label", { label: c.target.label })),
+              }))}
               count={isAppView(view) || view === "reminders" ? undefined : displayNotes.length}
+            />
+          )}
+          {view === "folder" && activeFolderObj && (
+            <FolderTemplateActions
+              folder={activeFolderObj}
+              onSetTemplate={(templateId) => updateFolder(activeFolderObj.id, { templateId })}
+              onCreate={(t) => {
+                const data = t.build();
+                data.labels.forEach(addLabel);
+                const id = handleAddNoteGlow(data.title, data.content, data.color, data.labels, null, [], data.checklist);
+                // Zostajemy w folderze (revealNote przełączyłby na Notatki): kafel pojawia się tu i otwiera do edycji.
+                setTimeout(() => document.querySelector<HTMLElement>(`[data-note-id-wrap="${window.CSS.escape(id)}"] .cursor-pointer`)?.click(), 150);
+              }}
             />
           )}
           {!isAppView(view) && (

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, type ReactNode } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 import { VIEW_GROUP, VIEW_LABEL } from "@/lib/viewMeta";
@@ -35,7 +36,12 @@ function kickerGroup(view: View): string {
  * Nowy plan 1.1: opis (`lead`) pod tytułem i akcje widoku po prawej (`PageActions`); na telefonie akcje
  * schodzą pod opis i tworzą jeden rząd.
  */
-export function ViewTitle({ view, title, count, lead, className }: { view: View; title?: ReactNode; count?: number; lead?: ReactNode; className?: string }) {
+export function ViewTitle({ view, title, count, lead, crumbs, className }: {
+  view: View; title?: ReactNode; count?: number; lead?: ReactNode;
+  /** 5.8: rodzice bieżącego folderu albo etykiety, od korzenia. Telefon pokazuje tylko „‹ Rodzic”. */
+  crumbs?: { label: string; onClick: () => void }[];
+  className?: string;
+}) {
   const ref = useRef<HTMLElement>(null);
   const leadText = lead ?? VIEW_LEAD[view];
   useEffect(() => {
@@ -57,6 +63,21 @@ export function ViewTitle({ view, title, count, lead, className }: { view: View;
     <header ref={ref} data-page-head className={cn("w-full", className)}>
       {kicker.length > 0 && (
         <p className="mb-1 font-mono text-xs uppercase tracking-wider text-muted-foreground">{kicker.join(" · ")}</p>
+      )}
+      {crumbs && crumbs.length > 0 && (
+        <nav aria-label="Okruszki" data-crumbs className="mb-1 text-sm text-muted-foreground">
+          <ol className="hidden flex-wrap items-center gap-1 sm:flex">
+            {crumbs.map((c, i) => (
+              <li key={i} className="flex items-center gap-1">
+                <button type="button" onClick={c.onClick} className="rounded-control underline-offset-2 hover:text-foreground hover:underline outline-hidden focus-visible:ring-2 focus-visible:ring-ring">{c.label}</button>
+                <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+              </li>
+            ))}
+          </ol>
+          <button type="button" onClick={crumbs[crumbs.length - 1].onClick} className="-ml-1 inline-flex min-h-11 items-center gap-0.5 rounded-control pr-2 hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:hidden">
+            <ChevronLeft className="h-4 w-4" aria-hidden />{crumbs[crumbs.length - 1].label}
+          </button>
+        </nav>
       )}
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-x-4">
         {/* `section-title`: podkreślenie piórem w kolorze działu (plan motywów 2.4, CSS w index.css). */}

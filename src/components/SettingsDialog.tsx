@@ -7,7 +7,8 @@ import { Settings, LayoutGrid, Pencil, Database, Wifi } from "lucide-react";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
-import { consumeRequestedSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
+import { consumeRequestedSettingsSection, consumeRequestedSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
+import { isMotionReduced } from "@/hooks/useMotionPref";
 import { SyncFileSection } from "@/components/settings/SyncFileSection";
 
 // qrcode.react (used only here, for device pairing) kept out of the eager
@@ -33,6 +34,31 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   };
   const [joinPrefill, setJoinPrefill] = useState("");
+
+  // Okno jest zamontowane cały czas, więc karta zamówiona przed otwarciem (kropka synchronizacji, paleta)
+  // musi być odebrana przy każdym otwarciu, nie tylko przy pierwszym renderze. Sekcja z palety (5.3):
+  // po narysowaniu karty przewijamy do nagłówka o tym tytule i na chwilę go podświetlamy.
+  useEffect(() => {
+    if (!open) return;
+    const tab = consumeRequestedSettingsTab();
+    if (tab) setActiveTab(tab);
+    const section = consumeRequestedSettingsSection();
+    if (!section) return;
+    let tries = 0;
+    let timer = 0;
+    const find = () => {
+      if (section.expand) scrollRef.current?.querySelector<HTMLElement>(`[aria-controls="${section.expand}"][aria-expanded="false"]`)?.click();
+      const heading = [...(scrollRef.current?.querySelectorAll<HTMLElement>("h2, h3, h4") ?? [])].find((h) => h.textContent?.trim() === section.title);
+      if (!heading) { if (++tries < 20) timer = window.setTimeout(find, 50); return; }
+      const card = heading.closest<HTMLElement>("section") ?? heading;
+      card.scrollIntoView({ block: "start", behavior: isMotionReduced() ? "auto" : "smooth" });
+      card.classList.add("note-flash");
+      // Osobny licznik: zdjęcie podświetlenia musi się wykonać także po zamknięciu okna.
+      window.setTimeout(() => card.classList.remove("note-flash"), 1600);
+    };
+    timer = window.setTimeout(find, 0);
+    return () => window.clearTimeout(timer);
+  }, [open]);
 
   // Link ?settings=<karta> otwiera Ustawienia na tej karcie (faza 3c); parametr znika z adresu.
   useEffect(() => {

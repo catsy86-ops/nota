@@ -15,8 +15,10 @@ const TAP_MS = 260;
 
 interface Zoom { refs: string[]; index: number }
 
-export function PhotoGalleryDialog({ zoom, onIndex, onClose }: {
+export function PhotoGalleryDialog({ zoom, onIndex, onClose, label = "Zdjęcie z budowy" }: {
   zoom: Zoom | null;
+  /** Nazwa zdjęcia dla czytnika ekranu („Zdjęcie z budowy”, „Obraz notatki”). */
+  label?: string;
   onIndex: (index: number) => void;
   onClose: () => void;
 }) {
@@ -82,7 +84,7 @@ export function PhotoGalleryDialog({ zoom, onIndex, onClose }: {
           if (ev.key === "ArrowLeft") { ev.preventDefault(); go(-1); }
         }}
       >
-        <DialogTitle className="sr-only">Zdjęcie z budowy</DialogTitle>
+        <DialogTitle className="sr-only">{label}</DialogTitle>
         {zoom && (
           <div
             className="relative flex h-dvh w-full items-center justify-center overflow-hidden touch-none select-none"
@@ -96,7 +98,7 @@ export function PhotoGalleryDialog({ zoom, onIndex, onClose }: {
               <NoteImage
                 key={zoom.refs[zoom.index]}
                 imageRef={zoom.refs[zoom.index]}
-                alt={`Zdjęcie z budowy ${zoom.index + 1} z ${zoom.refs.length}`}
+                alt={`${label} ${zoom.index + 1} z ${zoom.refs.length}`}
                 loading="eager"
                 className="max-h-[92dvh] max-w-[100vw] object-contain"
               />

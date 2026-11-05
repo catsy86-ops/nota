@@ -44,6 +44,37 @@ export const SW_UPDATE_EVENT = "kaczy:sw-update-available";
 
 let reloadingAfterUpdate = false;
 
+/**
+ * Stan workera dla okna „O aplikacji” (nowy plan 5.7). `off` — bez workera (tryb deweloperski,
+ * ramka, `?sw=off`, stara przeglądarka); `ready` — aplikacja działa offline; `update` — nowa
+ * wersja czeka na odświeżenie.
+ */
+export type SwState = "off" | "starting" | "ready" | "update";
+export interface SwInfo { state: SwState; registration: ServiceWorkerRegistration | null }
+
+let swInfo: SwInfo = { state: "off", registration: null };
+const swListeners = new Set<() => void>();
+function setSwInfo(next: SwInfo) {
+  swInfo = next;
+  swListeners.forEach((l) => l());
+}
+export const getSwInfo = (): SwInfo => swInfo;
+export function subscribeSwInfo(listener: () => void): () => void {
+  swListeners.add(listener);
+  return () => swListeners.delete(listener);
+}
+
+/** Ręczne „Sprawdź aktualizację”: `update` — nowa wersja czeka; `current` — to najnowsza; `offline` — nie udało się sprawdzić. */
+export async function checkForSwUpdate(): Promise<"off" | "update" | "current" | "offline"> {
+  const reg = swInfo.registration;
+  if (!reg) return "off";
+  try { await reg.update(); } catch { return "offline"; }
+  // Nowy worker najpierw się instaluje; dajemy mu chwilę, zanim powiemy „to najnowsza”.
+  for (let i = 0; i < 20 && reg.installing; i++) await new Promise((r) => setTimeout(r, 150));
+  if (reg.waiting) { setSwInfo({ state: "update", registration: reg }); return "update"; }
+  return "current";
+}
+
 /** Tell the waiting worker to take over. Reloads once it does. */
 export function applyServiceWorkerUpdate(registration: ServiceWorkerRegistration) {
   const waiting = registration.waiting;
@@ -53,6 +84,7 @@ export function applyServiceWorkerUpdate(registration: ServiceWorkerRegistration
 
 function watchForUpdates(registration: ServiceWorkerRegistration, hadControllerAtLoad: boolean) {
   const notifyIfWaiting = () => {
+    setSwInfo({ state: registration.waiting ? "update" : registration.active ? "ready" : "starting", registration });
     if (registration.waiting) {
       window.dispatchEvent(new CustomEvent(SW_UPDATE_EVENT, { detail: registration }));
     }
@@ -63,6 +95,7 @@ function watchForUpdates(registration: ServiceWorkerRegistration, hadControllerA
     const installing = registration.installing;
     if (!installing) return;
     installing.addEventListener("statechange", () => {
+      if (installing.state === "activated" && !registration.waiting) setSwInfo({ state: "ready", registration });
       // Pierwsza instalacja (gotowość offline) przechodzi po cichu — to był
       // kolejny dymek w chwili, gdy ktoś dopiero poznaje aplikację.
       if (installing.state === "installed" && navigator.serviceWorker.controller) {
