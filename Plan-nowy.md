@@ -76,7 +76,7 @@
 | 2.5 | ⏳ **Terminy:** ✅ 4.5 (odhaczenie z ruchem, bez ruchu przy redukcji — nowyplan 4.2, `ReminderQuickActions` + `collapseRowThen`); zostaje 3.4 (termin z treści jako podpowiedź w edytorze). | 2 | M |
 | 2.6 | **Kalendarz, Grafik, Praca (plan 27.10):** K3.6 (po QA, K-4), K4.1, K4.5, reszta G2–G4 i P2–P5, P6.2, P6.3 — tylko punkty, które inwentarz potwierdzi jako otwarte. | 2 | L |
 | 2.7 | **Skarbiec:** 2.2, 3.3, Etap 4 (1.2 część 2 czeka na decyzję). | 2 | M |
-| 2.8 | ⏳ **Powłoka i QoL:** ✅ test e2e celów dotyku 44 px na ekranie telefonu (`e2e/touch-targets-phone.spec.ts`, 7 ekranów, Pixel 7 i iPhone 14; poprawione 4 za małe cele); zostaje paleta zależna od kontekstu otwartej notatki (QoL 3.9 / Notatki 2.5 — dziś „Ta notatka” ma Otwórz i Przypnij). | 3 | M |
+| 2.8 | ✅ **Powłoka i QoL:** test e2e celów dotyku 44 px na ekranie telefonu (`e2e/touch-targets-phone.spec.ts`, 7 ekranów, Pixel 7 i iPhone 14; poprawione 4 za małe cele); paleta zależna od kontekstu otwartej notatki — „Ta notatka” ma też Ulubione, Duplikuj, Archiwizuj i Do kosza (QoL 3.9 / Notatki 2.5). Przy okazji naprawione: Ctrl+K nie otwierał palety przy otwartym podglądzie. | 3 | M |
 | 2.9 | **Notatki, Ustawienia, Ćwiczenia:** punkty potwierdzone przez inwentarz, w kolejności W/N. | 2 | L |
 
 ## 5. Cykl 3 — architektura i wydajność (apetyt: 1–2 tygodnie)

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
-import { Ruler, Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette } from "lucide-react";
+import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
@@ -73,6 +73,11 @@ interface Props {
   /** Bieżąca notatka (czytnik, zaznaczenie lub fokus): jej akcje idą na górę palety (plan 3.9). */
   currentNote?: Note | null;
   onTogglePin?: (id: string) => void;
+  /** Plan-nowy 2.8 (QoL 3.9): reszta akcji bieżącej notatki — te same funkcje co na kaflu (z „Cofnij”). */
+  onArchive?: (id: string) => void;
+  onTrash?: (id: string) => void;
+  onDuplicate?: (id: string) => void;
+  onToggleFavorite?: (id: string, favorite: boolean) => void;
   /** Widok z adresu: w Grafiku paleta pokazuje akcje zmiany. */
   view?: string;
 }
@@ -112,6 +117,10 @@ export function CommandPalette({
   onCopyNote,
   currentNote,
   onTogglePin,
+  onArchive,
+  onTrash,
+  onDuplicate,
+  onToggleFavorite,
   view,
 }: Props) {
   const { folders } = useNotesContext();
@@ -205,9 +214,29 @@ export function CommandPalette({
               <CommandItem value="ta notatka otwórz" onSelect={() => run(() => onOpenNote(currentNote.id))}>
                 <StickyNote className="w-4 h-4 mr-2" /> Otwórz
               </CommandItem>
-              {onTogglePin && (
+              {onTogglePin && !currentNote.trashed && (
                 <CommandItem value={currentNote.pinned ? "ta notatka odepnij" : "ta notatka przypnij"} onSelect={() => run(() => onTogglePin(currentNote.id))}>
                   <Pin className="w-4 h-4 mr-2" /> {currentNote.pinned ? "Odepnij" : "Przypnij"}
+                </CommandItem>
+              )}
+              {onToggleFavorite && !currentNote.trashed && (
+                <CommandItem value={currentNote.favorite ? "ta notatka usun z ulubionych" : "ta notatka do ulubionych"} onSelect={() => run(() => onToggleFavorite(currentNote.id, !currentNote.favorite))}>
+                  <Star className="w-4 h-4 mr-2" /> {currentNote.favorite ? "Usuń z ulubionych" : "Do ulubionych"}
+                </CommandItem>
+              )}
+              {onDuplicate && !currentNote.trashed && (
+                <CommandItem value="ta notatka duplikuj" onSelect={() => run(() => onDuplicate(currentNote.id))}>
+                  <Copy className="w-4 h-4 mr-2" /> Duplikuj
+                </CommandItem>
+              )}
+              {onArchive && !currentNote.trashed && !currentNote.archived && (
+                <CommandItem value="ta notatka archiwizuj" onSelect={() => run(() => onArchive(currentNote.id))}>
+                  <Archive className="w-4 h-4 mr-2" /> Archiwizuj
+                </CommandItem>
+              )}
+              {onTrash && !currentNote.trashed && (
+                <CommandItem value="ta notatka do kosza usun" onSelect={() => run(() => onTrash(currentNote.id))}>
+                  <Trash className="w-4 h-4 mr-2" /> Do kosza
                 </CommandItem>
               )}
             </CommandGroup>

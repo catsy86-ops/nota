@@ -1098,6 +1098,10 @@ const Index = () => {
           onCopyNote={copyTarget ? (fmt) => { void copyNoteToClipboard(copyTarget, fmt); } : undefined}
           currentNote={copyTarget}
           onTogglePin={(id) => togglePin(id)}
+          onArchive={handleArchiveSingle}
+          onTrash={handleTrashSingle}
+          onDuplicate={duplicateNote}
+          onToggleFavorite={(id, favorite) => updateNote(id, { favorite })}
           view={view}
         />
       </Suspense>

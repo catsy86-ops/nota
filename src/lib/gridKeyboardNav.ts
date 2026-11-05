@@ -158,6 +158,9 @@ function anyDialogOpen() {
 }
 
 function handlePreviewKeys(e: KeyboardEvent, previewId: string) {
+  // Skróty z modyfikatorem należą do aplikacji (Ctrl+K — paleta, Alt+←/→ — historia). Bez tego „k” przewijało
+  // podgląd także przy Ctrl+K i blokowało paletę przy otwartej notatce (Plan-nowy 2.8).
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === "Escape" || e.key === " ") {
     e.preventDefault();
     setGridNavPreview(null);
