@@ -666,7 +666,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   rows={4}
                   placeholder={kind === "problem" ? "Co poszło nie tak i co z tym zrobisz?" : "Krótko: gdzie, co zrobione, co zauważyłeś"}
                   className={cn(
-                    "w-full resize-none rounded-field border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring",
+                    "shake-invalid w-full resize-none rounded-field border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring",
                     dictation.supported && "pr-14",
                   )}
                 />

@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { MAIN_SCHEDULE_ID } from "@/lib/shifts/yShifts";
 import { SCHEDULE_NAME_MAX } from "@/lib/shifts/schedules";
 import { NewScheduleWizard } from "./NewScheduleWizard";
-import { createSchedule, removeSchedule, renameSchedule, setActiveSchedule, useActiveScheduleId, useSchedules } from "@/lib/shifts/store";
+import { createSchedule, removeSchedule, renameSchedule, restoreExtraSchedule, scheduleDump, setActiveSchedule, useActiveScheduleId, useSchedules } from "@/lib/shifts/store";
+import { toastWithUndo } from "@/lib/undoToast";
 
 /**
  * Wybór grafiku (np. praca główna i dorobek). Dane każdego grafiku są osobne; tu wybieramy, który
@@ -39,9 +40,13 @@ export function ScheduleSwitcher({ overlayId = null, onOverlayChange }: { overla
   };
 
   const confirmDelete = () => {
-    const removedName = active.name;
-    if (!removeSchedule(active.id)) return;
-    toast.success(`Usunięto grafik: ${removedName}`);
+    const { id: removedId, name: removedName } = active;
+    const data = scheduleDump(removedId);
+    if (!removeSchedule(removedId)) return;
+    toastWithUndo(`Usunięto grafik: ${removedName}`, () => {
+      if (restoreExtraSchedule(removedId, removedName, data)) setActiveSchedule(removedId);
+      else toast.error("Nie udało się przywrócić grafiku — jest już najwięcej grafików");
+    });
     close();
   };
 

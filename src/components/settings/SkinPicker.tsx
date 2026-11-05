@@ -44,7 +44,7 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
           const scheme = SKIN_SCHEME[s];
           const badges = [scheme ? SCHEME_BADGE[scheme] : SCHEME_BADGE.light, ...(meta.ambient ? ["Ruchome tło"] : [])];
           return (
-            <motion.button
+            <button
               key={s}
               type="button"
               role="radio"
@@ -53,12 +53,9 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
               onKeyDown={(e) => moveRadio(e, visibleSkins, value, onChange)}
               data-skin-option={s}
               onClick={() => { if (!active) { haptic("selection"); onChange(s); } }}
-              whileHover={{ y: -3 }}
-              whileTap={{ scale: 0.96 }}
-              transition={spring.snap}
               // Zeszyt (domyślny) bierze całą szerokość u góry; pozostałe sześć układa się w siatkę 2×3 / 3×2.
               className={cn(
-                "group relative rounded-card p-1.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                "pressable lift-hover group relative rounded-card p-1.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                 i === 0 && "col-span-2 sm:col-span-3",
               )}
             >
@@ -106,7 +103,7 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
                   <span key={b} className="rounded-full border border-border/70 px-1.5 py-px text-2xs leading-4 text-muted-foreground">{b}</span>
                 ))}
               </span>
-            </motion.button>
+            </button>
           );
         })}
       </div>

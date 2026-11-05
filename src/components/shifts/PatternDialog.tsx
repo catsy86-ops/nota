@@ -12,6 +12,7 @@ import { addDaysKey, dayDiff, daysUntilMonthEnd, deletePattern, newShiftId, save
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
+import { haptic } from "@/lib/haptics";
 import { TAP } from "@/lib/platform";
 
 interface PatternDialogProps {
@@ -97,6 +98,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply, ove
     onApply(steps, start, length, anchor, skipProtected);
     if (name.trim()) savePattern({ id: newShiftId("c"), name: name.trim(), steps, ...meta });
     else if (selected) savePattern({ ...selected, steps, ...meta });
+    haptic("success");
     onOpenChange(false);
   }
 
@@ -111,6 +113,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply, ove
     const kotwica = selected.anchor ?? selected.appliedUntil;
     onApply(selected.steps, from, len, kotwica, skipProtected);
     savePattern({ ...selected, anchor: kotwica, appliedUntil: addDaysKey(from, len - 1) });
+    haptic("success");
     onOpenChange(false);
   }
 

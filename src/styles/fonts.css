@@ -1,16 +1,31 @@
 /*
+  Fonty zastępcze (nowy plan 4.4): zanim plik kroju się pobierze, tekst rysuje się
+  systemowym Arialem (Literata: Georgią) przeskalowanym do szerokości i wysokości
+  kroju — po podmianie (`font-display: swap`) wiersze nie skaczą. Liczby zmierzone
+  w Chromium (szerokość zdania z polskimi znakami, `fontBoundingBox*`). Gdy systemu
+  nie ma danego kroju (Android), `local()` zawodzi i zostaje zwykłe `sans-serif`.
+*/
+@font-face { font-family: 'Plus Jakarta Sans Fallback'; src: local('Arial'), local('ArialMT'); size-adjust: 102.88%; ascent-override: 101.09%; descent-override: 21.38%; line-gap-override: 0%; }
+@font-face { font-family: 'Inter Fallback'; src: local('Arial'), local('ArialMT'); size-adjust: 106.64%; ascent-override: 90.96%; descent-override: 22.51%; line-gap-override: 0%; }
+@font-face { font-family: 'Nunito Fallback'; src: local('Arial'), local('ArialMT'); size-adjust: 100.04%; ascent-override: 100.96%; descent-override: 34.99%; line-gap-override: 0%; }
+@font-face { font-family: 'Atkinson Fallback'; src: local('Arial'), local('ArialMT'); size-adjust: 98.04%; ascent-override: 99.96%; descent-override: 32.64%; line-gap-override: 0%; }
+@font-face { font-family: 'Literata Fallback'; src: local('Georgia'); size-adjust: 105.94%; ascent-override: 111.38%; descent-override: 29.26%; line-gap-override: 0%; }
+@font-face { font-family: 'Manrope Fallback'; src: local('Arial'), local('ArialMT'); size-adjust: 100.18%; ascent-override: 106.81%; descent-override: 29.95%; line-gap-override: 0%; }
+@font-face { font-family: 'Lexend Fallback'; src: local('Arial'), local('ArialMT'); size-adjust: 108.42%; ascent-override: 92.23%; descent-override: 23.06%; line-gap-override: 0%; }
+
+/*
   Krój tekstu (`html[data-font]`, src/lib/appFont.ts). Reguły w `:where()` mają
   specyficzność samego `html[data-font]` (0,1,1) — przegrywają z krojami nagłówków
   stylów (`html[data-skin] h1`, 0,1,2), więc Plan/Neon/Zorza/Miedź/Matryca/Hydraulika zachowują nagłówki (h1, h2 — h3 idą za krojem tekstu),
   a w Zeszycie nagłówki (`.font-display`) idą za wybranym krojem. Logo i cyfry
   (`.font-logo`, `.font-mono`) mają własne kroje i nie są tu wymienione.
 */
-html[data-font="inter"] { --app-font: 'Inter Variable', 'Plus Jakarta Sans Variable', sans-serif; }
-html[data-font="nunito"] { --app-font: 'Nunito Variable', 'Plus Jakarta Sans Variable', sans-serif; }
-html[data-font="atkinson"] { --app-font: 'Atkinson Hyperlegible Next Variable', 'Plus Jakarta Sans Variable', sans-serif; }
-html[data-font="literata"] { --app-font: 'Literata Variable', Georgia, serif; }
-html[data-font="manrope"] { --app-font: 'Manrope Variable', 'Plus Jakarta Sans Variable', sans-serif; }
-html[data-font="lexend"] { --app-font: 'Lexend Variable', 'Plus Jakarta Sans Variable', sans-serif; }
+html[data-font="inter"] { --app-font: 'Inter Variable', 'Inter Fallback', 'Plus Jakarta Sans Variable', sans-serif; }
+html[data-font="nunito"] { --app-font: 'Nunito Variable', 'Nunito Fallback', 'Plus Jakarta Sans Variable', sans-serif; }
+html[data-font="atkinson"] { --app-font: 'Atkinson Hyperlegible Next Variable', 'Atkinson Fallback', 'Plus Jakarta Sans Variable', sans-serif; }
+html[data-font="literata"] { --app-font: 'Literata Variable', 'Literata Fallback', Georgia, serif; }
+html[data-font="manrope"] { --app-font: 'Manrope Variable', 'Manrope Fallback', 'Plus Jakarta Sans Variable', sans-serif; }
+html[data-font="lexend"] { --app-font: 'Lexend Variable', 'Lexend Fallback', 'Plus Jakarta Sans Variable', sans-serif; }
 
 html[data-font] :where(body, .font-body, .font-display, input, textarea, select, button) {
   font-family: var(--app-font);

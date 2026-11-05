@@ -151,7 +151,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     if (draft.length < 4) return;
     const route: PipeRoute = { id: newPlanId("route"), system: draftSystem, pts: draft, source: "manual", verified: true, at: Date.now() };
     stopPlansCapture();
-    if (!savePlanEntity("r", pid, route)) { toast.error("Nie udało się zapisać trasy (limit 500 tras w analizie)."); return; }
+    if (!savePlanEntity("r", pid, route)) { toast.error("Nie udało się zapisać trasy (limit 500 tras w analizie)"); return; }
     setDraft([]);
     setHover(null);
     setMode("select");
@@ -174,11 +174,11 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     if (picking) {
       setPicking(false);
       void import("@/lib/plans/detect/detectClient").then((m) => m.sampleColor(project, p.x, p.y)).then((hex) => {
-        if (!hex) { toast.error("W tym miejscu jest tło — stuknij dokładnie w linię rury."); return; }
+        if (!hex) { toast.error("W tym miejscu jest tło — stuknij dokładnie w linię rury"); return; }
         setDetectColor(hex);
         const known = plan.colors.find((c) => c.hex === hex);
         if (known) setDetectSystem(known.system);
-      }).catch(() => toast.error("Nie udało się odczytać koloru."));
+      }).catch(() => toast.error("Nie udało się odczytać koloru"));
       return;
     }
     if (mode === "route") { addDraftPoint(p); return; }
@@ -186,7 +186,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     if (mode === "symbol") {
       const s: DetectedSymbol = { id: newPlanId("sym"), type: symbolType, x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10, ...(symbolSystem ? { system: symbolSystem } : {}), manual: true, verified: true, at: Date.now() };
       stopPlansCapture();
-      if (!savePlanEntity("s", pid, s)) toast.error("Nie udało się dodać symbolu (limit 1000 w analizie).");
+      if (!savePlanEntity("s", pid, s)) toast.error("Nie udało się dodać symbolu (limit 1000 w analizie)");
       return;
     }
     const scale = canvas.current?.view().scale ?? 1;
@@ -325,7 +325,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
       if (detectRunRef.current !== run) return;
       setRouteProposals(found.map((l) => ({ id: newPlanId("route"), pts: l.pts, confidence: l.confidence })));
       setDetectRun({ state: "idle" });
-      if (!found.length) toast("Nie znaleziono linii w tym kolorze — zwiększ tolerancję albo wskaż kolor jeszcze raz.");
+      if (!found.length) toast("Nie znaleziono linii w tym kolorze — zwiększ tolerancję albo wskaż kolor jeszcze raz");
     } catch (e) {
       if (detectRunRef.current !== run) return;
       setDetectRun({ state: "error", message: (e as Error).message || "Wyszukiwanie tras się nie udało." });
@@ -342,14 +342,14 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     }
     if (detectColor) setPlanColors(pid, [{ hex: detectColor, system: detectSystem }, ...plan.colors.filter((c) => c.hex !== detectColor)]);
     setRouteProposals((cur) => cur.filter((x) => !list.includes(x)));
-    if (added < list.length) toast.error("Część tras nie zmieściła się (limit 500 w analizie).");
+    if (added < list.length) toast.error("Część tras nie zmieściła się (limit 500 w analizie)");
   };
 
   const proposeFittingsNow = () => {
     const scale = canvas.current?.view().scale ?? 1;
     const found = proposeFittings(routes, plan.symbols, Math.max(6, HIT_SYMBOL_PX / scale));
     setFittings(found.map((f) => ({ ...f, id: newPlanId("sym") })));
-    if (!found.length) toast("Brak nowych kolan ani trójników — trasy są proste albo symbole już stoją.");
+    if (!found.length) toast("Brak nowych kolan ani trójników — trasy są proste albo symbole już stoją");
   };
   const addFittings = (list: readonly (FittingProposal & { id: string })[]) => {
     stopPlansCapture();

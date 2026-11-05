@@ -15,6 +15,7 @@ import { sectionIconClass } from "@/lib/sections";
 import { FittingIcon } from "@/components/skins/FittingIcon";
 import { spring } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
+import { useBump } from "@/hooks/useBump";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
 import { preloadView } from "@/lib/viewPreload";
 import { orderByRecent, readLastQuick, writeLastQuick, type QuickKind } from "@/lib/fabRecent";
@@ -339,6 +340,7 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
   active: boolean; current?: boolean; label: string; onClick: () => void; children: React.ReactNode; badge?: number;
   buttonProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
 }) {
+  const bump = useBump(badge);
   return (
     <li className="relative">
       <button
@@ -372,7 +374,7 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
         <span className="relative z-raised">{children}</span>
         <span className="relative z-raised whitespace-nowrap leading-none tracking-tight">{label}</span>
         {!!badge && (
-          <span className="absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center z-raised">
+          <span key={bump} className={cn("absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center z-raised", bump > 0 && "count-bump")}>
             {badge}
           </span>
         )}

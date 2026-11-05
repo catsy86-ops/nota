@@ -23,7 +23,7 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
           const meta = APP_FONT_META[f];
           const active = f === value;
           return (
-            <motion.button
+            <button
               key={f}
               type="button"
               role="radio"
@@ -32,10 +32,7 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
               onKeyDown={(e) => moveRadio(e, APP_FONTS, value, onChange)}
               data-font-option={f}
               onClick={() => { if (!active) { haptic("selection"); onChange(f); } }}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              transition={spring.snap}
-              className="group relative rounded-card border border-border/60 bg-muted/30 px-3 py-2.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              className="pressable lift-hover group relative rounded-card border border-border/60 bg-muted/30 px-3 py-2.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
               {active && (
                 <motion.span
@@ -55,7 +52,7 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
                 <span className="block font-mono text-xs opacity-80" style={{ fontFamily: meta.family }}>Il1 O0 · 0123456789</span>
               </span>
               <span className="relative mt-1 block text-2xs text-muted-foreground">{meta.blurb}</span>
-            </motion.button>
+            </button>
           );
         })}
       </div>

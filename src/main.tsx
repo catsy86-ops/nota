@@ -6,6 +6,8 @@ import "./styles/fonts-latin/@fontsource-variable-plus-jakarta-sans-index.css";
 // Cyfry o stałej szerokości (rachunek w Grafiku); `wght.css` bez kursywy.
 import "./styles/fonts-latin/@fontsource-variable-jetbrains-mono-wght.css";
 import "./index.css";
+// Słownik ruchu (4.1): zaraz po index.css, żeby kolejność kaskady została jak przed wydzieleniem.
+import "./styles/motion.css";
 // Kroje stylów (Ustawienia → Wygląd). @font-face pobiera plik dopiero, gdy styl go użyje.
 import "./styles/fonts-latin/@fontsource-barlow-condensed-600.css";
 import "./styles/fonts-latin/@fontsource-variable-unbounded-wght.css";

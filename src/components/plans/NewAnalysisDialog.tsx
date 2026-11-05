@@ -51,7 +51,7 @@ export function NewAnalysisDialog({ open, onOpenChange, onCreated }: { open: boo
   function create() {
     if (!picked) return;
     const project = createPlan(name.trim() || "Plan bez nazwy", picked.image, picked.work);
-    if (!project) { toast.error("Osiągnięto limit 50 analiz — usuń starsze, żeby dodać nową."); return; }
+    if (!project) { toast.error("Osiągnięto limit 50 analiz — usuń starsze, żeby dodać nową"); return; }
     onOpenChange(false);
     onCreated(project.id);
   }

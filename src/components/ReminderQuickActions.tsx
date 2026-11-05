@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Check, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
+import { CheckMark } from "@/components/ui/check-mark";
+import { collapseRowThen } from "@/lib/collapseRow";
 import { SnoozeUntilDialog } from "@/components/SnoozeUntilDialog";
 import type { Note } from "@/hooks/useNotes";
 import { haptic } from "@/lib/haptics";
@@ -43,25 +45,33 @@ interface ReminderQuickActionsProps {
 export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuickActionsProps) {
   const id = note.id;
   const [untilOpen, setUntilOpen] = useState(false);
+  const [done, setDone] = useState(false);
 
   return (
     <div className={cn("flex flex-wrap items-center gap-1 sm:gap-1.5", className)} onClick={(e) => e.stopPropagation()}>
       <button
         type="button"
+        aria-disabled={done || undefined}
         onClick={(e) => {
+          if (done) return;
           const prev = reminderFields(note);
           const focus = focusAfterRemoval(e.currentTarget);
-          const { patch, message } = doneReminderUpdate(note, Date.now());
           haptic("success");
-          onUpdate(id, patch);
-          toastWithUndo(message, () => onUpdate(id, prev), { id: `rem-done-${id}` });
-          // Długi 2.3: zwrot odhaczony w Terminach — zapytaj, czy zapisać spłatę.
-          if (isDebtNote(note)) void import("@/lib/debts/settleFromNote").then((m) => m.offerSettleFromNote(id), () => {});
-          focus();
+          setDone(true);
+          // 4.2: najpierw ptaszek i zwinięcie wiersza, potem zapis (od razu przy ograniczonym ruchu).
+          collapseRowThen(e.currentTarget, () => {
+            const { patch, message } = doneReminderUpdate(note, Date.now());
+            onUpdate(id, patch);
+            setDone(false);
+            toastWithUndo(message, () => onUpdate(id, prev), { id: `rem-done-${id}` });
+            // Długi 2.3: zwrot odhaczony w Terminach — zapytaj, czy zapisać spłatę.
+            if (isDebtNote(note)) void import("@/lib/debts/settleFromNote").then((m) => m.offerSettleFromNote(id), () => {});
+            focus();
+          });
         }}
-        className="pressable inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-primary-ink hover:bg-primary/20"
+        className="group/check pressable inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-primary-ink hover:bg-primary/20"
       >
-        <Check className="w-3 h-3" aria-hidden /> Gotowe
+        <CheckMark checked={done} size="sm" /> Gotowe
       </button>
       <button
         type="button"

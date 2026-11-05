@@ -1,6 +1,5 @@
 import { Flag } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PRIORITY_COLOR_CLASS, PRIORITY_LABELS, type NotePriority } from "@/lib/notePriority";
 
@@ -15,7 +14,7 @@ export function PriorityPicker({ priority, onSet }: PriorityPickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <motion.button
+        <button
           aria-label="Priorytet notatki"
           className={cn(
             "card-action",
@@ -24,7 +23,7 @@ export function PriorityPicker({ priority, onSet }: PriorityPickerProps) {
           title="Priorytet"
         >
           <Flag className={cn("w-4 h-4", priority !== "none" && "fill-current")} />
-        </motion.button>
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-44 p-2 space-y-1" align="start" onClick={(e) => e.stopPropagation()}>
         <p className="text-xs font-semibold font-display text-muted-foreground px-1 pb-1">Priorytet</p>

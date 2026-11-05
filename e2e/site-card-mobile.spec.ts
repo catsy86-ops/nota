@@ -91,5 +91,5 @@ test("390 px: „Zdjęcie do wpisu” w karcie budowy dodaje wpis ze zdjęciem, 
 
   await expectTarget(card.getByRole("button", { name: "Zdjęcie do wpisu" }), "zdjęcie do wpisu");
   await card.locator('input[type="file"][capture]:not([data-testid="point-photo-input"])').setInputFiles({ name: "zdjecie.png", mimeType: "image/png", buffer: Buffer.from(PNG_B64, "base64") });
-  await expect(page.getByText("Zdjęcie dodane jako wpis budowy")).toBeVisible();
+  await expect(page.getByText("Dodano zdjęcie jako wpis budowy")).toBeVisible();
 });

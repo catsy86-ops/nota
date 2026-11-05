@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect, useCallback } from "react";
-import { m as motion } from "framer-motion";
 import { Pen, Eraser, Undo2, Trash, Save, Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -242,7 +241,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
           {/* Colors */}
           <div className="flex items-center gap-1">
             {COLORS.map((c) => (
-              <motion.button
+              <button
                 key={c}
                 type="button"
                 aria-label={`Kolor: ${COLOR_NAMES[COLORS.indexOf(c)]}`}

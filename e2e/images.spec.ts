@@ -98,7 +98,7 @@ test("pełny backup niesie bajty obrazu i odtwarza je na czystym urządzeniu", a
   ]);
   await chooser.setFiles(file);
   await b.getByRole("alertdialog").getByRole("button", { name: "Przywróć backup" }).click();
-  await expect(b.getByText(/Backup przywrócony/)).toBeVisible();
+  await expect(b.getByText(/Przywrócono kopię/)).toBeVisible();
   await b.waitForLoadState("load");
   await expect(cardImage(b, title)).toHaveCount(1);
 });

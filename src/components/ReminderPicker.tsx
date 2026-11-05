@@ -8,7 +8,6 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { LazyCalendar as Calendar } from "@/components/ui/lazy-calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { m as motion } from "framer-motion";
 import { endOfDay, type RepeatInput, type RepeatRule, type ReminderRepeat } from "@/lib/reminderRepeat";
 import { RepeatRuleExtras, RepeatRuleSelect } from "@/components/RepeatRuleFields";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
@@ -208,7 +207,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
 
   return (
     <ReminderSurface open={open} onOpenChange={openChange} trigger={trigger ?? (
-          <motion.button
+          <button
             aria-label="Przypomnienie"
             className={cn(
               "card-action",
@@ -217,7 +216,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
             title="Przypomnienie"
           >
             <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
-          </motion.button>
+          </button>
         )}>
         <p className="text-xs font-semibold font-display text-muted-foreground">Przypomnienie</p>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Szybkie terminy">

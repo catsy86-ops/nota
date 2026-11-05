@@ -252,6 +252,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
             maxLength={DEBT_PERSON_MAX}
             placeholder="Imię albo nazwa"
             autoComplete="off"
+            className="shake-invalid"
             aria-invalid={error?.field === "person" || undefined}
             aria-describedby={error?.field === "person" ? `${uid}-err` : undefined}
             onChange={(e) => { setPerson(e.target.value); setError(null); }}
@@ -266,7 +267,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
             inputMode="decimal"
             value={amount}
             placeholder="0,00"
-            className="tabular-nums"
+            className="shake-invalid tabular-nums"
             aria-invalid={error?.field === "amount" || undefined}
             aria-describedby={error?.field === "amount" ? `${uid}-err` : undefined}
             onChange={(e) => { setAmount(e.target.value); setError(null); }}
@@ -293,6 +294,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
             type="date"
             value={due}
             min={today}
+            className="shake-invalid"
             aria-invalid={error?.field === "due" || undefined}
             aria-describedby={error?.field === "due" ? `${uid}-err` : undefined}
             onChange={(e) => { setDue(e.target.value); setError(null); }}
@@ -483,7 +485,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
     const prev = removeDebt(e.id);
     if (!prev) return;
     const cleared = withReminder ? clearDueReminders([e], reminders) : [];
-    toast("Wpis usunięty", { action: { label: "Cofnij", onClick: () => {
+    toast("Usunięto wpis", { action: { label: "Cofnij", onClick: () => {
       restoreDebt(prev);
       for (const c of cleared) reminders?.restore(c.noteId, c.at);
     } } });
@@ -635,7 +637,7 @@ function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, onDon
       undoDue = () => { reminders?.remove(created); };
     }
     haptic("tap");
-    toast.success("Wpis poprawiony", { action: { label: "Cofnij", onClick: () => { updateDebt(entry); undoDue(); } } });
+    toast.success("Poprawiono wpis", { action: { label: "Cofnij", onClick: () => { updateDebt(entry); undoDue(); } } });
     onDone();
   };
 
@@ -652,16 +654,16 @@ function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, onDon
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-person`} className="text-sm font-medium">Kto</label>
-          <Input id={`${uid}-person`} list={`${uid}-people`} autoComplete="off" value={person} maxLength={DEBT_PERSON_MAX} {...invalid("person")} onChange={(e) => { setPerson(e.target.value); setError(null); }} />
+          <Input id={`${uid}-person`} list={`${uid}-people`} autoComplete="off" value={person} maxLength={DEBT_PERSON_MAX} className="shake-invalid" {...invalid("person")} onChange={(e) => { setPerson(e.target.value); setError(null); }} />
           <datalist id={`${uid}-people`}>{people.map((p) => <option key={p} value={p} />)}</datalist>
         </div>
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-amount`} className="text-sm font-medium">Kwota (zł)</label>
-          <Input id={`${uid}-amount`} inputMode="decimal" value={amount} className="tabular-nums" {...invalid("amount")} onChange={(e) => { setAmount(e.target.value); setError(null); }} />
+          <Input id={`${uid}-amount`} inputMode="decimal" value={amount} className="shake-invalid tabular-nums" {...invalid("amount")} onChange={(e) => { setAmount(e.target.value); setError(null); }} />
         </div>
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-date`} className="text-sm font-medium">Dzień</label>
-          <Input id={`${uid}-date`} type="date" value={at} max={localDayKey()} {...invalid("at")} onChange={(e) => { setAt(e.target.value); setError(null); }} />
+          <Input id={`${uid}-date`} type="date" value={at} max={localDayKey()} className="shake-invalid" {...invalid("at")} onChange={(e) => { setAt(e.target.value); setError(null); }} />
         </div>
         <div className="space-y-1.5">
           <label htmlFor={`${uid}-note`} className="text-sm font-medium">Za co</label>
@@ -670,7 +672,7 @@ function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, onDon
         {dueEditable && (
           <div className="space-y-1.5 sm:col-span-2">
             <label htmlFor={`${uid}-due`} className="text-sm font-medium">Termin zwrotu <span className="font-normal text-muted-foreground">(9:00; puste — bez przypomnienia)</span></label>
-            <Input id={`${uid}-due`} type="date" value={due} {...invalid("due")} onChange={(e) => { setDue(e.target.value); setError(null); }} />
+            <Input id={`${uid}-due`} type="date" value={due} className="shake-invalid" {...invalid("due")} onChange={(e) => { setDue(e.target.value); setError(null); }} />
           </div>
         )}
       </div>

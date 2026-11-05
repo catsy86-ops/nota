@@ -76,7 +76,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 ### Wibracje
 
-- `src/lib/haptics.ts`: `haptic(kind)` (`tap`, `success`, `warn`, `selection`). Krótkie drgnięcie na Androidzie (`navigator.vibrate`) przy zapisie, odhaczeniu, przejściu w pasku, odpowiedzi w quizie, zapisie wpisu.
+- `src/lib/haptics.ts`: `haptic(kind)` (`tap`, `success`, `warn`, `selection`). Krótkie drgnięcie na Androidzie (`navigator.vibrate`) przy zapisie, odhaczeniu, przejściu w pasku, odpowiedzi w quizie, zapisie wpisu, zapisie dnia, cyklu i rodzaju zmiany w Grafiku.
 - Po cichu nic nie robi, gdy: nie ma API (iOS, komputer), wskaźnik jest precyzyjny (mysz), efekt wyłączony (przełącznik „Wibracje na telefonie” w Ustawieniach → Ogólne) albo wibracja rzuciła wyjątek. Ograniczony ruch wibracji nie wyłącza.
 
 ### Układ szerokiego ekranu
@@ -102,10 +102,10 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 ### Ruch: framer-motion, przejścia, mikrointerakcje
 
 - **LazyMotion.** `App.tsx` owija aplikację w `<LazyMotion features={loadMotionFeatures} strict>`; pełny zestaw funkcji (`src/lib/motionFeatures.ts`) jest w osobnej paczce tuż po starcie. Komponenty importują `m as motion` (pełne `motion` w trybie `strict` to błąd). Wejściowy JS po tej zmianie 372,4 KB gzip. Do załadowania funkcji animacje wejścia nie grają.
-- **Czasy i sprężyny** z `src/lib/motion.ts` (`spring.snap`, `spring.soft`, `tween.enter`). Animowane są tylko `transform` i `opacity`. Ograniczony ruch obsługuje `MotionConfig` w `App.tsx`.
+- **Czasy i sprężyny** z `src/lib/motion.ts` (`spring.snap`, `spring.soft`, `tween.enter`). Animowane są tylko `transform` i `opacity`. Ograniczony ruch obsługuje `MotionConfig` w `App.tsx`. Animacje CSS i mikrointerakcje (słownik ruchu) są w `src/styles/motion.css` — opis w sekcji „ruch i drobny szlif, Etap 4”.
 - **Przełączniki** (`settings/Segmented.tsx`, `SkinPicker`): podświetlenie przesuwa się sprężyną (`layoutId` w `LayoutGroup` z `useId`). `RollingNumber` (licznik notatek) przewija cyfrę. Ikona słońca/księżyca obraca się.
 - **Listy:** zwijanie grupy w Notatkach opada wysokością; wiersz tabeli usunięty lub zarchiwizowany gaśnie, nowy wjeżdża (bez animacji przy pierwszym montażu); szkielet kart Dziś rezerwuje miejsce; pusty stan gaśnie.
-- **Mikrointerakcje stanów:** pole z błędem (`aria-invalid`) ma czerwoną ramkę; przełączniki i checkboxy podświetlają się po najechaniu; suwak ma halo; tosty mają przycisk × (błąd 9 s można zamknąć); Enter i Spacja po dotyku nie włączają ramki fokusu (`src/lib/inputModality.ts`). Przycisk „ładuje” (wspólny prop `loading`) nie jest zrobiony.
+- **Mikrointerakcje stanów:** pole z błędem (`aria-invalid`) ma czerwoną ramkę, a z klasą `shake-invalid` także drga przy próbie zapisu; liczniki w nawigacji pulsują przy zmianie (`count-bump`); przełączniki i checkboxy podświetlają się po najechaniu; suwak ma halo; tosty mają przycisk × (błąd 9 s można zamknąć); Enter i Spacja po dotyku nie włączają ramki fokusu (`src/lib/inputModality.ts`). Przycisk „ładuje” (wspólny prop `loading`) nie jest zrobiony.
 - **Podpis wciśnięcia** przycisków to klasa `pressable`, nie skala framer-motion.
 - **Przejście motywu** kołem (View Transitions, `clip-path: circle()` od ostatniego dotknięcia, ≤1,5 s). Wyłączone przy ograniczonym ruchu i efekcie „themeFade”.
 - **Przejście widoku** przez `document.startViewTransition` z `flushSync` w `Index.tsx`; bez View Transitions zmiana natychmiastowa.
@@ -331,6 +331,37 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 - `src/components/PageActions.test.tsx` (portal do główki, render w miejscu bez dostawcy, opis działu i jego nadpisanie).
 - e2e: `e2e/reminders-calendar.spec.ts` (rząd akcji pod tytułem na telefonie), `e2e/inbox-triage.spec.ts`, `e2e/plans.spec.ts`, `e2e/csp.spec.ts`, `e2e/visual.spec.ts` (selektory po przeniesieniu akcji).
 - Zrzuty `e2e/visual.spec.ts` odświeżone po przeglądzie (Kalendarz, Grafik, Terminy, Długi, Ćwiczenia, Plany, Skrzynka, Dziś, Skarbiec).
+
+## Wspólne — ruch i drobny szlif, Etap 4 (nowy plan 2026-11-05)
+
+Commit: HASH (2026-11-05), na wip/mobile-fala1.
+
+Plan: `nowyplan.md`, Etap 4 (punkty 4.1–4.5). Decyzję NP-5 przyjęto według rekomendacji: proste wejścia i naciśnięcia w CSS, `AnimatePresence` i `layoutId` zostają w framer-motion.
+
+### Co robi, gdzie jest i jak działa
+
+- **4.1 Słownik ruchu.** Wszystkie wspólne animacje (zmiana miesiąca, pieczątka, oddech „dziś”, kropka „teraz”, wejścia `rise-in`/`fade-quiet`/`soft-swap`, upuszczenie chipa, kaskada kafli, rysowany ptaszek i przekreślenie, pasek toastu) są w jednym pliku `src/styles/motion.css`, importowanym w `main.tsx` zaraz po `index.css` (ta sama kolejność kaskady co przed wydzieleniem). Nagłówek pliku opisuje słownik: czasy `--dur-fast` 150 ms, `--dur-base` 220 ms, `--dur-slow` 320 ms (plus `--dur-press` 90 ms tylko do dociśnięcia), krzywe `--ease-out` (wejścia) i `--ease-std` (zmiany stanu), `--ease-in` tylko przy wyjściach. Tokeny zostały w `:root` w `index.css`. Nowe mikrointerakcje:
+  - **puls licznika** `count-bump` + hook `src/hooks/useBump.ts` (licznik zmian wartości, 0 przy pierwszym renderze; użycie `key={bump}` i klasa przy `bump > 0`). Podpięte w `SidebarCount` (`sidebar/SidebarRow.tsx`) i plakietce dolnego paska (`NavItem` w `BottomNav.tsx`) — liczba podskakuje, gdy się zmieni, nie przy otwarciu widoku;
+  - **drgnięcie pola** `shake-invalid`: pole z tą klasą drga, gdy dostaje `aria-invalid="true"`. Tylko pola walidowane przy zapisie (Długi: osoba, kwota, dzień, termin w obu formularzach; własny punkt Pracy; wpis dziennika; nowa budowa) — nie pola sprawdzane w trakcie pisania (Ćwiczenia), żeby nie drgały przy każdym znaku;
+  - **uniesienie** `lift-hover` (tylko przy myszy) razem z `pressable` w galeriach stylów i krojów (`SkinPicker.tsx`, `FontPicker.tsx`) zamiast `whileHover`/`whileTap` framer-motion. Puste `motion.button` bez animacji w `DrawingCanvas.tsx`, `PriorityPicker.tsx` i `ReminderPicker.tsx` są zwykłymi przyciskami.
+- **4.2 Jedno odhaczenie.** Ptaszek z listy zadań (`CheckMark`, `StrikeText`) przeszedł do `src/components/ui/check-mark.tsx`. „Gotowe” w `ReminderQuickActions.tsx` (kafel Terminów, Dziś, Kalendarz) ma ten sam kwadracik: po stuknięciu rysuje się ptaszek, potem `collapseRowThen` (`src/lib/collapseRow.ts`) zwija wiersz `<li>` do zera (kafel siatki tylko gaśnie, bo zmiana wysokości przestawiłaby kolumny) i dopiero wtedy zapisuje zmianę i pokazuje toast z „Cofnij”. Przy ograniczonym ruchu zapis od razu. Wiersz, który po zapisie zostaje (termin cykliczny), wraca do zwykłego wyglądu. Drugie stuknięcie w trakcie animacji nic nie robi.
+- **4.3 Haptyka.** Koniec zmiany (`finishShiftNow`), „Gotowe” i zapis wpisu Pracy już wibrowały. Dopisane: zapis dnia (`DayDialog`), nałożenie i przedłużenie cyklu (`PatternDialog`), zapis rodzaju zmiany (`ShiftTypeDialog`) — `haptic("success")`.
+- **4.4 Fonty bez skoku układu.** `src/styles/fonts.css` ma `@font-face` zastępcze (`'<Krój> Fallback'`, `local('Arial')`, dla Literaty `local('Georgia')`) z `size-adjust`, `ascent-override`, `descent-override`, `line-gap-override` dla Plus Jakarta Sans i sześciu krojów tekstu. Stosy fontów (`--font-display`, `--font-body`, `tailwind.config.ts`, `html[data-font=…]`) mają je za krojem właściwym. Liczby zmierzono w Chromium: szerokość polskiego zdania względem Ariala i `fontBoundingBoxAscent/Descent`.
+- **4.5 Toasty.** Przegląd ok. 400 wywołań skryptem (wykrzykniki, kilka zdań, kropka na końcu, usunięcie bez „Cofnij”, imiesłów zamiast czasownika). Poprawione: „Zapisano termin”, „Usunięto termin”, „Usunięto wpis”, „Poprawiono wpis”, „Przywrócono kopię — N notatek, odświeżam stronę…”, „Wysłano kopię”, „Dodano zdjęcie jako wpis budowy”, „Zmieniono hasło”, „Zainstalowano aplikację”, jedno zdanie w kodzie wyglądu i podpisie wyceny, bez kropek w 12 komunikatach Planów, Kodu wyglądu i dokumentów budowy. Usunięcie dodatkowego grafiku (`ScheduleSwitcher.tsx`) ma teraz „Cofnij” (`scheduleDump` przed usunięciem, `restoreExtraSchedule` przy cofnięciu).
+
+### Ograniczenia i pułapki
+
+- **Toast nad otwartym arkuszem na telefonie nie jest zmieniony.** Toasty stoją 88 px nad dołem ekranu także przy otwartym arkuszu; przeniesienie ich do góry wymaga sprawdzenia stosu Sonnera na zrzutach (Etap 7).
+- **Wielkanocne toasty** („Niespodzianka!”, „KONAMI!”) zostały z wykrzyknikiem celowo.
+- **`--dur-press` i `--ease-in` zostały** — plan mówi o „3 czasach i 2 krzywych”; dodatkowe tokeny mają po jednej roli i są opisane w nagłówku `motion.css`, a ich usunięcie ruszyłoby ok. 100 miejsc bez zmiany wyglądu.
+- **Fonty zastępcze działają tam, gdzie system ma Arial/Georgię** (Windows, macOS, iOS). Na Androidzie `local()` zawodzi i zostaje zwykłe `sans-serif`.
+- **„Gotowe” zapisuje z opóźnieniem ok. 0,5 s.** Testy e2e czekają same (`toHaveCount(0)`); test jednostkowy, który sprawdzałby `onUpdate` od razu po kliknięciu, musi ustawić ograniczony ruch albo użyć sztucznych zegarów.
+- **`lift-hover` wymaga `pressable`** — sama klasa nie ma przejścia, więc bez `pressable` kafel skacze.
+
+### Testy
+
+- Vitest: `src/hooks/useBump.test.ts`; cały zestaw 404 pliki / 3055 testów zielony.
+- e2e (zielone): `reminders-calendar`, `reminders-phase2`, `reminder-toast`, `debts-plan`, `images`, `search-backup`, `site-card-mobile`, `workday`, `checklist`, `today-*`, `shifts*` (108), `a11y`, `skins`, `skin-*`, `seasons`, `settings*` (283), `bundle.spec.ts` (precache 4087 KiB).
 
 ## Wspólne — działy, Etap 3 (nowy plan 2026-11-05)
 

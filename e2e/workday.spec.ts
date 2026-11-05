@@ -78,7 +78,7 @@ test("dzień hydraulika: wejście, zdjęcie, kształtki, brak, etap, godziny, ra
     const card = await openCard();
     await card.locator('input[type="file"][capture]:not([data-testid="point-photo-input"])').setInputFiles({ name: "zdjecie.png", mimeType: "image/png", buffer: Buffer.from(PNG_B64, "base64") });
     taps++;
-    await expect(page.getByText("Zdjęcie dodane jako wpis budowy")).toBeVisible();
+    await expect(page.getByText("Dodano zdjęcie jako wpis budowy")).toBeVisible();
   });
 
   await step("wpis z kształtkami", 4, async () => {

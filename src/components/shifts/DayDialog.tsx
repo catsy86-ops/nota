@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { haptic } from "@/lib/haptics";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Minus, Plus } from "lucide-react";
@@ -121,6 +122,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
       ...(askTimeOff && timeOffOn ? { timeOff: timeOffRate } : {}),
       ...(customHours && isWork ? { hours: shiftHours(customHours), customHours: true as const } : keepHours ? { hours: keepHours } : {}),
     } : null);
+    haptic("success");
     onOpenChange(false);
   }
 

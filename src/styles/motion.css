@@ -1,0 +1,184 @@
+/*
+  Słownik ruchu (nowy plan 4.1). Wszystko, co się porusza, bierze czasy i krzywe
+  z tokenów w `index.css` (`:root`):
+    czasy  — --dur-fast 150 ms (odpowiedź), --dur-base 220 ms (wejście),
+             --dur-slow 320 ms (rysowanie, większe wejścia); --dur-press 90 ms
+             to tylko dociśnięcie (`pressable`);
+    krzywe — --ease-out (wejścia), --ease-std (zmiany stanu); --ease-in tylko
+             przy wyjściach (ok. 0,75× czasu wejścia).
+  Ograniczony ruch: `html[data-motion="reduced"]` w `index.css` skraca każdą
+  animację i przejście do 0,001 ms, więc reguły tutaj nie potrzebują własnego
+  wariantu — chyba że stan końcowy jest inny niż „bez animacji” (wtedy jawnie).
+  Mikrointerakcje: dociśnięcie (`pressable`, index.css), rysowany ptaszek
+  (`check-tick`), puls licznika (`count-bump`), drgnięcie pola (`shake-invalid`).
+  Proste wejścia są tu w CSS, nie w framer-motion (NP-5); `AnimatePresence`
+  zostaje tylko przy listach i arkuszach.
+*/
+/* Zmiana miesiąca (Kalendarz, Grafik): nowa siatka wjeżdża 12 px od strony,
+   w którą idzie nawigacja — „dalej” z prawej, „wstecz” z lewej. Tylko
+   transform/opacity; 12 px mieści się w paddingu <main>, więc bez paska
+   przewijania. Reduced motion skraca to regułą `html[data-motion]` wyżej. */
+@keyframes month-in-next { from { opacity: 0; transform: translateX(12px); } }
+@keyframes month-in-prev { from { opacity: 0; transform: translateX(-12px); } }
+.month-in-next { animation: month-in-next var(--dur-base) var(--ease-out); }
+.month-in-prev { animation: month-in-prev var(--dur-base) var(--ease-out); }
+
+/* ── Grafik i Kalendarz: ruch „zeszytu” ────────────────────────────────────
+   Cicho i precyzyjnie: tylko transform/opacity, krótkie czasy z tokenów.
+   Reduced motion gasi to regułą `html[data-motion]` (czasy 0.001 ms) lub
+   jawnie niżej; tryb oszczędzania danych (prefers-reduced-data) wyłącza
+   nieskończone pętle. */
+
+/* Pieczątka: chip zmiany po naniesieniu pędzlem. Wskakuje z 1.12× do 1×,
+   a obwódka w kolorze zmiany (--stamp) rozchodzi się jak odbicie stempla.
+   Gaśnięcie: chip wyczyszczonego dnia znika szybciej, niż wszedł. */
+@keyframes stamp-in { from { opacity: 0.35; transform: scale(1.12); } }
+@keyframes stamp-ring { from { opacity: 0.6; transform: scale(1); } to { opacity: 0; transform: scale(1.22); } }
+@keyframes stamp-out { to { opacity: 0; transform: scale(0.88); } }
+.stamp-in { animation: stamp-in var(--dur-base) var(--ease-out); animation-delay: var(--stamp-delay, 0ms); }
+.stamp-in::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid var(--stamp, currentColor);
+  pointer-events: none;
+  animation: stamp-ring var(--dur-slow) var(--ease-out) both;
+  animation-delay: var(--stamp-delay, 0ms);
+}
+.stamp-out { animation: stamp-out var(--dur-fast) var(--ease-in) both; pointer-events: none; }
+
+/* Dzień „dziś”: obramowanie oddycha (opacity pseudoelementu). */
+@keyframes today-breath { from { opacity: 0.15; } to { opacity: 0.7; } }
+.today-breath::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 1.5px solid var(--primary);
+  pointer-events: none;
+  opacity: 0.15;
+  animation: today-breath 2.6s ease-in-out infinite alternate;
+}
+html[data-motion="reduced"] .today-breath::before { animation: none; opacity: 0.4; }
+@media (prefers-reduced-data: reduce) {
+  .today-breath::before { animation: none; opacity: 0.4; }
+  .now-dot::after, .now-bar-sheen { animation: none !important; }
+}
+
+/* NowCard: kropka „trwa teraz” z rozchodzącym się pierścieniem. */
+@keyframes now-pulse { from { opacity: 0.6; transform: scale(1); } to { opacity: 0; transform: scale(2.6); } }
+.now-dot { position: relative; }
+.now-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: now-pulse 2s var(--ease-out) infinite;
+}
+html[data-motion="reduced"] .now-dot::after { animation: none; opacity: 0; }
+
+/* Pasek postępu zmiany: wypełnienie wsuwa się z lewej (translateX), po nim wolno
+   przesuwa się jasny prześwit. Postęp odświeża się co minutę. */
+@keyframes bar-grow { from { transform: translateX(-100%); } }
+@keyframes bar-sheen { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+.now-bar { animation: bar-grow var(--dur-slow) var(--ease-out); }
+.now-bar-sheen {
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  animation: bar-sheen 3.6s ease-in-out 1s infinite;
+}
+html[data-motion="reduced"] .now-bar-sheen { display: none; }
+
+/* Wejście kart i chipów ze stagger: opóźnienie z `--i` (40 ms na pozycję). */
+@keyframes rise-in { from { opacity: 0; transform: translateY(6px); } }
+@keyframes chip-slide { from { opacity: 0; transform: translateX(-6px); } }
+.rise-in { animation: rise-in var(--dur-base) var(--ease-out) calc(var(--i, 0) * 40ms) backwards; }
+.chip-slide { animation: chip-slide var(--dur-base) var(--ease-out) calc(var(--i, 0) * 40ms + 60ms) backwards; }
+/* Cichy wjazd samą przezroczystością (cytat dnia, podpowiedzi skrótów): zamiast framer-motion (D-3). */
+@keyframes fade-quiet { from { opacity: 0; } }
+.fade-quiet { animation: fade-quiet 0.4s var(--ease-out) backwards; }
+.fade-quiet-delayed { animation-delay: 0.5s; }
+@media (prefers-reduced-motion: reduce) { .fade-quiet { animation: none; } }
+/* Zmiana dnia w oknie: treść wjeżdża miękko. */
+@keyframes soft-swap { from { opacity: 0; transform: translateY(4px); } }
+.soft-swap { animation: soft-swap var(--dur-base) var(--ease-out); }
+
+/* Upuszczenie terminu: chip siada w nowym dniu z mikro-odbiciem. */
+@keyframes chip-drop { 0% { transform: scale(1.1); } 55% { transform: scale(0.96); } 100% { transform: scale(1); } }
+.chip-drop { animation: chip-drop var(--dur-slow) var(--ease-out); }
+
+/* Kafle arkuszy „+” wjeżdżają kaskadą. */
+.tile-enter { animation: rise-in var(--dur-base) var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 45ms + 60ms); }
+
+/* Odhaczanie pozycji listy (ChecklistEditor). Ptaszek się rysuje
+   (pathLength=1 → dasharray/dashoffset w jednostkach 0..1), kreska przesuwa
+   się przez tekst od lewej. Odhaczenie: 220–320 ms ease-out, odznaczenie:
+   szybkie 150 ms ease-in. Świadomy wyjątek od „tylko transform/opacity”:
+   dashoffset 14-pikselowej ikony i background-size jednego wiersza to
+   malowanie małego prostokąta, a zawinięty tekst nie da się przekreślić
+   transformem pseudoelementu. Przejścia grają tylko przy zmianie —
+   zwykły montaż kafli niczego nie animuje. */
+.check-tick path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset var(--dur-fast) var(--ease-in);
+}
+.check-tick[data-on="true"] path {
+  stroke-dashoffset: 0;
+  /* Najpierw wypełnia się kwadrat (150 ms), potem pióro. */
+  transition: stroke-dashoffset var(--dur-base) var(--ease-out) 60ms;
+}
+.check-tick-in[data-on="true"] path { animation: check-tick-in var(--dur-base) var(--ease-out) 60ms both; }
+@keyframes check-tick-in { from { stroke-dashoffset: 1; } }
+
+.check-strike {
+  background-image: linear-gradient(color-mix(in srgb, var(--muted-foreground) 60%, transparent), color-mix(in srgb, var(--muted-foreground) 60%, transparent));
+  background-repeat: no-repeat;
+  background-position: 0 58%;
+  background-size: 0% 1px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-size var(--dur-fast) var(--ease-in);
+}
+.check-strike[data-on="true"] {
+  background-size: 100% 1px;
+  transition: background-size var(--dur-slow) var(--ease-out) 60ms;
+}
+.check-strike-in[data-on="true"] { animation: check-strike-in var(--dur-slow) var(--ease-out) 60ms both; }
+@keyframes check-strike-in { from { background-size: 0% 1px; } }
+/* Tryb wysokiego kontrastu wycina tła — wtedy zwykłe przekreślenie. */
+@media (forced-colors: active) {
+  .check-strike[data-on="true"] { text-decoration: line-through; }
+}
+
+@keyframes toast-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Puls licznika: liczba w plakietce podskakuje, gdy się zmieni (`useBump` —
+   nie przy pierwszym renderze). */
+@keyframes count-bump { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1); } }
+.count-bump { animation: count-bump var(--dur-base) var(--ease-out); }
+
+/* Drgnięcie pola przy błędzie: gra, gdy pole z `shake-invalid` dostaje
+   `aria-invalid="true"` (próba zapisu). Czerwona ramka zostaje, ruch nie. */
+@keyframes field-shake {
+  0%, 100% { translate: 0; }
+  20% { translate: -4px 0; }
+  40% { translate: 4px 0; }
+  60% { translate: -2px 0; }
+  80% { translate: 2px 0; }
+}
+.shake-invalid[aria-invalid="true"] { animation: field-shake var(--dur-slow) var(--ease-std); }
+
+/* Uniesienie kafla wyboru pod kursorem (galerie stylów i krojów w Ustawieniach),
+   zawsze razem z `pressable`, który daje przejście `translate` i dociśnięcie.
+   Tylko przy myszy — dotyk nie ma hovera. */
+@media (hover: hover) {
+  .lift-hover:hover:not(:active) { translate: 0 -2px; }
+}

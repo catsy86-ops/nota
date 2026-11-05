@@ -65,7 +65,7 @@ test("1.5: termin zwrotu dodany w edycji pojawia się w Terminach, „Cofnij” 
   const form = page.getByRole("form", { name: "Edycja wpisu" });
   await form.getByLabel(/Termin zwrotu/).fill(inDays(2));
   await form.getByRole("button", { name: "Zapisz zmiany" }).click();
-  await expect(page.getByText("Wpis poprawiony")).toBeVisible();
+  await expect(page.getByText("Poprawiono wpis")).toBeVisible();
   await page.goto("/przypomnienia");
   await expect(page.getByText(`Zwrot od ${person}: 120,00 zł`).first()).toBeVisible();
 });

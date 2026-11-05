@@ -316,7 +316,7 @@ function ChangeForm({ onChanged }: { onChanged: (recoveryCode: string | null) =>
     try {
       const res = await privateNotes.changePassword(oldPw, password, { withRecovery });
       if (res.skipped.length) toast.warning(`${res.skipped.length} notatek prywatnych nie dało się odszyfrować i zostały bez zmian`);
-      else toast.success("Hasło zmienione", { description: hadPasskeys ? "Odblokowanie biometrią trzeba dodać ponownie w Ustawieniach." : "Wszystkie prywatne notatki przeszyfrowano nowym kluczem." });
+      else toast.success("Zmieniono hasło", { description: hadPasskeys ? "Odblokowanie biometrią trzeba dodać ponownie w Ustawieniach." : "Wszystkie prywatne notatki przeszyfrowano nowym kluczem." });
       onChanged(res.recoveryCode);
     } catch (err) {
       setError(errorText(err));

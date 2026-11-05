@@ -130,7 +130,7 @@ test("z kalendarza da się dodać termin, edytować go i usunąć", async ({ pag
   await page.getByRole("button", { name: /Edytuj termin/ }).click();
   await page.getByRole("button", { name: "Usuń termin" }).click();
   await expect(grid.getByRole("gridcell", { name: /1 termin/ })).toHaveCount(0);
-  await expect(page.getByText("Termin usunięty")).toBeVisible();
+  await expect(page.getByText("Usunięto termin")).toBeVisible();
 });
 
 test("termin można przypiąć do istniejącej notatki zamiast tworzyć nową", async ({ page }) => {
@@ -144,7 +144,7 @@ test("termin można przypiąć do istniejącej notatki zamiast tworzyć nową", 
 
   await page.getByRole("button", { name: /Zadzwonic do ksiegowej/ }).click();
 
-  await expect(page.getByText("Termin zapisany")).toBeVisible();
+  await expect(page.getByText("Zapisano termin")).toBeVisible();
   const row = page.getByRole("listitem").filter({ hasText: "Zadzwonic do ksiegowej" });
   await expect(row).toContainText("23:45");
 });
@@ -243,7 +243,7 @@ test("usunięcie całej serii zdejmuje wszystkie jej wystąpienia", async ({ pag
   await page.getByRole("button", { name: /^Edytuj termin/ }).click();
   await page.getByRole("button", { name: "Usuń całą serię" }).click();
 
-  await expect(page.getByText("Termin usunięty")).toBeVisible();
+  await expect(page.getByText("Usunięto termin")).toBeVisible();
   await expect(grid.getByRole("gridcell", { name: /\d+ termin/ })).toHaveCount(0);
 });
 

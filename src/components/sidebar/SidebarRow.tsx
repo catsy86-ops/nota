@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import { m as motion } from "framer-motion";
+import { useBump } from "@/hooks/useBump";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
 import { Ellipsis } from "lucide-react";
@@ -123,10 +124,13 @@ export function SidebarRowMenu({ label, children, onCloseAutoFocus }: {
 /** Licznik przy pozycji nawigacji. */
 /** `alert` — coś wymaga uwagi (zaległe przypomnienia): czerwony zamiast szarego. */
 export function SidebarCount({ value, active, alert = false }: { value: number; active?: boolean; alert?: boolean }) {
+  const bump = useBump(value);
   return (
     <span
+      key={bump}
       className={cn(
         "shrink-0 min-w-[22px] rounded-full px-2 py-0.5 text-center text-2xs font-semibold tabular-nums",
+        bump > 0 && "count-bump",
         alert ? "bg-destructive/15 text-destructive-ink" : active ? "bg-primary/20 text-primary-ink" : "bg-muted text-muted-foreground",
       )}
     >

@@ -94,7 +94,7 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
         <form className="space-y-3 pt-1" onSubmit={(e) => { e.preventDefault(); create(); }}>
           <div className="space-y-1.5">
             <Label htmlFor="new-site-name">{job ? "Nazwa zlecenia" : "Nazwa budowy"}</Label>
-            <Input id="new-site-name" value={form.name} maxLength={SITE_NAME_MAX} autoFocus onChange={field("name")} placeholder={job ? "np. Kowalski — kran" : "np. Lipowa 5"} aria-invalid={!!error} aria-describedby={error ? "new-site-error" : undefined} />
+            <Input id="new-site-name" value={form.name} maxLength={SITE_NAME_MAX} autoFocus onChange={field("name")} placeholder={job ? "np. Kowalski — kran" : "np. Lipowa 5"} className="shake-invalid" aria-invalid={!!error} aria-describedby={error ? "new-site-error" : undefined} />
             {error && <p id="new-site-error" role="alert" className="text-xs text-destructive-ink">{error}</p>}
           </div>
           {job && (

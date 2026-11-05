@@ -88,7 +88,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
     try {
       const [{ buildJobDonePdf, jobDonePdfName }, { sharePdf, signatureDataUrl }] = await Promise.all([import("@/lib/study/jobPdf"), import("@/lib/study/pdfWriter")]);
       const dataUrl = signed ? await signatureDataUrl(site.signature) : undefined;
-      if (site.signature && !signed) toast.warning("Podpis jest sprzed zmiany wyceny — w PDF zostaje puste miejsce. Podpisz ponownie.");
+      if (site.signature && !signed) toast.warning("Podpis jest sprzed zmiany wyceny — podpisz ponownie, bo w PDF zostanie puste miejsce");
       else if (signed && !dataUrl) toast.warning("Obraz podpisu jeszcze nie dotarł na to urządzenie — w PDF jest tylko imię i data");
       const blob = await buildJobDonePdf(job, site, { company: companyNameStore.get(), today: localDayKey(), signatureDataUrl: dataUrl });
       if ((await sharePdf(blob, jobDonePdfName(site.name))) === "downloaded") toast.success("Pobrano potwierdzenie wykonania");

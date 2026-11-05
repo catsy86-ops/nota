@@ -73,7 +73,7 @@ describe("useImportExport — ?share= link handling", () => {
     renderHook(() => useImportExport(vi.fn(), addNote));
 
     await waitFor(() => expect(addNote).toHaveBeenCalledWith("Tytuł", "Treść", "mint", ["dom"], null, [], []));
-    expect(toast.success).toHaveBeenCalledWith("Zaimportowano udostępnioną notatkę!");
+    expect(toast.success).toHaveBeenCalledWith("Zaimportowano udostępnioną notatkę");
     expect(window.location.search).toBe("");
   });
 

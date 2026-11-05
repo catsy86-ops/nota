@@ -89,7 +89,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
 
   async function open(d: SiteDoc) {
     const ok = await downloadAttachment({ hash: d.id, name: d.name, size: d.size, type: d.type });
-    if (!ok) toast.error("Tego pliku nie ma na tym urządzeniu — PDF powyżej 2 MB zostaje na telefonie, który go dodał.");
+    if (!ok) toast.error("Tego pliku nie ma na tym urządzeniu — PDF powyżej 2 MB zostaje na telefonie, który go dodał");
   }
 
   return (

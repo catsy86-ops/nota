@@ -33,14 +33,14 @@ export function AppearanceCode() {
   const load = () => {
     const values = decodeAppearance(code);
     if (!values) {
-      toast.error("To nie jest kod wyglądu. Kod zaczyna się od „NOTKI1-”.");
+      toast.error("To nie jest kod wyglądu — kod zaczyna się od „NOTKI1-”");
       return;
     }
     const before = snapshotAppearance();
     try {
       applyAppearanceValues(values, { replace: false });
     } catch {
-      toast.error("Nie udało się zapisać wyglądu w tej przeglądarce.");
+      toast.error("Nie udało się zapisać wyglądu w tej przeglądarce");
       return;
     }
     setCode("");

@@ -23,10 +23,10 @@ export default {
         toast: "70",
       },
       fontFamily: {
-        display: ['Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'sans-serif'],
+        display: ['Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'Plus Jakarta Sans Fallback', 'sans-serif'],
         logo: ['Unbounded Variable', 'Plus Jakarta Sans Variable', 'sans-serif'],
         // Jeden krój interfejsu — Inter był drugim, prawie takim samym.
-        body: ['Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'sans-serif'],
+        body: ['Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'Plus Jakarta Sans Fallback', 'sans-serif'],
         mono: ['JetBrains Mono Variable', 'ui-monospace', 'monospace'],
       },
       colors: {

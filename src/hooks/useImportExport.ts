@@ -35,7 +35,7 @@ export function useImportExport(importNotes: (notes: Note[]) => void, addNote: A
       const shared = parseShareParam(shareData);
       if (shared) {
         addNote(shared.title, shared.content, shared.color, shared.labels, null, [], shared.checklist);
-        toast.success("Zaimportowano udostępnioną notatkę!");
+        toast.success("Zaimportowano udostępnioną notatkę");
       } else {
         logSecurity("rejected-share-link", "link ?share= odrzucony (zły kształt lub rozmiar)");
         toast.error("Nieprawidłowy link udostępniania");

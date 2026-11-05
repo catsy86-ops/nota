@@ -48,7 +48,7 @@ export function useCalendarMoves({ notesById, onSetReminder, month, setMonth, se
   function handleAttach(noteId: string, reminder: number, repeat: RepeatInput, allDay: boolean, base?: number, until?: number) {
     const before = previousOf(noteId);
     onSetReminder(noteId, reminder, repeat, undefined, base, allDay, until);
-    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until), { icon: "🔔" });
+    toastWithUndo("Zapisano termin", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until), { icon: "🔔" });
   }
 
   /**
@@ -74,7 +74,7 @@ export function useCalendarMoves({ notesById, onSetReminder, month, setMonth, se
   function handleClear(noteId: string) {
     const before = previousOf(noteId);
     onSetReminder(noteId, null, "none", undefined, undefined, undefined, undefined);
-    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until), { icon: "🔕" });
+    toastWithUndo("Usunięto termin", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until), { icon: "🔕" });
     focusDay(selectedDay);
   }
 

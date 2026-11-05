@@ -63,6 +63,7 @@ export function CustomChecklistSection() {
               placeholder="Np. sprawdzić zawór przed płukaniem"
               maxLength={CUSTOM_TEXT_MAX}
               aria-label="Treść punktu"
+              className="shake-invalid"
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "custom-item-error" : undefined}
             />

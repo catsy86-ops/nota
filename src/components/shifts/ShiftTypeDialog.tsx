@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import { IS_TOUCH } from "@/lib/platform";
 import { toastWithUndo } from "@/lib/undoToast";
+import { haptic } from "@/lib/haptics";
 
 interface ShiftTypeDialogProps {
   /** `null` = nowa zmiana. */
@@ -91,6 +92,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
     };
     saveShiftType(saved);
     onSaved(saved);
+    haptic("success");
     onOpenChange(false);
   }
 

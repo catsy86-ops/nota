@@ -1,6 +1,6 @@
 # Nowy plan: dopracowanie, wygląd i QoL (2026-11-05)
 
-> **Status (2026-11-05):** Etapy 0–3 zrobione (Etap 3 w commicie fc5310f, na master). Dalej Etap 4 i 5. Uzupełnia `Plan-nowy.md`, którego Cykl 2 jest w toku (Dziś 2.4), i go nie zastępuje. Każda z decyzji NP-1…NP-7 ma rekomendację i czeka na właściciela.
+> **Status (2026-11-05):** Etapy 0–4 zrobione (Etap 3 w commicie fc5310f, Etap 4 w HASH). Dalej Etap 5. Z Etapu 4 otwarte tylko: toast nad otwartym arkuszem na telefonie (do Etapu 7). NP-5 przyjęte według rekomendacji. Uzupełnia `Plan-nowy.md`, którego Cykl 2 jest w toku (Dziś 2.4), i go nie zastępuje. Każda z decyzji NP-1…NP-7 ma rekomendację i czeka na właściciela.
 
 ## 1. Skąd ten plan
 

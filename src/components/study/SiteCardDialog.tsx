@@ -148,7 +148,7 @@ export function SiteCardDialog({
       setSite(site.name);
       if (!addJournalEntry({ kind: "ok", topic: null, text: "", images: [ref] })) { toast.error("Nie zapisano zdjęcia"); return; }
       haptic("tap");
-      toast.success("Zdjęcie dodane jako wpis budowy");
+      toast.success("Dodano zdjęcie jako wpis budowy");
     } catch {
       photoSaveFailed();
     } finally {

@@ -187,7 +187,7 @@ function RestoreBackup() {
       if (studyDropped > 0) notes.push(`Pominięto ${studyDropped} ${pluralPl(studyDropped, ["wpis Nauki", "wpisy Nauki", "wpisów Nauki"])} o nieznanym kształcie`);
       if (schedulesSkipped > 0) notes.push(`Nie przywrócono ${schedulesSkipped} ${pluralPl(schedulesSkipped, ["grafiku", "grafików", "grafików"])} (limit albo zły plik)`);
       // Przy pominiętych danych dajemy czas na przeczytanie komunikatu przed odświeżeniem.
-      toast.success(`Backup przywrócony — ${backup.notes.length} notatek. Odświeżam…`,
+      toast.success(`Przywrócono kopię — ${backup.notes.length} notatek, odświeżam stronę…`,
         notes.length ? { description: `${notes.join(". ")} — ślad jest w diagnostyce.`, duration: 8000 } : undefined);
       setTimeout(() => window.location.reload(), notes.length ? 6000 : 1200);
     } catch (err) {
@@ -265,7 +265,7 @@ async function shareNow(confirm: SkipConfirm) {
   try {
     const res = await shareFullBackup(confirm);
     if (res === "unsupported") toast.error("Ta przeglądarka nie udostępnia plików — pobierz kopię");
-    else if (res === "shared") toast.success("Kopia wysłana");
+    else if (res === "shared") toast.success("Wysłano kopię");
   } catch {
     toast.error("Nie udało się wysłać kopii");
   }

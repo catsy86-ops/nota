@@ -54,7 +54,7 @@ test("pełny backup przywraca się z wyborem sekcji", async ({ page }) => {
   await expect(dialog.getByText(/Historia wersji/)).toBeVisible();
   await expect(dialog.getByText("Odznaki i passa")).toBeVisible();
   await dialog.getByRole("button", { name: "Przywróć backup" }).click();
-  await expect(page.getByText(/Backup przywrócony/)).toBeVisible();
+  await expect(page.getByText(/Przywrócono kopię/)).toBeVisible();
   await page.waitForLoadState("load");
   await expect(page.getByText(title)).toBeVisible();
 });
