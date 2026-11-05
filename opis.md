@@ -334,7 +334,7 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 
 ## Notatki — zapisane widoki, porównanie wersji, opis na zdjęciu (nowy plan 2026-11-05, Etap 6)
 
-Commit: HASH (2026-11-05), na wip/mobile-fala1.
+Commit: d09405a1 (2026-11-05), na wip/mobile-fala1.
 
 Plan: `nowyplan.md`, Etap 6 (6.1–6.3; źródła: Notatki 6.2, 5.1, 5.2). W tym samym commicie są poprawki z przeglądu bezpieczeństwa Etapu 5 (opis na końcu sekcji).
 
