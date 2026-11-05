@@ -4899,3 +4899,13 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **Ruch kart (3.5).** Karty Dziś wchodzą kolejno, co 40 ms (`.today-stagger` w `src/styles/motion.css`). Licznik w nagłówku Terminów „pyka” przy zmianie (`useBump` w `TodayDueList.tsx`). Zwinięcie odhaczonego terminu było już w nowym planie 4.2. Przy ograniczonym ruchu bez animacji.
 - **Testy:** `src/lib/todayLists.test.ts`, `e2e/today-lists.spec.ts` (odhaczenie, „Cofnij”, audyt axe karty — Dziś nie ma go w `a11y.spec.ts`).
 
+
+## Pomiar reakcji na telefonie (Plan-nowy 3.3) — w toku (2026-11-05)
+
+- **Stan:** `e2e/web-vitals-phone.spec.ts` (Pixel 7, Chromium) mierzy LCP listy notatek i najdłuższą interakcję. Obserwatory są wstrzykiwane w teście, więc aplikacja nie ma kodu pomiarowego. Liczą się tylko zdarzenia z `interactionId`, jak w prawdziwym INP. Test jest oznaczony `test.fixme`, bo pomiar jest niestabilny.
+- **Pomiary (Pixel 7 w Playwright, bez dławienia CPU):**
+  - LCP ok. 1,1–1,8 s (raz 10,6 s na obciążonej maszynie);
+  - wyszukiwanie i przełączanie widoków 40–104 ms;
+  - otwarcie notatki stuknięciem w kafel ok. 170–360 ms; pierwsze otwarcie jest najdroższe, bo montuje edytor.
+- **Do dokończenia:** kilka powtórzeń i mediana zamiast jednego przebiegu, potem próg. Osobno: przyspieszyć otwarcie notatki na telefonie (najwolniejsza interakcja, blisko albo powyżej „dobrych” 200 ms).
+- **WebKit** (iPhone w Playwright) pomija test: Event Timing API, na którym stoi INP, mierzy tam niewiarygodnie.

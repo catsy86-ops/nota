@@ -85,7 +85,7 @@
 |---|----|---|---|
 | 3.1 | **`src/pages/Index.tsx` na mniejsze części:** hooki widoków (Skrzynka, Terminy, Dziś), hosty okien i akcje zapisu w osobnych modułach. Bez zmiany zachowania; siatką bezpieczeństwa są e2e. | 3 | L |
 | 3.2 | **Wyszukiwanie w Workerze** i zrzut indeksu do IndexedDB (odłożone z planu rozbudowy 3.x). Najpierw przejście wywołań na asynchroniczne. | 2 | L |
-| 3.3 | **Pomiar reakcji:** INP i LCP na `pixel-7` w Playwright (web-vitals w trybie debug) jako stały test z progiem. | 2 | M |
+| 3.3 | ⏳ (w toku: `e2e/web-vitals-phone.spec.ts` jako `fixme` — pomiar niestabilny, do dokończenia medianą z kilku przebiegów) **Pomiar reakcji:** INP i LCP na `pixel-7` w Playwright (web-vitals w trybie debug) jako stały test z progiem. | 2 | M |
 | 3.4 | ✅ **ADR** (`docs/adr.md`, ADR-1…5): krótko spisane decyzje — `reminderSpec` jako jedna wartość LWW, CSP `connect-src` szerokie, Web Push lokalnie, brak hostingu, model stylów i motywów. | 2 | S |
 | 3.6 | ✅ **Drobne z pomiaru renderu (§10.4)** (także paleta dostaje zapamiętaną listę zamiast nowej tablicy): `ShiftsView` dostaje memoizowane `reminderNotes` zamiast `[...notes, ...archivedNotes]` (`Index.tsx:974`); jedno liczenie `inboxBadge`/`inboxCount` (`Index.tsx:589,657`). | 2 | S |
 | 3.5 | **`<Activity>` dla ostatniego działu** (powrót bez przeładowania), tylko po pomiarze pamięci na telefonie. | 1 | M |
