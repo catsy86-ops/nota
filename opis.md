@@ -4858,3 +4858,11 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **Testy:** czekanie na gotowość zamiast stałych czasów (`toPass` dla sekwencji klawiszy w `qol`, `local-graph`, `grid-favorite-key`; czekanie na widoczność w `composer-reminder`, `jobs`, `qol-etap5`; `waitUntil: "domcontentloaded"` przy płótnie, bo pod obciążeniem „load” nie nadchodzi).
 - **Znane, niewyjaśnione:** pod 3 workerami z powtórzeniami nadal pojawiają się pojedyncze porażki (np. `routes:62`, `?new=1`). Po pojedynczych uruchomieniach przechodzą. Przy pełnym przebiegu tło jest tak samo obciążone, więc to ograniczenie środowiska, nie kodu.
 
+## Kalendarz — jedna kropka na notatkę w wąskiej komórce (2026-11-05)
+
+- **Co robi:** na telefonie (komórka dnia węższa niż 6 rem) każda notatka z terminem tego dnia ma jedną kropkę. Wcześniej każde wystąpienie miało własną, więc seria powtarzana kilka razy dziennie dawała rząd pustych kręgów, który wyglądał jak „0000 +3”.
+- **Gdzie:** `src/components/calendar/dayDots.ts` (`dayDots`), użyte w `DayCell.tsx`.
+- **Jak działa:** wystąpienia są grupowane po `noteId`. Kropka ma najważniejszy rodzaj z tego dnia: zaległy (czerwony kwadrat) > zapisany (pełna kropka) > prognoza serii (pusty krąg). „+N” liczy kolejne notatki, nie wystąpienia. Najwyżej 4 kropki.
+- **Bez zmian:** chipy na szerokiej komórce (z godziną każdego wystąpienia) i opis komórki dla czytnika ekranu (liczba wszystkich terminów).
+- **Testy:** `src/components/calendar/dayDots.test.ts`.
+

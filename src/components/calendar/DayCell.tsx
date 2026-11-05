@@ -6,18 +6,18 @@ import { format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { ReminderChip } from "./ReminderChip";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { isOverdueOccurrence } from "@/lib/dueTerms";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
 import { holidayName } from "@/lib/shifts/holidays";
 import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass } from "./dayCellStyles";
+import { dayDots } from "./dayDots";
 import { pluralPl } from "@/lib/plural";
 import { studySummary, type StudyDayMarks } from "@/lib/study/calendarMarks";
 
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
 const MAX_CHIPS = 3;
-/** Kropka zajmuje ułamek szerokości chipa, więc na telefonie zmieści się ich więcej. */
+/** Kropka zajmuje ułamek szerokości chipa, więc na telefonie zmieści się ich więcej. Jedna kropka = jedna notatka. */
 const MAX_DOTS = 4;
 
 const terminy = (n: number) => `${n} ${pluralPl(n, ["termin", "terminy", "terminów"])}`;
@@ -111,8 +111,8 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
   const today = isSameDay(day, new Date());
   const shown = occurrences.slice(0, MAX_CHIPS);
   const hidden = occurrences.length - shown.length;
-  const dots = occurrences.slice(0, MAX_DOTS);
-  const hiddenDots = occurrences.length - dots.length;
+  // Jedna kropka na notatkę: seria kilka razy dziennie nie daje już rzędu pustych kręgów („0000 +3”).
+  const { dots, hidden: hiddenDots } = dayDots(occurrences, MAX_DOTS);
 
   const holiday = showHolidays ? holidayName(dayKey(day)) : undefined;
   const work = studySummary(study);
@@ -190,15 +190,15 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
       <div aria-hidden className="flex flex-col gap-0.5 overflow-hidden">
         {/* Wąska komórka (poniżej 7,5 rem, zapytanie kontenerowe): same kropki — chipy z tekstem się nie mieszczą. */}
         <div className="flex items-center gap-1 flex-wrap @[6rem]:hidden pl-0.5">
-          {dots.map((occ) => (
+          {dots.map((dot) => (
             <span
-              key={`${occ.noteId}-${occ.at}`}
+              key={dot.noteId}
               className={cn(
                 "w-1.5 h-1.5 rounded-full",
                 // Prognoza serii to pusty krąg, a zapisany termin pełny — różni się kształtem, nie tylko odcieniem.
                 // Zaległy: czerwony kwadrat — święto (czerwona kropka) ma kształt koła, więc się nie myli (K1.1).
-                occ.isSeries && !occ.isNext ? "bg-transparent ring-1 ring-primary"
-                  : isOverdueOccurrence(occ) ? "rounded-[1px] bg-destructive"
+                dot.kind === "forecast" ? "bg-transparent ring-1 ring-primary"
+                  : dot.kind === "overdue" ? "rounded-[1px] bg-destructive"
                   : "bg-primary",
               )}
             />
