@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { projectViews, sanitizeView, viewFromCurrent, viewSummary } from "./savedViews";
+import { mergeViewsDump, projectViews, sanitizeView, viewFromCurrent, viewSummary } from "./savedViews";
 import { getViewPrefs } from "./viewPrefs";
 
 describe("zapisane widoki", () => {
@@ -26,5 +26,14 @@ describe("zapisane widoki", () => {
     map.set("a", { name: "Pierwszy", createdAt: 1 });
     map.set("z", { name: "" });
     expect(projectViews(map).map((v) => v.name)).toEqual(["Pierwszy", "Drugi"]);
+  });
+
+  it("kopia zapasowa: scalanie przyjmuje poprawne wpisy, odrzuca bez nazwy i nie-tablicę", () => {
+    expect(mergeViewsDump("nie tablica")).toBe(0);
+    const n = mergeViewsDump([
+      { id: "kopia-1", name: "Z kopii", source: { kind: "all" }, query: "beton", layout: "table", sortKey: "updated", sortDir: "desc", groupBy: "none", filterColor: "all", filterLabel: "all", filterHasReminder: false, filterPriority: "all", createdAt: 5 },
+      { id: "zly", name: "" },
+    ]);
+    expect(n).toBe(1);
   });
 });

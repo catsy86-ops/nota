@@ -63,12 +63,19 @@ test("galeria notatki: „Opisz na zdjęciu” dodaje opisaną kopię, oryginał
   await page.getByRole("button", { name: /Powiększ obraz 1 z 1/ }).click();
   await page.getByRole("button", { name: "Opisz na zdjęciu" }).click();
   const canvas = page.locator("canvas").last();
-  const box = (await canvas.boundingBox())!;
-  await page.mouse.move(box.x + 30, box.y + 30);
-  await page.mouse.down();
-  await page.mouse.move(box.x + 120, box.y + 80, { steps: 6 });
-  await page.mouse.up();
-  await page.getByRole("button", { name: "Zapisz rysunek" }).click();
+  const save = page.getByRole("button", { name: "Zapisz rysunek" });
+  // Okno rysunku wjeżdża animacją — kreska narysowana w trakcie może się nie zarejestrować, więc powtarzamy aż „Zapisz” się włączy.
+  await canvas.waitFor();
+  await page.waitForTimeout(400);
+  for (let i = 0; i < 3 && await save.isDisabled(); i++) {
+    const box = (await canvas.boundingBox())!;
+    await page.mouse.move(box.x + 30, box.y + 30);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 120, box.y + 80, { steps: 6 });
+    await page.mouse.up();
+  }
+  await expect(save).toBeEnabled();
+  await save.click();
   await expect(page.getByText("Dodano opisane zdjęcie — oryginał został")).toBeVisible();
   await expect(page.getByRole("button", { name: /Powiększ obraz 2 z 2/ })).toBeVisible();
 });

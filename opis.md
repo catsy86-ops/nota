@@ -398,9 +398,9 @@ Plan: `nowyplan.md`, Etap 6 (6.1–6.3; źródła: Notatki 6.2, 5.1, 5.2). W tym
 
 ### Ograniczenia i pułapki
 
-- **Widoki nie trafiają do kopii zapasowej JSON ani do resetu.** Są w dokumencie Yjs i synchronizują się, ale eksport i import kopii ich nie znają.
+- **Widoki są w pełnej kopii JSON** (sekcja `views`, `exportFullBackup` i `restoreFullBackup` w `exportNotes.ts`; scalanie przez `mergeViewsDump`, który waliduje każdy wpis). Przy resecie danych nie są kasowane osobno.
 - **Otwarcie widoku zmienia globalne preferencje widoku** (układ, sortowanie, filtry) — tak jak ręczna zmiana w pasku narzędzi. Po wyjściu z widoku zostają.
-- **„Widoczne kolumny” tabeli** z planu nie są w widoku: tabela nie ma jeszcze wyboru kolumn.
+- **„Widoczne kolumny” tabeli** z planu nie są w widoku: tabela nie ma jeszcze wyboru kolumn (osobne zadanie, nie w tym etapie).
 - **Dwie zmiany tego samego widoku naraz** (dwa urządzenia): zostaje jedna, cała.
 - **Diff akapitów** porównuje całe akapity. Zmiana jednego słowa daje blok „zmieniony”, a przywrócenie bierze cały akapit z wersji.
 - **Opisana kopia zdjęcia** to nowy obraz w `imageStore` (więcej miejsca). Usunięcie kopii nie rusza oryginału.

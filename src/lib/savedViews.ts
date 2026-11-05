@@ -147,6 +147,22 @@ export function renameView(id: string, name: string): void {
   if (v && n) saveView({ ...v, name: n });
 }
 
+/** Kopia zapasowa: wszystkie widoki jako tablica (wpisy bez nazwy odpadają). */
+export function viewsDump(): SavedView[] {
+  return getViews();
+}
+
+/** Scalanie z kopii: widoki o znanym id są nadpisywane, nowe dopisywane; limit i walidacja jak przy zapisie. */
+export function mergeViewsDump(raw: unknown): number {
+  if (!Array.isArray(raw)) return 0;
+  let saved = 0;
+  for (const item of raw) {
+    const v = sanitizeView(String((item as { id?: unknown })?.id ?? ""), item);
+    if (v && saveView(v)) saved++;
+  }
+  return saved;
+}
+
 export function removeView(id: string): SavedView | null {
   const v = getViews().find((x) => x.id === id) ?? null;
   yjsStore.doc.transact(() => viewsMap().delete(id));

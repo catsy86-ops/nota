@@ -209,6 +209,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     entryCheck: JSON.stringify(entryCheckDump()),
     // Zestawy materiału (H1.2) — osobna mapa, scalana przy przywracaniu bez nadpisywania.
     kits: JSON.stringify(kitsDump()),
+    // Zapisane widoki (nowy plan 6.1) są w dokumencie Yjs — bez tej sekcji kopia by je gubiła.
+    views: JSON.stringify((await import("@/lib/savedViews")).viewsDump()),
     // Punkty w pomieszczeniach budów (H2.1) — osobna mapa, scalana bez nadpisywania.
     points: JSON.stringify(pointsDump()),
     // Sposób rozliczenia budów (H3.1) — osobna mapa, scalana bez nadpisywania.
@@ -370,6 +372,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   // Lista przed wejściem: scalanie bez kasowania; uszkodzona sekcja po prostu się pomija.
   if (backup.entryCheck) await import("@/lib/study/entryCheckStore").then((m) => m.mergeEntryCheckDump(JSON.parse(backup.entryCheck!))).catch(() => {});
   if (backup.kits) await import("@/lib/study/kitsStore").then((m) => m.mergeKitsDump(JSON.parse(backup.kits!))).catch(() => {});
+  if (backup.views) await import("@/lib/savedViews").then((m) => m.mergeViewsDump(JSON.parse(backup.views!))).catch((err) => logDiag("warn", "backup", "cannot restore views", errName(err)));
   if (backup.points) await import("@/lib/study/pointsStore").then((m) => m.mergePointsDump(JSON.parse(backup.points!))).catch(() => {});
   if (backup.plans) await import("@/lib/plans/plansStore").then((m) => m.mergePlansDump(JSON.parse(backup.plans!))).catch(() => {});
   if (backup.billing) await import("@/lib/study/billingStore").then((m) => m.mergeBillingDump(JSON.parse(backup.billing!))).catch(() => {});
