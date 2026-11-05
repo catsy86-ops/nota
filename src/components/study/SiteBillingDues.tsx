@@ -75,7 +75,7 @@ export function SiteBillingDues({ site, billing, hours, points }: {
 
   return (
     <div className="space-y-2" data-testid="billing-dues">
-      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Należności</h4>
+      <h4 className="text-xs font-semibold text-muted-foreground">Należności</h4>
 
       <ul className="space-y-1 text-sm" aria-label="Naliczone">
         {st.lines.length === 0 && <li className="text-xs text-muted-foreground">Nic jeszcze nie naliczone — wpisz stawki niżej, a pozycje pojawią się tutaj.</li>}

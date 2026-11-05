@@ -171,7 +171,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
 
             {skipped.length > 0 && (
               <div>
-                <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">Pominięte</h3>
+                <h3 className="text-xs text-muted-foreground font-semibold mb-1.5">Pominięte</h3>
                 <ul className="space-y-1">
                   {skipped.map((r, i) => <LedgerRow key={r.label} index={added.length + i} {...r} />)}
                 </ul>

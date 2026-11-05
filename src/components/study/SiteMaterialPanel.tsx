@@ -60,7 +60,7 @@ export function SiteMaterialPanel({ site, journal }: { site: SiteInfo; journal: 
         <div id="site-material-body" className="space-y-3 border-t border-border px-3 py-3">
           {usage.months.map((m) => (
             <div key={m.month} className="space-y-1.5">
-              <h4 className="flex items-baseline justify-between text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h4 className="flex items-baseline justify-between text-xs font-semibold text-muted-foreground">
                 <span className="capitalize">{m.label}</span>
                 {m.cost !== null && <span className="tabular-nums normal-case">{zl(m.cost)}{m.unpriced ? ` (+${m.unpriced} bez ceny)` : ""}</span>}
               </h4>

@@ -102,7 +102,7 @@ function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions
   const more = cat.count - cat.examples.length;
   return (
     <section aria-label={cat.label} data-review-category={cat.key} className="min-w-0">
-      <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <h3 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
         <Icon className="w-3.5 h-3.5" aria-hidden />
         {cat.label}
         <span className="stamp-tag text-2xs normal-case text-primary-ink" data-testid="review-count">{cat.count}</span>

@@ -45,7 +45,7 @@ const COLUMNS: { v: ColumnsChoice; label: string; aria: string }[] = [
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="pt-5">
-      <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
+      <h3 className="px-1 pb-2 text-xs font-semibold text-muted-foreground">{title}</h3>
       {children}
     </section>
   );

@@ -46,7 +46,7 @@ export function Section({ title, children }: { title: string; children: React.Re
   const Heading = useContext(SectionLevel) === 4 ? "h4" : "h3";
   return (
     <div className="space-y-2">
-      <Heading className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</Heading>
+      <Heading className="text-xs font-semibold text-muted-foreground">{title}</Heading>
       {children}
     </div>
   );

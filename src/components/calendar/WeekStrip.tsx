@@ -102,7 +102,7 @@ export function WeekStrip({ day, byDay, shiftOf, titleOf, studyOf, onSelectDay }
               )}
             >
               {/* Zaznaczony dzień: tło podbarwione marką — kolor marki na nim nie ma kontrastu 4,5:1 w każdym stylu (Hydraulika). */}
-              <span aria-hidden className={cn("text-2xs uppercase tracking-wider", selected ? "text-foreground" : i >= 5 ? "text-primary-ink" : "text-muted-foreground")}>
+              <span aria-hidden className={cn("text-xs", selected ? "text-foreground" : i >= 5 ? "text-primary-ink" : "text-muted-foreground")}>
                 {format(d, "EEEEEE", { locale: pl })}
               </span>
               <span aria-hidden className={dayNumberClass({ today: isToday, holiday: !!holiday, inMonth: true })}>{format(d, "d")}</span>

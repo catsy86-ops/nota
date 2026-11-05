@@ -95,7 +95,7 @@ function YearBody({ data, initialYear, onOpenChange, onOpenMonth }: { data: Shif
             {paid && <col className="w-[23%]" />}
           </colgroup>
           <thead>
-            <tr className="text-2xs uppercase tracking-wider text-muted-foreground border-b-2 border-foreground/30">
+            <tr className="text-xs text-muted-foreground border-b-2 border-foreground/30">
               <th scope="col" className="text-left font-semibold py-1.5">Mies.</th>
               <th scope="col" className="text-right font-semibold py-1.5">Godz.</th>
               <th scope="col" className="text-right font-semibold py-1.5">Nadg.</th>
@@ -128,7 +128,7 @@ function YearBody({ data, initialYear, onOpenChange, onOpenMonth }: { data: Shif
           </tbody>
           <tfoot>
             <tr className="border-t-[3px] border-double border-foreground/40 font-semibold">
-              <th scope="row" className="text-left font-body text-2xs uppercase tracking-wider pt-2 pl-1">Razem</th>
+              <th scope="row" className="text-left font-body text-xs pt-2 pl-1">Razem</th>
               <Cell value={formatHoursShort(summary.total.minutes)} total />
               <Cell value={orDash(summary.total.overtimeMinutes, formatHoursShort)} total accent={summary.total.overtimeMinutes > 0} />
               <Cell value={orDash(summary.total.nightMinutes, formatHoursShort)} total />

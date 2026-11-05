@@ -219,7 +219,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
             <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
           </motion.button>
         )}>
-        <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
+        <p className="text-xs font-semibold font-display text-muted-foreground">Przypomnienie</p>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Szybkie terminy">
           {presets(new Date(), shiftList, mobile).map((p) => (
             <button

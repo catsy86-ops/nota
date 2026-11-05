@@ -36,7 +36,7 @@ export function InboxBar({ count, onTriage }: { count: number; onTriage: () => v
       data-testid="inbox-bar"
       className="flex w-full max-w-(--page-form) items-center gap-2 max-md:sticky max-md:top-(--app-header-h,0px) [html.header-hidden_&]:max-md:top-0 max-md:z-raised max-md:bg-background/95 max-md:py-1.5 max-md:backdrop-blur-xs"
     >
-      <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Do posortowania</span>
+      <span className="text-xs font-semibold text-muted-foreground">Do posortowania</span>
       <span className="stamp-tag tabular-nums text-primary-ink" data-testid="inbox-count">{count}</span>
       {mobile && triage}
     </div>

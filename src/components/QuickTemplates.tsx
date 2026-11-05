@@ -103,7 +103,7 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote, onPeriodNot
       // chipy nie mieszczą się w szerokości).
       className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-1 -mx-1 px-1 mask-[linear-gradient(to_right,#000_88%,transparent)] sm:mask-none"
     >
-      <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0 mr-1">
+      <span className="text-xs font-semibold text-muted-foreground shrink-0 mr-1">
         Szablony
       </span>
       <button

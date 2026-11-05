@@ -114,7 +114,7 @@ export function SitePackageImportDialog({ pkg, onClose, onDone }: { pkg: SitePac
         </DialogHeader>
         {targets && (
           <fieldset className="space-y-1.5">
-            <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Scal z</legend>
+            <legend className="mb-1 text-xs font-semibold text-muted-foreground">Scal z</legend>
             {targets.options.map((o, i) => (
               <button key={o.id} type="button" aria-pressed={i === index} onClick={() => setPick(i)}
                 className={cn("pressable flex w-full items-center justify-between gap-2 rounded-field border px-3 py-2 text-left text-sm coarse:min-h-11",

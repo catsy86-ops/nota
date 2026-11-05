@@ -86,7 +86,7 @@ export function SiteBillingPanel({ site, hours }: { site: SiteInfo; /** Godziny 
       {open && (
         <div id={`billing-${site.id}`} className="space-y-3 border-t border-dashed border-border px-3 pb-3 pt-2.5">
           <SiteBillingDues site={site} billing={billing} hours={hours} points={points} />
-          <h4 className="border-t border-dashed border-border pt-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jak jesteś rozliczany</h4>
+          <h4 className="border-t border-dashed border-border pt-2.5 text-xs font-semibold text-muted-foreground">Jak jesteś rozliczany</h4>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label="Sposób rozliczenia">
             {BILLING_MODES.map((m) => (
               <button key={m} type="button" onClick={() => flip(m)} aria-pressed={on(m)}
@@ -100,14 +100,14 @@ export function SiteBillingPanel({ site, hours }: { site: SiteInfo; /** Godziny 
 
           {on("hours") && (
             <fieldset className="space-y-1.5" data-testid="billing-hours">
-              <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{MODE_LABEL.hours}</legend>
+              <legend className="mb-1 text-xs font-semibold text-muted-foreground">{MODE_LABEL.hours}</legend>
               <AmountField label="Stawka godzinowa" unit="zł/h" value={site.rate} onSave={saveRate} placeholder="np. 45" />
             </fieldset>
           )}
 
           {on("points") && (
             <fieldset className="space-y-1.5" data-testid="billing-points">
-              <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{MODE_LABEL.points}</legend>
+              <legend className="mb-1 text-xs font-semibold text-muted-foreground">{MODE_LABEL.points}</legend>
               <AmountField label="Za punkt (domyślnie)" value={billing.pointRate} onSave={(n) => setPointRate(site.id, null, n)} placeholder="np. 150" />
               {used.map((t) => (
                 <AmountField key={t.id} label={`${t.label} ×${t.count}`} value={billing.typeRates[t.id]}
@@ -121,7 +121,7 @@ export function SiteBillingPanel({ site, hours }: { site: SiteInfo; /** Godziny 
 
           {on("lump") && (
             <fieldset className="space-y-1.5" data-testid="billing-lump">
-              <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{MODE_LABEL.lump}</legend>
+              <legend className="mb-1 text-xs font-semibold text-muted-foreground">{MODE_LABEL.lump}</legend>
               <AmountField label="Za całą budowę" value={billing.lump} onSave={(n) => setLump(site.id, n)} />
               <p className="pt-1 text-xs text-muted-foreground">Albo za etapy — kwota należy się po odhaczeniu etapu:</p>
               {stages.map((s) => (

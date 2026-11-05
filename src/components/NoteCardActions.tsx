@@ -133,7 +133,7 @@ function MoreGroup({ title, children }: { title: string; children: ReactNode }) 
   if (Children.toArray(children).length === 0) return null;
   return (
     <div className="contents">
-      <h3 className="col-span-full w-full px-1 pb-1 pt-3 text-2xs font-semibold uppercase tracking-wider text-muted-foreground first:pt-0">{title}</h3>
+      <h3 className="col-span-full w-full px-1 pb-1 pt-3 text-xs font-semibold text-muted-foreground first:pt-0">{title}</h3>
       {children}
     </div>
   );

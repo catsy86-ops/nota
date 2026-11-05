@@ -12,7 +12,7 @@ export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenC
         <div className="space-y-5">
           {SHORTCUT_GROUPS.map((group) => (
             <div key={group.heading}>
-              <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">{group.heading}</h3>
+              <h3 className="text-xs text-muted-foreground font-semibold mb-2">{group.heading}</h3>
               <div className="space-y-1.5">
                 {group.items.map((item) => (
                   <div key={item.label} className="flex items-center justify-between gap-4 text-sm">

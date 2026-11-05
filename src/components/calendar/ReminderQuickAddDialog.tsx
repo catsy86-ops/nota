@@ -380,7 +380,7 @@ export function ReminderQuickAddDialog({
 
             {suggestions.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   albo przypnij do istniejącej
                 </p>
                 <ul className="space-y-1 max-h-44 overflow-y-auto">

@@ -12,7 +12,7 @@ export type EditorMode = "select" | "route" | "calibrate" | "symbol";
 
 const field = "h-10 w-full rounded-field border border-border bg-background px-3 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
 const sectionCls = "space-y-2 border-b border-border/60 px-3 py-3 last:border-b-0";
-const h3 = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
+const h3 = "text-xs font-semibold text-muted-foreground";
 
 const fmt = (n: number, d = 2) => n.toLocaleString("pl-PL", { maximumFractionDigits: d });
 

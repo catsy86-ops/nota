@@ -185,7 +185,7 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                 const pin = pins[i] ?? {};
                 return (
                   <li key={g.keys.join("-")} className="space-y-1.5" data-testid="photo-day-group">
-                    {header && <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{header}</p>}
+                    {header && <p className="text-xs font-semibold text-muted-foreground">{header}</p>}
                     <div className="rounded-field border border-border p-2.5">
                       <div className="flex items-baseline justify-between gap-2 text-sm">
                         <span className="font-mono tabular-nums">{g.start === g.end ? time(g.start) : `${time(g.start)}–${time(g.end)}`}</span>

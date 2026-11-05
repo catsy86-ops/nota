@@ -123,7 +123,7 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
     <section aria-label="Punkty w pomieszczeniach" data-testid="site-points" className="space-y-2">
       <input ref={photoInput} type="file" accept="image/*" capture="environment" hidden data-testid="point-photo-input"
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void savePhoto(f); }} />
-      <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <h3 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
         <Droplets className="h-4 w-4" aria-hidden />Punkty
         {progress.total > 0 && <span className="font-mono tabular-nums normal-case" data-testid="site-points-progress">{progress.done}/{progress.total} gotowe</span>}
       </h3>

@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { MissingHint } from "@/components/ui/missing-hint";
 import { comparePayslip, PAYSLIP_TOLERANCE, type PayslipFacts } from "@/lib/shifts/payslip";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -81,7 +82,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
     <section aria-label="Podsumowanie miesiąca" className="rounded-card border border-border/60 bg-card p-4 sm:p-5 space-y-4">
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Przepracowane</p>
+          <p className="text-xs font-semibold text-muted-foreground">Przepracowane</p>
           <p className="font-display font-extrabold text-4xl tabular-nums leading-none mt-1">
             <CountUp value={minutes} format={formatHoursShort} /><span className="text-lg font-bold text-muted-foreground ml-1">h</span>
             <span className="text-base font-semibold text-muted-foreground ml-2">/ <CountUp value={normMinutes} format={formatHoursShort} /> h normy</span>
@@ -90,7 +91,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
         {/* Pokazuje się też wtedy, gdy zarobek to 0, a jest szacunek urlopu albo L4 (G0.5). */}
         {(summary.earnings > 0 || grossTotal > 0) && (
           <div className="text-right">
-            <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Razem brutto</p>
+            <p className="text-xs font-semibold text-muted-foreground">Razem brutto</p>
             <p className="font-display font-extrabold text-3xl sm:text-4xl tabular-nums leading-none mt-1 text-primary-ink">
               <CountUp value={grossTotal} format={formatMoney} />
             </p>
@@ -257,7 +258,7 @@ function PeriodProgress({ period }: { period: PeriodSummary }) {
 function Stat({ label, value, accent = false, hint }: { label: string; value: ReactNode; accent?: boolean; hint?: string }) {
   return (
     <div className="rounded-card bg-muted/50 px-3 py-2">
-      <dt className="text-2xs uppercase tracking-wider text-muted-foreground">{label}</dt>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className={cn("tabular-nums font-semibold", accent && "text-primary-ink")}>{value}</dd>
       {hint && <dd className="text-2xs text-muted-foreground tabular-nums">{hint}</dd>}
     </div>
@@ -297,7 +298,7 @@ function Receipt({ summary, hourlyRate, monthLabel, estimate, includeEstimate, o
 
   return (
     <div className="receipt font-mono text-xs sm:text-[0.8125rem] tabular-nums">
-      <p className="flex justify-between gap-2 pb-2 text-2xs uppercase tracking-[0.2em] text-muted-foreground">
+      <p className="flex justify-between gap-2 pb-2 text-xs text-muted-foreground">
         <span>Rachunek</span><span>{monthLabel}</span>
       </p>
       <details className="group mt-2">
@@ -362,6 +363,8 @@ function BonusPanel({ monthKey, bonuses }: { monthKey: string; bonuses: ShiftBon
   // `parseMoney` przyjmuje też „1 000,50”; nieczytelne daje NaN, więc przycisk „Dodaj” zostaje nieaktywny.
   const value = parseMoney(amount) ?? Number.NaN;
   const valid = name.trim().length > 0 && amount.trim() !== "" && Number.isFinite(value) && value > 0;
+  const missing = !name.trim() ? "Wpisz nazwę premii." : valid ? null : "Wpisz kwotę większą od zera.";
+  const hintId = useId();
 
   const add = () => {
     if (!valid) return;
@@ -400,7 +403,8 @@ function BonusPanel({ monthKey, bonuses }: { monthKey: string; bonuses: ShiftBon
       <form className="grid gap-2 sm:grid-cols-[1fr_9rem_auto]" onSubmit={(e) => { e.preventDefault(); add(); }}>
         <Input aria-label="Nazwa premii" placeholder="np. premia kwartalna" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} className="coarse:h-11" />
         <Input aria-label="Kwota premii (zł)" inputMode="decimal" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} className="tabular-nums coarse:h-11" />
-        <Button type="submit" size="sm" disabled={!valid} className="coarse:h-11">Dodaj premię</Button>
+        <Button type="submit" size="sm" disabled={!valid} aria-describedby={hintId} className="coarse:h-11">Dodaj premię</Button>
+        <MissingHint id={hintId} missing={missing} className="sm:col-span-3" />
       </form>
     </section>
   );
@@ -428,7 +432,7 @@ function PaySlipPanel({ monthKey, estimate, paid, facts }: { monthKey: string; e
     : `Wypłacono ${cmp.diff > 0 ? "więcej" : "mniej"} o ${formatMoney(Math.abs(cmp.diff))} niż szacunek (${cmp.percent > 0 ? "+" : ""}${cmp.percent.toLocaleString("pl-PL")} %).`;
   return (
     <section aria-label="Pasek wypłaty" className="mt-4 rounded-card border border-border/60 bg-card p-4">
-      <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Pasek wypłaty</h3>
+      <h3 className="text-xs font-semibold text-muted-foreground">Pasek wypłaty</h3>
       <label className="mt-2 flex flex-col gap-1 text-sm">
         Wypłacono brutto (zł)
         <input

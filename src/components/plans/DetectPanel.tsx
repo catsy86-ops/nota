@@ -15,7 +15,7 @@ export interface RouteProposal {
 export type DetectRun = { state: "idle" } | { state: "running" } | { state: "error"; message: string };
 
 const sectionCls = "space-y-2 border-b border-border/60 px-3 py-3 last:border-b-0";
-const h3 = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
+const h3 = "text-xs font-semibold text-muted-foreground";
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
 export function DetectSection({ picking, onPick, color, tolerance, onTolerance, system, onSystem, run, proposals, mpp, focusId, onFocus, onDetect, onCancel, onAdd, onReject, onAddAll }: {

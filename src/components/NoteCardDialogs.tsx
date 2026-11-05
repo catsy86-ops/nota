@@ -46,12 +46,12 @@ export function ActionSheet({
         </SheetHeader>
         {!isArchived && !note.trashed && (
           <section className="pt-4">
-            <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Kolor</h3>
+            <h3 className="px-1 pb-2 text-xs font-semibold text-muted-foreground">Kolor</h3>
             <ColorPicker selected={note.color} onSelect={(c: NoteColor) => onUpdate?.(note.id, { color: c })} />
           </section>
         )}
         <section className="pt-4">
-          <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Szybkie</h3>
+          <h3 className="px-1 pb-2 text-xs font-semibold text-muted-foreground">Szybkie</h3>
           <div className="note-sheet-grid">
             <PrimaryActions
               note={note}

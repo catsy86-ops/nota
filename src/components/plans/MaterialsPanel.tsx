@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 
 const sectionCls = "space-y-1.5 border-b border-border/60 px-3 py-3 last:border-b-0";
-const h3 = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
+const h3 = "text-xs font-semibold text-muted-foreground";
 const field = "h-10 w-full rounded-field border border-border bg-background px-2.5 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
 const rowBtn = "flex min-h-10 w-full items-center gap-2 rounded-control px-2 text-left text-sm hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11";
 

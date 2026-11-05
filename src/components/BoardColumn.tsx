@@ -9,7 +9,7 @@ export const BOARD_COLUMN_WIDTH = "w-70 sm:w-72";
 /** Etykieta kolumny z licznikiem — w kolumnie i w przyklejonym pasku nagłówków. */
 export function BoardColumnHeading({ label, count, className }: { label: ReactNode; count: number; className?: string }) {
   return (
-    <div className={cn("flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground", className)}>
+    <div className={cn("flex items-center gap-1.5 text-xs font-semibold text-muted-foreground", className)}>
       <span className="truncate">{label}</span>
       <span className="bg-muted text-foreground/80 text-2xs px-1.5 rounded-full tabular-nums normal-case tracking-normal">{count}</span>
     </div>

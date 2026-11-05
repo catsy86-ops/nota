@@ -27,7 +27,7 @@ export function NoteLookPicker({ icon, cover, onChange }: NoteLookPickerProps) {
       <PopoverContent className="w-64 p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
         <div>
           <div className="flex items-center justify-between pb-1.5">
-            <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Ikona</p>
+            <p className="text-xs font-semibold font-display text-muted-foreground">Ikona</p>
             {icon && (
               <button type="button" onClick={() => onChange({ icon: undefined })} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
                 Usuń
@@ -54,7 +54,7 @@ export function NoteLookPicker({ icon, cover, onChange }: NoteLookPickerProps) {
         </div>
         <div>
           <div className="flex items-center justify-between pb-1.5">
-            <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Okładka</p>
+            <p className="text-xs font-semibold font-display text-muted-foreground">Okładka</p>
             {cover && (
               <button type="button" onClick={() => onChange({ cover: undefined })} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
                 Usuń

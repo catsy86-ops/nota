@@ -133,7 +133,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
     <div className="overflow-x-auto rounded-card border border-border/60 bg-card/60">
       <table className="w-full text-sm" data-note-table>
         <thead>
-          <tr className="border-b border-border/60 text-left text-2xs uppercase tracking-wider text-muted-foreground">
+          <tr className="border-b border-border/60 text-left text-xs text-muted-foreground">
             {columns.map((c) => {
               const sort = "sort" in c ? c.sort : undefined;
               const active = sort !== undefined && sort === sortKey;
@@ -148,7 +148,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                     <button
                       type="button"
                       onClick={() => sortBy(sort)}
-                      className="inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
+                      className="inline-flex items-center gap-1 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
                     >
                       {c.label}
                       {active && (sortDir === "asc" ? <ArrowUp className="w-3 h-3" aria-hidden /> : <ArrowDown className="w-3 h-3" aria-hidden />)}

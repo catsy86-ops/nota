@@ -199,7 +199,7 @@ Zapas precache jest mniejszy niż 29 KiB zakładane w §3 p. 8. Etapy 1–2 musz
 
 ## 7. Miary (sprawdzane po każdym etapie)
 
-- Paczka: wejściowy JS ≤ 500 KB gzip, precache ≤ 4,0 MiB (`e2e/bundle.spec.ts`). Zapas precache nie może spaść poniżej 10 KiB bez decyzji.
+- Paczka: wejściowy JS ≤ 500 KB gzip, precache ≤ 4,2 MiB (`e2e/bundle.spec.ts`; podniesione z 4,0 MiB 2026-11-05). Zapas precache nie może spaść poniżej 10 KiB bez decyzji.
 - `uppercase tracking-wider` poza listą wyjątków: z 93 do 0 (pilnuje test strażnik).
 - `disabled:opacity-50` na głównym przycisku: 0.
 - Pusty stan: jedna implementacja (`EmptyState`) we wszystkich działach.

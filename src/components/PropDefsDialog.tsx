@@ -66,7 +66,7 @@ export function PropDefsDialog({ open, onOpenChange, defs, onAdd, onUpdate, onDe
                     }}
                     className="h-9"
                   />
-                  <span className="shrink-0 text-2xs uppercase tracking-wider text-muted-foreground">{PROP_TYPE_LABELS[def.type]}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{PROP_TYPE_LABELS[def.type]}</span>
                   {confirmId === def.id ? (
                     <span className="flex shrink-0 items-center gap-1 text-xs">
                       <Button size="sm" variant="destructive" onClick={() => { onDelete(def.id); setConfirmId(null); }}>Usuń</Button>

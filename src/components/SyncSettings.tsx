@@ -144,7 +144,7 @@ export function SyncSettings({ prefillCode }: Props) {
       </div>
 
       <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Urządzenia w grupie</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground">Urządzenia w grupie</h3>
         {olderDevices(syncState.devices).length > 0 && (
           <p role="status" className="rounded-control border border-warning/50 bg-warning/10 px-3 py-2 text-xs text-foreground">
             {olderDevices(syncState.devices).map((d) => d.name).join(", ")} ma starszą wersję aplikacji — część danych może być na nim niewidoczna. Zaktualizuj go.
@@ -177,7 +177,7 @@ export function SyncSettings({ prefillCode }: Props) {
 
       {syncState.code && (
         <div className="rounded-card border border-border/60 bg-muted/20 p-4 space-y-3 text-center">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dodaj urządzenie</h3>
+          <h3 className="text-xs font-semibold text-muted-foreground">Dodaj urządzenie</h3>
           <p className="text-xs text-muted-foreground">
             Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
           </p>
@@ -233,7 +233,7 @@ export function SyncSettings({ prefillCode }: Props) {
       )}
 
       <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dołącz do istniejącej grupy</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground">Dołącz do istniejącej grupy</h3>
         <Suspense fallback={null}>
           {scanOpen && <QrScanDialog open={scanOpen} onOpenChange={setScanOpen} onCode={(c) => { setJoinInput(c); toast.success("Kod odczytany — kliknij Dołącz"); }} />}
         </Suspense>

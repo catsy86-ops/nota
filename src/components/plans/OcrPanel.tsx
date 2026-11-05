@@ -19,7 +19,7 @@ export type OcrRun =
   | { state: "error"; message: string };
 
 const sectionCls = "space-y-2 border-b border-border/60 px-3 py-3 last:border-b-0";
-const h3 = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
+const h3 = "text-xs font-semibold text-muted-foreground";
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
 export function OcrSection({ run, engineCached, proposals, texts, focusId, onFocus, onRun, onCancel, onEdit, onAccept, onReject, onAcceptSure, onRemoveText }: {

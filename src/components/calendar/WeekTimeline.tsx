@@ -127,7 +127,7 @@ export function WeekTimeline({ weekStart, byDay, titleOf, shiftOf, onEdit, onOpe
               key === todayKey ? "font-semibold text-primary-ink" : "text-muted-foreground",
             )}
           >
-            <span className="block uppercase tracking-wide">{format(day, "EEE", { locale: pl })}</span>
+            <span className="block">{format(day, "EEE", { locale: pl })}</span>
             <span className="block font-mono tabular-nums text-sm">{format(day, "d")}</span>
           </button>
         ))}

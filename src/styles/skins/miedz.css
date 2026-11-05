@@ -105,12 +105,13 @@ html[data-skin="miedz"] h2 {
 /* Przycisk główny jak wypolerowana miedź (plan motywów 2026-10-30, 0.1): gradient liczony z `--primary`,
    więc idzie za akcentem i nie obniża kontrastu — jasny schemat: od `--primary` w ciemniejsze (biały tekst
    zyskuje), ciemny: od jaśniejszego do `--primary` (ciemny tekst zyskuje). Odblask po najechaniu tylko
-   w ciemnym, gdzie rozjaśnia tło pod ciemnym tekstem; w jasnym obniżałby kontrast białego tekstu. */
+   w ciemnym, gdzie rozjaśnia tło pod ciemnym tekstem; w jasnym obniżałby kontrast białego tekstu.
+   Nieaktywny przycisk bez miedzi: ma neutralne tło (nowy plan 2.4). */
 @supports (color: oklch(from red l c h)) {
-  html[data-skin="miedz"] button.bg-primary {
+  html[data-skin="miedz"] button.bg-primary:not(:disabled) {
     background-image: linear-gradient(180deg, var(--primary), oklch(from var(--primary) calc(l - 0.09) c h));
   }
-  html[data-skin="miedz"].dark button.bg-primary {
+  html[data-skin="miedz"].dark button.bg-primary:not(:disabled) {
     background-image: linear-gradient(115deg, transparent 30%, hsl(36 90% 85% / 0.4) 45%, transparent 60%),
       linear-gradient(180deg, oklch(from var(--primary) calc(l + 0.08) c h), var(--primary));
     background-size: 250% 100%, 100% 100%;

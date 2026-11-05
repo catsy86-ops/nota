@@ -39,7 +39,7 @@ export function SiteTallyBar({ tally, points }: { tally: SiteTally; /** H2.2: pu
           aria-label={c.aria}
           className="pressable flex min-w-0 flex-col items-start gap-1 px-3 py-2 text-left first:rounded-l-xl last:rounded-r-xl hover:bg-muted/60 coarse:min-h-11"
         >
-          <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{c.label}</span>
+          <span className="text-xs font-semibold text-muted-foreground">{c.label}</span>
           <span className={cn("font-mono text-lg leading-none tabular-nums", c.tone === "alarm" ? "text-destructive-ink" : c.tone === "quiet" ? "text-muted-foreground" : "text-foreground")}>{c.value}</span>
           {c.sub && <span className="max-w-full truncate text-2xs text-muted-foreground">{c.sub}</span>}
         </button>

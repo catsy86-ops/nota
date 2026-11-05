@@ -12,7 +12,7 @@ export function HandoverPaper({ handover: h }: { handover: Handover }) {
   return (
     <article className="report-paper space-y-4 text-sm" aria-label="Protokół odbioru">
       <header className="border-b-2 border-foreground/80 pb-2">
-        <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
           <MapPin className="h-3.5 w-3.5" aria-hidden />{h.site}
         </p>
         <h2 className="font-display text-xl leading-tight">Protokół odbioru instalacji wodno-kanalizacyjnej</h2>

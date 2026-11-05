@@ -112,7 +112,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
             <div key={t.label} className="rounded-card border border-border/60 bg-muted/30 p-3 text-center">
               <t.icon className="w-4 h-4 mx-auto text-primary-ink mb-1" />
               <p className="text-lg font-display font-bold">{t.value}</p>
-              <p className="text-2xs uppercase tracking-wider text-muted-foreground">{t.label}</p>
+              <p className="text-xs text-muted-foreground">{t.label}</p>
             </div>
           ))}
         </div>
@@ -130,7 +130,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
         </div>
 
         <div className="pt-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Aktywność (14 dni)</p>
+          <p className="text-xs font-semibold text-muted-foreground mb-2">Aktywność (14 dni)</p>
           <div className="h-24 rounded-card border border-border/60 bg-muted/20 p-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={activity}>
@@ -156,7 +156,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
 
         <div className="pt-4 space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Odznaki</p>
+            <p className="text-xs font-semibold text-muted-foreground">Odznaki</p>
             <Button variant="ghost" size="sm" onClick={() => setResetAsk(true)} className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-destructive-ink">
               <RotateCcw className="w-3 h-3" /> Resetuj
             </Button>
@@ -182,7 +182,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
                     </p>
                   )}
                 </div>
-                {done && <span className="text-2xs font-bold text-primary-ink uppercase">✓</span>}
+                {done && <span className="text-xs font-bold text-primary-ink">✓</span>}
               </div>
             );
           })}

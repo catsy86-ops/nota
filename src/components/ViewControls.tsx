@@ -75,7 +75,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
         {/* Fokus wraca na przycisk bez przewijania — inaczej po zmianie układu (`changeView`
             zachowuje miejsce na liście) strona odjeżdżała do nagłówka. */}
         <DropdownMenuContent align="end" className="w-56" onCloseAutoFocus={(e) => { e.preventDefault(); layoutTriggerRef.current?.focus({ preventScroll: true }); }}>
-          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Układ</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xs">Układ</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.layout} onValueChange={(v) => changeView(() => setViewPref("layout", v as Layout))}>
             {LAYOUTS.map((l) => (
               <DropdownMenuRadioItem key={l.v} value={l.v}>
@@ -84,7 +84,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
             ))}
           </DropdownMenuRadioGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Gęstość</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xs">Gęstość</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.density} onValueChange={(v) => changeView(() => setViewPref("density", v as Density))}>
             <DropdownMenuRadioItem value="compact">Kompakt</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="cozy">Komfort</DropdownMenuRadioItem>
@@ -93,7 +93,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           {(prefs.layout === "masonry" || prefs.layout === "grid") && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Kolumny</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs">Kolumny</DropdownMenuLabel>
               {/* Na telefonie mieszczą się najwyżej 2 kolumny — 3 i 4 dawały tam to samo co 2, więc ich nie ma. */}
               <div className="px-2 pb-2 flex items-center gap-1" role="group" aria-label="Liczba kolumn">
                 <button
@@ -135,7 +135,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <TooltipContent side="bottom" className="text-xs">Sortowanie</TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="end" className="w-52">
-          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Sortuj wg</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xs">Sortuj wg</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.sortKey} onValueChange={(v) => setViewPref("sortKey", v as SortKey)}>
             {sortOptions(propDefs).map((s) => (
               <DropdownMenuRadioItem key={s.v} value={s.v}>{s.label}</DropdownMenuRadioItem>
@@ -151,7 +151,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
             </>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Grupuj</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xs">Grupuj</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.groupBy} onValueChange={(v) => changeView(() => setViewPref("groupBy", v as GroupBy))}>
             {GROUPS.map((g) => (
               <DropdownMenuRadioItem key={g.v} value={g.v}>{g.label}</DropdownMenuRadioItem>
@@ -177,7 +177,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <TooltipContent side="bottom" className="text-xs">Filtry</TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="end" className="w-60">
-          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Kolor</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xs">Kolor</DropdownMenuLabel>
           <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => setViewPref("filterColor", "all")}
@@ -202,7 +202,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           {allLabels.length > 0 && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Etykieta</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs">Etykieta</DropdownMenuLabel>
               <div className="max-h-40 overflow-y-auto">
                 <DropdownMenuRadioGroup value={prefs.filterLabel} onValueChange={(v) => setViewPref("filterLabel", v)}>
                   <DropdownMenuRadioItem value="all">Wszystkie</DropdownMenuRadioItem>
@@ -214,7 +214,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
             </>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Priorytet</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xs">Priorytet</DropdownMenuLabel>
           <div className="px-2 pb-2 grid grid-cols-3 gap-1">
             <button
               onClick={() => setViewPref("filterPriority", "all")}

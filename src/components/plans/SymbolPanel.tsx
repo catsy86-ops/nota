@@ -7,7 +7,7 @@ import { SYMBOL_META, SYSTEM_META } from "@/lib/plans/systems";
 import { cn } from "@/lib/utils";
 
 const sectionCls = "space-y-2 border-b border-border/60 px-3 py-3 last:border-b-0";
-const h3 = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
+const h3 = "text-xs font-semibold text-muted-foreground";
 const field = "h-10 w-full rounded-field border border-border bg-background px-3 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 

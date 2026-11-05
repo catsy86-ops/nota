@@ -63,7 +63,7 @@ export function WholesaleOrderDialog({ open, onOpenChange, groups, van, dir }: {
           <div className="-mx-1 max-h-[55dvh] space-y-3 overflow-y-auto px-1">
             {groups.map((g) => (
               <section key={g.siteId} aria-label={`Na budowę: ${g.siteName}`} data-testid="wholesale-group" className="rounded-field border border-border p-2.5">
-                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Na budowę: <span className="normal-case text-foreground">{g.siteName}</span></h3>
+                <h3 className="mb-1 text-xs font-semibold text-muted-foreground">Na budowę: <span className="normal-case text-foreground">{g.siteName}</span></h3>
                 <ul className="space-y-0.5 text-sm">
                   {g.missing.map((s) => (
                     <li key={s.id} className="flex items-baseline justify-between gap-3">
@@ -88,7 +88,7 @@ export function WholesaleOrderDialog({ open, onOpenChange, groups, van, dir }: {
             ))}
             {van.length > 0 && (
               <section aria-label="Do auta" data-testid="wholesale-van" className="rounded-field border border-border p-2.5">
-                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Do auta</h3>
+                <h3 className="mb-1 text-xs font-semibold text-muted-foreground">Do auta</h3>
                 <ul className="space-y-0.5 text-sm">
                   {van.map((v) => (
                     <li key={v.name} className="flex items-baseline justify-between gap-3">

@@ -208,7 +208,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
           onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setSaving(false); } }}
           className="absolute right-0 top-full z-dropdown mt-1.5 w-72 max-w-[90vw] space-y-2 rounded-card border border-border bg-popover p-3 shadow-elevation-3"
         >
-          <label className="block text-2xs font-semibold uppercase tracking-wider text-muted-foreground" htmlFor={`${listId}-name`}>
+          <label className="block text-xs font-semibold text-muted-foreground" htmlFor={`${listId}-name`}>
             Nazwa filtra
           </label>
           <input enterKeyHint="search" autoComplete="off"
@@ -228,7 +228,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
             <button
               type="submit"
               disabled={!name.trim()}
-              className="pressable rounded-field bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+              className="pressable rounded-field bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:bg-muted disabled:text-muted-foreground"
             >
               Zapisz filtr
             </button>

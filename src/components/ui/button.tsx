@@ -5,17 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 // Wciśnięcie = dociśnięcie: reguła `.pressable` z index.css (1 px w dół, ciemniej) + wewnętrzny cień.
+// Nieaktywny (nowy plan 2.4): bez `opacity-50` — blady bursztyn wyglądał na zepsuty i miał za mały kontrast.
+// Wypełnione warianty przechodzą na neutralne tło z tekstem `muted-foreground`, obrysowe tylko szarzeją.
+// Czego brakuje, mówi linijka pod formularzem (`aria-describedby`), nie sam przycisk.
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control text-sm font-medium ring-offset-background pressable active:shadow-[inset_0_1px_2px_color-mix(in srgb, var(--foreground) 12%, transparent)] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:[stroke-width:1.75]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control text-sm font-medium ring-offset-background pressable active:shadow-[inset_0_1px_2px_color-mix(in srgb, var(--foreground) 12%, transparent)] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:[stroke-width:1.75]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-muted hover:text-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-muted hover:text-foreground",
-        link: "text-primary-ink underline-offset-4 hover:underline active:translate-none! active:shadow-none active:filter-none!",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:bg-muted disabled:text-muted-foreground",
+        outline: "border border-input bg-background hover:bg-muted hover:text-foreground disabled:text-muted-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:bg-muted disabled:text-muted-foreground",
+        ghost: "hover:bg-muted hover:text-foreground disabled:text-muted-foreground",
+        link: "text-primary-ink underline-offset-4 hover:underline active:translate-none! active:shadow-none active:filter-none! disabled:text-muted-foreground disabled:no-underline",
       },
       size: {
         default: "h-10 px-4 py-2",

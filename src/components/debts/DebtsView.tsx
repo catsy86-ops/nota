@@ -527,7 +527,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
       <div className="mt-5 space-y-4" role="group" aria-label="Historia">
         {months.map((m) => (
           <section key={m.key} aria-label={monthLabel(m.key)}>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{monthLabel(m.key)}</h3>
+            <h3 className="mb-2 text-xs font-semibold text-muted-foreground">{monthLabel(m.key)}</h3>
             <ol className="space-y-2">
               {m.items.map(({ e, i }) =>
                 editingId === e.id ? (

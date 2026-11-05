@@ -127,7 +127,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
           </div>
 
           <label className="block space-y-1 text-sm">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Co zrobić</span>
+            <span className="text-xs font-semibold text-muted-foreground">Co zrobić</span>
             <textarea
               key={job.scope ?? ""}
               defaultValue={job.scope ?? ""}
@@ -150,7 +150,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
             />
           </label>
 
-          <h4 className="border-t border-dashed border-border pt-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Wycena</h4>
+          <h4 className="border-t border-dashed border-border pt-2.5 text-xs font-semibold text-muted-foreground">Wycena</h4>
           {job.items.length === 0 ? (
             <p className="text-xs text-muted-foreground">Dodaj robociznę i materiał — z nich powstanie PDF dla klienta.</p>
           ) : (

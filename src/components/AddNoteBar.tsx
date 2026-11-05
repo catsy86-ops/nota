@@ -677,7 +677,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                     </IconButton>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-3 space-y-3" align="start">
-                    <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Etykiety</p>
+                    <p className="text-xs font-semibold font-display text-muted-foreground">Etykiety</p>
                     <div className="flex gap-1 flex-wrap">
                       {allLabels.map((l) => (
                         <button key={l} type="button" onClick={() => toggleLabel(l)} aria-pressed={labels.includes(l)} className="rounded-control outline-hidden focus-visible:ring-2 focus-visible:ring-ring"><Badge variant={labels.includes(l) ? "default" : "outline"} className="cursor-pointer text-xs">{l}</Badge></button>
@@ -717,7 +717,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                       </IconButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3 space-y-2" align="start">
-                      <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Podstrona w</p>
+                      <p className="text-xs font-semibold font-display text-muted-foreground">Podstrona w</p>
                       <select
                         value={parentId ?? ""}
                         onChange={(e) => setParentId(e.target.value || null)}

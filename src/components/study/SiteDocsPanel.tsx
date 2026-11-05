@@ -95,7 +95,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
   return (
     <section aria-label="Plany i dokumenty" data-testid="site-docs" className="space-y-2 rounded-card border border-border bg-card p-3">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h3 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
           <FolderOpen className="h-3.5 w-3.5" aria-hidden />Plany i dokumenty
         </h3>
         {docs.length > 0 && <span className="font-mono text-xs tabular-nums text-muted-foreground">{docs.length}</span>}

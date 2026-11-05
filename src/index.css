@@ -718,9 +718,10 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   .section-label {
     @apply flex items-center gap-1.5 text-sm font-semibold text-foreground;
   }
-  /* Wersalikowy nagłówek grupy (pasek boczny, dolny pasek, tablica, quiz): jeden przepis zamiast czterech (§audyt 1). */
+  /* Nagłówek grupy (pasek boczny, dolny pasek, tablica, quiz): jeden przepis zamiast czterech (§audyt 1).
+     Nowy plan 2.6: zdaniem, nie wersalikami — 12 px, bez rozstrzelenia. */
   .section-caps {
-    @apply text-2xs font-semibold uppercase tracking-wider text-muted-foreground;
+    @apply text-xs font-semibold text-muted-foreground;
   }
 
   /* Tabliczka rysunkowa na końcu kartki: nazwa widoku w każdym skinie. Ostatni element `<main>` (nowy plan 1.4):

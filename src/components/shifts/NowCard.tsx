@@ -19,7 +19,7 @@ function EndedCard({ occ }: { occ: ShiftOccurrence }) {
     <section aria-label="Zakończona zmiana" className="relative overflow-hidden rounded-card border border-border/60 bg-card p-4 flex items-center gap-4">
       <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: occ.type.color }} />
       <div className="min-w-0 flex-1">
-        <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Zmiana się skończyła</p>
+        <p className="text-xs font-semibold text-muted-foreground">Zmiana się skończyła</p>
         <p className="font-display font-bold line-clamp-2 wrap-anywhere">
           {occ.type.name} <span className="font-normal text-muted-foreground tabular-nums">do {format(occ.end, "HH:mm")}</span>
         </p>
@@ -56,7 +56,7 @@ export function NowCard({ data }: { data: ShiftData }) {
         {main.type.short}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
           {/* Pulsujący punkt „trwa teraz” — czysty CSS, bez zegara klatek. */}
           {current && <span aria-hidden className="now-dot w-1.5 h-1.5 rounded-full" style={{ backgroundColor: main.type.color }} />}
           {current ? "Teraz w pracy" : "Następna zmiana"}

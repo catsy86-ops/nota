@@ -41,7 +41,7 @@ export function SitePlan({ site }: { site: SiteInfo }) {
 
   return (
     <section aria-label="Plan na dziś" className="mt-3 space-y-2 rounded-card border border-border/60 bg-muted/30 p-3" data-testid="site-plan">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Plan na dziś</h3>
+      <h3 className="text-xs font-semibold text-muted-foreground">Plan na dziś</h3>
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">Wpisz 3–5 zadań na budowę. Niezrobione przejdą na jutro.</p>
       ) : (

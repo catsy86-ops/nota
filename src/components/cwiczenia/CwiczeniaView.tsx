@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import { MissingHint } from "@/components/ui/missing-hint";
 import { Pill, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -208,6 +209,7 @@ function AddSupplementForm({ notes }: { notes: NotesActions }) {
   const [remind, setRemind] = useState(true);
   const [time, setTime] = useState(DEFAULT_TIME.rano);
   const canSave = useMemo(() => name.trim().length > 0, [name]);
+  const hintId = useId();
 
   const pickWhen = (w: SupplementWhen) => {
     setWhen(w);
@@ -273,7 +275,8 @@ function AddSupplementForm({ notes }: { notes: NotesActions }) {
           className="w-auto coarse:h-11"
         />
       </div>
-      <Button type="submit" size="sm" disabled={!canSave} className="coarse:h-11">Dodaj</Button>
+      <Button type="submit" size="sm" disabled={!canSave} aria-describedby={hintId} className="coarse:h-11">Dodaj</Button>
+      <MissingHint id={hintId} missing={canSave ? null : "Wpisz nazwę odżywki."} />
     </form>
   );
 }

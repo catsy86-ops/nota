@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { MissingHint } from "@/components/ui/missing-hint";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TriangleAlert, Copy, Download, KeyRound, Lock, Printer, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -224,6 +225,11 @@ function SetupForm({ onCreated }: { onCreated: (recoveryCode: string | null) => 
   const strength = passwordStrength(password);
   const mismatch = confirm.length > 0 && confirm !== password;
   const canSubmit = strength.ok && password === confirm && ack && !busy;
+  const hintId = useId();
+  const missing = busy || canSubmit ? null
+    : !strength.ok ? `Hasło: co najmniej ${MIN_PASSWORD_LENGTH} znaków i nie oczywiste.`
+    : password !== confirm ? "Powtórz to samo hasło."
+    : "Zaznacz, że rozumiesz brak odzyskiwania hasła.";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -263,8 +269,9 @@ function SetupForm({ onCreated }: { onCreated: (recoveryCode: string | null) => 
         <span>Rozumiem, że zapomnianego hasła nie da się odzyskać.</span>
       </label>
       {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
+      <MissingHint id={hintId} missing={missing} />
       <ResponsiveDialogFooter>
-        <Button type="submit" disabled={!canSubmit}>{busy ? "Szyfruję…" : "Ustaw hasło"}</Button>
+        <Button type="submit" disabled={!canSubmit} aria-describedby={hintId}>{busy ? "Szyfruję…" : "Ustaw hasło"}</Button>
       </ResponsiveDialogFooter>
     </form>
   );

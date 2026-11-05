@@ -27,7 +27,7 @@ export function PriorityPicker({ priority, onSet }: PriorityPickerProps) {
         </motion.button>
       </PopoverTrigger>
       <PopoverContent className="w-44 p-2 space-y-1" align="start" onClick={(e) => e.stopPropagation()}>
-        <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider px-1 pb-1">Priorytet</p>
+        <p className="text-xs font-semibold font-display text-muted-foreground px-1 pb-1">Priorytet</p>
         {OPTIONS.map((p) => (
           <button
             key={p}

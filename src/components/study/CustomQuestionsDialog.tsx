@@ -160,7 +160,7 @@ export function CustomQuestionsDialog({ open, onOpenChange, prefill }: { open: b
         </form>
 
         <section aria-label="Moje pytania" className="space-y-2 border-t border-border pt-4">
-          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <h3 className="text-xs font-medium text-muted-foreground">
             {questions.length === 0 ? "Jeszcze nic nie dodano" : pluralPl(questions.length, ["pytanie", "pytania", "pytań"])}
           </h3>
           {questions.length > 0 && (

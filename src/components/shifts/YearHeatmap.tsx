@@ -42,7 +42,7 @@ export function YearHeatmap({ year, dayMinutes }: { year: number; dayMinutes: Ma
 
   return (
     <figure className="space-y-2">
-      <figcaption className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dni roku</figcaption>
+      <figcaption className="text-xs font-semibold text-muted-foreground">Dni roku</figcaption>
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" role="img" aria-label={`Mapa godzin pracy ${year}: każdy dzień to komórka, im ciemniej, tym więcej godzin. Dokładne liczby są w tabeli.`}>
         {cells}
       </svg>
