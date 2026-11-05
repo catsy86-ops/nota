@@ -38,8 +38,6 @@ export function PaperBackdrop() {
       className="paper-grid pointer-events-none fixed inset-0 -z-raised overflow-hidden bg-background"
       style={{ contain: "strict" }}
     >
-      {/* Tabliczka rysunkowa: napis zależy od widoku (`html[data-view]`, styl w `index.css`). */}
-      <span className="paper-stamp" />
       {/* Deszcz w obu schematach Matrycy (plan motywów 2.5): jasny ma ciemne znaki na papierze. */}
       {skin === "matrix" && backdrop !== "plain" && (
         <Suspense fallback={null}>

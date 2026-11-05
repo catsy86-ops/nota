@@ -146,7 +146,8 @@ test("skrzynka 4.2–4.4: pasek z licznikiem, wiek na kaflu, pieczątka „Posor
   await expect(bar.getByTestId("inbox-count")).toHaveText("1");
   await expect(page.locator("[data-note-id]").filter({ hasText: `Pomysł ${stamp}` }).locator("[data-inbox-age]")).toHaveText("dziś");
 
-  await bar.getByRole("button", { name: "Porządkuj skrzynkę (1)" }).click();
+  // Od `md` „Porządkuj” stoi w akcjach główki (nowy plan 1.1); na telefonie w pasku.
+  await page.getByRole("button", { name: "Porządkuj skrzynkę (1)" }).click();
   const dialog = page.getByRole("dialog", { name: "Porządkowanie skrzynki" });
   await expect(dialog.getByRole("progressbar", { name: "Postęp porządkowania" })).toHaveAttribute("aria-valuenow", "0");
   await dialog.getByRole("button", { name: "Archiwizuj" }).click();

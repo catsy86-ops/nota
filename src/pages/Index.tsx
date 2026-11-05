@@ -56,6 +56,7 @@ import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
 import { ViewTitle } from "@/components/ViewTitle";
+import { PageActionsProvider } from "@/components/PageActions";
 import { NoteGrid } from "@/components/NoteGrid";
 import { BoardColumn } from "@/components/BoardColumn";
 import { NoteBoard } from "@/components/NoteBoard";
@@ -745,15 +746,16 @@ const Index = () => {
 
         {/* `flex gap`, nie `space-y`: ukryta na sm+ wyszukiwarka nie dokłada marginesu nad treścią. */}
         {/* Dziś na telefonie: ciaśniejsze odstępy między kartami, mniej przewijania na 390 px. */}
-        <main ref={mainRef} className={`flex-1 max-w-352 mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col pb-safe ${view === "today" ? "gap-4 sm:gap-10" : "gap-8 sm:gap-10"}`}>
+        {/* Akcje widoków trafiają do główki przez portal (nowy plan 1.1). */}
+        <PageActionsProvider>
+        <main ref={mainRef} className={`flex-1 max-w-[calc(var(--page-wide)+3rem)] mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col pb-safe ${view === "today" ? "gap-4 sm:gap-10" : "gap-8 sm:gap-10"}`}>
           <OlderDeviceBanner onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }} />
-          {/* Główka kartki w każdym dziale (plan wyglądu, Faza 1); Długi i Ćwiczenia mają węższą kolumnę. */}
+          {/* Główka kartki w każdym dziale (plan wyglądu, Faza 1); lewa krawędź wspólna z treścią (nowy plan 1.2). */}
           {view !== "widget" && (
             <ViewTitle
               view={view}
               title={view === "folder" ? folders.find((f) => f.id === activeFolder)?.name || "Folder" : view === "label" ? `#${activeLabel}` : undefined}
               count={isAppView(view) || view === "reminders" ? undefined : displayNotes.length}
-              className={view === "debts" || view === "cwiczenia" ? "mx-auto max-w-2xl" : undefined}
             />
           )}
           {!isAppView(view) && (
@@ -994,7 +996,11 @@ const Index = () => {
             {!isAppView(view) && view !== "widget" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={view === "inbox" ? undefined : () => expandAddNote(view === "reminders" ? "reminder" : undefined)} onClearSearch={() => setSearch("")} />}
           </AnimatePresence>
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
+          {/* Tabliczka rysunkowa na końcu kartki (nowy plan 1.4, NP-3): po ostatniej sekcji, a przy krótkiej treści
+              na dole ekranu (`margin-top: auto`). Napis wybiera `html[data-view]`, styl w `index.css`. */}
+          <span aria-hidden className="paper-stamp" />
         </main>
+        </PageActionsProvider>
       </div>
     </div>
 

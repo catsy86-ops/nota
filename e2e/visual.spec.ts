@@ -244,7 +244,7 @@ for (const size of SIZES) {
       test(`plany-edytor — ${tag} @visual`, async ({ page }) => {
         await prepare(page, look.skin, look.theme);
         await page.goto("/plany");
-        await page.getByTestId("plans-list").getByRole("button", { name: "Nowa analiza" }).click();
+        await page.getByRole("button", { name: "Nowa analiza" }).click();
         const dialog = page.getByTestId("plan-new");
         await dialog.getByTestId("plan-file").setInputFiles({ name: "Parter.png", mimeType: "image/png", buffer: await planPng(page) });
         await dialog.getByRole("button", { name: "Utwórz analizę" }).click();

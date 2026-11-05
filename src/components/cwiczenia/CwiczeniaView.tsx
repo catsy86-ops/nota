@@ -68,7 +68,7 @@ export function CwiczeniaView() {
 
   return (
     // Tytuł i grupa są w główce kartki (`ViewTitle`).
-    <section aria-label="Ćwiczenia" className="mx-auto w-full max-w-2xl pb-32">
+    <section aria-label="Ćwiczenia" className="w-full max-w-(--page-form) pb-32">
 
       <div role="group" aria-label="Dział Ćwiczeń" className="mb-4 flex gap-1 rounded-card bg-muted p-0.5 sm:hidden">
         {CWICZENIA_TABS.map((t) => (

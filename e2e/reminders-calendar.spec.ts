@@ -381,13 +381,14 @@ test("terminy da się pobrać jako plik .ics", async ({ page }) => {
   expect(all.suggestedFilename()).toMatch(/^przypomnienia-.*\.ics$/);
 });
 
-test("telefon: .ics i Drukuj są w menu „Więcej akcji” @mobile", async ({ page }, testInfo) => {
+test("telefon: .ics i Drukuj w rzędzie akcji pod tytułem @mobile", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes("iphone"), "tylko układ telefonu");
   await page.goto("/kalendarz");
-  await expect(page.getByRole("button", { name: "Więcej akcji kalendarza" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Eksportuj nadchodzące terminy do kalendarza (.ics)" })).toBeHidden();
-  await expect(page.getByRole("button", { name: "Drukuj terminy tego miesiąca" })).toBeHidden();
-  await page.getByRole("button", { name: "Więcej akcji kalendarza" }).click();
-  await expect(page.getByRole("menuitem", { name: /Pobierz .ics/ })).toBeVisible();
-  await expect(page.getByRole("menuitem", { name: /Drukuj terminy miesiąca/ })).toBeVisible();
+  // Nowy plan 1.1: akcje działu w główce; na telefonie rząd pod tytułem zamiast menu „⋯”.
+  const actions = page.locator("[data-page-actions]");
+  await expect(actions.getByRole("button", { name: "Eksportuj nadchodzące terminy do kalendarza (.ics)" })).toBeVisible();
+  await expect(actions.getByRole("button", { name: "Drukuj terminy tego miesiąca" })).toBeVisible();
+  const title = await page.getByRole("heading", { level: 1 }).boundingBox();
+  const row = await actions.boundingBox();
+  expect(row!.y).toBeGreaterThan(title!.y + title!.height - 1);
 });

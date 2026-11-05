@@ -78,7 +78,7 @@ export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDE
     <div className="space-y-2">
     <form
       // 4.1: ten sam kształt, cień i obrys co zwinięty pasek „Zapisz notatkę…” (AddNoteBar), żeby oba pola czytały się jako jedno.
-      className={cn("flex w-full max-w-xl items-start gap-3 rounded-card border bg-card px-3 py-2 note-shadow transition-[box-shadow] focus-ring-gradient hover:shadow-elevation-3", dragging ? "border-primary ring-2 ring-primary/40" : "border-border")}
+      className={cn("flex w-full max-w-(--page-form) items-start gap-3 rounded-card border bg-card px-3 py-2 note-shadow transition-[box-shadow] focus-ring-gradient hover:shadow-elevation-3", dragging ? "border-primary ring-2 ring-primary/40" : "border-border")}
       onSubmit={(e) => { e.preventDefault(); submit(); }}
       onDragOver={(e) => { if (onFiles && e.dataTransfer.types.includes("Files")) { e.preventDefault(); setDragging(true); } }}
       onDragLeave={() => setDragging(false)}

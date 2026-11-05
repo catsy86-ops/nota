@@ -1,5 +1,6 @@
-import { ChevronLeft, ChevronRight, Download, Keyboard, MoreHorizontal, Printer } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ChevronLeft, ChevronRight, Download, Keyboard, Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PageActions } from "@/components/PageActions";
 import { format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 
@@ -15,7 +16,7 @@ interface CalendarHeaderProps {
   onExportAll: () => void;
 }
 
-/** Nagłówek kalendarza: miesiąc i strzałki, „Dziś”, .ics, skróty, wydruk; na telefonie menu „⋯” (K5.2). */
+/** Pasek miesiąca: strzałki, „Dziś” i skróty; druk i .ics wstawia do akcji główki (nowy plan 1.1, wcześniej menu „⋯” K5.2). */
 export function CalendarHeader({ month, selectedDay, showKeys, onPrev, onNext, onToday, onToggleKeys, onPrint, onExportAll }: CalendarHeaderProps) {
   const isThisMonth = isSameMonth(month, new Date());
   return (
@@ -50,16 +51,6 @@ export function CalendarHeader({ month, selectedDay, showKeys, onPrev, onNext, o
           Dziś
         </button>
       )}
-      {/* Na telefonie „.ics” i „Drukuj” są w menu „⋯” — nagłówek ma miejsce tylko na strzałki i miesiąc. */}
-      <button
-        onClick={onExportAll}
-        aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)"
-        title="Eksportuj nadchodzące terminy do kalendarza (.ics)"
-        className="ml-auto sm:ml-0 order-last shrink-0 hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <Download className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline">.ics</span>
-      </button>
       {/* Ściągawka skrótów w podpowiedzi zamiast stałego tekstu w nagłówku. */}
       <button
         type="button"
@@ -72,38 +63,15 @@ export function CalendarHeader({ month, selectedDay, showKeys, onPrev, onNext, o
       >
         <Keyboard className="w-4 h-4" aria-hidden />
       </button>
-      <button
-        type="button"
-        onClick={onPrint}
-        aria-label="Drukuj terminy tego miesiąca"
-        title="Drukuj terminy tego miesiąca"
-        className="shrink-0 hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <Printer className="w-3.5 h-3.5" aria-hidden />
-        <span>Drukuj</span>
-      </button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label="Więcej akcji kalendarza"
-            title="Więcej akcji"
-            className="ml-auto order-last shrink-0 sm:hidden coarse:min-h-11 coarse:min-w-11 inline-flex items-center justify-center p-2 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <MoreHorizontal className="w-4 h-4" aria-hidden />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuItem onSelect={() => onExportAll()}>
-            <Download className="w-4 h-4 mr-2" aria-hidden />
-            Pobierz .ics (nadchodzące terminy)
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={onPrint}>
-            <Printer className="w-4 h-4 mr-2" aria-hidden />
-            Drukuj terminy miesiąca
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Druk i .ics są akcjami działu, więc stoją w główce (nowy plan 1.1); na telefonie jako rząd pod tytułem. */}
+      <PageActions>
+        <Button variant="ghost" size="sm" onClick={onPrint} aria-label="Drukuj terminy tego miesiąca" title="Drukuj terminy tego miesiąca" className="gap-1.5 coarse:min-h-11">
+          <Printer className="h-4 w-4" aria-hidden />Drukuj
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onExportAll} aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)" title="Eksportuj nadchodzące terminy do kalendarza (.ics)" className="gap-1.5 coarse:min-h-11">
+          <Download className="h-4 w-4" aria-hidden />.ics
+        </Button>
+      </PageActions>
     </header>
   );
 }

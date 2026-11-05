@@ -20,8 +20,8 @@ test("notatka i grafik z jednej karty pojawiają się w drugiej bez odświeżani
   // Grafik otwarty w obu kartach (nawigacja w aplikacji), dzień naniesiony w drugiej.
   await a.getByRole("button", { name: "Grafik", exact: true }).click();
   await b.getByRole("button", { name: "Grafik", exact: true }).click();
-  // Domyślne rodzaje od G3.1: Urlop, L4, Dniówka, Budowa — pędzel wybierany jawnie.
+  // Domyślne rodzaje od G3.1: Urlop, L4, Dniówka, Budowa — pędzel wybierany jawnie. „, dziś” — gdy test trafia na 5. dzień miesiąca.
   await b.getByRole("radio", { name: /Dniówka/ }).click();
-  await b.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
-  await expect(a.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dniówka/ }).first()).toBeVisible();
+  await b.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+(, dziś)?, wolne$/ }).first().click();
+  await expect(a.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+(, dziś)?, Dniówka/ }).first()).toBeVisible();
 });

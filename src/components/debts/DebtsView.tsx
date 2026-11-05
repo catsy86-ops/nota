@@ -16,6 +16,7 @@ import { addDebt, addDebtFromText, removeDebt, renamePeople, restoreDebt, restor
 import { shareOrCopy } from "@/lib/shareOrCopy";
 import { downloadBlob } from "@/lib/downloadBlob";
 import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
+import { PageActions } from "@/components/PageActions";
 import { avatarHue, balances, debtsCsv, initialOf, debtSide, doubleSettle, foldName, personKey, personStatement, runningBalances, DEBT_KIND_LABEL, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 
 /**
@@ -81,22 +82,20 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
   };
 
   return (
-    // Tytuł i grupa są w główce kartki (`ViewTitle`); tu zostaje opis i „Ukryj kwoty”.
-    <section aria-label="Długi" className="mx-auto w-full max-w-2xl pb-32">
-      <header className="mb-5">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">Kto ile pożyczył i ile już oddał.</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="tap-target shrink-0 gap-1.5"
-            onClick={() => { setHideAmounts(!hidden); haptic("tap"); }}
-          >
-            {hidden ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
-            {hidden ? "Pokaż kwoty" : "Ukryj kwoty"}
-          </Button>
-        </div>
-      </header>
+    // Tytuł, opis i „Ukryj kwoty” są w główce kartki (`ViewTitle`, nowy plan 1.1); kolumna formularza przy lewej
+    // krawędzi główki (1.2).
+    <section aria-label="Długi" className="w-full max-w-(--page-form) pb-32">
+      <PageActions>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="tap-target shrink-0 gap-1.5"
+          onClick={() => { setHideAmounts(!hidden); haptic("tap"); }}
+        >
+          {hidden ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+          {hidden ? "Pokaż kwoty" : "Ukryj kwoty"}
+        </Button>
+      </PageActions>
 
       <Summary owedToMe={sums.owedToMe} iOwe={sums.iOwe} hidden={hidden} />
       {/* Pusta lista ma własne „Dodaj pierwszy wpis” (4.4) — bez drugiego przycisku obok. */}

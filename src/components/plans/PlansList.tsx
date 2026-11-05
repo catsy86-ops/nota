@@ -1,4 +1,5 @@
 import { ImagePlus, Plus, Ruler, Spline, Trash } from "lucide-react";
+import { PageActions } from "@/components/PageActions";
 import { Button } from "@/components/ui/button";
 import type { PlanImage } from "@/lib/plans/model";
 import { usePlanImageUrl } from "./usePlanImageUrl";
@@ -25,12 +26,13 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
 
   return (
     <section aria-label="Analizy planów" className="space-y-3" data-testid="plans-list">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">
-          {plans.length === 0 ? "Wyznaczaj trasy rur na zrzutach planów i licz ich długość." : `${plans.length} ${pluralPl(plans.length, ["analiza", "analizy", "analiz"])}`}
-        </p>
-        <Button onClick={onNew} className="pressable shrink-0 coarse:h-11"><Plus className="mr-1.5 h-4 w-4" aria-hidden />Nowa analiza</Button>
-      </div>
+      {/* Opis działu jest w główce (`ViewTitle`), „Nowa analiza” w jej akcjach (nowy plan 1.1). */}
+      <PageActions>
+        <Button size="sm" onClick={onNew} className="pressable shrink-0 coarse:h-11"><Plus className="mr-1.5 h-4 w-4" aria-hidden />Nowa analiza</Button>
+      </PageActions>
+      {plans.length > 0 && (
+        <p className="text-sm text-muted-foreground">{plans.length} {pluralPl(plans.length, ["analiza", "analizy", "analiz"])}</p>
+      )}
 
       {plans.length === 0 ? (
         // Pusty stan jako trzy kroki (plan wyglądu, Faza 7): to prawdziwa kolejność pracy, więc numeracja coś mówi.

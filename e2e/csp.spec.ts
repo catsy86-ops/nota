@@ -64,7 +64,7 @@ test("Matryca (kanwa) i Plany (obraz planu na kanwie) nie łamią CSP", async ({
   });
   const violations = await collectViolations(page);
   await page.goto("/plany");
-  await page.getByTestId("plans-list").getByRole("button", { name: "Nowa analiza" }).click();
+  await page.getByRole("button", { name: "Nowa analiza" }).click();
   const png = await page.evaluate(() => {
     const c = document.createElement("canvas");
     c.width = 400; c.height = 300;

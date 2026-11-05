@@ -31,7 +31,7 @@ test("Plany: import zrzutu, edytor z zoomem, odświeżenie, powrót i usunięcie
   const list = page.getByTestId("plans-list");
   await expect(list.getByText("Brak analiz")).toBeVisible();
 
-  await list.getByRole("button", { name: "Nowa analiza" }).click();
+  await page.getByRole("button", { name: "Nowa analiza" }).click();
   const dialog = page.getByTestId("plan-new");
   // Plik, który nie jest obrazem (SVG ze skryptem) — czytelny błąd, nic nie powstaje.
   await dialog.getByTestId("plan-file").setInputFiles({ name: "plan.png", mimeType: "image/png", buffer: Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'><script>alert(1)</script></svg>") });
@@ -83,7 +83,7 @@ test("Plany: dział jest w pasku bocznym, „wstecz” z edytora wraca do listy"
   await page.goto("/");
   await page.getByRole("complementary").getByRole("button", { name: "Plany", exact: true }).click();
   await expect(page).toHaveURL(/\/plany$/);
-  await page.getByTestId("plans-list").getByRole("button", { name: "Nowa analiza" }).click();
+  await page.getByRole("button", { name: "Nowa analiza" }).click();
   await page.getByTestId("plan-new").getByTestId("plan-file").setInputFiles({ name: "a.png", mimeType: "image/png", buffer: await planPng(page, 400, 300) });
   await page.getByTestId("plan-new").getByRole("button", { name: "Utwórz analizę" }).click();
   await expect(page.getByTestId("plan-editor")).toBeVisible();
@@ -102,7 +102,7 @@ async function clickImage(page: Page, x: number, y: number) {
 
 async function newPlan(page: Page, name: string) {
   await page.goto("/plany");
-  await page.getByTestId("plans-list").getByRole("button", { name: "Nowa analiza" }).click();
+  await page.getByRole("button", { name: "Nowa analiza" }).click();
   const dialog = page.getByTestId("plan-new");
   await dialog.getByTestId("plan-file").setInputFiles({ name: `${name}.png`, mimeType: "image/png", buffer: await planPng(page) });
   await dialog.getByRole("button", { name: "Utwórz analizę" }).click();
@@ -223,7 +223,7 @@ test("Plany (faza 4): OCR odczytuje średnice lokalnie — bez żądań na zewn�
     ctx.fillText("Salon", 200, 500);
     return c.toDataURL("image/png").split(",")[1];
   });
-  await page.getByTestId("plans-list").getByRole("button", { name: "Nowa analiza" }).click();
+  await page.getByRole("button", { name: "Nowa analiza" }).click();
   await page.getByTestId("plan-new").getByTestId("plan-file").setInputFiles({ name: "Opisy.png", mimeType: "image/png", buffer: Buffer.from(b64, "base64") });
   await page.getByTestId("plan-new").getByRole("button", { name: "Utwórz analizę" }).click();
   await expect(page.getByTestId("plan-canvas")).toHaveAttribute("data-tx", /\d/);

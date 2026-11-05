@@ -1,6 +1,6 @@
 # Nowy plan: dopracowanie, wygląd i QoL (2026-11-05)
 
-> **Status (2026-11-05):** Etap 0 zrobiony (wyniki pod tabelą Etapu 0). Dalej Etap 1. Uzupełnia `Plan-nowy.md`, którego Cykl 2 jest w toku (Dziś 2.4), i go nie zastępuje. Każda z decyzji NP-1…NP-7 ma rekomendację i czeka na właściciela.
+> **Status (2026-11-05):** Etapy 0 i 1 zrobione (wyniki pod tabelami etapów). Dalej Etap 2. Uzupełnia `Plan-nowy.md`, którego Cykl 2 jest w toku (Dziś 2.4), i go nie zastępuje. Każda z decyzji NP-1…NP-7 ma rekomendację i czeka na właściciela.
 
 ## 1. Skąd ten plan
 
@@ -95,6 +95,14 @@ Zapas precache jest mniejszy niż 29 KiB zakładane w §3 p. 8. Etapy 1–2 musz
 | 1.2 | **Trzy szerokości** jako tokeny (`--page-read`, `--page-form`, `--page-wide`) i jedna lewa krawędź z główką. Długi i Ćwiczenia tracą `mx-auto`, a Dziś dostaje limit 80rem. **Nowe** (V1). | `src/index.css`, widoki | 3 | M |
 | 1.3 | **Szukanie w każdym widoku.** Tam, gdzie nie ma pola szukania notatek (`viewSearches` = false), w tym samym miejscu paska stoi przycisk w kształcie pola: „Szukaj i polecenia… Ctrl+K”. Otwiera paletę, także na komputerze. **Nowe** (V3). | `src/components/AppHeader.tsx:132–142` | 2 | S |
 | 1.4 | **Tabliczka na końcu kartki.** `.paper-stamp` przechodzi z warstwy tła na koniec treści widoku: stoi statycznie po ostatniej sekcji, więc nie prześwituje między kartami. Napis dalej wybiera `html[data-view]`. **Nowe** (V4, decyzja NP-3). | `src/components/PaperBackdrop.tsx`, `src/index.css:726–761` | 1 | S |
+
+**Wynik Etapu 1 (2026-11-05):** 1.1–1.4 zrobione, opis w `opis.md` („Wspólne — szkielet strony”).
+
+- **1.1:** `PageActions` (portal z widoku do główki) i `lead` w `ViewTitle`. W akcjach: „Nowy termin”, „Nowa analiza”, „Ukryj kwoty”, „Porządkuj” (od `md`), „Drukuj” i „.ics”; menu „⋯” Kalendarza na telefonie zniknęło. Opis mają Długi i Plany.
+- **1.2:** tokeny `--page-read/form/wide`. Treść i pasek do 80rem, a Długi, Ćwiczenia, kompozytor i Skrzynka w kolumnie 48rem przy lewej krawędzi. Dziś nie dostał osobnego limitu, bo limit 80rem dotyczy całej treści.
+- **1.3:** przycisk „Szukaj i polecenia… Ctrl+K” w pasku na komputerze tam, gdzie nie ma pola szukania notatek.
+- **1.4:** tabliczka jako ostatni element `<main>`; zniknął wyjątek dla Grafiku.
+- **Miary po Etapie 1:** wejściowy JS 442,4 KB gzip, precache 3,988 MiB (zapas 12,6 KiB, czyli 3,7 KiB mniej, razem z osią dnia). axe 241/241, Vitest 3045/3045, zrzuty 227/227. Smoke `tabs.spec.ts` padał 5. dnia miesiąca (nazwa dnia z „dziś”); test poprawiony.
 
 ### Etap 2: wspólne elementy
 

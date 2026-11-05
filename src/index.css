@@ -723,12 +723,13 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
     @apply text-2xs font-semibold uppercase tracking-wider text-muted-foreground;
   }
 
-  /* Tabliczka rysunkowa w rogu arkusza: nazwa widoku w każdym skinie. Tylko komputer —
-     na telefonie w tym miejscu siedzi dolny pasek. Bez JS: napis wybiera `html[data-view]`. */
+  /* Tabliczka rysunkowa na końcu kartki: nazwa widoku w każdym skinie. Ostatni element `<main>` (nowy plan 1.4):
+     stoi po treści przy prawej krawędzi, a przy krótkiej treści schodzi na dół ekranu. Wcześniej była przyklejona
+     do rogu okna i prześwitywała między kartami. Tylko komputer — na telefonie dół zajmuje dolny pasek.
+     Bez JS: napis wybiera `html[data-view]`. */
   .paper-stamp {
-    position: absolute;
-    right: 1.5rem;
-    bottom: 1.25rem;
+    align-self: flex-end;
+    margin-top: auto;
     padding: 0.5rem 0.875rem;
     border: 1px solid color-mix(in srgb, var(--muted-foreground) 30%, transparent);
     box-shadow: inset 0 0 0 3px var(--background), inset 0 0 0 4px color-mix(in srgb, var(--muted-foreground) 12%, transparent);
@@ -745,8 +746,6 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   html[data-view="reminders"] .paper-stamp::after { content: "PRZYPOMNIENIA · ARKUSZ 1/1"; }
   html[data-view="calendar"] .paper-stamp::after { content: "KALENDARZ · ARKUSZ 1/1"; }
   html[data-view="shifts"] .paper-stamp::after { content: "GRAFIK · ARKUSZ 1/1"; }
-  /* Grafik: prawy dolny róg zajmuje panel podsumowania, więc tabliczka przechodzi na lewo od linków eksportu. */
-  html[data-view="shifts"] .paper-stamp { right: auto; left: 18.5rem; }
   html[data-view="study"] .paper-stamp::after { content: "PRACA · DZIENNIK BUDOWY"; }
   html[data-skin="plan"] .paper-stamp {
     font-family: 'Barlow Condensed', sans-serif;
@@ -1240,6 +1239,14 @@ html[data-motion="reduced"] .n-mark-dot { animation: none; opacity: 0; }
   --brand-via: #ff8a40;
   --brand-to: #ec5562;
   --brand-ink: #111;
+}
+
+/* ── Szerokości strony (nowy plan 2026-11-05, 1.2): trzy kolumny, każda przy lewej krawędzi główki ──
+   czytanie (notatka, ustawienia), formularz (Długi, Ćwiczenia, kompozytor), pulpit (cała treść widoku). */
+:root {
+  --page-read: 42rem;
+  --page-form: 48rem;
+  --page-wide: 80rem;
 }
 /* Przycisk „+” (plan motywów 1.6, krok 3): gradient marki i kolor ikony `--brand-ink` dobrany do niego
    w każdym stylu (ikona ≥3:1 na obu końcach, test w skinContrast.test.ts). `--fab-shade` przyciemnia

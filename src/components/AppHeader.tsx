@@ -76,7 +76,7 @@ export function AppHeader({
       )}
     >
       {/* Stała wysokość: bez kontrolek widoku (kalendarz, grafik) nagłówek nie skacze przy przejściu. */}
-      <div className="max-w-352 mx-auto px-4 sm:px-6 py-3 min-h-[66px] sm:min-h-[70px] flex items-center justify-between gap-3">
+      <div className="max-w-[calc(var(--page-wide)+3rem)] mx-auto px-4 sm:px-6 py-3 min-h-[66px] sm:min-h-[70px] flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -130,6 +130,16 @@ export function AppHeader({
 
         {/* Grafik i Kalendarz nie przeszukują notatek — pole tylko by udawało, że działa. */}
         {viewSearches && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
+        {/* Nowy plan 1.3: w działach bez szukania notatek w tym samym miejscu stoi przycisk w kształcie pola.
+            Otwiera paletę, więc pasek nie jest pusty, a szukanie jest pod ręką w każdym widoku. */}
+        {!viewSearches && onOpenPalette && (
+          <button type="button" onClick={onOpenPalette} aria-keyshortcuts="Control+K"
+            className="hidden sm:flex w-full max-w-md items-center gap-2 rounded-card border border-border bg-muted/60 py-2.5 pl-3 pr-2 text-sm text-muted-foreground transition-colors duration-fast hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            <Search className="h-4 w-4" aria-hidden />
+            <span className="flex-1 truncate text-left">Szukaj i polecenia…</span>
+            <kbd className="rounded-field border border-border bg-background px-1.5 py-0.5 font-mono text-2xs">Ctrl+K</kbd>
+          </button>
+        )}
 
         <div className="flex items-center gap-1">
           {/* Szukanie na telefonie w grupie ikon po prawej, nie samotnie na środku paska. */}

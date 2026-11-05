@@ -148,7 +148,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 - **Grafik — stuknięcie dnia (G3.2).** Obsługa stuknięcia w `ShiftsView.tsx` (pędzel, godziny, czyszczenie, „inspect”) jest w hooku `src/components/shifts/useShiftPaint.ts` (`useShiftPaint`), z `shortDate` (komunikaty czytnika). Zachowanie bez zmian; testy pokrywają ścieżki pędzla w `src/components/shifts` i `src/lib/shifts`.
 - **Grafik — dokończenie planu z 25.10 (G2).** (1) G2.1: karta Dziś (`src/components/review/TodayShiftCard.tsx`) pokazuje „Trwa teraz, do HH:MM” albo „Następna za …”, liczone przez `useShiftNow`. (2) G2.2: pusty miesiąc i pusty tydzień mają jeden pusty stan w `ShiftsView.tsx`; gdy wcześniej są dni, przycisk to „Przedłuż cykl”. (3) G2.3: tygodnie bez 35 h to przyciski otwierające pierwszy dzień tygodnia (`ShiftSummary.tsx`). (4) G2.4: numer ISO w tytule tygodnia; w tabeli roku (`YearSummaryDialog.tsx`) kolumna miesiąca jest przyklejona, a klik w miesiąc zamyka okno i przechodzi do miesiąca (`onOpenMonth`). (5) G2.5: Cofnij/Ponów w wierszu nawigacji; wybór motywu obrazu ma wysokość 44 px na dotyku. Pędzel z „Własnymi godzinami” i przyklejony pasek pędzla nie zrobione (opis w planie niejasny). (6) G2.6: nowy rodzaj zmiany nie ma w palecie bursztynu marki ani czerwieni świąt (`NEW_SHIFT_COLORS` w `model.ts`); edycja istniejącego rodzaju pokazuje pełną paletę.
 - **Marka: NOTKI.** Nazwa aplikacji to NOTKI: tytuł karty i `apple-mobile-web-app-title` (`index.html`), `manifest.webmanifest` (name, short_name), ekran offline, ekran startowy, `aria-label` logo, opis w pasku bocznym, powiadomienia (domyślny tytuł), nazwy plików eksportu i kopii (`notki-kopia-…`, `notki-eksport.*`), tytuł licznika kart (`BASE_TITLE` w `overdueBadge.ts`), nazwa klucza passkey (`passkey.ts`). Logo: `NotkiLogo.tsx` pisze litery N-O-T-K-I w czcionce Unbounded (`tracking-[0.06em]`); monogram `NMonogramLogo.tsx` to litera N, a jej kropka biegnie po ścieżce z `index.css` (`.n-mark-dot`, `offset-path`); napis odręczny `NotatnikWordmark.tsx` ma ręcznie narysowane litery N-O-T-K-I. Ikony PWA i favicon generuje `scripts/generate-icons.mjs` (litera N, uruchomić ponownie po zmianie litery). Nazwy plików i komponentów (`NotkiLogo`, `notki-logo`) zostają. Testy: `e2e/brand-notki.spec.ts`, `e2e/mobile-logo.spec.ts`, `e2e/diagnostics.spec.ts`, `useOverdueBadge.test.ts`, `exportNotes.test.ts`.
-- **Tabliczka i ołówek** (komputer): w rogu tła nazwa widoku („G · ARKUSZ 1/1”, `PaperBackdrop`); kreska ołówka rysuje się przy „Zapisano” (`.pencil-stroke`). Tabliczka na Grafiku przechodzi na lewy dolny róg. Czerwony margines Zeszytu nie jest rysowany (tło nie zna szerokości paska bocznego).
+- **Tabliczka i ołówek** (komputer): nazwa widoku („NOTKI · ARKUSZ 1/1”) na końcu kartki, czyli jako ostatni element `<main>` (nowy plan 1.4, szczegóły w „Szkielet strony”); kreska ołówka rysuje się przy „Zapisano” (`.pencil-stroke`). Czerwony margines Zeszytu nie jest rysowany (tło nie zna szerokości paska bocznego).
 - **Efekty domyślnie.** Zostają tylko przywrócenie z kosza (konfetti) i zamknięty dzień; iskierki, deszcz emoji, fajerwerki, serduszka, bąbelki, tęcza, motyw sezonowy, cytat dnia i odznaka są wyłączone (migracja `kaczy.effectsSettings.defaults2`, późniejsze wybory zostają). Skutek: pinezka przy przypięciu jest częścią „Iskierek”, więc domyślnie jej nie ma.
 - **Pieczątki.** Odznaki statusu i liczniki, które nie są przyciskami (zaległe na Dziś, przegląd tygodnia, „na dziś” przy temacie, status przypomnienia, liczba w nagłówku grupy), mają klasę `.stamp-tag`: obwódka i tekst w jednym kolorze, bez wypełnienia, mono. Przyciski zostają chipami z wypełnieniem.
 - **Kolory** w callout Markdownu, ikonach kopii, sejfie, płomieniu serii i ostrzeżeniu synchronizacji idą z tokenów.
@@ -283,6 +283,54 @@ Plan: `docs/plan-ui-ux-qol-2026-10-25.md`. Faza 0 nie zmienia wyglądu — zbier
 - `e2e/bundle.spec.ts` — bez zmian progu, przechodzi po dodaniu sondy.
 
 Stan 2026-10-25: pełny Vitest 260 plików / 2143 testy zielone; `test:visual` 70/70 w dwóch kolejnych przebiegach po ustabilizowaniu.
+
+## Wspólne — szkielet strony (nowy plan 2026-11-05, Etap 1)
+
+Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
+
+### Co robi
+
+- **Opis i akcje w główce (1.1).** Pod tytułem działu może stać jedno zdanie opisu, a po prawej akcje działu. Na telefonie akcje schodzą pod opis i tworzą jeden rząd. Akcje w główce:
+  - Terminy: „Nowy termin” (bursztynowy, bo to główna akcja);
+  - Plany: „Nowa analiza”;
+  - Długi: „Ukryj kwoty” / „Pokaż kwoty”;
+  - Skrzynka: „Porządkuj” (tylko od `md`, na telefonie zostaje w przyklejonym pasku);
+  - Kalendarz: „Drukuj” i „.ics” (zamiast menu „⋯” na telefonie).
+
+  Opis mają Długi i Plany: to zdania przeniesione z ich dawnych wierszy nad treścią. Przełącznik „Kafle / Lista” w Terminach zostaje w pasku narzędzi pod główką.
+- **Trzy szerokości (1.2).** Tokeny `--page-read` (42rem), `--page-form` (48rem) i `--page-wide` (80rem). Treść (`<main>`) i pasek u góry mają najwyżej `--page-wide` plus marginesy. Długi, Ćwiczenia, kompozytor notatek oraz pole i pasek Skrzynki mają szerokość formularza przy lewej krawędzi główki. Długi i Ćwiczenia nie są już wyśrodkowane.
+- **Szukanie w każdym widoku (1.3).** Na komputerze w działach bez pola szukania notatek (Kalendarz, Grafik, Praca, Plany, Długi, Ćwiczenia…) w miejscu pola stoi przycisk w jego kształcie: „Szukaj i polecenia… Ctrl+K”. Otwiera paletę poleceń. Na telefonie bez zmian (lupa w grupie ikon).
+- **Tabliczka na końcu kartki (1.4, NP-3).** „NOTKI · ARKUSZ 1/1” (napis zależy od widoku) stoi po ostatniej sekcji przy prawej krawędzi, a przy krótkiej treści schodzi na dół ekranu. Nie prześwituje już między kartami i nie zasłania panelu Grafiku. Tylko komputer.
+
+### Gdzie jest
+
+- `src/components/PageActions.tsx`: `PageActionsProvider` (stan elementu miejsca), `PageActionsSlot` (miejsce w główce, `data-page-actions`), `PageActions` (portal z widoku).
+- `src/components/ViewTitle.tsx`: prop `lead`, mapa `VIEW_LEAD`, `data-page-lead`, siatka tytułu z ozdobą dnia albo akcjami.
+- `src/pages/Index.tsx`: `<PageActionsProvider>` wokół `<main>`, szerokość `max-w-[calc(var(--page-wide)+3rem)]`, `<span class="paper-stamp">` na końcu `<main>`.
+- Widoki: `reminders/RemindersView.tsx`, `reminders/NewReminderButton.tsx`, `plans/PlansList.tsx`, `debts/DebtsView.tsx`, `cwiczenia/CwiczeniaView.tsx`, `InboxBar.tsx`, `InboxCapture.tsx`, `AddNoteBar.tsx`, `calendar/CalendarHeader.tsx`.
+- `src/components/AppHeader.tsx`: przycisk palety (`!viewSearches && onOpenPalette`, `hidden sm:flex`, `aria-keyshortcuts="Control+K"`).
+- `src/index.css`: tokeny szerokości (blok `:root` po tokenach marki), `.paper-stamp` (`align-self: flex-end; margin-top: auto`). `src/components/PaperBackdrop.tsx` nie renderuje już tabliczki.
+
+### Jak działa i dlaczego
+
+- **Portal, nie przekazywanie propsów.** Główka jest jedna i stoi w `Index`, a akcje mają stan w widokach (okno „Nowy termin”, ukrywanie kwot, druk Kalendarza). `PageActions` przenosi przyciski do główki przez `createPortal`. Stan, zdarzenia i kontekst Reacta zostają w widoku.
+- **Bez dostawcy akcje renderują się w miejscu.** Dzięki temu testy komponentów (np. `DebtsView.test.tsx`) i widok poza `Index` działają bez zmian. Z dostawcą akcje pojawiają się dopiero, gdy główka jest zamontowana (element miejsca jest w stanie dostawcy).
+- **Puste miejsce jest ukryte** (`empty:hidden`), więc działy bez akcji nie mają pustego rzędu na telefonie. Dlatego akcji, która ma być widoczna tylko na części ekranów, nie można ukryć klasą — trzeba jej nie renderować (Skrzynka: `useIsMobile`).
+- **Kolejność na telefonie wynika z DOM:** tytuł, opis, akcje. Od `sm` akcje przechodzą do pierwszego rzędu siatki (`sm:row-start-1 sm:col-start-2`), obok tytułu.
+- **Szerokości są tokenami CSS,** nie klasami Tailwinda: jedna wartość dla wszystkich działów, a Etapy 2 i 3 użyją tych samych.
+
+### Ograniczenia i pułapki
+
+- **Ozdoba dnia i akcje dzielą prawą kolumnę.** Dziś nie ma akcji. Dział, który dostanie naraz akcje i ozdobę, trzeba ułożyć osobno.
+- **Blok `:root` z szerokościami musi stać po tokenach marki.** `skinContrast.test.ts` czyta pierwszy `:root {` w `index.css` jako tokeny marki.
+- **`--page-read` jest zdefiniowany, ale jeszcze nieużywany.** Czytnik notatki i Ustawienia dostaną go w Etapie 3.
+- **Na 1920 px** treść ma 80rem i jest wyśrodkowana obok paska bocznego razem z główką, więc lewa krawędź treści i główki jest wspólna.
+
+### Testy
+
+- `src/components/PageActions.test.tsx` (portal do główki, render w miejscu bez dostawcy, opis działu i jego nadpisanie).
+- e2e: `e2e/reminders-calendar.spec.ts` (rząd akcji pod tytułem na telefonie), `e2e/inbox-triage.spec.ts`, `e2e/plans.spec.ts`, `e2e/csp.spec.ts`, `e2e/visual.spec.ts` (selektory po przeniesieniu akcji).
+- Zrzuty `e2e/visual.spec.ts` odświeżone po przeglądzie (Kalendarz, Grafik, Terminy, Długi, Ćwiczenia, Plany, Skrzynka, Dziś, Skarbiec).
 
 ## Wspólne — fundament skórek (Faza 0 planu motywów, 2026-10-27)
 
@@ -924,7 +972,7 @@ Dział opisany w jednym miejscu. Skrzynka to widok „do posortowania”: notatk
 - **Do skrzynki z każdego miejsca (2.3, 2026-11-03).** `Alt+K`, polecenie palety „Do skrzynki…” albo skrót z ekranu głównego „Do skrzynki” (`/?skrzynka=1`) otwiera małe okno z tym samym polem. Widok pod spodem się nie zmienia. Enter zapisuje i zamyka okno, dymek z „Cofnij” jest ten sam co w Skrzynce. Frazy, link i pliki działają jak w polu Skrzynki. `Alt+K` działa także z pola tekstowego, ale nie nad innym otwartym oknem (okna by się piętrzyły). Na macOS skrót łapie `e.code === "KeyK"`, bo Option+K daje inny znak. Parametr to `skrzynka`, nie `inbox`: `?inbox=` ma już udostępnianie z plikami. Commit 724190b.
 - **Wygląd widoku (4.1–4.4, 2026-11-03).**
   - *Pole:* ten sam kształt co zwinięty pasek „Zapisz notatkę…”: `note-shadow`, `focus-ring-gradient`, `max-w-xl` i ikona skrzynki na kafelku `bg-primary/12`. Linii kratki w Zeszycie nie dodano, bo pole leży na kartce z kratką.
-  - *Pasek nad listą* (`InboxBar`): „Do posortowania”, licznik jako `stamp-tag` i przycisk „Porządkuj” (nazwa dla czytnika: „Porządkuj skrzynkę (N)”). Na telefonie przykleja się pod nagłówkiem (`--app-header-h`; przy schowanym nagłówku do góry).
+  - *Pasek nad listą* (`InboxBar`): „Do posortowania”, licznik jako `stamp-tag` i przycisk „Porządkuj” (nazwa dla czytnika: „Porządkuj skrzynkę (N)”). Na telefonie pasek przykleja się pod nagłówkiem (`--app-header-h`; przy schowanym nagłówku do góry), a „Porządkuj” jest w nim. Od `md` (`useIsMobile` = fałsz) „Porządkuj” stoi w akcjach główki (nowy plan 1.1). W DOM jest jedna kopia: ukryta klasą zostawiłaby niepuste miejsce na akcje i pusty rząd na telefonie.
   - *Wiek notatki:* kafel w Skrzynce pokazuje, od kiedy notatka czeka („dziś”, „od wczoraj”, „od 3 dni”, liczone z `createdAt` w dniach kalendarzowych). Pełna data zapisu jest w podpowiedzi. Po 14 dniach (`INBOX_STALE_DAYS`) przed napisem pojawia się klepsydra w kolorze akcentu, a czytnik słyszy „Czeka długo”. Sortowanie „najstarsze najpierw” było już wcześniej.
   - *Pieczątka „Posortowane”* (`SortedStamp`): odbija się, gdy licznik zejdzie do zera w otwartej Skrzynce i na końcu porządkowania, jeśli Skrzynka naprawdę jest pusta (po „Zostaw” pieczątki nie ma). Ruch to istniejące `stamp-in` i `stamp-ring`. Przy ograniczonym ruchu globalna reguła `html[data-motion="reduced"]` zostawia samo pojawienie się.
 - **Co jest w skrzynce:** aktywne notatki bez folderu, bez etykiet i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuwa notatkę ze skrzynki.
@@ -1391,7 +1439,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 
 - **Co robi.** Każdy dział (poza widżetem) zaczyna się tak samo: linijka mono nad tytułem (grupa z paska bocznego — Codziennie, Praca, Osobiste; folder i etykieta; data w Kalendarzu, Grafiku i Pracy; liczba notatek w widokach list) i tytuł z kreską pióra. Pasek u góry nie pokazuje tytułu, dopóki główka jest na ekranie; po przewinięciu pojawia się tam mała kopia. Ikona szukania na telefonie stoi w grupie ikon po prawej. Długi i Ćwiczenia nie mają już własnego nagłówka („PRYWATNE” + drugi h1), Praca nie ma trzeciego tytułu „Dziennik budowy” (licznik „0/18 tematów” zostaje).
 - **Gdzie jest.** `src/components/ViewTitle.tsx` (`ViewTitle`, `kickerGroup`, `DATED_VIEWS`); grupy: `VIEW_GROUP` i typ `ViewGroup` w `src/lib/viewMeta.ts`, `SidebarGroupKey = ViewGroup` w `src/components/sidebar/sidebarItems.ts`; wpięcie w `src/pages/Index.tsx` (pierwsze dziecko `<main>`); pasek: `src/components/AppHeader.tsx` (`p.app-title` z `aria-hidden`); `DebtsView.tsx`, `CwiczeniaView.tsx`, `StudyView.tsx`.
-- **Jak działa.** `ViewTitle` to jedyny h1 widoku. `IntersectionObserver` (margines −72 px = pasek) ustawia `data-head-out` na `<html>`, gdy główka schowa się pod paskiem; mały tytuł w pasku ma `opacity-0 in-data-head-out:opacity-100` — bez stanu w Reakcie. Grupa o nazwie działu jest pomijana („PRACA” nad „Praca”). Dziś nie ma daty w linijce: pokazuje ją ozdoba „1 lis” i karta dnia (trzecia kopia łamała linijkę na 390 px). Długi i Ćwiczenia: główka w tej samej kolumnie `max-w-2xl` co treść; sekcje bez własnego `px-4` (był podwójny margines 32 px na telefonie).
+- **Jak działa.** `ViewTitle` to jedyny h1 widoku. `IntersectionObserver` (margines −72 px = pasek) ustawia `data-head-out` na `<html>`, gdy główka schowa się pod paskiem; mały tytuł w pasku ma `opacity-0 in-data-head-out:opacity-100` — bez stanu w Reakcie. Grupa o nazwie działu jest pomijana („PRACA” nad „Praca”). Dziś nie ma daty w linijce: pokazuje ją ozdoba „1 lis” i karta dnia (trzecia kopia łamała linijkę na 390 px). Główka ma szerokość całej treści; Długi i Ćwiczenia stoją w kolumnie `--page-form` przy jej lewej krawędzi (nowy plan 1.2, wcześniej obie wyśrodkowane w `max-w-2xl`). Sekcje nie mają własnego `px-4` (był podwójny margines 32 px na telefonie). Opis i akcje: sekcja „Szkielet strony”.
 - **Decyzje (D-W1, D-W5 z `docs/plan-wyglad-2026-11-01.md`).** Tytuł na stronie, w pasku tylko po przewinięciu; grupa wszędzie, data tylko tam, gdzie dzień ma znaczenie.
 - **Ograniczenia.** Pasek chowa się przy przewijaniu w dół, więc mały tytuł widać po ruchu w górę. Liczba notatek liczy widoczne notatki (`displayNotes`), nie terminy w Terminach.
 - **Testy.** `src/components/sidebar/sidebarItems.test.ts` (grupa w pasku = `VIEW_GROUP`), e2e szukające h1 działu (`routes`, `mobile`, `hidden-views`, `reminders-calendar`), `e2e/a11y.spec.ts`, zrzuty `e2e/visual.spec.ts`.
@@ -1938,7 +1986,7 @@ Commit: brak (zmiany niezacommitowane, na prośbę).
 - **Kalendarz — edycja odłożonego wystąpienia.** `ReminderCalendarView.tsx` `openEdit` przekazuje `base` (termin serii), `handleAttach` zapisuje go z powrotem; `ReminderQuickAddDialog.tsx` `handleSaveEdit` przekazuje `edit.base`. Seria nie przesuwa się. Przeciągnięcie takiego wystąpienia (`moveToDay`) też zachowuje bazę, o ile nowy czas nie wypada po następnym terminie serii; dialog edycji zachowuje bazę zawsze (ograniczenie: po przesunięciu za następny termin serii baza zostaje — do decyzji, czy też zdjąć). Testy: brak automatycznego testu tej ścieżki (logika w komponencie), sprawdzić ręcznie.
 - **Kalendarz — godzina z języka naturalnego.** `ReminderQuickAddDialog.tsx` (`parsed`): godzina zaraz po dacie („jutro 15:00”, „jutro o 15”) trafia do pola czasu, nie do tytułu. Samotna liczba („jutro 2 kupić”) nie jest godziną. Bez osobnego testu jednostkowego (logika w komponencie); sprawdzone ręcznie tylko w testach istniejących.
 - **Kalendarz — renderowanie siatki (K5.1).** `MonthGrid.tsx`: tygodnie liczone `useMemo` po miesiącu (te same obiekty `Date`), `cellRefFor(key)` zwraca tę samą funkcję ref dla dnia, pusty dzień dostaje stałą `NO_OCCURRENCES`. `DayCell.tsx` eksportuje `memo(DayCellView)`. Rodzic `ReminderCalendarView.tsx`: `studyOf` przez `useCallback`, `openAdd` przez `useCallback`, `shiftOf` buduje typy dni raz na zmianę grafiku (`dayType` tworzy nowy obiekt), `notesById` zamiast `notes.find`. Test `MonthGrid.test.tsx` liczy renderery komórek: przy zmianie zaznaczenia 2 (było 35). Duplikat `expandOccurrences` w `UpcomingDays` zostaje — jego okno (dziś i jutro) nie zawsze mieści się w siatce.
-- **Kalendarz — podział widoku (K5.2).** `ReminderCalendarView.tsx` (zostają stan, dane i siatka) korzysta z trzech modułów bez zmiany zachowania: `CalendarHeader.tsx` (nagłówek: strzałki, „Dziś”, .ics, skróty, wydruk, menu „⋯” na telefonie; props `onPrev`/`onNext`/`onToday`/`onToggleKeys`/`onPrint`/`onExportAll`), `useCalendarMoves.ts` (hook: `handleAttach`, `handleSkip`, `handleClear`, `moveToDay`, `handleDragEnd`, a w środku `previousOf` i `focusDay`; cofnięcia w toastach dostają poprzedni koniec serii), `calendarExport.ts` (`exportOneReminder`, `exportAllReminders`). `openSeriesSource` i `sensors` zostają w widoku, bo dotyczą dialogu i DnD. Testy: istniejące testy kalendarza (`src/components/calendar/*.test.tsx`) przechodzą; brak osobnych testów nowych modułów.
+- **Kalendarz — podział widoku (K5.2).** `ReminderCalendarView.tsx` (zostają stan, dane i siatka) korzysta z trzech modułów bez zmiany zachowania: `CalendarHeader.tsx` (pasek miesiąca: strzałki, „Dziś”, skróty; druk i .ics w akcjach główki, nowy plan 1.1; props `onPrev`/`onNext`/`onToday`/`onToggleKeys`/`onPrint`/`onExportAll`), `useCalendarMoves.ts` (hook: `handleAttach`, `handleSkip`, `handleClear`, `moveToDay`, `handleDragEnd`, a w środku `previousOf` i `focusDay`; cofnięcia w toastach dostają poprzedni koniec serii), `calendarExport.ts` (`exportOneReminder`, `exportAllReminders`). `openSeriesSource` i `sensors` zostają w widoku, bo dotyczą dialogu i DnD. Testy: istniejące testy kalendarza (`src/components/calendar/*.test.tsx`) przechodzą; brak osobnych testów nowych modułów.
 - **Kalendarz — zaległe terminy (K1.1).** `ReminderChip.tsx`: zaległy chip ma czerwony ton i lewą krawędź (`border-l-destructive`), a w opisie dla czytnika słowo „zaległe”. Status liczy `isOverdueOccurrence` (`src/lib/dueTerms.ts`, oparte na `termStatus`, tym samym co licznik i widok Terminy). `DayCell.tsx`: na telefonie kropka zaległego jest czerwonym kwadratem (`rounded-[1px]`), żeby nie mylić jej z kołem świąt. Test: `ReminderChip.test.tsx`.
 - **.ics — cały dzień i odłożone serie (K1.2, K1.3).** `src/lib/icsExport.ts`: termin „cały dzień” to `DTSTART;VALUE=DATE` i `DTEND;VALUE=DATE` (dzień następny), alarm `TRIGGER;VALUE=DATE-TIME` o 9:00, a `UNTIL` serii jako data. Odłożone wystąpienie serii: wydarzenie główne zaczyna się od `reminderBase`, a to jedno wystąpienie to osobny VEVENT z `RECURRENCE-ID` i nowym `DTSTART`. `exportableReminders` pomija serie z `reminderRepeatUntil` przed dziś. Testy: `src/lib/icsExport.test.ts` (także powrót przez `parseIcs` z `icsImport.ts`: cały dzień wraca jako 9:00). Importer ignoruje `RECURRENCE-ID`, więc odłożone wystąpienie wraca jako osobny termin, nie jako zdublowana seria.
 - **Dotyk i pickery (K1.4).** Wiersz „Cały dzień” ma `coarse:min-h-11` (44 px) w `ReminderQuickAddDialog.tsx` i `ReminderPicker.tsx`, a checkbox na dotyku `coarse:size-5`. Kalendarzyk w pickerze nie wyłącza już przeszłych dni (K-1: zapis z ostrzeżeniem).
@@ -2054,11 +2102,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/components/NoteReader.tsx` (nagłówek: klasy `phone:hidden`; pasek: `hidden phone:flex` przed stopką z podpowiedziami).
 - **Testy:** `e2e/reader.spec.ts` — "telefon: dolny pasek …" (@mobile, iphone-14). Wysokość mierzona przez `expect.poll`, bo czytnik wchodzi ze skalą 0,94. Regresja reader/reader-step/mobile: 36/36.
 
-## Kalendarz — nagłówek na telefonie: menu „Więcej akcji” (Fala 4, 2026-10-22)
+## Kalendarz — „Drukuj” i „.ics” w akcjach główki (nowy plan 1.1, 2026-11-05)
 
-- **Co robi:** na telefonie nagłówek ma strzałki, miesiąc, „Dziś” i przycisk „⋯”. Menu zawiera „Pobierz .ics (nadchodzące terminy)” i „Drukuj terminy miesiąca”. Na szerszych ekranach przyciski „.ics” i „Drukuj” są jak dotąd.
-- **Gdzie:** `src/components/calendar/ReminderCalendarView.tsx` (nagłówek `<header>`; `DropdownMenu` z `components/ui/dropdown-menu`; `exportAll`, `setPrinting`).
-- **Testy:** `e2e/reminders-calendar.spec.ts` — "telefon: .ics i Drukuj są w menu …" (@mobile) oraz istniejący test .ics (desktop). Regresja kalendarza na desktopie: 15/15 z `calendar-shift-edit`.
+- **Co robi:** „Drukuj” (terminy miesiąca) i „.ics” (nadchodzące terminy) stoją w akcjach główki kartki: na komputerze obok tytułu „Kalendarz”, na telefonie w rzędzie pod nim. Zastąpiły menu „⋯” z telefonu (Fala 4). Pasek miesiąca ma strzałki, „Dziś” i skróty klawiszy.
+- **Gdzie:** `src/components/calendar/CalendarHeader.tsx` (`<PageActions>` z dwoma przyciskami `Button variant="ghost"`; nazwy dla czytnika jak dotąd: „Drukuj terminy tego miesiąca”, „Eksportuj nadchodzące terminy do kalendarza (.ics)”).
+- **Testy:** `e2e/reminders-calendar.spec.ts` — „telefon: .ics i Drukuj w rzędzie akcji pod tytułem” (@mobile) oraz test .ics na komputerze.
 
 ## Grafik — eksporty na telefonie w menu „Udostępnij” (Fala 4, 2026-10-22)
 
@@ -3668,7 +3716,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 ## Długi — ukrywanie kwot (plan mobile C1 / plan długów 3.3, 2026-10-28)
 
 ### Co robi
-- Przycisk **„Ukryj kwoty” / „Pokaż kwoty”** przy opisie na górze widoku Długi. Chowa wszystkie kwoty („•••”): podsumowanie, saldo przy osobach, pasek „Oddał całość” w arkuszu i kwoty w historii. Pomaga, gdy ktoś patrzy w telefon.
+- Przycisk **„Ukryj kwoty” / „Pokaż kwoty”** w akcjach główki Długów (obok tytułu, na telefonie pod opisem; nowy plan 1.1). Chowa wszystkie kwoty („•••”): podsumowanie, saldo przy osobach, pasek „Oddał całość” w arkuszu i kwoty w historii. Pomaga, gdy ktoś patrzy w telefon.
 - Stan jest tylko na tym urządzeniu. Nie idzie do Yjs ani do backupu.
 - Zapisy wpisów dają wibrację: sukces (dodanie, rozliczenie) i ostrzeżenie (zła nazwa, zła kwota, nieudany zapis).
 

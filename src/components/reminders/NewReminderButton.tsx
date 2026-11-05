@@ -12,7 +12,7 @@ interface NewReminderButtonProps {
 }
 
 /**
- * „Nowy termin” w nagłówku Terminów. Dialog ten sam co w Kalendarzu (pole tekstowe,
+ * „Nowy termin” w główce Terminów (główna akcja działu, więc bursztynowy). Dialog ten sam co w Kalendarzu (pole tekstowe,
  * dzień, godzina, powtarzanie), ale otwiera się od razu bez wybranej komórki —
  * startuje od dzisiaj, a dzień zmienia się w polu „Dzień”.
  */
@@ -25,7 +25,6 @@ export default function NewReminderButton({ notes, onCreateNote, onAttachReminde
     <>
       <Button
         size="sm"
-        variant="outline"
         onClick={() => { setDay(new Date()); setOpen(true); }}
         className="coarse:min-h-11"
       >
