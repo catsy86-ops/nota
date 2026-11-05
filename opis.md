@@ -234,7 +234,11 @@ Plan: `docs/plan-ui-ux-qol-2026-10-25.md`. Faza 0 nie zmienia wyglądu — zbier
 
 ### Co robi
 
-- **Zrzuty referencyjne wyglądu.** Pięć widoków (Notatki, Przypomnienia, Kalendarz, Grafik, Praca) × siedem stylów (Zeszyt…Hydraulika) × komputer 1440 px i telefon 390 px = 70 zrzutów. Użytkownik nie widzi ich bezpośrednio; służą do wykrywania zmian pikseli.
+- **Zrzuty referencyjne wyglądu.** Użytkownik nie widzi ich bezpośrednio; służą do wykrywania zmian pikseli. Stan 2026-11-05 (nowy plan, Etap 0): 227 zrzutów, każdy w 1440 px i 390 px.
+  - Pięć głównych działów (Notatki, Przypomnienia, Kalendarz, Grafik, Praca) we wszystkich 10 stylach jasno, a do tego w ciemnym Zeszycie.
+  - Pozostałe działy (Dziś, Skrzynka, Tydzień, Archiwum, Kosz, Długi, Ćwiczenia, Plany i edytor Planów) w trzech wyglądach: Zeszyt jasny, Zeszyt ciemny, Hydraulika.
+  - Okna i stany, w tych samych trzech wyglądach: 4 karty Ustawień (`?settings=…`), otwarta notatka (na telefonie okno edytora, na komputerze edycja w kaflu), paleta poleceń (Ctrl+K), okno „Ustaw hasło skarbca”, pierwsze uruchomienie (bez notatek, z przewodnikiem), szukanie bez trafień, a na telefonie arkusz „Więcej”.
+  - Dziś i Kalendarz także w 1920 × 1080 (`*-szeroki-*`). Na tym ekranie widać, czy treść ma limit szerokości.
 - **Audyt axe we wszystkich stylach.** Każdy styl na każdym z pięciu widoków (wcześniej tylko trzy widoki).
 - **Strażnik tokenów.** Test zlicza surowe klasy `rounded-md/lg/xl/3xl`, `shadow-md/lg/2xl` i `z-N` w `src/**/*.tsx`. Nie pozwala, żeby ich przybywało.
 - **Sonda INP i CLS (tylko dev).** W konsoli przeglądarki wypisuje `[perf] INP …` przy każdej nowej najdłuższej interakcji i `[perf] CLS …` przy zmianie sumy przesunięć.
@@ -263,6 +267,8 @@ Plan: `docs/plan-ui-ux-qol-2026-10-25.md`. Faza 0 nie zmienia wyglądu — zbier
 
 - **Zrzuty są zależne od systemu.** Bazowe są `-win32`. Na innym OS trzeba je wygenerować od nowa (`npm run test:visual -- --update-snapshots`).
 - **Zrzuty trzeba odnawiać po każdej zmianie maski lub odstępu.** Stare bazowe porównują się z nowym zachowaniem i padają.
+- **Brakujący wzorzec Playwright zapisuje, ale test i tak oznacza jako nieudany** (także przy `--update-snapshots=missing`). Drugi przebieg powinien już przejść.
+- **Pierwsze uruchomienie** to jedyny zrzut bez `seedNotes` (`prepare(..., { seed: false })`). Pokazuje przewodnik, bo `kaczy.tour.seen.v1` nie jest ustawione.
 - **Zrzuty nie widzą animacji** (są wyłączone). Ruch sprawdzają osobne testy, np. `e2e/card-motion.spec.ts`; zrzut wyłapuje tylko różnice statyczne.
 - **Wyjątek axe `kalendarz/1440/hydraulika`** usunięty: axe nie zgłasza już kontrastu znacznika „dziś” (sprawdzone 2026-10-26, `e2e/a11y.spec.ts` przechodzi bez wyjątku).
 - **Sonda nie działa w produkcji** i nie trafia do paczki. Pomiar na telefonie trzeba robić w buildzie dev albo ręcznie przez `PerformanceObserver`.
@@ -272,7 +278,7 @@ Plan: `docs/plan-ui-ux-qol-2026-10-25.md`. Faza 0 nie zmienia wyglądu — zbier
 
 - `src/test/designTokens.test.ts` (3 testy, progi),
 - `src/lib/perfProbe.test.ts` (3 testy: INP, zerowe czasy, CLS),
-- `e2e/visual.spec.ts` (70 testów, `@visual`, `npm run test:visual`),
+- `e2e/visual.spec.ts` (227 testów od 2026-11-05, `@visual`, `npm run test:visual`; 1 worker ok. 16 min, `PW_WORKERS=2` szybciej),
 - `e2e/a11y.spec.ts` (grupa „a11y styl”: 60 testów),
 - `e2e/bundle.spec.ts` — bez zmian progu, przechodzi po dodaniu sondy.
 
@@ -1974,7 +1980,7 @@ Testy zielone: `npx vitest run` 1826/1826, `npx eslint .` bez błędów (16 ostr
   - *Pusty dzień (3.6):* bez zmiany i bez terminów karta mówi „Wolne. Nic nie czeka.”, a „Notatka dnia” jest głównym przyciskiem. Karta Terminów znika, gdy nie ma ani dzisiejszych, ani przyszłych terminów. Rysunku w karcie nie ma, bo słońce jest już w pustym stanie notatek pod kartami.
 - **Gdzie:** `src/components/review/TodayShiftCard.tsx` (props `reminderNotes`, `onOpenTomorrow`), `TodayCards.tsx`, `TodayDueList.tsx` (`GROUP_DOT`). Logika: `src/lib/todayTomorrow.ts` (`isTomorrowPreviewTime`, `countRemindersOn`, `tomorrowLine`), `src/lib/shifts/finishNow.ts` (`finishShiftNow`, wspólne z `NowCard.tsx`). Kompozytor: `canCompose` w `src/pages/Index.tsx`.
 - **W toku (2.4):** `src/components/review/TodayTimeline.tsx` (oś dnia: `DayTimeline` z Kalendarza, zwijana, stan w `kaczy.today.timeline.v1`, domyślnie zwinięta na telefonie) jest napisany, ale jeszcze niepodpięty w `TodayCards` i bez testów.
-- **Testy:** `src/lib/todayTomorrow.test.ts`, `src/components/review/TodayShiftCard.test.tsx` (znaczek, „skończyła się”, wiersz „Jutro”), `e2e/dzis-composer.spec.ts`, `e2e/inbox-today.spec.ts` (pusty dzień). Zrzuty `dzis-*` w `e2e/visual.spec.ts-snapshots` nie są jeszcze zaktualizowane.
+- **Testy:** `src/lib/todayTomorrow.test.ts`, `src/components/review/TodayShiftCard.test.tsx` (znaczek, „skończyła się”, wiersz „Jutro”), `e2e/dzis-composer.spec.ts`, `e2e/inbox-today.spec.ts` (pusty dzień). Zrzuty `dzis-*` w `e2e/visual.spec.ts-snapshots` są zaktualizowane (2026-11-05, nowy plan 0.1).
 - **Commity:** 52fe529, 16e748f (2026-11-03).
 
 ## Dziś — karta „Trening mózgu” (Neuroklik, 2026-10-22)

@@ -43,9 +43,10 @@ const SIZES = [
 const FIXED_NOW = new Date("2026-10-14T12:00:00");
 const T = FIXED_NOW.getTime();
 
-async function prepare(page: Page, skin: string, theme: "light" | "dark") {
+async function prepare(page: Page, skin: string, theme: "light" | "dark", { seed = true } = {}) {
   await page.clock.setFixedTime(FIXED_NOW);
-  await seedNotes(page, [
+  // `seed: false` — pierwsze uruchomienie: bez notatek i bez odhaczonego przewodnika (nowyplan 0.2).
+  if (seed) await seedNotes(page, [
     { id: "vis-1", title: "Zakupy", content: "Mleko, chleb, jajka", color: "default", pinned: true, archived: false, labels: ["dom"], createdAt: T, updatedAt: T },
     { id: "vis-2", title: "Budowa", content: "Zamówić beton na poniedziałek", color: "sky", pinned: false, archived: false, labels: [], createdAt: T, updatedAt: T },
     { id: "vis-3", title: "Piwo", content: "Piątek po pracy", color: "peach", pinned: false, archived: false, labels: [], createdAt: T, updatedAt: T },
@@ -112,6 +113,22 @@ async function planPng(page: Page): Promise<Buffer> {
   return Buffer.from(b64, "base64");
 }
 
+// Nowy plan 0.2: pulpitowe działy na szerokim ekranie — tu widać, czy treść ma limit szerokości.
+test.describe("wygląd @visual szeroki", () => {
+  test.use({ viewport: { width: 1920, height: 1080 } });
+  for (const look of EXTRA_LOOKS) {
+    const tag = `${look.skin}-${look.theme}`;
+    for (const view of [{ name: "dzis", path: "/dzis" }, { name: "kalendarz", path: "/kalendarz" }]) {
+      test(`${view.name} 1920 — ${tag} @visual`, async ({ page }) => {
+        await prepare(page, look.skin, look.theme);
+        await page.goto(view.path);
+        await settle(page);
+        await shoot(page, `${view.name}-szeroki-${tag}.png`);
+      });
+    }
+  }
+});
+
 for (const size of SIZES) {
   test.describe(`wygląd @visual ${size.name}`, () => {
     test.use({ viewport: size.viewport, isMobile: size.mobile, hasTouch: size.mobile });
@@ -127,6 +144,16 @@ for (const size of SIZES) {
       }
     }
 
+    // Nowy plan 0.1: główne działy także w ciemnym Zeszycie (reszta stylów tylko jasno).
+    for (const view of VIEWS) {
+      test(`${view.name} — zeszyt-dark @visual`, async ({ page }) => {
+        await prepare(page, "zeszyt", "dark");
+        await page.goto(view.path);
+        await settle(page);
+        await shoot(page, `${view.name}-${size.name}-zeszyt-dark.png`);
+      });
+    }
+
     for (const look of EXTRA_LOOKS) {
       const tag = `${look.skin}-${look.theme}`;
       for (const view of EXTRA_VIEWS) {
@@ -135,6 +162,82 @@ for (const size of SIZES) {
           await page.goto(view.path);
           await settle(page);
           await shoot(page, `${view.name}-${size.name}-${tag}.png`);
+        });
+      }
+
+      // Nowy plan 2026-11-05, Etap 0.2: brakujące wzorce — okna, stany i ekrany poza działami.
+      for (const card of ["wyglad", "ogolne", "kopia", "sync"]) {
+        test(`ustawienia-${card} — ${tag} @visual`, async ({ page }) => {
+          await prepare(page, look.skin, look.theme);
+          await page.goto(`/?settings=${card}`);
+          await expect(page.getByRole("dialog", { name: "Ustawienia" })).toBeVisible();
+          await settle(page);
+          await shoot(page, `ustawienia-${card}-${size.name}-${tag}.png`);
+        });
+      }
+
+      test(`notatka-otwarta — ${tag} @visual`, async ({ page }) => {
+        await prepare(page, look.skin, look.theme);
+        await page.goto("/");
+        await settle(page);
+        await page.locator("[data-note-id-wrap]").filter({ hasText: "Budowa" }).getByRole("heading", { name: "Budowa" }).click();
+        // Telefon: okno edytora; komputer: edycja w miejscu kafla — w obu jest pole „Tytuł” z treścią.
+        await expect(page.getByRole("textbox", { name: "Tytuł" }).first()).toHaveValue("Budowa");
+        await settle(page);
+        await shoot(page, `notatka-otwarta-${size.name}-${tag}.png`);
+      });
+
+      test(`paleta — ${tag} @visual`, async ({ page }) => {
+        await prepare(page, look.skin, look.theme);
+        await page.goto("/");
+        await settle(page);
+        await page.keyboard.press("Control+k");
+        await expect(page.getByRole("dialog").getByPlaceholder(/szukaj|wpisz|polec/i)).toBeVisible();
+        await settle(page);
+        await shoot(page, `paleta-${size.name}-${tag}.png`);
+      });
+
+      test(`skarbiec — ${tag} @visual`, async ({ page }) => {
+        await prepare(page, look.skin, look.theme);
+        await page.goto("/");
+        await settle(page);
+        const card = page.locator("[data-note-id]").filter({ hasText: "Piwo" });
+        if (!size.mobile) await card.hover();
+        await card.getByRole("button", { name: "Więcej opcji" }).click();
+        // Telefon: akcje kafla są w arkuszu poza kaflem — szukane na całej stronie.
+        await page.getByRole("button", { name: "Zablokuj (notatka prywatna)" }).click();
+        await expect(page.getByRole("dialog", { name: "Ustaw hasło skarbca" })).toBeVisible();
+        await settle(page);
+        await shoot(page, `skarbiec-${size.name}-${tag}.png`);
+      });
+
+      test(`pierwsze-uruchomienie — ${tag} @visual`, async ({ page }) => {
+        await prepare(page, look.skin, look.theme, { seed: false });
+        await page.goto("/");
+        await settle(page);
+        await shoot(page, `pierwsze-uruchomienie-${size.name}-${tag}.png`);
+      });
+
+      test(`szukanie-pusto — ${tag} @visual`, async ({ page }) => {
+        await prepare(page, look.skin, look.theme);
+        await page.goto("/");
+        await settle(page);
+        await page.getByRole("searchbox", { name: "Szukaj w notatkach" }).fill("kalafior");
+        await expect(page.locator("[data-note-id]")).toHaveCount(0);
+        await page.getByRole("searchbox", { name: "Szukaj w notatkach" }).blur();
+        await settle(page);
+        await shoot(page, `szukanie-pusto-${size.name}-${tag}.png`);
+      });
+
+      if (size.mobile) {
+        test(`wiecej — ${tag} @visual`, async ({ page }) => {
+          await prepare(page, look.skin, look.theme);
+          await page.goto("/");
+          await settle(page);
+          await page.getByRole("button", { name: /^Więcej(: .+)?$/ }).click();
+          await expect(page.getByRole("dialog", { name: "Więcej" })).toBeVisible();
+          await settle(page);
+          await shoot(page, `wiecej-${size.name}-${tag}.png`);
         });
       }
 
