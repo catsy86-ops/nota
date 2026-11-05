@@ -1,4 +1,5 @@
 import { BellRing, ChevronRight, Lock } from "lucide-react";
+import { SectionCard } from "@/components/ui/section-card";
 import { noteListTitle } from "@/lib/noteListTitle";
 import { Button } from "@/components/ui/button";
 import type { Note } from "@/hooks/useNotes";
@@ -47,17 +48,13 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
   if (total === 0 && !next) return null;
 
   return (
-    <section aria-label="Przypomnienia" data-testid="today-due" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="section-label gap-2">
-          <BellRing className="h-3.5 w-3.5" aria-hidden />
-          Terminy
-          {total > 0 && <span className="stamp-tag normal-case text-primary-ink" data-testid="today-due-count">{total}</span>}
-        </h2>
+    <SectionCard aria-label="Przypomnienia" data-testid="today-due" icon={BellRing} bodyClassName="space-y-3"
+      title={<>Terminy{total > 0 && <span className="stamp-tag normal-case text-primary-ink" data-testid="today-due-count">{total}</span>}</>}
+      action={
         <Button variant="ghost" size="sm" onClick={onOpenReminders} className="coarse:h-11">
           Wszystkie<ChevronRight className="ml-0.5 h-4 w-4" aria-hidden />
         </Button>
-      </div>
+      }>
 
       {total === 0 ? (
         <p className="text-sm text-muted-foreground">
@@ -112,6 +109,6 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
           );
         })
       )}
-    </section>
+    </SectionCard>
   );
 }

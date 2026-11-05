@@ -14,7 +14,7 @@ async function tap(page: Page, n: number, rest = "wolne$") {
 }
 
 test("szablon tygodnia: zapis z tygodnia i nałożenie na pusty tydzień (G4.6)", async ({ page }) => {
-  await page.getByRole("button", { name: "Tydzień", exact: true }).click();
+  await page.getByRole("radio", { name: "Tydzień", exact: true }).click();
   await expect(page.getByRole("heading", { level: 2 })).toHaveText(/^5–11 października 2026/);
 
   // Układ: poniedziałek i środa dniówką. Domyślny pędzel to pierwszy rodzaj (Urlop), więc wybieramy Dniówkę.
@@ -55,7 +55,7 @@ test("szablon tygodnia: w widoku miesiąca nie ma zapisu tygodnia", async ({ pag
 
 test("390 px: pasek pędzli zostaje pod nagłówkiem, gdy przewijam Grafik (G2.5)", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Tydzień", exact: true }).click();
+  await page.getByRole("radio", { name: "Tydzień", exact: true }).click();
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   // Nagłówek chowa się i pokazuje animacją, więc czekamy, aż pomiar się ustali.

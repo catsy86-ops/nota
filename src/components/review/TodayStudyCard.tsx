@@ -1,4 +1,5 @@
 import { GraduationCap } from "lucide-react";
+import { SectionCard } from "@/components/ui/section-card";
 import { Button } from "@/components/ui/button";
 import { pluralPl } from "@/lib/plural";
 import { useStudy, dueToday } from "@/lib/study/store";
@@ -14,18 +15,11 @@ const studyMinutes = (questions: number) => Math.max(1, Math.round((questions * 
 export function TodayStudyCardView({ due, onPractice }: { due: number; onPractice: () => void }) {
   if (due <= 0) return null;
   return (
-    <section aria-label="Powtórki na dziś" data-testid="today-study" className="rounded-card border border-border bg-card p-4 sm:p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="flex min-w-0 items-center gap-2 text-sm sm:text-base">
-          <GraduationCap className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-          <span>
-            Powtórki na dziś: <span className="font-mono font-semibold tabular-nums" data-testid="today-study-count">{due}</span>{" "}
-            <span className="text-muted-foreground">{pluralPl(due, ["pytanie", "pytania", "pytań"])} · ok. {studyMinutes(due)} min</span>
-          </span>
-        </p>
-        <Button size="sm" onClick={onPractice} className="coarse:h-11">Powtórz</Button>
-      </div>
-    </section>
+    // Pusta karta w jednej linijce (nowy plan 2.1): sam nagłówek z liczbą i szacunkiem czasu.
+    <SectionCard aria-label="Powtórki na dziś" data-testid="today-study" icon={GraduationCap}
+      title="Powtórki na dziś" meta={<span data-testid="today-study-count">{due}</span>}
+      description={`${pluralPl(due, ["pytanie", "pytania", "pytań"])} · ok. ${studyMinutes(due)} min`}
+      action={<Button size="sm" onClick={onPractice} className="coarse:h-11">Powtórz</Button>} />
   );
 }
 

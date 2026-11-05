@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDayClock } from "@/lib/dayClock";
 import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -122,17 +123,11 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   // Przełącznik Miesiąc/Tydzień — ten sam JSX w dwóch miejscach (telefon i od sm), jeden jest ukryty.
   const viewToggle = (
-    <div role="group" aria-label="Widok Grafiku" className="flex rounded-card bg-muted p-0.5">
-      {([["month", "Miesiąc"], ["week", "Tydzień"]] as const).map(([id, text]) => (
-        <button key={id} type="button" aria-pressed={layout === id} onClick={() => setLayout(id)}
-          className={cn(
-            "pressable h-9 coarse:h-11 px-2.5 sm:px-3.5 rounded-[0.65rem] text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-            layout === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-          )}>
-          {text}
-        </button>
-      ))}
-    </div>
+    // Przełącznik segmentowy (nowy plan 2.2) — ten sam co w Terminach i Kalendarzu.
+    <ToggleGroup aria-label="Widok Grafiku" value={layout} onValueChange={(v) => setLayout(v as typeof layout)}>
+      <ToggleGroupItem value="month" className="px-2.5 sm:px-3.5">Miesiąc</ToggleGroupItem>
+      <ToggleGroupItem value="week" className="px-2.5 sm:px-3.5">Tydzień</ToggleGroupItem>
+    </ToggleGroup>
   );
   const schedules = useSchedules();
   const activeScheduleName = schedules.find((s) => s.id === activeScheduleId())?.name ?? "Główny";

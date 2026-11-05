@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Stat } from "@/components/ui/stat";
 import { ArrowDownLeft, ArrowUpRight, Check, ChevronDown, Combine, Download, Eye, EyeOff, HandCoins, Pencil, Plus, Search, Send, Trash2, TriangleAlert, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -134,16 +135,11 @@ function Summary({ owedToMe, iOwe, hidden }: { owedToMe: number; iOwe: number; h
     ? <span data-testid={testId}>{amountText(v, true)}</span>
     : <AnimatedNumber value={v} format={formatAmount} data-testid={testId} />;
   return (
-    <div className="rounded-card border border-border/70 bg-card p-4 shadow-elevation-up" role="group" aria-label="Podsumowanie">
+    // Liczby przez `Stat` (nowy plan 2.3): ten sam wygląd co w Grafiku i Pracy.
+    <div className="rounded-card border border-border bg-card p-4 sm:p-5" role="group" aria-label="Podsumowanie">
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <p className="text-xs text-muted-foreground">Są nam winni</p>
-          <p className="mt-1 font-display text-xl font-bold tabular-nums text-success-ink">{money(owedToMe, "debts-owed")}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">Jesteś winien</p>
-          <p className="mt-1 font-display text-xl font-bold tabular-nums text-warning-ink">{money(iOwe, "debts-owe")}</p>
-        </div>
+        <Stat label="Są nam winni" value={money(owedToMe, "debts-owed")} tone="success" />
+        <Stat label="Jesteś winien" value={money(iOwe, "debts-owe")} tone="warning" align="end" />
       </div>
       {total > 0 && (
         // 4.1: proporcja w jednym pasku — lewa część „nam winni”, prawa „Ty winien”.

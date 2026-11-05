@@ -62,8 +62,8 @@ test("Grafik: przełącznik widoku, „Ten tydzień”, kopiowanie tygodnia, „
   await page.clock.setFixedTime(new Date("2026-10-07T10:00:00"));
   await page.goto("/grafik");
   await expectTarget(page.getByRole("button", { name: "Rozumiem" }));
-  await expectTarget(page.getByRole("button", { name: "Miesiąc", exact: true }));
-  await page.getByRole("button", { name: "Tydzień", exact: true }).click();
+  await expectTarget(page.getByRole("radio", { name: "Miesiąc", exact: true }));
+  await page.getByRole("radio", { name: "Tydzień", exact: true }).click();
   await expectTarget(page.getByRole("button", { name: "Skopiuj ten tydzień na następny" }));
   await page.getByRole("button", { name: "Następny tydzień" }).click();
   await expectTarget(page.getByRole("button", { name: "Ten tydzień", exact: true }));

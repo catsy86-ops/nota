@@ -8,7 +8,7 @@ test("Grafik w poziomie na telefonie: miesiąc obok przełącznika, paleta w jed
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
   await page.goto("/grafik");
 
-  const toggle = page.getByRole("group", { name: "Widok Grafiku" });
+  const toggle = page.getByRole("radiogroup", { name: "Widok Grafiku" });
   const month = page.getByTitle("Wróć do bieżącego miesiąca");
   await expect(month).toBeVisible();
   const [t, m] = [await toggle.boundingBox(), await month.boundingBox()];

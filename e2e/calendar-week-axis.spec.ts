@@ -21,8 +21,8 @@ test.describe("komputer (xl)", () => {
     await page.getByLabel("Godzina przypomnienia").fill("15:00");
     await page.getByRole("button", { name: /Utwórz notatkę z terminem/ }).click();
 
-    await page.getByRole("button", { name: "Oś tygodnia" }).click();
-    await expect(page.getByRole("button", { name: "Oś tygodnia" })).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("radio", { name: "Oś tygodnia" }).click();
+    await expect(page.getByRole("radio", { name: "Oś tygodnia" })).toHaveAttribute("aria-checked", "true");
     // Siatka miesiąca ustępuje osi (ukryta na xl).
     await expect(page.getByRole("grid", { name: /Kalendarz przypomnień/ })).toBeHidden();
 
@@ -49,7 +49,7 @@ test.describe("komputer (xl)", () => {
 
   test("oś tygodnia przechodzi axe (WCAG 2.2 AA)", async ({ page }) => {
     await page.goto("/kalendarz");
-    await page.getByRole("button", { name: "Oś tygodnia" }).click();
+    await page.getByRole("radio", { name: "Oś tygodnia" }).click();
     await expect(page.locator('[data-week-col="2"]')).toBeVisible();
     const result = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
     expect(result.violations.map((v) => v.id)).toEqual([]);
@@ -61,6 +61,6 @@ test.describe("telefon", () => {
 
   test("oś tygodnia nie pojawia się poniżej xl", async ({ page }) => {
     await page.goto("/kalendarz");
-    await expect(page.getByRole("button", { name: "Oś tygodnia" })).toBeHidden();
+    await expect(page.getByRole("radio", { name: "Oś tygodnia" })).toBeHidden();
   });
 });

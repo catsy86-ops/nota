@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { SectionCard } from "@/components/ui/section-card";
 import { Dumbbell, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,11 +28,7 @@ export function TrainingSection() {
   const [restUntil, setRestUntil] = useState<number | null>(null);
 
   return (
-    <section aria-labelledby="training-title" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-5">
-      <h2 id="training-title" className="section-label gap-2">
-        <Dumbbell className="h-3.5 w-3.5" aria-hidden />
-        Trening
-      </h2>
+    <SectionCard icon={Dumbbell} title="Trening" bodyClassName="space-y-5">
 
       <TrainingReminderControl />
       <EquipmentForm />
@@ -51,7 +48,7 @@ export function TrainingSection() {
       <WeekSummary week={week} />
       <ProgressList progress={progress} entries={entries} />
       <AddPlanForm />
-    </section>
+    </SectionCard>
   );
 }
 

@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from "react";
+import { SectionCard } from "@/components/ui/section-card";
 import { MissingHint } from "@/components/ui/missing-hint";
 import { Pill, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -85,18 +86,8 @@ export function CwiczeniaView() {
         ))}
       </div>
 
-      <section aria-labelledby="supplements-title" className={`rounded-card border border-border bg-card p-4 sm:p-5 space-y-4 ${phoneHide("odzywki") ?? ""}`}>
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 id="supplements-title" className="section-label gap-2">
-            <Pill className="h-3.5 w-3.5" aria-hidden />
-            Odżywki
-          </h2>
-          {supplements.length > 0 && (
-            <span className="text-xs text-muted-foreground" data-testid="supplements-count">
-              dziś {doneToday} z {supplements.length}
-            </span>
-          )}
-        </div>
+      <SectionCard icon={Pill} title="Odżywki" className={phoneHide("odzywki")} bodyClassName="space-y-4"
+        meta={supplements.length > 0 ? <span data-testid="supplements-count">dziś {doneToday} z {supplements.length}</span> : undefined}>
 
         {supplements.length === 0 ? (
           <EmptyList notes={notes} />
@@ -105,7 +96,7 @@ export function CwiczeniaView() {
         )}
 
         <AddSupplementForm notes={notes} />
-      </section>
+      </SectionCard>
 
       <div className="mt-6 space-y-6">
         <div className={phoneHide("trening")}><TrainingSection /></div>

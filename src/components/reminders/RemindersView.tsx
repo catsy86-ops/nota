@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { cn } from "@/lib/utils";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ReminderListGroups } from "@/components/reminders/ReminderListGroups";
 import { NoteGroupSection } from "@/components/NoteGroupSection";
 import { PageActions } from "@/components/PageActions";
@@ -49,13 +49,11 @@ export function RemindersView({ go, reminderNotes, reminderGroups, archivedRows,
                   <NewReminderButton notes={reminderNotes} onCreateNote={createReminderNote} onAttachReminder={attachReminder} />
                 </Suspense>
               </PageActions>
-              <div role="group" aria-label="Układ Terminów" className="flex gap-1">
-                {(["tiles", "list"] as const).map((layout) => (
-                  <button key={layout} type="button" aria-pressed={remindersLayout === layout} onClick={() => setRemindersLayout(layout)} className={cn("rounded-full px-3 py-1 text-xs font-medium coarse:min-h-11", remindersLayout === layout ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground")}>
-                    {layout === "tiles" ? "Kafle" : "Lista"}
-                  </button>
-                ))}
-              </div>
+              {/* Tryb widoku = przełącznik segmentowy (nowy plan 2.2, zasada 4). */}
+              <ToggleGroup aria-label="Układ Terminów" value={remindersLayout} onValueChange={(v) => setRemindersLayout(v as "tiles" | "list")}>
+                <ToggleGroupItem value="tiles" className="px-3">Kafle</ToggleGroupItem>
+                <ToggleGroupItem value="list" className="px-3">Lista</ToggleGroupItem>
+              </ToggleGroup>
             </div>
           )}
           {remindersLayout === "list" && (

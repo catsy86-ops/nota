@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { flushSync } from "react-dom";
 import { CalendarLegend } from "./CalendarLegend";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -348,19 +349,11 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
         <p role="status" aria-live="polite" className="sr-only">
           {format(month, "LLLL yyyy", { locale: pl })}, wybrany dzień: {format(selectedDay, "EEEE, d MMMM", { locale: pl })}
         </p>
-        <div role="group" aria-label="Widok na telefonie" className="order-3 flex gap-1 sm:hidden">
-            {(["month", "week", "agenda"] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={phoneView === v}
-                onClick={() => setPhoneView(v)}
-                className={`rounded-field px-3 py-1.5 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${phoneView === v ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                {v === "month" ? "Miesiąc" : v === "week" ? "Tydzień" : "Lista"}
-              </button>
-            ))}
-        </div>
+        <ToggleGroup aria-label="Widok na telefonie" value={phoneView} onValueChange={(v) => setPhoneView(v as typeof phoneView)} className="order-3 sm:hidden">
+          <ToggleGroupItem value="month">Miesiąc</ToggleGroupItem>
+          <ToggleGroupItem value="week">Tydzień</ToggleGroupItem>
+          <ToggleGroupItem value="agenda">Lista</ToggleGroupItem>
+        </ToggleGroup>
         {showKeys && (
           <p id="calendar-keys-hint" className="order-2 -mt-2 px-1 text-xs text-muted-foreground">
             Strzałki — przechodzenie po dniach · PgUp / PgDn — miesiąc · Enter — dodaj termin · Z — zmiana i godziny z Grafiku · Shift+←/→ — przesuń wybrany termin o dzień (albo przeciągnij go myszą).
@@ -409,25 +402,15 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
 
         {/* K-3 (plan Kalendarza 3.4): agenda miesiąca na telefonie — trzeci widok, bez pustych dni. */}
         {/* K3.2: agenda na komputerze (przełącznik „Siatka | Lista”) i na telefonie (widok Lista). Stuknięcie dnia pokazuje panel, nie zmienia widoku. */}
-        <div role="group" aria-label="Widok dni" className="order-4 hidden sm:flex justify-end gap-1">
-          {([
-            ["grid", "Siatka", !desktopAgenda && !axisShown],
-            ["list", "Lista", desktopAgenda],
-            ["axis", "Oś tygodnia", axisShown],
-          ] as const).map(([v, label, pressed]) => (
-            <button
-              key={v}
-              type="button"
-              aria-pressed={pressed}
-              onClick={() => {
-                setDesktopAgenda(v === "list");
-                setWeekAxis(v === "axis");
-              }}
-              className={`rounded-field px-3 py-1.5 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${pressed ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground"} ${v === "axis" ? "max-xl:hidden" : ""}`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Przełącznik segmentowy (nowy plan 2.2); „Oś tygodnia” tylko od xl. */}
+        <div className="order-4 hidden sm:flex justify-end">
+          <ToggleGroup aria-label="Widok dni" className="w-auto"
+            value={axisShown ? "axis" : desktopAgenda ? "list" : "grid"}
+            onValueChange={(v) => { setDesktopAgenda(v === "list"); setWeekAxis(v === "axis"); }}>
+            <ToggleGroupItem value="grid" className="px-3">Siatka</ToggleGroupItem>
+            <ToggleGroupItem value="list" className="px-3">Lista</ToggleGroupItem>
+            <ToggleGroupItem value="axis" className="px-3 max-xl:hidden">Oś tygodnia</ToggleGroupItem>
+          </ToggleGroup>
         </div>
         <div className={cn(phoneView === "agenda" ? "order-5 sm:hidden" : "hidden", desktopAgenda && "sm:block sm:order-5")}>
           <MonthAgenda

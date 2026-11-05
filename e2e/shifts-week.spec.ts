@@ -30,7 +30,7 @@ async function drag(page: Page, from: number, to: number, opts: { alt?: boolean 
 }
 
 test("widok tygodnia: przełącznik, nawigacja, pędzel i pamięć wyboru", async ({ page }) => {
-  await page.getByRole("button", { name: "Tydzień", exact: true }).click();
+  await page.getByRole("radio", { name: "Tydzień", exact: true }).click();
   await expect(page.getByRole("heading", { level: 2 })).toHaveText(/^5–11 października 2026/);
   await expect(page.getByRole("grid", { name: /^Tydzień 5 października – 11 października 2026$/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ten tydzień", exact: true })).toHaveCount(0);
@@ -46,12 +46,12 @@ test("widok tygodnia: przełącznik, nawigacja, pędzel i pamięć wyboru", asyn
 
   await page.reload();
   await expect(page.getByRole("heading", { level: 2 })).toHaveText(/^5–11 października 2026/);
-  await page.getByRole("button", { name: "Miesiąc", exact: true }).click();
+  await page.getByRole("radio", { name: "Miesiąc", exact: true }).click();
   await expect(page.getByRole("heading", { level: 2 })).toHaveText(/^październik 2026/);
 });
 
 test("tydzień przechodzi przez przełom miesiąca", async ({ page }) => {
-  await page.getByRole("button", { name: "Tydzień", exact: true }).click();
+  await page.getByRole("radio", { name: "Tydzień", exact: true }).click();
   await page.getByRole("button", { name: "Następny tydzień" }).click();
   await page.getByRole("button", { name: "Następny tydzień" }).click();
   await page.getByRole("button", { name: "Następny tydzień" }).click();
@@ -80,7 +80,7 @@ test("przeciągnięcie z Alt kopiuje zmianę", async ({ page }) => {
 });
 
 test("przeciągnięcie działa też w widoku tygodnia", async ({ page }) => {
-  await page.getByRole("button", { name: "Tydzień", exact: true }).click();
+  await page.getByRole("radio", { name: "Tydzień", exact: true }).click();
   await tap(page, 6);
   await drag(page, 6, 9);
   await expect(page.getByRole("button", { name: day(9, "Dzień") })).toBeVisible();
@@ -107,7 +107,7 @@ test("klawiatura: Shift+strzałka przenosi, Ctrl+C i Ctrl+V kopiują wpis", asyn
 });
 
 test("kopiowanie tygodnia na pusty tydzień da się cofnąć", async ({ page }) => {
-  await page.getByRole("button", { name: "Tydzień", exact: true }).click();
+  await page.getByRole("radio", { name: "Tydzień", exact: true }).click();
   await tap(page, 5);
   await tap(page, 6);
   await page.getByRole("radio", { name: /Noc/ }).click();
@@ -127,7 +127,7 @@ test("kopiowanie tygodnia na pusty tydzień da się cofnąć", async ({ page }) 
 });
 
 test("kopiowanie tygodnia pyta, gdy nadpisze inny wpis", async ({ page }) => {
-  await page.getByRole("button", { name: "Tydzień", exact: true }).click();
+  await page.getByRole("radio", { name: "Tydzień", exact: true }).click();
   await tap(page, 5);
   await page.getByRole("button", { name: "Następny tydzień" }).click();
   await page.getByRole("radio", { name: /Noc/ }).click();
@@ -159,7 +159,7 @@ test("widok tygodnia pokazuje terminy z Kalendarza jako podgląd", async ({ page
   await expect(page.getByRole("button", { name: /^8 października, czwartek.*1 termin$/ })).toBeVisible();
 
   await page.getByRole("button", { name: /Grafik/ }).first().click();
-  await page.getByRole("button", { name: "Tydzień", exact: true }).click();
+  await page.getByRole("radio", { name: "Tydzień", exact: true }).click();
   const thursday = page.getByRole("button", { name: day(8, "") }).first();
   await expect(thursday).toHaveAccessibleName(/terminy: 18:30 odebrac paczke/);
   await expect(thursday).toContainText("odebrac paczke");
@@ -167,7 +167,7 @@ test("widok tygodnia pokazuje terminy z Kalendarza jako podgląd", async ({ page
 
 test("390 px: widok tygodnia bez poziomego przewijania", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Tydzień", exact: true }).click();
+  await page.getByRole("radio", { name: "Tydzień", exact: true }).click();
   await tap(page, 7, "dziś, wolne$");
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);

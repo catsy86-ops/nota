@@ -97,18 +97,13 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
         </button>
       </div>
 
-      <ToggleGroup
-        variant="plain"
-        value={view}
-        onValueChange={(v) => { if (v) setView(v as DayView); }}
-        aria-label="Widok terminów dnia"
-        className="mb-3 inline-flex gap-0.5 rounded-field bg-muted/50 p-0.5"
-      >
-        <ToggleGroupItem value="list" className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-card data-[state=on]:text-primary-ink data-[state=on]:shadow-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+      {/* Ten sam przełącznik segmentowy co reszta trybów widoku (nowy plan 2.2). */}
+      <ToggleGroup value={view} onValueChange={(v) => setView(v as DayView)} aria-label="Widok terminów dnia" className="mb-3 inline-grid">
+        <ToggleGroupItem value="list" className="inline-flex items-center justify-center gap-1 px-3">
           <List className="w-3.5 h-3.5" aria-hidden />
           Lista
         </ToggleGroupItem>
-        <ToggleGroupItem value="axis" className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-card data-[state=on]:text-primary-ink data-[state=on]:shadow-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        <ToggleGroupItem value="axis" className="inline-flex items-center justify-center gap-1 px-3">
           <Clock className="w-3.5 h-3.5" aria-hidden />
           Oś godzin
         </ToggleGroupItem>

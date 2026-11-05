@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { SectionCard } from "@/components/ui/section-card";
 import { Salad, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,13 +22,7 @@ export function DietSection() {
   const week = useMemo(() => summarizeRange(meals, today, 7, addDaysToKey), [meals, today]);
 
   return (
-    <section aria-labelledby="diet-title" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 id="diet-title" className="section-label gap-2">
-          <Salad className="h-3.5 w-3.5" aria-hidden />
-          Dieta
-        </h2>
-      </div>
+    <SectionCard icon={Salad} title="Dieta" bodyClassName="space-y-4">
 
       <TodaySummary summary={summary} goals={goals} />
 
@@ -42,7 +37,7 @@ export function DietSection() {
       <AddMealForm />
       <GoalsForm goals={goals} />
       <WeekList days={week} today={today} />
-    </section>
+    </SectionCard>
   );
 }
 

@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Stat } from "@/components/ui/stat";
 import { cn } from "@/lib/utils";
 import { MODULES, TOPICS } from "@/lib/study/content";
 import { STUDY_TOPIC_PARAM } from "@/lib/study/questionSearch";
@@ -47,10 +48,8 @@ function MasteryStrip() {
   const pickedTopic = TOPICS.find((t) => t.id === picked) ?? null;
   return (
     <div className="space-y-2">
-      <div className="flex items-baseline gap-3">
-        <p className="font-mono text-4xl font-semibold leading-none tabular-nums text-primary-ink" data-testid="mastery-count">{done}</p>
-        <p className="text-sm text-muted-foreground">z {TOPICS.length} tematów opanowanych{doing > 0 ? ` · ${doing} w trakcie` : ""}</p>
-      </div>
+      <Stat label="Opanowane tematy" size="lg" tone="primary" value={<span data-testid="mastery-count">{done}</span>}
+        suffix={`z ${TOPICS.length}`} hint={doing > 0 ? `${doing} w trakcie` : undefined} />
       <div className="flex flex-wrap gap-x-5 gap-y-3" role="group" aria-label={`Opanowane tematy: ${done} z ${TOPICS.length}`}>
         {MODULES.map((m) => {
           const topics = TOPICS.filter((t) => t.module === m.id);

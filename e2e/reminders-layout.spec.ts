@@ -8,11 +8,11 @@ test.beforeEach(async ({ page }) => {
 
 test("Terminy: „Lista” zapamiętuje się po odświeżeniu, „Kafle” wraca", async ({ page }) => {
   await page.goto("/przypomnienia");
-  const group = page.getByRole("group", { name: "Układ Terminów" });
-  await group.getByRole("button", { name: "Lista" }).click();
-  await expect(group.getByRole("button", { name: "Lista" })).toHaveAttribute("aria-pressed", "true");
+  const group = page.getByRole("radiogroup", { name: "Układ Terminów" });
+  await group.getByRole("radio", { name: "Lista" }).click();
+  await expect(group.getByRole("radio", { name: "Lista" })).toHaveAttribute("aria-checked", "true");
   await page.reload();
-  await expect(page.getByRole("group", { name: "Układ Terminów" }).getByRole("button", { name: "Lista" })).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("group", { name: "Układ Terminów" }).getByRole("button", { name: "Kafle" }).click();
-  await expect(page.getByRole("group", { name: "Układ Terminów" }).getByRole("button", { name: "Kafle" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("radiogroup", { name: "Układ Terminów" }).getByRole("radio", { name: "Lista" })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("radiogroup", { name: "Układ Terminów" }).getByRole("radio", { name: "Kafle" }).click();
+  await expect(page.getByRole("radiogroup", { name: "Układ Terminów" }).getByRole("radio", { name: "Kafle" })).toHaveAttribute("aria-checked", "true");
 });

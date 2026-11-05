@@ -1,4 +1,5 @@
 import { BrainCircuit, BellRing, ExternalLink } from "lucide-react";
+import { SectionCard } from "@/components/ui/section-card";
 import { Button } from "@/components/ui/button";
 import { useDayClock } from "@/lib/dayClock";
 import { toast } from "sonner";
@@ -18,16 +19,8 @@ export function BrainTrainingCard({ onRemind, hasReminder }: { onRemind: (at: nu
   const plan = brainPlan(data, new Date());
 
   return (
-    <section aria-label="Trening mózgu" data-testid="brain-training" className="rounded-card border border-border bg-card p-4 sm:p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <BrainCircuit className="mt-0.5 h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
-          <div className="min-w-0">
-            <p className="text-sm font-medium sm:text-base">{plan.title}</p>
-            <p className="text-xs text-muted-foreground">{plan.body}</p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
+    <SectionCard aria-label="Trening mózgu" data-testid="brain-training" icon={BrainCircuit} title={plan.title} description={plan.body}
+      action={<>
           {plan.remindAt !== null && hasReminder?.(plan.remindAt, plan.remindLabel ?? plan.title) ? (
             <Button variant="outline" size="sm" className="coarse:h-11" disabled>
               <BellRing className="mr-1.5 h-4 w-4" aria-hidden />Przypomnienie ustawione
@@ -48,8 +41,6 @@ export function BrainTrainingCard({ onRemind, hasReminder }: { onRemind: (at: nu
           <Button size="sm" className="coarse:h-11" onClick={() => window.open(NEUROKLIK_URL, "_blank", "noopener,noreferrer")}>
             <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden />Otwórz trening
           </Button>
-        </div>
-      </div>
-    </section>
+      </>} />
   );
 }

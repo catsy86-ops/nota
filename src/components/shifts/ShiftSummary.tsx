@@ -1,4 +1,6 @@
 import { lazy, Suspense, useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { SectionCard } from "@/components/ui/section-card";
+import { Stat as UiStat } from "@/components/ui/stat";
 import { MissingHint } from "@/components/ui/missing-hint";
 import { comparePayslip, PAYSLIP_TOLERANCE, type PayslipFacts } from "@/lib/shifts/payslip";
 import { format } from "date-fns";
@@ -81,21 +83,11 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
   return (
     <section aria-label="Podsumowanie miesiąca" className="rounded-card border border-border/60 bg-card p-4 sm:p-5 space-y-4">
       <div className="flex items-end justify-between gap-4 flex-wrap">
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground">Przepracowane</p>
-          <p className="font-display font-extrabold text-4xl tabular-nums leading-none mt-1">
-            <CountUp value={minutes} format={formatHoursShort} /><span className="text-lg font-bold text-muted-foreground ml-1">h</span>
-            <span className="text-base font-semibold text-muted-foreground ml-2">/ <CountUp value={normMinutes} format={formatHoursShort} /> h normy</span>
-          </p>
-        </div>
+        <UiStat label="Przepracowane" size="lg" value={<CountUp value={minutes} format={formatHoursShort} />} unit="h"
+          suffix={<>/ <CountUp value={normMinutes} format={formatHoursShort} /> h normy</>} />
         {/* Pokazuje się też wtedy, gdy zarobek to 0, a jest szacunek urlopu albo L4 (G0.5). */}
         {(summary.earnings > 0 || grossTotal > 0) && (
-          <div className="text-right">
-            <p className="text-xs font-semibold text-muted-foreground">Razem brutto</p>
-            <p className="font-display font-extrabold text-3xl sm:text-4xl tabular-nums leading-none mt-1 text-primary-ink">
-              <CountUp value={grossTotal} format={formatMoney} />
-            </p>
-          </div>
+          <UiStat label="Razem brutto" size="lg" tone="primary" align="end" value={<CountUp value={grossTotal} format={formatMoney} />} />
         )}
         <button type="button" onClick={() => setYearOpen(true)} aria-label="Podsumowanie roku"
           className="pressable shrink-0 flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-card border border-border/60 bg-background hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
@@ -255,14 +247,9 @@ function PeriodProgress({ period }: { period: PeriodSummary }) {
   );
 }
 
+/** Kafelek liczby w siatce podsumowania — `Stat` z `ui/` jako para `dt`/`dd` (nowy plan 2.3). */
 function Stat({ label, value, accent = false, hint }: { label: string; value: ReactNode; accent?: boolean; hint?: string }) {
-  return (
-    <div className="rounded-card bg-muted/50 px-3 py-2">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={cn("tabular-nums font-semibold", accent && "text-primary-ink")}>{value}</dd>
-      {hint && <dd className="text-2xs text-muted-foreground tabular-nums">{hint}</dd>}
-    </div>
-  );
+  return <UiStat term size="sm" label={label} value={value} hint={hint} tone={accent ? "primary" : "default"} className="rounded-card bg-muted/50 px-3 py-2" />;
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -383,8 +370,7 @@ function BonusPanel({ monthKey, bonuses }: { monthKey: string; bonuses: ShiftBon
   };
 
   return (
-    <section aria-labelledby="bonus-title" className="rounded-card border border-border/60 bg-card p-4 space-y-3">
-      <h3 id="bonus-title" className="text-sm font-medium">Premie w tym miesiącu</h3>
+    <SectionCard level={3} title="Premie w tym miesiącu" bodyClassName="space-y-3">
       {bonuses.length === 0 ? (
         <p className="text-sm text-muted-foreground">Brak premii. Dodane kwoty doliczają się do zarobku brutto.</p>
       ) : (
@@ -406,7 +392,7 @@ function BonusPanel({ monthKey, bonuses }: { monthKey: string; bonuses: ShiftBon
         <Button type="submit" size="sm" disabled={!valid} aria-describedby={hintId} className="coarse:h-11">Dodaj premię</Button>
         <MissingHint id={hintId} missing={missing} className="sm:col-span-3" />
       </form>
-    </section>
+    </SectionCard>
   );
 }
 

@@ -25,12 +25,12 @@ test.describe("telefon", () => {
 
   test("przełącznik Miesiąc / Tydzień zamienia siatkę na pasek tygodnia", async ({ page }) => {
     await page.goto("/kalendarz");
-    const month = page.getByRole("button", { name: "Miesiąc", exact: true });
-    const week = page.getByRole("button", { name: "Tydzień", exact: true });
-    await expect(month).toHaveAttribute("aria-pressed", "true");
+    const month = page.getByRole("radio", { name: "Miesiąc", exact: true });
+    const week = page.getByRole("radio", { name: "Tydzień", exact: true });
+    await expect(month).toHaveAttribute("aria-checked", "true");
 
     await week.click();
-    await expect(week).toHaveAttribute("aria-pressed", "true");
+    await expect(week).toHaveAttribute("aria-checked", "true");
     await expect(page.getByRole("region", { name: "Ten tydzień" })).toBeVisible();
     await expect(page.getByRole("grid")).toBeHidden();
 
