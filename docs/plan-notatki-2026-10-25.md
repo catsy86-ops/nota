@@ -2,7 +2,7 @@
 
 > **Status (2026-11-03):** zrobione 1.1 i 4.5 (b11d36f), 2.4 (df9f902), 4.1 (fa4628e), 4.6/N-3 (990244a), 4.7 w części „ptaszek”; częściowo 1.2 (brak „Cofnij” w dymku i `aria-expanded`), 1.3 (brak ochrony przed Esc i tłem, „Wyczyść” bez cofnięcia), 2.5 (w „Ta notatka” tylko Otwórz i Przypnij), 2.6 (brak upuszczania pliku i PDF), 3.3 (filtry bez ikony), 3.4 (brak podglądu liczby i „Cofnij”), 4.2 (brak `mask-image`), 4.3 (brak 70ch); otwarte 1.4, 1.5, 1.6, 2.1, 2.2, 2.3 (klawisze M i L), 2.7, 2.8, 3.1, 3.2, 3.5, 4.4, 4.8, Etapy 5–8; czeka N-2, N-4 i QA na telefonie. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
 
-> **Uzupełnienie (2026-11-05, nowy plan Etap 5, HASH):** zrobione 1.2, 1.3 (ochrona przed Esc i tłem, „Wyczyść” z „Cofnij”), 1.4, 1.5, 2.1 (przeciąganie listy), 2.3 (M i L), 2.7 (ostatnie i Alt+←/→), 2.8 (domyślny szablon folderu). Opis: `opis.md`, sekcja „QoL na co dzień, Etap 5”.
+> **Uzupełnienie (2026-11-05, nowy plan Etap 5, 12035f1):** zrobione 1.2, 1.3 (ochrona przed Esc i tłem, „Wyczyść” z „Cofnij”), 1.4, 1.5, 2.1 (przeciąganie listy), 2.3 (M i L), 2.7 (ostatnie i Alt+←/→), 2.8 (domyślny szablon folderu). Opis: `opis.md`, sekcja „QoL na co dzień, Etap 5”.
 
 Pierwszy z serii planów „dział po dziale”. Kolejne działy dostaną osobne pliki `docs/plan-<dział>-2026-10-xx.md` w tym samym układzie.
 

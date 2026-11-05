@@ -334,7 +334,7 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 
 ## Wspólne — QoL na co dzień, Etap 5 (nowy plan 2026-11-05)
 
-Commit: HASH (2026-11-05), na wip/mobile-fala1.
+Commit: 12035f1 (2026-11-05), na wip/mobile-fala1.
 
 Plan: `nowyplan.md`, Etap 5 (punkty 5.1–5.10). Punkty przejęte z planów działów: Notatki 1.2, 1.3, 1.4, 1.5, 2.1, 2.3, 2.7, 2.8; Ustawienia 1.1, 2.2, 4.1; Powłoka 2.6.
 

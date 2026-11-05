@@ -1,6 +1,6 @@
 # Nowy plan: dopracowanie, wygląd i QoL (2026-11-05)
 
-> **Status (2026-11-05):** Etapy 0–5 zrobione (Etap 3: fc5310f, Etap 4: d495ac2, Etap 5: HASH). Dalej Etap 6 (tylko po decyzji) i Etap 7 (QA). Otwarte: toast nad otwartym arkuszem na telefonie (4.5, do Etapu 7), okruszek Praca → budowa (5.8; karta budowy to okno). NP-5 przyjęte według rekomendacji.
+> **Status (2026-11-05):** Etapy 0–5 zrobione (Etap 3: fc5310f, Etap 4: d495ac2, Etap 5: 12035f1). Dalej Etap 6 (tylko po decyzji) i Etap 7 (QA). Otwarte: toast nad otwartym arkuszem na telefonie (4.5, do Etapu 7), okruszek Praca → budowa (5.8; karta budowy to okno). NP-5 przyjęte według rekomendacji.
 
 ## 1. Skąd ten plan
 
