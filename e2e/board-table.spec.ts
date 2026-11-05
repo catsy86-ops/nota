@@ -175,3 +175,17 @@ test.describe("tablica na telefonie", () => {
     await expect(page.getByText("Zarchiwizowano")).toBeVisible();
   });
 });
+
+test("tabela: menu „Kolumny” chowa kolumnę, wybór zostaje po przeładowaniu (6.1)", async ({ page }) => {
+  await seed(page, { layout: "table" });
+  await expect(page.getByRole("columnheader", { name: "Etykiety" })).toBeVisible();
+  await page.getByTestId("table-columns").click();
+  await page.getByRole("menuitemcheckbox", { name: "Etykiety" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("columnheader", { name: "Etykiety" })).toHaveCount(0);
+  // Tytuł i „Zmieniono” nie chowają się.
+  await expect(page.getByRole("columnheader", { name: "Tytuł" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("columnheader", { name: "Etykiety" })).toHaveCount(0);
+});
+

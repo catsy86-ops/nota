@@ -1,4 +1,6 @@
-import { ArrowDown, ArrowUp, Bell, Flag, Pin } from "lucide-react";
+import { ArrowDown, ArrowUp, Bell, Columns3, Flag, Pin } from "lucide-react";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { AnimatePresence, m as motion } from "framer-motion";
@@ -7,7 +9,7 @@ import { useMotionPref } from "@/hooks/useMotionPref";
 import { dur, ease } from "@/lib/motion";
 import type { Folder, Note } from "@/hooks/useNotes";
 import { PRIORITY_COLOR_CLASS, PRIORITY_LABELS } from "@/lib/notePriority";
-import { setViewPref, type SortDir, type SortKey } from "@/lib/viewPrefs";
+import { getViewPrefs, setViewPref, useViewPrefs, type SortDir, type SortKey } from "@/lib/viewPrefs";
 import {
   filledPropEntries,
   parsePropInput,
@@ -123,13 +125,44 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
 
   // Pola właściwości wchodzą przed „Zmieniono” (ostatnia kolumna zostaje na końcu).
   const updatedColumn = COLUMNS[COLUMNS.length - 1];
-  const columns = [
+  const allColumns = [
     ...COLUMNS.slice(0, -1),
     ...propDefs.map((d) => ({ key: `prop:${d.id}`, label: d.name, sort: `prop:${d.id}` as const, className: "hidden md:table-cell" })),
     updatedColumn,
   ];
+  // 6.1: „widoczne kolumny”. Tytuł i „Zmieniono” nie chowają się, żeby tabela zawsze miała co pokazać.
+  const hidden = new Set(useViewPrefs().tableHidden);
+  const columns = allColumns.filter((c) => c.key === "title" || c.key === updatedColumn.key || !hidden.has(c.key));
+  const toggleColumn = (key: string, on: boolean) => {
+    const next = on ? getViewPrefs().tableHidden.filter((k) => k !== key) : [...getViewPrefs().tableHidden, key];
+    setViewPref("tableHidden", next);
+  };
+
+  // Menu kolumn: te same klucze co w `allColumns`, zapisane w preferencjach widoku (i w zapisanym widoku).
+  const hideable = allColumns.filter((c) => c.key !== "title" && c.key !== updatedColumn.key);
+  const chooser = (
+    <div className="mb-2 flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-1.5 coarse:h-11" data-testid="table-columns">
+            <Columns3 className="h-3.5 w-3.5" aria-hidden />Kolumny
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-52">
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Pokaż w tabeli</DropdownMenuLabel>
+          {hideable.map((c) => (
+            <DropdownMenuCheckboxItem key={c.key} checked={!hidden.has(c.key)} onCheckedChange={(on) => toggleColumn(c.key, on === true)} onSelect={(e) => e.preventDefault()}>
+              {c.label}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
 
   return (
+    <>
+    {chooser}
     <div className="overflow-x-auto rounded-card border border-border/60 bg-card/60">
       <table className="w-full text-sm" data-note-table>
         <thead>
@@ -235,5 +268,6 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
         </tbody>
       </table>
     </div>
+    </>
   );
 }

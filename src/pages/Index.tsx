@@ -448,6 +448,7 @@ const Index = () => {
     setViewPref("filterLabel", v.filterLabel);
     setViewPref("filterHasReminder", v.filterHasReminder);
     setViewPref("filterPriority", v.filterPriority);
+    setViewPref("tableHidden", v.tableHidden);
     setSearch(v.query);
     if (src.kind === "folder") go("folder", { folder: src.id, search: v.query });
     else if (src.kind === "label") go("label", { label: src.label, search: v.query });

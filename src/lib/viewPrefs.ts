@@ -24,6 +24,8 @@ export interface ViewPrefs {
   filterLabel: string | "all";
   filterHasReminder: boolean;
   filterPriority: NotePriority | "all";
+  /** Ukryte kolumny tabeli (klucze z `NoteTable`); tytuł i „Zmieniono” zawsze widoczne. */
+  tableHidden: string[];
   defaultNoteColor: NoteColor;
   spellcheck: boolean;
   autosaveSeconds: number;
@@ -54,6 +56,7 @@ const DEFAULTS: ViewPrefs = {
   filterLabel: "all",
   filterHasReminder: false,
   filterPriority: "all",
+  tableHidden: [],
   defaultNoteColor: "default",
   spellcheck: true,
   autosaveSeconds: 0,
@@ -117,6 +120,7 @@ export const VIEW_PREF_LABELS: Record<keyof ViewPrefs, string> = {
   filterLabel: "filtr etykiety",
   filterHasReminder: "filtr przypomnień",
   filterPriority: "filtr priorytetu",
+  tableHidden: "ukryte kolumny tabeli",
   defaultNoteColor: "kolor nowej notatki",
   spellcheck: "sprawdzanie pisowni",
   autosaveSeconds: "autosave",

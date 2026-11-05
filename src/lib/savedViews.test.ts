@@ -36,4 +36,10 @@ describe("zapisane widoki", () => {
     ]);
     expect(n).toBe(1);
   });
+
+  it("widoczne kolumny: zapisane z widoku i wracają z wpisu; uszkodzone klucze odpadają", () => {
+    const v = sanitizeView("k", { name: "Tabela", tableHidden: ["labels", 5, "x".repeat(200)] })!;
+    expect(v.tableHidden).toEqual(["labels"]);
+    expect(sanitizeView("k2", { name: "Bez" })!.tableHidden).toEqual([]);
+  });
 });

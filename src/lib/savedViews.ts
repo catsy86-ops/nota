@@ -26,6 +26,8 @@ export interface SavedView {
   filterLabel: string;
   filterHasReminder: boolean;
   filterPriority: ViewPrefs["filterPriority"];
+  /** Ukryte kolumny tabeli w tym widoku (6.1: „widoczne kolumny”). */
+  tableHidden: string[];
   createdAt: number;
 }
 
@@ -68,6 +70,8 @@ export function sanitizeView(id: string, raw: unknown): SavedView | null {
     filterLabel: str(r.filterLabel, 200) || "all",
     filterHasReminder: r.filterHasReminder === true,
     filterPriority: oneOf(r.filterPriority, PRIORITIES, "all") as SavedView["filterPriority"],
+    // Klucze kolumn: krótkie napisy, najwyżej 20 (wpis od peera nie może puchnąć).
+    tableHidden: Array.isArray(r.tableHidden) ? r.tableHidden.filter((k): k is string => typeof k === "string" && k.length <= 120).slice(0, 20) : [],
     createdAt: typeof r.createdAt === "number" && Number.isFinite(r.createdAt) ? r.createdAt : 0,
   };
 }
@@ -83,6 +87,7 @@ export function viewFromCurrent(id: string, name: string, source: ViewSource, qu
   return sanitizeView(id, {
     name, source, query: query.trim(), layout: prefs.layout, sortKey: prefs.sortKey, sortDir: prefs.sortDir, groupBy: prefs.groupBy,
     filterColor: prefs.filterColor, filterLabel: prefs.filterLabel, filterHasReminder: prefs.filterHasReminder, filterPriority: prefs.filterPriority,
+    tableHidden: prefs.tableHidden,
     createdAt: now,
   });
 }

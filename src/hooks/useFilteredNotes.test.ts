@@ -41,6 +41,7 @@ const basePrefs: ViewPrefs = {
   filterLabel: "all",
   filterHasReminder: false,
   filterPriority: "all",
+  tableHidden: [],
   defaultNoteColor: "default",
   spellcheck: true,
   autosaveSeconds: 0,
