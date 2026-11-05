@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ChevronDown, Clock3 } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { DayTimeline } from "@/components/calendar/DayTimeline";
@@ -7,6 +7,7 @@ import { noteListTitle } from "@/lib/noteListTitle";
 import { localDayKey } from "@/lib/dayDone";
 import { useShifts } from "@/lib/shifts";
 import { dayType, type ShiftType } from "@/lib/shifts/model";
+import { carryPieces } from "@/lib/dayTimeline";
 import { cn } from "@/lib/utils";
 
 /** Stan zwinięcia osi na tym urządzeniu: "1" rozwinięta, "0" zwinięta; brak — domyślnie (telefon zwinięta). */
@@ -23,10 +24,12 @@ function readOpen(): boolean {
 /**
  * Dziś 2.4: oś dnia pod kartą zmiany — ta sama `DayTimeline` co w Kalendarzu: pasek zmiany (z nocką z wczoraj),
  * terminy w swoich godzinach i linia „teraz”. Zwijana; stan pamięta urządzenie. Klik w termin otwiera notatkę
- * (przesuwanie terminów jest w Kalendarzu). Ładowana leniwie z `TodayCards`.
+ * (przesuwanie terminów jest w Kalendarzu). Ładowana leniwie z `TodayCards`. Pusty dzień (bez zmiany, nocki
+ * z wczoraj i terminów w godzinach) jej nie pokazuje — „Wolne. Nic nie czeka.” mówi już to samo.
  */
 export function TodayTimeline({ notes, onOpen }: { notes: Note[]; onOpen: (id: string) => void }) {
   const [open, setOpen] = useState(readOpen);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const shifts = useShifts();
   const today = new Date();
   const key = localDayKey(today);
@@ -41,6 +44,7 @@ export function TodayTimeline({ notes, onOpen }: { notes: Note[]; onOpen: (id: s
   };
   const prevKey = localDayKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1));
   const shift = shiftOf(key);
+  const prevShift = shiftOf(prevKey);
   const titles = useMemo(() => new Map(notes.map((n) => [n.id, noteListTitle(n)])), [notes]);
 
   const toggle = () => {
@@ -49,6 +53,8 @@ export function TodayTimeline({ notes, onOpen }: { notes: Note[]; onOpen: (id: s
       return !o;
     });
   };
+
+  if (!shift && occurrences.length === 0 && carryPieces(prevShift).length === 0) return null;
 
   return (
     <section aria-label="Oś dnia" data-testid="today-timeline" className="rounded-card border border-border bg-card p-4 sm:p-5">
@@ -60,13 +66,14 @@ export function TodayTimeline({ notes, onOpen }: { notes: Note[]; onOpen: (id: s
         <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform motion-reduce:transition-none", !open && "-rotate-90")} aria-hidden />
       </button>
       {open && (
-        <div id="today-timeline-body" className="mt-3 max-h-96 overflow-y-auto scrollbar-thin">
+        <div id="today-timeline-body" ref={bodyRef} className="mt-3 max-h-96 overflow-y-auto scrollbar-thin">
           <DayTimeline
             showNow
             occurrences={occurrences}
             titleOf={(id) => titles.get(id) ?? ""}
             shift={shift}
-            prevShift={shiftOf(prevKey)}
+            prevShift={prevShift}
+            scrollWithin={bodyRef}
             onEdit={(occ) => onOpen(occ.noteId)}
             onMoveByDays={(occ) => onOpen(occ.noteId)}
             onOpenSeriesSource={(occ) => onOpen(occ.noteId)}

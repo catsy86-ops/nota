@@ -1979,8 +1979,12 @@ Testy zielone: `npx vitest run` 1826/1826, `npx eslint .` bez błędów (16 ostr
   - *Nagłówki grup terminów (3.3):* „Zaległe”, „Przegapione” i „Dziś” jako `section-label` z kropką stanu i liczbą.
   - *Pusty dzień (3.6):* bez zmiany i bez terminów karta mówi „Wolne. Nic nie czeka.”, a „Notatka dnia” jest głównym przyciskiem. Karta Terminów znika, gdy nie ma ani dzisiejszych, ani przyszłych terminów. Rysunku w karcie nie ma, bo słońce jest już w pustym stanie notatek pod kartami.
 - **Gdzie:** `src/components/review/TodayShiftCard.tsx` (props `reminderNotes`, `onOpenTomorrow`), `TodayCards.tsx`, `TodayDueList.tsx` (`GROUP_DOT`). Logika: `src/lib/todayTomorrow.ts` (`isTomorrowPreviewTime`, `countRemindersOn`, `tomorrowLine`), `src/lib/shifts/finishNow.ts` (`finishShiftNow`, wspólne z `NowCard.tsx`). Kompozytor: `canCompose` w `src/pages/Index.tsx`.
-- **W toku (2.4):** `src/components/review/TodayTimeline.tsx` (oś dnia: `DayTimeline` z Kalendarza, zwijana, stan w `kaczy.today.timeline.v1`, domyślnie zwinięta na telefonie) jest napisany, ale jeszcze niepodpięty w `TodayCards` i bez testów.
-- **Testy:** `src/lib/todayTomorrow.test.ts`, `src/components/review/TodayShiftCard.test.tsx` (znaczek, „skończyła się”, wiersz „Jutro”), `e2e/dzis-composer.spec.ts`, `e2e/inbox-today.spec.ts` (pusty dzień). Zrzuty `dzis-*` w `e2e/visual.spec.ts-snapshots` są zaktualizowane (2026-11-05, nowy plan 0.1).
+- **Oś dnia (2.4):** `src/components/review/TodayTimeline.tsx`, leniwie w `TodayCards` pod kartą zmiany, z własną granicą błędu „Oś dnia”.
+  - Pokazuje tę samą `DayTimeline` co Kalendarz: pasek zmiany (z nocką z wczoraj), terminy w swoich godzinach i linię „teraz”. Klik w termin otwiera notatkę.
+  - Jest zwijana. Stan zapisuje się w `kaczy.today.timeline.v1` (`"1"` lub `"0"`). Bez zapisu oś jest rozwinięta na komputerze i zwinięta na telefonie.
+  - W pusty dzień (bez zmiany, bez nocki z wczoraj i bez terminów w godzinach) osi nie ma, bo „Wolne. Nic nie czeka.” mówi już to samo.
+  - `DayTimeline` ma prop `scrollWithin`. Linia „teraz” centruje się wtedy tylko w pojemniku osi (`max-h-96`). Wcześniej `scrollIntoView` przewijał całą stronę Dziś do osi.
+- **Testy:** `src/components/review/TodayTimeline.test.tsx` (pusty dzień, termin, zmiana, pamięć zwinięcia, kosz), `e2e/today-timeline.spec.ts` (komputer: rozwinięta, strona nie skacze; telefon: zwinięta), `src/lib/todayTomorrow.test.ts`, `src/components/review/TodayShiftCard.test.tsx` (znaczek, „skończyła się”, wiersz „Jutro”), `e2e/dzis-composer.spec.ts`, `e2e/inbox-today.spec.ts` (pusty dzień). Zrzuty `dzis-*` w `e2e/visual.spec.ts-snapshots` są zaktualizowane (2026-11-05, nowy plan 0.1).
 - **Commity:** 52fe529, 16e748f (2026-11-03).
 
 ## Dziś — karta „Trening mózgu” (Neuroklik, 2026-10-22)

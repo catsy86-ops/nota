@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { ArrowRight, Pencil } from "lucide-react";
 import { ReminderChip } from "./ReminderChip";
 import type { Occurrence } from "@/lib/reminderOccurrences";
@@ -24,6 +24,8 @@ interface DayTimelineProps {
   shift?: ShiftType;
   /** Zmiana z poprzedniego dnia — jej część po północy (nocka) pokazuje się też tutaj (K2.7). */
   prevShift?: ShiftType;
+  /** Przewijany pojemnik osi (Dziś): linia „teraz” centruje się tylko w nim, strona stoi w miejscu. */
+  scrollWithin?: RefObject<HTMLElement | null>;
   onEdit: (occurrence: Occurrence) => void;
   onMoveByDays: (occurrence: Occurrence, days: number) => void;
   onOpenSeriesSource: (occurrence: Occurrence) => void;
@@ -74,7 +76,7 @@ function TimelineItem({ occ, title, onEdit, onMoveByDays, onOpenSeriesSource }: 
 
 const pad = (h: number) => `${String(h).padStart(2, "0")}:00`;
 
-export function DayTimeline({ showNow = false, occurrences, titleOf, shift, prevShift, onEdit, onMoveByDays, onOpenSeriesSource }: DayTimelineProps) {
+export function DayTimeline({ showNow = false, occurrences, titleOf, shift, prevShift, scrollWithin, onEdit, onMoveByDays, onOpenSeriesSource }: DayTimelineProps) {
   const nowRef = useRef<HTMLSpanElement>(null);
   // Linia „teraz” idzie co minutę (K4.4): minutowy sygnał przerysowuje oś tylko dla dzisiejszego dnia.
   const [, setMinuteTick] = useState(0);
@@ -87,8 +89,14 @@ export function DayTimeline({ showNow = false, occurrences, titleOf, shift, prev
   useEffect(() => {
     if (!showNow) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    nowRef.current?.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
-  }, [showNow]);
+    const box = scrollWithin?.current;
+    const line = nowRef.current;
+    if (box && line) {
+      box.scrollTop += line.getBoundingClientRect().top - box.getBoundingClientRect().top - box.clientHeight / 2;
+      return;
+    }
+    line?.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+  }, [showNow, scrollWithin]);
   const pieces = [...shiftPieces(shift), ...carryPieces(prevShift)];
   const allDay = occurrences.filter((o) => o.allDay);
   const timed = occurrences.filter((o) => !o.allDay);

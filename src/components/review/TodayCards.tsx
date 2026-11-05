@@ -13,6 +13,7 @@ type NotesApi = ReturnType<typeof useNotesContext>;
 
 // Leniwe karty widoku Dziś — każda ładuje się osobno.
 const TodayShiftCard = lazy(() => import("@/components/review/TodayShiftCard").then((m) => ({ default: m.TodayShiftCard })));
+const TodayTimeline = lazy(() => import("@/components/review/TodayTimeline").then((m) => ({ default: m.TodayTimeline })));
 const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
 export const StudyDueRows = lazy(() => import("@/components/review/StudyDueRows"));
 const TodaySiteCard = lazy(() => import("@/components/review/TodaySiteCard").then((m) => ({ default: m.TodaySiteCard })));
@@ -59,6 +60,14 @@ export function TodayCards({ searching, go, notes, folders, reminderNotes, today
             </ViewErrorBoundary>
           )}
 
+          {/* Dziś 2.4: oś dnia pod kartą zmiany — osobna granica, żeby błąd osi nie zabierał karty zmiany. */}
+          {!searching && (
+            <ViewErrorBoundary name="Oś dnia">
+              <Suspense fallback={null}>
+                <TodayTimeline notes={reminderNotes} onOpen={openNote} />
+              </Suspense>
+            </ViewErrorBoundary>
+          )}
 
           {!searching && (
             <ViewErrorBoundary name="Przypomnienia">
