@@ -334,7 +334,7 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 
 ## Wspólne — ruch i drobny szlif, Etap 4 (nowy plan 2026-11-05)
 
-Commit: HASH (2026-11-05), na wip/mobile-fala1.
+Commit: d495ac2 (2026-11-05), na wip/mobile-fala1.
 
 Plan: `nowyplan.md`, Etap 4 (punkty 4.1–4.5). Decyzję NP-5 przyjęto według rekomendacji: proste wejścia i naciśnięcia w CSS, `AnimatePresence` i `layoutId` zostają w framer-motion.
 
