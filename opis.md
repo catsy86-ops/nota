@@ -4885,3 +4885,11 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **2.8 Paleta przy otwartej notatce.** Grupa „Ta notatka” (`CommandPalette.tsx`) ma oprócz „Otwórz” i „Przypnij” także „Do ulubionych” / „Usuń z ulubionych”, „Duplikuj”, „Archiwizuj” i „Do kosza”. To te same funkcje co na kaflu (`handleArchiveSingle`, `handleTrashSingle` z „Cofnij”, `duplicateNote`, `updateNote`). Dla notatki z kosza zostaje samo „Otwórz”.
 - **Naprawione: Ctrl+K przy otwartym podglądzie.** Podgląd przewija treść klawiszem `k` (`handlePreviewKeys` w `gridKeyboardNav.ts`) i robił to także przy Ctrl+K, a jego `preventDefault` blokował paletę. Teraz skróty z Ctrl, Cmd albo Alt podgląd przepuszcza (paleta, Alt+←/→). Test: `e2e/palette-note-actions.spec.ts`.
 
+## Terminy — termin z treści jako podpowiedź (Terminy 3.4, Plan-nowy 2.5, 2026-11-05)
+
+- **Co robi:** gdy w treści edytowanej notatki jest termin („odbiór w piątek o 10”), a notatka nie ma jeszcze przypomnienia, pod treścią pojawia się podpowiedź z rozpoznaną frazą i datą. Przycisk „Ustaw przypomnienie” ustawia termin (z „Cofnij”), a „×” chowa podpowiedź dla tej frazy. Nic nie ustawia się samo.
+- **Gdzie:** `src/lib/dateInText.ts` (`findDateInText`), `src/components/NoteEditor.tsx`.
+- **Jak działa:** parser `parseNaturalDate` jest wyrozumiały (np. dowolną liczbę bierze za godzinę), więc w zwykłym tekście szukamy tylko od wyraźnych słów: „jutro”, „pojutrze”, „dziś”, dzień tygodnia, „w piątek”, „za 2 h”, „12.11”, „12 listopada”. Z każdego takiego miejsca bierzemy najkrótszą frazę, którą parser rozumie (jak szybkie dodawanie w Kalendarzu), i dokładamy godzinę zaraz po niej („o 10”, „15:30”). Samotna liczba bez „o” nie jest godziną. Liczy się pierwszy termin w przyszłości.
+- **Ograniczenia:** tylko jeden (pierwszy) termin w treści; ukrycie trwa do zamknięcia edytora; brak podpowiedzi w notatce prywatnej i w koszu.
+- **Testy:** `src/lib/dateInText.test.ts`, `e2e/date-hint.spec.ts`.
+

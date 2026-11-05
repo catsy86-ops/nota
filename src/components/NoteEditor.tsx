@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Expand, ListChecks, Minimize2, Scissors, Type } from "lucide-react";
+import { Bell, Eye, EyeOff, Expand, ListChecks, Minimize2, Scissors, Type, X } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import type { NoteEditSession } from "@/hooks/useNoteEditSession";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,11 @@ import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { EditorStats } from "./EditorStats";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { findDateInText } from "@/lib/dateInText";
+import { formatReminderShort } from "@/lib/reminderTime";
+import { toastWithUndo } from "@/lib/undoToast";
 
 /** Pasek „Znajdź i zamień” (Ctrl+F/H) ładowany przy pierwszym użyciu. */
 const FindReplaceBar = lazy(() => import("./FindReplaceBar").then((m) => ({ default: m.FindReplaceBar })));
@@ -65,6 +69,9 @@ export function NoteEditor({
   // Pełny ekran z listą: lista zaraz pod treścią i to ona wypełnia okno —
   // inaczej pusta treść zajmowała ekran, a pozycje lądowały na dole.
   const [phoneTab, setPhoneTab] = useState<"edit" | "preview">("edit");
+  // Terminy 3.4: pierwszy termin z treści (np. „w piątek o 10”); ukrycie dotyczy tej jednej frazy.
+  const dateHint = useMemo(() => (note.reminder === null ? findDateInText(editContent) : null), [editContent, note.reminder]);
+  const [dismissedHint, setDismissedHint] = useState<string | null>(null);
   const contentFills = full && !showChecklist;
   const textareaCls = full
     ? cn("w-full bg-transparent text-base leading-relaxed text-foreground/90 outline-hidden resize-none", contentFills && "h-full")
@@ -220,6 +227,28 @@ export function NoteEditor({
       {showChecklist && (
         <div className={full ? "flex-1 min-h-0 overflow-y-auto" : undefined}>
           <ChecklistEditor items={editChecklist} onChange={setEditChecklist} />
+        </div>
+      )}
+
+      {/* Terminy 3.4: data w treści jako podpowiedź — nic nie ustawia się samo. */}
+      {!note.locked && !note.trashed && note.reminder === null && onUpdate && dateHint && dismissedHint !== dateHint.phrase && (
+        <div data-testid="date-hint" className="flex flex-wrap items-center gap-2 rounded-control border border-border/60 bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground">
+          <Bell className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1">
+            W treści jest termin: „{dateHint.phrase}” — <span className="font-mono tabular-nums text-foreground">{formatReminderShort(dateHint.date.getTime())}</span>
+          </span>
+          <Button type="button" size="sm" variant="outline" className="h-7 coarse:h-11"
+            onClick={() => {
+              const at = dateHint.date.getTime();
+              onUpdate(note.id, { reminder: at });
+              toastWithUndo(`Ustawiono przypomnienie: ${formatReminderShort(at)}`, () => onUpdate(note.id, { reminder: null }));
+            }}>
+            Ustaw przypomnienie
+          </Button>
+          <button type="button" onClick={() => setDismissedHint(dateHint.phrase)} aria-label="Ukryj podpowiedź terminu"
+            className="grid size-7 place-items-center rounded-control hover:bg-muted coarse:size-11">
+            <X className="h-3.5 w-3.5" aria-hidden />
+          </button>
         </div>
       )}
 
