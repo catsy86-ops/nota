@@ -332,6 +332,59 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 - e2e: `e2e/reminders-calendar.spec.ts` (rząd akcji pod tytułem na telefonie), `e2e/inbox-triage.spec.ts`, `e2e/plans.spec.ts`, `e2e/csp.spec.ts`, `e2e/visual.spec.ts` (selektory po przeniesieniu akcji).
 - Zrzuty `e2e/visual.spec.ts` odświeżone po przeglądzie (Kalendarz, Grafik, Terminy, Długi, Ćwiczenia, Plany, Skrzynka, Dziś, Skarbiec).
 
+## Wspólne — działy, Etap 3 (nowy plan 2026-11-05)
+
+Plan: `nowyplan.md`, Etap 3 (punkty 3.1–3.8). Każdy dział dostał zmiany z jego punktu; komunikaty i liczby mają wspólny wygląd z Etapów 1–2.
+
+### Co robi, gdzie jest i jak działa
+
+- **Praca (3.5)** — `src/components/study/StudyView.tsx`.
+  - Postęp to trzy odcinki, jeden na moduł (Woda użytkowa, Kanalizacja, Wspólne), z licznikiem `n/m` i pieczątką „Umiem”, gdy moduł jest cały w „Umiem”. Zamiast 18 kwadracików; tematy są na Tablicy, nie w pasku.
+  - Narzędzia (Statystyki, Wysokości, Kalkulatory, Przewodnik) to jeden rząd pastylek z ikoną i podpisem: `StudyTools`, w obu nagłówkach (zwarty na Dzienniku i pełny).
+  - Zakładki były już na `tabs.tsx` (Quiz, Tablica, Lista, Dziennik, Plany).
+- **Długi i Ćwiczenia (3.6)** — `debts/DebtsView.tsx`, `cwiczenia/CwiczeniaView.tsx`.
+  - Długi: bez wpisów widać tylko pusty stan (saldo 0,00 zł i formularz znikają). Z wpisami saldo i przycisk „Nowy wpis”, który zwija i rozwija formularz na każdym ekranie (dawniej tylko na telefonie). Gdy formularz jest otwarty, pusty stan z przyciskiem chowa się pod nim.
+  - Ćwiczenia: pusty stan ma „Dodaj odżywkę” (rozwija formularz) i dalej „Dodaj kreatynę (rano, 1 łyżka)”. Z odżywkami przycisk „Dodaj odżywkę”, a po otwarciu formularza „Zwiń formularz”.
+- **Pasek boczny (3.7)** — `AppSidebar.tsx`, `sidebar/SidebarRow.tsx`, `sidebar/sidebarItems.ts`.
+  - Slogan zostaje tylko pod logo. Stopka to rząd trzech ikon (paleta, tryb ciemny, ustawienia) i wiersz „O aplikacji · wersja …” z `APP_VERSION`. Dawne „NOTKI v1.0 • …” zniknęło.
+  - „Trening mózgu” i „Zainstaluj” przeszły do „Narzędzi”.
+  - Archiwum i Kosz są na końcu grupy „Osobiste” (NP-4). Główka kartki dalej nie pokazuje dla nich linijki grupy (`viewMeta`).
+  - `SidebarHeading`: grupy, Etykiety i Foldery mają ten sam nagłówek (przycisk ze szewronem, `aria-expanded`). Stan zwinięcia zapisuje się w `kaczy.sidebarGroups.v1` pod kluczami `etykiety` i `foldery`. Otwarta etykieta lub folder zawsze widać.
+  - Odcień działu: aktywna pigułka i kreska w kolorze działu (`--sec-*`) przez zmienną `--row-hue` ustawianą w `SidebarRow` (`hue`). Bez odcienia zostaje kolor motywu.
+- **Ustawienia (3.8)** — `settings/SettingsShared.tsx`, `settings/AppearanceSettings.tsx`, `settings/BackupSettings.tsx`, `CustomThemeControl.tsx`, `FrameLookPicker.tsx`, `GlowPicker.tsx`.
+  - Słownik w tekstach: „styl” to skórka, „tryb” to jasny i ciemny, „krój” to czcionka, „kopia” to kopia zapasowa. Dawne „motyw” w napisach UI zniknęło (w kodzie i komentarzach zostaje).
+  - `Section` (sekcja każdej zakładki) to `SectionCard` z poziomem 3 w oknie i 4 w grupie. `SectionCard` przyjmuje `level` 2–4.
+  - Liczebniki w „Pominięto … wpisów Nauki” i „Nie przywrócono … grafików” idą przez `pluralPl` (dawne ternary dawały „wpisy” dla pięciu).
+  - Kolejność karty Sync została sprawdzona i zostaje: status, urządzenia, dodaj i dołącz, serwery, zgodność, „Jak to działa” na końcu.
+- **Grafik na telefonie (3.4)** — `shifts/ShiftSummary.tsx`.
+  - Podsumowanie miesiąca to karta „Miesiąc w liczbach” (`SectionCard`, nagłówek h3 z `aria-label` „Podsumowanie miesiąca”).
+  - Urlop (`LeaveMeter`), premie (`BonusPanel`) i pasek wypłaty (`PaySlipPanel`) zwijają się na telefonie: `PhoneFold` pokazuje przycisk z nazwą i podsumowaniem w jednej linii. Na komputerze stoją otwarte.
+  - Pasek narzędzi z wygaszoną krawędzią już był (`shifts/BrushBar.tsx`, maska po prawej przy przewijaniu), więc nie zmieniano go.
+- **Kalendarz (3.3)** — `calendar/ReminderCalendarView.tsx`, `calendar/UpcomingDays.tsx`.
+  - Pasek tygodnia na komputerze tylko w widoku „Lista” (NP-6). Na telefonie bez zmian: tylko w widoku „Tydzień”.
+  - „Dziś” i „Jutro” jedna pod drugą w bocznej kolumnie od `xl` (`grid-cols-1`); poniżej `xl` dalej obok siebie.
+  - Dni bez wpisów bez białego kafla: zrobione wcześniej w 2.5 (`dayCellClass(…, empty)`).
+- **Dziś (3.2)** — `review/TodayCards.tsx`.
+  - Karty układają się w siatkę dwukolumnową od `lg`. Karta zmiany (`lg:col-span-2`) idzie przez całą szerokość. Każda karta ma swoją granicę błędu, jak dotąd.
+- **Notatki (3.1)** — `NoteCardBody.tsx`, `NoteCard.tsx`, `styles/skins/signatures.css`, `src/lib/noteDate.ts`.
+  - Taśma Zeszytu siedzi na górnej krawędzi karty (`top: 0`, 10 px), nad tytułem; karta ma 12 px góry, więc tytuł jej nie zasłania.
+  - Data na kafelku to względna: „dziś 12:00”, „wczoraj 18:30”, a dalej „4 lis, 09:15”; rok tylko gdy inny niż bieżący (`formatNoteDate`). Jest w `<time dateTime>`.
+  - Pole wyboru na dotyku: ukryte (opacity 0) nie łapie stuknięć (`pointer-events-none`); widać w trybie zaznaczania albo po najechaniu. Usunięto `coarse:opacity-70`.
+
+### Ograniczenia i pułapki
+
+- **Punkty 3.1 (koniec treści maską) i 3.1 (szerokość 70ch w edytorze) nie są zrobione.** Maska na `line-clamp` pokazałaby się też przy krótkiej treści, bo CSS nie mówi, czy tekst się obciął. Edytor nie ma jeszcze limitu szerokości.
+- **Dziś: oś dnia i karty Dziś/Jutro** zostają przy swoim układzie (nie są na `SectionCard`).
+- **Strona Długów bez wpisów nie pokazuje sumy 0,00 zł** — to celowe (3.6), ale zrzuty pustego Długu się zmieniają.
+- **Stan formularza Długów (`kaczy.debts.formOpen.v1`)** jest trwały, także na komputerze. Wcześniej na komputerze był zawsze otwarty.
+- **Wersja w stopce** to `APP_VERSION` z `content/changelog.ts` (ręcznie podbijana), nie wersja z builda; plan mówi o buildzie, ale build nie ma stałej z wersją.
+- **Archiwum i Kosz** są w grupie „Osobiste”, która domyślnie jest zwinięta, więc na starcie ich nie widać.
+
+### Testy
+
+- Vitest: `sidebar/sidebarItems.test.ts` (grupy po NP-4), `lib/noteDate.test.ts`, `debts/DebtsView.test.tsx` i `cwiczenia/CwiczeniaView.test.tsx` (formularz zwinięty).
+- e2e: `study.spec.ts` (pasek opanowania bez kwadracików), `cwiczenia-*.spec.ts`, `debts-*.spec.ts`, `calendar-*.spec.ts`, `reminders-*.spec.ts`, `shifts-*.spec.ts`, `today-*.spec.ts`, `dzis-*.spec.ts`, `touch-targets.spec.ts`.
+
 ## Wspólne — elementy wspólne (nowy plan 2026-11-05, Etap 2)
 
 Plan: `nowyplan.md`, Etap 2 (punkty 2.1–2.6, V5–V7).
@@ -369,7 +422,7 @@ Plan: `nowyplan.md`, Etap 2 (punkty 2.1–2.6, V5–V7).
 
 ### Ograniczenia i pułapki
 
-- **Nie wszystkie karty przeszły na `SectionCard`.** Karty „Dziś / Jutro” w Kalendarzu, karta zmiany i oś dnia w Dziś oraz sekcje Ustawień zostały przy swoim układzie (inne nagłówki: przycisk zwijania, data). Dojdą przy działach w Etapie 3.
+- **Nie wszystkie karty przeszły na `SectionCard`.** Karty „Dziś / Jutro” w Kalendarzu i oś dnia w Dziś zostały przy swoim układzie (inne nagłówki: data, przycisk zwijania). Sekcje Ustawień przeszły w Etapie 3 (3.8), patrz „Wspólne — działy, Etap 3”.
 - **Style mogą dalej pisać wersalikami w CSS** (np. nagłówki Odblasku w `skins/odblask.css`). Strażnik pilnuje tylko klas w komponentach.
 - **Skarbiec i „Szukaj też w archiwum” bez zmian:** pusty Skarbiec nie ma osobnego widoku, a szukanie bez trafień już podaje trafienia w Archiwum i Koszu.
 - **Budżet precache:** 4,2 MiB od 2026-11-05 (decyzja właściciela). Po Etapie 2 precache ma 3,987 MiB (237 plików).

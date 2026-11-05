@@ -155,7 +155,8 @@ test("widok tygodnia pokazuje terminy z Kalendarza jako podgląd", async ({ page
   await page.getByLabel("Godzina przypomnienia").fill("18:30");
   await page.getByRole("button", { name: /Utwórz notatkę z terminem/ }).click();
 
-  // Pasek tygodnia w Kalendarzu: 8 października ma 1 termin.
+  // Pasek tygodnia w Kalendarzu na komputerze jest tylko w widoku „Lista” (plan 3.3): 8 października ma 1 termin.
+  await page.getByRole("radiogroup", { name: "Widok dni" }).getByRole("radio", { name: "Lista", exact: true }).click();
   await expect(page.getByRole("button", { name: /^8 października, czwartek.*1 termin$/ })).toBeVisible();
 
   await page.getByRole("button", { name: /Grafik/ }).first().click();

@@ -235,7 +235,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             className={cn(
               "absolute top-2 right-2 z-sticky w-6 h-6 rounded-control border-2 flex items-center justify-center transition-[color,background-color,border-color,opacity] coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
               // Start zaznaczania bez Ctrl+A: pole pojawia się po najechaniu / fokusie, a na dotyku jest zawsze lekko widoczne.
-              !(selectionMode || selected) && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-70",
+              // Plan nowy V12 / NP-2: na dotyku pole ukryte do trybu zaznaczania; ukryte nie łapie stuknięć.
+              !(selectionMode || selected) && "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto",
               selected ? "bg-primary border-primary text-primary-foreground" : "bg-background/80 border-border hover:border-primary"
             )}
             aria-label={selected ? "Odznacz notatkę" : "Zaznacz notatkę"}

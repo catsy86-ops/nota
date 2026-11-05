@@ -53,7 +53,7 @@ const dueAt = (day: string) => new Date(`${day}T09:00:00`).getTime();
 
 const hasDue = (kind: DebtKind) => kind === "lent" || kind === "borrowed";
 
-// 2.1: formularz rozwinięty na telefonie — zapamiętany na tym urządzeniu (na komputerze zawsze widać).
+// Formularz rozwinięty — zapamiętany na tym urządzeniu (3.6: zwijany na każdym ekranie, nie tylko na telefonie).
 const formOpenStore = createPersistedStore<boolean>("kaczy.debts.formOpen.v1", false, {
   merge: (defaults, stored) => (typeof stored === "boolean" ? stored : defaults),
 });
@@ -99,18 +99,22 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
         </Button>
       </PageActions>
 
-      <Summary owedToMe={sums.owedToMe} iOwe={sums.iOwe} hidden={hidden} />
-      {/* Pusta lista ma własne „Dodaj pierwszy wpis” (4.4) — bez drugiego przycisku obok. */}
-      <div className={cn("mt-4 sm:hidden", entries.length === 0 && !formOpen && "hidden")}>
-        <Button variant="outline" className="h-11 w-full gap-2" aria-expanded={formOpen} aria-controls={formId} onClick={() => { formOpenStore.set(!formOpen); haptic("tap"); }}>
-          {formOpen ? <ChevronDown className="h-4 w-4 rotate-180" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
-          {formOpen ? "Zwiń formularz" : "Nowy wpis"}
-        </Button>
-      </div>
-      <div id={formId} className={cn("mt-4", !formOpen && "max-sm:hidden")}>
+      {/* 3.6: bez wpisów zostaje jeden pusty stan (jego „Dodaj pierwszy wpis” rozwija formularz), bez saldo 0,00 zł obok.
+          Z wpisami formularz zwija się do „Nowy wpis” na każdym ekranie. */}
+      {entries.length > 0 && <Summary owedToMe={sums.owedToMe} iOwe={sums.iOwe} hidden={hidden} />}
+      {(entries.length > 0 || formOpen) && (
+        <div className="mt-4">
+          <Button variant="outline" className="h-11 w-full gap-2 sm:w-auto" aria-expanded={formOpen} aria-controls={formId} onClick={() => { formOpenStore.set(!formOpen); haptic("tap"); }}>
+            {formOpen ? <ChevronDown className="h-4 w-4 rotate-180" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
+            {formOpen ? "Zwiń formularz" : "Nowy wpis"}
+          </Button>
+        </div>
+      )}
+      <div id={formId} className={cn("mt-4", !formOpen && "hidden")}>
         <AddForm key={prefill?.n ?? 0} entries={entries} addReminderNote={addReminderNote} hidden={hidden} initialPerson={prefill?.name} focusAmount={prefill?.focus === "amount"} focusPerson={prefill?.focus === "person"} />
       </div>
-      <People people={people} onOpen={setOpenKey} hidden={hidden} onStart={startFirst} />
+      {/* Gdy formularz otwarty, pusty stan z własnym przyciskiem znikałby pod nim — zostaje sam formularz. */}
+      {!(entries.length === 0 && formOpen) && <People people={people} onOpen={setOpenKey} hidden={hidden} onStart={startFirst} />}
       {entries.length > 0 && (
         <div className="mt-6 flex justify-end">
           <Button variant="ghost" size="sm" className="tap-target gap-1.5 text-muted-foreground" onClick={() => {

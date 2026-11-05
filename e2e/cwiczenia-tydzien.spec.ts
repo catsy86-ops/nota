@@ -11,6 +11,8 @@ test.beforeEach(async ({ page }, testInfo) => {
 
 test("odżywka: odhaczenie dziś daje 1 z 7 w kropkach tygodnia", async ({ page }) => {
   const name = `Magnez ${Date.now()}`;
+  // Formularz odżywki jest zwinięty do przycisku „Dodaj odżywkę” (plan 3.6).
+  await page.getByRole("button", { name: "Dodaj odżywkę" }).first().click();
   await page.getByLabel("Nazwa odżywki").fill(name);
   await page.getByRole("button", { name: "Dodaj", exact: true }).click();
   await page.getByRole("checkbox", { name: `Wzięte: ${name}` }).click();

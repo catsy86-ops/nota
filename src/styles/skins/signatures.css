@@ -449,14 +449,15 @@ html[data-motion="reduced"][data-sig] .sig-layer::after { animation: none; }
 }
 
 /* Sygnatury stylów (plan motywów 3.6): Zeszyt — taśma klejąca na przypiętej notatce. Tylko notatki bez
-   poświaty aktywnej (ta ma swój ::after). Taśma leży w górnej krawędzi wewnątrz karty (karta jest overflow-hidden). */
+   poświaty aktywnej (ta ma swój ::after). Taśma leży na górnej krawędzi karty (karta jest overflow-hidden),
+   nad tytułem: karta ma 12 px góry (`card-body pt-3`), a taśma kończy się w 10 px (plan nowy 3.1, V9). */
 html[data-skin="zeszyt"] .note-card[data-pinned]:not(.note-glow-active)::after {
   content: "";
   position: absolute;
-  top: 6px;
+  top: 0;
   left: 50%;
   width: 46px;
-  height: 14px;
+  height: 10px;
   transform: translateX(-50%) rotate(-3deg);
   background: color-mix(in srgb, var(--accent) 28%, transparent);
   border-left: 1px dashed color-mix(in srgb, var(--foreground) 14%, transparent);

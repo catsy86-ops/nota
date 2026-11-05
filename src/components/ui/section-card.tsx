@@ -13,8 +13,8 @@ export interface SectionCardProps extends Omit<HTMLAttributes<HTMLElement>, "tit
   action?: ReactNode;
   /** Stopka pod kreską, np. link „Wszystkie…”. */
   footer?: ReactNode;
-  /** Poziom nagłówka: w widoku h2 (pod h1 główki), w oknie albo karcie w karcie h3. */
-  level?: 2 | 3;
+  /** Poziom nagłówka: w widoku h2 (pod h1 główki), w oknie albo karcie w karcie h3, w grupie ustawień h4. */
+  level?: 2 | 3 | 4;
   bodyClassName?: string;
 }
 
@@ -25,7 +25,7 @@ export interface SectionCardProps extends Omit<HTMLAttributes<HTMLElement>, "tit
  */
 export function SectionCard({ icon: Icon, title, meta, description, action, footer, level = 2, className, bodyClassName, children, ...rest }: SectionCardProps) {
   const headingId = useId();
-  const Heading = level === 2 ? "h2" : "h3";
+  const Heading = level === 2 ? "h2" : level === 3 ? "h3" : "h4";
   const hasBody = children !== undefined && children !== null && children !== false;
   return (
     <section aria-labelledby={rest["aria-label"] ? undefined : headingId} className={cn("rounded-card border border-border bg-card p-4 sm:p-5", className)} {...rest}>

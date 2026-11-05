@@ -1,6 +1,7 @@
 import { createContext, useContext, useId, useState, type KeyboardEvent } from "react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { SectionCard } from "@/components/ui/section-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { changedViewPrefs, resetViewPrefKeys, useViewPrefs, VIEW_PREF_LABELS, type ViewPrefs } from "@/lib/viewPrefs";
@@ -41,15 +42,9 @@ export function ResetSectionButton({ title, keys }: { title: string; keys: reado
 /** Poziom nagłówka sekcji: 3 na karcie, 4 wewnątrz `SettingsGroup` (hierarchia dla czytnika ekranu). */
 const SectionLevel = createContext<3 | 4>(3);
 
-/** Small labeled section wrapper shared by every settings tab. Tytuł to nagłówek, nie akapit. */
+/** Sekcja każdej zakładki Ustawień: jedna karta (`SectionCard`, nowy plan 5.1). Tytuł to nagłówek, nie akapit. */
 export function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const Heading = useContext(SectionLevel) === 4 ? "h4" : "h3";
-  return (
-    <div className="space-y-2">
-      <Heading className="text-xs font-semibold text-muted-foreground">{title}</Heading>
-      {children}
-    </div>
-  );
+  return <SectionCard level={useContext(SectionLevel)} title={title} bodyClassName="space-y-2">{children}</SectionCard>;
 }
 
 /**

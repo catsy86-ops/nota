@@ -69,7 +69,7 @@ export function CwiczeniaView() {
   // Panele mają `forceMount`, więc sekcje są w DOM zawsze; nieaktywne chowa tylko telefon.
   const [tab, setTab] = useState<CwiczeniaTab>("odzywki");
   const panel = "mt-0 max-sm:data-[state=inactive]:hidden";
-  // NP-7 (nowy plan 2.5): przy pustej liście formularz od razu otwarty; gdy odżywki już są — najpierw przycisk.
+  // NP-7 (nowy plan 2.5) i 3.6: formularz zwinięty; przy pustej liście jest pusty stan z przyciskiem, z odżywkami — „Dodaj odżywkę”.
   const [formOpen, setFormOpen] = useState(false);
 
   return (
@@ -88,14 +88,18 @@ export function CwiczeniaView() {
         meta={supplements.length > 0 ? <span data-testid="supplements-count">dziś {doneToday} z {supplements.length}</span> : undefined}>
 
         {supplements.length === 0 ? (
-          <EmptyList notes={notes} />
+          // Jeden pusty stan; gdy formularz już otwarty, zostaje sam formularz (3.6).
+          !formOpen && <EmptyList notes={notes} onAdd={() => setFormOpen(true)} />
         ) : (
           <SupplementList supplements={supplements} taken={taken} day={today} notes={notes} />
         )}
 
-        {supplements.length === 0 || formOpen ? (
-          <AddSupplementForm notes={notes} />
-        ) : (
+        {formOpen ? (
+          <div className="space-y-3">
+            <AddSupplementForm notes={notes} />
+            <Button variant="ghost" size="sm" className="coarse:h-11" aria-expanded onClick={() => setFormOpen(false)}>Zwiń formularz</Button>
+          </div>
+        ) : supplements.length > 0 && (
           <Button variant="outline" size="sm" className="gap-1.5 coarse:h-11" aria-expanded={false} onClick={() => setFormOpen(true)}>
             <Plus className="h-4 w-4" aria-hidden />Dodaj odżywkę
           </Button>
@@ -113,18 +117,23 @@ export function CwiczeniaView() {
   );
 }
 
-function EmptyList({ notes }: { notes: NotesActions }) {
+function EmptyList({ notes, onAdd }: { notes: NotesActions; onAdd: () => void }) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">Nie masz jeszcze odżywek na liście.</p>
-      <Button
-        variant="outline"
-        size="sm"
-        className="coarse:h-11"
-        onClick={() => createSupplement(notes, { name: "Kreatyna", dose: "1 łyżka", when: "rano", remindAt: DEFAULT_TIME.rano })}
-      >
-        Dodaj kreatynę (rano, 1 łyżka)
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" className="coarse:h-11" aria-expanded={false} onClick={onAdd}>
+          <Plus className="h-4 w-4" aria-hidden />Dodaj odżywkę
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="coarse:h-11"
+          onClick={() => createSupplement(notes, { name: "Kreatyna", dose: "1 łyżka", when: "rano", remindAt: DEFAULT_TIME.rano })}
+        >
+          Dodaj kreatynę (rano, 1 łyżka)
+        </Button>
+      </div>
     </div>
   );
 }

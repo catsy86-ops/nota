@@ -59,7 +59,7 @@ export function FrameLookPicker() {
           swatchOf={(id) => FRAME_COLORS[id].hex ?? "linear-gradient(135deg, var(--border) 50%, var(--muted-foreground) 50%)"}
         />
         <p className="text-xs text-muted-foreground mt-1.5">
-          {look.color === "theme" ? "Krawędzie w kolorze motywu." : `Krawędzie w kolorze: ${FRAME_COLORS[look.color].label.toLowerCase()}. Siła ramek zostaje z ustawienia powyżej.`}
+          {look.color === "theme" ? "Krawędzie w kolorze stylu." : `Krawędzie w kolorze: ${FRAME_COLORS[look.color].label.toLowerCase()}. Siła ramek zostaje z ustawienia powyżej.`}
         </p>
       </div>
       <div>
@@ -72,7 +72,7 @@ export function FrameLookPicker() {
           swatchOf={(id) => FRAME_SURFACES[id].light ?? "var(--card)"}
         />
         <p className="text-xs text-muted-foreground mt-1.5">
-          {look.surface === "theme" ? "Tło kart z motywu." : "Delikatny odcień tła kart. W ciemnym motywie zmienia się na ciemniejszy odpowiednik."}
+          {look.surface === "theme" ? "Tło kart ze stylu." : "Delikatny odcień tła kart. W ciemnym motywie zmienia się na ciemniejszy odpowiednik."}
         </p>
       </div>
     </div>

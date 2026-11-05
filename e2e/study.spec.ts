@@ -47,10 +47,8 @@ test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeże
   await expect(page.getByTestId("count-todo")).toHaveText("17");
   await expect(page.getByTestId("count-done")).toHaveText("1");
   await expect(page.getByTestId("mastery-count")).toHaveText("1");
-  // Pasek opanowania: odcinek modułu z licznikiem, komórka podpisuje temat.
+  // Pasek opanowania (plan 3.5): odcinek modułu z licznikiem; tematy są już tylko na Tablicy.
   await expect(page.locator('[data-mastery-module="kan"]')).toContainText(/Kanalizacja\s*1\//);
-  await page.getByRole("button", { name: "Spadki kanalizacji: umiem" }).click();
-  await expect(page.getByTestId("mastery-picked")).toHaveText("Spadki kanalizacji · umiem");
 
   await reloadWhenSaved(page);
   await page.getByRole("tab", { name: "Tablica" }).click();

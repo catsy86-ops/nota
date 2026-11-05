@@ -36,7 +36,7 @@ export function UpcomingDays({ notes, titleOf, shiftOf, studyOf, onSelectDay }: 
   }, [notes, days]);
 
   return (
-    <section aria-label="Dziś i jutro" className="grid grid-cols-2 gap-2">
+    <section aria-label="Dziś i jutro" className="grid grid-cols-2 gap-2 xl:grid-cols-1">
       {days.map((day, i) => {
         const key = dayKey(day);
         const shift = shiftOf(key);

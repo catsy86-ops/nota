@@ -208,8 +208,8 @@ export function AppearanceSettings() {
               : schemeMode === "system"
                 ? "Motyw dopasowuje się do ustawień Twojego systemu."
                 : schemeMode === "dark"
-                  ? "Ciemny motyw ułatwia pracę wieczorem."
-                  : "Klasyczny jasny motyw."}
+                  ? "Ciemny tryb ułatwia pracę wieczorem."
+                  : "Klasyczny jasny tryb."}
           </p>
         </Section>
 
@@ -251,7 +251,7 @@ export function AppearanceSettings() {
 
         <Section title="Ramki">
           <Segmented label="Ramki" options={framesOptions} value={frames} onChange={setFrames} />
-          <p className="text-xs text-muted-foreground mt-1.5">Jak mocno widać krawędzie kart i podziałów. Delikatne — prawie niewidoczne; Wyraźne — pełny kolor motywu.</p>
+          <p className="text-xs text-muted-foreground mt-1.5">Jak mocno widać krawędzie kart i podziałów. Delikatne — prawie niewidoczne; Wyraźne — pełny kolor stylu.</p>
           <div className="mt-4">
             <FrameLookPicker />
           </div>
@@ -281,7 +281,7 @@ export function AppearanceSettings() {
           <NightSkinSettings skin={skin} />
         </Section>
 
-        <Section title="Motyw pory roku">
+        <Section title="Styl pory roku">
           <div className="grid grid-cols-5 gap-2">
             {(["auto", "spring", "summer", "autumn", "winter"] as SeasonPref[]).map((s) => {
               const label = s === "auto" ? "Auto" : SEASON_META[s].label;
@@ -352,7 +352,7 @@ export function AppearanceSettings() {
           <ToggleRow label="Przegląd tygodnia" desc={todayCards.weeklyReview ? "Pokazany" : "Ukryty"} checked={todayCards.weeklyReview} onCheck={(on) => setTodayCard("weeklyReview", on)} />
         </Section>
 
-        <Section title="Własny motyw (eksperyment)">
+        <Section title="Własny styl (eksperyment)">
           <CustomThemeControl />
         </Section>
 
@@ -497,7 +497,7 @@ export function AppearanceSettings() {
             <AlertDialogTitle>Przywrócić domyślne ustawienia widoku?</AlertDialogTitle>
             <AlertDialogDescription>
               Zmienią się: {changedViewPrefs().map((k) => VIEW_PREF_LABELS[k]).join(", ") || "nic — wszystko już jest domyślne"}.
-              Nie zmienią się: skórka, czcionka, tryb ruchu, motyw sezonowy, efekty, potwierdzenia, sync, sejf i powiadomienia push.
+              Nie zmienią się: skórka, czcionka, tryb ruchu, styl sezonowy, efekty, potwierdzenia, sync, sejf i powiadomienia push.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

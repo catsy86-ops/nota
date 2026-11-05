@@ -6,7 +6,7 @@ import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
 import { buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, shareFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
-import { dniPl } from "@/lib/plural";
+import { dniPl, pluralPl } from "@/lib/plural";
 import type { FullBackup } from "@/lib/noteSchema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -184,8 +184,8 @@ function RestoreBackup() {
       }
       const { studyDropped, schedulesSkipped } = await restoreFullBackup(backup, opts);
       const notes: string[] = [];
-      if (studyDropped > 0) notes.push(`Pominięto ${studyDropped} ${studyDropped === 1 ? "wpis Nauki" : "wpisy Nauki"} o nieznanym kształcie`);
-      if (schedulesSkipped > 0) notes.push(`Nie przywrócono ${schedulesSkipped} ${schedulesSkipped === 1 ? "grafiku" : "grafików"} (limit albo zły plik)`);
+      if (studyDropped > 0) notes.push(`Pominięto ${studyDropped} ${pluralPl(studyDropped, ["wpis Nauki", "wpisy Nauki", "wpisów Nauki"])} o nieznanym kształcie`);
+      if (schedulesSkipped > 0) notes.push(`Nie przywrócono ${schedulesSkipped} ${pluralPl(schedulesSkipped, ["grafiku", "grafików", "grafików"])} (limit albo zły plik)`);
       // Przy pominiętych danych dajemy czas na przeczytanie komunikatu przed odświeżeniem.
       toast.success(`Backup przywrócony — ${backup.notes.length} notatek. Odświeżam…`,
         notes.length ? { description: `${notes.join(". ")} — ślad jest w diagnostyce.`, duration: 8000 } : undefined);
@@ -198,7 +198,7 @@ function RestoreBackup() {
 
   const sections: { key: keyof RestoreOptions; label: string; present: boolean }[] = backup ? [
     { key: "versions", label: `Historia wersji (${backup.versions?.length ?? 0})`, present: backup.versions !== undefined },
-    { key: "settings", label: "Ustawienia (wygląd, motyw, efekty, potwierdzenia)", present: backup.settings !== undefined },
+    { key: "settings", label: "Ustawienia (wygląd, styl, efekty, potwierdzenia)", present: backup.settings !== undefined },
     { key: "achievements", label: "Odznaki i passa", present: backup.achievements !== undefined },
     { key: "shifts", label: viewLabel("shifts"), present: backup.shifts !== undefined },
     { key: "study", label: "Praca i dziennik z budowy", present: backup.study !== undefined || backup.settings?.["kaczy.study.v1"] !== undefined },

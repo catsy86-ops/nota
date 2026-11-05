@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { formatNoteDate } from "@/lib/noteDate";
 import { CornerLeftUp, Hourglass, Link2, Lock, RotateCcw, Trash } from "lucide-react";
 import { inboxAgeDays, inboxAgeLabel, INBOX_STALE_DAYS } from "@/lib/inbox";
 import { format } from "date-fns";
@@ -203,7 +204,7 @@ export function NoteCardBody({
                     {inboxAgeLabel(note.createdAt)}
                   </span>
                 ) : (
-                  <span className="tabular-nums">{format(new Date(note.updatedAt), "d MMM, HH:mm", { locale: pl })}</span>
+                  <time dateTime={new Date(note.updatedAt).toISOString()} className="tabular-nums">{formatNoteDate(note.updatedAt)}</time>
                 )}
               </div>
     </>

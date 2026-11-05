@@ -28,16 +28,19 @@ interface SidebarRowProps {
   buttonProps?: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onClick" | "className" | "children">;
   /** Skrót z tabeli (`lib/shortcuts.ts`): pokazuje się w podpowiedzi po najechaniu (plan 3.8). */
   tipKeys?: string;
+  /** Odcień działu (plan 3.7): pigułka i kreska aktywnego wiersza biorą kolor z niego, bez niego — z motywu. */
+  hue?: string;
 }
 
 export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function SidebarRow(
-  { icon, label, onClick, active = false, dropActive = false, trailing, before, actions, className, buttonProps, tipKeys },
+  { icon, label, onClick, active = false, dropActive = false, trailing, before, actions, className, buttonProps, tipKeys, hue },
   ref,
 ) {
   return (
     <div
       ref={ref}
       data-active={active || undefined}
+      style={hue ? ({ "--row-hue": hue } as React.CSSProperties) : undefined}
       className={cn(
         "group relative flex items-center h-9 coarse:h-11 rounded-field text-sm font-medium transition-[color,background-color,box-shadow] duration-(--dur-fast)",
         active ? "text-primary-ink" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
@@ -49,11 +52,11 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
         <motion.span
           layoutId="sidebar-active-pill"
           aria-hidden
-          className="absolute inset-0 rounded-field bg-primary/10"
+          className="absolute inset-0 rounded-field bg-[color-mix(in_srgb,var(--row-hue,var(--primary))_10%,transparent)]"
           transition={spring.snap}
         >
           {/* Kreska jak zapis na marginesie zeszytu — jedzie razem z pigułką (ten sam layoutId). */}
-          <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-primary" />
+          <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-[var(--row-hue,var(--primary))]" />
         </motion.span>
       )}
       {before && <span className="relative z-raised flex shrink-0 items-center pl-1.5">{before}</span>}

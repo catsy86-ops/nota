@@ -393,7 +393,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
         )}
 
         {/* Telefon: bieżący tydzień i tak jest wierszem siatki miesiąca tuż pod spodem — pasek go dublował. */}
-        <div className={phoneView === "week" ? "order-4" : "order-4 max-sm:hidden"}>
+        {/* Plan 3.3 (NP-6): na komputerze pasek tygodnia tylko w widoku „Lista”; na telefonie jak dotąd. */}
+        <div className={cn("order-4", phoneView !== "week" && "max-sm:hidden", !desktopAgenda && "sm:hidden")}>
         <WeekStrip
           day={selectedDay}
           byDay={shownByDay}

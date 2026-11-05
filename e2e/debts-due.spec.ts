@@ -1,9 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
   await page.setViewportSize({ width: 1440, height: 1000 });
 });
+
+/** Formularz Długów zwija się do „Nowy wpis” (plan 3.6); otwiera go pusty stan albo przycisk „Nowy wpis”. */
+async function openDebtForm(page: Page) {
+  const form = page.getByRole("form", { name: "Nowy wpis" });
+  if (await form.isVisible()) return form;
+  await page.getByRole("button", { name: /^(Nowy wpis|Dodaj pierwszy wpis)$/ }).first().click();
+  await expect(form).toBeVisible();
+  return form;
+}
 
 test("długi: termin zwrotu tworzy notatkę z przypomnieniem w Terminach", async ({ page }) => {
   const person = `Dłużnik ${Date.now()}`;
@@ -11,7 +20,7 @@ test("długi: termin zwrotu tworzy notatkę z przypomnieniem w Terminach", async
   const due = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
 
   await page.goto("/dlugi");
-  const form = page.getByRole("form", { name: "Nowy wpis" });
+  const form = await openDebtForm(page);
   await form.getByRole("radio", { name: "Pożyczyłem", exact: true }).click();
   await form.getByLabel("Kto").fill(person);
   await form.getByLabel("Kwota (zł)").fill("120");
@@ -25,7 +34,7 @@ test("długi: termin zwrotu tworzy notatkę z przypomnieniem w Terminach", async
 
 test("długi: termin w przeszłości jest odrzucany", async ({ page }) => {
   await page.goto("/dlugi");
-  const form = page.getByRole("form", { name: "Nowy wpis" });
+  const form = await openDebtForm(page);
   await form.getByRole("radio", { name: "Pożyczyłem", exact: true }).click();
   await form.getByLabel("Kto").fill("Przeszły");
   await form.getByLabel("Kwota (zł)").fill("10");
@@ -38,7 +47,7 @@ async function addLentWithDue(page: import("@playwright/test").Page, person: str
   const tomorrow = new Date(Date.now() + 86_400_000);
   const due = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
   await page.goto("/dlugi");
-  const form = page.getByRole("form", { name: "Nowy wpis" });
+  const form = await openDebtForm(page);
   await form.getByRole("radio", { name: "Pożyczyłem", exact: true }).click();
   await form.getByLabel("Kto").fill(person);
   await form.getByLabel("Kwota (zł)").fill("120");

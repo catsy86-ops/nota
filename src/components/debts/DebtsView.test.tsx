@@ -265,6 +265,9 @@ describe("DebtsView — plan Długów, Etap 4", () => {
 
   it("4.4: pusty stan ma jedno wezwanie „Dodaj pierwszy wpis”", () => {
     render(<DebtsView />);
+    // Magazyn formularza jest trwały, jak w przeglądarce: po poprzednim teście może być otwarty — zwijamy go.
+    const collapse = screen.queryByRole("button", { name: "Zwiń formularz" });
+    if (collapse) fireEvent.click(collapse);
     expect(screen.getByRole("button", { name: "Dodaj pierwszy wpis" })).toBeTruthy();
     expect(screen.queryByTestId("debts-ratio")).toBeNull();
   });

@@ -34,82 +34,46 @@ import { StudyBoard } from "./StudyBoard";
 import { StudyChecklist } from "./StudyChecklist";
 import { StudyJournal } from "./StudyJournal";
 
-const COLUMN_STATE = { todo: "do nauki", doing: "w trakcie", done: "umiem" } as const;
-
 /**
- * Pasek opanowania: odcinek na moduł, komórka na temat — pełna = „Umiem”, połowa = „W trakcie”.
- * Dotyk komórki podpisuje temat pod paskiem (na telefonie nie ma najechania).
+ * Pasek opanowania (nowy plan 3.5): jeden odcinek na moduł zamiast 18 kwadracików.
+ * Ciemna część to „Umiem”, jasna „W trakcie”. Tematy są na Tablicy, tu tylko postęp i pieczątka.
  */
 function MasteryStrip() {
   const study = useStudy();
-  const [picked, setPicked] = useState<string | null>(null);
   const done = TOPICS.filter((t) => columnOf(study, t.id) === "done").length;
   const doing = TOPICS.filter((t) => columnOf(study, t.id) === "doing").length;
-  const pickedTopic = TOPICS.find((t) => t.id === picked) ?? null;
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <Stat label="Opanowane tematy" size="lg" tone="primary" value={<span data-testid="mastery-count">{done}</span>}
         suffix={`z ${TOPICS.length}`} hint={doing > 0 ? `${doing} w trakcie` : undefined} />
-      <div className="flex flex-wrap gap-x-5 gap-y-3" role="group" aria-label={`Opanowane tematy: ${done} z ${TOPICS.length}`}>
+      <div className="space-y-2" role="group" aria-label={`Opanowane tematy: ${done} z ${TOPICS.length}`}>
         {MODULES.map((m) => {
           const topics = TOPICS.filter((t) => t.module === m.id);
           if (topics.length === 0) return null;
           const modDone = topics.filter((t) => columnOf(study, t.id) === "done").length;
+          const modDoing = topics.filter((t) => columnOf(study, t.id) === "doing").length;
           return (
-            <div key={m.id} className="min-w-0 max-w-full" data-mastery-module={m.id}>
-              <div className="flex flex-wrap gap-1">
-                {topics.map((t) => {
-                  const col = columnOf(study, t.id);
-                  const on = picked === t.id;
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      title={t.title}
-                      aria-label={`${t.title}: ${COLUMN_STATE[col]}`}
-                      aria-pressed={on}
-                      onClick={() => setPicked(on ? null : t.id)}
-                      // Kratka 20 px w polu 28 px (na dotyku 44 px) — palec trafia bez celowania.
-                      className="group grid size-7 shrink-0 place-items-center focus-visible:outline-hidden coarse:size-11"
-                    >
-                      <span
-                        className={cn(
-                          "block size-5 rounded-[4px] border transition-colors duration-300 group-focus-visible:ring-2 group-focus-visible:ring-ring",
-                          col === "done" && "border-primary bg-primary",
-                          col === "doing" && "border-primary/60 bg-primary/30",
-                          // Nieopanowane: obwódka ma być widoczna na papierze (≥ 3:1), bo sama krawędź niesie stan.
-                          col === "todo" && "border-foreground/50 bg-transparent",
-                          on && "ring-2 ring-foreground/70 ring-offset-1 ring-offset-background",
-                        )}
-                      />
-                    </button>
-                  );
-                })}
+            <div key={m.id} className="flex items-center gap-3" data-mastery-module={m.id}>
+              <span className="w-28 shrink-0 truncate text-sm sm:w-36">{m.label}</span>
+              <div
+                role="img"
+                aria-label={`${m.label}: ${modDone} z ${topics.length} w „Umiem”${modDoing > 0 ? `, ${modDoing} w trakcie` : ""}`}
+                className="flex h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
+              >
+                <span className="h-full bg-primary transition-[width] duration-500" style={{ width: `${(modDone / topics.length) * 100}%` }} />
+                <span className="h-full bg-primary/35 transition-[width] duration-500" style={{ width: `${(modDoing / topics.length) * 100}%` }} />
               </div>
-              <p className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-2xs text-muted-foreground">
-                <span className="truncate">{m.label}</span>
-                <span className="flex shrink-0 items-center gap-1.5">
-                  {modDone === topics.length && (
-                    // Pieczątka: moduł cały w „Umiem” — krzywo, jak stempel w zeszycie.
-                    <span data-mastery-stamp className="-rotate-3 rounded-sm border-2 border-success-ink px-1.5 text-2xs font-semibold uppercase leading-4 tracking-widest text-success-ink">Umiem</span>
-                  )}
-                  <span className="font-mono tabular-nums">{modDone}/{topics.length}</span>
-                </span>
-              </p>
+              <span className="flex shrink-0 items-center gap-1.5">
+                {modDone === topics.length && (
+                  // Pieczątka: moduł cały w „Umiem” — krzywo, jak stempel w zeszycie.
+                  <span data-mastery-stamp className="-rotate-3 rounded-sm border-2 border-success-ink px-1.5 text-2xs font-semibold uppercase leading-4 tracking-widest text-success-ink">Umiem</span>
+                )}
+                <span className="w-12 text-right font-mono text-sm tabular-nums">{modDone}/{topics.length}</span>
+              </span>
             </div>
           );
         })}
       </div>
-      <p className="min-h-5 text-xs text-muted-foreground" aria-live="polite" data-testid="mastery-picked">
-        {pickedTopic ? (
-          <><span className="font-medium text-foreground">{pickedTopic.title}</span> · {COLUMN_STATE[columnOf(study, pickedTopic.id)]}</>
-        ) : (
-          <>
-            <span className="coarse:hidden">Kliknij komórkę, żeby zobaczyć temat.</span>
-            <span className="hidden coarse:inline">Dotknij komórki, żeby zobaczyć temat.</span>
-          </>
-        )}
-      </p>
     </div>
   );
 }
@@ -147,6 +111,24 @@ function StudySkeleton() {
 
 // Plany (Analizator planów) poza precache (D2) — zakładka ładuje je dopiero przy wejściu.
 const PlansView = lazy(loadPlansView);
+
+const TOOL_PILL = "pressable inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11";
+
+/** Rząd narzędzi Pracy (nowy plan 3.5): każdy przycisk ma ikonę i podpis, na wąskim ekranie zawija się. */
+function StudyTools({ onStats, className }: { onStats: () => void; className?: string }) {
+  return (
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      <button type="button" onClick={onStats} className={TOOL_PILL}>
+        <ChartColumn className="h-4 w-4" aria-hidden />Statystyki
+      </button>
+      <HeightsButton />
+      <CalculatorsButton />
+      <button type="button" onClick={() => openGuide("work")} aria-label="Przewodnik po Pracy" className={TOOL_PILL}>
+        <CircleQuestionMark className="h-4 w-4" aria-hidden />Przewodnik
+      </button>
+    </div>
+  );
+}
 
 /** Dział „Praca” (dawniej „Nauka”): quiz, tablica tematów, lista do nauki z materiałów G-HEAT, dziennik i Plany. */
 export default function StudyView() {
@@ -280,29 +262,7 @@ function StudyScreen() {
             <span className="ml-1 text-xs">tematów</span>
           </button>
           <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
-          {/* Ikony jako jedna grupa: na wąskim ekranie przechodzą do drugiego wiersza razem, nie pojedynczo. */}
-          <div className="ml-auto flex items-center gap-1.5">
-            <HeightsButton variant="icon" />
-            <CalculatorsButton variant="icon" />
-            <button
-              type="button"
-              onClick={() => setStatsOpen(true)}
-              aria-label="Statystyki"
-              title="Statystyki"
-              className="pressable inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
-            >
-              <ChartColumn className="h-4 w-4" aria-hidden />
-            </button>
-            <button
-              type="button"
-              onClick={() => openGuide("work")}
-              aria-label="Przewodnik po Pracy"
-              title="Przewodnik po Pracy"
-              className="pressable inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
-            >
-              <CircleQuestionMark className="h-4 w-4" aria-hidden />
-            </button>
-          </div>
+          <StudyTools onStats={() => setStatsOpen(true)} className="ml-auto" />
           <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} onPractice={() => { setStatsOpen(false); changeScope({ kind: "all" }); setTab("quiz"); }} />
         </header>
       ) : (
@@ -314,15 +274,7 @@ function StudyScreen() {
           <MasteryStrip />
           <div className="flex flex-wrap items-center gap-2">
             <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
-            <button
-              type="button"
-              onClick={() => setStatsOpen(true)}
-              className="pressable inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
-            >
-              <ChartColumn className="h-4 w-4" aria-hidden />Statystyki
-            </button>
-            <HeightsButton />
-            <CalculatorsButton />
+            <StudyTools onStats={() => setStatsOpen(true)} />
           </div>
           <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} onPractice={() => { setStatsOpen(false); changeScope({ kind: "all" }); setTab("quiz"); }} />
         </header>

@@ -36,8 +36,9 @@ export function sidebarItems(counts: { inbox: number; overdue: number; trash: nu
     { icon: HardHat, label: viewLabel("study"), view: "study", group: "praca" },
     { icon: HandCoins, label: viewLabel("debts"), view: "debts", group: "osobiste" },
     { icon: Dumbbell, label: viewLabel("cwiczenia"), view: "cwiczenia", group: "osobiste" },
-    { icon: Archive, label: viewLabel("archive"), view: "archive", group: "archiwum" },
-    { icon: Trash, label: viewLabel("trash"), view: "trash", group: "archiwum", count: counts.trash },
+    // NP-4 (plan 3.7): Archiwum i Kosz na końcu grupy „Osobiste”.
+    { icon: Archive, label: viewLabel("archive"), view: "archive", group: "osobiste" },
+    { icon: Trash, label: viewLabel("trash"), view: "trash", group: "osobiste", count: counts.trash },
   ];
 }
 

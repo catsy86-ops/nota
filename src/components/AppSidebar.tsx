@@ -28,16 +28,17 @@ import { dur, ease, tween } from "@/lib/motion";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
 import { preloadView } from "@/lib/viewPreload";
-import { groupSidebarItems, type SidebarGroupKey, type SidebarItem } from "@/components/sidebar/sidebarItems";
+import { groupSidebarItems, type SidebarItem } from "@/components/sidebar/sidebarItems";
 import { NEUROKLIK_URL } from "@/lib/neuroklik";
+import { APP_VERSION } from "@/content/changelog";
 
 const MAX_FAVORITES = 10;
 
 /** Zwinięte grupy paska (PW-4): zapamiętane per przeglądarka. Bez zapisu „Osobiste” są zwinięte (plan wyglądu,
  *  Faza 7) — pasek ma się mieścić na 900 px; błąd dostępu do pamięci daje ten sam stan domyślny. */
 const SIDEBAR_GROUPS_KEY = "kaczy.sidebarGroups.v1";
-const DEFAULT_COLLAPSED_GROUPS: Partial<Record<SidebarGroupKey, boolean>> = { osobiste: true };
-function readCollapsedGroups(): Partial<Record<SidebarGroupKey, boolean>> {
+const DEFAULT_COLLAPSED_GROUPS: Partial<Record<string, boolean>> = { osobiste: true };
+function readCollapsedGroups(): Partial<Record<string, boolean>> {
   try {
     const raw = localStorage.getItem(SIDEBAR_GROUPS_KEY);
     if (raw === null) return DEFAULT_COLLAPSED_GROUPS;
@@ -51,6 +52,8 @@ function readCollapsedGroups(): Partial<Record<SidebarGroupKey, boolean>> {
 // „Notatki” przyjmują upuszczoną notatkę (wyjęcie z folderu); pozostałe pozycje nie.
 function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean; onClick: () => void }) {
   const droppableId = item.view === "notes" ? "notes-drop-root" : undefined;
+  // Działy z własnym odcieniem (plan 3.7): pigułka aktywnego wiersza w tym kolorze.
+  const section = sectionIconClass(item.view);
   const { setNodeRef, isOver } = useDroppable({ id: droppableId || `nav-${item.view}`, disabled: !droppableId });
   return (
     <div data-folder-drop-root={droppableId ? "" : undefined}>
@@ -60,12 +63,51 @@ function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean;
         label={item.label}
         active={active}
         dropActive={isOver}
+        hue={section ? `var(--${section})` : undefined}
         onClick={onClick}
         // Paczka widoku (Kalendarz, Grafik, Nauka) zaczyna się pobierać przy najechaniu / dotknięciu, przed kliknięciem.
         buttonProps={{ onPointerEnter: () => preloadView(item.view), onPointerDown: () => preloadView(item.view), onFocus: () => preloadView(item.view) }}
         trailing={item.count !== undefined && item.count > 0 ? <SidebarCount value={item.count} active={active} alert={item.alert} /> : undefined}
       />
     </div>
+  );
+}
+
+/** Nagłówek sekcji paska (plan 3.7): grupy, Etykiety i Foldery mają ten sam przepis — zwijany, z szewronem. */
+function SidebarHeading({ label, icon, collapsed, onToggle, action }: {
+  label: string; icon?: React.ReactNode; collapsed: boolean; onToggle: () => void; action?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-1 flex min-h-7 items-center justify-between gap-1 pr-1">
+      <button
+        type="button"
+        aria-expanded={!collapsed}
+        onClick={onToggle}
+        className="section-caps flex min-w-0 flex-1 items-center justify-between gap-1.5 rounded-control px-3 py-1 hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="flex min-w-0 items-center gap-1.5">{icon}{label}</span>
+        <ChevronDown className={cn("w-3 h-3 shrink-0 transition-transform motion-reduce:transition-none", collapsed && "-rotate-90")} aria-hidden />
+      </button>
+      {action}
+    </div>
+  );
+}
+
+/** Ikona w stopce paska (plan 3.7): nazwa w `aria-label`, podpowiedź skrótu w `title`. */
+function FooterIcon({ label, title, icon, onClick, extra }: {
+  label: string; title: string; icon: React.ReactNode; onClick: () => void; extra?: React.ButtonHTMLAttributes<HTMLButtonElement>;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={title}
+      {...extra}
+      className="pressable grid size-10 place-items-center rounded-field text-muted-foreground hover:bg-muted/80 hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:size-11"
+    >
+      {icon}
+    </button>
   );
 }
 
@@ -104,7 +146,7 @@ export function AppSidebar({
   const themePress = useLongPress(openQuickPresets);
   const [moreOpen, setMoreOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState(readCollapsedGroups);
-  const setGroupCollapsed = (key: SidebarGroupKey, collapsed: boolean) => {
+  const setGroupCollapsed = (key: string, collapsed: boolean) => {
     setCollapsedGroups((prev) => {
       const next = { ...prev, [key]: collapsed };
       try { localStorage.setItem(SIDEBAR_GROUPS_KEY, JSON.stringify(next)); } catch { /* bez zapisu — zwinięcie działa do odświeżenia */ }
@@ -151,6 +193,9 @@ export function AppSidebar({
   const favorites = useMemo(() => notes.filter((n) => n.favorite).slice(0, MAX_FAVORITES), [notes]);
   // Jedna pigułka aktywna naraz: gdy zapytanie jest zapisanym filtrem, „Notatki” gasną.
   const activeFilterId = view === "notes" ? filters.find((f) => sameQuery(search, f.query))?.id ?? null : null;
+  // Jak w grupach: otwarty wpis zawsze widać, zwinięcie go nie chowa.
+  const labelsCollapsed = !!collapsedGroups.etykiety && view !== "label";
+  const foldersCollapsed = !!collapsedGroups.foldery && view !== "folder";
 
   return (
     <>
@@ -218,15 +263,7 @@ export function AppSidebar({
                   if (!g.label) return <div key={g.key}>{rows}</div>;
                   return (
                     <div key={g.key} data-sidebar-group={g.key}>
-                      <button
-                        type="button"
-                        aria-expanded={!collapsed}
-                        onClick={() => setGroupCollapsed(g.key, !collapsed)}
-                        className="section-caps px-3 mb-1 flex w-full items-center justify-between gap-1.5 py-1 rounded-control hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        {g.label}
-                        <ChevronDown className={cn("w-3 h-3 transition-transform motion-reduce:transition-none", collapsed && "-rotate-90")} aria-hidden />
-                      </button>
+                      <SidebarHeading label={g.label} collapsed={collapsed} onToggle={() => setGroupCollapsed(g.key, !collapsed)} />
                       {rows}
                     </div>
                   );
@@ -281,11 +318,9 @@ export function AppSidebar({
 
               {allLabels.length > 0 && (
                 <div className="pt-5">
-                  <p className="section-caps px-3 mb-2 flex items-center gap-1.5">
-                    <Tag className="w-3 h-3" />
-                    Etykiety
-                  </p>
-                  <div className="space-y-0.5">
+                  <SidebarHeading label="Etykiety" icon={<Tag className="w-3 h-3" />} collapsed={labelsCollapsed}
+                    onToggle={() => setGroupCollapsed("etykiety", !labelsCollapsed)} />
+                  <div className="space-y-0.5" hidden={labelsCollapsed}>
                     {buildLabelRows(allLabels).map((row) => (
                       <SidebarLabelItem
                         key={row.label}
@@ -303,14 +338,10 @@ export function AppSidebar({
               )}
 
               <div className="pt-5">
-                <div className="flex items-center justify-between pl-3 pr-1 mb-1 min-h-7">
-                  <p className="section-caps flex items-center gap-1.5">
-                    <FolderOpen className="w-3 h-3" />
-                    Foldery
-                  </p>
-                  <SidebarAddFolderButton onAdd={(name) => addFolder(name)} />
-                </div>
-                <div className="space-y-0.5">
+                <SidebarHeading label="Foldery" icon={<FolderOpen className="w-3 h-3" />} collapsed={foldersCollapsed}
+                  onToggle={() => setGroupCollapsed("foldery", !foldersCollapsed)}
+                  action={<SidebarAddFolderButton onAdd={(name) => addFolder(name)} />} />
+                <div className="space-y-0.5" hidden={foldersCollapsed}>
                   {folders.filter((f) => !f.parentId).map((folder) => (
                     <SidebarFolderItem
                       key={folder.id}
@@ -333,27 +364,17 @@ export function AppSidebar({
 
               <div className="flex-1" />
 
-              <div className="pb-2 pt-4 border-t border-border/50 space-y-0.5">
-                <SidebarRow
-                  icon={<Command className="w-[18px] h-[18px]" />}
-                  label="Paleta poleceń" tipKeys={shortcutFor("Paleta poleceń")}
-                  onClick={onOpenPalette}
-                  trailing={<span className="shrink-0 text-2xs">{modShortcut("K")}</span>}
-                />
-                <SidebarRow
-                  icon={dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
-                  label="Tryb ciemny"
-                  onClick={() => { if (!themePress.shouldSkipClick()) onToggleTheme(); }}
-                  buttonProps={{ "aria-label": "Tryb ciemny", "aria-pressed": dark, title: "Przytrzymaj albo prawy przycisk: zestawy wyglądu", ...themePress.handlers }}
-                />
-                <SidebarRow icon={<SettingsIcon className="w-[18px] h-[18px]" />} label="Ustawienia" tipKeys={shortcutFor("Ustawienia")} onClick={() => onSettingsOpenChange(true)} />
-                <SidebarRow
-                  icon={<BrainCircuit className="w-[18px] h-[18px]" />}
-                  label="Trening mózgu"
-                  onClick={() => window.open(NEUROKLIK_URL, "_blank", "noopener,noreferrer")}
-                  trailing={<ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" aria-hidden />}
-                  buttonProps={{ "aria-label": "Trening mózgu (otwiera się w nowej karcie)" }}
-                />
+              <div className="pb-2 pt-4 border-t border-border/50 space-y-1">
+                {/* Stopka (plan 3.7): jeden rząd ikon zamiast trzech wierszy; slogan jest już pod logo. */}
+                <div className="flex items-center justify-between gap-1" role="group" aria-label="Szybkie akcje">
+                  <FooterIcon label="Paleta poleceń" title={`Paleta poleceń (${modShortcut("K")})`} onClick={onOpenPalette}
+                    icon={<Command className="w-[18px] h-[18px]" />} />
+                  <FooterIcon label="Tryb ciemny" title="Przytrzymaj albo prawy przycisk: zestawy wyglądu" onClick={() => { if (!themePress.shouldSkipClick()) onToggleTheme(); }}
+                    extra={{ "aria-pressed": dark, ...themePress.handlers }}
+                    icon={dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />} />
+                  <FooterIcon label="Ustawienia" title={`Ustawienia (${shortcutFor("Ustawienia")})`} onClick={() => onSettingsOpenChange(true)}
+                    icon={<SettingsIcon className="w-[18px] h-[18px]" />} />
+                </div>
 
                 {/* Akcje drugorzędne zwinięte — sidebar ma się mieścić na 900 px. */}
                 <SidebarRow
@@ -369,10 +390,17 @@ export function AppSidebar({
                     <SidebarRow icon={<Trophy className="w-[18px] h-[18px]" />} label="Statystyki" tipKeys={shortcutFor("Statystyki")} onClick={onOpenStats} />
                     <SidebarRow icon={<Brain className="w-[18px] h-[18px]" />} label="Tryb skupienia" onClick={onOpenFocusMode} />
                     <SidebarRow icon={<CircleQuestionMark className="w-[18px] h-[18px]" />} label="Samouczek" onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))} />
+                    <SidebarRow
+                      icon={<BrainCircuit className="w-[18px] h-[18px]" />}
+                      label="Trening mózgu"
+                      onClick={() => window.open(NEUROKLIK_URL, "_blank", "noopener,noreferrer")}
+                      trailing={<ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" aria-hidden />}
+                      buttonProps={{ "aria-label": "Trening mózgu (otwiera się w nowej karcie)" }}
+                    />
+                    <InstallAppButton />
                   </div>
                 )}
-                <InstallAppButton />
-                <p className="text-2xs text-muted-foreground text-center font-medium">NOTKI v1.0 • Notuj, zanim zapomnisz</p>
+                <p className="px-3 pt-1 text-2xs text-muted-foreground">O aplikacji · wersja {APP_VERSION}</p>
               </div>
             </div>
           </motion.aside>

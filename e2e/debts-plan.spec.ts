@@ -8,18 +8,30 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
 });
 
+/** Formularz Długów zwija się do „Nowy wpis” (plan 3.6); otwiera go pusty stan albo przycisk „Nowy wpis”. */
+async function openDebtForm(page: Page) {
+  const form = page.getByRole("form", { name: "Nowy wpis" });
+  if (await form.isVisible()) return form;
+  await page.getByRole("button", { name: /^(Nowy wpis|Dodaj pierwszy wpis)$/ }).first().click();
+  await expect(form).toBeVisible();
+  return form;
+}
+
 const dayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const inDays = (n: number) => dayKey(new Date(Date.now() + n * 86_400_000));
 
 async function addLent(page: Page, person: string, due?: string) {
   await page.goto("/dlugi");
-  const form = page.getByRole("form", { name: "Nowy wpis" });
+  const form = await openDebtForm(page);
   await form.getByRole("radio", { name: "Pożyczyłem", exact: true }).click();
   await form.getByLabel("Kto").fill(person);
   await form.getByLabel("Kwota (zł)").fill("120");
   if (due) await form.getByLabel(/Termin zwrotu/).fill(due);
   await form.getByRole("button", { name: "Zapisz wpis" }).click();
   await expect(page.getByText(/Pożyczyłem: /).first()).toBeVisible();
+  // Zapisany wpis zostawia formularz otwarty; zwijamy go, żeby lista pod nim była klikalna.
+  const collapse = page.getByRole("button", { name: "Zwiń formularz" });
+  if (await collapse.isVisible()) await collapse.click();
 }
 
 test("1.2: notatka terminu zwrotu ma etykietę „długi” i nie ląduje w Skrzynce", async ({ page }) => {
@@ -33,7 +45,7 @@ test("1.2: notatka terminu zwrotu ma etykietę „długi” i nie ląduje w Skrz
 
 test("1.4: rodzaj wpisu strzałkami, jeden przystanek Tab; axe formularza", async ({ page }) => {
   await page.goto("/dlugi");
-  const form = page.getByRole("form", { name: "Nowy wpis" });
+  const form = await openDebtForm(page);
   const lent = form.getByRole("radio", { name: "Pożyczyłem", exact: true });
   await lent.click();
   await expect(lent).toHaveAttribute("aria-checked", "true");

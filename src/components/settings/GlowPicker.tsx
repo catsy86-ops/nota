@@ -41,7 +41,7 @@ export function GlowPicker() {
       <p className="text-xs text-muted-foreground">
         {look.strength === "off"
           ? "Bez poświaty. Zaznaczona notatka zostaje obwiedziona, ale bez rozmytego blasku."
-          : `${GLOW_STRENGTH[look.strength].label} poświata${look.color === "theme" ? ", w kolorze motywu" : `, w kolorze: ${GLOW_COLORS[look.color].label.toLowerCase()}`}.`}
+          : `${GLOW_STRENGTH[look.strength].label} poświata${look.color === "theme" ? ", w kolorze stylu" : `, w kolorze: ${GLOW_COLORS[look.color].label.toLowerCase()}`}.`}
       </p>
     </div>
   );

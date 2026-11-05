@@ -5,7 +5,8 @@ import { MissingHint } from "@/components/ui/missing-hint";
 import { comparePayslip, PAYSLIP_TOLERANCE, type PayslipFacts } from "@/lib/shifts/payslip";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { TriangleAlert, CalendarRange, Settings2, Trash } from "lucide-react";
+import { TriangleAlert, CalendarRange, Settings2, Trash, ChevronDown } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,7 +82,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
   const balance = useMemo(() => leaveBalance(data, year, new Date()), [data, year, today]); // eslint-disable-line react-hooks/exhaustive-deps -- `today`: przeliczenie po zmianie dnia
 
   return (
-    <section aria-label="Podsumowanie miesiąca" className="rounded-card border border-border/60 bg-card p-4 sm:p-5 space-y-4">
+    <SectionCard level={3} aria-label="Podsumowanie miesiąca" title="Miesiąc w liczbach" bodyClassName="space-y-4">
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <UiStat label="Przepracowane" size="lg" value={<CountUp value={minutes} format={formatHoursShort} />} unit="h"
           suffix={<>/ <CountUp value={normMinutes} format={formatHoursShort} /> h normy</>} />
@@ -131,7 +132,9 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
 
       {summary.period && <PeriodProgress period={summary.period} />}
 
-      <LeaveMeter balance={balance} />
+      <PhoneFold label="Urlop" summary={balance.remaining >= 0 ? `zostało ${pluralPl(balance.remaining, ["dzień", "dni", "dni"])}` : "ponad wymiar"}>
+        <LeaveMeter balance={balance} />
+      </PhoneFold>
 
       {summary.shortRests.length > 0 && (
         <div role="note" className="flex gap-2.5 rounded-card bg-destructive/10 px-3 py-2.5 text-sm">
@@ -192,8 +195,12 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
         <Receipt summary={summary} hourlyRate={hourlyRate} monthLabel={monthLabel} estimate={estimate ?? null}
           includeEstimate={includeEstimate} onToggleEstimate={setIncludeEstimate} />
       )}
-      <BonusPanel monthKey={monthKey} bonuses={summary.bonuses} />
-      <PaySlipPanel monthKey={monthKey} estimate={summary.earnings} paid={data.paidGross?.[monthKey] ?? 0} facts={{ nightMinutes: summary.nightMinutes, absenceDays: summary.absenceDays }} />
+      <PhoneFold label="Premie" summary={summary.bonuses.length > 0 ? `${summary.bonuses.length} ${pluralPl(summary.bonuses.length, ["pozycja", "pozycje", "pozycji"])}` : undefined}>
+        <BonusPanel monthKey={monthKey} bonuses={summary.bonuses} />
+      </PhoneFold>
+      <PhoneFold label="Pasek wypłaty" summary={(data.paidGross?.[monthKey] ?? 0) > 0 ? formatMoney(data.paidGross?.[monthKey] ?? 0) : undefined}>
+        <PaySlipPanel monthKey={monthKey} estimate={summary.earnings} paid={data.paidGross?.[monthKey] ?? 0} facts={{ nightMinutes: summary.nightMinutes, absenceDays: summary.absenceDays }} />
+      </PhoneFold>
 
 
       {/* Bieżące ustawienia w jednej linii — pola są w oknie „Ustawienia grafiku”. */}
@@ -213,7 +220,34 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
       </button>
 
       <YearSummaryDialog open={yearOpen} onOpenChange={setYearOpen} data={data} initialYear={year} onOpenMonth={onOpenMonth} />
-    </section>
+    </SectionCard>
+  );
+}
+
+/**
+ * Blok podsumowania, który na telefonie rozwija się przyciskiem (plan 3.4: urlop, premie, pasek wypłaty).
+ * Na komputerze blok stoi otwarty jak dotąd. Zwinięty na telefonie pokazuje podsumowanie w jednej linii.
+ */
+function PhoneFold({ label, summary, children }: { label: string; summary?: string; children: ReactNode }) {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(!isMobile);
+  if (!isMobile) return <>{children}</>;
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="pressable flex w-full items-center justify-between gap-3 rounded-card border border-border/60 bg-muted/40 px-3 py-2 text-left text-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="font-medium">{label}</span>
+        <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
+          {summary && <span className="truncate tabular-nums">{summary}</span>}
+          <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden />
+        </span>
+      </button>
+      {open && children}
+    </div>
   );
 }
 

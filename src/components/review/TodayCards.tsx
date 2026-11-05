@@ -49,15 +49,18 @@ export interface TodayCardsProps {
 export function TodayCards({ searching, go, notes, folders, reminderNotes, todayCards, openNote, openDailyNote, addNote, updateNote, togglePin, archiveNote, unarchiveNote, trashNote, restoreFromTrash, handleArchiveSingle, handleMoveToFolderGlow, inboxCount }: TodayCardsProps) {
   const navigate = useNavigate();
   return (
-    <>
+    // Od `lg` dwie kolumny (nowyplan.md, Etap 3.2): przy pustym dniu cały Dziś mieści się na 1440 px.
+    <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
           {/* Każda karta Dziś ma własną granicę: błąd w danych Pracy nie kładzie całego widoku, który jest punktem wejścia. */}
           {!searching && (
-            <ViewErrorBoundary name="Grafik">
-              <Suspense fallback={<CardSkeleton />}>
-                <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} dailyNote={findDailyNote(notes, dailyKey()) ?? null}
-                  reminderNotes={reminderNotes} onOpenTomorrow={() => navigate(`/kalendarz?dzien=${localDayKey(((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1))(new Date()))}`)} />
-              </Suspense>
-            </ViewErrorBoundary>
+            <div className="lg:col-span-2">
+              <ViewErrorBoundary name="Grafik">
+                <Suspense fallback={<CardSkeleton />}>
+                  <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} dailyNote={findDailyNote(notes, dailyKey()) ?? null}
+                    reminderNotes={reminderNotes} onOpenTomorrow={() => navigate(`/kalendarz?dzien=${localDayKey(((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1))(new Date()))}`)} />
+                </Suspense>
+              </ViewErrorBoundary>
+            </div>
           )}
 
           {/* Dziś 2.4: oś dnia pod kartą zmiany — osobna granica, żeby błąd osi nie zabierał karty zmiany. */}
@@ -121,6 +124,6 @@ export function TodayCards({ searching, go, notes, folders, reminderNotes, today
             </ViewErrorBoundary>
           )}
 
-    </>
+    </div>
   );
 }
