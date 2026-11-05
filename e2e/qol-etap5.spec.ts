@@ -45,6 +45,8 @@ test("paleta: ostatnio otwierane, terminy osobno i sekcja Ustawień z przewinię
   await input.fill("czcionka");
   const setting = page.getByRole("group", { name: "Ustawienia" }).getByRole("option", { name: "Krój tekstu" });
   await expect(setting).toBeVisible();
+  // Etap 7: trafienie w Ustawieniach to wynik — bez „Brak wyników” i „Utwórz notatkę” nad nim.
+  await expect(page.getByText("Brak wyników.")).toHaveCount(0);
   await setting.click();
   const dialog = page.getByRole("dialog", { name: "Ustawienia" });
   await expect(dialog.getByRole("tab", { name: "Wygląd", selected: true })).toBeVisible();

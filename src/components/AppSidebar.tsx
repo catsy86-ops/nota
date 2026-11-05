@@ -390,9 +390,6 @@ export function AppSidebar({
                         }}
                       />
                     ))}
-                    {savedViews.length === 0 && (
-                      <p className="px-3 pt-1 text-2xs text-muted-foreground">Ustaw notatki (folder, szukaj, układ) i zapisz je przyciskiem obok.</p>
-                    )}
                   </div>
                 )}
               </div>

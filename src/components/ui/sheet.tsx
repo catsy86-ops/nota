@@ -1,3 +1,4 @@
+import { BottomSheetMarker } from "@/lib/bottomSheets";
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
@@ -154,6 +155,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
         {...props}
         style={useSnap ? { ...style, maxHeight: SNAP_MAX_HEIGHT[snapState] } : style}
       >
+        {side === "bottom" && <BottomSheetMarker />}
         {side === "bottom" && (
           // Uchwyt naprawdę działa: przeciągnięcie w dół zamyka arkusz (próg odległości albo szybki ruch).
           <div

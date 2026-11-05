@@ -20,7 +20,7 @@ function InlineDiff({ before, after }: { before: string; after: string }) {
     <p className="whitespace-pre-wrap wrap-break-word text-xs leading-relaxed" data-testid="version-diff-inline">
       {ops.map((o, i) =>
         o.type === "eq" ? <span key={i}>{o.text}</span>
-          : o.type === "del" ? <del key={i} className="rounded-control bg-destructive/15 text-destructive-ink decoration-destructive/60">{o.text}</del>
+          : o.type === "del" ? <del key={i} className="mr-0.5 rounded-control bg-destructive/15 text-destructive-ink decoration-destructive/60">{o.text}</del>
           : <ins key={i} className="rounded-control bg-success/15 text-foreground underline decoration-success decoration-2 underline-offset-2">{o.text}</ins>,
       )}
     </p>

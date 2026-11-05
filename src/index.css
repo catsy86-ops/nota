@@ -977,6 +977,17 @@ html[data-motion="reduced"] .fab-ring[data-pressing="true"] { stroke-dashoffset:
   [data-sonner-toaster][data-y-position="bottom"] {
     bottom: calc(88px + env(safe-area-inset-bottom)) !important;
   }
+  /* Otwarty arkusz dolny (Etap 7, `lib/bottomSheets.ts`): toasty na górę, żeby nie leżały na jego przyciskach.
+     Lista Sonnera ma zerową wysokość, a toast jest przyklejony do jej dołu — przy liście u góry przyklejamy go do góry.
+     Starsze toasty w stosie wysuwają się wtedy nad krawędź ekranu; widać przedni. */
+  html[data-bottom-sheet] [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: auto !important;
+    top: calc(12px + env(safe-area-inset-top)) !important;
+  }
+  html[data-bottom-sheet] [data-sonner-toaster][data-y-position="bottom"] [data-sonner-toast] {
+    bottom: auto;
+    top: 0;
+  }
   /* Przypomnienia u góry: pod paskiem stanu (viewport-fit=cover). */
   [data-sonner-toaster][data-y-position="top"] {
     top: calc(12px + env(safe-area-inset-top)) !important;

@@ -157,6 +157,7 @@ export function CommandPalette({
     const types = new Map(shifts.types.map((x) => [x.id, x]));
     return searchShiftDays(search, shifts.days, types);
   }, [shifts, search]);
+  const hasForcedHits = matched.length > 0 || sections.length > 0 || settingsHits.length > 0 || shiftHits.length > 0;
 
   // Nawigacja jako dane: ta sama lista rysuje grupę i „Ostatnio użyte”.
   const hiddenViews = useHiddenViews();
@@ -182,7 +183,9 @@ export function CommandPalette({
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput placeholder="Szukaj notatek, terminów, Pracy, ustawień i akcji…" value={search} onValueChange={setSearch} />
       <CommandList>
-        <CommandEmpty>
+        {/* Grupy z `forceMount` (notatki, terminy, ustawienia, grafik, sekcje) cmdk nie liczy — bez tego „Brak wyników”
+            stało nad trafieniem w Ustawieniach (Etap 7). */}
+        {!hasForcedHits && <CommandEmpty>
           <div className="flex flex-col items-center gap-2 py-2">
             <span>Brak wyników.</span>
             {search.trim() && (
@@ -195,7 +198,7 @@ export function CommandPalette({
               </button>
             )}
           </div>
-        </CommandEmpty>
+        </CommandEmpty>}
         {currentNote && !search.trim() && (
           <>
             <CommandGroup heading="Ta notatka">

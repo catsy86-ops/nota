@@ -332,6 +332,36 @@ Plan: `nowyplan.md`, Etap 1 (punkty 1.1–1.4, V1–V4).
 - e2e: `e2e/reminders-calendar.spec.ts` (rząd akcji pod tytułem na telefonie), `e2e/inbox-triage.spec.ts`, `e2e/plans.spec.ts`, `e2e/csp.spec.ts`, `e2e/visual.spec.ts` (selektory po przeniesieniu akcji).
 - Zrzuty `e2e/visual.spec.ts` odświeżone po przeglądzie (Kalendarz, Grafik, Terminy, Długi, Ćwiczenia, Plany, Skrzynka, Dziś, Skarbiec).
 
+## Wspólne — QA, Etap 7 (nowy plan 2026-11-05)
+
+Commit: HASH (2026-11-05), na wip/mobile-fala1.
+
+Plan: `nowyplan.md`, Etap 7. Przegląd zrzutów, a11y, testy na telefonach i poprawki znalezionych usterek.
+
+### Co sprawdzono
+
+- **Zrzuty wzorcowe** (`npm run test:visual`, 227 zrzutów): 216 bez zmian.
+  - Grafik i paleta różniły się tylko w jednym przebiegu; po ponownym puszczeniu przechodzą.
+  - 9 zrzutów (Archiwum, Kosz i Długi; Zeszyt jasny i ciemny, Hydraulika) różniło się tylko nowym wierszem „Widoki” w pasku bocznym (6.1). Po obejrzeniu różnic dostały nowe wzorce.
+- **a11y** (`e2e/a11y.spec.ts`, wszystkie style × 2 schematy, axe WCAG 2.2 AA): zielone.
+- **Telefony** (`--project=pixel-7 --project=iphone-14`, testy `@mobile`): 133 z 133.
+- **Przegląd wyglądu nowych okien** (historia wersji, paleta na telefonie; `frontend-design`, `refactoring-ui`, `ux-heuristics`).
+
+### Co poprawiono
+
+- **Toast nad otwartym arkuszem na telefonie** (4.5): przy otwartym arkuszu dolnym (`SheetContent side="bottom"`, `DialogContent sheet`) i szerokości do 767 px toasty stoją u góry ekranu. Wcześniej stały 88 px nad dołem, na przyciskach arkusza. `src/lib/bottomSheets.ts` liczy otwarte arkusze (`BottomSheetMarker` rysowany wewnątrz `Content`, które Radix montuje tylko przy otwartym oknie) i ustawia `<html data-bottom-sheet>`. Reguła w `index.css` przestawia listę Sonnera i toast z dołu na górę. Najpierw było to robione zmianą `position` w `Toaster`, ale przebudowa Toastera przewijała listę pod arkuszem (`view-change.spec.ts:92`), stąd atrybut. Sprawdzone zrzutem (390 px, arkusz akcji kafla, „Skopiowano” u góry). Test: `src/components/ui/sonner.test.tsx`.
+- **Paleta: „Brak wyników” nad trafieniem.** Grupy z `forceMount` (notatki, terminy, ustawienia, dni grafiku, sekcje) cmdk nie liczy, więc przy samym trafieniu w Ustawieniach pokazywał też „Brak wyników” i „Utwórz notatkę”. Teraz `CommandEmpty` znika, gdy jest którekolwiek z tych trafień (`hasForcedHits`). Test: `e2e/qol-etap5.spec.ts`.
+- **Zmiany w tekście:** usunięte i dopisane słowo stojące obok siebie mają odstęp (wcześniej sklejały się w „StaryNowy”).
+- **Pusta grupa „Widoki”** to jedna linijka (nagłówek z przyciskiem, jak Foldery), bez dwuzdaniowej podpowiedzi w każdym widoku. Pasek boczny był już przeładowany (V10).
+- **`e2e/mobile-layout.spec.ts:44`:** na dotyku pole wyboru jest ukryte do trybu zaznaczania (NP-2). Test przytrzymuje teraz kafel zdarzeniem wskaźnika typu `touch` (450 ms), zamiast klikać ukryte pole.
+
+### Ograniczenia i pułapki
+
+- **Ręczne QA na prawdziwym telefonie** zostaje dla właściciela (Cykl 4 w `Plan-nowy.md`). Testy `@mobile` to emulacja w Playwright.
+- **Toasty u góry przy arkuszu:** gdy pokazuje się kilka naraz, stos rozwija się w dół od góry ekranu i może zasłonić nagłówek arkusza. Pojedynczy toast go nie zasłania.
+- **Niestabilne pod 3 workerami** (pojedynczo przechodzą): `composer-reminder:27`, `jobs:166`, `local-graph:27`, `qol:8`, `routes:67`, płótno w `qol-etap5`.
+- **Esc zwija pasek boczny** — testy i zrzuty po Esc muszą go pokazać („Pokaż panel”).
+
 ## Notatki — zapisane widoki, porównanie wersji, opis na zdjęciu (nowy plan 2026-11-05, Etap 6)
 
 Commit: d09405a1 (2026-11-05), na wip/mobile-fala1.
@@ -451,7 +481,7 @@ Plan: `nowyplan.md`, Etap 4 (punkty 4.1–4.5). Decyzję NP-5 przyjęto według 
 
 ### Ograniczenia i pułapki
 
-- **Toast nad otwartym arkuszem na telefonie nie jest zmieniony.** Toasty stoją 88 px nad dołem ekranu także przy otwartym arkuszu; przeniesienie ich do góry wymaga sprawdzenia stosu Sonnera na zrzutach (Etap 7).
+- **Toast nad otwartym arkuszem na telefonie** jest rozwiązany w Etapie 7 (toasty idą na górę ekranu, opis w sekcji „QA, Etap 7”).
 - **Wielkanocne toasty** („Niespodzianka!”, „KONAMI!”) zostały z wykrzyknikiem celowo.
 - **`--dur-press` i `--ease-in` zostały** — plan mówi o „3 czasach i 2 krzywych”; dodatkowe tokeny mają po jednej roli i są opisane w nagłówku `motion.css`, a ich usunięcie ruszyłoby ok. 100 miejsc bez zmiany wyglądu.
 - **Fonty zastępcze działają tam, gdzie system ma Arial/Georgię** (Windows, macOS, iOS). Na Androidzie `local()` zawodzi i zostaje zwykłe `sans-serif`.
