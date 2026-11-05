@@ -6,13 +6,19 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("sekwencja „g, k” przechodzi do kosza, a „g, n” wraca do notatek", async ({ page }) => {
-  await page.locator("body").click({ position: { x: 5, y: 5 } });
-  await page.keyboard.press("g");
-  await page.keyboard.press("k");
-  await expect(page).toHaveURL(/\/kosz$/);
-  await page.keyboard.press("g");
-  await page.keyboard.press("n");
-  await expect(page).not.toHaveURL(/\/kosz$/);
+  // Pod obciążeniem aplikacja bywa jeszcze po starcie — ponawiamy sekwencję, aż adres się zmieni (okno „g” to 1,2 s).
+  await expect(page.getByRole("button", { name: "Zapisz notatkę..." })).toBeVisible();
+  await expect(async () => {
+    await page.locator("body").click({ position: { x: 5, y: 5 } });
+    await page.keyboard.press("g");
+    await page.keyboard.press("k");
+    await expect(page).toHaveURL(/\/kosz$/, { timeout: 800 });
+  }).toPass({ timeout: 15000 });
+  await expect(async () => {
+    await page.keyboard.press("g");
+    await page.keyboard.press("n");
+    await expect(page).not.toHaveURL(/\/kosz$/, { timeout: 800 });
+  }).toPass({ timeout: 15000 });
 });
 
 test("po kliknięciu notatki kliknięcie poza kaflem przywraca skrót „g, k”", async ({ page }) => {

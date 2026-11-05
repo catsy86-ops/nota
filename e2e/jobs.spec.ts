@@ -174,6 +174,7 @@ test("H3.5: po „Zrobione” podpis klienta i PDF „Potwierdzenie wykonania”
   await job.getByTestId("job-sign").click();
   const dialog = page.getByTestId("site-signature");
   await dialog.getByLabel("Imię i nazwisko podpisującego").fill("Jan Kowalski");
+  await expect(dialog.getByTestId("signature-pad")).toBeVisible({ timeout: 15000 });
   const pad = (await dialog.getByTestId("signature-pad").boundingBox())!;
   await page.mouse.move(pad.x + 30, pad.y + 100);
   await page.mouse.down();

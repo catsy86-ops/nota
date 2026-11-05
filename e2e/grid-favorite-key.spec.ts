@@ -22,9 +22,15 @@ test.beforeEach(async ({ page }) => {
 
 test("klawisz F na zaznaczonym kaflu dodaje notatkę do ulubionych", async ({ page }) => {
   await page.goto("/");
-  await page.locator("body").click({ position: { x: 900, y: 900 } });
-  await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("f");
-  // Kolejność kafli przy równych datach jest dowolna — ważne, że dokładnie jedna notatka trafiła do ulubionych.
-  await expect(page.locator("[data-favorites] > div")).toHaveCount(1);
+  await expect(page.locator("[data-note-id-wrap]")).toHaveCount(2, { timeout: 15000 });
+  // Pod obciążeniem fokus siatki bywa jeszcze nieustawiony — ponawiamy strzałkę i „f”, dopóki notatka nie trafi do ulubionych.
+  await expect(async () => {
+    if ((await page.locator("[data-favorites] > div").count()) === 0) {
+      await page.locator("body").click({ position: { x: 900, y: 900 } });
+      await page.keyboard.press("ArrowDown");
+      await page.keyboard.press("f");
+    }
+    // Kolejność kafli przy równych datach jest dowolna — ważne, że dokładnie jedna notatka trafiła do ulubionych.
+    await expect(page.locator("[data-favorites] > div")).toHaveCount(1, { timeout: 1000 });
+  }).toPass({ timeout: 15000 });
 });

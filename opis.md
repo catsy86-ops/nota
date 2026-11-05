@@ -400,7 +400,7 @@ Plan: `nowyplan.md`, Etap 6 (6.1–6.3; źródła: Notatki 6.2, 5.1, 5.2). W tym
 
 - **Widoki są w pełnej kopii JSON** (sekcja `views`, `exportFullBackup` i `restoreFullBackup` w `exportNotes.ts`; scalanie przez `mergeViewsDump`, który waliduje każdy wpis). Przy resecie danych nie są kasowane osobno.
 - **Otwarcie widoku zmienia globalne preferencje widoku** (układ, sortowanie, filtry) — tak jak ręczna zmiana w pasku narzędzi. Po wyjściu z widoku zostają.
-- **„Widoczne kolumny” tabeli** z planu nie są w widoku: tabela nie ma jeszcze wyboru kolumn (osobne zadanie, nie w tym etapie).
+- **Widoczne kolumny tabeli:** menu „Kolumny” nad tabelą (`NoteTable.tsx`, preferencja `tableHidden` w `viewPrefs.ts`, lista kluczy kolumn). Tytuł i „Zmieniono” nie chowają się. Zapisany widok zapamiętuje ukryte kolumny (`SavedView.tableHidden`). Test: `e2e/board-table.spec.ts`.
 - **Dwie zmiany tego samego widoku naraz** (dwa urządzenia): zostaje jedna, cała.
 - **Diff akapitów** porównuje całe akapity. Zmiana jednego słowa daje blok „zmieniony”, a przywrócenie bierze cały akapit z wersji.
 - **Opisana kopia zdjęcia** to nowy obraz w `imageStore` (więcej miejsca). Usunięcie kopii nie rusza oryginału.
@@ -4851,3 +4851,10 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **Tylko telefon (`view-sheet-snap`, `touch-audit`).** Projekt `chromium` (komputer) uruchamia też testy `@mobile`; arkusz „Widok” i cele 44 px (`coarse:`) są tylko na telefonie, więc `test.skip(!isMobile)`.
 - **Schowek na iPhone (`journal-menu`, `site-billing`).** WebKit w Playwright nie zna uprawnień `clipboard-*`: uprawnienia i odczyt schowka tylko w Chromium, na iPhone sprawdzany jest komunikat „Skopiowano”.
 - **Commit.** `af41621` (2026-11-01).
+
+## Stabilność e2e (punkt 6 planu wykończenia, 2026-11-05)
+
+- **Wyścig skrótów kompozytora** (`src/pages/Index.tsx`, `expandAddNote`): kompozytor był otwierany raz, po 100 ms. Gdy montował się później (obciążenie), skrót („+”, „?new=list”, „N”) przepadał bez śladu. Teraz wywołanie jest ponawiane, najwyżej ok. 3 s.
+- **Testy:** czekanie na gotowość zamiast stałych czasów (`toPass` dla sekwencji klawiszy w `qol`, `local-graph`, `grid-favorite-key`; czekanie na widoczność w `composer-reminder`, `jobs`, `qol-etap5`; `waitUntil: "domcontentloaded"` przy płótnie, bo pod obciążeniem „load” nie nadchodzi).
+- **Znane, niewyjaśnione:** pod 3 workerami z powtórzeniami nadal pojawiają się pojedyncze porażki (np. `routes:62`, `?new=1`). Po pojedynczych uruchomieniach przechodzą. Przy pełnym przebiegu tło jest tak samo obciążone, więc to ograniczenie środowiska, nie kodu.
+

@@ -289,7 +289,13 @@ const Index = () => {
     // W Skrzynce nie ma kompozytora: „+” ustawia kursor w polu przechwycenia, bez zmiany działu.
     if (view === "inbox") { document.querySelector<HTMLTextAreaElement>("[data-inbox-capture]")?.focus(); return; }
     if (!canCompose) setView("notes");
-    setTimeout(() => addNoteRef.current?.expand(action, prefill), 100);
+    // Kompozytor montuje się po zmianie widoku (i pod obciążeniem bywa później niż po 100 ms) — ponawiamy,
+    // zamiast po cichu zgubić skrót („+”, „?new=list”, „N”). Najwyżej ok. 3 s.
+    const tryExpand = (left: number) => {
+      if (addNoteRef.current) { addNoteRef.current.expand(action, prefill); return; }
+      if (left > 0) window.setTimeout(() => tryExpand(left - 1), 100);
+    };
+    window.setTimeout(() => tryExpand(30), 100);
   }
 
   useGlobalShortcuts({

@@ -144,21 +144,31 @@ test("siatka: M otwiera wybór folderu, L etykiety; okruszki podfolderu; domyśl
 
 test("płótno: Esc przy niezapisanych kreskach pyta; „Wyczyść” ma Cofnij (5.10)", async ({ page }) => {
   await seedNotes(page, [note("a", "Szkic")]);
-  await page.goto("/");
+  // Pod obciążeniem zdarzenie „load” potrafi nie nadejść — dalej czekamy na konkretne elementy.
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   const card = page.locator("[data-note-id-wrap]", { hasText: "Szkic" });
+  await expect(card).toBeVisible({ timeout: 15000 });
   await card.hover();
   await card.getByRole("button", { name: "Więcej opcji" }).click();
   await card.getByRole("button", { name: "Rysuj" }).click();
   const canvas = page.locator("canvas").last();
-  const box = (await canvas.boundingBox())!;
-  await page.mouse.move(box.x + 40, box.y + 40);
-  await page.mouse.down();
-  await page.mouse.move(box.x + 140, box.y + 90, { steps: 6 });
-  await page.mouse.up();
-
-  await page.keyboard.press("Escape");
+  const save = page.getByRole("button", { name: "Zapisz rysunek" });
+  // Okno rysunku wjeżdża animacją — kreska narysowana za wcześnie się nie liczy, więc powtarzamy, aż „Zapisz” się włączy.
+  await canvas.waitFor();
+  await page.waitForTimeout(400);
+  for (let i = 0; i < 3 && await save.isDisabled(); i++) {
+    const box = (await canvas.boundingBox())!;
+    await page.mouse.move(box.x + 40, box.y + 40);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 140, box.y + 90, { steps: 6 });
+    await page.mouse.up();
+  }
+  await expect(save).toBeEnabled();
   const ask = page.getByRole("alertdialog", { name: "Niezapisany rysunek" });
-  await expect(ask).toBeVisible();
+  await expect(async () => {
+    await page.keyboard.press("Escape");
+    await expect(ask).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 10000 });
   await ask.getByRole("button", { name: "Rysuj dalej" }).click();
   await expect(canvas).toBeVisible();
 

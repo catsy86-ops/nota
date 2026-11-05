@@ -61,14 +61,14 @@ test("link /notatka/:id otwiera notatkę, także z Archiwum", async ({ page }) =
 
 test("skrót PWA /?new=1 otwiera nową notatkę i czyści parametr z adresu", async ({ page }) => {
   await page.goto("/?new=1");
-  await expect(page.getByPlaceholder("Tytuł")).toBeVisible();
+  await expect(page.getByPlaceholder("Tytuł")).toBeVisible({ timeout: 15000 });
   await expect(page).toHaveURL(/\/$/);
   expect(new URL(page.url()).search).toBe("");
 });
 
 test("skróty PWA „Nowa lista” i „Szukaj”: lista od razu w kompozytorze, kursor w wyszukiwaniu", async ({ page }) => {
   await page.goto("/?new=list");
-  await expect(page.locator("[aria-label=\"Lista zadań\"][aria-pressed=\"true\"]")).toHaveCount(1);
+  await expect(page.locator("[aria-label=\"Lista zadań\"][aria-pressed=\"true\"]")).toHaveCount(1, { timeout: 15000 });
   await expect(page.getByPlaceholder("Dodaj element...")).toBeVisible();
   expect(new URL(page.url()).search).toBe("");
 

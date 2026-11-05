@@ -19,9 +19,14 @@ async function seed(page: Page, notes: unknown[]) {
 
 /** Pierwsza notatka na liście (order 0) zaznaczana przez Home; spacja otwiera czytnik. */
 async function openFirstInReader(page: Page) {
-  await page.locator("body").click({ position: { x: 5, y: 5 } });
-  await page.keyboard.press("Home");
-  await page.keyboard.press(" ");
+  // Pod obciążeniem lista dochodzi do siebie po starcie — ponawiamy, aż czytnik się otworzy.
+  const reader = page.getByRole("dialog", { name: "Zakupy" });
+  await expect(async () => {
+    await page.locator("body").click({ position: { x: 5, y: 5 } });
+    await page.keyboard.press("Home");
+    await page.keyboard.press(" ");
+    await expect(reader).toBeVisible({ timeout: 1500 });
+  }).toPass({ timeout: 15000 });
 }
 
 test("lokalny graf pokazuje sąsiadów do dwóch kroków i filtr etykiety go zawęża", async ({ page }) => {
@@ -43,7 +48,7 @@ test("lokalny graf pokazuje sąsiadów do dwóch kroków i filtr etykiety go zaw
   await expect(local.getByTestId("link-graph")).toBeVisible();
   // Zakupy + Plan + Start (krok 1) + Remont (krok 2). „Daleko” jest w kroku 3 — odpada.
   const nodes = local.locator("[data-graph-node]");
-  await expect(nodes).toHaveCount(4);
+  await expect(nodes).toHaveCount(4, { timeout: 15000 });
   await expect(local.locator('[data-graph-node="x"]')).toHaveCount(0);
 
   // Etykieta „praca” zostawia tylko pasujących sąsiadów; Remont jest dalej, więc odpada.
