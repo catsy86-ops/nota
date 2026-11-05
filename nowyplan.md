@@ -61,7 +61,7 @@ Oznaczenia: W to wartość (1–3), N to nakład (S/M/L). „Źródło” wskazu
 | 0.2 | **Brakujące wzorce:** Ustawienia (4 karty), otwarta notatka, paleta poleceń, arkusz „Więcej”, Skarbiec, pusta aplikacja przy pierwszym uruchomieniu, szukanie bez trafień, a dla Dziś i Kalendarza także 1920 px. | `e2e/visual.spec.ts` | 3 | S |
 | 0.3 | **Liczby wyjściowe** do miar z punktu 7: wersaliki, `opacity-50` na głównym przycisku, liczba wariantów pustego stanu, rozmiar paczki. | — | 2 | S |
 
-**Wynik Etapu 0 (2026-11-05):**
+**Wynik Etapu 0 (2026-11-05, commit cb80583):**
 
 - **0.1, zrobione.** Cały zestaw `test:visual` przeszedł bez zmian poza Dziś. Wzorce z 25.10 i 28.10 (`grafik-telefon-*`, `notatki-telefon-matrix`, `praca-telefon-matrix`) zgadzają się z obecnym wyglądem, więc nie trzeba ich odnawiać. Sześć zrzutów `dzis-*` odświeżone, bo zmieniła je karta zmiany i pusty dzień z Plan-nowy 2.4. Doszedł ciemny Zeszyt dla pięciu głównych działów.
 - **0.2, zrobione.** 63 nowe wzorce w `e2e/visual.spec.ts`: 4 karty Ustawień, otwarta notatka, paleta poleceń, okno hasła Skarbca, pierwsze uruchomienie, szukanie bez trafień i arkusz „Więcej” (każdy w Zeszycie jasnym i ciemnym oraz w Hydraulice), do tego Dziś i Kalendarz w 1920 px. Razem z 10 zrzutami ciemnego Zeszytu z 0.1 przybyło 73 wzorców, w sumie 227, wszystkie zielone w drugim przebiegu.
