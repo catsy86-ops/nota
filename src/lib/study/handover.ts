@@ -37,6 +37,8 @@ export interface HandoverRemark {
 export interface HandoverPhotoGroup {
   stage: string | null;
   photos: string[];
+  /** Data wpisu każdego zdjęcia (ms, w kolejności `photos`): protokół podpisuje zdjęcie datą (P2.2). */
+  dates: number[];
 }
 
 /** Punkt w protokole (H2.4): typ, strony, wysokość, zrobione kroki z datami i liczba zdjęć punktu. */
@@ -93,16 +95,22 @@ export function buildHandover(
   // Najpierw zdjęcia przypięte do etapów (w kolejności etapów), potem reszta — limit wydruku tnie od końca.
   // Karta bez własnej listy ma domyślne etapy — wpis mógł zostać przypięty do jednego z nich.
   const stageList = siteStages(site);
-  const groups: HandoverPhotoGroup[] = stageList
-    .map((s) => ({ stage: s.name, photos: entries.filter((e) => e.stage === s.id).flatMap((e) => e.images) }))
-    .filter((g) => g.photos.length > 0);
+  // Każde zdjęcie niesie czas swojego wpisu (wpisy są posortowane), żeby protokół mógł podpisać je datą.
+  const shots = (list: readonly JournalEntry[]) => list.flatMap((e) => e.images.map((ref) => ({ ref, at: e.at })));
+  const groups: { stage: string | null; shots: { ref: string; at: number }[] }[] = stageList
+    .map((s) => ({ stage: s.name, shots: shots(entries.filter((e) => e.stage === s.id)) }))
+    .filter((g) => g.shots.length > 0);
   const known = new Set(stageList.map((s) => s.id));
-  const rest = entries.filter((e) => !e.stage || !known.has(e.stage)).flatMap((e) => e.images);
-  if (rest.length > 0) groups.push({ stage: null, photos: rest });
-  const photos = groups.flatMap((g) => g.photos);
+  const rest = shots(entries.filter((e) => !e.stage || !known.has(e.stage)));
+  if (rest.length > 0) groups.push({ stage: null, shots: rest });
+  const photos = groups.flatMap((g) => g.shots.map((x) => x.ref));
   let left = HANDOVER_PHOTOS_MAX;
-  const photoGroups = groups
-    .map((g) => { const taken = g.photos.slice(0, Math.max(0, left)); left -= taken.length; return { stage: g.stage, photos: taken }; })
+  const photoGroups: HandoverPhotoGroup[] = groups
+    .map((g) => {
+      const taken = g.shots.slice(0, Math.max(0, left));
+      left -= taken.length;
+      return { stage: g.stage, photos: taken.map((x) => x.ref), dates: taken.map((x) => x.at) };
+    })
     .filter((g) => g.photos.length > 0);
   const first = entries[0]?.at;
   const last = entries[entries.length - 1]?.at;

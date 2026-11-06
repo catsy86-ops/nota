@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Check, ListChecks, Plus, X } from "lucide-react";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
@@ -6,6 +6,9 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { setSiteStages } from "@/lib/study/store";
 import type { SiteInfo } from "@/lib/study/sites";
 import { addStage, removeStage, siteStages, stageProgress, STAGE_NAME_MAX, STAGES_MAX, toggleStage } from "@/lib/study/stages";
+import { COVER_STAGE_ID, coverPhotoCount } from "@/lib/study/coverPhotos";
+import type { JournalEntry } from "@/lib/study/yStudy";
+import { CoverPhotoButton } from "./CoverPhotoButton";
 
 const shortDate = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" });
 
@@ -13,9 +16,11 @@ const shortDate = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day
  * Etapy budowy w karcie: odhaczenie zapisuje datę, pasek pokazuje postęp, a „Następny” — co
  * zostało. Własne etapy dopisuje się na końcu; usunięcie ma „Cofnij”. Lista trafia do raportu.
  */
-export function SiteStagesPanel({ site }: { site: SiteInfo }) {
+export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journal?: readonly JournalEntry[] }) {
   const stages = siteStages(site);
   const { done, total, next } = stageProgress(stages);
+  // Zdjęcia przed zakryciem (P2.2) widać, dopóki etap „Zakrycie” nie jest odhaczony.
+  const coverPhotos = coverPhotoCount(journal, site.id);
   const [name, setName] = useState("");
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
@@ -66,7 +71,8 @@ export function SiteStagesPanel({ site }: { site: SiteInfo }) {
         {stages.map((s) => {
           const isDone = s.done !== undefined;
           return (
-            <li key={s.id} className="flex items-center gap-1">
+            <Fragment key={s.id}>
+            <li className="flex items-center gap-1">
               <button
                 type="button"
                 role="checkbox"
@@ -95,6 +101,15 @@ export function SiteStagesPanel({ site }: { site: SiteInfo }) {
                 <X className="h-3.5 w-3.5" aria-hidden />
               </button>
             </li>
+            {s.id === COVER_STAGE_ID && !isDone && (
+              <li className="flex items-center justify-between gap-2 pb-1 pl-9" data-testid="cover-photos">
+                <span className="text-xs text-muted-foreground">
+                  Zdjęcia przed zakryciem: <span className="font-mono tabular-nums text-foreground">{coverPhotos}</span>
+                </span>
+                <CoverPhotoButton siteName={site.name} />
+              </li>
+            )}
+            </Fragment>
           );
         })}
       </ul>

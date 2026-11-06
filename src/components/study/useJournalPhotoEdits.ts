@@ -4,10 +4,19 @@ import { haptic } from "@/lib/haptics";
 import { prepareImage } from "@/lib/imagePrepare";
 import { dataUrlToBlob, imageStore } from "@/lib/imageStore";
 import type { JournalDraft } from "@/lib/study/draft";
+import type { PhotoEntryResult } from "@/lib/study/photoEntry";
 
 /** Błąd zapisu zdjęcia (brak miejsca w przeglądarce) — wspólny komunikat dla podpisu i rysunku. */
 export function photoSaveFailed() {
   toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare zdjęcia albo zrób kopię zapasową i spróbuj ponownie." });
+}
+
+/** Komunikat po zdjęciu z aparatu jako nowym wpisie (oś, karta, przypomnienie); `okMessage` przy sukcesie. */
+export function photoEntryToast(result: PhotoEntryResult, okMessage: string) {
+  if (result === "too-big") { toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB"); return; }
+  if (result === "failed") { toast.error("Nie zapisano zdjęcia"); return; }
+  haptic("tap");
+  toast.success(okMessage);
 }
 
 interface JournalPhotoEditsDeps {

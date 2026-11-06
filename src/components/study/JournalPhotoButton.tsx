@@ -1,9 +1,7 @@
 import { useRef, useState } from "react";
 import { Camera } from "lucide-react";
-import { toast } from "sonner";
-import { haptic } from "@/lib/haptics";
 import { addPhotoEntry } from "@/lib/study/photoEntry";
-import { photoSaveFailed } from "./useJournalPhotoEdits";
+import { photoEntryToast, photoSaveFailed } from "./useJournalPhotoEdits";
 
 /**
  * Pływający przycisk „Zdjęcie” na osi dziennika (P2.1): jedno stuknięcie otwiera aparat i zdjęcie
@@ -18,11 +16,7 @@ export function JournalPhotoButton({ siteName, onNoSite }: { siteName: string | 
   async function onFile(file: File, site: string) {
     setBusy(true);
     try {
-      const result = await addPhotoEntry(file, site);
-      if (result === "too-big") { toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB"); return; }
-      if (result === "failed") { toast.error("Nie zapisano zdjęcia"); return; }
-      haptic("tap");
-      toast.success(`Dodano zdjęcie do budowy „${site}”`);
+      photoEntryToast(await addPhotoEntry(file, site), `Dodano zdjęcie do budowy „${site}”`);
     } catch {
       photoSaveFailed();
     } finally {

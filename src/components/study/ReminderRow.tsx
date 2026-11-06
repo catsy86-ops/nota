@@ -5,6 +5,7 @@
 import { ClipboardCheck, Gauge, Package, TriangleAlert, Truck, Wrench } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { type StudyReminder } from "@/lib/study/reminders";
+import { CoverPhotoButton } from "./CoverPhotoButton";
 
 
 const REMINDER_ICON: Partial<Record<StudyReminder["kind"], typeof TriangleAlert>> = {
@@ -16,7 +17,8 @@ const REMINDER_ICON: Partial<Record<StudyReminder["kind"], typeof TriangleAlert>
   "no-test": ClipboardCheck,
 };
 
-export function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow: () => void }) {
+/** `coverPhotos` — zdjęcia przed zakryciem tej budowy (P2.2); przy przypomnieniu „próba przed zakryciem” liczy się i jest „Zrób zdjęcia”. */
+export function ReminderRow({ reminder: r, onShow, coverPhotos = 0 }: { reminder: StudyReminder; onShow: () => void; coverPhotos?: number }) {
   const text =
     r.kind === "stale-problems"
       ? `${r.count} ${pluralPl(r.count, ["problem", "problemy", "problemów"])} otwarte od ponad 3 dni`
@@ -34,7 +36,15 @@ export function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; 
   return (
     <li className="flex items-start gap-2.5 rounded-card border border-warning/50 bg-warning/10 p-3 text-sm" data-reminder={r.kind}>
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
-      <p className="min-w-0 flex-1 leading-snug">{text}</p>
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <p className="leading-snug">{text}</p>
+        {r.kind === "pre-cover-test" && (
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>Zdjęcia przed zakryciem: <span className="font-mono tabular-nums text-foreground">{coverPhotos}</span></span>
+            <CoverPhotoButton siteName={r.site} />
+          </div>
+        )}
+      </div>
       <button
         type="button"
         onClick={onShow}

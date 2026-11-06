@@ -17,6 +17,7 @@ import {
 } from "@/lib/study/journalView";
 import { patchJournalDraft, useHasJournalDraft } from "@/lib/study/draft";
 import { openJournalSheet } from "@/lib/study/entrySheet";
+import { coverPhotoCount } from "@/lib/study/coverPhotos";
 import { JournalEntrySheet } from "./JournalEntrySheet";
 import { JournalItem } from "./JournalItem";
 import { JournalPhotoButton } from "./JournalPhotoButton";
@@ -229,6 +230,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                 key={r.kind === "stale-problems" ? "stale" : `${r.kind}-${r.siteId}`}
                 reminder={r}
                 onShow={() => (r.kind === "stale-problems" ? patch({ kind: "open" }) : r.kind === "late-order" || r.kind === "service-due" || r.kind === "pre-cover-test" ? setCard(r.siteId) : openTestEntry(r.site))}
+                coverPhotos={r.kind === "pre-cover-test" ? coverPhotoCount(study.journal, r.siteId) : 0}
               />
             ))}
           </ul>

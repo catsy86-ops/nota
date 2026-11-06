@@ -65,9 +65,9 @@ describe("protokół odbioru — zdjęcia przy etapach", () => {
     ];
     const h = buildHandover(journal, { ...card, stages }, at(16));
     expect(h.photoGroups).toEqual([
-      { stage: "Kanalizacja podposadzkowa", photos: [IMG(4)] },
-      { stage: "Próba szczelności", photos: [IMG(2), IMG(3)] },
-      { stage: null, photos: [IMG(1), IMG(5)] },
+      { stage: "Kanalizacja podposadzkowa", photos: [IMG(4)], dates: [at(2)] },
+      { stage: "Próba szczelności", photos: [IMG(2), IMG(3)], dates: [at(3), at(3)] },
+      { stage: null, photos: [IMG(1), IMG(5)], dates: [at(1), at(4)] },
     ]);
     expect(h.photos).toEqual([IMG(4), IMG(2), IMG(3), IMG(1), IMG(5)]);
     expect(handoverText(h)).toContain("Dokumentacja zdjęciowa: 5 zdjęć (Kanalizacja podposadzkowa: 1, Próba szczelności: 2).");
@@ -86,12 +86,12 @@ describe("protokół odbioru — zdjęcia przy etapach", () => {
   it("karta bez własnej listy — grupuje po domyślnych etapach", () => {
     const h = buildHandover([e("p", at(1), { images: [IMG(1)], stage: "kan-pion" })], card, at(16));
     expect(h.stages).toBeNull();
-    expect(h.photoGroups).toEqual([{ stage: "Piony i podejścia kanalizacji", photos: [IMG(1)] }]);
+    expect(h.photoGroups).toEqual([{ stage: "Piony i podejścia kanalizacji", photos: [IMG(1)], dates: [at(1)] }]);
   });
 
   it("bez przypiętych — jedna grupa bez etapu", () => {
     const h = buildHandover([e("x", at(1), { images: [IMG(1)] })], card, at(16));
-    expect(h.photoGroups).toEqual([{ stage: null, photos: [IMG(1)] }]);
+    expect(h.photoGroups).toEqual([{ stage: null, photos: [IMG(1)], dates: [at(1)] }]);
   });
 });
 

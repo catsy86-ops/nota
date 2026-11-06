@@ -134,8 +134,11 @@ export function HandoverPaper({ handover: h }: { handover: Handover }) {
                 {/* Podpis grupy tylko przy etapach — bez przypiętych zdjęć zostaje jedna siatka bez nagłówka. */}
                 {(g.stage || h.photoGroups.length > 1) && <h4 className="mb-1 text-xs font-medium text-muted-foreground">{g.stage ?? "Pozostałe"}</h4>}
                 <div className="grid grid-cols-3 gap-2">
-                  {g.photos.map((ref) => (
-                    <HandoverPhoto key={ref} imageRef={ref} alt={g.stage ? `Zdjęcie: ${g.stage}` : "Zdjęcie z budowy"} />
+                  {g.photos.map((ref, i) => (
+                    <figure key={ref} className="min-w-0">
+                      <HandoverPhoto imageRef={ref} alt={g.stage ? `Zdjęcie: ${g.stage}` : "Zdjęcie z budowy"} />
+                      <figcaption className="mt-0.5 font-mono text-2xs tabular-nums text-muted-foreground">{shortDate(g.dates[i])}</figcaption>
+                    </figure>
                   ))}
                 </div>
               </div>
