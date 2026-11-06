@@ -40,15 +40,9 @@ async function installObservers(page: Page) {
 
 const vitals = (page: Page) => page.evaluate(() => (window as unknown as { __vitals: Vitals }).__vitals);
 
-// W TOKU (2026-11-05): pomiar jest jeszcze niestabilny — w czterech przebiegach najdłuższa interakcja 240–360 ms,
-// raz LCP 10,6 s (obciążona maszyna). Do dokończenia: kilka powtórzeń i mediana zamiast jednego przebiegu,
-// potem próg. Do tego czasu `fixme`, żeby nie psuł pełnego e2e.
-test.fixme("telefon: LCP listy notatek i najdłuższa interakcja w dobrych granicach @mobile", async ({ page, browserName }) => {
-  // INP i LCP to metryki Chromium (Event Timing API); WebKit (iPhone w Playwright) mierzy je niewiarygodnie.
-  test.skip(browserName !== "chromium", "INP i LCP mierzymy na Chromium (pixel-7)");
-  await page.clock.setFixedTime(NOW);
-  await installObservers(page);
-  await seedNotes(page, NOTES);
+// Jeden przebieg: świeże załadowanie strony (obserwatory z `installObservers` działają od pierwszego dokumentu),
+// rozgrzewka edytora, potem typowe stuknięcia. Zwraca LCP i najdłuższą interakcję tego przebiegu.
+async function measureOnce(page: Page): Promise<{ lcp: number; worst: number; worstName: string }> {
   await page.goto("/");
   await expect(page.locator("[data-note-id-wrap]").first()).toBeVisible();
   // LCP zamyka się przy pierwszej interakcji — odczyt przed nią.
@@ -77,9 +71,38 @@ test.fixme("telefon: LCP listy notatek i najdłuższa interakcja w dobrych grani
   await page.locator("[data-note-id-wrap]").first().getByRole("heading").tap();
   await page.waitForTimeout(600);
   const { worst, worstName } = await vitals(page);
+  return { lcp, worst, worstName };
+}
 
-  console.log(`[vitals] LCP ${Math.round(lcp)} ms, najdłuższa interakcja ${Math.round(worst)} ms (${worstName})`);
-  expect(lcp, "LCP listy notatek na telefonie").toBeGreaterThan(0);
-  expect(lcp, "LCP listy notatek na telefonie").toBeLessThan(2500);
-  expect(worst, `najdłuższa interakcja (${worstName})`).toBeLessThan(300);
+const median = (xs: number[]) => {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+
+// Pomiar niestabilny pojedynczo (2026-11-05: najdłuższa interakcja 240–360 ms, raz LCP 10,6 s na obciążonej maszynie),
+// więc bierzemy medianę z RUNS przebiegów. Próg dotyczy mediany, nie pojedynczego przebiegu.
+const RUNS = 5;
+
+test("telefon: LCP listy notatek i najdłuższa interakcja w dobrych granicach @mobile", async ({ page, browserName }) => {
+  // INP i LCP to metryki Chromium (Event Timing API); WebKit (iPhone w Playwright) mierzy je niewiarygodnie.
+  test.skip(browserName !== "chromium", "INP i LCP mierzymy na Chromium (pixel-7)");
+  test.setTimeout(RUNS * 60_000);
+  await page.clock.setFixedTime(NOW);
+  await installObservers(page);
+  await seedNotes(page, NOTES);
+
+  const runs: Array<{ lcp: number; worst: number; worstName: string }> = [];
+  for (let i = 0; i < RUNS; i++) runs.push(await measureOnce(page));
+
+  const lcp = median(runs.map((r) => r.lcp));
+  const worst = median(runs.map((r) => r.worst));
+  const worstName = runs[Math.floor(RUNS / 2)].worstName;
+  console.log(
+    `[vitals] ${RUNS} przebiegów; mediana LCP ${Math.round(lcp)} ms, najdłuższa interakcja ${Math.round(worst)} ms (${worstName}); ` +
+      `wszystkie interakcje: ${runs.map((r) => Math.round(r.worst)).join(", ")} ms`,
+  );
+  expect(lcp, "mediana LCP listy notatek na telefonie").toBeGreaterThan(0);
+  expect(lcp, "mediana LCP listy notatek na telefonie").toBeLessThan(2500);
+  expect(worst, `mediana najdłuższej interakcji (${worstName})`).toBeLessThan(300);
 });

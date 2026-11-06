@@ -4900,12 +4900,11 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **Testy:** `src/lib/todayLists.test.ts`, `e2e/today-lists.spec.ts` (odhaczenie, „Cofnij”, audyt axe karty — Dziś nie ma go w `a11y.spec.ts`).
 
 
-## Pomiar reakcji na telefonie (Plan-nowy 3.3) — w toku (2026-11-05)
+## Pomiar reakcji na telefonie (Plan-nowy 3.3, 2026-11-05/06)
 
-- **Stan:** `e2e/web-vitals-phone.spec.ts` (Pixel 7, Chromium) mierzy LCP listy notatek i najdłuższą interakcję. Obserwatory są wstrzykiwane w teście, więc aplikacja nie ma kodu pomiarowego. Liczą się tylko zdarzenia z `interactionId`, jak w prawdziwym INP. Test jest oznaczony `test.fixme`, bo pomiar jest niestabilny.
-- **Pomiary (Pixel 7 w Playwright, bez dławienia CPU):**
-  - LCP ok. 1,1–1,8 s (raz 10,6 s na obciążonej maszynie);
-  - wyszukiwanie i przełączanie widoków 40–104 ms;
-  - otwarcie notatki stuknięciem w kafel ok. 170–360 ms; pierwsze otwarcie jest najdroższe, bo montuje edytor.
-- **Do dokończenia:** kilka powtórzeń i mediana zamiast jednego przebiegu, potem próg. Osobno: przyspieszyć otwarcie notatki na telefonie (najwolniejsza interakcja, blisko albo powyżej „dobrych” 200 ms).
+- **Co robi:** `e2e/web-vitals-phone.spec.ts` (Pixel 7, Chromium, `@mobile`) mierzy LCP listy notatek i najdłuższą interakcję na telefonie. Obserwatory są wstrzykiwane w teście (`installObservers`), więc aplikacja nie ma kodu pomiarowego i paczka się nie zmienia. Liczą się tylko zdarzenia z `interactionId`, jak w prawdziwym INP.
+- **Jak działa:** `measureOnce` ładuje stronę, robi rozgrzewkę (pierwsze otwarcie notatki montuje edytor), zeruje rekord i wykonuje typowe stuknięcia: wyszukiwanie, Dziś i powrót, otwarcie notatki. Test powtarza to `RUNS = 5` razy i sprawdza **medianę**, nie pojedynczy przebieg. Próg: LCP < 2500 ms, najdłuższa interakcja < 300 ms (straż regresji, nie cel).
+- **Ostatni wynik (2026-11-06, Pixel 7, 1 worker):** mediana LCP 344 ms; najdłuższa interakcja, mediana 256 ms, przebiegi 256, 264, 256, 296, 248 ms. Test przechodzi, ale 296 ms jest blisko progu.
+- **Uwaga:** komentarz w nagłówku testu podaje wcześniejsze wyniki (LCP 1,1–1,8 s), które nie zgadzają się z ostatnim pomiarem. Przy kolejnej zmianie warto zaktualizować ten komentarz.
+- **Pułapki:** przy obciążonej maszynie LCP potrafi skoczyć (raz 10,6 s). Jeśli test zacznie padać na interakcji, najpierw sprawdzić obciążenie, potem próg. Otwarcie notatki stuknięciem jest najwolniejszą interakcją; osobno do zrobienia: przyspieszyć je na telefonie.
 - **WebKit** (iPhone w Playwright) pomija test: Event Timing API, na którym stoi INP, mierzy tam niewiarygodnie.
