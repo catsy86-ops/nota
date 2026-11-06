@@ -1,4 +1,4 @@
-import { QUESTIONS, type Question } from "./content";
+import { QUESTIONS, type ChecklistItem, type Question } from "./content";
 
 export interface RoundQuestion {
   id: string;
@@ -61,4 +61,37 @@ export function missedTopics(questions: readonly RoundQuestion[], answers: reado
 
 export function scoreRound(questions: readonly RoundQuestion[], answers: readonly (number | null)[]): number {
   return questions.reduce((n, q, i) => n + (answers[i] === q.correct ? 1 : 0), 0);
+}
+
+/**
+ * Pytanie z punktu listy kontrolnej (P4.3): poprawne zdanie to sam punkt, błędne to `wrong` z listy.
+ * Punkt bez trzech błędnych zdań nie daje pytania.
+ */
+function checklistQuestion(item: ChecklistItem & { wrong: [string, string, string] }, rng: Rng): RoundQuestion {
+  const tagged = [item.text, ...item.wrong].map((text, i) => ({ text, right: i === 0 }));
+  const options = shuffle(tagged, rng);
+  return {
+    id: `chk-${item.id}`,
+    topic: item.topic,
+    question: "Które zdanie zgadza się z listą kontrolną?",
+    options: options.map((o) => o.text),
+    correct: options.findIndex((o) => o.right),
+    explanation: item.text,
+  };
+}
+
+/**
+ * Egzamin próbny (P4.3): pytania z puli działu, a gdy ich brakuje, dociągnięte pytaniami z punktów
+ * listy kontrolnej, które mają trzy błędne zdania. Krótszy egzamin zostaje, gdy zabraknie i jednych, i drugich.
+ */
+export function examRound(size: number, questions: readonly Question[], checklist: readonly ChecklistItem[], rng: Rng = Math.random): RoundQuestion[] {
+  const base = buildRound(size, new Set(), rng, questions);
+  const fillable = checklist.filter((i): i is ChecklistItem & { wrong: [string, string, string] } => i.wrong?.length === 3);
+  const fill = shuffle(fillable, rng).slice(0, Math.max(0, size - base.length)).map((item) => checklistQuestion(item, rng));
+  return shuffle([...base, ...fill], rng);
+}
+
+/** Ile pytań egzaminu da się złożyć z puli działu i listy kontrolnej. */
+export function examPoolSize(questions: readonly Question[], checklist: readonly ChecklistItem[]): number {
+  return questions.length + checklist.filter((i) => i.wrong?.length === 3).length;
 }

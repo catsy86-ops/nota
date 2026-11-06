@@ -4266,7 +4266,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 - **Co robi.** W trakcie egzaminu odliczanie ma `role="timer"` z etykietą „Pozostały czas: N min S s”, a czytnik ekranu dostaje komunikat co 5 minut („Zostało 25 minut egzaminu.”) i na ostatnią minutę („Została minuta egzaminu.”). Zegar sam nie ogłasza każdej sekundy.
 - **Gdzie.** `examAnnouncement` w `src/lib/study/exam.ts`, zegar i region `aria-live="polite"` w `src/components/study/QuizPanel.tsx` (`exam-timer`, `exam-announce`).
-- **Stan P4.3.** Ostrzeżenie przy małej puli pytań było już zrobione (C2). „Dociąganie punktów listy kontrolnej” z planu nie jest opisane na tyle, żeby je wdrożyć bez decyzji (uzupełnianie egzaminu punktami listy? podpowiedzi po wyniku?) — nie zrobione.
+- **Stan P4.3.** Ostrzeżenie przy małej puli pytań było już zrobione (C2). Dociąganie (decyzja 2026-11-06, wariant 4 odpowiedzi): gdy pula pytań działu jest za mała, egzamin dopełnia się pytaniami z punktów listy kontrolnej, które mają trzy pola `wrong` (`content.ts`, `ChecklistItem.wrong`). Pytanie: „Które zdanie zgadza się z listą kontrolną?”, poprawne to sam punkt. Składa je `examRound` (`quiz.ts`), a `examPoolSize` liczy pulę do ostrzeżenia w `QuizPanel`. Punkty bez `wrong` nie dają pytań. Stan: w wbudowanej liście żaden punkt nie ma jeszcze błędnych zdań, więc dociąganie jest puste, dopóki nie zostaną dopisane. Testy: `quiz.test.ts`, `exam.spec.ts`.
 - **Testy.** Vitest: `src/lib/study/exam.test.ts` (momenty ogłoszeń). E2E: `e2e/exam.spec.ts` (zegar `timer`, komunikat po 5 minutach; dotychczasowe testy egzaminu przechodzą).
 
 ## Praca: karta budowy jako bohater (P5.1)

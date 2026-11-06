@@ -50,6 +50,8 @@ export interface ChecklistItem {
   text: string;
   /** Punkt krytyczny (⚠ w materiałach): tu najłatwiej o kosztowny błąd. */
   critical?: boolean;
+  /** Trzy błędne zdania do pytania egzaminacyjnego (P4.3); bez nich punkt nie dociąga egzaminu. */
+  wrong?: [string, string, string];
   /** Skutek pominięcia, jeśli materiał go podaje. */
   risk?: string;
 }

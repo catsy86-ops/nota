@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TOPICS, topicTitle } from "@/lib/study/content";
-import { buildRound, missedTopics, scoreRound, type RoundQuestion } from "@/lib/study/quiz";
+import { buildRound, examPoolSize, examRound, missedTopics, scoreRound, type RoundQuestion } from "@/lib/study/quiz";
 import { EXAM_SECONDS, EXAM_SIZE, examAnnouncement, examResult, weakTopicsOf } from "@/lib/study/exam";
 import { activeStreak, columnOf, dueToday, recordExam, recordRound, useStudy, useStudyLists } from "@/lib/study/store";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
@@ -86,7 +86,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
 
   // Egzamin: ta sama runda, ale bez wyjaśnień w trakcie, bez powtórek (SRS), tablicy i serii, z limitem czasu.
   const startExam = useCallback(() => {
-    const next = buildRound(EXAM_SIZE, new Set(), Math.random, lists.questions);
+    const next = examRound(EXAM_SIZE, lists.questions, lists.checklist);
     setRound(next);
     setAnswers(next.map(() => null));
     setGrades({});
@@ -293,9 +293,9 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
               Ostatni egzamin: {study.exams[study.exams.length - 1].correct}/{study.exams[study.exams.length - 1].total}
             </p>
           )}
-          {lists.questions.length < EXAM_SIZE && (
+          {examPoolSize(lists.questions, lists.checklist) < EXAM_SIZE && (
             <p className="w-full text-xs text-warning-ink" data-testid="exam-pool-warning">
-              W puli jest tylko {lists.questions.length} pytań — egzamin będzie krótszy niż {EXAM_SIZE}.
+              W puli jest tylko {examPoolSize(lists.questions, lists.checklist)} pytań — egzamin będzie krótszy niż {EXAM_SIZE}.
             </p>
           )}
           {study.bestPercent !== null && (
