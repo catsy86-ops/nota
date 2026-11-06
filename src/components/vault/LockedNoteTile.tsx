@@ -107,7 +107,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
           <span className="grid place-items-center w-7 h-7 rounded-full bg-foreground/[0.07]" aria-hidden>
             <Lock className="w-3.5 h-3.5" />
           </span>
-          <h3 className="font-display font-semibold text-[0.9375rem] leading-tight">Notatka prywatna</h3>
+          <h3 className="font-display font-semibold text-base leading-tight">Notatka prywatna</h3>
         </div>
 
         {/* Stałe kreski jak linie zeszytu — nie odzwierciedlają treści. */}

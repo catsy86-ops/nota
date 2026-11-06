@@ -75,7 +75,7 @@ function WorkSettingsLink() {
   const [open, setOpen] = useState(false);
   return (
     <Section title="Praca i Grafik">
-      <p className="text-xs text-muted-foreground">Norma, nadgodziny i zarobek liczą się z ustawień Grafiku. Zmiany zapisują się od razu.</p>
+      <p className="ui-hint">Norma, nadgodziny i zarobek liczą się z ustawień Grafiku. Zmiany zapisują się od razu.</p>
       <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-1.5 coarse:h-11">
         Ustawienia grafiku
       </Button>
@@ -182,7 +182,7 @@ export function GeneralSettings() {
               >wyczyść</button>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1.5">
+          <p className="ui-hint mt-1.5">
             {prefs.todayReminderTime
               ? `Toast pojawi się raz dziennie o ${prefs.todayReminderTime} (gdy masz notatki z dzisiaj).`
               : prefs.todayReminderHours === 0
@@ -219,7 +219,7 @@ export function GeneralSettings() {
               >wyłącz</button>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1.5">
+          <p className="ui-hint mt-1.5">
             {prefs.weekReminderTime
               ? "Raz w tygodniu, o wybranej porze, dostaniesz podsumowanie ostatnich 7 dni."
               : "Ustaw godzinę, aby otrzymywać cotygodniowe przypomnienie."}
@@ -304,7 +304,7 @@ export function GeneralSettings() {
             aria-label="Autozapis: co ile sekund"
             onValueChange={([v]) => setViewPref("autosaveSeconds", v)}
           />
-          <p className="text-xs text-muted-foreground mt-1.5">
+          <p className="ui-hint mt-1.5">
             {prefs.autosaveSeconds === 0
               ? "Bez zapisu cyklicznego. Edycja i tak zapisuje się przy wyjściu z pola oraz gdy kafel zniknie z widoku."
               : "Edycja będzie zapisywana automatycznie po przerwie w pisaniu — oraz zawsze przy wyjściu z pola."}
@@ -331,7 +331,7 @@ export function GeneralSettings() {
 
       {/* Skróty klawiszowe są bezużyteczne na telefonie. */}
       <div id="ogolne-skroty" className="scroll-mt-14 pt-2 space-y-2 [@media(pointer:coarse)]:hidden">
-        <p className="text-xs text-muted-foreground mb-2">Lista skrótów dostępnych w aplikacji:</p>
+        <p className="ui-hint mb-2">Lista skrótów dostępnych w aplikacji:</p>
         {SHORTCUTS.map((s) => (
           <div key={s.keys} className="flex items-center justify-between gap-3 rounded-card border border-border/60 bg-muted/20 px-4 py-2.5">
             <span className="text-sm text-foreground">{s.desc}</span>

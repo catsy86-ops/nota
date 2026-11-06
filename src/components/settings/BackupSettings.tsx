@@ -301,7 +301,7 @@ export function BackupSettings() {
           aria-label="Auto-backup: co ile dni"
           onValueChange={([v]) => handleAutoExportChange(v)}
         />
-        <p className="text-xs text-muted-foreground mt-1.5">
+        <p className="ui-hint mt-1.5">
           Po przekroczeniu interwału (gdy otworzysz aplikację) backup sam zapisze się do pliku wybranego wyżej. Bez wybranego pliku pojawi się przycisk „Pobierz” — przeglądarki nie pozwalają pobierać plików bez kliknięcia.
         </p>
       </Section>
@@ -313,7 +313,7 @@ export function BackupSettings() {
           aria-label="Przypomnienie o kopii: co ile dni"
           onValueChange={([v]) => setViewPref("backupReminderDays", v)}
         />
-        <p className="text-xs text-muted-foreground mt-1.5">
+        <p className="ui-hint mt-1.5">
           {(() => {
             const d = daysSinceBackup();
             if (d === null) return "Nie ma jeszcze backupu.";
@@ -377,7 +377,7 @@ export function BackupSettings() {
         <div className="flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
           <div className="min-w-0">
             <p className="text-sm font-semibold">Raport diagnostyczny</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="ui-hint mt-0.5">
               Plik tekstowy z wersją aplikacji, stanem pamięci i synchronizacji oraz ostatnimi błędami. Bez treści notatek i bez kodu parowania. Nic nie jest wysyłane.
             </p>
           </div>

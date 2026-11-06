@@ -56,7 +56,7 @@ export function HeightsButton({ variant = "pill", className }: { variant?: "pill
               ))}
             </tbody>
           </table>
-          <p className="text-xs text-muted-foreground">c/z — rozstaw ciepła/zimna. Kan. — wysokość podejścia kanalizacji.</p>
+          <p className="ui-hint">c/z — rozstaw ciepła/zimna. Kan. — wysokość podejścia kanalizacji.</p>
         </ResponsiveDialogContent>
       </Dialog>
     </>

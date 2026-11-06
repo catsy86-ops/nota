@@ -50,7 +50,7 @@ export function Stat({ label, value, unit, suffix, hint, bar, size = "md", tone 
         {unit && <span className="ml-1 text-[0.5em] font-medium text-muted-foreground">{unit}</span>}
         {suffix && <span className="ml-2 font-sans text-sm font-medium text-muted-foreground">{suffix}</span>}
       </Value>
-      {hint && (term ? <dd className="mt-1 text-xs text-muted-foreground tabular-nums">{hint}</dd> : <p className="mt-1 text-xs text-muted-foreground tabular-nums">{hint}</p>)}
+      {hint && (term ? <dd className="mt-1 text-xs text-muted-foreground tabular-nums">{hint}</dd> : <p className="ui-meta mt-1">{hint}</p>)}
       {bar}
     </div>
   );

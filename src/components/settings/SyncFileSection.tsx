@@ -42,7 +42,7 @@ export function SyncFileSection() {
             <GitMerge className="w-4 h-4" /> Scal z pliku
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground mt-1.5">
+        <p className="ui-hint mt-1.5">
           Przenosi zmiany między urządzeniami bez połączenia na żywo. Scalanie łączy notatki i Grafik zmian z obu stron — nic nie usuwa i nie nadpisuje. Używaj świeżych plików: bardzo stary może przywrócić dawno usuniętą notatkę.
         </p>
       </Section>

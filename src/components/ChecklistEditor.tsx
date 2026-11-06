@@ -303,7 +303,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
       {checked.length > 0 && (
         <div className="pt-1 border-t border-border/30 mt-2">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-muted-foreground">
+            <p className="ui-hint">
               {checked.length} ukończone
             </p>
             {!readOnly && (

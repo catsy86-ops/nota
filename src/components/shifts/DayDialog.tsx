@@ -167,7 +167,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="ui-hint">
                 Czas tego dnia: <span className="font-semibold text-foreground">{formatDuration(entryMinutesOn(type, { extraMin: extra }, dayKey))}</span>
               </p>
             </div>
@@ -188,7 +188,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                 </div>
               </div>
               <div className="flex items-center justify-between gap-2 min-h-8">
-                <p className="text-xs text-muted-foreground">
+                <p className="ui-hint">
                   {custom
                     ? hoursInvalid ? (custom?.start === custom?.end ? "Początek i koniec muszą się różnić." : "Uzupełnij godziny.") : `Ręcznie wpisane — zamiast ${base?.start}–${base?.end}.`
                     : `Wg zmiany „${base?.name}”.`}
@@ -208,7 +208,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                 aria-describedby="day-off-schedule-hint" className="mt-0.5" />
               <div className="space-y-0.5">
                 <Label htmlFor="day-off-schedule">Poza grafikiem</Label>
-                <p id="day-off-schedule-hint" className="text-xs text-muted-foreground">
+                <p id="day-off-schedule-hint" className="ui-hint">
                   Ten dzień miał być wolny. Nadgodziny w niedzielę lub święto wolne wg grafiku mają dodatek 100%, w zaplanowane — 50%.
                 </p>
               </div>
@@ -222,7 +222,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                   aria-describedby="day-time-off-hint" className="mt-0.5" />
                 <div className="space-y-0.5">
                   <Label htmlFor="day-time-off">Odbiór nadgodzin</Label>
-                  <p id="day-time-off-hint" className="text-xs text-muted-foreground">
+                  <p id="day-time-off-hint" className="ui-hint">
                     Ta nieobecność odbiera nadgodziny. Saldo w Grafiku liczy godziny zmiany tego dnia.
                   </p>
                 </div>
@@ -246,7 +246,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                 aria-describedby="day-in-lieu-hint" className="mt-0.5" />
               <div className="space-y-0.5">
                 <Label htmlFor="day-in-lieu">W dzień wolny za niedzielę lub święto</Label>
-                <p id="day-in-lieu-hint" className="text-xs text-muted-foreground">
+                <p id="day-in-lieu-hint" className="ui-hint">
                   Ten dzień był wolny w zamian za pracę w niedzielę lub święto. Nadgodziny w taki dzień mają dodatek 100%.
                 </p>
               </div>

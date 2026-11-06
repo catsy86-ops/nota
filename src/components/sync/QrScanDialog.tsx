@@ -83,7 +83,7 @@ export function QrScanDialog({ open, onOpenChange, onCode }: QrScanDialogProps) 
             Wybierz zdjęcie kodu
           </label>
           <input id={fileId} type="file" accept="image/*" className="sr-only" onChange={(e) => { void pickFile(e.target.files?.[0]); e.target.value = ""; }} />
-          <p role="status" className="min-h-5 text-xs text-muted-foreground">{status}</p>
+          <p role="status" className="ui-hint min-h-5">{status}</p>
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="coarse:h-11">Zamknij</Button>
         </div>
       </DialogContent>

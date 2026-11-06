@@ -79,7 +79,7 @@ export function PropDefsDialog({ open, onOpenChange, defs, onAdd, onUpdate, onDe
                   )}
                 </div>
                 {confirmId === def.id && (
-                  <p className="text-xs text-muted-foreground">Usunąć pole „{def.name}” i jego wartości we wszystkich notatkach?</p>
+                  <p className="ui-hint">Usunąć pole „{def.name}” i jego wartości we wszystkich notatkach?</p>
                 )}
                 {def.type === "select" && (
                   <Input

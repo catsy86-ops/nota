@@ -356,7 +356,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
           <ToggleGroupItem value="agenda">Lista</ToggleGroupItem>
         </ToggleGroup>
         {showKeys && (
-          <p id="calendar-keys-hint" className="order-2 -mt-2 px-1 text-xs text-muted-foreground">
+          <p id="calendar-keys-hint" className="ui-hint order-2 -mt-2 px-1">
             Strzałki — przechodzenie po dniach · PgUp / PgDn — miesiąc · Enter — dodaj termin · Z — zmiana i godziny z Grafiku · Shift+←/→ — przesuń wybrany termin o dzień (albo przeciągnij go myszą).
           </p>
         )}

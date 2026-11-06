@@ -654,13 +654,13 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             <span aria-hidden className="grid place-items-center w-9 h-9 rounded-card bg-primary/12 text-primary-ink ring-1 ring-primary/20 transition-[background-color,transform] duration-(--dur-fast) group-hover:bg-primary/20 group-active:scale-95">
               <Plus className="w-5 h-5" />
             </span>
-            <span className="font-medium font-display text-[0.95rem] tracking-tight">Zapisz notatkę...</span>
+            <span className="font-medium font-display text-base tracking-tight">Zapisz notatkę...</span>
             {destination && <span className="ml-auto text-xs truncate max-w-[45%]">trafi do: {destination}</span>}
           </motion.button>
         ) : (
           <motion.div key="expanded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className={cn("p-4 space-y-3", fullScreen && "flex min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col space-y-0 gap-3 bg-inherit")}>
-            {destination && !isPrivate && <p className="text-xs text-muted-foreground">Trafi do: <span className="font-medium text-foreground">{destination}</span></p>}
+            {destination && !isPrivate && <p className="ui-hint">Trafi do: <span className="font-medium text-foreground">{destination}</span></p>}
             {restored && (
               <div role="status" className="flex items-center gap-2 rounded-field bg-primary/10 px-2.5 py-1.5 text-xs text-primary-ink" data-draft-restored="">
                 <span>Szkic przywrócony z poprzedniej sesji</span>
@@ -844,7 +844,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                     </IconButton>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-3 space-y-3" align="start">
-                    <p className="text-xs font-semibold font-display text-muted-foreground">Etykiety</p>
+                    <p className="ui-hint font-semibold font-display">Etykiety</p>
                     <div className="flex gap-1 flex-wrap">
                       {allLabels.map((l) => (
                         <button key={l} type="button" onClick={() => toggleLabel(l)} aria-pressed={labels.includes(l)} className="rounded-control outline-hidden focus-visible:ring-2 focus-visible:ring-ring"><Badge variant={labels.includes(l) ? "default" : "outline"} className="cursor-pointer text-xs">{l}</Badge></button>
@@ -889,7 +889,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                       </IconButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3 space-y-2" align="start">
-                      <p className="text-xs font-semibold font-display text-muted-foreground">Podstrona w</p>
+                      <p className="ui-hint font-semibold font-display">Podstrona w</p>
                       <select
                         value={parentId ?? ""}
                         onChange={(e) => setParentId(e.target.value || null)}

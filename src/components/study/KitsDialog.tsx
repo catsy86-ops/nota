@@ -69,7 +69,7 @@ export function KitsDialog({ open, onOpenChange, fittingHistory, pipeHistory }: 
             </div>
             <fieldset className="space-y-1.5">
               <legend className="text-sm font-medium">Podejście dla punktów</legend>
-              <p className="text-xs text-muted-foreground">Z tych punktów karta budowy policzy szacunek materiału na start.</p>
+              <p className="ui-hint">Z tych punktów karta budowy policzy szacunek materiału na start.</p>
               <div className="flex flex-wrap gap-1.5">
                 {POINT_TYPES.filter((t) => t.id !== "inny").map((t) => {
                   const on = editing.forPoints?.includes(t.id) ?? false;

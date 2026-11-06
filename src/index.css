@@ -723,6 +723,21 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   .section-caps {
     @apply text-xs font-semibold text-muted-foreground;
   }
+  /* Role tekstu (plan UI 2026-11-06, Etap 2). Nazwy bez przedrostka `text-`: tailwind-merge w `cn`
+     wziąłby `text-hint` za kolor i zdjąłby go przy `text-destructive`. Utility na tym samym elemencie
+     wygrywa (warstwa components < utilities), więc kolor stanu dokłada się zwykłą klasą. */
+  /* Opis i podpowiedź pod kontrolką albo nad listą — czytane, więc 14 px, nie 12. */
+  .ui-hint {
+    @apply text-sm text-muted-foreground;
+  }
+  /* Data, licznik, jednostka — zerkane, więc 12 px i cyfry tabelaryczne. */
+  .ui-meta {
+    @apply text-xs tabular-nums text-muted-foreground;
+  }
+  /* Tytuł sekcji w widoku (h2 pod h1 główki), gdy nie jest kartą `SectionCard`. */
+  .title-section {
+    @apply font-display text-lg font-semibold leading-tight text-foreground;
+  }
 
   /* Tabliczka rysunkowa na końcu kartki: nazwa widoku w każdym skinie. Ostatni element `<main>` (nowy plan 1.4):
      stoi po treści przy prawej krawędzi, a przy krótkiej treści schodzi na dół ekranu. Wcześniej była przyklejona

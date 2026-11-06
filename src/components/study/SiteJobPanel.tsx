@@ -152,7 +152,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
 
           <h4 className="border-t border-dashed border-border pt-2.5 text-xs font-semibold text-muted-foreground">Wycena</h4>
           {job.items.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Dodaj robociznę i materiał — z nich powstanie PDF dla klienta.</p>
+            <p className="ui-hint">Dodaj robociznę i materiał — z nich powstanie PDF dla klienta.</p>
           ) : (
             <ul className="space-y-1" data-testid="job-items">
               {job.items.map((i) => (

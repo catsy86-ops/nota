@@ -234,7 +234,7 @@ function AddSupplementForm({ notes }: { notes: NotesActions }) {
       className="space-y-3 border-t border-dashed border-border pt-4"
       onSubmit={(e) => { e.preventDefault(); save(); }}
     >
-      <p className="text-xs font-medium text-muted-foreground">Dodaj odżywkę</p>
+      <p className="ui-hint font-medium">Dodaj odżywkę</p>
       <div className="grid gap-2 sm:grid-cols-2">
         <Input
           aria-label="Nazwa odżywki"

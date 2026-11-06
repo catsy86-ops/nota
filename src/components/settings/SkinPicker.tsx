@@ -76,7 +76,7 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
                 )}
                 style={{ backgroundColor: p.bg, color: p.ink }}
               >
-                <span className="absolute left-2.5 top-1.5 text-[1.375rem] leading-none" style={{ fontFamily: meta.font, fontWeight: 600 }}>Aa</span>
+                <span className="absolute left-2.5 top-1.5 text-xl leading-none" style={{ fontFamily: meta.font, fontWeight: 600 }}>Aa</span>
                 {!active && <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: accent, boxShadow: `0 0 10px ${accent}` }} />}
                 <span className="absolute inset-x-2.5 bottom-2 rounded-control px-2 py-1.5 shadow-sm" style={{ backgroundColor: p.card }}>
                   <span className="block h-1.5 w-3/5 rounded-full" style={{ backgroundColor: p.ink, opacity: 0.85 }} />

@@ -44,7 +44,7 @@ export function PointsEstimate({ site, points }: { site: SiteInfo; points: reado
       </summary>
       <div className="mt-2 space-y-2">
         {empty ? (
-          <p className="text-xs text-muted-foreground">Żaden typ punktu nie ma zestawu. Przypisz go w „Zestawy materiału” (w arkuszu wpisu).</p>
+          <p className="ui-hint">Żaden typ punktu nie ma zestawu. Przypisz go w „Zestawy materiału” (w arkuszu wpisu).</p>
         ) : (
           <ul className="space-y-0.5" data-testid="points-estimate-items">
             {est.pipes.map((p) => (

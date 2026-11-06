@@ -104,7 +104,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save(); }}>
         {presets.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">Gotowe</p>
+            <p className="ui-hint font-medium">Gotowe</p>
             <div className="flex flex-wrap gap-1.5">
               {presets.map((p) => (
                 <button key={p.id} type="button" onClick={() => { setDraft({ ...p }); setRate(""); }}
@@ -143,7 +143,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
           </ToggleGroup>
         )}
         {absence && (
-          <p className="text-xs text-muted-foreground">
+          <p className="ui-hint">
             Nie liczy się do przepracowanych godzin, ale obniża normę miesiąca o czas poniżej. Urlop trafia też do licznika urlopu.
           </p>
         )}
@@ -184,7 +184,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
           <p className="text-xs text-destructive-ink">Zmiana dłuższa niż 16 h — sprawdź godziny (koniec mógł być wpisany tego samego dnia zamiast następnego).</p>
         )}
         {type && (type.start !== draft.start || type.end !== draft.end || type.breakMin !== draft.breakMin || (type.breakAt ?? "") !== (placedBreak ? draft.breakAt : "")) && (
-          <p className="text-xs text-muted-foreground">Nowe godziny od dziś — dni wcześniejsze zachowają dotychczasowe.</p>
+          <p className="ui-hint">Nowe godziny od dziś — dni wcześniejsze zachowają dotychczasowe.</p>
         )}
         {!absence && <div className="space-y-1.5">
           <Label htmlFor="shift-alarm">Alarm w kalendarzu (.ics)</Label>

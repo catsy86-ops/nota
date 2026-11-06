@@ -258,7 +258,7 @@ export function JournalReportDialog({
           <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row-reverse sm:items-center sm:justify-between sm:px-6">
             <div className="flex items-center gap-2 sm:justify-end" data-testid="whatsapp-row">
               {ownReport ? (
-                <p className="min-w-0 flex-1 text-xs text-muted-foreground" data-testid="own-report-note">Twoje zlecenie — bez wysyłki szefowi ani do grupy.</p>
+                <p className="ui-hint min-w-0 flex-1" data-testid="own-report-note">Twoje zlecenie — bez wysyłki szefowi ani do grupy.</p>
               ) : boss || group ? (
                 <>
                   {boss && (

@@ -39,7 +39,7 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
-        <p className="text-xs font-semibold font-display text-muted-foreground">Etykiety</p>
+        <p className="ui-hint font-semibold font-display">Etykiety</p>
         <div className="flex gap-1 flex-wrap">
           <AnimatePresence>
             {allLabels.map((label) => (
@@ -56,7 +56,7 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
           </AnimatePresence>
         </div>
         {allLabels.length === 0 && (
-          <p className="text-xs text-muted-foreground">Brak etykiet. Utwórz pierwszą!</p>
+          <p className="ui-hint">Brak etykiet. Utwórz pierwszą!</p>
         )}
         <div className="flex gap-1.5 items-center">
           <input

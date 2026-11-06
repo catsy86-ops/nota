@@ -44,7 +44,7 @@ export function AccentPicker({ skin }: { skin: Skin }) {
           );
         })}
       </div>
-      <p className="text-xs text-muted-foreground mt-1.5">{options[value].label}{value === 0 ? " — barwa stylu." : "."} Każdy styl pamięta swój akcent.</p>
+      <p className="ui-hint mt-1.5">{options[value].label}{value === 0 ? " — barwa stylu." : "."} Każdy styl pamięta swój akcent.</p>
     </div>
   );
 }

@@ -277,7 +277,7 @@ function Section({ title, note, children }: { title: string; note?: string; chil
     <section className="space-y-2.5" aria-label={title}>
       <header>
         <h3 className="font-display text-base">{title}</h3>
-        {note && <p className="text-xs text-muted-foreground">{note}</p>}
+        {note && <p className="ui-hint">{note}</p>}
       </header>
       {children}
     </section>

@@ -239,7 +239,7 @@ export function ReminderQuickAddDialog({
               className="w-full bg-muted/60 border border-border rounded-card px-3 py-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             />
             {parsed && (
-              <p className="text-xs text-muted-foreground">
+              <p className="ui-hint">
                 Rozpoznano datę: <span className="text-primary-ink font-medium">{format(parsed.date, "d MMMM", { locale: pl })}</span>
                 {parsed.clock && !timeTouched && <> o <span className="text-primary-ink font-medium tabular-nums">{parsed.clock}</span></>}
               </p>
@@ -324,7 +324,7 @@ export function ReminderQuickAddDialog({
         )}
 
         {inWorkHours && workShift && (
-          <p className="text-xs text-muted-foreground">
+          <p className="ui-hint">
             Ten termin wypada w czasie zmiany: {workShift.name} ({workShift.start}–{workShift.end}). Przypomnienie zadzwoni w pracy.
           </p>
         )}
@@ -343,7 +343,7 @@ export function ReminderQuickAddDialog({
               </Button>
             )}
             {edit?.isSeries && (
-              <p className="text-xs text-muted-foreground">
+              <p className="ui-hint">
                 To najbliższy termin serii „{REPEAT_KIND_LABELS[edit.repeat.kind].toLowerCase()}”.
                 {edit.base !== undefined
                   ? "Zmiana zostaje w tym jednym wystąpieniu, reszta serii bez zmian."
@@ -380,7 +380,7 @@ export function ReminderQuickAddDialog({
 
             {suggestions.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">
+                <p className="ui-hint">
                   albo przypnij do istniejącej
                 </p>
                 <ul className="space-y-1 max-h-44 overflow-y-auto">

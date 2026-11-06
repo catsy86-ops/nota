@@ -33,7 +33,7 @@ export function SiteStorageSettings() {
   return (
     <Section title="Miejsce na zdjęcia budów">
       <div className="space-y-2" data-testid="site-storage-settings">
-        <p className="text-xs text-muted-foreground">Zdjęcia, nagrania i dokumenty z Pracy na tym urządzeniu, budowa po budowie.</p>
+        <p className="ui-hint">Zdjęcia, nagrania i dokumenty z Pracy na tym urządzeniu, budowa po budowie.</p>
         {rows && (
           rows.length === 0 ? <p className="text-sm">Brak zdjęć i plików budów.</p> : (
             <>

@@ -86,7 +86,7 @@ export function FolderPicker({ folders, currentFolderId, onSelect }: FolderPicke
         <TooltipContent side="bottom" className="text-xs">Folder <kbd className="ml-1 font-mono text-2xs opacity-70">M</kbd></TooltipContent>
       </Tooltip>
       <PopoverContent className="w-56 p-2" align="start" onClick={(e) => e.stopPropagation()}>
-        <p className="text-xs font-semibold text-muted-foreground px-2 pb-1">Przenieś do folderu</p>
+        <p className="ui-hint font-semibold px-2 pb-1">Przenieś do folderu</p>
         {currentFolderId && (
           <button
             onClick={() => { onSelect(null); setOpen(false); }}

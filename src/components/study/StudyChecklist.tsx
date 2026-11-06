@@ -85,7 +85,7 @@ export function StudyChecklist() {
           <section key={mod.id} aria-label={mod.label} className="space-y-3">
             <header>
               <h3 className="font-display text-lg">{mod.label}</h3>
-              <p className="text-xs text-muted-foreground">{mod.source}</p>
+              <p className="ui-hint">{mod.source}</p>
             </header>
             {topics.map(({ topic, items }) => (
               <div key={topic.id} className="rounded-card border border-border bg-card p-3.5">

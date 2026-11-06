@@ -205,7 +205,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         <header className="mb-3 flex items-center justify-between gap-3 xl:col-start-1 xl:row-start-1">
           <div className="min-w-0">
             <h3 className="font-display text-lg leading-tight">Dziennik</h3>
-            <p className="font-mono text-xs text-muted-foreground tabular-nums" data-testid="journal-week">
+            <p className="ui-meta font-mono" data-testid="journal-week">
               7 dni: {entriesPl(week.all)}, {problemsPl(week.problems)}
             </p>
           </div>
@@ -375,7 +375,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                 </select>
               )}
               {filtered && (
-                <p className="flex items-center justify-between gap-2 text-xs text-muted-foreground" aria-live="polite" data-testid="journal-results">
+                <p className="ui-hint flex items-center justify-between gap-2" aria-live="polite" data-testid="journal-results">
                   <span className="font-mono tabular-nums">Pasuje: {entriesPl(view.shown)}</span>
                   {filter.site && (
                     <button type="button" onClick={() => setCard(filter.site)} className="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-muted hover:text-foreground coarse:min-h-11">

@@ -38,7 +38,7 @@ export function MonthAgenda({ month, byDay, titleOf, shiftOf, studyOf, onSelectD
               <span className="text-sm font-semibold first-letter:uppercase">{format(parseDayKey(k), "EEEE, d MMMM", { locale: pl })}</span>
               {shift && <span className="shrink-0 text-xs text-muted-foreground">{shift}</span>}
             </button>
-            {work(k) && <p className="mt-1 text-xs text-muted-foreground">{work(k)}</p>}
+            {work(k) && <p className="ui-hint mt-1">{work(k)}</p>}
             {occ.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {occ.map((o) => (

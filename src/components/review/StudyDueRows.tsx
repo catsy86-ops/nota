@@ -49,12 +49,12 @@ function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: (siteId?: string) => v
             {row.siteId ? (
               <button type="button" onClick={() => onOpenStudy(row.siteId ?? undefined)} aria-label={`${row.title}: karta budowy`} className="pressable block w-full rounded-control text-left coarse:min-h-11">
                 <p className="text-sm">{row.title}</p>
-                {row.detail && <p className="mt-0.5 text-xs text-muted-foreground">{row.detail}</p>}
+                {row.detail && <p className="ui-hint mt-0.5">{row.detail}</p>}
               </button>
             ) : (
               <>
                 <p className="text-sm">{row.title}</p>
-                {row.detail && <p className="mt-0.5 text-xs text-muted-foreground">{row.detail}</p>}
+                {row.detail && <p className="ui-hint mt-0.5">{row.detail}</p>}
               </>
             )}
           </li>

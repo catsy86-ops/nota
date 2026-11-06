@@ -318,8 +318,8 @@ function Receipt({ summary, hourlyRate, monthLabel, estimate, includeEstimate, o
   const hours50 = summary.overtimeMinutes - summary.overtime100Minutes;
 
   return (
-    <div className="receipt font-mono text-xs sm:text-[0.8125rem] tabular-nums">
-      <p className="flex justify-between gap-2 pb-2 text-xs text-muted-foreground">
+    <div className="receipt font-mono text-xs sm:text-sm tabular-nums">
+      <p className="ui-hint flex justify-between gap-2 pb-2">
         <span>Rachunek</span><span>{monthLabel}</span>
       </p>
       <details className="group mt-2">
@@ -469,7 +469,7 @@ function PaySlipPanel({ monthKey, estimate, paid, facts }: { monthKey: string; e
         <div className="mt-3 space-y-1 text-sm" aria-live="polite">
           <p>Szacunek: <span className="tabular-nums">{formatMoney(estimate)}</span> · wypłata: <span className="tabular-nums">{formatMoney(paid)}</span></p>
           <p>{verdict}</p>
-          {cmp.hints.map((h) => <p key={h} className="text-xs text-muted-foreground">{h}</p>)}
+          {cmp.hints.map((h) => <p key={h} className="ui-hint">{h}</p>)}
         </div>
       )}
     </section>

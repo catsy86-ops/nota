@@ -353,7 +353,7 @@ function ItemsEditor({ items, custom, onDone }: { items: readonly CheckItem[]; c
 
   return (
     <div className="space-y-3 px-5 py-4" data-testid="entry-check-editor">
-      <p className="text-xs text-muted-foreground">Te punkty są na liście każdej budowy. Punkty „Na tej budowie” biorą się z karty budowy.</p>
+      <p className="ui-hint">Te punkty są na liście każdej budowy. Punkty „Na tej budowie” biorą się z karty budowy.</p>
       <ul className="space-y-1.5">
         {draft.map((item, idx) => (
           <li key={item.id} className="flex items-center gap-1.5">

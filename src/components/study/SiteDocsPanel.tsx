@@ -102,7 +102,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
       </div>
 
       {docs.length === 0 && (
-        <p className="text-xs text-muted-foreground">Rzut, projekt, zdjęcie tablicy — zawsze pod ręką, także bez zasięgu.</p>
+        <p className="ui-hint">Rzut, projekt, zdjęcie tablicy — zawsze pod ręką, także bez zasięgu.</p>
       )}
 
       {images.length > 0 && (

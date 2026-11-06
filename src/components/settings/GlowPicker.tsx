@@ -21,7 +21,7 @@ export function GlowPicker() {
     <div className="space-y-4">
       <Segmented label="Siła poświaty" options={strengthOptions} value={look.strength} onChange={setGlowStrength} />
       <div>
-        <p className="mb-2 text-xs font-medium text-muted-foreground">Barwa poświaty</p>
+        <p className="ui-hint mb-2 font-medium">Barwa poświaty</p>
         <Swatches
           label="Barwa poświaty"
           options={colorOptions}
@@ -38,7 +38,7 @@ export function GlowPicker() {
           Zapisz
         </span>
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="ui-hint">
         {look.strength === "off"
           ? "Bez poświaty. Zaznaczona notatka zostaje obwiedziona, ale bez rozmytego blasku."
           : `${GLOW_STRENGTH[look.strength].label} poświata${look.color === "theme" ? ", w kolorze stylu" : `, w kolorze: ${GLOW_COLORS[look.color].label.toLowerCase()}`}.`}

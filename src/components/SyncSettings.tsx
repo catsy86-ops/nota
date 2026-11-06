@@ -128,9 +128,9 @@ export function SyncSettings({ prefillCode }: Props) {
           )}
           <div className="min-w-0">
             <p className="text-sm font-semibold">Synchronizacja między urządzeniami</p>
-            <p className="text-xs text-muted-foreground mt-0.5" role="status" aria-live="polite">{statusLabel}</p>
+            <p className="ui-hint mt-0.5" role="status" aria-live="polite">{statusLabel}</p>
             {syncState.status !== "disabled" && (
-              <p className="text-xs text-muted-foreground mt-1" data-testid="sync-diagnosis">{diagnosis(syncState)}</p>
+              <p className="ui-hint mt-1" data-testid="sync-diagnosis">{diagnosis(syncState)}</p>
             )}
             {syncState.status !== "disabled" && (
               <p className="text-2xs text-muted-foreground mt-0.5">
@@ -169,11 +169,11 @@ export function SyncSettings({ prefillCode }: Props) {
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-muted-foreground">Żadne inne urządzenie nie jest teraz połączone.</p>
+          <p className="ui-hint">Żadne inne urządzenie nie jest teraz połączone.</p>
         )}
         {offline.length > 0 && (
           <div data-testid="sync-seen">
-            <p className="text-xs text-muted-foreground">Ostatnio widziane</p>
+            <p className="ui-hint">Ostatnio widziane</p>
             <ul className="mt-1 space-y-1 text-sm" aria-label="Ostatnio widziane urządzenia">
               {offline.slice(0, 6).map((d) => (
                 <li key={d.name} className="flex items-center gap-2">
@@ -200,7 +200,7 @@ export function SyncSettings({ prefillCode }: Props) {
       {syncState.code && (
         <div className="rounded-card border border-border/60 bg-muted/20 p-4 space-y-3 text-center">
           <h3 className="text-xs font-semibold text-muted-foreground">Dodaj urządzenie</h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="ui-hint">
             Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
           </p>
           <div className="flex justify-center">

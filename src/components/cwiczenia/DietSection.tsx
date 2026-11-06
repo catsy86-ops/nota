@@ -54,7 +54,7 @@ function TodaySummary({ summary, goals }: { summary: DaySummary; goals: DietGoal
 function Stat({ label, value, goal, note }: { label: string; value: string; goal?: string; note?: string }) {
   return (
     <div className="rounded-field border border-border/60 px-3 py-2">
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="ui-hint">{label}</p>
       <p className="font-mono text-lg tabular-nums">{value} {goal && <span className="text-xs text-muted-foreground">{goal}</span>}</p>
       {note && <p className="text-2xs text-muted-foreground">{note}</p>}
     </div>
@@ -68,7 +68,7 @@ function MealRow({ meal }: { meal: Meal }) {
       <span className="w-12 shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{meal.time ?? "—"}</span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm">{meal.text}</p>
-        {details && <p className="text-xs text-muted-foreground">{details}</p>}
+        {details && <p className="ui-hint">{details}</p>}
       </div>
       <Button variant="ghost" size="sm" className="coarse:h-11" aria-label={`Usuń posiłek: ${meal.text}`} onClick={() => deleteWithUndo(meal)}>
         <Trash className="h-4 w-4" aria-hidden />
@@ -119,7 +119,7 @@ function AddMealForm() {
 
   return (
     <form className="space-y-3 border-t border-dashed border-border pt-4" onSubmit={(e) => { e.preventDefault(); save(); }}>
-      <p className="text-xs font-medium text-muted-foreground">Dodaj posiłek</p>
+      <p className="ui-hint font-medium">Dodaj posiłek</p>
       <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
         <Input aria-label="Co zjedzono" placeholder="np. Owsianka z bananem" maxLength={DIET_TEXT_MAX} value={text} onChange={(e) => setText(e.target.value)} />
         <Input type="time" aria-label="Godzina posiłku" value={time} onChange={(e) => setTime(e.target.value)} className="w-auto coarse:h-11" />
@@ -149,7 +149,7 @@ function GoalsForm({ goals }: { goals: DietGoals }) {
         setDietGoals({ kcal: kcalValue ?? undefined, protein: proteinValue ?? undefined });
       }}
     >
-      <p className="text-xs font-medium text-muted-foreground">Cele dzienne (puste = bez celu)</p>
+      <p className="ui-hint font-medium">Cele dzienne (puste = bez celu)</p>
       <div className="grid gap-2 sm:grid-cols-2">
         <Input inputMode="numeric" aria-label="Cel kalorii (kcal)" aria-invalid={kcalValue === null} placeholder="np. 2400" value={kcal} onChange={(e) => setKcal(e.target.value)} />
         <Input inputMode="decimal" aria-label="Cel białka (g)" aria-invalid={proteinValue === null} placeholder="np. 150" value={protein} onChange={(e) => setProtein(e.target.value)} />
@@ -164,7 +164,7 @@ function WeekList({ days, today }: { days: DaySummary[]; today: string }) {
   if (!hasAny) return null;
   return (
     <div className="border-t border-dashed border-border pt-4">
-      <p className="text-xs font-medium text-muted-foreground">Ostatnie 7 dni</p>
+      <p className="ui-hint font-medium">Ostatnie 7 dni</p>
       <ul className="mt-2 space-y-1 text-sm" data-testid="diet-week">
         {[...days].reverse().map((d) => (
           <li key={d.day} className="flex justify-between gap-3">

@@ -127,7 +127,7 @@ export function SitePackageImportDialog({ pkg, onClose, onDone }: { pkg: SitePac
         )}
         <p className="text-sm" data-testid="site-package-summary">{parts.length ? `Dojdzie: ${parts.join(", ")}.` : "Nic nowego — wszystko z pliku już jest."}</p>
         {c && c.dropped > 0 && <p className="text-xs text-warning-ink">Pominięte ponad limity list: {c.dropped}.</p>}
-        <p className="text-xs text-muted-foreground">Pozycje z pliku są podpisane „z pliku”. Usunięcia nie przechodzą — co usunąłeś u siebie, a jest w pliku, wróci.</p>
+        <p className="ui-hint">Pozycje z pliku są podpisane „z pliku”. Usunięcia nie przechodzą — co usunąłeś u siebie, a jest w pliku, wróci.</p>
         <Button onClick={apply} disabled={busy || !parts.length} className="coarse:h-11"><Upload className="h-4 w-4" aria-hidden />{busy ? "Wczytuję…" : "Wczytaj"}</Button>
       </DialogContent>
     </Dialog>

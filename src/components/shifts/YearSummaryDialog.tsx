@@ -82,7 +82,7 @@ function YearBody({ data, initialYear, onOpenChange, onOpenMonth }: { data: Shif
       <YearHeatmap year={year} dayMinutes={dayMinutes} />
 
       {/* Na telefonie tabela przewija się w poziomie zamiast ściskać kolumny (5.6). */}
-      <div className="font-mono text-xs sm:text-[0.8125rem] tabular-nums overflow-x-auto">
+      <div className="font-mono text-xs sm:text-sm tabular-nums overflow-x-auto">
         <table className="w-full min-w-[30rem] table-fixed border-collapse">
           <caption className="sr-only">Podsumowanie roku {year} według miesięcy</caption>
           <colgroup>

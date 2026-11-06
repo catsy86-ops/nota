@@ -112,7 +112,7 @@ export function DraftSection({ draft, mpp, system, onSystem, snap, onSnap, onUnd
         <Button type="button" onClick={onFinish} disabled={n < 2} className="pressable coarse:h-11">Zakończ trasę</Button>
       </div>
       <Button type="button" variant="ghost" onClick={onCancel} className="pressable w-full coarse:h-11">Anuluj rysowanie</Button>
-      <p className="text-xs text-muted-foreground coarse:hidden">Klawiatura: spacja dodaje punkt w celowniku, Backspace cofa punkt, Enter kończy, Esc anuluje.</p>
+      <p className="ui-hint coarse:hidden">Klawiatura: spacja dodaje punkt w celowniku, Backspace cofa punkt, Enter kończy, Esc anuluje.</p>
     </section>
   );
 }
@@ -154,7 +154,7 @@ export function RouteSection({ route, mpp, onChange, onDelete, suggestions, onFo
         <h3 className={h3}>Trasa</h3>
         <span className="font-mono text-sm tabular-nums" data-testid="plan-route-length">{lengthLabel(m)}</span>
       </div>
-      <p className="text-xs text-muted-foreground">{route.pts.length / 2} punktów · {Math.round(polylineLength(route.pts))} px. Przeciągnij biały punkt, żeby poprawić przebieg.</p>
+      <p className="ui-hint">{route.pts.length / 2} punktów · {Math.round(polylineLength(route.pts))} px. Przeciągnij biały punkt, żeby poprawić przebieg.</p>
       <label className="block space-y-1 text-sm">
         <span className="font-medium">Instalacja</span>
         <SystemSelect value={route.system} onChange={(system) => onChange({ ...route, system })} />
@@ -168,7 +168,7 @@ export function RouteSection({ route, mpp, onChange, onDelete, suggestions, onFo
       </label>
       {suggestions.length > 0 && (
         <div className="space-y-1" data-testid="plan-diameter-suggestions">
-          <p className="text-xs text-muted-foreground">Z opisów przy trasie:</p>
+          <p className="ui-hint">Z opisów przy trasie:</p>
           {suggestions.map((s) => (
             <div key={s.textId} className="flex items-center gap-2 text-sm" onMouseEnter={() => onFocusText(s.textId)} onMouseLeave={() => onFocusText(null)}>
               <span className="min-w-0 flex-1 truncate"><span className="font-mono">{s.text}</span> <span className="text-xs text-muted-foreground">· {Math.round(s.distance)} px od trasy</span></span>

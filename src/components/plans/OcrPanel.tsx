@@ -51,7 +51,7 @@ export function OcrSection({ run, engineCached, proposals, texts, focusId, onFoc
         </div>
       ) : (
         <>
-          <p className="text-xs text-muted-foreground">
+          <p className="ui-hint">
             Średnice i oznaczenia (ZW, CWU, CO) odczytane na tym urządzeniu, bez wysyłania obrazu — do sprawdzenia.
             {engineCached === false && " Pierwszy raz pobierze silnik (ok. 9 MB)."}
           </p>
@@ -86,7 +86,7 @@ export function OcrSection({ run, engineCached, proposals, texts, focusId, onFoc
                       <X className="h-4 w-4" aria-hidden />
                     </button>
                   </div>
-                  <p className="mt-0.5 px-0.5 text-xs text-muted-foreground">{meaningLabel(meaning)} · pewność {pct(p.confidence)}</p>
+                  <p className="ui-hint mt-0.5 px-0.5">{meaningLabel(meaning)} · pewność {pct(p.confidence)}</p>
                 </li>
               );
             })}

@@ -68,12 +68,12 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
         <div className="min-w-0 flex-1">
           <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{entryHeadline(e)}</p>
           {e.fittings && e.fittings.length > 0 && (
-            <p className="mt-1 inline-flex items-start gap-1.5 text-xs text-muted-foreground" data-testid="journal-fittings">
+            <p className="ui-hint mt-1 inline-flex items-start gap-1.5" data-testid="journal-fittings">
               <Package className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{fittingsLine(e.fittings)}
             </p>
           )}
           {e.pipes && e.pipes.length > 0 && (
-            <p className="mt-1 flex items-start gap-1.5 text-xs text-muted-foreground" data-testid="journal-pipes">
+            <p className="ui-hint mt-1 flex items-start gap-1.5" data-testid="journal-pipes">
               <Cylinder className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{pipesLine(e.pipes)}
             </p>
           )}
@@ -168,7 +168,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
                   <button type="button" onClick={() => onZoom(e.images, i)} aria-label={`Powiększ zdjęcie ${i + 1} z ${e.images.length}`} className="relative block overflow-hidden rounded-field">
                     <NoteImage imageRef={ref} alt="" className="h-16 w-16 object-cover" placeholderClassName="h-16 w-16" />
                     {/* Numer zdjęcia na miniaturze (§D3): od razu widać, które z kolei jest w galerii. */}
-                    {e.images.length > 1 && <span aria-hidden className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 font-mono text-[10px] leading-4 text-white tabular-nums">{i + 1}</span>}
+                    {e.images.length > 1 && <span aria-hidden className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 font-mono text-2xs leading-4 text-white tabular-nums">{i + 1}</span>}
                   </button>
                 </li>
               ))}

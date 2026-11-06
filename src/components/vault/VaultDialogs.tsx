@@ -200,8 +200,8 @@ function UnlockForm({ onUnlocked, onRecover }: { onUnlocked: () => void; onRecov
         <Label htmlFor="vault-password">Hasło skarbca</Label>
         <Input id="vault-password" type="password" autoFocus autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={busy || wait > 0} aria-invalid={!!error} aria-describedby={error ? "vault-error" : undefined} />
         {error && <p id="vault-error" role="alert" className="text-xs text-destructive-ink">{error}</p>}
-        {wait > 0 && !error && <p role="status" className="text-xs text-muted-foreground">Za dużo błędnych prób — odczekaj {wait} s.</p>}
-        {wait > 0 && error && !error.startsWith("Za dużo") && <p role="status" className="text-xs text-muted-foreground">Kolejna próba za {wait} s.</p>}
+        {wait > 0 && !error && <p role="status" className="ui-hint">Za dużo błędnych prób — odczekaj {wait} s.</p>}
+        {wait > 0 && error && !error.startsWith("Za dużo") && <p role="status" className="ui-hint">Kolejna próba za {wait} s.</p>}
       </div>
       <ResponsiveDialogFooter className="gap-2 sm:justify-between">
         {hasRecovery ? (

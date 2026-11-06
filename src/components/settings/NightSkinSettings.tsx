@@ -64,7 +64,7 @@ export function NightSkinSettings({ skin }: { skin: Skin }) {
               </label>
             </div>
           )}
-          <p className="text-xs text-muted-foreground">Wybór stylu w galerii zmienia styl bieżącej pory: wieczorem — nocny.</p>
+          <p className="ui-hint">Wybór stylu w galerii zmienia styl bieżącej pory: wieczorem — nocny.</p>
         </>
       )}
     </div>

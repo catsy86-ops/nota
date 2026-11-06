@@ -196,7 +196,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply, ove
 
         {valid && (
           <div>
-            <p className="text-xs text-muted-foreground mb-1.5">Podgląd pierwszych {PREVIEW_DAYS} dni · razem {length} {pluralPl(length, ["dzień", "dni", "dni"])}</p>
+            <p className="ui-hint mb-1.5">Podgląd pierwszych {PREVIEW_DAYS} dni · razem {length} {pluralPl(length, ["dzień", "dni", "dni"])}</p>
             <div className="grid grid-cols-7 gap-1">
               {preview.map(({ date, step }, i) => {
                 const t = step ? typesById.get(step) : undefined;

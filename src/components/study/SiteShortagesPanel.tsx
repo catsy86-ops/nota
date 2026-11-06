@@ -160,7 +160,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
         <p role="status" className="text-xs text-warning-ink">Ponad {SHORTAGES_MAX} braków: {dropped} {pluralPl(dropped, ["brak", "braki", "braków"])} nie widać — najpierw chowają się dostarczone, potem najstarsze. Usuń zbędne pozycje, żeby wróciły.</p>
       )}
       {list.length >= SHORTAGES_MAX && (
-        <p className="text-xs text-muted-foreground">Lista pełna ({SHORTAGES_MAX}). Usuń dostarczone, żeby dodać nowe braki.</p>
+        <p className="ui-hint">Lista pełna ({SHORTAGES_MAX}). Usuń dostarczone, żeby dodać nowe braki.</p>
       )}
       {list.length < SHORTAGES_MAX && (
         <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); add(); }}>

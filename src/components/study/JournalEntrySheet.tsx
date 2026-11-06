@@ -583,7 +583,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             if (!tpl) return null;
             return (
               <div className="space-y-1.5 rounded-card border border-border/60 px-3 py-2" data-testid="journal-stage-template">
-                <p className="text-xs text-muted-foreground">Na tym etapie potwierdź w opisie:</p>
+                <p className="ui-hint">Na tym etapie potwierdź w opisie:</p>
                 <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Lista kontrolna: ${entryStage.name}`}>
                   {tpl.checklist.map((item) => {
                     const on = hasCheckLine(text, item);
@@ -597,7 +597,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                     );
                   })}
                 </div>
-                <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <p className="ui-hint flex items-start gap-1.5">
                   <Camera className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
                   <span>Zdjęcia: {tpl.photos.join(" · ")}</span>
                 </p>
@@ -607,7 +607,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
 
           {!isEdit && !entryStage && kind === "ok" && nextStages.length > 0 && (
             <div className="space-y-1" data-testid="journal-stage-chips">
-              <p className="text-xs text-muted-foreground">Skończony etap? Odhacz go — zdjęcia z wpisu trafią do protokołu przy nim:</p>
+              <p className="ui-hint">Skończony etap? Odhacz go — zdjęcia z wpisu trafią do protokołu przy nim:</p>
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Następne etapy budowy">
                 {nextStages.map((s) => (
                   <button
@@ -687,7 +687,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 )}
               </span>
             </label>
-            {dictationHint && <p className="hidden text-xs text-muted-foreground coarse:block" data-testid="dictation-hint">{dictationHint}</p>}
+            {dictationHint && <p className="ui-hint hidden coarse:block" data-testid="dictation-hint">{dictationHint}</p>}
             {!text.trim() && (yesterdayText || textSuggestions.length > 0) && (
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Podpowiedzi tekstu z tej budowy" data-testid="journal-text-suggestions">
                 {yesterdayText && (
@@ -958,7 +958,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 : isEdit ? "Zapisz zmiany" : "Zapisz wpis"}
             </Button>
           </div>
-          <p className="mt-1.5 text-center text-xs text-muted-foreground coarse:hidden">Ctrl+Enter zapisuje {isEdit ? "zmiany" : "wpis"}</p>
+          <p className="ui-hint mt-1.5 text-center coarse:hidden">Ctrl+Enter zapisuje {isEdit ? "zmiany" : "wpis"}</p>
         </div>
         {/* Rysowanie po zdjęciu — okno nad arkuszem; zamknięcie bez zapisu zostawia zdjęcie bez zmian. */}
         <DrawingCanvas

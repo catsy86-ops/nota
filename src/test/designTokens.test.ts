@@ -33,7 +33,9 @@ const LIMITS = {
   rawZIndex: { pattern: /(?<![\w-])z-\d+(?![\w-])/g, max: 0, token: "z-sticky / z-dropdown / z-overlay / z-modal / z-toast" },
   // Plan UI 2026-11-06, 1.7: progi = stan z 2026-11-06; Etapy 2 i 5 je obniżają.
   // Rozmiar tekstu w px/rem omija skalę i `--text-scale`.
-  pxText: { pattern: /(?<![\w-])text-\[\d+(?:\.\d+)?(?:px|rem)\]/g, max: 10, token: "text-2xs / text-xs / text-sm" },
+  pxText: { pattern: /(?<![\w-])text-\[\d+(?:\.\d+)?(?:px|rem)\]/g, max: 0, token: "text-2xs / text-xs / text-sm" },
+  // Etap 2: opis w akapicie to `.ui-hint` (14 px). Zostały wydruki (raport, protokół), kafle i linijki z `truncate`.
+  smallHintParagraph: { pattern: /<p\b[^>]*className="(?=[^"]*\btext-xs\b)(?=[^"]*\btext-muted-foreground\b)[^"]*"/g, max: 24, token: "ui-hint / ui-meta" },
   // Goły `rounded` (0.25rem) nie idzie za kształtem motywu (`--shape`).
   bareRadius: { pattern: /(?<![\w-])rounded(?![\w-[])/g, max: 38, token: "rounded-control / rounded-field" },
   // `shadow` i `shadow-sm` to dwie nazwy na `--elevation-1`.

@@ -48,7 +48,7 @@ export function AppearanceCode() {
   };
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground -mt-1">Styl, jasność, akcent, kształt, ramki, poświata, tło, krój, rozmiar tekstu, tryb budowa, ruch i pora roku jako jeden kod — do przeniesienia na inne urządzenie.</p>
+      <p className="ui-hint -mt-1">Styl, jasność, akcent, kształt, ramki, poświata, tło, krój, rozmiar tekstu, tryb budowa, ruch i pora roku jako jeden kod — do przeniesienia na inne urządzenie.</p>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" size="sm" className="coarse:h-11" onClick={copy}>Kopiuj kod wyglądu</Button>
         <Button type="button" variant="outline" size="sm" className="coarse:h-11" onClick={share}>Udostępnij link</Button>

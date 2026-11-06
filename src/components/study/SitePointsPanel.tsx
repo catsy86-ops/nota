@@ -172,7 +172,7 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
             </div>
             {expanded && (
               <div id={`room-${room.id}`} className="space-y-2 border-t border-dashed border-border px-3 py-2">
-                {list.length === 0 && <p className="text-xs text-muted-foreground">Brak punktów — dodaj pierwszy poniżej.</p>}
+                {list.length === 0 && <p className="ui-hint">Brak punktów — dodaj pierwszy poniżej.</p>}
                 <ul className="space-y-2">
                   {list.map((p) => {
                     const t = pointType(p.type);

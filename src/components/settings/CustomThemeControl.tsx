@@ -17,7 +17,7 @@ export function CustomThemeControl() {
   if (!active) {
     return (
       <div className="space-y-2">
-        <p className="text-xs text-muted-foreground">
+        <p className="ui-hint">
           Odcienie papieru, kafla i akcentu z „{label}”. Jasność i tekst pilnuje generator, kontrast zostaje na poziomie AA.
         </p>
         <button
@@ -51,7 +51,7 @@ export function CustomThemeControl() {
           />
         </label>
       ))}
-      <p role="status" aria-live="polite" className="text-xs text-muted-foreground">
+      <p role="status" aria-live="polite" className="ui-hint">
         {failing.length
           ? `Te odcienie nie dają czytelnego tekstu, więc zostają bazowe: ${failing.map((g) => GROUP_LABEL[g].toLowerCase()).join(", ")}.`
           : "Kontrast tekstu w porządku (AA)."}

@@ -81,7 +81,7 @@ export function CustomChecklistSection() {
         </form>
 
         {items.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nic jeszcze nie dodano. Punkt pojawi się w wybranym temacie, obok punktów z materiału.</p>
+          <p className="ui-hint">Nic jeszcze nie dodano. Punkt pojawi się w wybranym temacie, obok punktów z materiału.</p>
         ) : (
           <ul className="space-y-1.5">
             {items.map((e) => {
@@ -108,7 +108,7 @@ export function CustomChecklistSection() {
           </ul>
         )}
         {items.length > 0 && (
-          <p className="text-xs text-muted-foreground">{pluralPl(items.length, ["własny punkt", "własne punkty", "własnych punktów"])} · dopisane do tematów w liście.</p>
+          <p className="ui-hint">{pluralPl(items.length, ["własny punkt", "własne punkty", "własnych punktów"])} · dopisane do tematów w liście.</p>
         )}
       </div>
     </details>

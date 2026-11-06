@@ -15,7 +15,7 @@ export function ClipperSettings() {
 
   return (
     <Section title="Zakładka do zapisu stron w G">
-      <p className="text-xs text-muted-foreground">
+      <p className="ui-hint">
         Przeciągnij przycisk poniżej na pasek zakładek. Na dowolnej stronie kliknij zakładkę — tytuł, adres
         i zaznaczony fragment trafią do nowej notatki w G.
       </p>

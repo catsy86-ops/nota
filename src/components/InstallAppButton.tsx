@@ -127,7 +127,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
               </li>
             ))}
           </ol>
-          <p className="flex items-center gap-2 text-xs text-muted-foreground border-t border-border/60 pt-3">
+          <p className="ui-hint flex items-center gap-2 border-t border-border/60 pt-3">
             <WifiOff className="w-3.5 h-3.5 shrink-0" />
             Zainstalowana aplikacja działa bez internetu — notatki są zapisane na urządzeniu.
           </p>

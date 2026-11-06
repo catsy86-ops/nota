@@ -34,7 +34,7 @@ export function VaultSettings() {
   return (
     <Section title="Prywatne notatki">
       <div className="rounded-card border border-border/60 bg-muted/30 px-4 py-3 space-y-3">
-        <p role="status" className="text-xs text-muted-foreground flex items-start gap-2" data-testid="vault-status">
+        <p role="status" className="ui-hint flex items-start gap-2" data-testid="vault-status">
           <ShieldCheck className="w-4 h-4 shrink-0 text-primary-ink" aria-hidden />
           <span>{vault.corrupt ? STATUS.corrupt : STATUS[vault.phase]}</span>
         </p>
@@ -189,7 +189,7 @@ function PasskeyEnroll() {
 
   return (
     <form onSubmit={add} className="space-y-2" aria-label="Odblokowanie biometrią">
-      <p className="text-xs text-muted-foreground">Odblokuj skarbiec odciskiem palca albo twarzą zamiast hasła. Hasło dalej działa.</p>
+      <p className="ui-hint">Odblokuj skarbiec odciskiem palca albo twarzą zamiast hasła. Hasło dalej działa.</p>
       <div className="flex gap-2">
         <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Hasło skarbca" aria-label="Hasło skarbca do dodania odblokowania" autoComplete="current-password" className="coarse:h-11" />
         <Button type="submit" size="sm" variant="outline" disabled={busy || !password} className="coarse:h-11">Dodaj biometrię</Button>

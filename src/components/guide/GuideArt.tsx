@@ -124,7 +124,7 @@ const SCENES: Record<GuideArtId, ReactNode> = {
       <D d="M22 34H138V78H22Z" t={0} />
       <D d="M51 34V78M80 34V78M109 34V78" t={0.3} />
       {["5/7", "3/8", "2", "4"].map((v, i) => (
-        <text key={v} x={36 + i * 29} y="64" textAnchor="middle" className={`guide-pop font-mono text-[11px] ${i === 2 ? "fill-destructive" : "fill-foreground"}`} style={at(0.6 + i * 0.1)}>{v}</text>
+        <text key={v} x={36 + i * 29} y="64" textAnchor="middle" className={`guide-pop font-mono text-2xs ${i === 2 ? "fill-destructive" : "fill-foreground"}`} style={at(0.6 + i * 0.1)}>{v}</text>
       ))}
       <D d="M30 48h12M59 48h14M88 48h12M117 48h14" t={0.5} />
     </>

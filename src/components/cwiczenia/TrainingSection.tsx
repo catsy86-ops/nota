@@ -83,8 +83,8 @@ function EntryRow({ entry }: { entry: TrainingEntry }) {
       <span className="w-12 shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{entry.time ?? "—"}</span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm">{name}</p>
-        <p className="text-xs text-muted-foreground">{setsLine(entry.sets)}{volume > 0 && ` · objętość ${volume} kg`}</p>
-        {entry.note && <p className="text-xs text-muted-foreground">{entry.note}</p>}
+        <p className="ui-hint">{setsLine(entry.sets)}{volume > 0 && ` · objętość ${volume} kg`}</p>
+        {entry.note && <p className="ui-hint">{entry.note}</p>}
       </div>
       <Button variant="ghost" size="sm" className="coarse:h-11" aria-label={`Usuń wpis: ${name}`} onClick={() => deleteEntryWithUndo(entry)}>
         <Trash className="h-4 w-4" aria-hidden />
@@ -109,7 +109,7 @@ function PlanList({ plans }: { plans: PlanDay[] }) {
           <li key={p.id} className="flex items-start gap-3 py-2">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{planLine(p)}</p>
-              <p className="text-xs text-muted-foreground">{p.exerciseIds.map((id) => exerciseById(id)?.name ?? id).join(" · ")}</p>
+              <p className="ui-hint">{p.exerciseIds.map((id) => exerciseById(id)?.name ?? id).join(" · ")}</p>
             </div>
             <Button
               variant="ghost"
@@ -254,7 +254,7 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
 
   return (
     <form className="space-y-3 border-t border-dashed border-border pt-4" onSubmit={(e) => { e.preventDefault(); save(); }}>
-      <p className="text-xs font-medium text-muted-foreground">Zapisz trening</p>
+      <p className="ui-hint font-medium">Zapisz trening</p>
       {plans.length > 0 && (
         <label className="block text-sm">
           <span className="sr-only">Dzień planu</span>
@@ -282,7 +282,7 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
           ))}
         </select>
       </label>
-      <p className="text-xs text-muted-foreground">{exerciseById(exerciseId)?.hint}</p>
+      <p className="ui-hint">{exerciseById(exerciseId)?.hint}</p>
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <Button type="button" variant="ghost" size="sm" className="coarse:h-11" aria-expanded={newOpen} onClick={() => setNewOpen((v) => !v)}>{newOpen ? "Zamknij" : "+ Nowe ćwiczenie"}</Button>
         {exerciseId.startsWith(CUSTOM_PREFIX) && (
@@ -298,7 +298,7 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
           </Button>
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground">To pierwszy zapis tego ćwiczenia.</p>
+        <p className="ui-hint">To pierwszy zapis tego ćwiczenia.</p>
       )}
 
       <div className="space-y-2">
@@ -426,7 +426,7 @@ function AddPlanForm() {
 
   return (
     <form className="space-y-3 border-t border-dashed border-border pt-4" onSubmit={(e) => { e.preventDefault(); save(); }}>
-      <p className="text-xs font-medium text-muted-foreground">Dodaj dzień planu</p>
+      <p className="ui-hint font-medium">Dodaj dzień planu</p>
       <Input aria-label="Nazwa dnia planu" placeholder="np. Klatka i triceps" value={name} onChange={(e) => setName(e.target.value)} />
       <fieldset className="space-y-1">
         <legend className="sr-only">Ćwiczenia w dniu</legend>

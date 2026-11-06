@@ -37,7 +37,7 @@ export function EffectsSettings() {
   return (
     <div className="space-y-4">
       <div className="pt-2"><Section title="Efekty i zabawa">
-        <p className="text-xs text-muted-foreground mb-2">Małe mikrointerakcje i sezonowe kolory. Wszystko respektuje tryb ograniczonego ruchu.</p>
+        <p className="ui-hint mb-2">Małe mikrointerakcje i sezonowe kolory. Wszystko respektuje tryb ograniczonego ruchu.</p>
       </Section></div>
       <div className="space-y-3">
         {keys.map((key) => {
@@ -51,7 +51,7 @@ export function EffectsSettings() {
                 <span className="text-2xl leading-none shrink-0" aria-hidden>{meta.emoji}</span>
                 <div className="min-w-0">
                   <Label htmlFor={id} className="text-sm font-semibold cursor-pointer">{meta.label}</Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">{meta.description}</p>
+                  <p className="ui-hint mt-0.5">{meta.description}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">

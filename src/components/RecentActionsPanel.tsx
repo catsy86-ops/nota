@@ -131,7 +131,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
                     title="Pokaż notatkę"
                   >
                     <p className="text-sm font-medium truncate">{e.label}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="ui-hint">
                       {meta.verb} • {relativeTime(e.at)}
                       {e.count > 1 ? ` • ${e.count} notatek` : ""}
                     </p>

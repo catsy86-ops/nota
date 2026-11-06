@@ -550,6 +550,44 @@ Plan: `nowyplan.md`, Etap 3 (punkty 3.1–3.8). Każdy dział dostał zmiany z j
 - Vitest: `sidebar/sidebarItems.test.ts` (grupy po NP-4), `lib/noteDate.test.ts`, `debts/DebtsView.test.tsx` i `cwiczenia/CwiczeniaView.test.tsx` (formularz zwinięty).
 - e2e: `study.spec.ts` (pasek opanowania bez kwadracików), `cwiczenia-*.spec.ts`, `debts-*.spec.ts`, `calendar-*.spec.ts`, `reminders-*.spec.ts`, `shifts-*.spec.ts`, `today-*.spec.ts`, `dzis-*.spec.ts`, `touch-targets.spec.ts`.
 
+## Wspólne — role tekstu i czytelność (plan spójności 2026-11-06, Etap 2)
+
+**Co robi.** Opisy i podpowiedzi pod kontrolkami mają 14 px zamiast 12 px. Daty i liczniki zostają drobne i mają cyfry tabelaryczne. Nagłówki sekcji poza kartami mają jeden wygląd.
+
+**Gdzie jest.**
+
+- Role tekstu w `src/index.css`, w warstwie `components`, obok `.section-label`:
+
+  | Klasa | Do czego | Wygląd |
+  |---|---|---|
+  | `.ui-hint` | opis, podpowiedź | `text-sm text-muted-foreground` |
+  | `.ui-meta` | data, licznik | `text-xs tabular-nums text-muted-foreground` |
+  | `.title-section` | h2 sekcji, który nie jest `SectionCard` | `font-display text-lg font-semibold leading-tight` |
+
+- Migracja objęła akapity z `text-xs text-muted-foreground` w 95 plikach: 193 przeszły na `.ui-hint`, a 10 z `tabular-nums` na `.ui-meta`. Opis w `SectionCard` też jest `.ui-hint`.
+- `.title-section` mają nagłówki „Przegląd tygodnia”, „Sprawdź, co umiesz” i „Na dziś”.
+- Wartości poza skalą (`text-[10px]`, `text-[0.95rem]` i inne, razem 10) zamienione na `text-2xs`/`xs`/`sm`/`base`/`xl`. Tytuł zablokowanej notatki ma `text-base`, jak tytuł kafla.
+
+**Jak działa i dlaczego tak.**
+
+- **Nazwy bez przedrostka `text-`.** Tailwind-merge w `cn` uznałby `text-hint` za kolor i zdjąłby go przy `text-destructive`.
+- **Kolor stanu.** Utility na tym samym elemencie wygrywa z klasą komponentową, więc kolor stanu (np. `text-destructive`) dokłada się zwykłą klasą.
+- **Tego samego elementu nie łączyć z `text-xs`.** Utility wygrałoby z rozmiarem z `.ui-hint`.
+
+**Ograniczenia.**
+
+- Bez zmian zostały:
+  - wydruki (`ReportPaper`, `HandoverPaper`);
+  - kafle i podglądy (`NoteCard*`, `WikiLinkPreview`, `WikiEmbed`, `NoteGraph`, `ui/stat`);
+  - linijki z `truncate`, `font-mono` i `uppercase`;
+  - klasy składane w `cn(...)` oraz `<span>`/`<div>`.
+- Część podpowiedzi ma więc dalej 12 px, np. druga podpowiedź w Grafiku. Zbiera je Etap 3, a resztę Etap 5.
+- Strony na telefonie urosły o kilkanaście do kilkudziesięciu pikseli. Przy 390 px nic się nie zawija ani nie wychodzi poza ekran (sprawdzone na zrzutach Grafiku, Pracy, Dziś i Ustawień).
+
+**Testy.** `src/test/designTokens.test.ts`: `pxText` ma próg 0, a nowy `smallHintParagraph` 24 (pozostałe akapity `<p>` z `text-xs text-muted-foreground`). Wzorce `@visual` odnowione jednym przebiegiem po Etapach 1–2.
+
+**Commit.** COMMIT_HASH (2026-11-06).
+
 ## Wspólne — prymitywy UI (plan spójności 2026-11-06, Etap 1)
 
 **Co robi.** Jedna skala przycisków, kart i nawigacji okresu dla wszystkich działów. Etap 1 tylko przygotowuje klocki, a migracja ekranów to Etapy 3–5 planu `docs/plan-ui-spojnosc-2026-11-06.md`.

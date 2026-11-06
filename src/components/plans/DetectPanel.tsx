@@ -39,8 +39,8 @@ export function DetectSection({ picking, onPick, color, tolerance, onTolerance, 
 }) {
   return (
     <section className={sectionCls} aria-label="Propozycje tras" data-testid="plan-detect">
-      <h3 className={cn(h3, "flex items-center gap-1.5")}><Sparkles className="h-3.5 w-3.5" aria-hidden />Propozycje tras <span className="rounded-full bg-muted px-1.5 py-0.5 text-[0.65rem] normal-case tracking-normal">eksperymentalne</span></h3>
-      <p className="text-xs text-muted-foreground">Wskaż pipetą kolor rury — program znajdzie linie w tym kolorze, inne pominie.</p>
+      <h3 className={cn(h3, "flex items-center gap-1.5")}><Sparkles className="h-3.5 w-3.5" aria-hidden />Propozycje tras <span className="rounded-full bg-muted px-1.5 py-0.5 text-2xs normal-case tracking-normal">eksperymentalne</span></h3>
+      <p className="ui-hint">Wskaż pipetą kolor rury — program znajdzie linie w tym kolorze, inne pominie.</p>
       <div className="flex items-center gap-2">
         <Button type="button" variant={picking ? "default" : "outline"} onClick={() => onPick(!picking)} aria-pressed={picking} className="pressable flex-1 coarse:h-11">
           <Pipette className="mr-1.5 h-4 w-4" aria-hidden />{picking ? "Stuknij rurę na planie" : color ? "Zmień kolor" : "Wskaż kolor rury"}
@@ -93,7 +93,7 @@ export function DetectSection({ picking, onPick, color, tolerance, onTolerance, 
               </li>
             ))}
           </ul>
-          <p className="text-xs text-muted-foreground">Dodane trasy są „do weryfikacji” — zatwierdź je po sprawdzeniu.</p>
+          <p className="ui-hint">Dodane trasy są „do weryfikacji” — zatwierdź je po sprawdzeniu.</p>
         </div>
       )}
     </section>

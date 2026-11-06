@@ -41,8 +41,8 @@ export function AliasPicker({ title, aliases, onSave }: AliasPickerProps) {
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
-        <p className="text-xs font-semibold font-display text-muted-foreground">Aliasy</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="ui-hint font-semibold font-display">Aliasy</p>
+        <p className="ui-hint">
           Inne nazwy tej notatki, oddzielone przecinkami. Link [[nazwa]] pod każdą z nich prowadzi tutaj.
         </p>
         <label htmlFor="alias-input" className="sr-only">Aliasy notatki</label>

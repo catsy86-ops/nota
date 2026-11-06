@@ -391,7 +391,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           </div>
         </div>
         {commonFree !== null && (
-          <p className="order-0 w-full text-xs text-muted-foreground px-1">Wspólne wolne dni w tym miesiącu (w obu grafikach): <span className="font-semibold text-foreground tabular-nums">{commonFree}</span></p>
+          <p className="ui-hint order-0 w-full px-1">Wspólne wolne dni w tym miesiącu (w obu grafikach): <span className="font-semibold text-foreground tabular-nums">{commonFree}</span></p>
         )}
         <div className="order-2 flex flex-wrap items-center justify-between gap-2">
           {/* Od sm przełącznik widoku siedzi tutaj; na telefonie — w rzędzie nawigacji (5.5). */}
@@ -447,7 +447,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           <p role="status" aria-live="polite" className="sr-only">{announce}</p>
 
 
-          <p id="shift-brush-hint" className="text-xs text-muted-foreground px-1 short:hidden">{brushHint(brush, typesById, activeHours)}</p>
+          <p id="shift-brush-hint" className="ui-hint px-1 short:hidden">{brushHint(brush, typesById, activeHours)}</p>
 
           {/* Schowek jako osobny chip: widoczny także po „Rozumiem” i nie znika razem z podpowiedzią. */}
           {clip && (

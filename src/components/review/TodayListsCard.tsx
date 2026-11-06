@@ -59,7 +59,7 @@ export function TodayListsCard({ notes, onOpen, onUpdate }: {
           </li>
         ))}
       </ul>
-      {more > 0 && <p className="text-xs text-muted-foreground">i jeszcze {more} w notatkach</p>}
+      {more > 0 && <p className="ui-hint">i jeszcze {more} w notatkach</p>}
     </SectionCard>
   );
 }

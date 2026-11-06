@@ -545,10 +545,10 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{DEBT_KIND_LABEL[e.kind]} · <span className="tabular-nums">{amountText(e.amount, hidden)}</span></p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="ui-hint">
                         {formatDay(e.at)}{e.note ? ` · ${e.note}` : ""}
                       </p>
-                      <p className="text-xs text-muted-foreground tabular-nums">
+                      <p className="ui-meta">
                         Saldo po tym: {running[i] === 0 ? "0" : `${running[i] > 0 ? "" : "− "}${amountText(Math.abs(running[i]), hidden)}`}
                       </p>
                     </div>
@@ -565,7 +565,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
           </section>
         ))}
       </div>
-      <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+      <p className="ui-hint mt-4 flex items-center gap-1.5">
         <Undo2 className="h-3.5 w-3.5" aria-hidden />
         Usunięty wpis można cofnąć z komunikatu na dole ekranu.
       </p>

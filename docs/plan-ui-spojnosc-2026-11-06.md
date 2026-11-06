@@ -5,7 +5,11 @@
 - **1.1, wysokości.** Wysokości `Button` i `IconButton` zostają bez zmian (40/36/44 oraz 28/32–36). Komentarze w `icon-button.tsx` uzasadniają je: pięć przycisków musi zmieścić się w nagłówku 320 px. Ujednolicone są nieaktywny stan i promień zamknięcia okna.
 - **1.5, pusty stan.** Zamiast `ui/empty-state` jest istniejący `StatusPanel`.
 
-Opis w `opis.md`: „Wspólne — prymitywy UI”. Dalej: Etap 2 (typografia) i jednorazowe odnowienie zrzutów `@visual`.
+Opis w `opis.md`: „Wspólne — prymitywy UI”.
+
+**Etap 2** zrobiony 2026-11-06, z jedną zmianą: role tekstu nazywają się `.ui-hint` i `.ui-meta` (a `.title-section` zostaje), a nie `.text-hint`. Powód: tailwind-merge brałby `text-*` za kolor. Wzorce `@visual` odnowione. Opis w `opis.md`: „Wspólne — role tekstu i czytelność”.
+
+Dalej Etap 3 albo 4.
 
 ## Kontekst
 

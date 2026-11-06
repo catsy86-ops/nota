@@ -201,7 +201,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
             ))}
           </ul>
         </div>
-        <p className="text-xs text-muted-foreground">Egzamin nie zmienia powtórek, tablicy ani serii.</p>
+        <p className="ui-hint">Egzamin nie zmienia powtórek, tablicy ani serii.</p>
         <div className="flex flex-wrap gap-2">
           {weak.length > 0 && <Button onClick={() => start({ kind: "topics", topics: weak })}>Ćwicz słabe tematy</Button>}
           <Button variant="outline" onClick={() => { setExamDone(null); setRound(null); }}>Zakończ</Button>
@@ -261,7 +261,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   if (!round || !current) {
     return (
       <section aria-label="Quiz" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-4">
-        <h2 className="font-display text-xl">Sprawdź, co umiesz</h2>
+        <h2 className="title-section">Sprawdź, co umiesz</h2>
         <p className="text-sm text-muted-foreground max-w-prose">
           {ROUND_SIZE} pytań z poradnika, list kontrolnych i Twoich własnych. Najpierw wypadają tematy, których jeszcze nie masz w kolumnie „Umiem”.
           Błąd w temacie z kolumny „Umiem” cofa go do „W trakcie”. Każde pytanie wraca do powtórki: po dobrej odpowiedzi
@@ -273,7 +273,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
             <Button size="sm" onClick={() => onScopeChange?.({ kind: "due" })}>Powtórz</Button>
           </div>
         ) : nextDue ? (
-          <p className="text-xs text-muted-foreground" data-testid="due-today">Na dziś nic do powtórki. Następne: {nextDue}.</p>
+          <p className="ui-hint" data-testid="due-today">Na dziś nic do powtórki. Następne: {nextDue}.</p>
         ) : null}
         {/* Nowy użytkownik: bez rund i bez zaległości nie wiadomo, od czego zacząć. */}
         {study.rounds === 0 && due.length === 0 && !nextDue && (
@@ -293,7 +293,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           <CustomQuestionsDialog open={ownOpen} onOpenChange={setOwnOpen} />
           <OwnTopics topics={ownTopics} onPractice={(topic) => start({ kind: "topic", topic })} />
           {study.exams && study.exams.length > 0 && (
-            <p className="text-xs text-muted-foreground tabular-nums" data-testid="last-exam">
+            <p className="ui-meta" data-testid="last-exam">
               Ostatni egzamin: {study.exams[study.exams.length - 1].correct}/{study.exams[study.exams.length - 1].total}
             </p>
           )}
@@ -303,7 +303,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
             </p>
           )}
           {study.bestPercent !== null && (
-            <p className="text-xs text-muted-foreground tabular-nums">
+            <p className="ui-meta">
               Najlepszy wynik: {study.bestPercent}% · rund: {study.rounds}
               {activeStreak(study) > 1 && <> · seria: {streakLabel(activeStreak(study))}</>}
             </p>

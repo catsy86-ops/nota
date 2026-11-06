@@ -77,7 +77,7 @@ const chipClass = "rounded-full border px-2.5 py-1 text-xs transition-colors coa
 /** Etykieta kroku w pickerze (zeszytowa, z przerywaną linią): kolejność dnia, godziny i powtarzania. */
 function StepLabel({ children }: { children: ReactNode }) {
   return (
-    <p aria-hidden className="kicker flex items-center gap-2 text-xs text-muted-foreground">
+    <p aria-hidden className="ui-hint kicker flex items-center gap-2">
       <span>{children}</span>
       <span className="h-px flex-1 border-t border-dashed border-border/70" />
     </p>
@@ -218,7 +218,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
             <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
           </button>
         )}>
-        <p className="text-xs font-semibold font-display text-muted-foreground">Przypomnienie</p>
+        <p className="ui-hint font-semibold font-display">Przypomnienie</p>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Szybkie terminy">
           {presets(new Date(), shiftList, mobile).map((p) => (
             <button

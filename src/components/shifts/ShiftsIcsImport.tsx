@@ -45,7 +45,7 @@ export function ShiftsIcsImport() {
   return (
     <section aria-label="Import zmian z pliku" className="rounded-card bg-muted/50 px-3 py-2.5 text-sm">
       <p className="font-medium">Import zmian z pliku</p>
-      <p className="mt-1 text-xs text-muted-foreground">
+      <p className="ui-hint mt-1">
         Plik .ics: każde zdarzenie staje się dniem z wybraną zmianą. Plik .csv z karty czasu: rodzaje biorą się z kolumny „Zmiana”. Dni, które już mają wpis, zostają bez zmian.
       </p>
       <div className="mt-2 flex flex-wrap items-center gap-2">

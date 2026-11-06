@@ -75,7 +75,7 @@ function FolderMenu({ note, folders, onMove }: { note: Note; folders: Folder[]; 
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-2 max-h-72 overflow-y-auto">
-        <p className="text-xs font-semibold text-muted-foreground px-2 pb-1">Przenieś do folderu</p>
+        <p className="ui-hint font-semibold px-2 pb-1">Przenieś do folderu</p>
         {rows.length === 0 && <p className="px-2 py-1.5 text-sm text-muted-foreground">Nie masz jeszcze folderów.</p>}
         {rows.map(({ folder, depth }) => (
           <button
@@ -147,7 +147,7 @@ function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions
           </li>
         ))}
       </ul>
-      {more > 0 && <p className="mt-1 text-xs text-muted-foreground">…i jeszcze {more}. Przejrzyj je trybem „po kolei”.</p>}
+      {more > 0 && <p className="ui-hint mt-1">…i jeszcze {more}. Przejrzyj je trybem „po kolei”.</p>}
     </section>
   );
 }
@@ -207,8 +207,8 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
             <Sparkles className="w-[18px] h-[18px]" />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="font-display text-base font-semibold leading-tight">Przegląd tygodnia</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <h2 className="title-section">Przegląd tygodnia</h2>
+            <p className="ui-hint mt-0.5">
               {review.total} {pluralPl(review.total, ["notatka czeka", "notatki czekają", "notatek czeka"])} na szybki rzut oka.
             </p>
           </div>

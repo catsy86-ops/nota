@@ -65,7 +65,7 @@ export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journa
       >
         <div className="h-full rounded-full bg-success transition-[width] duration-base" style={{ width: `${pct}%` }} />
       </div>
-      {next && <p className="text-xs text-muted-foreground">Następny: <span className="text-foreground">{next.name}</span></p>}
+      {next && <p className="ui-hint">Następny: <span className="text-foreground">{next.name}</span></p>}
 
       <ul className="space-y-0.5">
         {stages.map((s) => {

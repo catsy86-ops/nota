@@ -39,7 +39,7 @@ export function SnoozeUntilDialog({ open, onOpenChange, onPick }: SnoozeUntilDia
         <form onSubmit={(e) => { e.preventDefault(); save(); }} className="space-y-2">
           <label htmlFor={inputId} className="text-sm font-medium">Kiedy</label>
           <Input id={inputId} autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder="piątek 8:00" aria-invalid={text.trim() !== "" && !valid} />
-          <p className="text-xs text-muted-foreground min-h-4" role="status">
+          <p className="ui-hint min-h-4" role="status">
             {text.trim() === "" ? "" : valid && parsed ? `Ustawię na: ${formatReminderShort(parsed.getTime())}` : "Nie rozumiem tej daty albo jest w przeszłości."}
           </p>
           <DialogFooter>

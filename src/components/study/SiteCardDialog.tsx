@@ -238,7 +238,7 @@ export function SiteCardDialog({
               </DialogDescription>
               <div className="flex items-start justify-between gap-2">
               {hours && (hours.total.minutes > 0 || hours.total.unsplit > 0) ? (
-                <p className="min-w-0 pt-0.5 font-mono text-xs tabular-nums text-muted-foreground" data-testid="site-card-hours">
+                <p className="ui-meta min-w-0 pt-0.5 font-mono" data-testid="site-card-hours">
                   <Clock className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-primary-ink" aria-hidden />
                   <span className="text-foreground">{formatHoursShort(hours.total.minutes)} h</span> łącznie
                   {" · "}<span className="text-foreground">{formatHoursShort(hours.month.minutes)} h</span> w tym miesiącu

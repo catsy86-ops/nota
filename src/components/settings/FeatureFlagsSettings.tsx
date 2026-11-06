@@ -18,7 +18,7 @@ export function FeatureFlagsSettings() {
   const flags = useFeatureFlags();
   return (
     <Section title="Funkcje w przygotowaniu">
-      <p className="text-xs text-muted-foreground">
+      <p className="ui-hint">
         Przełączniki zapisują się już teraz. Funkcje podłączamy po kolei, więc część z nich jeszcze niczego nie zmienia.
       </p>
       <div className="space-y-2">

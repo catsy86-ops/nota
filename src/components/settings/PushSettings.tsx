@@ -62,7 +62,7 @@ export function PushSettings() {
   return (
     <Section title="Powiadomienia przy zamkniętej aplikacji">
       <div className="space-y-3 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
-        <p className="text-xs text-muted-foreground">
+        <p className="ui-hint">
           Przypomnienia notatek, Grafik na jutro, raport dnia i tygodnia, problemy i materiał z budowy przyjdą o czasie także wtedy,
           gdy aplikacja jest zamknięta. Wysyła je Twój serwer powiadomień.
           Trafiają na niego terminy i tytuły na 14 dni — bez treści notatek, a z notatek prywatnych bez tytułów.
@@ -118,7 +118,7 @@ export function PushSettings() {
         )}
       </div>
       <div className="mt-3 space-y-2">
-        <p className="text-xs text-muted-foreground">Co ma przypominać, gdy aplikacja jest zamknięta:</p>
+        <p className="ui-hint">Co ma przypominać, gdy aplikacja jest zamknięta:</p>
         {PUSH_CATEGORIES.map((c) => (
           <ToggleRow
             key={c.id}

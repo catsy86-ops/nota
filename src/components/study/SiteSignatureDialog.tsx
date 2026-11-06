@@ -93,7 +93,7 @@ export function SiteSignatureDialog({ site, open, onOpenChange }: { site: SiteIn
                 </button>
               </div>
               <SignaturePad ref={pad} onChange={onPadChange} label="Pole podpisu — podpisz palcem albo myszą nad linią" />
-              <p className="text-xs text-muted-foreground">Podaj telefon klientowi — podpisuje palcem nad linią.</p>
+              <p className="ui-hint">Podaj telefon klientowi — podpisuje palcem nad linią.</p>
             </div>
             <ResponsiveDialogFooter className="grid grid-cols-2 gap-2 pt-1 sm:grid sm:space-x-0">
               <Button type="button" variant="outline" onClick={() => (redo ? setRedo(false) : onOpenChange(false))} disabled={saving} className="pressable coarse:h-11">

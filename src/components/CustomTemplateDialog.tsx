@@ -71,7 +71,7 @@ export function CustomTemplateDialog({ template, onOpenChange }: Props) {
           <div className="space-y-1">
             <Label htmlFor="tpl-title">Tytuł notatki</Label>
             <Input id="tpl-title" value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} placeholder="Dziennik — {{data}}" />
-            {title.includes("{{") && <p className="text-xs text-muted-foreground">Wyjdzie: {preview || "—"}</p>}
+            {title.includes("{{") && <p className="ui-hint">Wyjdzie: {preview || "—"}</p>}
           </div>
           <div className="space-y-1">
             <Label htmlFor="tpl-content">Treść</Label>

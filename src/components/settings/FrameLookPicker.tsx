@@ -50,7 +50,7 @@ export function FrameLookPicker() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="mb-2 text-xs font-medium text-muted-foreground">Kolor krawędzi</p>
+        <p className="ui-hint mb-2 font-medium">Kolor krawędzi</p>
         <Swatches
           label="Kolor krawędzi"
           options={colorOptions}
@@ -58,12 +58,12 @@ export function FrameLookPicker() {
           onPick={setFrameColor}
           swatchOf={(id) => FRAME_COLORS[id].hex ?? "linear-gradient(135deg, var(--border) 50%, var(--muted-foreground) 50%)"}
         />
-        <p className="text-xs text-muted-foreground mt-1.5">
+        <p className="ui-hint mt-1.5">
           {look.color === "theme" ? "Krawędzie w kolorze stylu." : `Krawędzie w kolorze: ${FRAME_COLORS[look.color].label.toLowerCase()}. Siła ramek zostaje z ustawienia powyżej.`}
         </p>
       </div>
       <div>
-        <p className="mb-2 text-xs font-medium text-muted-foreground">Tło kart</p>
+        <p className="ui-hint mb-2 font-medium">Tło kart</p>
         <Swatches
           label="Tło kart"
           options={surfaceOptions}
@@ -71,7 +71,7 @@ export function FrameLookPicker() {
           onPick={setFrameSurface}
           swatchOf={(id) => FRAME_SURFACES[id].light ?? "var(--card)"}
         />
-        <p className="text-xs text-muted-foreground mt-1.5">
+        <p className="ui-hint mt-1.5">
           {look.surface === "theme" ? "Tło kart ze stylu." : "Delikatny odcień tła kart. W ciemnym motywie zmienia się na ciemniejszy odpowiednik."}
         </p>
       </div>

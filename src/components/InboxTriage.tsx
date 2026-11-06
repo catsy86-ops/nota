@@ -253,7 +253,7 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
               <p className="font-display font-semibold text-lg leading-snug wrap-anywhere">{title}</p>
               {preview && <p className="mt-1 line-clamp-6 text-sm text-muted-foreground whitespace-pre-line wrap-anywhere">{preview}</p>}
             </m.div>
-            {coarse && <p className="-mt-2 text-xs text-muted-foreground">Przesuń w lewo: archiwizuj. W prawo: zostaw.</p>}
+            {coarse && <p className="ui-hint -mt-2">Przesuń w lewo: archiwizuj. W prawo: zostaw.</p>}
 
             <div className="space-y-2">
               <input
@@ -342,7 +342,7 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
                   ))}
                 </div>
                 <QuickReminderInput onParsed={(d) => remind(d.getTime())} />
-                <p className="text-xs text-muted-foreground">Notatka z terminem zostaje w Skrzynce, dopóki nie dostanie folderu albo etykiety.</p>
+                <p className="ui-hint">Notatka z terminem zostaje w Skrzynce, dopóki nie dostanie folderu albo etykiety.</p>
               </div>
             )}
           </div>

@@ -15,7 +15,7 @@ export function ReviewSettings() {
     );
   return (
     <Section title="Przegląd tygodnia">
-      <p className="text-xs text-muted-foreground">
+      <p className="ui-hint">
         Karta w widoku „Dziś” z rzeczami do ogarnięcia. Pokazuje się wieczorem w wybranym dniu i rano następnego, o ile jest co przejrzeć.
       </p>
       <div role="group" aria-label="Dzień przeglądu tygodnia" className="flex flex-wrap gap-2">

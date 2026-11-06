@@ -81,7 +81,7 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
           </div>
 
           {syncState.status === "disabled" && (
-            <p className="px-1 pt-1 text-xs text-muted-foreground">
+            <p className="ui-hint px-1 pt-1">
               Włącz ją w Ustawieniach → zakładka „Sync”, aby sparować to urządzenie z innym.
             </p>
           )}

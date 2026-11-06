@@ -198,7 +198,7 @@ export function NoteEditor({
                 {renderEditor(cn(textareaCls, "border border-border/30 rounded-field p-2", !contentFills && "min-h-[80px]"))}
               </div>
               <div className={cn("bg-muted/20 rounded-field p-2 overflow-y-auto border border-border/30", contentFills ? "h-full" : "min-h-[80px]", phoneTab === "edit" && "max-sm:hidden")}>
-                {editContent ? <MarkdownRenderer content={editContent} knownTitles={knownTitles} onWikiClick={onWikiClick} /> : <p className="text-xs text-muted-foreground italic">Podgląd…</p>}
+                {editContent ? <MarkdownRenderer content={editContent} knownTitles={knownTitles} onWikiClick={onWikiClick} /> : <p className="ui-hint italic">Podgląd…</p>}
               </div>
             </div>
           </>

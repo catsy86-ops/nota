@@ -56,7 +56,7 @@ export function AboutPanel() {
         <dt className="text-muted-foreground">Build</dt>
         <dd className="font-mono text-xs tabular-nums break-all" data-testid="about-build">{build}</dd>
       </dl>
-      <p className="text-xs text-muted-foreground" role="status" data-testid="about-sw">{SW_TEXT[sw.state]}</p>
+      <p className="ui-hint" role="status" data-testid="about-sw">{SW_TEXT[sw.state]}</p>
       {sw.state === "update" ? (
         <Button size="sm" onClick={refresh} className="coarse:h-11">Odśwież do nowej wersji</Button>
       ) : sw.state !== "off" ? (

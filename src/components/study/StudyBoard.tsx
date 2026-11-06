@@ -108,7 +108,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
           </button>
         </div>
       </div>
-      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{topic.summary}</p>
+      <p className="ui-hint mt-1 leading-relaxed">{topic.summary}</p>
       <p className="mt-2 font-mono text-2xs text-muted-foreground tabular-nums">
         lista {checked}/{items.length} · pytań {questions}
         {practice && <> · budowa {practice.ok}×{practice.problem > 0 ? `, problemów ${practice.problem}` : ""}</>}
@@ -148,13 +148,13 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
         </details>
       )}
       {suggestDone && (
-        <p className="mt-2 text-xs text-muted-foreground" data-testid="suggest-done">
+        <p className="ui-hint mt-2" data-testid="suggest-done">
           Wychodzi świetnie ({mastery.percent}% z {mastery.seen}).{" "}
           <button type="button" onClick={() => moveTo(topic, "done")} className="text-primary-ink underline-offset-2 hover:underline">Oznacz jako „Umiem”</button>
         </p>
       )}
       {questionCount <= 2 && (
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="ui-hint mt-2">
           Mało pytań w tym temacie ({questionCount}).{" "}
           <button type="button" onClick={() => setOwnOpen(true)} className="text-primary-ink underline-offset-2 hover:underline">Dodaj własne</button>
         </p>
@@ -248,7 +248,7 @@ export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: st
                   {COLUMN_LABEL[col]}
                   <span className="rounded-full bg-background px-1.5 font-mono text-xs font-semibold text-foreground tabular-nums" data-testid={`count-${col}`}>{topics.length}</span>
                 </h3>
-                <p className="text-xs text-muted-foreground">{COLUMN_HINT[col]}</p>
+                <p className="ui-hint">{COLUMN_HINT[col]}</p>
               </header>
               <ul className="space-y-2.5 min-h-12">
                 {topics.map((t) => <TopicCard key={t.id} topic={t} column={col} study={study} practice={practice.get(t.id)} due={dueByTopic.get(t.id) ?? 0} onPractice={onPractice} onJournal={onJournal} />)}

@@ -86,7 +86,7 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
             <summary className="cursor-pointer text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-control">
               Opcjonalne <span className="font-normal text-muted-foreground">— pora nocna, niedziela i święto</span>
             </summary>
-            <p className="mt-2 text-xs text-muted-foreground">Zostaw ustawowe, jeśli regulamin pracy nie ustala inaczej.</p>
+            <p className="ui-hint mt-2">Zostaw ustawowe, jeśli regulamin pracy nie ustala inaczej.</p>
             <div className="mt-3 space-y-4">
               <Field label="Pora nocna" hint="8 godzin między 21 a 7 — tak, jak ustala regulamin pracy (art. 151⁷ KP).">
                 <select value={s.nightFrom} onChange={(e) => setNightFrom(Number(e.target.value))} className={CONTROL}>
@@ -190,7 +190,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
         <span className="text-sm font-medium">{label}</span>
         {children}
       </label>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {hint && <p className="ui-hint">{hint}</p>}
     </div>
   );
 }

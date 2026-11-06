@@ -33,7 +33,7 @@ export function CalendarLegend() {
           Zmiana z Grafiku (kolor zmiany)
         </li>
         <li className="flex items-center gap-2">
-          <span aria-hidden className="inline-flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">1</span>
+          <span aria-hidden className="inline-flex size-4 items-center justify-center rounded-full bg-primary text-2xs font-medium text-primary-foreground">1</span>
           Dziś
         </li>
         <li className="flex items-center gap-2">

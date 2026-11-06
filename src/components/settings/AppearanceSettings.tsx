@@ -202,7 +202,7 @@ export function AppearanceSettings() {
 
         <Section title="Jasność">
           <Segmented label="Jasność" options={themeOptions} value={schemeMode} onChange={setThemeMode} />
-          <p className="text-xs text-muted-foreground mt-1.5">
+          <p className="ui-hint mt-1.5">
             {skin !== "zeszyt"
               ? `Każdy styl pamięta własną jasność. ${SKIN_META[skin].label} powstał jako ${skinScheme === "dark" ? "ciemny" : "jasny"}.`
               : schemeMode === "system"
@@ -223,7 +223,7 @@ export function AppearanceSettings() {
 
         <Section title="Tryb budowa: większy tekst i przyciski">
           <Segmented label="Tryb budowa" options={siteOptions} value={siteMode} onChange={setSiteMode} />
-          <p className="text-xs text-muted-foreground mt-1.5">
+          <p className="ui-hint mt-1.5">
             {siteMode === "auto"
               ? "Włącza się, gdy system prosi o większy kontrast."
               : "Do pracy w rękawicach i w słońcu: większy tekst i przyciski, mocniejszy kontrast, gładkie tło, dłuższe „Cofnij”."}
@@ -246,12 +246,12 @@ export function AppearanceSettings() {
           <div id="wyglad-zaawansowane-tresc" className="space-y-4">
         <Section title="Kształt">
           <Segmented label="Kształt" options={shapeOptions} value={shape} onChange={setShape} />
-          <p className="text-xs text-muted-foreground mt-1.5">Zaokrąglenie przycisków, pól, kafli i okien w każdym stylu.</p>
+          <p className="ui-hint mt-1.5">Zaokrąglenie przycisków, pól, kafli i okien w każdym stylu.</p>
         </Section>
 
         <Section title="Ramki">
           <Segmented label="Ramki" options={framesOptions} value={frames} onChange={setFrames} />
-          <p className="text-xs text-muted-foreground mt-1.5">Jak mocno widać krawędzie kart i podziałów. Delikatne — prawie niewidoczne; Wyraźne — pełny kolor stylu.</p>
+          <p className="ui-hint mt-1.5">Jak mocno widać krawędzie kart i podziałów. Delikatne — prawie niewidoczne; Wyraźne — pełny kolor stylu.</p>
           <div className="mt-4">
             <FrameLookPicker />
           </div>
@@ -263,7 +263,7 @@ export function AppearanceSettings() {
 
         <Section title="Tło">
           <Segmented label="Tło" options={backdropOptions} value={backdrop} onChange={setBackdrop} />
-          <p className="text-xs text-muted-foreground mt-1.5">
+          <p className="ui-hint mt-1.5">
             {backdrop === "full"
               ? "Tło stylu z ozdobami i ruchem."
               : backdrop === "quiet"
@@ -274,7 +274,7 @@ export function AppearanceSettings() {
 
         <Section title="Kolory działów">
           <Segmented label="Kolory działów" options={sectionOptions} value={sectionColors} onChange={setSectionColors} />
-          <p className="text-xs text-muted-foreground mt-1.5">Kreska pod nagłówkiem każdego działu w jego kolorze. Subtelne — cienka, stonowana; Wyraźne — grubsza i pełna.</p>
+          <p className="ui-hint mt-1.5">Kreska pod nagłówkiem każdego działu w jego kolorze. Subtelne — cienka, stonowana; Wyraźne — grubsza i pełna.</p>
         </Section>
         <ToggleRow label="Czarne tło w ciemnym (OLED)" desc={oled ? "Czarne tło — mniej prądu na ekranie OLED, mocniejszy kontrast na słońcu" : "Tło jak w stylu"} checked={oled} onCheck={setOled} />
         <Section title="Styl na noc">
@@ -305,7 +305,7 @@ export function AppearanceSettings() {
               );
             })}
           </div>
-          <p className="text-xs text-muted-foreground mt-1.5">
+          <p className="ui-hint mt-1.5">
             {skin !== "zeszyt"
               ? `W stylu ${SKIN_META[skin].label} pora roku dodaje tylko delikatne plamy światła na tle; kolory i poświata zostają w barwach stylu.`
               : seasonPref === "auto"
@@ -322,7 +322,7 @@ export function AppearanceSettings() {
         <Section title="Krój tekstu">
           <FontPicker value={appFont} onChange={setAppFont} />
           {skinScheme && appFont !== "default" && (
-            <p className="text-xs text-muted-foreground mt-1.5">Nagłówki zostają w kroju stylu {SKIN_META[skin].label}.</p>
+            <p className="ui-hint mt-1.5">Nagłówki zostają w kroju stylu {SKIN_META[skin].label}.</p>
           )}
         </Section>
 
@@ -335,19 +335,19 @@ export function AppearanceSettings() {
 
       <SettingsGroup id="wyglad-uklad" title="Układ">
         <Section title="Działy na pasku">
-          <p className="text-xs text-muted-foreground -mt-1">Ukryty dział znika z paska, z „Więcej” i z palety. Dane zostają, a adres działa dalej. Notatki, Dziś, Archiwum i Kosz są zawsze widoczne.</p>
+          <p className="ui-hint -mt-1">Ukryty dział znika z paska, z „Więcej” i z palety. Dane zostają, a adres działa dalej. Notatki, Dziś, Archiwum i Kosz są zawsze widoczne.</p>
           {HIDEABLE_VIEWS.map((v) => (
             <ToggleRow key={v} label={HIDEABLE_LABELS[v]} desc={hiddenViews.includes(v) ? "Ukryty" : "Widoczny"} checked={!hiddenViews.includes(v)} onCheck={(on) => setViewHidden(v, !on)} />
           ))}
         </Section>
 
         <Section title="Dolny pasek">
-          <p className="text-xs text-muted-foreground -mt-1">Prawa pozycja obok „+”. Wybór zapisuje się na tym urządzeniu.</p>
+          <p className="ui-hint -mt-1">Prawa pozycja obok „+”. Wybór zapisuje się na tym urządzeniu.</p>
           <Segmented label="Czwarta pozycja dolnego paska" options={BOTTOM_SLOT_OPTIONS} value={bottomSlot} onChange={(v) => setBottomSlot(v)} />
         </Section>
 
         <Section title="Karty na Dziś">
-          <p className="text-xs text-muted-foreground -mt-1">Zapisuje się tylko na tym urządzeniu, więc telefon i komputer mogą mieć inne karty.</p>
+          <p className="ui-hint -mt-1">Zapisuje się tylko na tym urządzeniu, więc telefon i komputer mogą mieć inne karty.</p>
           <ToggleRow label="Trening mózgu" desc={todayCards.brainTraining ? "Pokazana" : "Ukryta"} checked={todayCards.brainTraining} onCheck={(on) => setTodayCard("brainTraining", on)} />
           <ToggleRow label="Przegląd tygodnia" desc={todayCards.weeklyReview ? "Pokazany" : "Ukryty"} checked={todayCards.weeklyReview} onCheck={(on) => setTodayCard("weeklyReview", on)} />
         </Section>
@@ -358,7 +358,7 @@ export function AppearanceSettings() {
 
         <Section title="Gęstość interfejsu (komputer)">
           <Segmented label="Gęstość interfejsu" options={uiDensityOptions} value={uiDensity} onChange={setUiDensity} />
-          <p className="text-xs text-muted-foreground mt-1.5">Odstępy i wysokości w całej aplikacji. Działa przy myszy i klawiaturze; na telefonie cele dotyku zostają bez zmian.</p>
+          <p className="ui-hint mt-1.5">Odstępy i wysokości w całej aplikacji. Działa przy myszy i klawiaturze; na telefonie cele dotyku zostają bez zmian.</p>
         </Section>
         <Section title="Domyślny układ siatki">
           <div className="grid grid-cols-3 gap-2">
@@ -402,7 +402,7 @@ export function AppearanceSettings() {
               </select>
             </label>
           </div>
-          <p className="text-xs text-muted-foreground mt-1.5">Ustawienie startowe widoku. Własne pola notatek sortuje się w widoku.</p>
+          <p className="ui-hint mt-1.5">Ustawienie startowe widoku. Własne pola notatek sortuje się w widoku.</p>
         </Section>
 
         <Section title="Gęstość">
@@ -462,7 +462,7 @@ export function AppearanceSettings() {
       <SettingsGroup id="wyglad-ruch" title="Ruch">
         <Section title="Ruch i animacje">
           <Segmented label="Ruch i animacje" options={motionOptions} value={motionMode} onChange={setMotionMode} />
-          <p className="text-xs text-muted-foreground mt-1.5">
+          <p className="ui-hint mt-1.5">
             {motionMode === "system"
               ? `Zgodnie z ustawieniem systemu (teraz: ${motionReduced ? "ograniczony ruch" : "pełne animacje"}).`
               : motionMode === "reduced"

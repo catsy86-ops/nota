@@ -35,7 +35,7 @@ export function WeightChart({ entries }: { entries: WeightEntry[] }) {
           ))}
         </div>
         {series && (
-          <p className="text-xs tabular-nums text-muted-foreground">
+          <p className="ui-meta">
             {series.min.toFixed(1)}–{series.max.toFixed(1)} kg
           </p>
         )}
@@ -65,7 +65,7 @@ export function WeightChart({ entries }: { entries: WeightEntry[] }) {
           ))}
         </svg>
       ) : (
-        <p className="rounded-control border border-dashed border-border/70 px-3 py-6 text-center text-xs text-muted-foreground">
+        <p className="ui-hint rounded-control border border-dashed border-border/70 px-3 py-6 text-center">
           Brak ważeń w ostatnich {range} dniach.
         </p>
       )}

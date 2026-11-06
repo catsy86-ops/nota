@@ -490,7 +490,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
 
             {propDefs.length > 0 && sideSlot("props", (
               <section aria-label="Pola notatki" className="mt-6 pt-3 border-t border-border/50" style={present ? { fontSize: "0.95rem" } : undefined}>
-                <p className="text-xs font-semibold text-muted-foreground mb-1">Pola</p>
+                <p className="ui-hint font-semibold mb-1">Pola</p>
                 <dl>
                   {[...propDefs].sort((a, b) => a.order - b.order).map((d) => (
                     <div key={d.id} className="grid grid-cols-[minmax(0,40%)_minmax(0,1fr)] items-center gap-3 border-b border-dashed border-border/60 py-1.5 last:border-0">
@@ -506,7 +506,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
 
             {backlinks.length > 0 && sideSlot("links", (
               <div className="mt-8 pt-4 border-t border-border/50" style={present ? { fontSize: "0.95rem" } : undefined}>
-                <p className="text-xs font-semibold text-muted-foreground mb-2">
+                <p className="ui-hint font-semibold mb-2">
                   Linkują tutaj ({backlinks.length})
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -526,7 +526,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
 
             {!present && !note.trashed && !note.locked && sideSlot("graph", (
               <section aria-label="Lokalny graf" className={cn(!wide && "mt-8 pt-4 border-t border-border/50")} data-local-graph="">
-                {!wide && <p className="text-xs font-semibold text-muted-foreground mb-2">Lokalny graf</p>}
+                {!wide && <p className="ui-hint font-semibold mb-2">Lokalny graf</p>}
                 <Suspense fallback={<div className="h-40 rounded-card bg-muted/30" />}>
                   <NoteGraph notes={treeNotes} centerId={note.id} folders={folders} compact={wide} onOpenNote={(id) => onShow(id, mode)} />
                 </Suspense>
@@ -535,7 +535,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
 
             {(subpages.length > 0 || (canEdit && !note.locked)) && (
               <div className="mt-8 pt-4 border-t border-border/50" data-subpages="" style={present ? { fontSize: "0.95rem" } : undefined}>
-                <p className="text-xs font-semibold text-muted-foreground mb-2">
+                <p className="ui-hint font-semibold mb-2">
                   Podstrony{subpages.length > 0 ? ` (${subpages.length})` : ""}
                 </p>
                 {subpages.length > 0 && (
@@ -586,7 +586,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
 
             {mentions.length > 0 && sideSlot("links", (
               <div className={cn("pt-4 border-t border-border/50", backlinks.length > 0 ? "mt-4" : "mt-8")} data-unlinked-mentions="" style={present ? { fontSize: "0.95rem" } : undefined}>
-                <p className="text-xs font-semibold text-muted-foreground mb-2">
+                <p className="ui-hint font-semibold mb-2">
                   Niepołączone wzmianki ({mentions.length})
                 </p>
                 <ul className="space-y-1.5">
@@ -645,9 +645,9 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
               className="min-h-0 flex-1 overflow-y-auto px-4 py-3"
             >
               {sideTab === "links" && !backlinks.length && !mentions.length && (
-                <p className="text-xs text-muted-foreground">Nic tu nie linkuje i nie ma niepołączonych wzmianek.</p>
+                <p className="ui-hint">Nic tu nie linkuje i nie ma niepołączonych wzmianek.</p>
               )}
-              {sideTab === "props" && propDefs.length === 0 && <p className="text-xs text-muted-foreground">Ta notatka nie ma pól.</p>}
+              {sideTab === "props" && propDefs.length === 0 && <p className="ui-hint">Ta notatka nie ma pól.</p>}
               {sideTab === "split" && (splitNote ? (
                 <div data-split-note={splitNote.id}>
                   <div className="mb-2 flex items-center gap-2">
@@ -669,7 +669,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                   </div>
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground">Ctrl+klik na [[link]] w treści otwiera tu notatkę obok, a czytana zostaje na miejscu.</p>
+                <p className="ui-hint">Ctrl+klik na [[link]] w treści otwiera tu notatkę obok, a czytana zostaje na miejscu.</p>
               ))}
             </div>
           </aside>

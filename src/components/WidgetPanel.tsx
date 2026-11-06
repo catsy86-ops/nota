@@ -26,7 +26,7 @@ export function WidgetPanel({ notes, onOpen, onOpenToday, onNew, onUpdate }: {
         <WidgetShiftLine />
       </Suspense>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-lg">Na dziś</h2>
+        <h2 className="title-section">Na dziś</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onNew} className="coarse:h-11">
             <Plus className="mr-1 h-4 w-4" aria-hidden />Nowa notatka

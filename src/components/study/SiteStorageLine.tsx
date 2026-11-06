@@ -20,7 +20,7 @@ export function SiteStorageLine({ site, journal }: { site: SiteInfo; journal: Jo
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   if (refs.size === 0) return null;
   return (
-    <p className="col-span-2 text-center text-xs text-muted-foreground tabular-nums" data-testid="site-storage">
+    <p className="ui-meta col-span-2 text-center" data-testid="site-storage">
       Zdjęcia, nagrania i dokumenty: {bytes === null ? "liczę…" : formatFileSize(bytes)}
     </p>
   );

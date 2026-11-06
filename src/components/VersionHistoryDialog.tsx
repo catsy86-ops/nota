@@ -30,7 +30,7 @@ function InlineDiff({ before, after }: { before: string; after: string }) {
 /** Akapity wersji i bieżącej treści obok siebie; zmieniony blok można przywrócić osobno. */
 function SideBySide({ version, current, onRestore }: { version: string; current: string; onRestore?: (content: string) => void }) {
   const hunks = useMemo(() => paragraphHunks(current, version), [current, version]);
-  if (!hunks.some((h) => h.kind === "changed")) return <p className="text-xs text-muted-foreground">Treść jest taka sama jak teraz.</p>;
+  if (!hunks.some((h) => h.kind === "changed")) return <p className="ui-hint">Treść jest taka sama jak teraz.</p>;
   return (
     <div className="space-y-1.5 text-xs" data-testid="version-diff-side">
       <div className="hidden grid-cols-2 gap-2 font-medium text-muted-foreground sm:grid"><span>Ta wersja</span><span>Teraz</span></div>
@@ -129,7 +129,7 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
                         ) : v.content ? (
                           <MarkdownRenderer content={v.content} className="text-xs" />
                         ) : (
-                          <p className="text-xs text-muted-foreground italic">Brak treści</p>
+                          <p className="ui-hint italic">Brak treści</p>
                         )}
                       </div>
                       <Button

@@ -111,7 +111,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
           </Button>
         </div>
       </div>
-      {timing && <p className="mt-2 text-xs text-muted-foreground tabular-nums" data-testid="today-timing">{timing}</p>}
+      {timing && <p className="ui-meta mt-2" data-testid="today-timing">{timing}</p>}
       {progress !== null && (
         <div role="progressbar" aria-label="Postęp zmiany" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-primary transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${progress * 100}%`, ...(current?.type?.color ? { backgroundColor: current.type.color } : {}) }} data-testid="today-progress" />
@@ -122,7 +122,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
         return (
           <div className="mt-3 rounded-field bg-muted/40 px-3 py-2 text-sm" data-testid="today-daily-preview">
             {dailyNote.locked ? <p className="text-muted-foreground">Notatka dnia jest w skarbcu.</p> : p.lines.length > 0 ? p.lines.map((l, i) => <p key={i} className="truncate">{l}</p>) : <p className="text-muted-foreground">Notatka dnia jest pusta.</p>}
-            {p.total > 0 && <p className="mt-1 text-xs text-muted-foreground tabular-nums">Odhaczone: {p.done} z {p.total}</p>}
+            {p.total > 0 && <p className="ui-meta mt-1">Odhaczone: {p.done} z {p.total}</p>}
           </div>
         );
       })()}

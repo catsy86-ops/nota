@@ -39,7 +39,7 @@ export function SectionCard({ icon: Icon, title, meta, description, action, foot
               <span className="font-mono text-xs font-normal tabular-nums text-muted-foreground">{meta}</span>
             )}
           </Heading>
-          {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
+          {description && <p className="ui-hint mt-0.5">{description}</p>}
         </div>
         {action && <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div>}
       </div>

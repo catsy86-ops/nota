@@ -128,7 +128,7 @@ function SlopeCalc() {
           {note === "low" ? "Mniej niż" : "Więcej niż"} typowe {SLOPE_TYPICAL[0]}–{SLOPE_TYPICAL[1]}% — sprawdź wymagany spadek dla tej średnicy.
         </p>
       )}
-      <p className="text-xs text-muted-foreground">1% = 1 cm na każdy metr. Za mały spadek — zaleganie; za duży — odrywanie wody.</p>
+      <p className="ui-hint">1% = 1 cm na każdy metr. Za mały spadek — zaleganie; za duży — odrywanie wody.</p>
     </section>
   );
 }
@@ -212,7 +212,7 @@ function VolumeCalc() {
         <Plus className="h-4 w-4" aria-hidden />Kolejny odcinek
       </button>
       <Result label="Razem" value={total !== null ? plNum(total, total < 10 ? 2 : 1) : null} unit="l" testId="calc-volume-total" />
-      <p className="text-xs text-muted-foreground">Ile wody wejdzie przy napełnianiu i płukaniu. Średnica wewnętrzna = zewnętrzna − 2 × ścianka.</p>
+      <p className="ui-hint">Ile wody wejdzie przy napełnianiu i płukaniu. Średnica wewnętrzna = zewnętrzna − 2 × ścianka.</p>
     </section>
   );
 }
@@ -295,7 +295,7 @@ function PressureCalc() {
           );
         })}
       </dl>
-      <p className="text-xs text-muted-foreground">{PRESSURE_SOURCE}</p>
+      <p className="ui-hint">{PRESSURE_SOURCE}</p>
     </section>
   );
 }
@@ -324,7 +324,7 @@ function ThreadsCheat() {
           ))}
         </tbody>
       </table>
-      <p className="text-xs text-muted-foreground">{THREADS_SOURCE}</p>
+      <p className="ui-hint">{THREADS_SOURCE}</p>
     </section>
   );
 }

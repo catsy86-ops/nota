@@ -159,7 +159,7 @@ export function AttachmentsReadOnlyList({ attachments, className }: { attachment
   if (!attachments?.length) return null;
   return (
     <section aria-label="Załączniki" className={cn("mt-6", className)}>
-      <p className="mb-2 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+      <p className="ui-hint mb-2 flex items-center gap-1 font-semibold">
         <Paperclip className="w-3 h-3" aria-hidden /> Załączniki ({attachments.length})
       </p>
       <ul className="space-y-1.5">

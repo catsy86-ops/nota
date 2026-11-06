@@ -171,7 +171,7 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
               {groups.length} {pluralPl(groups.length, ["wpis", "wpisy", "wpisów"])} z {photos.length} {pluralPl(photos.length, ["zdjęcia", "zdjęć", "zdjęć"])}
             </p>
             {inexact > 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="ui-hint">
                 {inexact} {pluralPl(inexact, ["zdjęcie nie ma", "zdjęcia nie mają", "zdjęć nie ma"])} czasu zrobienia — godzina z pliku, może być godziną skopiowania.
               </p>
             )}
@@ -185,7 +185,7 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                 const pin = pins[i] ?? {};
                 return (
                   <li key={g.keys.join("-")} className="space-y-1.5" data-testid="photo-day-group">
-                    {header && <p className="text-xs font-semibold text-muted-foreground">{header}</p>}
+                    {header && <p className="ui-hint font-semibold">{header}</p>}
                     <div className="rounded-field border border-border p-2.5">
                       <div className="flex items-baseline justify-between gap-2 text-sm">
                         <span className="font-mono tabular-nums">{g.start === g.end ? time(g.start) : `${time(g.start)}–${time(g.end)}`}</span>
@@ -207,7 +207,7 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                         {value && !live.some((s) => s.name === value) && <option value={value}>{value}</option>}
                         {live.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
                       </select>
-                      {sites[i] === undefined && <p className="mt-1 text-xs text-muted-foreground">{WHY[g.why]}</p>}
+                      {sites[i] === undefined && <p className="ui-hint mt-1">{WHY[g.why]}</p>}
                       {choice && (choice.stages.length > 0 || choice.points.length > 0) && (
                         <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2">
                           {choice.stages.length > 0 && (

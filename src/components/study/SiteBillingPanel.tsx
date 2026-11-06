@@ -96,7 +96,7 @@ export function SiteBillingPanel({ site, hours }: { site: SiteInfo; /** Godziny 
               </button>
             ))}
           </div>
-          {billing.modes.length === 0 && <p className="text-xs text-muted-foreground">Wybierz, jak jesteś rozliczany na tej budowie. Sposoby można łączyć.</p>}
+          {billing.modes.length === 0 && <p className="ui-hint">Wybierz, jak jesteś rozliczany na tej budowie. Sposoby można łączyć.</p>}
 
           {on("hours") && (
             <fieldset className="space-y-1.5" data-testid="billing-hours">
@@ -123,12 +123,12 @@ export function SiteBillingPanel({ site, hours }: { site: SiteInfo; /** Godziny 
             <fieldset className="space-y-1.5" data-testid="billing-lump">
               <legend className="mb-1 text-xs font-semibold text-muted-foreground">{MODE_LABEL.lump}</legend>
               <AmountField label="Za całą budowę" value={billing.lump} onSave={(n) => setLump(site.id, n)} />
-              <p className="pt-1 text-xs text-muted-foreground">Albo za etapy — kwota należy się po odhaczeniu etapu:</p>
+              <p className="ui-hint pt-1">Albo za etapy — kwota należy się po odhaczeniu etapu:</p>
               {stages.map((s) => (
                 <AmountField key={s.id} label={s.name} value={billing.stageAmounts[s.id]} onSave={(n) => setStageAmount(site.id, s.id, n)} />
               ))}
               {stagesSum > 0 && (
-                <p className="text-right text-xs text-muted-foreground" data-testid="billing-stages-total">
+                <p className="ui-hint text-right" data-testid="billing-stages-total">
                   Etapy razem: <span className="font-mono font-semibold tabular-nums text-foreground">{money(Math.round(stagesSum * 100) / 100)}</span>
                 </p>
               )}
