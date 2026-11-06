@@ -10,6 +10,7 @@ import { CustomChecklistSection } from "./CustomChecklistForm";
 import { isCustomId } from "@/lib/study/custom";
 import { fold } from "@/lib/study/siteKey";
 import { toastWithUndo } from "@/lib/undoToast";
+import { cardClass } from "@/components/ui/card";
 
 /** Lista do nauki: punkty z materiałów pogrupowane w moduły i tematy. */
 export function StudyChecklist() {
@@ -88,7 +89,7 @@ export function StudyChecklist() {
               <p className="ui-hint">{mod.source}</p>
             </header>
             {topics.map(({ topic, items }) => (
-              <div key={topic.id} className="rounded-card border border-border bg-card p-3.5">
+              <div key={topic.id} className={`${cardClass} p-3.5`}>
                 <h4 className="text-sm font-medium">{topic.title}</h4>
                 <ul className="mt-2 space-y-2">
                   {items.map((item) => {

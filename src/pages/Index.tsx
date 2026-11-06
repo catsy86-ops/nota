@@ -107,6 +107,8 @@ import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetP
 // note action or explicit toggle) — kept out of the eager main bundle so
 // first load only pays for the code the note grid itself needs.
 import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
+import { Pin } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { requestSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import type { DebtReminderApi } from "@/components/debts/DebtsView";
 import { repeatUpdate, toRule, type RepeatInput } from "@/lib/reminderRepeat";
@@ -879,12 +881,10 @@ const Index = () => {
           {view === "trash" && trashedNotes.length > 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-between mb-4 px-1">
               <p className="ui-hint">Notatki w koszu są automatycznie usuwane po 30 dniach</p>
-              <button
-                onClick={() => setConfirmEmptyTrash(true)}
-                className="pressable text-xs font-medium text-destructive-ink hover:bg-destructive/10 px-3 py-1.5 rounded-field transition-colors"
-              >
+              <Button variant="ghost" size="sm" onClick={() => setConfirmEmptyTrash(true)}
+                className="shrink-0 text-destructive-ink hover:bg-destructive/10 hover:text-destructive-ink coarse:min-h-11">
                 Opróżnij kosz
-              </button>
+              </Button>
             </motion.div>
           )}
 
@@ -909,7 +909,8 @@ const Index = () => {
           {showPinned && !boardMode && !tableMode && (
             <NoteGroupSection
               groupKey="pinned"
-              label="📌 Przypięte"
+              label="Przypięte"
+              icon={Pin}
               count={pinned.length}
               collapsible={pinnedCollapsible}
               collapsed={pinnedCollapsed}
@@ -954,12 +955,12 @@ const Index = () => {
           {boardMode && (
             <NoteBoard
               headers={[
-                ...(showPinned ? [{ key: PINNED_COLUMN, label: "📌 Przypięte", count: pinned.length }] : []),
+                ...(showPinned ? [{ key: PINNED_COLUMN, label: "Przypięte", icon: Pin, count: pinned.length }] : []),
                 ...groups.map((group) => ({ key: group.key || NONE_COLUMN, label: group.label, count: group.notes.length })),
               ]}
             >
               {showPinned && (
-                <BoardColumn columnKey={PINNED_COLUMN} label="📌 Przypięte" count={pinned.length}>
+                <BoardColumn columnKey={PINNED_COLUMN} label="Przypięte" icon={Pin} count={pinned.length}>
                   {renderGrid(pinned, 0)}
                 </BoardColumn>
               )}
@@ -974,13 +975,9 @@ const Index = () => {
           {tableMode && (
             <>
               <div className="mb-2 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setPropDefsOpen(true)}
-                  className="inline-flex h-9 items-center rounded-field border border-input bg-background px-3 text-sm hover:bg-muted"
-                >
+                <Button variant="outline" size="sm" onClick={() => setPropDefsOpen(true)}>
                   Pola{propDefs.length ? ` (${propDefs.length})` : ""}
-                </button>
+                </Button>
               </div>
               <NoteTable
                 notes={[...(showPinned ? pinned : []), ...others]}
@@ -1027,7 +1024,7 @@ const Index = () => {
 
           {view === "cwiczenia" && (
             <ViewErrorBoundary name="Ćwiczenia">
-              <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
+              <Suspense fallback={<ViewSkeleton view="cwiczenia" />}>
                 <CwiczeniaView />
               </Suspense>
             </ViewErrorBoundary>
@@ -1035,7 +1032,7 @@ const Index = () => {
 
           {view === "debts" && (
             <ViewErrorBoundary name="Długi">
-              <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
+              <Suspense fallback={<ViewSkeleton view="debts" />}>
                 <DebtsView addReminderNote={(title, content, at, labels) => addNote(title, content, prefs.defaultNoteColor, labels, at)} reminders={debtReminders} />
               </Suspense>
             </ViewErrorBoundary>

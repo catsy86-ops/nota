@@ -52,6 +52,7 @@ import { RecipientsForm } from "./RecipientsForm";
 import { buildHandover, type Handover } from "@/lib/study/handover";
 import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref } from "@/lib/study/contact";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { cardClass } from "@/components/ui/card";
 
 
 const EMPTY_FORM = { name: "", address: "", investor: "", phone: "", manager: "", managerPhone: "", supplierPhone: "", access: "" };
@@ -302,7 +303,7 @@ export function SiteCardDialog({
               <SiteOrderPanel site={site} />
             </div>
 
-            <div className="mx-5 mt-3 rounded-card border border-border bg-card" data-testid="site-data">
+            <div className={`${cardClass} mx-5 mt-3`} data-testid="site-data">
               <button
                 type="button"
                 onClick={() => setEditing((v) => !v)}
@@ -427,7 +428,7 @@ export function SiteCardDialog({
             </div>
 
             {/* Odbiorcy raportu (1.11) — te same dla wszystkich budów, więc formularz jest ten sam co w oknie raportu. */}
-            <div className="mx-5 mt-3 rounded-card border border-border bg-card" data-testid="site-recipients">
+            <div className={`${cardClass} mx-5 mt-3`} data-testid="site-recipients">
               <button
                 type="button"
                 onClick={() => setRecipientsOpen((v) => !v)}

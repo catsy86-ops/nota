@@ -7,6 +7,7 @@ import { MODULES, TOPICS } from "@/lib/study/content";
 import { CUSTOM_TEXT_MAX, type CustomTopic } from "@/lib/study/custom";
 import { deleteCustom } from "@/lib/study/customActions";
 import { addCustomItem, useStudy } from "@/lib/study/store";
+import { cardClass } from "@/components/ui/card";
 
 const selectClass =
   "h-9 w-full min-w-0 rounded-control border border-input bg-background px-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11";
@@ -52,7 +53,7 @@ export function CustomChecklistSection() {
   }
 
   return (
-    <details className="rounded-card border border-border bg-card p-3.5 group" data-testid="custom-checklist">
+    <details className={`${cardClass} p-3.5 group`} data-testid="custom-checklist">
       <summary className="cursor-pointer text-sm font-medium">
         Własne punkty{items.length > 0 && <span className="ml-1.5 font-mono tabular-nums text-muted-foreground">({items.length})</span>}
       </summary>

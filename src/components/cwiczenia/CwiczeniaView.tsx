@@ -2,6 +2,7 @@ import { useId, useMemo, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SectionCard } from "@/components/ui/section-card";
 import { MissingHint } from "@/components/ui/missing-hint";
+import { StatusPanel } from "@/components/StatusPanel";
 import { Pill, Plus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -118,10 +119,13 @@ export function CwiczeniaView() {
 }
 
 function EmptyList({ notes, onAdd }: { notes: NotesActions; onAdd: () => void }) {
+  // Pusty stan jak w innych działach (plan UI 2026-11-06, 3.5): ikona, zdanie i akcje w jednym panelu.
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">Nie masz jeszcze odżywek na liście.</p>
-      <div className="flex flex-wrap gap-2">
+    <StatusPanel
+      size="inline"
+      icon={Pill}
+      title="Nie masz jeszcze odżywek na liście"
+      actions={<>
         <Button variant="outline" size="sm" className="coarse:h-11" aria-expanded={false} onClick={onAdd}>
           <Plus className="h-4 w-4" aria-hidden />Dodaj odżywkę
         </Button>
@@ -133,8 +137,8 @@ function EmptyList({ notes, onAdd }: { notes: NotesActions; onAdd: () => void })
         >
           Dodaj kreatynę (rano, 1 łyżka)
         </Button>
-      </div>
-    </div>
+      </>}
+    />
   );
 }
 

@@ -9,6 +9,7 @@ import { toastWithUndo } from "@/lib/undoToast";
 import type { SiteInfo } from "@/lib/study/sites";
 import { siteOrder, supplierOrderText, whatsappOrderUrl } from "@/lib/study/order";
 import { orderLogLine } from "@/lib/study/shortages";
+import { cardClass } from "@/components/ui/card";
 
 /**
  * „Do zamówienia” w karcie budowy: kształtki zużyte od ostatniego zamówienia i braki „Brakuje” w jednej
@@ -50,7 +51,7 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
   }
 
   return (
-    <section aria-label="Do zamówienia" data-testid="site-order" className="space-y-2 rounded-card border border-border bg-card p-3">
+    <section aria-label="Do zamówienia" data-testid="site-order" className={`${cardClass} space-y-2 p-3`}>
       <h3 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
         <PackageCheck className="h-3.5 w-3.5" aria-hidden />
         Do zamówienia

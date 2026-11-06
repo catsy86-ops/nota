@@ -14,7 +14,7 @@ import { CalculatorsButton } from "./CalculatorsSheet";
 import { STUDY_DUE_PARAM } from "@/components/review/TodayStudyCard";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
-import { CardSkeleton } from "@/components/ViewSkeleton";
+import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, JOURNAL_VOICE_PARAM, openJournalSheet, requestVoiceOnOpen, useJournalSheet } from "@/lib/study/entrySheet";
 import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
 import { readSiteParam } from "@/lib/study/siteLink";
@@ -38,6 +38,8 @@ import { StudyJournal } from "./StudyJournal";
  * Pasek opanowania (nowy plan 3.5): jeden odcinek na moduł zamiast 18 kwadracików.
  * Ciemna część to „Umiem”, jasna „W trakcie”. Tematy są na Tablicy, tu tylko postęp i pieczątka.
  */
+const TAB = "shrink-0 flex-1 sm:flex-none coarse:min-h-11";
+
 function MasteryStrip() {
   const study = useStudy();
   const done = TOPICS.filter((t) => columnOf(study, t.id) === "done").length;
@@ -242,6 +244,12 @@ function StudyScreen() {
   // Wyjście z Nauki zamyka arkusz — inaczej otworzyłby się sam przy powrocie.
   useEffect(() => closeJournalSheet, []);
 
+  // Aktywna zakładka zawsze w polu widzenia przewijanego paska (np. Plany po wejściu z linku).
+  const tabsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    tabsRef.current?.querySelector<HTMLElement>('[data-state="active"]')?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  }, [tab]);
+
   return (
     <div className="space-y-6" data-testid="study-view">
       <WorkGuide />
@@ -267,10 +275,8 @@ function StudyScreen() {
         </header>
       ) : (
         <header className="space-y-4" data-study-header="full">
-          <div>
-            <h2 className="font-display text-2xl">Nauka</h2>
-            <p className="text-sm text-muted-foreground">Poradnik „Woda użytkowa” i listy kontrolne G-HEAT, KAN-therm UltraLine.</p>
-          </div>
+          {/* Bez h2 „Nauka” (plan UI 2026-11-06, 3.1): pod h1 „Praca” od razu zakładki, trzeci poziom tytułu był szumem. */}
+          <p className="ui-hint">Poradnik „Woda użytkowa” i listy kontrolne G-HEAT, KAN-therm UltraLine.</p>
           <MasteryStrip />
           <div className="flex flex-wrap items-center gap-2">
             <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
@@ -281,14 +287,14 @@ function StudyScreen() {
       )}
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="h-auto w-full sm:w-auto">
-          <TabsTrigger value="quiz" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Quiz</TabsTrigger>
-          <TabsTrigger value="board" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Tablica</TabsTrigger>
-          <TabsTrigger value="list" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11" aria-label="Lista kontrolna"><span className="sm:hidden">Lista</span><span className="max-sm:hidden">Lista kontrolna</span></TabsTrigger>
-          <TabsTrigger value="journal" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Dziennik</TabsTrigger>
+        {/* Na wąskim ekranie (albo przy dużym tekście) zakładki przewijają się w bok zamiast łamać się w dwie linie. */}
+        <TabsList ref={tabsRef} className="h-auto w-full justify-start overflow-x-auto [scrollbar-width:none] sm:w-auto">
+          <TabsTrigger value="quiz" className={TAB}>Quiz</TabsTrigger>
+          <TabsTrigger value="board" className={TAB}>Tablica</TabsTrigger>
+          <TabsTrigger value="list" className={TAB} aria-label="Lista kontrolna"><span className="sm:hidden">Lista</span><span className="max-sm:hidden">Lista kontrolna</span></TabsTrigger>
+          <TabsTrigger value="journal" className={TAB}>Dziennik</TabsTrigger>
           {plansShown && (
-            <TabsTrigger value="plans" onPointerDown={() => preloadView("plans")} onFocus={() => preloadView("plans")}
-              className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Plany</TabsTrigger>
+            <TabsTrigger value="plans" onPointerDown={() => preloadView("plans")} onFocus={() => preloadView("plans")} className={TAB}>Plany</TabsTrigger>
           )}
         </TabsList>
         {/* forceMount: runda w toku nie ginie po zajrzeniu do tablicy lub listy. */}
@@ -303,7 +309,7 @@ function StudyScreen() {
         {plansShown && (
           <TabsContent value="plans" className="mt-4">
             <ViewErrorBoundary name="Plany">
-              <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
+              <Suspense fallback={<ViewSkeleton view="plans" />}>
                 <PlansView />
               </Suspense>
             </ViewErrorBoundary>

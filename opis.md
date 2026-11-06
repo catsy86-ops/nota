@@ -550,6 +550,52 @@ Plan: `nowyplan.md`, Etap 3 (punkty 3.1–3.8). Każdy dział dostał zmiany z j
 - Vitest: `sidebar/sidebarItems.test.ts` (grupy po NP-4), `lib/noteDate.test.ts`, `debts/DebtsView.test.tsx` i `cwiczenia/CwiczeniaView.test.tsx` (formularz zwinięty).
 - e2e: `study.spec.ts` (pasek opanowania bez kwadracików), `cwiczenia-*.spec.ts`, `debts-*.spec.ts`, `calendar-*.spec.ts`, `reminders-*.spec.ts`, `shifts-*.spec.ts`, `today-*.spec.ts`, `dzis-*.spec.ts`, `touch-targets.spec.ts`.
 
+## Wspólne — ekrany Praca, Grafik, Kalendarz i puste stany (plan spójności 2026-11-06, Etap 3, w toku)
+
+**Co robi.**
+- **Praca:** pod h1 „Praca” nie ma już h2 „Nauka”. Opis poradnika stoi jako `.ui-hint`. Zakładki na wąskim ekranie przewijają się w bok zamiast łamać, a aktywna sama wjeżdża w pole widzenia.
+- **Grafik i Kalendarz:** mają tę samą nawigację okresu (`MonthNav`).
+- **Leniwe działy** pokazują zarys zamiast pustego miejsca.
+- **Notatki:** sekcja „Przypięte” ma ikonę pinezki zamiast emoji.
+
+**Gdzie jest i jak działa.**
+
+- `study/StudyView.tsx`:
+  - zakładki dostają wspólną klasę `TAB`;
+  - `TabsList` ma `overflow-x-auto` i ukryty pasek przewijania;
+  - efekt na `tab` przewija aktywną zakładkę (`scrollIntoView`).
+  - Nagłówek skrócony na Dzienniku i pełny na reszcie zostaje celowo, bo na budowie liczy się „+ Wpis”. Testują to `e2e/study.spec.ts` przez `data-study-header`.
+- `shifts/ShiftsView.tsx`:
+  - strzałki, tytuł (powrót do bieżącego miesiąca lub tygodnia) i Cofnij/Ponów idą przez `MonthNav`, który jest w `children`;
+  - Cofnij i Ponów to `Button variant="toolbar" size="icon-lg"`;
+  - usunięty lokalny `navButton`;
+  - podpowiedź o przeciąganiu zmiany jest `.ui-hint`, czyli ma ten sam rozmiar co podpowiedź pędzla.
+- `calendar/CalendarHeader.tsx`: `MonthNav` bez `onCurrent`, z szarym rokiem bieżącego roku. „Dziś” to `Button size="sm"` (`ghost` w bieżącym miesiącu, `default` poza nim).
+- `ViewSkeleton.tsx` ma typ `SkeletonView`, czyli `LazyView` plus `cwiczenia`, `debts` i `week`.
+  - Pasek miesiąca i siatka są tylko dla Kalendarza i Grafiku.
+  - Pozostałe widoki dostają trzy karty.
+  - Gdzie użyty: Ćwiczenia i Długi w `pages/Index.tsx`, Plany w `StudyView`, oś tygodnia w `ReminderCalendarView`.
+- **Karty:** 22 ręczne przepisy `rounded-card border border-border bg-card` w 17 plikach przeszły na `${cardClass} …` (`ui/card.tsx`). Wygląd jest bez zmian, karta ma jedno źródło.
+  - Pliki: Długi, Dziś (`review/*`), Quiz, panele budowy, Ćwiczenia/Waga i inne.
+- **Ćwiczenia:** pusta lista odżywek to `StatusPanel size="inline"` z ikoną `Pill` i dwiema akcjami.
+- **Ikona przed etykietą.** `NoteGroupSection`, `BoardColumn`/`BoardColumnHeading` i nagłówki `NoteBoard` mają właściwość `icon`, a etykieta zostaje tekstem. Dzięki temu `aria-label` sekcji dalej brzmi „Przypięte”.
+- **Przyciski w `pages/Index.tsx`:** „Opróżnij kosz” i „Pola” to `Button`.
+
+**Ograniczenia.**
+
+- `order-*` w Grafiku nie są przegrupowane, bo zależą od układów `short:` i `xl:`.
+- `EmptyState` dla Kalendarza i Grafiku nie jest renderowany. Grafik ma własny pusty stan, więc nie było czego ujednolicać.
+
+**Testy.** Vitest przechodzi w całości: 421 plików, 3180 testów.
+
+**Do zrobienia przed zamknięciem etapu:**
+
+- e2e działów: `study*`, `shifts*`, `calendar*`, `note-groups`, `board-table`, `cwiczenia*`;
+- zrzuty `@visual` Pracy, Grafiku, Kalendarza i Notatek;
+- `e2e/a11y.spec.ts`.
+
+**Commit.** COMMIT_HASH (2026-11-06).
+
 ## Wspólne — role tekstu i czytelność (plan spójności 2026-11-06, Etap 2)
 
 **Co robi.** Opisy i podpowiedzi pod kontrolkami mają 14 px zamiast 12 px. Daty i liczniki zostają drobne i mają cyfry tabelaryczne. Nagłówki sekcji poza kartami mają jeden wygląd.

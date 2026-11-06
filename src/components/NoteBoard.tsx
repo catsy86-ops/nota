@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
 import { BOARD_COLUMN_WIDTH, BoardColumnHeading } from "@/components/BoardColumn";
 
 export interface BoardHeader {
   key: string;
   label: ReactNode;
+  icon?: LucideIcon;
   count: number;
 }
 
@@ -67,6 +69,7 @@ export function NoteBoard({ headers, children }: { headers: BoardHeader[]; child
               <BoardColumnHeading
                 key={h.key}
                 label={h.label}
+                icon={h.icon}
                 count={h.count}
                 className={cn(BOARD_COLUMN_WIDTH, "shrink-0 rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-sm px-3.5 py-2")}
               />

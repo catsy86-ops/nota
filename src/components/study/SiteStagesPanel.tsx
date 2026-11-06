@@ -9,6 +9,7 @@ import { addStage, removeStage, siteStages, stageProgress, STAGE_NAME_MAX, STAGE
 import { COVER_STAGE_ID, coverPhotoCount } from "@/lib/study/coverPhotos";
 import type { JournalEntry } from "@/lib/study/yStudy";
 import { CoverPhotoButton } from "./CoverPhotoButton";
+import { cardClass } from "@/components/ui/card";
 
 const shortDate = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" });
 
@@ -48,7 +49,7 @@ export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journa
   }
 
   return (
-    <section aria-label="Etapy budowy" data-testid="site-stages" className="space-y-2 rounded-card border border-border bg-card p-3">
+    <section aria-label="Etapy budowy" data-testid="site-stages" className={`${cardClass} space-y-2 p-3`}>
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
           <ListChecks className="h-3.5 w-3.5" aria-hidden />Etapy

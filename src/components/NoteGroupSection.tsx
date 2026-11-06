@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { dur, ease } from "@/lib/motion";
@@ -9,6 +9,8 @@ interface NoteGroupSectionProps {
   /** Klucz do testów i `aria-controls`. */
   groupKey: string;
   label: ReactNode;
+  /** Ikona przed etykietą (np. pinezka „Przypięte”) — etykieta zostaje tekstem dla `aria-label`. */
+  icon?: LucideIcon;
   count: number;
   /** Czy nagłówek jest przyciskiem zwijającym sekcję. */
   collapsible?: boolean;
@@ -24,7 +26,7 @@ interface NoteGroupSectionProps {
  * kreska do prawej krawędzi. Zwinięta sekcja nie renderuje siatki — tym samym
  * wyrejestrowuje się z nawigacji klawiaturą (patrz `registerGridNavSection`).
  */
-export function NoteGroupSection({ groupKey, label, count, collapsible, collapsed, onToggle, tone = "default", children }: NoteGroupSectionProps) {
+export function NoteGroupSection({ groupKey, label, icon: Icon, count, collapsible, collapsed, onToggle, tone = "default", children }: NoteGroupSectionProps) {
   const bodyId = `group-body-${groupKey}`;
   // Zwijanie: treść opada/rośnie wysokością. Przy ograniczonym ruchu zmiana jest natychmiastowa.
   const { reduced } = useMotionPref();
@@ -38,6 +40,7 @@ export function NoteGroupSection({ groupKey, label, count, collapsible, collapse
           aria-hidden
         />
       )}
+      {Icon && <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
       <span className="truncate">{label}</span>
       <span className="stamp-tag tabular-nums normal-case tracking-normal">{count}</span>
       <span className="flex-1 h-px bg-border/70 ml-1" aria-hidden />

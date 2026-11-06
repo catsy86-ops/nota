@@ -9,7 +9,9 @@ Opis w `opis.md`: „Wspólne — prymitywy UI”.
 
 **Etap 2** zrobiony 2026-11-06, z jedną zmianą: role tekstu nazywają się `.ui-hint` i `.ui-meta` (a `.title-section` zostaje), a nie `.text-hint`. Powód: tailwind-merge brałby `text-*` za kolor. Wzorce `@visual` odnowione. Opis w `opis.md`: „Wspólne — role tekstu i czytelność”.
 
-Dalej Etap 3 albo 4.
+**Etap 3** jest w toku (2026-11-06). Kod 3.1–3.6 zrobiony, poza przegrupowaniem `order-*` w Grafiku (pominięte celowo). Brakuje e2e działów, zrzutów i a11y. Opis w `opis.md`: „Wspólne — ekrany Praca, Grafik, Kalendarz i puste stany”.
+
+Dalej: zamknąć Etap 3 testami, potem Etap 4.
 
 ## Kontekst
 

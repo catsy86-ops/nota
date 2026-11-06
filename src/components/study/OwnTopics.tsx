@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CUSTOM_TOPIC_MAX, type CustomTopic } from "@/lib/study/custom";
 import { addCustomTopic, removeCustomTopic } from "@/lib/study/learnActions";
+import { cardClass } from "@/components/ui/card";
 
 /**
  * „Moje tematy” w Nauce (P4.6, v1): nazwa tematu, a pytania i punkty dopina się w „Moje pytania”
@@ -28,7 +29,7 @@ export function OwnTopics({ topics, onPractice }: { topics: readonly CustomTopic
   }
 
   return (
-    <section aria-label="Moje tematy" className="space-y-2 rounded-card border border-border bg-card p-3" data-testid="own-topics">
+    <section aria-label="Moje tematy" className={`${cardClass} space-y-2 p-3`} data-testid="own-topics">
       <h3 className="text-xs font-semibold text-muted-foreground">Moje tematy</h3>
       {topics.length > 0 && (
         <ul className="space-y-1">

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
 import { columnDropId } from "@/lib/boardColumns";
@@ -7,9 +8,10 @@ import { columnDropId } from "@/lib/boardColumns";
 export const BOARD_COLUMN_WIDTH = "w-70 sm:w-72";
 
 /** Etykieta kolumny z licznikiem — w kolumnie i w przyklejonym pasku nagłówków. */
-export function BoardColumnHeading({ label, count, className }: { label: ReactNode; count: number; className?: string }) {
+export function BoardColumnHeading({ label, icon: Icon, count, className }: { label: ReactNode; icon?: LucideIcon; count: number; className?: string }) {
   return (
     <div className={cn("flex items-center gap-1.5 text-xs font-semibold text-muted-foreground", className)}>
+      {Icon && <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
       <span className="truncate">{label}</span>
       <span className="bg-muted text-foreground/80 text-2xs px-1.5 rounded-full tabular-nums normal-case tracking-normal">{count}</span>
     </div>
@@ -20,6 +22,8 @@ interface BoardColumnProps {
   /** Klucz kolumny — ten sam, który rozpoznaje `useNoteDnd`. */
   columnKey: string;
   label: ReactNode;
+  /** Ikona przed etykietą (np. pinezka „Przypięte”) — etykieta zostaje tekstem dla `aria-label`. */
+  icon?: LucideIcon;
   count: number;
   /** Czy upuszczenie karty zmienia coś w notatce (kolumny wg daty tylko pokazują). */
   droppable?: boolean;
@@ -30,7 +34,7 @@ interface BoardColumnProps {
  * Kolumna tablicy: nagłówek „jak w zeszycie” i pasek kart. Cała kolumna jest strefą
  * upuszczania, więc kartę można położyć także w pustym miejscu pod ostatnią notatką.
  */
-export function BoardColumn({ columnKey, label, count, droppable = true, children }: BoardColumnProps) {
+export function BoardColumn({ columnKey, label, icon, count, droppable = true, children }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: columnDropId(columnKey), disabled: !droppable });
   return (
     <section
@@ -44,7 +48,7 @@ export function BoardColumn({ columnKey, label, count, droppable = true, childre
       )}
     >
       <header>
-        <BoardColumnHeading label={label} count={count} className="px-1 pb-2.5" />
+        <BoardColumnHeading label={label} icon={icon} count={count} className="px-1 pb-2.5" />
       </header>
       <div className="min-h-16">{children}</div>
     </section>

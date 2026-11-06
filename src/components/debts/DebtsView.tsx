@@ -20,6 +20,7 @@ import { downloadBlob } from "@/lib/downloadBlob";
 import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
 import { PageActions } from "@/components/PageActions";
 import { avatarHue, balances, debtsCsv, initialOf, debtSide, doubleSettle, foldName, personKey, personStatement, runningBalances, DEBT_KIND_LABEL, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
+import { cardClass } from "@/components/ui/card";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -141,7 +142,7 @@ function Summary({ owedToMe, iOwe, hidden }: { owedToMe: number; iOwe: number; h
     : <AnimatedNumber value={v} format={formatAmount} data-testid={testId} />;
   return (
     // Liczby przez `Stat` (nowy plan 2.3): ten sam wygląd co w Grafiku i Pracy.
-    <div className="rounded-card border border-border bg-card p-4 sm:p-5" role="group" aria-label="Podsumowanie">
+    <div className={`${cardClass} p-4 sm:p-5`} role="group" aria-label="Podsumowanie">
       <div className="grid grid-cols-2 gap-3">
         <Stat label="Są nam winni" value={money(owedToMe, "debts-owed")} tone="success" />
         <Stat label="Jesteś winien" value={money(iOwe, "debts-owe")} tone="warning" align="end" />

@@ -5,11 +5,17 @@ import type { LazyView } from "@/lib/viewPreload";
 // ekranu przy pierwszym wejściu na wolnym łączu. Pojawia się z opóźnieniem
 // (`.view-skeleton` w index.css), więc szybkie ładowanie nie mignie szkieletem.
 
-const LABELS: Record<LazyView, string> = {
+/** Widoki leniwe z preloadem plus te, które ładują się tylko po wejściu (plan UI 2026-11-06, 3.5). */
+export type SkeletonView = LazyView | "cwiczenia" | "debts" | "week";
+
+const LABELS: Record<SkeletonView, string> = {
   calendar: "Ładowanie kalendarza…",
   shifts: "Ładowanie grafiku…",
   study: "Ładowanie Pracy…",
   plans: "Ładowanie planów…",
+  cwiczenia: "Ładowanie ćwiczeń…",
+  debts: "Ładowanie długów…",
+  week: "Ładowanie osi tygodnia…",
 };
 
 function Bone({ className }: { className?: string }) {
@@ -39,18 +45,21 @@ export function CardSkeleton() {
   );
 }
 
-export function ViewSkeleton({ view }: { view: LazyView }) {
+export function ViewSkeleton({ view }: { view: SkeletonView }) {
+  const month = view === "calendar" || view === "shifts";
   return (
     <div role="status" aria-live="polite" className="view-skeleton space-y-4" data-testid="view-skeleton">
       <span className="sr-only">{LABELS[view]}</span>
       <div aria-hidden className="space-y-4">
-        {/* Pasek nawigacji miesiąca / zakładek */}
-        <div className="flex items-center gap-2">
-          <Bone className="h-9 w-9 rounded-full" />
-          <Bone className="h-6 w-40" />
-          <Bone className="h-9 w-9 rounded-full" />
-          <Bone className="ml-auto h-9 w-24 rounded-full" />
-        </div>
+        {/* Pasek nawigacji miesiąca */}
+        {month && (
+          <div className="flex items-center gap-2">
+            <Bone className="h-9 w-9 rounded-full" />
+            <Bone className="h-6 w-40" />
+            <Bone className="h-9 w-9 rounded-full" />
+            <Bone className="ml-auto h-9 w-24 rounded-full" />
+          </div>
+        )}
         {view === "study" ? (
           <>
             <div className="flex gap-2">
@@ -60,6 +69,11 @@ export function ViewSkeleton({ view }: { view: LazyView }) {
               {Array.from({ length: 4 }, (_, i) => <Bone key={i} className="h-28 rounded-card" />)}
             </div>
           </>
+        ) : !month ? (
+          // Listy kart: Plany, Ćwiczenia, Długi, oś tygodnia — siatka miesiąca sugerowałaby kalendarz.
+          <div className="space-y-3">
+            {Array.from({ length: 3 }, (_, i) => <Bone key={i} className="h-24 rounded-card" />)}
+          </div>
         ) : (
           <>
             {view === "shifts" && (

@@ -1,5 +1,6 @@
-import { ChevronLeft, ChevronRight, Download, Keyboard, Printer } from "lucide-react";
+import { Download, Keyboard, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MonthNav } from "@/components/ui/month-nav";
 import { PageActions } from "@/components/PageActions";
 import { format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -21,35 +22,24 @@ export function CalendarHeader({ month, selectedDay, showKeys, onPrev, onNext, o
   const isThisMonth = isSameMonth(month, new Date());
   return (
     <header className="order-1 flex items-center gap-1 sm:gap-2">
-      <button
-        onClick={onPrev}
-        aria-label="Poprzedni miesiąc"
-        className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <ChevronLeft className="w-4 h-4" />
-      </button>
-      <h2
-        className="font-display font-bold text-base sm:text-lg capitalize text-center truncate sm:min-w-[11ch]"
-      >
-        {format(month, "LLLL", { locale: pl })}{" "}
-        <span className={month.getFullYear() === new Date().getFullYear() ? "font-normal text-muted-foreground" : undefined}>{format(month, "yyyy")}</span>
-      </h2>
-      <button
-        onClick={onNext}
-        aria-label="Następny miesiąc"
-        className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <ChevronRight className="w-4 h-4" />
-      </button>
+      {/* Strzałki i tytuł wspólne z Grafikiem (plan UI 2026-11-06, 3.3); rok szary, gdy bieżący. */}
+      <MonthNav
+        className="min-w-0 flex-1 sm:flex-none"
+        label={<>{format(month, "LLLL", { locale: pl })}{" "}<span className={month.getFullYear() === new Date().getFullYear() ? "font-normal text-muted-foreground" : undefined}>{format(month, "yyyy")}</span></>}
+        onPrev={onPrev}
+        onNext={onNext}
+      />
       {/* Przycisk zostaje także wtedy, gdy wybrany dzień jest inny niż dziś, nawet w bieżącym miesiącu. */}
       {(!isThisMonth || !isSameDay(selectedDay, new Date())) && (
-        <button
+        <Button
+          size="sm"
+          variant={isThisMonth ? "ghost" : "default"}
           onClick={onToday}
           aria-label="Dziś: wróć do bieżącego miesiąca"
-          className={`ml-1 shrink-0 text-xs font-medium px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${isThisMonth ? "text-primary-ink hover:bg-primary/10" : "bg-primary text-primary-foreground hover:bg-primary/90"}`}
+          className={isThisMonth ? "shrink-0 text-primary-ink hover:bg-primary/10 hover:text-primary-ink coarse:min-h-11" : "shrink-0 coarse:min-h-11"}
         >
           Dziś
-        </button>
+        </Button>
       )}
       {/* Ściągawka skrótów w podpowiedzi zamiast stałego tekstu w nagłówku. */}
       <button

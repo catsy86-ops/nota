@@ -6,6 +6,7 @@ import { useDayClock } from "@/lib/dayClock";
 import { useStudy } from "@/lib/study/store";
 import { studyReminders } from "@/lib/study/reminders";
 import { studyDueRows } from "@/lib/study/dueRows";
+import { cardClass } from "@/components/ui/card";
 
 /**
  * Terminy z działu Praca (serwis, zamówienia bez dostawy, otwarte problemy) — tylko do odczytu.
@@ -26,7 +27,7 @@ function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: (siteId?: string) => v
   const rows = studyDueRows(studyReminders(study.journal, Date.now(), study.sites));
   if (rows.length === 0) return null;
   return (
-    <section aria-label="Terminy z Praca" data-testid="study-due" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-3">
+    <section aria-label="Terminy z Praca" data-testid="study-due" className={`${cardClass} p-4 sm:p-5 space-y-3`}>
       <div className="flex items-center justify-between gap-3">
         <h2 className="section-label gap-2">
           <HardHat className="h-3.5 w-3.5" aria-hidden />

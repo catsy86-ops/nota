@@ -3,7 +3,9 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDayClock } from "@/lib/dayClock";
 import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarRange, ChevronDown, ChevronLeft, ChevronRight, Redo2, Undo2 } from "lucide-react";
+import { CalendarRange, ChevronDown, Redo2, Undo2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MonthNav } from "@/components/ui/month-nav";
 import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
@@ -74,7 +76,6 @@ const layoutStore = createPersistedStore<ShiftsLayout>("kaczy.shifts.layout.v1",
 const NO_REMINDERS = new Map<string, Occurrence[]>();
 
 
-const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-card flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
  * Grafik zmian. Widok tylko składa części: stan Grafiku żyje w
@@ -415,33 +416,26 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           )}
         </div>
 
-        <div className="order-3 flex items-center justify-between gap-2 sm:justify-center sm:gap-4">
-          <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, -7)) : setMonth((m) => addMonths(m, -1)))}
-            aria-label={isWeek ? "Poprzedni tydzień" : "Poprzedni miesiąc"} className={navButton}>
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <h2 className="min-w-0 flex-1 sm:flex-none sm:min-w-48 text-center">
-            <button type="button" onClick={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
-              title={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
-              className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-semibold text-base sm:text-lg px-2 sm:px-3 rounded-card hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
-              {isWeek ? `${weekRangeLabel(weekStart)} · tydz. ${isoWeek(parseDayKey(weekStart).getTime()).week}` : format(month, "LLLL yyyy", { locale: pl })}
-            </button>
-          </h2>
-          <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, 7)) : setMonth((m) => addMonths(m, 1)))}
-            aria-label={isWeek ? "Następny tydzień" : "Następny miesiąc"} className={navButton}>
-            <ChevronRight className="w-5 h-5" />
-          </button>
+        <MonthNav
+          className="order-3 justify-between sm:justify-center sm:gap-4"
+          label={isWeek ? `${weekRangeLabel(weekStart)} · tydz. ${isoWeek(parseDayKey(weekStart).getTime()).week}` : format(month, "LLLL yyyy", { locale: pl })}
+          capitalize={!isWeek}
+          onPrev={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, -7)) : setMonth((m) => addMonths(m, -1)))}
+          onNext={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, 7)) : setMonth((m) => addMonths(m, 1)))}
+          prevLabel={isWeek ? "Poprzedni tydzień" : "Poprzedni miesiąc"}
+          nextLabel={isWeek ? "Następny tydzień" : "Następny miesiąc"}
+          onCurrent={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
+          currentHint={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
+        >
           <div className="flex shrink-0 gap-1 sm:gap-2" role="group" aria-label="Cofnij i ponów zmiany w Grafiku">
-              <button type="button" onClick={() => undoShifts()} disabled={!canUndo} aria-label="Cofnij zmianę w Grafiku"
-                className="pressable h-11 w-11 flex items-center justify-center rounded-control border border-border/60 bg-card hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                <Undo2 className="w-5 h-5" aria-hidden />
-              </button>
-              <button type="button" onClick={() => redoShifts()} disabled={!canRedo} aria-label="Ponów zmianę w Grafiku"
-                className="pressable h-11 w-11 flex items-center justify-center rounded-control border border-border/60 bg-card hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                <Redo2 className="w-5 h-5" aria-hidden />
-              </button>
-            </div>
+            <Button variant="toolbar" size="icon-lg" onClick={() => undoShifts()} disabled={!canUndo} aria-label="Cofnij zmianę w Grafiku">
+              <Undo2 aria-hidden />
+            </Button>
+            <Button variant="toolbar" size="icon-lg" onClick={() => redoShifts()} disabled={!canRedo} aria-label="Ponów zmianę w Grafiku">
+              <Redo2 aria-hidden />
+            </Button>
           </div>
+        </MonthNav>
 
         <div className="order-7 space-y-5 short:col-span-full">
           <p role="status" aria-live="polite" className="sr-only">{announce}</p>
@@ -463,7 +457,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           )}
 
           {/* Podpowiedź o przenoszeniu: po „Rozumiem” zostaje tylko dla czytnika ekranu (aria-describedby siatki). */}
-          <p id="shift-move-hint" className={cn("text-xs text-muted-foreground px-1 short:hidden", moveHintSeen && "sr-only")}>
+          <p id="shift-move-hint" className={cn("ui-hint px-1 short:hidden", moveHintSeen && "sr-only")}>
             {IS_TOUCH
               ? "Przytrzymaj zmianę i przeciągnij na inny dzień — zapytam, czy przenieść, czy skopiować."
               : `Przeciągnij zmianę na inny dzień, żeby ją przenieść (z Alt — skopiować). Klawiatura: Shift+strzałki przenoszą zmianę, Alt+Shift+strzałki kopiują, ${modShortcut("C")} / ${modShortcut("V")} kopiuje wpis dnia (zmiana, odchylenie, notatka).`}

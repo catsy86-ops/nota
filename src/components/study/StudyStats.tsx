@@ -14,6 +14,7 @@ import { accuracyByTopic, daysInLast, entriesByMonth, entriesBySite, hardestQues
 import { downloadBlob } from "@/lib/downloadBlob";
 import { useJobs } from "@/lib/study/jobsStore";
 import { entrySiteId } from "@/lib/study/sites";
+import { cardClass } from "@/components/ui/card";
 
 const topicName = (id: string) => topicTitle(id) ?? id;
 const WEEKDAYS = ["pn", "wt", "śr", "cz", "pt", "sb", "nd"];
@@ -207,7 +208,7 @@ function StatsBody() {
 function ExperienceRows({ card }: { card: ExperienceCard }) {
   const { seen, right, percent } = card.accuracy;
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-card border border-border bg-card p-3 text-sm" data-testid="experience-card">
+    <dl className={`${cardClass} grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 p-3 text-sm`} data-testid="experience-card">
       <dt className="text-muted-foreground">Budowy</dt>
       <dd>
         <span className="font-mono tabular-nums">{card.sites.length}</span>
@@ -256,7 +257,7 @@ function Tile({ label, value, hint, ring }: { label: string; value: string; hint
   const r = 14;
   const c = 2 * Math.PI * r;
   return (
-    <div className="rounded-card border border-border bg-card px-3 py-2.5">
+    <div className={`${cardClass} px-3 py-2.5`}>
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 flex items-center justify-between gap-2">
         <span className="font-mono text-2xl font-semibold tabular-nums leading-tight">{value}</span>

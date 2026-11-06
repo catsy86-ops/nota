@@ -38,6 +38,7 @@ import { CALENDAR_LAYERS, countMonth, readLayers, writeLayers, type CalendarLaye
 import { holidayName } from "@/lib/shifts/holidays";
 import { studySummary } from "@/lib/study/calendarMarks";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ViewSkeleton } from "@/components/ViewSkeleton";
 
 /**
  * Widok kalendarza przypomnień: siatka miesiąca + lista terminów wybranego dnia.
@@ -454,7 +455,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
 
         {weekAxis && (
           <div className={cn("order-5 hidden", axisShown && "xl:block")}>
-            <Suspense fallback={<p className="p-4 text-sm text-muted-foreground">Ładuję oś tygodnia…</p>}>
+            <Suspense fallback={<ViewSkeleton view="week" />}>
               <WeekTimeline
                 weekStart={startOfWeek(selectedDay, { weekStartsOn: 1 })}
                 byDay={shownByDay}

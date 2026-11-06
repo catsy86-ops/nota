@@ -15,6 +15,7 @@ import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { haptic } from "@/lib/haptics";
 import { pluralPl } from "@/lib/plural";
+import { cardClass } from "@/components/ui/card";
 
 const ROUND_SIZE = 10;
 const LETTERS = ["A", "B", "C", "D"];
@@ -185,7 +186,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   if (examDone && round) {
     const weak = weakTopicsOf(examDone.byTopic);
     return (
-      <section aria-label="Wynik egzaminu" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-5">
+      <section aria-label="Wynik egzaminu" className={`${cardClass} p-5 sm:p-7 space-y-5`}>
         <div className="flex items-end gap-4">
           <p className="font-mono text-6xl font-semibold leading-none tabular-nums text-primary-ink">{examDone.correct}<span className="text-2xl text-muted-foreground">/{examDone.total}</span></p>
           <p className="pb-1 text-sm text-muted-foreground">Egzamin próbny · {Math.max(1, Math.round(examDone.seconds / 60))} min</p>
@@ -213,7 +214,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   if (result && round) {
     const percent = Math.round((result.correct / round.length) * 100);
     return (
-      <section aria-label="Wynik rundy" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-5">
+      <section aria-label="Wynik rundy" className={`${cardClass} p-5 sm:p-7 space-y-5`}>
         <div className="flex items-end gap-4">
           <p className="font-mono text-6xl font-semibold leading-none tabular-nums text-primary-ink">{result.correct}<span className="text-2xl text-muted-foreground">/{round.length}</span></p>
           <p className="pb-1 text-sm text-muted-foreground">
@@ -260,7 +261,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
 
   if (!round || !current) {
     return (
-      <section aria-label="Quiz" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-4">
+      <section aria-label="Quiz" className={`${cardClass} p-5 sm:p-7 space-y-4`}>
         <h2 className="title-section">Sprawdź, co umiesz</h2>
         <p className="text-sm text-muted-foreground max-w-prose">
           {ROUND_SIZE} pytań z poradnika, list kontrolnych i Twoich własnych. Najpierw wypadają tematy, których jeszcze nie masz w kolumnie „Umiem”.
@@ -319,7 +320,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   const reveal = answered && !examMode;
   const left = examEnd !== null ? Math.max(0, Math.ceil((examEnd - now) / 1000)) : 0;
   return (
-    <section aria-label="Quiz" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-5">
+    <section aria-label="Quiz" className={`${cardClass} p-5 sm:p-7 space-y-5`}>
       <div className="flex items-center justify-between gap-3 text-xs">
         <span className="font-mono tabular-nums text-muted-foreground">
           Pytanie {index + 1} z {round.length}

@@ -10,6 +10,7 @@ import { setSiteShortages, useStudy } from "@/lib/study/store";
 import { pluralPl } from "@/lib/plural";
 import type { SiteInfo } from "@/lib/study/sites";
 import { currentAuthor, otherAuthor, useAuthor } from "@/lib/study/companyPrefs";
+import { cardClass } from "@/components/ui/card";
 import {
   addShortage, clearDelivered, dueDayValue, dueFromDayValue, nextStatus, removeShortage, setShortageDue, setShortageStatus,
   shortagesText, spokenShortageLabel, SHORTAGE_QTY_MAX, SHORTAGE_TEXT_MAX, SHORTAGES_MAX, STATUS_LABEL, type ShortageStatus,
@@ -106,7 +107,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
   }
 
   return (
-    <section aria-label="Braki materiału" data-testid="site-shortages" className="space-y-2 rounded-card border border-border bg-card p-3">
+    <section aria-label="Braki materiału" data-testid="site-shortages" className={`${cardClass} space-y-2 p-3`}>
       <p role="status" className="sr-only">{announce}</p>
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">

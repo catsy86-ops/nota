@@ -9,6 +9,7 @@ import { useShifts } from "@/lib/shifts";
 import { dayType, type ShiftType } from "@/lib/shifts/model";
 import { carryPieces } from "@/lib/dayTimeline";
 import { cn } from "@/lib/utils";
+import { cardClass } from "@/components/ui/card";
 
 /** Stan zwinięcia osi na tym urządzeniu: "1" rozwinięta, "0" zwinięta; brak — domyślnie (telefon zwinięta). */
 export const TODAY_TIMELINE_KEY = "kaczy.today.timeline.v1";
@@ -57,7 +58,7 @@ export function TodayTimeline({ notes, onOpen }: { notes: Note[]; onOpen: (id: s
   if (!shift && occurrences.length === 0 && carryPieces(prevShift).length === 0) return null;
 
   return (
-    <section aria-label="Oś dnia" data-testid="today-timeline" className="rounded-card border border-border bg-card p-4 sm:p-5">
+    <section aria-label="Oś dnia" data-testid="today-timeline" className={`${cardClass} p-4 sm:p-5`}>
       <button type="button" onClick={toggle} aria-expanded={open} aria-controls="today-timeline-body"
         className="pressable flex w-full items-center justify-between gap-2 text-left coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-field">
         <span className="section-label gap-2"><Clock3 className="h-3.5 w-3.5" aria-hidden />Oś dnia

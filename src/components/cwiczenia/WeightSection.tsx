@@ -8,6 +8,7 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { parseKg, weightTrend } from "@/lib/weight/model";
 import { removeWeight, restoreWeight, setWeight, useWeights } from "@/lib/weight/store";
 import { WeightChart } from "./WeightChart";
+import { cardClass } from "@/components/ui/card";
 
 /** Masa ciała (C-2): ważenie dnia, zmiana względem poprzedniego i średnia z 7 ważeń. */
 export function WeightSection() {
@@ -38,7 +39,7 @@ export function WeightSection() {
   }
 
   return (
-    <section aria-labelledby="weight-title" className="space-y-3 rounded-card border border-border bg-card p-4">
+    <section aria-labelledby="weight-title" className={`${cardClass} space-y-3 p-4`}>
       <h3 id="weight-title" className="flex items-center gap-2 font-display text-base">
         <Scale className="h-4 w-4 text-primary-ink" aria-hidden />Masa ciała
       </h3>

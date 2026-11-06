@@ -13,6 +13,7 @@ import { countDueToday } from "@/lib/reminderAgenda";
 import { format, formatDistanceStrict } from "date-fns";
 import { pl } from "date-fns/locale";
 import { CardSkeleton } from "@/components/ViewSkeleton";
+import { cardClass } from "@/components/ui/card";
 
 /**
  * Pierwsza rzecz w widoku „Dziś”: dzisiejsza zmiana z Grafiku (albo „wolne”), obok skrótów
@@ -79,7 +80,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
   const quiet = !entry && countDueToday([...reminderNotes]) === 0;
 
   return (
-    <section aria-label="Dziś" data-testid="today-card" className="rounded-card border border-border bg-card p-4 sm:p-5">
+    <section aria-label="Dziś" data-testid="today-card" className={`${cardClass} p-4 sm:p-5`}>
       <p className="font-display text-base font-semibold first-letter:uppercase text-foreground sm:text-lg">{dateLabel}</p>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
