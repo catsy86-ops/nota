@@ -19,6 +19,7 @@ import { patchJournalDraft, useHasJournalDraft } from "@/lib/study/draft";
 import { openJournalSheet } from "@/lib/study/entrySheet";
 import { JournalEntrySheet } from "./JournalEntrySheet";
 import { JournalItem } from "./JournalItem";
+import { JournalPhotoButton } from "./JournalPhotoButton";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
 import { PhotoGalleryDialog } from "./PhotoGallery";
@@ -126,6 +127,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   }, [dirById]);
   // „+ Wpis” przy filtrze budowy zaczyna wpis na tej budowie; „Dokończ wpis” zostawia budowę szkicu.
   const newEntry = () => openEntryAt(hasDraft ? null : contextSiteName(filter.site, dir));
+  // Budowa z filtrów dla przycisku „Zdjęcie” (P2.1); pusty ciąg (bez budowy) to brak budowy.
+  const photoSite = contextSiteName(filter.site, dir) || null;
   // Postęp etapów przy nazwie budowy — tylko budowy z własną listą (ktoś już odhaczał).
   const stagesBySite = useMemo(
     () => new Map(dir.filter((x) => x.stages).map((x) => [x.id, stageProgress(x.stages!)] as const)),
@@ -499,6 +502,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         )}
       </section>
       <JournalEntrySheet onPractice={onPractice} />
+      <JournalPhotoButton siteName={photoSite} onNoSite={() => openJournalSheet()} />
       <NewSiteDialog key={newSiteJob ? "job" : "site"} open={newSiteOpen} onOpenChange={setNewSiteOpen} dir={dir} initialJob={newSiteJob} onCreated={(id) => setCard(id)} onPackage={setSitePackage} />
       <SitePackageImportDialog pkg={sitePackage} onClose={() => setSitePackage(null)} onDone={(id) => { setSitePackage(null); setCard(id); }} />
       <WholesaleOrderDialog open={wholesaleOpen} onOpenChange={setWholesaleOpen} groups={wholesale} van={vanBuy} dir={dir} />

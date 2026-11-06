@@ -9,9 +9,8 @@ import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { haptic } from "@/lib/haptics";
 import { useShifts } from "@/lib/shifts";
 import { pluralPl } from "@/lib/plural";
-import { addJournalEntry, saveSiteCard, setSite, useSiteDirectory, useStudy } from "@/lib/study/store";
-import { prepareImage } from "@/lib/imagePrepare";
-import { imageStore } from "@/lib/imageStore";
+import { saveSiteCard, useSiteDirectory, useStudy } from "@/lib/study/store";
+import { addPhotoEntry as saveSitePhoto } from "@/lib/study/photoEntry";
 import { photoSaveFailed } from "@/components/study/useJournalPhotoEdits";
 import { findSiteByName, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
 import { entriesPl, problemsPl } from "@/lib/study/journalView";
@@ -142,11 +141,9 @@ export function SiteCardDialog({
     if (!site) return;
     setPhotoBusy(true);
     try {
-      const prepared = await prepareImage(file);
-      if (!prepared) { toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB"); return; }
-      const ref = await imageStore.putBlob(prepared);
-      setSite(site.name);
-      if (!addJournalEntry({ kind: "ok", topic: null, text: "", images: [ref] })) { toast.error("Nie zapisano zdjęcia"); return; }
+      const result = await saveSitePhoto(file, site.name);
+      if (result === "too-big") { toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB"); return; }
+      if (result === "failed") { toast.error("Nie zapisano zdjęcia"); return; }
       haptic("tap");
       toast.success("Dodano zdjęcie jako wpis budowy");
     } catch {
