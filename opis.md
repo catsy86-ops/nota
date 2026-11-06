@@ -590,7 +590,7 @@ Liczby mogą tylko maleć.
 
 **Testy.** `src/components/ui/primitives.test.tsx` (`loading`, pigułka bez `rounded-control`, `MonthNav`) oraz `src/test/designTokens.test.ts`.
 
-**Commit.** COMMIT_HASH (2026-11-06).
+**Commit.** `a26307a0` (2026-11-06).
 
 ## Wspólne — elementy wspólne (nowy plan 2026-11-05, Etap 2)
 
