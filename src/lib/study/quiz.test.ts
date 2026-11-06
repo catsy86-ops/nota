@@ -19,3 +19,18 @@ describe("egzamin dociągany z listy kontrolnej (P4.3)", () => {
     expect(round).toHaveLength(2);
   });
 });
+
+describe("wbudowana lista kontrolna (P4.3)", () => {
+  it("każdy punkt z trzema błędnymi zdaniami daje pytanie z poprawną odpowiedzią pod właściwym indeksem", async () => {
+    const { CHECKLIST } = await import("./content");
+    const withWrong = CHECKLIST.filter((i) => i.wrong?.length === 3);
+    expect(withWrong.length).toBe(14);
+    const round = examRound(20, [], CHECKLIST, () => 0.37);
+    expect(round).toHaveLength(14);
+    for (const q of round) {
+      expect(new Set(q.options).size).toBe(4);
+      const source = withWrong.find((i) => `chk-${i.id}` === q.id)!;
+      expect(q.options[q.correct]).toBe(source.text);
+    }
+  });
+});
