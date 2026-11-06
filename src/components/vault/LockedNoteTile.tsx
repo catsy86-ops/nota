@@ -23,6 +23,8 @@ interface Props {
   dragAttributes?: DraggableAttributes;
   dragListeners?: DraggableSyntheticListeners;
   phase: VaultPhase;
+  /** Kafel powstał z blokady otwartej karty (4.2): bez wejścia z dołu, linie się „zamazują”. */
+  sealed?: boolean;
 }
 
 /**
@@ -30,11 +32,13 @@ interface Props {
  * zredagowana w projekcji — a „rozmyte linie” to stałe kreski, niezależne od
  * rzeczywistej długości tekstu (długość też jest informacją).
  */
-export const LockedNoteTile = memo(function LockedNoteTile({ note, index, selected, dragAttributes, dragListeners, phase }: Props) {
+export const LockedNoteTile = memo(function LockedNoteTile({ note, index, selected, dragAttributes, dragListeners, phase, sealed }: Props) {
   const { onDelete, onTogglePin, onArchive, onUnarchive, isArchived, selectionMode, onToggleSelect } = useNoteViewActions();
   const undecryptable = phase === "unlocked" && privateNotes.isUndecryptable(note.id);
   const noVault = phase === "none";
-  const busy = phase === "locking" || (phase === "unlocked" && !undecryptable);
+  // Bez szyfrogramu nie ma czego odszyfrować — „Odszyfrowuję…” wisiałoby bez końca.
+  const decrypting = phase === "unlocked" && !undecryptable && Boolean(note.vault);
+  const busy = phase === "locking" || decrypting;
 
   function unlock() {
     if (noVault) {
@@ -50,7 +54,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 6 }}
+      initial={sealed ? false : { opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ default: { ...tween.enter, delay: cascadeDelay(index, false) } }}
@@ -60,7 +64,9 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
       className={cn(
         "group note-card relative rounded-card border note-shadow overflow-hidden",
         colorClasses[note.color],
-        selected ? "note-glow-active border-transparent" : "border-border/50",
+        // 4.1: nieodszyfrowywalna ma obwódkę błędu; bez skarbca na urządzeniu kafel jest wyszarzony.
+        selected ? "note-glow-active border-transparent" : undecryptable ? "border-destructive/60" : "border-border/50",
+        noVault && "border-dashed",
       )}
     >
       {(selectionMode || selected) && onToggleSelect && (
@@ -90,7 +96,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
       )}
 
       <div
-        className="cursor-pointer card-body px-3 pt-3 pb-2"
+        className={cn("cursor-pointer card-body px-3 pt-3 pb-2", noVault && "grayscale")}
         role="button"
         tabIndex={0}
         aria-label={noVault ? "Notatka prywatna — brak skarbca na tym urządzeniu" : "Notatka prywatna — odblokuj, aby zobaczyć"}
@@ -105,7 +111,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
         </div>
 
         {/* Stałe kreski jak linie zeszytu — nie odzwierciedlają treści. */}
-        <div className="mt-3 space-y-1.5" aria-hidden>
+        <div className={cn("mt-3 space-y-1.5", sealed && "vault-seal", decrypting && "vault-decrypting")} aria-hidden>
           <div className="h-2 rounded-full bg-foreground/10 w-[88%]" />
           <div className="h-2 rounded-full bg-foreground/10 w-[64%]" />
           <div className="h-2 rounded-full bg-foreground/10 w-[40%]" />
@@ -128,7 +134,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
           ) : (
             <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium", busy ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary-ink")}>
               <KeyRound className="w-3 h-3" />
-              {busy ? "Odszyfrowuję…" : "Odblokuj"}
+              {phase === "locking" ? "Blokuję…" : busy ? "Odszyfrowuję…" : "Odblokuj"}
             </span>
           )}
           <ReminderBadgeSafe note={note} />

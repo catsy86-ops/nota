@@ -75,7 +75,7 @@
 | 2.4 | ✅ **Dziś:** 2.1, 2.2, 2.4 (oś dnia, f62fbbe), 2.5, 3.1, 3.2 (dwie kolumny, nowyplan 3.2), 3.3, 3.5 (karty wchodzą kolejno, odhaczenie zwija wiersz, licznik terminów „pyka”), 3.6, 4.2 („Listy na dziś”), zrzuty `dzis-*`. Bez 3.4 (czeka na D-3). | 2 | M |
 | 2.5 | ✅ **Terminy:** 4.5 (odhaczenie z ruchem, bez ruchu przy redukcji — nowyplan 4.2, `ReminderQuickActions` + `collapseRowThen`); 3.4 (termin z treści jako podpowiedź w edytorze — `src/lib/dateInText.ts`, `NoteEditor.tsx`). | 2 | M |
 | 2.6 | **Kalendarz, Grafik, Praca (plan 27.10):** K3.6 (po QA, K-4), K4.1, K4.5, reszta G2–G4 i P2–P5, P6.2, P6.3 — tylko punkty, które inwentarz potwierdzi jako otwarte. **Stan (2026-11-06):** zrobione P6.4, P2.1, P2.2, G4.1, P-6 (FSRS), P4.1, P4.3, P4.6; czeka P4.4 (materiały od właściciela), P2.11 i P3.3 (telefon), G4.8 (odłożone); P6.2 i P6.3 do sprawdzenia w inwentarzu. | 2 | L |
-| 2.7 | **Skarbiec:** 2.2, 3.3, Etap 4 (1.2 część 2 czeka na decyzję). | 2 | M |
+| 2.7 | **Skarbiec:** 2.2, 3.3, Etap 4 (1.2 część 2 czeka na decyzję). **Stan (2026-11-06):** 2.2 i cały Etap 4 (4.1–4.4) zrobione; zostaje 3.3 (szyfrowane pliki, L, po przeglądzie bezpieczeństwa). | 2 | M |
 | 2.8 | ✅ **Powłoka i QoL:** test e2e celów dotyku 44 px na ekranie telefonu (`e2e/touch-targets-phone.spec.ts`, 7 ekranów, Pixel 7 i iPhone 14; poprawione 4 za małe cele); paleta zależna od kontekstu otwartej notatki — „Ta notatka” ma też Ulubione, Duplikuj, Archiwizuj i Do kosza (QoL 3.9 / Notatki 2.5). Przy okazji naprawione: Ctrl+K nie otwierał palety przy otwartym podglądzie. | 3 | M |
 | 2.9 | **Notatki, Ustawienia, Ćwiczenia:** punkty potwierdzone przez inwentarz, w kolejności W/N. | 2 | L |
 

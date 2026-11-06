@@ -1,6 +1,6 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie „Skarbca” (notatki prywatne) (2026-10-25)
 
-> **Status (2026-11-03):** zrobione 1.1, 1.2 cz. 1, 1.3–1.7, 2.1, 2.3–2.5, 3.1, 3.2; częściowo 4.1 (brak wariantów poza nieodszyfrowywalnym) i 4.3; otwarte 2.2 (brak „Prywatna” w `AddNoteBar`), 3.3, 4.2, 4.4; czeka 1.2 cz. 2 (nowy projekt kryptografii). Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
+> **Status (2026-11-06):** zrobione 1.1, 1.2 cz. 1, 1.3–1.7, 2.1–2.5 (2.2: przełącznik „Notatka prywatna” w kompozytorze, po przeglądzie bezpieczeństwa i code-review), 3.1, 3.2; 4.1–4.4 (4.1 bez napisu „Ustaw skarbiec…”, patrz `opis.md`); otwarte 3.3; czeka 1.2 cz. 2 (nowy projekt kryptografii). Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
 
 > **Status (2026-11-02):** zrobione wcześniej (opis w `opis.md`): 1.3, 1.4 (V-1), 1.5 (V-2), 2.1, 3.1 (v2, V-3), 3.2 (passkey PRF, V-4). Zrobione 2026-11-02: 1.2 część 1 („Pobierz szyfrogram”; „Usuń” już było) i 1.7 (druk kodu, wpisywanie z myślnikami, wklejanie z separatorami).
 >

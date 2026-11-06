@@ -1233,6 +1233,17 @@ html[data-motion="reduced"] .entry-stamp[data-fresh] { animation: none; }
   100% { opacity: 0; transform: rotate(-8deg) scale(1); }
 }
 
+/* ── Skarbiec 4.2: przy blokadzie treść „zamazuje się” w linie kafla ─────────────────────── */
+/* Jawny tekst znika z DOM od razu (bezpieczeństwo); przenikanie dotyczy już samych linii kafla. */
+.vault-seal { animation: vault-seal 280ms var(--ease-out) both; transform-origin: top; }
+@keyframes vault-seal {
+  from { filter: blur(6px); opacity: 0.25; transform: scaleY(1.5); }
+  to   { filter: blur(0); opacity: 1; transform: none; }
+}
+/* 4.1: odszyfrowywanie — linie pulsują, dopóki treść nie wróci z szyfrogramu. */
+.vault-decrypting { animation: view-skeleton-pulse 1.2s ease-in-out infinite; }
+/* Redukcję ruchu (ustawienie albo system) obsługuje globalna reguła `html[data-motion="reduced"]`. */
+
 /* ── Kafle: zakładka zamiast paska, kolor krawędzi z koloru notatki (2026-10-11) ───────── */
 /* Kolorowa notatka ma u góry „zakładkę” przy lewej krawędzi — jak kolorowy zakładnik w zeszycie.
    Przy najechaniu zakładka się wydłuża. Zaznaczony kafel zostaje przy własnej obwódce. */

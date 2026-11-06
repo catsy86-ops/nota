@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useSyncExternalStore } from "react";
+import { memo, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import { NoteCard } from "@/components/NoteCard";
 import { LockedNoteTile } from "@/components/vault/LockedNoteTile";
@@ -35,6 +35,17 @@ export const PrivateNoteGate = memo(function PrivateNoteGate({ note, ...rest }: 
   const content = unlocked ? privateNotes.peek(note.id) : undefined;
   const view = useMemo(() => (content ? { ...note, ...content } : note), [note, content]);
 
-  if (note.locked && !content) return <LockedNoteTile note={note} index={rest.index} selected={rest.selected} dragAttributes={rest.dragAttributes} dragListeners={rest.dragListeners} phase={snap.phase} />;
+  // 4.2: kafel, który zastąpił kartę z odszyfrowaną treścią, „zamazuje” linie zamiast wjechać od zera.
+  // Liczone z tego, czy karta pokazywała treść, a nie z fazy skarbca: kafle, które nigdy nie miały treści,
+  // nie dostają animacji, a krok „locking” → „locked” jej nie urywa.
+  const shown = Boolean(note.locked && content);
+  const [prevShown, setPrevShown] = useState(shown);
+  const [sealed, setSealed] = useState(false);
+  if (prevShown !== shown) {
+    setPrevShown(shown);
+    setSealed(prevShown && !shown);
+  }
+
+  if (note.locked && !content) return <LockedNoteTile note={note} index={rest.index} selected={rest.selected} dragAttributes={rest.dragAttributes} dragListeners={rest.dragListeners} phase={snap.phase} sealed={sealed} />;
   return <NoteCard note={view} {...rest} />;
 });

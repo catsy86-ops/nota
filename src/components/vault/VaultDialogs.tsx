@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { MissingHint } from "@/components/ui/missing-hint";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TriangleAlert, Copy, Download, KeyRound, Lock, Printer, ShieldCheck } from "lucide-react";
+import { TriangleAlert, Copy, Download, KeyRound, Printer, Shield, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
@@ -57,7 +57,10 @@ export function VaultDialog({ kind, onDone }: { kind: VaultUiKind; onDone?: () =
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display">
-            {recoveryCode ? <ShieldCheck className="w-4 h-4 text-primary-ink" /> : <Lock className="w-4 h-4 text-primary-ink" />}
+            {/* 4.4: tarcza to znak skarbca we wszystkich jego oknach; z ptaszkiem przy kodzie awaryjnym. */}
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10" aria-hidden>
+              {recoveryCode ? <ShieldCheck className="size-4 text-primary-ink" /> : <Shield className="size-4 text-primary-ink" />}
+            </span>
             {title}
           </DialogTitle>
           <DialogDescription className="sr-only">Okno skarbca prywatnych notatek</DialogDescription>
@@ -84,7 +87,9 @@ export function VaultDialog({ kind, onDone }: { kind: VaultUiKind; onDone?: () =
 
 function StrengthMeter({ password }: { password: string }) {
   const s = passwordStrength(password);
-  const tone = s.score >= 3 ? "bg-primary" : s.score === 2 ? "bg-warning" : "bg-destructive";
+  // 4.3: kolory z tokenów stanu, a poziom zawsze też słowem obok (sam kolor nie niesie informacji).
+  const tone = s.score >= 3 ? "bg-success" : s.score === 2 ? "bg-warning" : "bg-destructive";
+  const ink = s.score >= 3 ? "text-success-ink" : s.score === 2 ? "text-warning-ink" : "text-destructive-ink";
   return (
     <div data-testid="password-strength">
       {/* Czytnik słyszy tylko zmianę poziomu siły, nie każdy znak. */}
@@ -95,7 +100,7 @@ function StrengthMeter({ password }: { password: string }) {
         ))}
       </div>
       <p className="mt-1 text-2xs text-muted-foreground">
-        {password ? `${s.label} · ${[...password].length} znaków` : `Co najmniej ${MIN_PASSWORD_LENGTH} znaków; im dłuższe, tym lepiej (np. kilka słów).`}
+        {password ? <><span className={cn("font-medium", ink)}>{s.label}</span> · {[...password].length} znaków</> : `Co najmniej ${MIN_PASSWORD_LENGTH} znaków; im dłuższe, tym lepiej (np. kilka słów).`}
       </p>
     </div>
   );
@@ -450,7 +455,13 @@ function RecoveryCodeStep({ code, onClose }: { code: string; onClose: () => void
       <p className="text-sm text-muted-foreground">
         To jedyny raz, kiedy widzisz ten kod. Zapisz go poza urządzeniem (wydruk, menedżer haseł). Kto go zna, może odblokować Twoje notatki.
       </p>
-      <p data-testid="recovery-code" className="select-all rounded-field border border-border bg-muted/40 px-3 py-3 text-center font-mono text-sm tracking-wider wrap-break-word">{code}</p>
+      {/* 4.4: karta z kodem w grupach po 4 (JetBrains Mono), po 4 w wierszu. Zwykły tekst w linii z przygaszonym
+          myślnikiem — zaznaczenie i kopiowanie dają dokładnie `XXXX-XXXX-…`, bez przełamań z siatki. */}
+      <p data-testid="recovery-code" className="select-all mx-auto max-w-[26ch] rounded-field border border-border bg-muted/40 px-3 py-3 text-center font-mono text-base leading-relaxed tracking-wider tabular-nums">
+        {code.split("-").map((g, i, all) => (
+          <span key={i}>{g}{i < all.length - 1 && <span className="text-muted-foreground">-</span>}</span>
+        ))}
+      </p>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" size="sm" onClick={copy}><Copy className="w-3.5 h-3.5 mr-1.5" />Kopiuj</Button>
         <Button type="button" variant="outline" size="sm" onClick={download}><Download className="w-3.5 h-3.5 mr-1.5" />Pobierz .txt</Button>
