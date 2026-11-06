@@ -1,10 +1,13 @@
-import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, lazy, Suspense, type ReactNode } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, useSyncExternalStore, lazy, Suspense, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useDictation } from "@/hooks/useDictation";
 import { useOverlayHistory } from "@/hooks/useOverlayHistory";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
-import { AudioLines, Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, CornerDownRight, Repeat, CopyPlus } from "lucide-react";
+import { AudioLines, Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, CornerDownRight, Repeat, CopyPlus, Lock } from "lucide-react";
+import { privateNotes } from "@/lib/privateNotes";
+import { vaultUi } from "@/lib/vaultUi";
+import { yjsStore } from "@/lib/yjsStore";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { format as formatDate } from "date-fns";
 import { pl as plLocale } from "date-fns/locale";
@@ -161,6 +164,11 @@ function writeDraft(d: Draft): void {
   } catch { /* brak miejsca albo localStorage — szkic po prostu nie przeżyje przeładowania */ }
 }
 
+/** Szkic bez tekstu i bez pozycji listy — przy notatce prywatnej taki zapis usuwa ją, zamiast zostawić samą kłódkę. */
+function isTextEmpty(f: { title: string; content: string; checklist: readonly unknown[] }): boolean {
+  return !f.title.trim() && !f.content.trim() && f.checklist.length === 0;
+}
+
 /** Migawka pustego szkicu (patrz blokada podwójnego zapisu w `commit`). */
 const EMPTY_DRAFT_KEY = JSON.stringify({ title: "", content: "", images: [], attachments: [], checklist: [] });
 
@@ -213,9 +221,55 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
     },
   }));
 
+  // Notatka prywatna (2.2): od pierwszego znaku zapisuje się szyfrogramem w skarbcu, a szkic nie trafia do localStorage.
+  // `reset` zawsze zeruje ten stan, żeby kolejna notatka nie dopisała się do poprzedniej prywatnej.
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [privateId, setPrivateId] = useState<string | null>(null);
+  const creatingPrivateRef = useRef(false);
+  const closeAfterCreateRef = useRef(false);
+  /** Rośnie przy każdym `reset` — szyfrowanie, które skończy się po odrzuceniu szkicu, sprząta po sobie. */
+  const privateGenRef = useRef(0);
+
   const reset = useCallback(() => {
+    setIsPrivate(false); setPrivateId(null); closeAfterCreateRef.current = false; privateGenRef.current++;
     setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderRepeat("none"); setReminderRule(undefined); setReminderUntil(undefined); setReminderAllDay(false); setReminderLead(undefined); setParentId(null); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setRestored(false); setExpanded(false);
   }, []);
+
+  const [privateTick, setPrivateTick] = useState(0);
+  /** Ostatni tekst notatki prywatnej — czyta go wywołanie po zakończonym szyfrowaniu, gdy zamknięcie przyszło w trakcie. */
+  const latestPrivateRef = useRef({ title, content, checklist, labels });
+  const privateConflict = images.length > 0 || attachments.length > 0 || reminder !== null || priority !== "none" || parentId !== null || color !== "default";
+
+  const enablePrivate = () => {
+    const phase = privateNotes.phase();
+    if (phase === "none") { vaultUi.open("setup", enablePrivate); return; }
+    if (phase !== "unlocked") { vaultUi.open("unlock", enablePrivate); return; }
+    if (privateConflict) {
+      toast.error("Notatka prywatna nie ma plików, przypomnień, priorytetu, koloru ani rodzica", { description: "Usuń je z tej notatki i włącz „Prywatna” ponownie." });
+      return;
+    }
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* bez localStorage nie ma szkicu do usunięcia */ }
+    setIsPrivate(true);
+  };
+
+  /**
+   * Zamyka kompozytor po notatce prywatnej: dopisuje ostatni tekst do skarbca i czyści formularz.
+   * Notatka, z której wszystko skasowano, znika — nie zostaje po niej sama kłódka.
+   */
+  const finishPrivate = useCallback((id: string | null, fields: { title: string; content: string; checklist: typeof checklist; labels: string[] }) => {
+    if (id) {
+      if (isTextEmpty(fields)) yjsStore.removeNote(id);
+      else yjsStore.patchNote(id, fields);
+    }
+    void privateNotes.flush();
+    reset();
+  }, [reset]);
+
+  /** „Odrzuć” i szablon nad pustym szkicem: zaczęta notatka prywatna znika razem ze szkicem. */
+  const discardDraft = useCallback(() => {
+    if (privateId) yjsStore.removeNote(privateId);
+    reset();
+  }, [privateId, reset]);
 
   // Lista robocza: odłożone szkice nowych notatek (wznawiane z rzędu nad tytułem).
   const [parked, setParked] = useState<Parked<Draft>[]>(readParked);
@@ -257,6 +311,8 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
 
   /** Wznowienie z listy: bieżący niepusty szkic najpierw zostaje odłożony, żeby nic nie przepadło. */
   const resumeParked = (id: string) => {
+    // Wznowienie odkłada bieżący szkic jawnie do localStorage — w notatce prywatnej to wyciek.
+    if (isPrivate) return;
     const entry = parked.find((p) => p.id === id);
     if (!entry) return;
     if (!isDraftEmpty && hasUnsavedMedia) {
@@ -301,7 +357,25 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   const draftKey = useMemo(() => JSON.stringify({ title, content, images, attachments, checklist }), [title, content, images, attachments, checklist]);
   const committedRef = useRef<string | null>(null);
   useEffect(() => { if (draftKey !== EMPTY_DRAFT_KEY) committedRef.current = null; }, [draftKey]);
+  // Prywatna notatka nie ma `onAdd` — jej zapis to dopisanie do skarbca, a nie nowa notatka w dokumencie.
   const commit = useCallback(() => {
+    if (isPrivate) {
+      if (creatingPrivateRef.current) { closeAfterCreateRef.current = true; return; }
+      const empty = isTextEmpty({ title, content, checklist });
+      // Zapis musi dojść do skarbca, zanim formularz się wyczyści — inaczej tekst przepadłby po cichu.
+      if (!empty && !privateNotes.isUnlocked()) {
+        toast.info("Odblokuj skarbiec, żeby zapisać notatkę prywatną", { id: "private-composer-locked", description: "Tekst zostaje w edytorze." });
+        vaultUi.open("unlock", () => setPrivateTick((t) => t + 1));
+        return;
+      }
+      if (!empty && (!privateId || !yjsStore.isLocked(privateId) || privateNotes.peek(privateId) === undefined)) {
+        toast.error("Notatka prywatna nie jest jeszcze zapisana", { id: "private-composer-pending", description: "Spróbuj jeszcze raz za chwilę. Tekst zostaje w edytorze." });
+        setPrivateTick((t) => t + 1);
+        return;
+      }
+      finishPrivate(privateId, { title, content, checklist, labels });
+      return;
+    }
     if (committedRef.current === draftKey) return;
     if (title.trim() || content.trim() || images.length > 0 || attachments.length > 0 || checklist.length > 0) {
       committedRef.current = draftKey;
@@ -322,9 +396,67 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
       onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments, extras);
     }
     reset();
-  }, [draftKey, title, content, images, attachments, checklist, color, labels, reminder, reminderRepeat, reminderRule, reminderUntil, reminderAllDay, reminderLead, parentId, parentOptions, priority, capture, ignored, onAdd, onCreateLabel, reset]);
+  }, [isPrivate, privateId, title, content, checklist, labels, finishPrivate, draftKey, images, attachments, color, reminder, reminderRepeat, reminderRule, reminderUntil, reminderAllDay, reminderLead, parentId, parentOptions, priority, capture, ignored, onAdd, onCreateLabel, reset]);
 
   const handleClose = commit;
+
+  // Sync notatki prywatnej: pierwsza zmiana tworzy szyfrogram, każda następna dopisuje się do skarbca.
+  // Gdy skarbiec jest zablokowany, zapis nie idzie w próżnię — prosimy o odblokowanie i wracamy tą samą zmianą.
+  useEffect(() => {
+    latestPrivateRef.current = { title, content, checklist, labels };
+  }, [title, content, checklist, labels]);
+  // Blokada skarbca przy otwartej notatce prywatnej: jawny tekst nie może zostać na ekranie.
+  // `lock()` ogłasza „locking” przed zapisaniem kolejki — wtedy dopisujemy ostatni tekst, a po blokadzie czyścimy edytor.
+  const vaultPhase = useSyncExternalStore(privateNotes.subscribe, () => privateNotes.getSnapshot().phase);
+  useEffect(() => {
+    if (!isPrivate || !privateId || vaultPhase === "unlocked") return;
+    if (vaultPhase === "locking") { yjsStore.patchNote(privateId, latestPrivateRef.current); return; }
+    reset();
+    toast.info("Skarbiec zablokowany — notatka prywatna jest zapisana", { id: "private-composer-closed" });
+  }, [isPrivate, privateId, vaultPhase, reset]);
+  useEffect(() => {
+    if (!isPrivate) return;
+    if (!privateNotes.isUnlocked()) {
+      if (!privateId && draftKey !== EMPTY_DRAFT_KEY) vaultUi.open("unlock", () => setPrivateTick((t) => t + 1));
+      return;
+    }
+    if (privateId) {
+      // Notatkę usunięto (tu albo na innym urządzeniu) — tekst z edytora trafi do nowej, zamiast przepaść.
+      if (!yjsStore.isLocked(privateId)) { setPrivateId(null); return; }
+      // Po ponownym odblokowaniu treści nie ma w pamięci skarbca — sink odrzuciłby zapis. Najpierw odszyfrowanie.
+      if (privateNotes.peek(privateId) === undefined) {
+        if (privateNotes.isUndecryptable(privateId)) {
+          toast.error("Tej notatki prywatnej nie da się odszyfrować bieżącym hasłem", { id: "private-composer-undecryptable", description: "Skopiuj tekst z edytora, zanim go zamkniesz." });
+          return;
+        }
+        const vault = yjsStore.getVault(privateId);
+        if (vault) void privateNotes.ensureDecrypted({ id: privateId, vault }).then(() => setPrivateTick((t) => t + 1));
+        return;
+      }
+      // Jedna transakcja dokumentu na chwilę pisania, nie na każdy znak. Zamknięcie i blokada dopisują ostatni tekst same.
+      const timer = setTimeout(() => yjsStore.patchNote(privateId, { title, content, checklist, labels }), 250);
+      return () => clearTimeout(timer);
+    }
+    if (draftKey === EMPTY_DRAFT_KEY || creatingPrivateRef.current) return;
+    creatingPrivateRef.current = true;
+    const gen = privateGenRef.current;
+    void privateNotes.createNote({ title, content, checklist, labels }).then((id) => {
+      creatingPrivateRef.current = false;
+      // Szkic odrzucony w trakcie szyfrowania: notatka nie zostaje jako sierota.
+      if (gen !== privateGenRef.current) { if (id) yjsStore.removeNote(id); return; }
+      if (!id) {
+        closeAfterCreateRef.current = false;
+        toast.error("Nie udało się zapisać notatki prywatnej", { description: "Odblokuj skarbiec i spróbuj ponownie." });
+        return;
+      }
+      setPrivateId(id);
+      if (closeAfterCreateRef.current) {
+        closeAfterCreateRef.current = false;
+        finishPrivate(id, latestPrivateRef.current);
+      }
+    });
+    // `draftKey` i `privateTick` ponawiają zapis po odblokowaniu skarbca; `draftKey` nie zawiera etykiet, więc są osobno.
+  }, [isPrivate, privateId, privateTick, vaultPhase, draftKey, title, content, checklist, labels, finishPrivate]);
 
   /** Zapisuje i od razu otwiera pusty szkic — do seryjnego wpisywania wielu notatek. */
   const saveAndNext = useCallback(() => {
@@ -337,12 +469,16 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
     if (expanded && titleRef.current) titleRef.current.focus();
   }, [expanded]);
 
+  // Szkic prywatny nie trafia do localStorage: jego treść żyje w skarbcu (patrz `privateSync` niżej).
   useEffect(() => {
+    if (isPrivate) return;
     writeDraft({ title, content, checklist, color, labels, reminder, reminderRepeat, reminderRule, reminderRepeatUntil: reminderUntil, ...(parentId ? { parentId } : {}), priority });
-  }, [title, content, checklist, color, labels, reminder, reminderRepeat, reminderRule, reminderUntil, parentId, priority]);
+  }, [isPrivate, title, content, checklist, color, labels, reminder, reminderRepeat, reminderRule, reminderUntil, parentId, priority]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
+      // Okno skarbca (portal) otwarte z kompozytora — klik w nie nie zamyka edytora, bo to on czeka na hasło.
+      if (vaultUi.get()) return;
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         // Kliknięcie w dymek (np. „Cofnij” po usunięciu ukończonych) nie jest kliknięciem „poza” edytorem.
         // Arkusz terminu (F2.1) to portal poza kompozytorem — jego dotknięcie to nie „poza” edytorem.
@@ -452,11 +588,12 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
     const a = pendingAction;
     setPendingAction(null);
     if (a === "list") setShowChecklist(true);
-    else if (a === "draw") setShowDrawing(true);
-    else if (a === "image") fileInputRef.current?.click();
+    // Rysunek i obraz nie są szyfrowane — w notatce prywatnej ich nie otwieramy.
+    else if (a === "draw") { if (!isPrivate) setShowDrawing(true); }
+    else if (a === "image") { if (!isPrivate) fileInputRef.current?.click(); }
     else if (a === "dictate" && dictation.supported && !dictation.listening) dictation.toggle();
     else if (a === "reminder") setReminderOpenSignal((n) => n + 1);
-  }, [pendingAction, expanded, dictation]);
+  }, [pendingAction, expanded, dictation, isPrivate]);
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -466,6 +603,11 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   }
 
   async function addImageFiles(files: File[]) {
+    // Obrazy nie są szyfrowane (3.3): w notatce prywatnej nie zapisujemy ich bajtów w IndexedDB.
+    if (isPrivate) {
+      toast.error("Notatka prywatna nie przyjmuje obrazów", { description: "Obrazy i pliki nie są szyfrowane. Dodaj je do zwykłej notatki." });
+      return;
+    }
     let skipped = 0;
     try {
       for (const file of files) {
@@ -518,16 +660,16 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
         ) : (
           <motion.div key="expanded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className={cn("p-4 space-y-3", fullScreen && "flex min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col space-y-0 gap-3 bg-inherit")}>
-            {destination && <p className="text-xs text-muted-foreground">Trafi do: <span className="font-medium text-foreground">{destination}</span></p>}
+            {destination && !isPrivate && <p className="text-xs text-muted-foreground">Trafi do: <span className="font-medium text-foreground">{destination}</span></p>}
             {restored && (
               <div role="status" className="flex items-center gap-2 rounded-field bg-primary/10 px-2.5 py-1.5 text-xs text-primary-ink" data-draft-restored="">
                 <span>Szkic przywrócony z poprzedniej sesji</span>
-                <button type="button" onClick={reset} className="ml-auto rounded px-1.5 py-0.5 font-medium hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="button" onClick={discardDraft} className="ml-auto rounded px-1.5 py-0.5 font-medium hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                   Odrzuć
                 </button>
               </div>
             )}
-            {parked.length > 0 && (
+            {parked.length > 0 && !isPrivate && (
               <div role="group" aria-label="Odłożone szkice" className="flex flex-wrap items-center gap-1.5 text-xs" data-parked-count={parked.length}>
                 <span className="text-muted-foreground">Odłożone:</span>
                 {parked.map((p) => {
@@ -567,10 +709,11 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             </div>
             {content.length > 0 && <EditorStats textareaRef={textareaRef} value={content} className="block text-2xs text-muted-foreground" />}
 
-            <CaptureChips tokens={capture} ignored={ignored} onToggle={toggleIgnored} />
+            {/* `#etykieta`, daty i `@folder` nie działają w notatce prywatnej — chipy obiecywałyby coś, czego zapis nie zrobi. */}
+            {!isPrivate && <CaptureChips tokens={capture} ignored={ignored} onToggle={toggleIgnored} />}
 
             {/* Szablony tylko nad pustym szkicem — wybór tworzy osobną notatkę, więc nic by nie zastąpił. */}
-            {templates && isDraftEmpty && templates(reset)}
+            {templates && isDraftEmpty && templates(discardDraft)}
 
             {(content.trim() || checklist.length > 0) && (
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -601,7 +744,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
               </div>
             )}
 
-            <AttachmentsPanel ref={attachmentsRef} attachments={attachments} onChange={setAttachments} />
+            {!isPrivate && <AttachmentsPanel ref={attachmentsRef} attachments={attachments} onChange={setAttachments} />}
 
             {/* Labels display */}
             {labels.length > 0 && (
@@ -622,6 +765,12 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
               </div>
             )}
 
+            {isPrivate && (
+              <p className="flex items-center gap-1 text-2xs text-primary-ink">
+                <Lock className="w-3 h-3" aria-hidden />
+                Zapisuje się zaszyfrowana hasłem skarbca, poza folderem. Obrazy, przypomnienia i odłożenie szkicu są wyłączone.
+              </p>
+            )}
             <time dateTime={new Date(openedAt).toISOString()} className="block text-2xs text-muted-foreground tabular-nums">
               Data i czas: {formatDate(openedAt, "d MMM yyyy, HH:mm", { locale: plLocale })}
             </time>
@@ -634,41 +783,59 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                   title="Lista zadań" aria-label="Lista zadań" aria-pressed={showChecklist}>
                   <ListChecks className="w-4 h-4" />
                 </IconButton>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <IconButton size="sm" tone={color !== "default" ? "active" : "muted"} title="Kolor" aria-label="Kolor">
-                      <Palette className="w-4 h-4" />
-                    </IconButton>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-2.5" align="start">
-                    <ColorPicker selected={color} onSelect={setColor} />
-                  </PopoverContent>
-                </Popover>
+                {!isPrivate && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <IconButton size="sm" tone={color !== "default" ? "active" : "muted"} title="Kolor" aria-label="Kolor">
+                        <Palette className="w-4 h-4" />
+                      </IconButton>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2.5" align="start">
+                      <ColorPicker selected={color} onSelect={setColor} />
+                    </PopoverContent>
+                  </Popover>
+                )}
+                <IconButton size="sm" tone={isPrivate ? "active" : "muted"}
+                  onClick={() => {
+                    // Wyłączenie tylko przed pierwszym zapisem; w trakcie szyfrowania powstałaby sierota i jawna kopia.
+                    if (!isPrivate) enablePrivate();
+                    else if (!privateId && !creatingPrivateRef.current) setIsPrivate(false);
+                  }}
+                  disabled={isPrivate && privateId !== null}
+                  title={isPrivate ? "Notatka prywatna — zaszyfrowana hasłem skarbca" : "Notatka prywatna (zaszyfrowana)"}
+                  aria-label="Notatka prywatna" aria-pressed={isPrivate}>
+                  <Lock className="w-4 h-4" />
+                </IconButton>
                 {dictation.supported && (
                   <IconButton size="sm" tone={dictation.listening ? "active" : "muted"} onClick={dictation.toggle}
                     title={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj"} aria-label={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj"} aria-pressed={dictation.listening}>
                     <Mic className={cn("w-4 h-4", dictation.listening && "animate-pulse")} />
                   </IconButton>
                 )}
-                {/* Image upload */}
-                <IconButton size="sm" onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" aria-label="Dodaj obrazek">
-                  <ImagePlus className="w-4 h-4" />
-                </IconButton>
-                <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
-                {/* Attachments: PDF, tekst, dokumenty */}
-                <IconButton size="sm" onClick={() => attachmentsRef.current?.pick()} title="Dodaj plik" aria-label="Dodaj plik">
-                  <Paperclip className="w-4 h-4" />
-                </IconButton>
-                {/* Notatka głosowa jako załącznik (dyktowanie to osobny przycisk z mikrofonem). */}
-                {canRecordVoice() && (
-                  <IconButton size="sm" onClick={() => attachmentsRef.current?.record()} title="Nagraj notatkę głosową (do 3 min)" aria-label="Nagraj notatkę głosową">
-                    <AudioLines className="w-4 h-4" />
-                  </IconButton>
+                {/* Pliki, rysunki i przypomnienia nie wchodzą do notatki prywatnej (patrz `enablePrivate`). */}
+                {!isPrivate && (
+                  <>
+                    {/* Image upload */}
+                    <IconButton size="sm" onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" aria-label="Dodaj obrazek">
+                      <ImagePlus className="w-4 h-4" />
+                    </IconButton>
+                    <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                    {/* Attachments: PDF, tekst, dokumenty */}
+                    <IconButton size="sm" onClick={() => attachmentsRef.current?.pick()} title="Dodaj plik" aria-label="Dodaj plik">
+                      <Paperclip className="w-4 h-4" />
+                    </IconButton>
+                    {/* Notatka głosowa jako załącznik (dyktowanie to osobny przycisk z mikrofonem). */}
+                    {canRecordVoice() && (
+                      <IconButton size="sm" onClick={() => attachmentsRef.current?.record()} title="Nagraj notatkę głosową (do 3 min)" aria-label="Nagraj notatkę głosową">
+                        <AudioLines className="w-4 h-4" />
+                      </IconButton>
+                    )}
+                    {/* Drawing */}
+                    <IconButton size="sm" onClick={() => setShowDrawing(true)} title="Rysuj" aria-label="Rysuj">
+                      <PenTool className="w-4 h-4" />
+                    </IconButton>
+                  </>
                 )}
-                {/* Drawing */}
-                <IconButton size="sm" onClick={() => setShowDrawing(true)} title="Rysuj" aria-label="Rysuj">
-                  <PenTool className="w-4 h-4" />
-                </IconButton>
                 {/* Label picker */}
                 <Popover>
                   <PopoverTrigger asChild>
@@ -683,6 +850,10 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                         <button key={l} type="button" onClick={() => toggleLabel(l)} aria-pressed={labels.includes(l)} className="rounded-control outline-hidden focus-visible:ring-2 focus-visible:ring-ring"><Badge variant={labels.includes(l) ? "default" : "outline"} className="cursor-pointer text-xs">{l}</Badge></button>
                       ))}
                     </div>
+                    {/* Nowa etykieta trafia jawnie na wspólną listę — w notatce prywatnej tylko istniejące. */}
+                    {isPrivate ? (
+                      <p className="text-2xs text-muted-foreground">W notatce prywatnej wybierz istniejącą etykietę. Nazwy nowych etykiet nie są szyfrowane.</p>
+                    ) : (
                     <div className="flex gap-1.5">
                       <input enterKeyHint="done" autoComplete="off" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateLabel()}
                         placeholder="Nowa etykieta..." className="flex-1 text-xs max-sm:text-base bg-muted/60 border border-border rounded-field px-2.5 py-1.5 outline-hidden focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground" />
@@ -690,10 +861,11 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                         <Plus className="w-3.5 h-3.5" />
                       </IconButton>
                     </div>
+                    )}
                   </PopoverContent>
                 </Popover>
                 {/* Reminder picker: ten sam co na kaflu — powtarzanie, koniec serii, szybkie terminy */}
-                <ReminderPicker
+                {!isPrivate && <ReminderPicker
                   reminder={reminder}
                   reminderRepeat={reminderRepeat}
                   reminderRule={reminderRule}
@@ -707,9 +879,9 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                       <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
                     </IconButton>
                   }
-                />
+                />}
                 {/* Podstrona: notatka powstaje pod wybraną */}
-                {parentOptions && parentOptions.length > 0 && (
+                {!isPrivate && parentOptions && parentOptions.length > 0 && (
                   <Popover>
                     <PopoverTrigger asChild>
                       <IconButton size="sm" tone={parentId ? "active" : "muted"} title="Podstrona w…" aria-label="Podstrona w…">
@@ -731,10 +903,10 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                   </Popover>
                 )}
                 {/* Priority picker */}
-                <PriorityPicker priority={priority} onSet={setPriority} />
+                {!isPrivate && <PriorityPicker priority={priority} onSet={setPriority} />}
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                {!isDraftEmpty && (
+                {!isDraftEmpty && !isPrivate && (
                   <button type="button" onClick={parkCurrent} title="Odłóż szkic na listę roboczą — wrócisz do niego z rzędu „Odłożone”"
                     className="pressable px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-field transition-colors shrink-0 coarse:min-h-11">
                     Odłóż
@@ -774,6 +946,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
       open={showDrawing}
       onOpenChange={setShowDrawing}
       onSave={(dataUrl) => {
+        if (isPrivate) { toast.error("Notatka prywatna nie przyjmuje rysunków", { description: "Rysunki nie są szyfrowane. Dodaj go do zwykłej notatki." }); return; }
         imageStore.putDataUrl(dataUrl)
           .then((ref) => setImages((prev) => [...prev, ref]))
           .catch(() => toast.error("Nie udało się zapisać rysunku", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare obrazy albo zrób kopię zapasową i spróbuj ponownie." }));

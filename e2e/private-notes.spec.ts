@@ -286,3 +286,66 @@ test("Skarbiec 2.3–2.5: karta stanu, sprawdzenie kodu awaryjnego i filtr ma:pr
   await expect(page.getByText("Kod awaryjny działa")).toBeVisible();
   await expect(state).not.toContainText("sprawdzony: nigdy");
 });
+
+test("kompozytor: notatka prywatna od pierwszego znaku, bez jawnego szkicu w localStorage i w dokumencie (2.2)", async ({ page }) => {
+  const TITLE_P = "Prywatna z kompozytora";
+  await page.getByText("Zapisz notatkę...").click();
+  // Pierwsze włączenie zakłada skarbiec (okno ustawienia hasła), a po nim notatka staje się prywatna.
+  await page.getByRole("button", { name: "Notatka prywatna", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Ustaw hasło skarbca" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Hasło skarbca").fill(PASSWORD);
+  await dialog.getByLabel("Powtórz hasło").fill(PASSWORD);
+  await dialog.getByLabel("Rozumiem, że zapomnianego hasła nie da się odzyskać.").check();
+  await dialog.getByRole("button", { name: "Ustaw hasło" }).click();
+  const recovery = page.getByRole("dialog", { name: "Zapisz kod awaryjny" });
+  await recovery.getByLabel("Zapisałem kod w bezpiecznym miejscu.").check();
+  await recovery.getByRole("button", { name: "Gotowe" }).click();
+
+  await expect(page.getByRole("button", { name: "Notatka prywatna", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("Zapisuje się zaszyfrowana hasłem skarbca")).toBeVisible();
+  // Pliki nie są szyfrowane — w trybie prywatnym nie ma jak ich dodać.
+  await expect(page.getByRole("button", { name: "Dodaj obrazek" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Dodaj plik" })).toHaveCount(0);
+  await page.getByPlaceholder("Tytuł").fill(TITLE_P);
+  await page.getByPlaceholder("Treść notatki...").fill(`Treść z ${SECRET} tylko w skarbcu`);
+
+  // Szkic nie trafia jawnie do localStorage ani do dokumentu, nawet przed zapisem.
+  await expect.poll(() => page.evaluate(() => JSON.stringify(localStorage))).not.toContain(SECRET);
+  await expect.poll(() => dumpDocIdb(page)).not.toContain(SECRET);
+
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
+  await expect(card(page, TITLE_P)).toContainText(SECRET);
+  await expect.poll(() => dumpDocIdb(page)).not.toContain(SECRET);
+  await expect.poll(() => dumpDocIdb(page)).not.toContain(TITLE_P);
+  expect(await page.content()).toContain(SECRET); // odblokowana sesja pokazuje treść
+  await lockNowFromPalette(page);
+  expect(await page.content()).not.toContain(SECRET);
+});
+
+test("kompozytor: blokada skarbca w trakcie pisania zapisuje notatkę i zdejmuje jawny tekst z ekranu (2.2)", async ({ page }) => {
+  const TITLE_L = "Pisana przy blokadzie";
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByRole("button", { name: "Notatka prywatna", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Ustaw hasło skarbca" });
+  await dialog.getByLabel("Hasło skarbca").fill(PASSWORD);
+  await dialog.getByLabel("Powtórz hasło").fill(PASSWORD);
+  await dialog.getByLabel("Rozumiem, że zapomnianego hasła nie da się odzyskać.").check();
+  await dialog.getByRole("button", { name: "Ustaw hasło" }).click();
+  const recovery = page.getByRole("dialog", { name: "Zapisz kod awaryjny" });
+  await recovery.getByLabel("Zapisałem kod w bezpiecznym miejscu.").check();
+  await recovery.getByRole("button", { name: "Gotowe" }).click();
+
+  await page.getByPlaceholder("Tytuł").fill(TITLE_L);
+  await page.getByPlaceholder("Treść notatki...").fill(`Przed blokadą ${SECRET}`);
+  // Blokada bez zamykania edytora (jak auto-blokada): samo zdarzenie `click` na kłódce, bez `mousedown`,
+  // które edytor uznałby za kliknięcie obok. Edytor znika, a treść jest zapisana w skarbcu.
+  await page.getByRole("button", { name: /^Skarbiec odblokowany/ }).dispatchEvent("click");
+  await expect(page.locator("[data-private-tile]")).toBeVisible();
+  await expect(page.getByPlaceholder("Treść notatki...")).toHaveCount(0);
+  await expect(page.getByText("Skarbiec zablokowany — notatka prywatna jest zapisana")).toBeVisible();
+  expect(await page.content()).not.toContain(SECRET);
+  await unlockViaTile(page, PASSWORD);
+  await expect(card(page, TITLE_L)).toContainText(SECRET);
+});

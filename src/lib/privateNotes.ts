@@ -166,6 +166,8 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   /** Odcisk metadanych, z którymi odblokowano sesję. Sam `epoch` nie wystarcza: dwa urządzenia zakładające skarbiec offline mają oba epoch 1. */
   let sessionFingerprint = "";
   let locking = false;
+  /** Trwa zmiana hasła: nowa notatka dostałaby szyfrogram pod klucz, który zaraz zniknie. */
+  let rekeying = false;
   let version = 0;
   let snapshot: VaultSnapshot = { phase: "none", corrupt: false, version: 0 };
   const cache = new Map<string, Entry>();
@@ -597,12 +599,39 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   }
 
   /**
+   * 2.2: nowa notatka prywatna od pierwszego znaku. Szyfrogram powstaje od razu; w dokumencie
+   * leży tylko pusta, zablokowana notatka z tokenem. Dalsze zmiany idą przez `yjsStore.patchNote`
+   * (sink zapisu), więc jawny tekst nigdy nie trafia do Yjs.
+   */
+  async function createNote(initial: Omit<PrivateContent, "meta">): Promise<string | null> {
+    const k = key;
+    if (!k || locking || rekeying) return null;
+    const epoch0 = sessionEpoch;
+    const id = crypto.randomUUID();
+    const content: PrivateContent = { title: initial.title, content: initial.content, checklist: initial.checklist, labels: initial.labels };
+    const token = await encryptNoteWrite(k, JSON.stringify(content), id, sessionEpoch);
+    // Skarbiec zablokowany, zmiana hasła tu albo na innym urządzeniu w trakcie szyfrowania — token byłby pod nieaktualny klucz.
+    const m = meta();
+    if (key !== k || locking || rekeying || sessionEpoch !== epoch0 || !m || (sessionFingerprint !== "" && fingerprint(m) !== sessionFingerprint)) return null;
+    const t = now();
+    store.upsertNote({ id, title: "", content: "", color: "default", pinned: false, archived: false, trashed: false, trashedAt: null, labels: [], reminder: null, priority: "none", images: [], checklist: [], folderId: null, order: 0, locked: true, vault: token, createdAt: t, updatedAt: t });
+    cache.set(id, { vault: token, content, dirty: false });
+    emit();
+    return id;
+  }
+
+  /**
    * Nowe hasło = nowy klucz danych: wszystkie notatki prywatne są
    * przeszyfrowane i zapisane razem z nowymi metadanymi w jednej transakcji
    * dokumentu. Błąd na dowolnym etapie nie zapisuje niczego. Notatki, których
    * i tak nie dało się odszyfrować (obcy szyfrogram), są zgłaszane w `skipped`.
    */
   async function rekey(oldKey: CryptoKey, newPassword: string, withRecovery: boolean): Promise<{ recoveryCode: string | null; skipped: string[] }> {
+    rekeying = true;
+    try { return await rekeyInner(oldKey, newPassword, withRecovery); } finally { rekeying = false; }
+  }
+
+  async function rekeyInner(oldKey: CryptoKey, newPassword: string, withRecovery: boolean): Promise<{ recoveryCode: string | null; skipped: string[] }> {
     const m = meta();
     if (!m) throw new Error("Brak skarbca");
     await flush();
@@ -688,7 +717,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     hasRecovery: () => Boolean(meta()?.recovery),
     ensureDecrypted,
     setup, unlock, unlockWithRecoveryCode, unlockWithPasskey, addPasskey, hasPasskeys, lock, flush,
-    lockNote, removeLock, duplicate, changePassword, resetPasswordWithRecovery,
+    lockNote, removeLock, duplicate, createNote, changePassword, resetPasswordWithRecovery,
     retryInMs,
   };
 }

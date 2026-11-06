@@ -522,3 +522,55 @@ describe("przegląd V-3, W-1: pin skarbca", () => {
     expect(pn.isUnlocked()).toBe(true);
   });
 });
+
+describe("privateNotes — nowa notatka prywatna (2.2)", () => {
+  it("createNote zapisuje tylko szyfrogram; treść wchodzi do skarbca przez sink, nigdy jawnie", async () => {
+    const { store, pn } = fresh();
+    await pn.setup(PW);
+    const id = await pn.createNote({ title: "JAWNYTYTUL", content: "JAWNATRESC", checklist: [{ id: "c1", text: "JAWNYPUNKT", checked: false }], labels: ["JAWNAETYKIETA"] });
+    expect(id).toBeTruthy();
+    expect(store.isLocked(id!)).toBe(true);
+    expect(looksLikeVaultToken(store.getVault(id!)!)).toBe(true);
+    expect(pn.peek(id!)?.content).toBe("JAWNATRESC");
+    expect(docText(store)).not.toContain("JAWNATRESC");
+    expect(docText(store)).not.toContain("JAWNYTYTUL");
+    // Kolejna zmiana idzie przez sink zapisu i też jest szyfrowana.
+    store.patchNote(id!, { content: "NOWATRESC" });
+    await pn.flush();
+    expect(pn.peek(id!)?.content).toBe("NOWATRESC");
+    expect(docText(store)).not.toContain("NOWATRESC");
+  });
+
+  it("notatka utworzona w trakcie zmiany hasła da się odczytać nowym hasłem (albo nie powstaje)", async () => {
+    const { store, pn } = fresh();
+    await pn.setup(PW);
+    const NEW = "nowe-haslo-do-testow-678";
+    let done = false;
+    const change = pn.changePassword(PW, NEW).finally(() => { done = true; });
+    const ids: string[] = [];
+    // Tworzymy notatki przez cały czas zmiany hasła — także w oknie przeszyfrowania (KDF nowego hasła).
+    while (!done) {
+      const id = await pn.createNote({ title: "t", content: `w trakcie ${ids.length}`, checklist: [], labels: [] });
+      if (id) ids.push(id);
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    await change;
+    await pn.lock();
+    await pn.unlock(NEW);
+    for (const id of store.lockedNoteIds()) {
+      await pn.ensureDecrypted({ id, vault: store.getVault(id)! });
+      expect(pn.isUndecryptable(id)).toBe(false);
+      expect(pn.peek(id)?.content).toMatch(/^w trakcie \d+$/);
+    }
+    expect(store.lockedNoteIds().sort()).toEqual(ids.sort());
+  });
+
+  it("createNote bez odblokowanego skarbca nic nie tworzy", async () => {
+    const { store, pn } = fresh();
+    await pn.setup(PW);
+    await pn.lock(); // pełna blokada (klucz usunięty), nie tylko stan „locking”
+    const before = store.lockedNoteIds().length;
+    expect(await pn.createNote({ title: "x", content: "y", checklist: [], labels: [] })).toBeNull();
+    expect(store.lockedNoteIds().length).toBe(before);
+  });
+});
