@@ -15,6 +15,8 @@ export const pushKey = {
   evening: (forKey: string) => `e:${forKey}`,
   shiftCheck: (dayKey: string) => `z:${dayKey}`,
   shiftAlarm: (dayKey: string) => `a:${dayKey}`,
+  /** Koniec zmiany (G4.1): „Skończyłem” zapisuje godzinę końca tego dnia. */
+  shiftEnd: (dayKey: string) => `s:${dayKey}`,
   reportDay: (dayKey: string) => `rd:${dayKey}`,
   reportWeek: (weekKey: string) => `rw:${weekKey}`,
   problem: (entryId: string) => `p:${entryId}`,

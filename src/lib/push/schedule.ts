@@ -43,7 +43,7 @@ export const PUSH_HORIZON_DAYS = 14;
  */
 export const PUSH_CATEGORIES = [
   { id: "notatki", label: "Przypomnienia notatek", prefixes: ["n:"] },
-  { id: "grafik", label: "Grafik na jutro i alarm przed zmianą", prefixes: ["e:", "a:"] },
+  { id: "grafik", label: "Grafik na jutro, alarm przed zmianą i koniec zmiany", prefixes: ["e:", "a:", "s:"] },
   { id: "raporty", label: "Raport dnia i tygodnia", prefixes: ["rd:", "rw:"] },
   { id: "problemy", label: "Problem w dzienniku budowy", prefixes: ["p:"] },
   { id: "serwis", label: "Serwis dziś i zaległy", prefixes: ["v:"] },
@@ -145,6 +145,38 @@ const atMinute = (dayKey: string, minute: number) => {
   const [y, m, d] = dayKey.split("-").map(Number);
   return new Date(y, m - 1, d, Math.floor(minute / 60), minute % 60).getTime();
 };
+
+/**
+ * Koniec zmiany (G4.1): push o planowanym końcu z akcją „Skończyłem” (SW, `public/sw-notifications.js`).
+ * Dzień, który już ma odchylenie od planu (`extraMin`), jest zamknięty — bez przypomnienia.
+ */
+function shiftEndItems(input: PushInput, now: number): PushItem[] {
+  const { shifts } = input;
+  if (!shifts) return [];
+  const typesById = new Map<string, ShiftType>(shifts.types.map((t) => [t.id, t]));
+  const out: PushItem[] = [];
+  for (let i = 0; i < PUSH_HORIZON_DAYS; i++) {
+    const day = addDays(new Date(now), i);
+    const key = dayKeyOf(day.getTime());
+    const entry = shifts.days[key];
+    const base = entry && typesById.get(entry.type);
+    if (!entry || !base || entry.extraMin !== undefined) continue;
+    const t = dayType(base, entry);
+    if (t.kind !== "work") continue;
+    const span = shiftSpan(t);
+    if (!span) continue;
+    // `to` może przekroczyć dobę (zmiana nocna): dzień początku plus minuty daje właściwą chwilę.
+    const at = new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime() + span.to * 60_000;
+    if (at <= now) continue;
+    out.push({
+      key: pushKey.shiftEnd(key), at,
+      title: `Koniec zmiany: ${t.name}`,
+      body: "Stuknij „Skończyłem”, żeby zapisać godzinę końca.",
+      url: "/grafik",
+    });
+  }
+  return out;
+}
 
 /**
  * Alarm przed zmianą (G4.1): push `alarmBeforeMin` minut przed początkiem zmiany tego dnia.
@@ -326,7 +358,7 @@ export function buildPushSchedulePlan(input: PushInput): { items: PushItem[]; to
   const groups = [
     noteItems(input.notes, now, end),
     studyItems(input, now, end),
-    [...eveningItems(input, now), ...reportItems(input, now), ...shiftAlarmItems(input, now)],
+    [...eveningItems(input, now), ...reportItems(input, now), ...shiftAlarmItems(input, now), ...shiftEndItems(input, now)],
   ].map((g) => g.filter((i) => !isPushCategoryOff(i.key, input.off)).sort((a, b) => a.at - b.at));
   const total = groups.reduce((n, g) => n + g.length, 0);
   const chosen = groups.flat().slice(0, PUSH_MAX_ITEMS);

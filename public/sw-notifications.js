@@ -47,9 +47,11 @@ self.addEventListener("push", (event) => {
     }
     // Przypomnienie z notatki (`n:<id>:<termin>`) dostaje te same przyciski co powiadomienie ze strony.
     const noteId = key.startsWith("n:") ? key.split(":")[1] || "" : "";
+    // Koniec zmiany (G4.1): klucz `s:<dzień>` dostaje „Skończyłem”, które zapisze godzinę końca tego dnia.
+    const shiftDay = /^s:\d{4}-\d{2}-\d{2}$/.test(key) ? key.slice(2) : "";
     const actions = noteId
       ? [...(d.snooze === true ? [{ action: "snooze10", title: "Odłóż 10 min" }] : []), { action: "done", title: "Gotowe" }]
-      : [];
+      : shiftDay ? [{ action: "shift-done", title: "Skończyłem" }] : [];
     await self.registration.showNotification(title, {
       body: typeof d.body === "string" ? d.body : "",
       icon: "/pwa-192.png",
@@ -57,7 +59,7 @@ self.addEventListener("push", (event) => {
       tag,
       renotify: true,
       vibrate: [120, 60, 120],
-      data: noteId ? { url, key, noteId } : { url, key },
+      data: noteId ? { url, key, noteId } : shiftDay ? { url, key, shiftDay } : { url, key },
       actions,
     });
   })());
@@ -69,6 +71,22 @@ self.addEventListener("notificationclick", (event) => {
   // Tylko ścieżka w obrębie aplikacji — `//host` i `/\host` wychodziłyby poza nią.
   const url = typeof data.url === "string" && /^\/(?![/\\])/.test(data.url) ? data.url : "/";
   const action = event.action || "";
+  // „Skończyłem” przy końcu zmiany: aplikacja zapisuje godzinę (`hooks/useShiftEndAction.ts`). Bez otwartej karty
+  // otwieramy Grafik z parametrami, a aplikacja wykonuje akcję po wczytaniu danych.
+  if (action === "shift-done" && typeof data.shiftDay === "string") {
+    const dayKey = data.shiftDay;
+    event.waitUntil(
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+        const client = clients.find((c) => "focus" in c);
+        if (client) {
+          client.postMessage({ type: "shift-action", action, dayKey });
+          return client.focus();
+        }
+        if (self.clients.openWindow) return self.clients.openWindow(`/grafik?akcja=shift-done&dzien=${encodeURIComponent(dayKey)}`);
+      })
+    );
+    return;
+  }
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {

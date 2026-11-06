@@ -147,3 +147,24 @@ describe("buildPushSchedule — alarm przed zmianą (G4.1)", () => {
     expect(alarms(buildPushSchedule({ now: WED_NOON, notes: [], shifts, off: ["grafik"] }))).toEqual([]);
   });
 });
+
+describe("buildPushSchedule — koniec zmiany (G4.1)", () => {
+  // Jak w alarmie: budowa 7–17, środa 14 o 12:00, zmiana w czwartek 15.
+  const shifts: ShiftData = { ...EMPTY_SHIFT_DATA, days: { "2026-10-15": { type: "b" } } };
+  const ends = <T extends { key: string }>(items: T[]): T[] => items.filter((i) => i.key.startsWith("s:"));
+
+  it("push o planowanym końcu zmiany z kluczem dnia", () => {
+    expect(ends(buildPushSchedule({ now: WED_NOON, notes: [], shifts }))).toEqual([
+      { key: "s:2026-10-15", at: at(15, 17), title: "Koniec zmiany: Budowa", body: "Stuknij „Skończyłem”, żeby zapisać godzinę końca.", url: "/grafik" },
+    ]);
+  });
+
+  it("dzień z już zapisanym odchyleniem od planu nie dostaje przypomnienia", () => {
+    const done = { ...shifts, days: { "2026-10-15": { type: "b", extraMin: 30 } } };
+    expect(ends(buildPushSchedule({ now: WED_NOON, notes: [], shifts: done }))).toEqual([]);
+  });
+
+  it("wyłączona kategoria „Grafik” wyłącza też koniec zmiany", () => {
+    expect(ends(buildPushSchedule({ now: WED_NOON, notes: [], shifts, off: ["grafik"] }))).toEqual([]);
+  });
+});

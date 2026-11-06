@@ -416,6 +416,11 @@ export interface ShiftOccurrence {
   end: Date;
 }
 
+/** Zmiana z dnia `dayKey` albo `null` (dzień bez zmiany, urlop). Akcja „Skończyłem” z powiadomienia (G4.1). */
+export function shiftOccurrenceOn(data: ShiftData, dayKey: string): ShiftOccurrence | null {
+  return occurrence(data, dayKey, new Map(data.types.map((t) => [t.id, t])));
+}
+
 function occurrence(data: ShiftData, dayKey: string, typesById: Map<string, ShiftType>): ShiftOccurrence | null {
   const entry = data.days[dayKey];
   const base = entry && typesById.get(entry.type);
