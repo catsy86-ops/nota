@@ -1,6 +1,7 @@
 import { useId, type HTMLAttributes, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { cardClass } from "@/components/ui/card";
 
 export interface SectionCardProps extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   icon?: LucideIcon;
@@ -28,7 +29,7 @@ export function SectionCard({ icon: Icon, title, meta, description, action, foot
   const Heading = level === 2 ? "h2" : level === 3 ? "h3" : "h4";
   const hasBody = children !== undefined && children !== null && children !== false;
   return (
-    <section aria-labelledby={rest["aria-label"] ? undefined : headingId} className={cn("rounded-card border border-border bg-card p-4 sm:p-5", className)} {...rest}>
+    <section aria-labelledby={rest["aria-label"] ? undefined : headingId} className={cn(cardClass, "p-4 sm:p-5", className)} {...rest}>
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="min-w-0">
           <Heading id={headingId} className="section-label gap-2">

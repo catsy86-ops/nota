@@ -85,7 +85,7 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
         <div className="grid grid-cols-2 gap-1 rounded-field border border-border p-0.5" role="group" aria-label="Rodzaj">
           {([[false, "Budowa szefa"], [true, "Zlecenie własne"]] as const).map(([v, label]) => (
             <button key={label} type="button" aria-pressed={job === v} onClick={() => setJob(v)}
-              className={cn("pressable rounded-[calc(var(--radius-field)-2px)] px-2 py-1.5 text-sm coarse:min-h-11",
+              className={cn("pressable rounded-[calc(var(--r-field)-2px)] px-2 py-1.5 text-sm coarse:min-h-11",
                 job === v ? "bg-primary/12 font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}>
               {label}
             </button>

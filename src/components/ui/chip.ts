@@ -10,7 +10,7 @@ export const CHIP_ACCENT = "rounded-full bg-primary/10 px-2 py-0.5 text-primary-
  * (nic by nie pokazał, więc nie świeci bursztynem), wyłączony — przekreślony.
  */
 export function filterChipClass(on: boolean, count: number): string {
-  const base = "rounded-field border px-2.5 py-1 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
+  const base = "rounded-control border px-2.5 py-1 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
   if (!on) return `${base} border-border/60 text-muted-foreground line-through hover:text-foreground`;
   if (count === 0) return `${base} border-border/60 bg-muted/40 text-muted-foreground hover:text-foreground`;
   return `${base} border-primary/40 bg-primary/10 text-primary-ink`;

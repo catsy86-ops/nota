@@ -31,6 +31,17 @@ const LIMITS = {
   rawRadius: { pattern: /(?<![\w-])rounded-(?:lg|xl|md|sm|3xl)(?![\w-])/g, max: 11, token: "rounded-field / rounded-card / rounded-control" },
   rawShadow: { pattern: /(?<![\w-])shadow-(?:md|lg|2xl)(?![\w-])/g, max: 0, token: "shadow-elevation-1..3" },
   rawZIndex: { pattern: /(?<![\w-])z-\d+(?![\w-])/g, max: 0, token: "z-sticky / z-dropdown / z-overlay / z-modal / z-toast" },
+  // Plan UI 2026-11-06, 1.7: progi = stan z 2026-11-06; Etapy 2 i 5 je obniżają.
+  // Rozmiar tekstu w px/rem omija skalę i `--text-scale`.
+  pxText: { pattern: /(?<![\w-])text-\[\d+(?:\.\d+)?(?:px|rem)\]/g, max: 10, token: "text-2xs / text-xs / text-sm" },
+  // Goły `rounded` (0.25rem) nie idzie za kształtem motywu (`--shape`).
+  bareRadius: { pattern: /(?<![\w-])rounded(?![\w-[])/g, max: 38, token: "rounded-control / rounded-field" },
+  // `shadow` i `shadow-sm` to dwie nazwy na `--elevation-1`.
+  bareShadow: { pattern: /(?<![\w-])shadow(?:-sm)?(?![\w-[])/g, max: 24, token: "shadow-elevation-1" },
+  // Zmienna `--radius-*` nie istnieje — promienie to `--r-control/field/card`.
+  missingRadiusVar: { pattern: /var\(--radius-/g, max: 0, token: "var(--r-field) itd." },
+  // Blady przycisk wygląda na zepsuty (nowy plan 2.4) — nieaktywny szarzeje kolorem.
+  disabledOpacity: { pattern: /(?<![\w-])disabled:opacity-\d+/g, max: 30, token: "disabled:text-muted-foreground / Button" },
 } as const;
 
 describe("tokeny projektowe — surowe klasy nie przybywają", () => {

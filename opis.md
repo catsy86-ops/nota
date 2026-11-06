@@ -550,6 +550,48 @@ Plan: `nowyplan.md`, Etap 3 (punkty 3.1–3.8). Każdy dział dostał zmiany z j
 - Vitest: `sidebar/sidebarItems.test.ts` (grupy po NP-4), `lib/noteDate.test.ts`, `debts/DebtsView.test.tsx` i `cwiczenia/CwiczeniaView.test.tsx` (formularz zwinięty).
 - e2e: `study.spec.ts` (pasek opanowania bez kwadracików), `cwiczenia-*.spec.ts`, `debts-*.spec.ts`, `calendar-*.spec.ts`, `reminders-*.spec.ts`, `shifts-*.spec.ts`, `today-*.spec.ts`, `dzis-*.spec.ts`, `touch-targets.spec.ts`.
 
+## Wspólne — prymitywy UI (plan spójności 2026-11-06, Etap 1)
+
+**Co robi.** Jedna skala przycisków, kart i nawigacji okresu dla wszystkich działów. Etap 1 tylko przygotowuje klocki, a migracja ekranów to Etapy 3–5 planu `docs/plan-ui-spojnosc-2026-11-06.md`.
+
+**Gdzie jest i jak działa.**
+
+- `src/components/ui/button.tsx`:
+  - **Promień w wariantach.** Promień przeniesiony z bazy do każdego wariantu. Powód: `cn` (tailwind-merge) nie zna `rounded-control`, więc nie zdjąłby go pod `rounded-full`.
+  - **Nowe warianty i rozmiary.** Warianty `toolbar` (obrys na karcie, Cofnij/Ponów) i `pill` (akcentowa pigułka podpowiedzi). Rozmiary `icon-lg` (44 px, ikona 20 px) i `pill` (36 px, 44 px na dotyku).
+  - **Właściwość `loading`.** Przycisk staje się nieaktywny, dostaje `aria-busy` i kółko `Loader2` zamiast pierwszego dziecka-komponentu (ikony). Etykieta zostaje, więc szerokość nie skacze.
+- `src/components/ui/icon-button.tsx`: nieaktywny szarzeje kolorem (`text-muted-foreground/60`, ton `primary` na `bg-muted`), a nie `opacity-50`. Tak samo jak `Button` (nowy plan 2.4).
+- `src/components/ui/card.tsx`: `Card` i `cardClass` (`rounded-card border border-border bg-card`). `SectionCard` stoi na `cardClass`.
+- `src/components/ui/month-nav.tsx`: `MonthNav` to strzałki 40 px (44 na dotyku), tytuł w h2, opcjonalnie przycisk „wróć do bieżącego” (`onCurrent`) i dodatki w `children`. Ma zastąpić `CalendarHeader` i własny `navButton` w Grafiku.
+- **Tokeny.**
+  - Zamknięcie okna i arkusza ma `rounded-control`, jak inne przyciski.
+  - Arkusz na telefonie (`dialog.tsx` z `sheet` i `sheet.tsx`) ma górne rogi `var(--overlay-radius, var(--r-card))`. Idzie więc za kształtem i skórką (Odblask, Plan), a nie za stałym `rounded-t-2xl`.
+  - `filterChipClass` ma `rounded-control`, jak `Input`.
+  - `--radius-field` (nieistniejąca zmienna) zamienione na `--r-field` w `JournalEntrySheet` i `NewSiteDialog`.
+- **Pusty stan.** Osobnego `ui/empty-state` nie ma, bo `StatusPanel` już nim jest.
+
+**Strażnik.** `src/test/designTokens.test.ts` ma nowe progi według stanu z 2026-11-06:
+
+| Próg | Wartość |
+|---|---|
+| `pxText` | 10 |
+| `bareRadius` | 38 |
+| `bareShadow` | 24 |
+| `missingRadiusVar` | 0 |
+| `disabledOpacity` | 30 |
+
+Liczby mogą tylko maleć.
+
+**Ograniczenia.**
+
+- `loading` z `asChild` nie działa (Slot ma jedno dziecko).
+- `loading` zdejmuje pierwsze dziecko, jeśli jest komponentem. Etykieta nie może więc być pierwszym dzieckiem owiniętym w komponent.
+- Zmienione promienie (zamknięcie okna, chip filtra, arkusz w skórkach z `--overlay-radius`) zmieniają zrzuty `@visual`. Wzorce odnawia Etap 2 jednym przebiegiem.
+
+**Testy.** `src/components/ui/primitives.test.tsx` (`loading`, pigułka bez `rounded-control`, `MonthNav`) oraz `src/test/designTokens.test.ts`.
+
+**Commit.** COMMIT_HASH (2026-11-06).
+
 ## Wspólne — elementy wspólne (nowy plan 2026-11-05, Etap 2)
 
 Plan: `nowyplan.md`, Etap 2 (punkty 2.1–2.6, V5–V7).

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 // Przycisk z samą ikoną: jeden rozmiar celu, jeden stan wciśnięcia (`.pressable`),
 // jeden wygląd otwartego menu. Etykieta zawsze przez `aria-label`.
 const iconButtonVariants = cva(
-  "tap-target pressable relative inline-flex shrink-0 items-center justify-center rounded-control ring-offset-background coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] coarse:after:rounded-card focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
+  "tap-target pressable relative inline-flex shrink-0 items-center justify-center rounded-control ring-offset-background coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] coarse:after:rounded-card focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:text-muted-foreground/60",
   {
     variants: {
       tone: {
@@ -17,7 +17,8 @@ const iconButtonVariants = cva(
         segment:
           "text-muted-foreground hover:bg-background hover:text-foreground hover:shadow-elevation-1 data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-elevation-1",
         active: "bg-primary/10 text-primary-ink hover:bg-primary/15",
-        primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+        // Nieaktywny jak `Button` (nowy plan 2.4): neutralne tło zamiast bladego bursztynu.
+        primary: "bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted",
         destructive: "text-destructive-ink hover:bg-destructive/10",
       },
       size: {

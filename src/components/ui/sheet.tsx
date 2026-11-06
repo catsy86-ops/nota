@@ -103,7 +103,7 @@ const sheetVariants = cva(
       side: {
         top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         bottom:
-          "inset-x-0 bottom-0 max-h-[92dvh] overflow-y-auto rounded-t-2xl border-t pb-[max(1.5rem,env(safe-area-inset-bottom))] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+          "inset-x-0 bottom-0 max-h-[92dvh] overflow-y-auto rounded-t-[var(--overlay-radius,var(--r-card))] border-t pb-[max(1.5rem,env(safe-area-inset-bottom))] data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
         left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
         right:
           "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
@@ -169,7 +169,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
         )}
         {children}
         <OverlayBack closeRef={closeRef} />
-        <SheetPrimitive.Close ref={closeRef} className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-field text-muted-foreground ring-offset-background transition-colors duration-fast hover:bg-muted hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none coarse:h-11 coarse:w-11 coarse:right-2 coarse:top-2">
+        <SheetPrimitive.Close ref={closeRef} className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-control text-muted-foreground ring-offset-background transition-colors duration-fast hover:bg-muted hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none coarse:h-11 coarse:w-11 coarse:right-2 coarse:top-2">
           <X className="h-4 w-4" />
           <span className="sr-only">Zamknij</span>
         </SheetPrimitive.Close>
