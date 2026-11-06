@@ -13,12 +13,12 @@ export function shrinkDimensions(width: number, height: number, max = SHRINK_MAX
   return { width: Math.max(1, Math.round(width * k)), height: Math.max(1, Math.round(height * k)) };
 }
 
-/** Miniatura JPEG zdjęcia; `null`, gdy przeglądarka nie umie albo zdjęcie jest już małe. */
-async function thumbnail(blob: Blob): Promise<Blob | null> {
+/** Miniatura JPEG zdjęcia (dłuższy bok ≤ `max`); `null`, gdy przeglądarka nie umie albo zdjęcie już mieści się w `max`. */
+export async function makeThumbnail(blob: Blob, max = SHRINK_MAX_SIDE): Promise<Blob | null> {
   if (typeof createImageBitmap !== "function") return null;
   const bitmap = await createImageBitmap(blob).catch(() => null);
   if (!bitmap) return null;
-  const size = shrinkDimensions(bitmap.width, bitmap.height);
+  const size = shrinkDimensions(bitmap.width, bitmap.height, max);
   if (!size) return null;
   const canvas = document.createElement("canvas");
   canvas.width = size.width;
@@ -39,7 +39,7 @@ export async function shrinkSitePhotos(entries: readonly JournalEntry[]): Promis
   for (const ref of refs) {
     const rec = await imageStore.get(ref).catch(() => undefined);
     const blob = rec ? new Blob([rec.bytes], { type: rec.type }) : null;
-    const small = blob ? await thumbnail(blob).catch(() => null) : null;
+    const small = blob ? await makeThumbnail(blob).catch(() => null) : null;
     if (!small) { skipped++; continue; }
     map.set(ref, await imageStore.putBlob(small));
   }

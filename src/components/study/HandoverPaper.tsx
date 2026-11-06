@@ -1,8 +1,38 @@
+import { useEffect, useState } from "react";
 import { MapPin } from "lucide-react";
 import { NoteImage } from "@/components/NoteImage";
 import { signerLabel, type Handover } from "@/lib/study/handover";
+import { handoverThumbBlob } from "@/lib/study/handoverThumb";
 
 const shortDate = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+/**
+ * Zdjęcie na protokole jako miniatura (P6.4): zamiast pełnego pliku z magazynu dekodujemy małą kopię.
+ * `undefined` = trwa przygotowanie (pusta ramka), `null` = miniatury nie ma, pokazujemy oryginał.
+ */
+function HandoverPhoto({ imageRef, alt }: { imageRef: string; alt: string }) {
+  const [url, setUrl] = useState<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    let made: string | null = null;
+    void handoverThumbBlob(imageRef).then((blob) => {
+      if (cancelled) return;
+      if (!blob) { setUrl(null); return; }
+      made = URL.createObjectURL(blob);
+      setUrl(made);
+    });
+    return () => {
+      cancelled = true;
+      if (made) URL.revokeObjectURL(made);
+    };
+  }, [imageRef]);
+
+  const cls = "aspect-[4/3] w-full rounded object-cover";
+  if (url === undefined) return <div className={`${cls} bg-muted`} aria-hidden />;
+  if (url === null) return <NoteImage imageRef={imageRef} loading="eager" alt={alt} className={cls} placeholderClassName="aspect-[4/3]" />;
+  return <img src={url} alt={alt} className={cls} />;
+}
 
 /**
  * Kartka protokołu odbioru (tylko do wydruku / PDF): dane budowy, etapy z datami, próby szczelności,
@@ -105,7 +135,7 @@ export function HandoverPaper({ handover: h }: { handover: Handover }) {
                 {(g.stage || h.photoGroups.length > 1) && <h4 className="mb-1 text-xs font-medium text-muted-foreground">{g.stage ?? "Pozostałe"}</h4>}
                 <div className="grid grid-cols-3 gap-2">
                   {g.photos.map((ref) => (
-                    <NoteImage key={ref} imageRef={ref} loading="eager" alt={g.stage ? `Zdjęcie: ${g.stage}` : "Zdjęcie z budowy"} className="aspect-[4/3] w-full rounded object-cover" placeholderClassName="aspect-[4/3]" />
+                    <HandoverPhoto key={ref} imageRef={ref} alt={g.stage ? `Zdjęcie: ${g.stage}` : "Zdjęcie z budowy"} />
                   ))}
                 </div>
               </div>
