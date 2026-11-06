@@ -594,7 +594,7 @@ Plan: `nowyplan.md`, Etap 3 (punkty 3.1–3.8). Każdy dział dostał zmiany z j
 - zrzuty `@visual` Pracy, Grafiku, Kalendarza i Notatek;
 - `e2e/a11y.spec.ts`.
 
-**Commit.** COMMIT_HASH (2026-11-06).
+**Commit.** `e0f3c7c9` (2026-11-06).
 
 ## Wspólne — role tekstu i czytelność (plan spójności 2026-11-06, Etap 2)
 
