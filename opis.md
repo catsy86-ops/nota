@@ -586,7 +586,7 @@ Plan: `nowyplan.md`, Etap 3 (punkty 3.1–3.8). Każdy dział dostał zmiany z j
 
 **Testy.** `src/test/designTokens.test.ts`: `pxText` ma próg 0, a nowy `smallHintParagraph` 24 (pozostałe akapity `<p>` z `text-xs text-muted-foreground`). Wzorce `@visual` odnowione jednym przebiegiem po Etapach 1–2.
 
-**Commit.** COMMIT_HASH (2026-11-06).
+**Commit.** `ffde7103`; wzorce `@visual` w następnym commicie (2026-11-06).
 
 ## Wspólne — prymitywy UI (plan spójności 2026-11-06, Etap 1)
 
