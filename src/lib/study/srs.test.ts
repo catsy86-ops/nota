@@ -45,3 +45,15 @@ describe("srs — SM-2 lite z oceną automatyczną", () => {
     expect(cleanCard({ due: D, last: D, reps: 2, lapses: 1 })).toMatchObject({ seen: 3, right: 2 });
   });
 });
+
+describe("łatwość karty (P4.1)", () => {
+  const card = (ease: number): ReviewCard => ({ reps: 2, interval: 3, ease, due: D, last: "2026-10-10", lapses: 0, seen: 2, right: 2 });
+  it("dobra odpowiedź podnosi łatwość o 0,1, nie więcej niż do 5", () => {
+    expect(reviewCard(card(2.5), true, D).ease).toBe(2.6);
+    expect(reviewCard(card(4.95), true, D).ease).toBe(5);
+  });
+  it("błąd obniża łatwość, nie niżej niż 1,3", () => {
+    expect(reviewCard(card(2.5), false, D).ease).toBe(2.3);
+    expect(reviewCard(card(1.4), false, D).ease).toBe(1.3);
+  });
+});

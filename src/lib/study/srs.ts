@@ -28,6 +28,10 @@ export interface ReviewCard {
 
 export const EASE_START = 2.5;
 export const EASE_MIN = 1.3;
+/** Sufit łatwości: powyżej tego odstępy rosną za szybko (i tak tnie je `INTERVAL_MAX`). */
+export const EASE_MAX = 5;
+/** Ile łatwość rośnie po dobrej odpowiedzi (P4.1: w czystym SM-2 przy „dobrze” zostaje bez zmian, więc rosła tylko w dół). */
+export const EASE_GOOD_STEP = 0.1;
 /** Najdłuższy odstęp — po pół roku pytanie i tak warto zobaczyć. */
 export const INTERVAL_MAX = 180;
 
@@ -35,7 +39,7 @@ const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * Następny stan karty po odpowiedzi. Pierwsze dobre odpowiedzi: 1 dzień, potem 3,
- * dalej odstęp × łatwość. Błąd: od nowa jutro, łatwość −0,2. Druga odpowiedź tego
+ * dalej odstęp × łatwość. Dobra odpowiedź podnosi łatwość o 0,1 (do 5), błąd: od nowa jutro, łatwość −0,2. Druga odpowiedź tego
  * samego dnia (np. „Jeszcze raz”) nie wydłuża odstępu — liczy się raz na dzień;
  * błąd liczy się zawsze.
  */
@@ -49,7 +53,7 @@ export function reviewCard(prev: ReviewCard | undefined, ok: boolean, today: str
   if (prev && prev.last === today && prev.reps > 0) return { ...prev, seen, right: prev.right + 1 };
   const reps = card.reps + 1;
   const interval = Math.min(INTERVAL_MAX, reps === 1 ? 1 : reps === 2 ? 3 : Math.round(card.interval * card.ease));
-  return { reps, interval, ease: card.ease, due: addDaysToKey(today, interval), last: today, lapses: card.lapses, seen, right: card.right + 1 };
+  return { reps, interval, ease: Math.min(EASE_MAX, round2(card.ease + EASE_GOOD_STEP)), due: addDaysToKey(today, interval), last: today, lapses: card.lapses, seen, right: card.right + 1 };
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -72,7 +76,7 @@ export function cleanCard(raw: unknown): ReviewCard | null {
   return {
     reps: Math.floor(num(c.reps, 0, 10_000, 0)),
     interval: Math.floor(num(c.interval, 0, INTERVAL_MAX, 1)),
-    ease: num(c.ease, EASE_MIN, 5, EASE_START),
+    ease: num(c.ease, EASE_MIN, EASE_MAX, EASE_START),
     due: c.due,
     last: c.last,
     lapses: Math.floor(num(c.lapses, 0, 10_000, 0)),
