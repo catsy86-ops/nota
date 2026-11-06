@@ -32,7 +32,16 @@ export interface CustomItem {
   text: string;
 }
 
-export type CustomEntry = CustomQuestion | CustomItem;
+/** Własny temat nauki (P4.6): nazwa, a pytania i punkty wskazują go przez `topic` = id. */
+export interface CustomTopic {
+  kind: "topic";
+  id: string;
+  title: string;
+}
+
+export const CUSTOM_TOPIC_MAX = 60;
+
+export type CustomEntry = CustomQuestion | CustomItem | CustomTopic;
 
 export const isCustomId = (id: string): boolean => id.startsWith(CUSTOM_PREFIX) && id.length <= 64;
 
@@ -50,6 +59,10 @@ export function cleanCustom(raw: unknown): CustomEntry | null {
   if (!raw || typeof raw !== "object") return null;
   const e = raw as Record<string, unknown>;
   if (typeof e.id !== "string" || !isCustomId(e.id)) return null;
+  if (e.kind === "topic") {
+    const title = str(e.title, CUSTOM_TOPIC_MAX);
+    return title ? { kind: "topic", id: e.id, title } : null;
+  }
   const topic = str(e.topic, 64);
   if (!topic) return null;
   if (e.kind === "item") {
@@ -88,4 +101,10 @@ export function cleanCustomList(raw: unknown): CustomEntry[] {
 /** Odpowiedzi w kolejności materiału: poprawna pierwsza (`quiz.ts` miesza je sam). */
 export function questionOptions(q: CustomQuestion): [string, string, string, string] {
   return [q.correct, ...q.wrong];
+}
+
+/** Nazwa własnego tematu (P4.6) albo `null`; bez zależności od wbudowanych tematów. */
+export function ownTopicTitle(custom: readonly CustomEntry[], id: string): string | null {
+  const t = custom.find((e): e is CustomTopic => e.kind === "topic" && e.id === id);
+  return t?.title ?? null;
 }

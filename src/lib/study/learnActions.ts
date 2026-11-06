@@ -1,5 +1,5 @@
 import { TOPICS } from "./content";
-import { CUSTOM_MAX, CUSTOM_PREFIX, CUSTOM_TEXT_MAX, cleanCustom, type CustomEntry, type CustomItem, type CustomQuestion } from "./custom";
+import { CUSTOM_MAX, CUSTOM_PREFIX, CUSTOM_TEXT_MAX, cleanCustom, type CustomEntry, type CustomItem, type CustomQuestion, type CustomTopic } from "./custom";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { studyDevice, yStudy } from "./data";
@@ -70,9 +70,14 @@ export function recordRound(
   return { demoted, streak: activeStreak(getStudy(), today), streakGrew };
 }
 
-/** Własne punkty i pytania (N5): zapis tylko dla znanego tematu i w limicie. `null` = odrzucone. */
+/** Temat wbudowany albo własny (P4.6). */
+export function knownTopic(topic: string): boolean {
+  return TOPICS.some((t) => t.id === topic) || getStudy().custom.some((e) => e.kind === "topic" && e.id === topic);
+}
+
+/** Własne punkty, pytania i tematy (N5, P4.6): zapis tylko dla znanego tematu i w limicie. `null` = odrzucone. */
 function addCustomEntry(entry: CustomEntry | null): CustomEntry | null {
-  if (!entry || !TOPICS.some((t) => t.id === entry.topic)) return null;
+  if (!entry || (entry.kind !== "topic" && !knownTopic(entry.topic))) return null;
   if (getStudy().custom.length >= CUSTOM_MAX) return null;
   yStudy.addCustom(entry);
   return entry;
@@ -101,7 +106,7 @@ export function addCustomQuestion(input: CustomQuestionInput): CustomQuestion | 
 /** Zmiana własnego pytania bez utraty historii powtórek (§4 P6). `null` = nie ma takiego pytania albo treść odrzucona. */
 export function updateCustomQuestion(id: string, input: CustomQuestionInput): CustomQuestion | null {
   const prev = getStudy().custom.find((e) => e.id === id);
-  if (!prev || prev.kind !== "question" || !TOPICS.some((t) => t.id === input.topic)) return null;
+  if (!prev || prev.kind !== "question" || !knownTopic(input.topic)) return null;
   const cleaned = cleanCustom({ kind: "question", id, ...input });
   if (!cleaned || cleaned.kind !== "question") return null;
   yStudy.updateCustom(cleaned);
@@ -115,4 +120,15 @@ export function removeCustomEntry(id: string): CustomEntry | null {
 
 export function restoreCustomEntry(entry: CustomEntry) {
   yStudy.restoreCustom(entry);
+}
+
+/** Nowy własny temat (P4.6): tylko nazwa; pytania i punkty dopina się do jego id. `null` = pusta nazwa albo limit. */
+export function addCustomTopic(title: string): CustomTopic | null {
+  return addCustomEntry(cleanCustom({ kind: "topic", id: CUSTOM_PREFIX + crypto.randomUUID(), title: title.trim() })) as CustomTopic | null;
+}
+
+/** Usuwa własny temat razem z jego pytaniami i punktami (powtórki, błędy i odhaczenia też). */
+export function removeCustomTopic(id: string): void {
+  for (const e of getStudy().custom) if (e.kind !== "topic" && e.topic === id) yStudy.removeCustom(e.id);
+  yStudy.removeCustom(id);
 }

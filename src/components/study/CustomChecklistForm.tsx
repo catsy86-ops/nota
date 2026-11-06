@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { pluralPl } from "@/lib/plural";
 import { MODULES, TOPICS } from "@/lib/study/content";
-import { CUSTOM_TEXT_MAX } from "@/lib/study/custom";
+import { CUSTOM_TEXT_MAX, type CustomTopic } from "@/lib/study/custom";
 import { deleteCustom } from "@/lib/study/customActions";
 import { addCustomItem, useStudy } from "@/lib/study/store";
 
@@ -13,6 +13,7 @@ const selectClass =
 
 /** Wybór tematu pogrupowany w moduły — jak w arkuszu wpisu. */
 export function TopicSelect({ id, value, onChange, ariaLabel }: { id?: string; value: string; onChange: (topic: string) => void; ariaLabel: string }) {
+  const own = useStudy().custom.filter((e): e is CustomTopic => e.kind === "topic");
   return (
     <select id={id} aria-label={ariaLabel} value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
       {MODULES.map((m) => (
@@ -20,6 +21,11 @@ export function TopicSelect({ id, value, onChange, ariaLabel }: { id?: string; v
           {TOPICS.filter((t) => t.module === m.id).map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
         </optgroup>
       ))}
+      {own.length > 0 && (
+        <optgroup label="Moje tematy">
+          {own.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+        </optgroup>
+      )}
     </select>
   );
 }

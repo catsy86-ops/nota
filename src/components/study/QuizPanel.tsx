@@ -9,6 +9,8 @@ import { buildRound, examPoolSize, examRound, missedTopics, scoreRound, type Rou
 import { EXAM_SECONDS, EXAM_SIZE, examAnnouncement, examResult, weakTopicsOf } from "@/lib/study/exam";
 import { activeStreak, columnOf, dueToday, recordExam, recordRound, useStudy, useStudyLists } from "@/lib/study/store";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
+import { OwnTopics } from "./OwnTopics";
+import { ownTopicTitle, type CustomTopic } from "@/lib/study/custom";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { haptic } from "@/lib/haptics";
@@ -34,6 +36,7 @@ function nextReviewLabel(due: string, today: string): string {
 export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: QuizScope; onScopeChange?: (s: QuizScope) => void }) {
   const study = useStudy();
   const lists = useStudyLists();
+  const ownTopics = useMemo(() => study.custom.filter((e): e is CustomTopic => e.kind === "topic"), [study.custom]);
   const [ownOpen, setOwnOpen] = useState(false);
   const [round, setRound] = useState<RoundQuestion[] | null>(null);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
@@ -288,6 +291,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
             Moje pytania{study.custom.some((e) => e.kind === "question") && <span className="ml-1 font-mono tabular-nums text-muted-foreground">({study.custom.filter((e) => e.kind === "question").length})</span>}
           </Button>
           <CustomQuestionsDialog open={ownOpen} onOpenChange={setOwnOpen} />
+          <OwnTopics topics={ownTopics} onPractice={(topic) => start({ kind: "topic", topic })} />
           {study.exams && study.exams.length > 0 && (
             <p className="text-xs text-muted-foreground tabular-nums" data-testid="last-exam">
               Ostatni egzamin: {study.exams[study.exams.length - 1].correct}/{study.exams[study.exams.length - 1].total}
@@ -330,7 +334,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           )}
         </span>
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-muted-foreground truncate">
-          {scope.kind === "missed" ? "Powtórka błędów · " : scope.kind === "due" ? "Na dziś · " : ""}{topicName(current.topic)}
+          {scope.kind === "missed" ? "Powtórka błędów · " : scope.kind === "due" ? "Na dziś · " : ""}{ownTopicTitle(study.custom, current.topic) ?? topicName(current.topic)}
         </span>
       </div>
       {/* Przerwanie rundy w połowie (§8 P3): wraca do startu; odpowiedzi już zapisane w powtórkach zostają. */}

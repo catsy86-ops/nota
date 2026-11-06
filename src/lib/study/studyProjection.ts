@@ -28,7 +28,10 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     if (topicIds.has(id) && isColumn(col) && col !== "todo") board[id] = col;
   }
   // Własne wpisy (N5) walidowane tu, bo tylko tu znane są tematy; potem liczą się jak materiał.
-  const custom = cleanCustomList(s.custom).filter((e) => topicIds.has(e.topic));
+  // Własne tematy (P4.6) są celem pytań i punktów obok wbudowanych; sam temat nie ma pola `topic`.
+  const list = cleanCustomList(s.custom);
+  const ownIds = new Set(list.flatMap((e) => (e.kind === "topic" ? [e.id] : [])));
+  const custom = list.filter((e) => e.kind === "topic" || topicIds.has(e.topic) || ownIds.has(e.topic));
   const lists = studyLists(custom);
   const itemIds = new Set(lists.checklist.map((c) => c.id));
   const checked: Record<string, true> = {};
@@ -79,7 +82,7 @@ export function studyLists(custom: readonly CustomEntry[]): { checklist: Checkli
   const questions: Question[] = [...QUESTIONS, ...CALC_QUESTIONS];
   for (const e of custom) {
     if (e.kind === "item") checklist.push({ id: e.id, topic: e.topic, text: e.text });
-    else questions.push({ id: e.id, topic: e.topic, question: e.question, options: questionOptions(e), explanation: e.explanation });
+    else if (e.kind === "question") questions.push({ id: e.id, topic: e.topic, question: e.question, options: questionOptions(e), explanation: e.explanation });
   }
   return { checklist, questions };
 }

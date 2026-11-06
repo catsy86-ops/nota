@@ -11,6 +11,7 @@ import { pluralPl } from "@/lib/plural";
 import { TOPICS } from "@/lib/study/content";
 import { CUSTOM_ANSWER_MAX, CUSTOM_EXPLANATION_MAX, CUSTOM_TEXT_MAX, type CustomQuestion } from "@/lib/study/custom";
 import { addCustomQuestion, updateCustomQuestion, useStudy } from "@/lib/study/store";
+import { ownTopicTitle } from "@/lib/study/custom";
 import { parseQuestionsMd } from "@/lib/study/questionsMd";
 import type { CustomPrefill } from "@/lib/study/customPrefill";
 import { TopicSelect } from "./CustomChecklistForm";
@@ -169,7 +170,7 @@ export function CustomQuestionsDialog({ open, onOpenChange, prefill }: { open: b
                 <li key={q.id} className="flex items-start gap-2 text-sm">
                   <span className="min-w-0 flex-1">
                     {q.question}
-                    <span className="block text-xs text-muted-foreground">{TOPICS.find((t) => t.id === q.topic)?.title ?? q.topic}</span>
+                    <span className="block text-xs text-muted-foreground">{TOPICS.find((t) => t.id === q.topic)?.title ?? ownTopicTitle(study.custom, q.topic) ?? q.topic}</span>
                   </span>
                   <Button variant="ghost" size="sm" aria-label={`Edytuj pytanie: ${q.question}`} onClick={() => startEdit(q)} className="coarse:h-11">
                     <Pencil className="h-4 w-4" aria-hidden />
