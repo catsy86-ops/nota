@@ -127,8 +127,8 @@ test("powtórki: pytania z rundy wracają następnego dnia jako „Na dziś: 10�
   await expect(page.getByTestId("due-chip")).toHaveCount(0);
   await expect(page.getByText("Zapisano", { exact: true })).toBeVisible();
 
-  // Następny dzień: każde pytanie z rundy (dobre po 1 dniu, złe też jutro) jest do powtórki.
-  await page.clock.setFixedTime(new Date(2026, 9, 15, 9, 0).getTime());
+  // Trzy dni później (FSRS, P-6): dobre odpowiedzi wracają po 3 dniach, złe po jednym, więc wszystkie 10 jest do powtórki.
+  await page.clock.setFixedTime(new Date(2026, 9, 17, 9, 0).getTime());
   await page.reload();
   await expect(page.getByTestId("due-chip")).toContainText("Na dziś: 10");
   await page.getByRole("tab", { name: "Tablica" }).click();

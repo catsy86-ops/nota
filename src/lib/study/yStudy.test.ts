@@ -262,7 +262,7 @@ describe("karty budów w Yjs", () => {
     sync();
     const r = b.get().review;
     expect(Object.keys(r).sort()).toEqual(["q1", "q2", "q3"]);
-    expect(r.q1).toMatchObject({ reps: 1, due: "2026-10-16" });
+    expect(r.q1).toMatchObject({ reps: 1, due: "2026-10-18" });
     expect(r.q2).toMatchObject({ reps: 0, lapses: 1, due: "2026-10-16" });
     const dump = a.dump();
     const { a: c } = pair();

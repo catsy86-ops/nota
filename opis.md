@@ -1133,7 +1133,7 @@ Dział Praca to dziennik instalatora wod-kan połączony z nauką materiału G-H
 ### Quiz i powtórki („Na dziś”)
 
 - Po odpowiedzi pytanie wraca do powtórki: po dobrej coraz rzadziej (1 dzień, 3 dni, dalej dłużej), po błędzie następnego dnia. Pod paskiem „Na dziś: N powtórek” z każdej zakładki; w Quizie ramka z „Powtórz”. Runda powtórek bierze najbardziej zaległe pytania (do 10). Gdy nic nie ma na dziś, Quiz podaje, kiedy następne.
-- SM-2 „lite” z oceną automatyczną: dobra odpowiedź = q 4, zła = q 1 (od nowa, łatwość −0,2, min. 1,3), dobra podnosi łatwość o 0,1 (maks. 5; P4.1, 2026-11-06). Bez pytania o samoocenę. Odstęp maks. 180 dni.
+- Powtórki FSRS (P-6, 2026-11-06, biblioteka `ts-fsrs` 5.4.2, wersja przypięta, starsza niż 14 dni). `src/lib/study/srs.ts`: `reviewCard(prev, ok, today)` liczy harmonogram przez `fsrs` z wyłączonymi `enable_fuzz` i `enable_short_term` (ten sam wynik na każdym urządzeniu, odstęp to co najmniej dzień), sufit `INTERVAL_MAX` = 180 dni, także po stronie aplikacji. „Dobrze” = Good, „Od nowa” = Again. Karta trzyma `stability`, `difficulty`, `state` (opcjonalne; w `cleanCard` tylko w komplecie). Karta sprzed FSRS: stabilność = dotychczasowy odstęp, trudność z łatwości SM-2 (1,3 → 10, 2,5 → ok. 7, 5 → 1), stan „powtórka”. Pole `ease` zostaje w danych, ale nie wpływa już na terminy. Testy: `srs.test.ts`, `yStudy.test.ts` (pierwsza dobra odpowiedź: termin za 3 dni), `dataCompat.test.ts`. Bundle: `ts-fsrs` w leniwym chunku `yStudy`; paczka startowa 197 KB gzip.
 - Dni jako klucze lokalnego dnia („2026-10-15”), nie milisekundy. Druga dobra odpowiedź tego samego dnia nie wydłuża odstępu; błąd zawsze się liczy (`lapses`).
 - Karty w mapie Yjs `studyReview` (klucz = id pytania): dwa telefony odpowiadające na różne pytania scalają się bez strat. `recordRound` aktualizuje karty w tej samej transakcji co runda.
 - „Powtórka błędów” (`studyMissed`) zostaje osobno: lista ostatnich błędów, nie harmonogram.
@@ -3969,7 +3969,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 ### Jak działa i dlaczego
 - Ocena jest jednym stuknięciem po pokazaniu wyniku. Domyślny wybór to wynik odpowiedzi, więc zwykła runda nie wymaga dodatkowego kroku. Przyciski pojawiają się tylko przy objaśnieniu (`reveal`), a nie w egzaminie (`examEnd === null`).
-- Wybrano wariant „Od nowa / Dobrze” (dwa wyniki). Trzy oceny („trudne / dobrze / łatwe”) z planu odłożone. Przy dwóch wynikach nie ma q 5. Pierwotnie wzrostu łatwości nie dodano (dobra odpowiedź zostawiała łatwość bez zmian, jak w czystym SM-2). **Od 2026-11-06 (P4.1) dobra odpowiedź podnosi łatwość o 0,1** (`EASE_GOOD_STEP`, sufit `EASE_MAX` = 5), bo bez wzrostu łatwość mogła tylko spadać. Ta zmiana odwraca wcześniejszą decyzję: do potwierdzenia.
+- Wybrano wariant „Od nowa / Dobrze” (dwa wyniki). Trzy oceny („trudne / dobrze / łatwe”) z planu odłożone. Przy dwóch wynikach nie ma q 5. Pierwotnie wzrostu łatwości nie dodano (dobra odpowiedź zostawiała łatwość bez zmian, jak w czystym SM-2). **Od 2026-11-06 (P4.1) dobra odpowiedź podnosi łatwość o 0,1** (`EASE_GOOD_STEP`, sufit `EASE_MAX` = 5), bo bez wzrostu łatwość mogła tylko spadać. Od 2026-11-06 dobra odpowiedź podnosi łatwość o 0,1, a od P-6 (FSRS) łatwość nie wpływa już na terminy (zob. wpis o powtórkach).
 
 ### Ograniczenia i pułapki
 - Ocena istnieje tylko w pamięci komponentu do końca rundy. Po wyjściu z rundy nie ma zapisu „niezaliczone” poza wynikiem z `recordRound`.

@@ -1,19 +1,22 @@
+import { createEmptyCard, fsrs, generatorParameters, Rating, State, type Card } from "ts-fsrs";
 import { addDaysToKey } from "@/lib/week";
 
 /**
- * Powtórki pytań quizu — SM-2 w wersji „lite” z oceną automatyczną:
- * dobra odpowiedź = „dobrze” (q 4), zła = „od nowa” (q 1). Nie pytamy
- * o samoocenę — na budowie liczy się jedno stuknięcie.
+ * Powtórki pytań quizu — FSRS (decyzja P-6, biblioteka `ts-fsrs`). Dwa wyniki: „Dobrze” = Good,
+ * „Od nowa” = Again. Nie pytamy o samoocenę — na budowie liczy się jedno stuknięcie.
  *
- * Karta trzyma dni jako klucze „2026-10-15” (lokalny dzień), nie milisekundy:
- * termin „na jutro” ma znaczyć jutro, niezależnie od godziny rundy.
+ * Bez losowości (`enable_fuzz` wyłączony) i bez kroków w ciągu dnia (`enable_short_term`): dane
+ * synchronizują się przez Yjs, więc każde urządzenie ma policzyć to samo, a odstęp to co najmniej dzień.
+ *
+ * Karta trzyma dni jako klucze „2026-10-15” (lokalny dzień), nie milisekundy: termin „na jutro”
+ * ma znaczyć jutro, niezależnie od godziny rundy.
  */
 export interface ReviewCard {
   /** Dobre odpowiedzi z rzędu (zero po błędzie). */
   reps: number;
   /** Odstęp do następnej powtórki w dniach. */
   interval: number;
-  /** Łatwość SM-2 (min. 1,3). */
+  /** Łatwość z dawnego SM-2 (min. 1,3). Już nie wpływa na terminy; służy tylko do trudności kart sprzed FSRS. */
   ease: number;
   /** Dzień następnej powtórki. */
   due: string;
@@ -24,39 +27,76 @@ export interface ReviewCard {
   /** Odpowiedzi łącznie i dobre odpowiedzi — trafność (statystyki); brak w kartach sprzed N4. */
   seen: number;
   right: number;
+  /** Stan FSRS: stabilność w dniach, trudność 1–10, stan (0 nowa, 1 nauka, 2 powtórka, 3 ponowna nauka). Brak w kartach sprzed FSRS. */
+  stability?: number;
+  difficulty?: number;
+  state?: number;
 }
 
 export const EASE_START = 2.5;
 export const EASE_MIN = 1.3;
-/** Sufit łatwości: powyżej tego odstępy rosną za szybko (i tak tnie je `INTERVAL_MAX`). */
 export const EASE_MAX = 5;
-/** Ile łatwość rośnie po dobrej odpowiedzi (P4.1: w czystym SM-2 przy „dobrze” zostaje bez zmian, więc rosła tylko w dół). */
-export const EASE_GOOD_STEP = 0.1;
 /** Najdłuższy odstęp — po pół roku pytanie i tak warto zobaczyć. */
 export const INTERVAL_MAX = 180;
 
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const STABILITY_MAX = 36_500;
+
+const scheduler = fsrs(generatorParameters({ enable_fuzz: false, enable_short_term: false, maximum_interval: INTERVAL_MAX }));
+
+/** Dzień klucza jako data w południe, żeby strefa czasu nie przesunęła dnia. */
+const dayDate = (key: string): Date => {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d, 12);
+};
 
 /**
- * Następny stan karty po odpowiedzi. Pierwsze dobre odpowiedzi: 1 dzień, potem 3,
- * dalej odstęp × łatwość. Dobra odpowiedź podnosi łatwość o 0,1 (do 5), błąd: od nowa jutro, łatwość −0,2. Druga odpowiedź tego
- * samego dnia (np. „Jeszcze raz”) nie wydłuża odstępu — liczy się raz na dzień;
- * błąd liczy się zawsze.
+ * Karta w formie FSRS. Stare karty (bez pól FSRS) dostają stabilność z dotychczasowego odstępu
+ * i trudność z łatwości SM-2: 1,3 → 10, 2,5 → ok. 7, 5 → 1.
  */
-export function reviewCard(prev: ReviewCard | undefined, ok: boolean, today: string): ReviewCard {
-  const card = prev ?? { reps: 0, interval: 0, ease: EASE_START, due: today, last: today, lapses: 0, seen: 0, right: 0 };
-  const seen = card.seen + 1;
-  if (!ok) {
-    return { reps: 0, interval: 1, ease: Math.max(EASE_MIN, round2(card.ease - 0.2)), due: addDaysToKey(today, 1), last: today, lapses: card.lapses + 1, seen, right: card.right };
+function toFsrs(card: ReviewCard): Card {
+  const last_review = dayDate(card.last);
+  const due = dayDate(card.due);
+  if (card.stability !== undefined && card.difficulty !== undefined && card.state !== undefined) {
+    return {
+      due, stability: card.stability, difficulty: card.difficulty, state: card.state as State,
+      reps: card.reps, lapses: card.lapses, scheduled_days: card.interval, learning_steps: 0, elapsed_days: 0, last_review,
+    };
   }
-  // Liczniki rosną zawsze; harmonogram — raz na dzień.
-  if (prev && prev.last === today && prev.reps > 0) return { ...prev, seen, right: prev.right + 1 };
-  const reps = card.reps + 1;
-  const interval = Math.min(INTERVAL_MAX, reps === 1 ? 1 : reps === 2 ? 3 : Math.round(card.interval * card.ease));
-  return { reps, interval, ease: Math.min(EASE_MAX, round2(card.ease + EASE_GOOD_STEP)), due: addDaysToKey(today, interval), last: today, lapses: card.lapses, seen, right: card.right + 1 };
+  const difficulty = 10 - ((card.ease - EASE_MIN) * 9) / (EASE_MAX - EASE_MIN);
+  return {
+    due, stability: Math.max(0.5, card.interval), difficulty: Math.min(10, Math.max(1, difficulty)), state: State.Review,
+    reps: card.reps, lapses: card.lapses, scheduled_days: card.interval, learning_steps: 0, elapsed_days: 0, last_review,
+  };
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
+/**
+ * Następny stan karty po odpowiedzi. Liczniki rosną zawsze; harmonogram — raz na dzień
+ * (druga dobra odpowiedź tego samego dnia, np. „Jeszcze raz”, nie przesuwa terminu).
+ * Błąd wraca do nauki i liczy się do pomyłek.
+ */
+export function reviewCard(prev: ReviewCard | undefined, ok: boolean, today: string): ReviewCard {
+  const seen = (prev?.seen ?? 0) + 1;
+  if (ok && prev && prev.last === today && prev.reps > 0) return { ...prev, seen, right: prev.right + 1 };
+  const base = prev ?? { reps: 0, interval: 0, ease: EASE_START, due: today, last: today, lapses: 0, seen: 0, right: 0 };
+  const current = prev ? toFsrs(prev) : createEmptyCard(dayDate(today));
+  const next = scheduler.next(current, dayDate(today), ok ? Rating.Good : Rating.Again).card;
+  // Sufit też po naszej stronie: biblioteka potrafi oddać o dzień więcej niż `maximum_interval`.
+  const days = Math.min(INTERVAL_MAX, Math.max(1, Math.round(next.scheduled_days)));
+  return {
+    reps: ok ? base.reps + 1 : 0,
+    interval: days,
+    ease: base.ease,
+    due: addDaysToKey(today, days),
+    last: today,
+    lapses: ok ? base.lapses : base.lapses + 1,
+    seen,
+    right: ok ? base.right + 1 : base.right,
+    stability: next.stability,
+    difficulty: next.difficulty,
+    state: next.state,
+  };
+}
 
 /** Pytania należne do powtórki (termin dziś lub wcześniej), od najbardziej zaległych. */
 export function dueIds(reviews: Readonly<Record<string, ReviewCard>>, today: string): string[] {
@@ -73,6 +113,15 @@ export function cleanCard(raw: unknown): ReviewCard | null {
   if (typeof c.due !== "string" || !DAY_RE.test(c.due) || typeof c.last !== "string" || !DAY_RE.test(c.last)) return null;
   const num = (v: unknown, min: number, max: number, fallback: number) =>
     typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : fallback;
+  // Pola FSRS tylko w komplecie; niepełne (uszkodzone) są pomijane, karta policzy się od pól SM-2.
+  const fsrsPart = typeof c.stability === "number" && typeof c.difficulty === "number" && typeof c.state === "number"
+    && Number.isFinite(c.stability) && Number.isFinite(c.difficulty) && Number.isFinite(c.state)
+    ? {
+      stability: num(c.stability, 0, STABILITY_MAX, 1),
+      difficulty: num(c.difficulty, 1, 10, 5),
+      state: Math.floor(num(c.state, 0, 3, 2)),
+    }
+    : {};
   return {
     reps: Math.floor(num(c.reps, 0, 10_000, 0)),
     interval: Math.floor(num(c.interval, 0, INTERVAL_MAX, 1)),
@@ -83,5 +132,6 @@ export function cleanCard(raw: unknown): ReviewCard | null {
     // Karty sprzed N4 bez liczników: odpowiedzi co najmniej tyle, ile pomyłek + dobre z rzędu.
     seen: Math.floor(num(c.seen, 0, 100_000, num(c.lapses, 0, 10_000, 0) + num(c.reps, 0, 10_000, 0))),
     right: Math.floor(num(c.right, 0, 100_000, num(c.reps, 0, 10_000, 0))),
+    ...fsrsPart,
   };
 }
