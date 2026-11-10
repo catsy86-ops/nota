@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X, Maximize2, QrCode, Sparkles } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X, Maximize2, QrCode, Sparkles, Aperture } from "lucide-react";
 import { formatFileSize } from "@/lib/attachments";
 import { addRecording } from "@/lib/study/recordings";
 import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/journalEntry";
@@ -11,6 +11,7 @@ import { PressureTestFields } from "./PressureTestFields";
 import { LevelMeter } from "./LevelMeter";
 import { BarcodeScanner } from "./BarcodeScanner";
 import { AISummary } from "./AISummary";
+import { CameraCapture } from "./CameraCapture";
 import { FittingsFields } from "./FittingsFields";
 import { PipesFields } from "./PipesFields";
 import { applyKit, type Kit } from "@/lib/study/kits";
@@ -129,6 +130,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [levelOpen, setLevelOpen] = useState(false);
   const [barcodeOpen, setBarcodeOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const [fittingsOpen, setFittingsOpen] = useState(false);
   const testVisible = testOpen || !!form.test || TEST_TOPICS.has(topic);
   const levelVisible = levelOpen || form.level !== undefined;
@@ -736,7 +738,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             {fileInput({ ref: cameraRef, testId: "journal-camera-input", capture: true })}
             {fileInput({ ref: galleryRef, testId: "journal-photo-input" })}
             <div className="flex gap-2 coarse:grid coarse:grid-cols-2">
-              <Button type="button" variant="outline" onClick={() => cameraRef.current?.click()} className="hidden coarse:inline-flex coarse:h-12">
+              <Button type="button" variant="outline" onClick={() => setCameraOpen(true)} className="hidden coarse:inline-flex coarse:h-12">
                 <Camera className="mr-1.5 h-5 w-5" />Aparat
               </Button>
               <Button type="button" variant="outline" onClick={() => galleryRef.current?.click()} className="coarse:h-12">
@@ -910,6 +912,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </div>
             )}
             <AISummary open={aiOpen} onOpenChange={setAiOpen} text={form.text} onSelect={(s) => patch({ summary: s })} />
+            <CameraCapture open={cameraOpen} onOpenChange={setCameraOpen} onCapture={async (blob) => { try { const ref = await imageStore.putBlob(blob); const now = getForm().images; if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) { patch({ images: [...now, ref] }); haptic("tap"); } } catch { photoSaveFailed(); } }} />
             {fittingsVisible && (
               <div id="journal-fittings" className="rounded-card border border-border p-2">
                 <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
