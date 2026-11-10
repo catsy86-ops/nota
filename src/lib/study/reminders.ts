@@ -1,5 +1,5 @@
 import { TEST_TOPICS } from "./pressureTest";
-import { dueServiceCalls, serviceDayKey } from "./service";
+import { dueServiceCalls, serviceDayKey, warrantyDaysLeft } from "./service";
 import { entrySiteId, type SiteCard } from "./sites";
 import { ORDER_LATE_DAYS, dueDayValue, orderLateFrom } from "./shortages";
 import type { JournalEntry } from "./journalEntry";
@@ -21,7 +21,8 @@ export type StudyReminder =
   | { kind: "late-order"; siteId: string; site: string; items: string[] }
   | { kind: "delivery-today"; siteId: string; site: string; items: string[] }
   | { kind: "service-due"; siteId: string; site: string; items: string[] }
-  | { kind: "pre-cover-test"; siteId: string; site: string };
+  | { kind: "pre-cover-test"; siteId: string; site: string }
+  | { kind: "warranty-expiring"; siteId: string; site: string; daysLeft: number };
 
 /**
  * Przypomnienia do dziennika:
@@ -39,7 +40,7 @@ export type StudyReminder =
 export function studyReminders(
   journal: readonly JournalEntry[],
   now: number = Date.now(),
-  siteCards: Readonly<Record<string, Pick<SiteCard, "id" | "name" | "archived" | "shortages" | "service" | "stages">>> = {},
+  siteCards: Readonly<Record<string, Pick<SiteCard, "id" | "name" | "archived" | "shortages" | "service" | "stages" | "warranty">>> = {},
 ): StudyReminder[] {
   const out: StudyReminder[] = [];
 
@@ -99,6 +100,16 @@ export function studyReminders(
   for (const card of Object.values(siteCards)) {
     const due = dueServiceCalls(card.service ?? [], today);
     if (due.length > 0) out.push({ kind: "service-due", siteId: card.id, site: card.name, items: due.map((c) => c.text) });
+  }
+
+  // B3.10: przypomnienie 30 dni przed końcem gwarancji.
+  const todayStr = new Date(now).toISOString().split("T")[0];
+  for (const card of Object.values(siteCards)) {
+    if (card.archived !== undefined || !card.warranty) continue;
+    const daysLeft = warrantyDaysLeft(card.warranty, todayStr);
+    if (daysLeft > 0 && daysLeft <= 30) {
+      out.push({ kind: "warranty-expiring", siteId: card.id, site: card.name, daysLeft });
+    }
   }
 
   return out;
