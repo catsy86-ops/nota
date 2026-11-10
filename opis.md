@@ -4695,6 +4695,17 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Testy.** `src/lib/study/usage.test.ts`, `src/lib/study/perf.test.ts`, `src/lib/diagnostics.test.ts`. Seed sprawdzono przez `cleanDump` (3 000 wpisów, 40 budów).
 - **Commit.** 2026-11-10 (hash w następnym wpisie).
 
+## Praca: status zdjęć budowy w karcie (B1.7, plan Pracy na budowie 2026-11-10)
+
+- **Co robi.** Pod linijką „Zdjęcia, nagrania i dokumenty: X MB” w karcie budowy stoi druga: „kopia pełna: 3 dni temu” (albo „dziś”, „kopii pełnej jeszcze nie zrobiono”). Gdy kopii nie ma, jest starsza niż 7 dni albo przeglądarka nie zapewniła trwałego magazynu, linijka jest w kolorze ostrzeżenia (przy braku trwałego magazynu z dopiskiem, że przeglądarka może usunąć dane przy braku miejsca).
+- **Gdzie jest.** `src/lib/study/storageStatus.ts` (`storageStatus`, `BACKUP_STALE_DAYS`), `src/components/study/SiteStorageLine.tsx` (`data-testid="site-storage-backup"`); dane z `daysSinceBackup()` i `getStorageInfo()`.
+- **Ograniczenia i pułapki.** „Kopia pełna” to ostatnia kopia całej aplikacji, nie archiwum tej budowy. Nie ma przycisku kopii w karcie.
+- **Testy.** `src/lib/study/storageStatus.test.ts`, `e2e/site-storage.spec.ts`.
+
+## Praca: testy migracji `data.ts` (B1.3)
+
+- `src/lib/study/data.test.ts`: stałe id urządzenia (też bez localStorage), migracja starego zapisu do Yjs raz i bez dubli, uszkodzony JSON, zły kształt, `legacyStudyMerged`, `useStudyReady`. Pokrycie `data.ts` z 59% do 96%.
+
 ## Wygląd: Fala 0 planu motywów — naprawy (2026-10-30)
 
 - **Co robi.**

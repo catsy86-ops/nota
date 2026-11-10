@@ -1,6 +1,6 @@
 # Plan: Praca na budowie — naprawy, dopracowanie, rozwój (2026-11-10)
 
-> **Status (2026-11-10):** B0.1 i B0.4 zrobione w kodzie (niezacommitowane, szczegóły w `opis.md`); B0.2 i B0.3 czekają na telefon i Twój tydzień obserwacji. Zastępuje otwarte resztki `plan-praca-hydraulik-2026-10-29.md` (H4.2, H6.1, H6.2 → punkt B0.2) i P2.2 z planu 27.10 (→ B3.9). Numeracja ma przedrostek **B** (budowa).
+> **Status (2026-11-10):** B0.1 i B0.4 zrobione (`ec639272`, szczegóły w `opis.md`); B1.2 nie wymagało kodu, B1.3 i B1.7 zrobione; B0.2 i B0.3 czekają na telefon i Twój tydzień obserwacji. Zastępuje otwarte resztki `plan-praca-hydraulik-2026-10-29.md` (H4.2, H6.1, H6.2 → punkt B0.2) i P2.2 z planu 27.10 (→ B3.9). Numeracja ma przedrostek **B** (budowa).
 
 ## 1. Diagnoza
 
@@ -57,12 +57,12 @@ Oznaczenia: **W** to wartość dla codziennej pracy (1–3), **N** to nakład (S
 | # | Co | Gdzie | W | N |
 |---|----|-------|---|---|
 | B1.1 | **Kształtki w 3 stuknięciach.** Pigułki ostatnio używanych kształtek widać od razu w arkuszu, bez rozwijania sekcji. Stuknięcie dodaje 1 szt., przytrzymanie otwiera pole ilości. | `JournalEntrySheet.tsx`, `FittingsFields.tsx` | 3 | S |
-| B1.2 | **Ostrzeżenie o starej wersji na drugim telefonie.** Każde urządzenie zapisuje w `studyMeta` swoją wersję formatu danych. Gdy inne urządzenie w grupie ma starszą wersję, pojawia się pasek: „Telefon *Marek* ma starą wersję: nie zobaczy nowych wpisów. Zaktualizuj”. Bez tego błąd zgodności (mapa pól) zostaje niewidoczny. | `src/lib/sync/`, `studyMeta`, `dataCompat.test.ts` | 3 | S |
-| B1.3 | **Testy charakteryzujące `data.ts`** (59% → ≥ 85%): migracje, pierwsze uruchomienie, uszkodzony dump. | `src/lib/study/data.test.ts` | 2 | S |
+| B1.2 | ✅ **Nie wymaga kodu (2026-11-10).** Ostrzeżenie o starej wersji już istnieje: urządzenia ogłaszają `SCHEMA_VERSION` w awareness (`formatSchema.ts`), a `OlderDeviceBanner` (w `Index.tsx`) i Ustawienia → Sync pokazują „*Marek* ma starszą wersję”. Diagnoza D4 w tym punkcie była błędna. | `src/lib/formatSchema.ts`, `src/components/sync/OlderDeviceBanner.tsx` | 3 | S |
+| B1.3 | ✅ **Testy charakteryzujące `data.ts`** (59% → 96%, `data.test.ts`): migracje, pierwsze uruchomienie, uszkodzony dump. | `src/lib/study/data.test.ts` | 2 | S |
 | B1.4 | **Testy własności** (`fast-check`, tylko w devDependencies): (a) scalanie 2–3 `Y.Doc` w losowej kolejności daje ten sam stan i niczego nie gubi (wpisy, punkty, braki, auto, wpłaty); (b) `billing.ts`: „naliczone − otrzymane = zostało” dla każdego wejścia, nigdy `NaN`; (c) stan auta = inwentaryzacja + przyjęcia − zużycie, niezależnie od kolejności zdarzeń; (d) `sitePackage` wczytany dwa razy daje to samo co raz (idempotentność). | `src/lib/study/*.prop.test.ts` | 3 | M |
 | B1.5 | **Cykl typów i importy przez fasadę** (dług P3): `JournalEntry` importowane z `journalEntry.ts`, nie z `yStudy.ts`. Reguła ESLint `no-restricted-imports` pilnuje, żeby akcje nie importowały `store.ts`. | `src/lib/study/`, `eslint.config.js` | 1 | S |
 | B1.6 | **Podział `JournalEntrySheet.tsx`** na sekcje (`EntryText`, `EntryMaterial`, `EntryPhotos`, `EntryTest`, `EntryMeta`) z jednym reduktorem stanu szkicu (`useReducer` + czysta funkcja `entryDraftReducer` w `lib/` z testem). Najpierw testy charakteryzujące obecnego arkusza. Robione razem z B1.1, bo to ten sam plik. | `src/components/study/entry/` | 2 | M |
-| B1.7 | **Bezpieczeństwo zdjęć widoczne.** Na karcie budowy linia: „Zdjęcia: 124 · tylko na tym telefonie” albo „· w kopii z 8.11”. Jedno stuknięcie tworzy archiwum budowy (`siteZip.ts`) i otwiera arkusz udostępniania (Dysk Google, WhatsApp). Bez trwałego magazynu (`storagePersistence.ts`) widać ostrzeżenie. | `SiteStorageLine.tsx` | 3 | S |
+| B1.7 | ✅ (bez przycisku archiwum, jest już w karcie) **Bezpieczeństwo zdjęć widoczne.** Na karcie budowy linia: „Zdjęcia: 124 · tylko na tym telefonie” albo „· w kopii z 8.11”. Jedno stuknięcie tworzy archiwum budowy (`siteZip.ts`) i otwiera arkusz udostępniania (Dysk Google, WhatsApp). Bez trwałego magazynu (`storagePersistence.ts`) widać ostrzeżenie. | `SiteStorageLine.tsx` | 3 | S |
 
 ## Faza 2: przebudowa wejścia i karty budowy (największa dźwignia)
 
