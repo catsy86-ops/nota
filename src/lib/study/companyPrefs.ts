@@ -1,5 +1,7 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { safeLine } from "@/lib/safeText";
+import type { CompanyPricing } from "@/lib/pricing";
+import { EMPTY_PRICING, cleanPricing } from "@/lib/pricing";
 
 /**
  * Nazwa firmy na nagłówku protokołu PDF (P2.5, Ustawienia → Praca). Pusta = bez nagłówka.
@@ -14,6 +16,19 @@ export const companyNameStore = createPersistedStore<string>(COMPANY_NAME_KEY, "
 
 export const setCompanyName = (name: string) => companyNameStore.set(name.slice(0, COMPANY_NAME_MAX));
 export const useCompanyName = () => companyNameStore.use();
+
+/**
+ * B4.1 Cennik robocizny dla fuch (własne pozycje typu „WC: 350 zł").
+ * Trzymany na urządzeniu — dane firmy, nie budowy.
+ */
+export const PRICING_KEY = "kaczy.study.pricing.v1";
+
+export const pricingStore = createPersistedStore<CompanyPricing>(PRICING_KEY, EMPTY_PRICING, {
+  merge: (def, stored) => cleanPricing(stored) || def,
+});
+
+export const setPricing = (pricing: CompanyPricing) => pricingStore.set(pricing);
+export const usePricing = () => pricingStore.use();
 
 /**
  * H5.1 Autor: imię osoby na tym urządzeniu („Marek”) dopisywane do nowych wpisów, braków i kroków punktów
