@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X, Maximize2, QrCode } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X, Maximize2, QrCode, Sparkles } from "lucide-react";
 import { formatFileSize } from "@/lib/attachments";
 import { addRecording } from "@/lib/study/recordings";
 import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/journalEntry";
@@ -10,6 +10,7 @@ import { PhotoStrip } from "./PhotoStrip";
 import { PressureTestFields } from "./PressureTestFields";
 import { LevelMeter } from "./LevelMeter";
 import { BarcodeScanner } from "./BarcodeScanner";
+import { AISummary } from "./AISummary";
 import { FittingsFields } from "./FittingsFields";
 import { PipesFields } from "./PipesFields";
 import { applyKit, type Kit } from "@/lib/study/kits";
@@ -66,7 +67,7 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "level" | "barcode" | "recordings" | "test" | "fittings" | "pipes" | "stage" | "geo">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "level" | "barcode" | "summary" | "recordings" | "test" | "fittings" | "pipes" | "stage" | "geo">;
 
 /** Odtwarzacz i nagrywanie leniwie, poza główną paczką (jak w notatkach). */
 const VoiceRecorder = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.VoiceRecorder })));
@@ -127,10 +128,12 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [testOpen, setTestOpen] = useState(false);
   const [levelOpen, setLevelOpen] = useState(false);
   const [barcodeOpen, setBarcodeOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [fittingsOpen, setFittingsOpen] = useState(false);
   const testVisible = testOpen || !!form.test || TEST_TOPICS.has(topic);
   const levelVisible = levelOpen || form.level !== undefined;
   const barcodeVisible = barcodeOpen || form.barcode !== undefined;
+  const aiVisible = aiOpen || form.summary !== undefined;
   const fittingsVisible = fittingsOpen || (form.fittings?.length ?? 0) > 0;
   // B1.1: trzy najczęściej używane kształtki od razu w rzędzie przycisków — 1 stuknięcie zamiast otwierania sekcji.
   const quickFittings = useMemo(() => (fittingsVisible ? [] : sumFittings(fittingHistory).slice(0, 3).map((f) => f.name)), [fittingsVisible, fittingHistory]);
@@ -894,6 +897,19 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </div>
             )}
             <BarcodeScanner open={barcodeOpen} onOpenChange={setBarcodeOpen} onDetected={(code) => patch({ barcode: code })} />
+            {aiVisible && (
+              <div id="journal-ai" className="rounded-card border border-border p-2">
+                <button
+                  type="button"
+                  onClick={() => setAiOpen(true)}
+                  className="pressable flex w-full items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
+                >
+                  <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
+                  {form.summary ? `Streszczenie: ${form.summary.slice(0, 50)}…` : "Dodaj streszczenie AI"}
+                </button>
+              </div>
+            )}
+            <AISummary open={aiOpen} onOpenChange={setAiOpen} text={form.text} onSelect={(s) => patch({ summary: s })} />
             {fittingsVisible && (
               <div id="journal-fittings" className="rounded-card border border-border p-2">
                 <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
