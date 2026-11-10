@@ -4702,6 +4702,13 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Ograniczenia i pułapki.** „Kopia pełna” to ostatnia kopia całej aplikacji, nie archiwum tej budowy. Nie ma przycisku kopii w karcie.
 - **Testy.** `src/lib/study/storageStatus.test.ts`, `e2e/site-storage.spec.ts`.
 
+## Praca: kształtki w 3 stuknięciach (B1.1, plan Pracy na budowie 2026-11-10)
+
+- **Co robi.** W arkuszu wpisu, przy zamkniętej sekcji „Kształtki”, w rzędzie przycisków są trzy najczęściej używane kształtki jako „+ Kolano 16”. Jedno stuknięcie dodaje 1 szt. i otwiera sekcję (−/+ do poprawy ilości). Ścieżka „otwórz wpis → kształtka → zapisz” to 3 stuknięcia (było 4).
+- **Gdzie jest.** `JournalEntrySheet.tsx` (`quickFittings` z `sumFittings(fittingHistory)`), test `e2e/workday.spec.ts` (limit kroku 3).
+- **Ograniczenia.** Bez historii wpisów z kształtkami pigułek nie ma. Przytrzymanie do wpisania ilości nie powstało: ilość poprawia się przyciskami −/+ po dodaniu.
+- **Testy.** `e2e/workday.spec.ts`, `e2e/journal-fittings.spec.ts`, `e2e/journal-kits.spec.ts`.
+
 ## Praca: testy migracji `data.ts` (B1.3)
 
 - `src/lib/study/data.test.ts`: stałe id urządzenia (też bez localStorage), migracja starego zapisu do Yjs raz i bez dubli, uszkodzony JSON, zły kształt, `legacyStudyMerged`, `useStudyReady`. Pokrycie `data.ts` z 59% do 96%.

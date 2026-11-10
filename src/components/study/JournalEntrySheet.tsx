@@ -36,7 +36,7 @@ import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput
 import { findSiteByName, siteKey } from "@/lib/study/sites";
 import { setSiteSupply, useVan } from "@/lib/study/vanStore";
 import { accuracyLabel, cleanGeo, mapsUrl, nearestSite } from "@/lib/study/geo";
-import { suggestFittingNames } from "@/lib/study/fittings";
+import { suggestFittingNames, sumFittings } from "@/lib/study/fittings";
 import { editDemotesTopic, editSavedMessage, newEntryMessage, shouldOfferSiteGeo } from "@/lib/study/entrySheetRules";
 import { applySpokenEntry } from "@/lib/study/spokenEntryApply";
 import { siteStages, toggleStage } from "@/lib/study/stages";
@@ -124,6 +124,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [fittingsOpen, setFittingsOpen] = useState(false);
   const testVisible = testOpen || !!form.test || TEST_TOPICS.has(topic);
   const fittingsVisible = fittingsOpen || (form.fittings?.length ?? 0) > 0;
+  // B1.1: trzy najczęściej używane kształtki od razu w rzędzie przycisków — 1 stuknięcie zamiast otwierania sekcji.
+  const quickFittings = useMemo(() => (fittingsVisible ? [] : sumFittings(fittingHistory).slice(0, 3).map((f) => f.name)), [fittingsVisible, fittingHistory]);
   const [pipesOpen, setPipesOpen] = useState(false);
   const pipesVisible = pipesOpen || (form.pipes?.length ?? 0) > 0;
   // Zestawy materiału (H1.2): pigułki pod „+ Zestaw”, edycja w osobnym oknie (ładowanym leniwie).
@@ -815,6 +817,16 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               >
                 {(form.fittings?.length ?? 0) > 0 ? "✓ " : "+ "}Kształtki
               </button>
+              {quickFittings.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => patch({ fittings: [{ name: n, qty: 1 }] })}
+                  className="pressable inline-flex max-w-full items-center rounded-full bg-muted px-2.5 py-1 text-xs text-foreground hover:bg-primary/10 coarse:min-h-11 coarse:px-3.5"
+                >
+                  <span className="truncate">+ {n}</span>
+                </button>
+              ))}
               <button
                 type="button"
                 aria-pressed={pipesVisible}

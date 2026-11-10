@@ -33,7 +33,7 @@ Oznaczenia: **W** to wartość dla codziennej pracy (1–3), **N** to nakład (S
 | Miara | Dziś | Cel | Jak mierzone |
 |---|---|---|---|
 | Zdjęcie do wpisu bieżącej budowy | 3 stuknięcia | **2** | `e2e/workday.spec.ts` (licznik stuknięć) |
-| Kształtki do wpisu | 4 | **3** | j.w. |
+| Kształtki do wpisu | ~~4~~ 3 (B1.1) | **3** | j.w. |
 | Brak materiału | ≤ 3 | ≤ 3 | j.w. |
 | Koniec dnia: godziny + raport do szefa + zamówienie | 4–5 miejsc, ok. 12 stuknięć | **1 arkusz, ≤ 6 stuknięć** | nowy krok w `workday.spec.ts` |
 | Otwarcie karty budowy (Pixel 7, CPU ×4) | brak pomiaru | **< 300 ms** do pierwszej sekcji | B0.4 |
@@ -56,7 +56,7 @@ Oznaczenia: **W** to wartość dla codziennej pracy (1–3), **N** to nakład (S
 
 | # | Co | Gdzie | W | N |
 |---|----|-------|---|---|
-| B1.1 | **Kształtki w 3 stuknięciach.** Pigułki ostatnio używanych kształtek widać od razu w arkuszu, bez rozwijania sekcji. Stuknięcie dodaje 1 szt., przytrzymanie otwiera pole ilości. | `JournalEntrySheet.tsx`, `FittingsFields.tsx` | 3 | S |
+| B1.1 | ✅ **Kształtki w 3 stuknięciach** (trzy najczęstsze jako „+ Kolano 16” w rzędzie przycisków arkusza; bez przytrzymania, −/+ są po dodaniu). Pigułki ostatnio używanych kształtek widać od razu w arkuszu, bez rozwijania sekcji. Stuknięcie dodaje 1 szt., przytrzymanie otwiera pole ilości. | `JournalEntrySheet.tsx`, `FittingsFields.tsx` | 3 | S |
 | B1.2 | ✅ **Nie wymaga kodu (2026-11-10).** Ostrzeżenie o starej wersji już istnieje: urządzenia ogłaszają `SCHEMA_VERSION` w awareness (`formatSchema.ts`), a `OlderDeviceBanner` (w `Index.tsx`) i Ustawienia → Sync pokazują „*Marek* ma starszą wersję”. Diagnoza D4 w tym punkcie była błędna. | `src/lib/formatSchema.ts`, `src/components/sync/OlderDeviceBanner.tsx` | 3 | S |
 | B1.3 | ✅ **Testy charakteryzujące `data.ts`** (59% → 96%, `data.test.ts`): migracje, pierwsze uruchomienie, uszkodzony dump. | `src/lib/study/data.test.ts` | 2 | S |
 | B1.4 | **Testy własności** (`fast-check`, tylko w devDependencies): (a) scalanie 2–3 `Y.Doc` w losowej kolejności daje ten sam stan i niczego nie gubi (wpisy, punkty, braki, auto, wpłaty); (b) `billing.ts`: „naliczone − otrzymane = zostało” dla każdego wejścia, nigdy `NaN`; (c) stan auta = inwentaryzacja + przyjęcia − zużycie, niezależnie od kolejności zdarzeń; (d) `sitePackage` wczytany dwa razy daje to samo co raz (idempotentność). | `src/lib/study/*.prop.test.ts` | 3 | M |

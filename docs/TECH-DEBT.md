@@ -7,7 +7,7 @@
 | Zdjęcia usterki po naprawie poza listą kluczy (sprzątanie po 7 dniach, brak w kopii) | `src/lib/study/journalRefs.ts` | błąd, utrata danych | wysokie | S | P0 | naprawione `399da86` (przed startem ścieżki) |
 | Poprawka problemu w arkuszu kasowała odpowiedzialnego, termin i zdjęcia po naprawie | `updateJournalEntry` | błąd, utrata danych | wysokie | S | P0 | naprawione `399da86` (przed startem ścieżki) |
 | Próg paczki startowej 500 KB w teście, a 394 KB w `CLAUDE.md` | `e2e/bundle.spec.ts:116`, `CLAUDE.md` | dokumentacja / strażnik | średnie | S | P2 | otwarte — decyzja właściciela: obniżyć próg w teście do ~450 KB czy poprawić `CLAUDE.md` |
-| Wpis z kształtkami: 5 stuknięć (cel ≤ 3) | `JournalEntrySheet.tsx`, `FittingsFields.tsx` | UX | średnie | S | P1 | częściowo: 4 po H1.5 (pigułki od razu); do 3 trzeba by pigułek kształtek bez otwierania sekcji |
+| Wpis z kształtkami: 5 stuknięć (cel ≤ 3) | `JournalEntrySheet.tsx`, `FittingsFields.tsx` | UX | średnie | S | P1 | naprawione (B1.1): 3 stuknięcia, pigułki „+ Kolano 16” w rzędzie przycisków arkusza |
 | Pomocnicze zapisy Yjs jako domknięcia w `createYStudy` | `src/lib/study/yStudy.ts` | struktura | niskie | M | P3 | odłożone (krok 3 planu H0.2, mały zysk) |
 | Importy typu `JournalEntry` przez fasadę `yStudy.ts`; cykl typów `sites.ts` ↔ `yStudy.ts` | `sites.ts`, `entrySheet.ts`, reszta | struktura | niskie | M | P3 | otwarte (krok 6 planu H0.2) |
 | Paczka startowa rośnie od podziału na małe chunki (`pipes`, `fittings` wydzielone przy H1.2: +791 B, 77 → 79 plików) | `vite.config.ts` (manualChunks) | wydajność | niskie | S | P3 | otwarte — rozważyć połączenie małych modułów Pracy z paczki startowej w jeden chunk |

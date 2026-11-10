@@ -81,11 +81,11 @@ test("dzień hydraulika: wejście, zdjęcie, kształtki, brak, etap, godziny, ra
     await expect(page.getByText("Dodano zdjęcie jako wpis budowy")).toBeVisible();
   });
 
-  await step("wpis z kształtkami", 4, async () => {
+  await step("wpis z kształtkami", 3, async () => {
     await tap(page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }));
     const sheet = page.getByTestId("journal-entry-sheet");
-    await tap(sheet.getByRole("button", { name: /^(\+ |✓ )?Kształtki$/ }));
-    await tap(sheet.getByTestId("fittings").getByRole("button", { name: "Kolano 16" }));
+    // B1.1: najczęstsza kształtka jest od razu w rzędzie przycisków, bez otwierania sekcji.
+    await tap(sheet.getByRole("button", { name: "+ Kolano 16" }));
     await tap(sheet.getByRole("button", { name: "Zapisz wpis" }));
     await expect(sheet).toHaveCount(0);
     await expect(journal.getByTestId("journal-fittings").first()).toHaveText("Kolano 16 × 1");
