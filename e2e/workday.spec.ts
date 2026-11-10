@@ -112,7 +112,7 @@ test("dzień hydraulika: wejście, zdjęcie, kształtki, brak, etap, godziny, ra
 
   await step("godziny dnia", 3, async () => {
     const card = await openCard();
-    await tap(card.getByRole("button", { name: "Wpisz godziny" }));
+    await tap(card.getByTestId("site-thumb-bar").getByRole("button", { name: "Wpisz godziny" }));
     const dialog = page.getByRole("dialog", { name: /Godziny/ });
     await dialog.getByLabel(`Godziny: ${SITE}`).fill("8");
     await tap(dialog.getByRole("button", { name: "Zapisz" }));

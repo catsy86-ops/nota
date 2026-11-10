@@ -4723,6 +4723,14 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Ograniczenia i pułapki.** Przełączenie segmentu to dodatkowe stuknięcie: w teście „dzień hydraulika” kroki „brak materiału” i „odhaczony etap” mają limit 3 (było 2). Testy e2e używają `inCard`, `inPapiery` i `openSection` z `e2e/helpers.ts`, które otwierają właściwy segment; zapamiętany lokator panelu z innego segmentu trzeba odświeżyć po przełączeniu. Zakładka „Pieniądze” znika przy fuchach.
 - **Testy.** `e2e/site-sections.spec.ts` (segmenty, liczniki, pamięć, mieszczenie na 390 px, axe), `src/lib/study/cardSection.test.ts`, przepisane `e2e/site-*.spec.ts`, `jobs`, `photo-day`, `entry-dictation`, `study-delivery`, `study`, `touch-targets`, `workday`.
 
+## Praca: pasek akcji przy kciuku w karcie budowy (B2.3, plan Pracy na budowie 2026-11-10)
+
+- **Co robi.** Na telefonie na dole karty budowy leży przyklejony pasek czterech przycisków (m.in. „Wpisz godziny”), osiągalny kciukiem bez przewijania i bez przełączania segmentu. Na szerokim ekranie pasek jest ukryty (`sm:hidden`), a te same akcje są w panelach segmentów.
+- **Gdzie jest.** `src/components/study/SiteCardDialog.tsx` (blok `data-testid="site-thumb-bar"`).
+- **Jak działa.** Pasek jest `sticky bottom-0` z odstępem na `safe-area-inset-bottom`. Przyciski dublują akcje z paneli (ta sama nazwa dostępna), więc lokator w testach musi zawężać się do paska albo panelu.
+- **Ograniczenia i pułapki.** Dwa przyciski „Wpisz godziny” w karcie naruszają tryb ścisły Playwrighta — używać `getByTestId("site-thumb-bar")`.
+- **Testy.** `e2e/workday.spec.ts` (godziny z paska: 1 stuknięcie), `e2e/site-points.spec.ts`, `e2e/site-card-mobile.spec.ts`.
+
 ## Praca: zakładka „Budowa” i grupa „Nauka” (B2.1, plan Pracy na budowie 2026-11-10)
 
 - **Co robi.** Pasek zakładek Pracy ma cztery pozycje: **Budowa · Dziennik · Plany · Nauka**. „Nauka” grupuje Quiz, Tablicę i Listę kontrolną jako podzakładki. Telefon bez zapamiętanej zakładki zaczyna od Budowy (komputer nadal od Quizu). Budowa pokazuje bieżącą budowę (pigułki budów od ostatnio używanej), kartę z postępem („Etapy 2/6 · Punkty 3/14 · Braki 1”), trzy duże przyciski — **Zdjęcie** (aparat, jeden wybór = nowy wpis tej budowy, bez opuszczania ekranu), **Wpis głosem** (arkusz wpisu z dyktowaniem) i **Brak** (otwiera panel braków z fokusem w polu) — oraz „Plan na dziś” i „Braki materiału”. Pod spodem Wysokości, Kalkulatory i Przewodnik. Stuknięcie karty otwiera kartę budowy w Dzienniku.
