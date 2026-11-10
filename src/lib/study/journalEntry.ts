@@ -41,6 +41,8 @@ export interface JournalEntry {
   dimensions?: Record<string, Array<{ from: [number, number]; to: [number, number]; text: string }>>;
   /** B3.4: poziomnica — kąt nachylenia rury w stopniach (może być ujemny). */
   level?: number;
+  /** B3.5: kod skanowany (QR, EAN, Code128, itd). */
+  barcode?: string;
   /** Zdjęcia z budowy: klucze z `imageStore` (bajty poza stanem Nauki). */
   images: string[];
   /** Nagrania głosowe z budowy (załączniki audio; bajty w `imageStore`). Brak = bez nagrań. */
@@ -95,7 +97,7 @@ export const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
  * materiału), zdjęcia, próba, kształtki, etap, lokalizacja. `empty` = nic w tym nie ma
  * (sprawdzane przed filtrem materiału — wpis z odhaczeniami, których punkt zniknął, zostaje).
  */
-export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?: unknown; captions?: unknown; drawnFrom?: unknown; dimensions?: unknown; level?: unknown; recordings?: unknown; test?: unknown; fittings?: unknown; pipes?: unknown; stage?: unknown; geo?: unknown }) {
+export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?: unknown; captions?: unknown; drawnFrom?: unknown; dimensions?: unknown; level?: unknown; barcode?: unknown; recordings?: unknown; test?: unknown; fittings?: unknown; pipes?: unknown; stage?: unknown; geo?: unknown }) {
   const text = typeof e.text === "string" ? e.text.slice(0, JOURNAL_MAX_TEXT) : "";
   const checked = Array.isArray(e.checked) ? e.checked.filter((id): id is string => typeof id === "string" && id.length <= 64).slice(0, 60) : [];
   const images = Array.isArray(e.images) ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES) : [];
@@ -103,6 +105,7 @@ export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?:
   const drawnFrom = cleanDrawnFrom(e.drawnFrom, images);
   const dimensions = cleanDimensions(e.dimensions, images);
   const level = typeof e.level === "number" && Number.isFinite(e.level) ? Math.round(e.level * 100) / 100 : undefined;
+  const barcode = typeof e.barcode === "string" ? e.barcode.slice(0, 120) : undefined;
   const recordings = cleanRecordings(e.recordings);
   const test = cleanTest(e.test);
   const fittings = cleanFittings(e.fittings);
@@ -110,7 +113,7 @@ export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?:
   const stage = cleanEntryStage(e.stage);
   const geo = cleanGeo(e.geo);
   const empty = !text.trim() && checked.length === 0 && images.length === 0 && recordings.length === 0 && !test && fittings.length === 0 && pipes.length === 0 && !stage;
-  return { text, checked, images, captions, drawnFrom, dimensions, level, recordings, test, fittings, pipes, stage, geo, empty };
+  return { text, checked, images, captions, drawnFrom, dimensions, level, barcode, recordings, test, fittings, pipes, stage, geo, empty };
 }
 
 /**
@@ -140,7 +143,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
   if (typeof e.id !== "string" || !e.id || e.id.length > 64) return null;
   if (typeof e.at !== "number" || !Number.isFinite(e.at)) return null;
   if (!JOURNAL_KINDS.includes(e.kind as JournalKind)) return null;
-  const { text, checked, images, captions, drawnFrom, dimensions, level, recordings, test, fittings, pipes, stage, geo, empty } = cleanEntryParts(e);
+  const { text, checked, images, captions, drawnFrom, dimensions, level, barcode, recordings, test, fittings, pipes, stage, geo, empty } = cleanEntryParts(e);
   if (empty) return null;
   return {
     id: e.id, at: e.at, kind: e.kind as JournalKind,
@@ -154,6 +157,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(Object.keys(drawnFrom).length ? { drawnFrom } : {}),
     ...(Object.keys(dimensions).length ? { dimensions } : {}),
     ...(level !== undefined ? { level } : {}),
+    ...(barcode ? { barcode } : {}),
     ...(recordings.length ? { recordings } : {}),
     ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
     ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
@@ -181,7 +185,7 @@ export const ORDERED_ENTRY_LISTS = new Set<string>(["images", "fittings"]);
  * pola z nowszej wersji (nieznane tutaj) zostają, żeby stara edycja ich nie wycinała.
  */
 export const JOURNAL_ENTRY_KEYS: ReadonlySet<string> = new Set([
-  "id", "at", "kind", "topic", "text", "site", "siteId", "checked", "images", "captions", "drawnFrom", "dimensions", "level", "recordings",
+  "id", "at", "kind", "topic", "text", "site", "siteId", "checked", "images", "captions", "drawnFrom", "dimensions", "level", "barcode", "recordings",
   "resolved", "solution", "test", "fittings", "pipes", "stage", "geo", "owner", "due", "after", "point", "by", "supply",
 ]);
 

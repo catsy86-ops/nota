@@ -24,6 +24,8 @@ export interface JournalDraft {
   drawnFrom?: Record<string, string>;
   /** B3.4: poziomnica — kąt nachylenia w stopniach; brak = bez pomiaru. */
   level?: number;
+  /** B3.5: kod skanowany (QR, EAN, Code128, itd); brak = bez kodu. */
+  barcode?: string;
   /** Nagrania głosowe (załączniki audio); starszy szkic dostaje pustą listę (`sanitizeDraft`). */
   recordings: Attachment[];
   /** Protokół próby szczelności; `null` = bez próby. */
@@ -40,7 +42,7 @@ export interface JournalDraft {
   geo?: GeoPoint | null;
 }
 
-export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], captions: {}, recordings: [], test: null, fittings: [], at: null, stage: null, geo: null, level: undefined };
+export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], captions: {}, recordings: [], test: null, fittings: [], at: null, stage: null, geo: null, level: undefined, barcode: undefined };
 
 export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalDraft {
   if (!stored || typeof stored !== "object") return defaults;
