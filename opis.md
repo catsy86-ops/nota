@@ -4686,6 +4686,15 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Testy.** Vitest: `src/lib/guides.test.ts` (karty według wyboru, unikalne id, stan „widziane” i śmieci w pamięci, brak automatu pod webdriverem). E2E: `e2e/guides.spec.ts` (wybór działów zmienia liczbę kart, Wstecz, strzałki, skok kropką, zapamiętanie; przewodnik Pracy raz i z „?”; podpowiedź Grafiku raz); `e2e/mobile.spec.ts` (okno samouczka mieści się na telefonie).
 - **Commit.** `905a3ed` (2026-10-30).
 
+## Praca: licznik użycia i pomiar wydajności (B0.1, B0.4, plan Pracy na budowie 2026-11-10)
+
+- **Co robi.** Ustawienia → Kopia i dane → „Użycie funkcji Pracy” pokazuje, ile razy użyto karty budowy, wpisu, raportu, kalkulatorów i zakładek oraz kiedy ostatnio; funkcje nieużywane od 30 dni są oznaczone, a licznik można wyzerować. Raport diagnostyczny dostaje sekcje „użycie funkcji Pracy” i „wydajność Pracy” (p75 reakcji na stuknięcie, najgorsza długa klatka, czas otwarcia karty i zakładek).
+- **Gdzie jest.** `src/lib/study/usage.ts` (`trackUse`, `useTrackUse`, `readUsage`, `usageRows`), `src/components/settings/StudyUsageStats.tsx`, `src/lib/study/perf.ts` (`startPerfProbe`, `measureSpan`, `perfReportLines`), `src/lib/diagnosticsReport.ts`, `scripts/seed-praca.mjs` (3 000 wpisów i 40 budów do pomiaru), `docs/PERFORMANCE.md` (instrukcja i tabela wyników). Wywołania `trackUse` są w `StudyView`, `StudyJournal`, `SiteCardDialog`, `JournalEntrySheet`, `CalculatorsSheet`, `HeightsSheet`.
+- **Jak działa.** Licznik to jeden klucz localStorage `kaczy.study.usage.v1` (`{ funkcja: { n, last } }`), tylko na tym urządzeniu: nie jest w Yjs, kopii ani sieci. Nazwa funkcji musi pasować do `^[a-z0-9][a-z0-9.-]{0,39}$`, więc nie da się zapisać treści wpisu; limit 60 funkcji (najstarsze odpadają). Pomiar używa `PerformanceObserver` (`event` z `interactionId`, `long-animation-frame`) i dwóch klatek `requestAnimationFrame` dla odcinków; w przeglądarce bez tych typów po prostu nic nie zbiera.
+- **Ograniczenia i pułapki.** Wyniki pomiaru są z jednego przebiegu aplikacji (pamięć, bez zapisu). Czas zakładki liczony jest od efektu po renderze, więc nie obejmuje samego renderu. Zaznaczone „Wyzeruj” kasuje tylko licznik użycia.
+- **Testy.** `src/lib/study/usage.test.ts`, `src/lib/study/perf.test.ts`, `src/lib/diagnostics.test.ts`. Seed sprawdzono przez `cleanDump` (3 000 wpisów, 40 budów).
+- **Commit.** 2026-11-10 (hash w następnym wpisie).
+
 ## Wygląd: Fala 0 planu motywów — naprawy (2026-10-30)
 
 - **Co robi.**

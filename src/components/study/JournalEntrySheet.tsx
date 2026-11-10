@@ -42,6 +42,7 @@ import { applySpokenEntry } from "@/lib/study/spokenEntryApply";
 import { siteStages, toggleStage } from "@/lib/study/stages";
 import { hasCheckLine, stageTemplate, toggleCheckLine } from "@/lib/study/stageTemplates";
 import { DelayedSpinner } from "@/components/DelayedSpinner";
+import { useTrackUse } from "@/lib/study/usage";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-success-ink")} aria-hidden />;
@@ -91,6 +92,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   // Fokus po otwarciu idzie na tytuł, nie na pole tekstu: na telefonie pole od razu wywołałoby klawiaturę.
   const titleRef = useRef<HTMLHeadingElement>(null);
   const { open, topicFirst, editing } = useJournalSheet();
+  useTrackUse("wpis", open);
   const isMobile = useIsMobile();
   const study = useStudy();
   const draft = useJournalDraft();

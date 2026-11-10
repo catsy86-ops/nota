@@ -4,6 +4,7 @@ import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { HEIGHTS } from "@/lib/study/content";
+import { useTrackUse } from "@/lib/study/usage";
 
 /**
  * Ściąga wysokości podejść (standard G-HEAT) — najczęściej potrzebna na budowie, więc
@@ -12,6 +13,7 @@ import { HEIGHTS } from "@/lib/study/content";
  */
 export function HeightsButton({ variant = "pill", className }: { variant?: "pill" | "icon" | "link"; className?: string }) {
   const [open, setOpen] = useState(false);
+  useTrackUse("wysokosci", open);
   return (
     <>
       <button

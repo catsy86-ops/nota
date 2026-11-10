@@ -1,5 +1,7 @@
 import { yjsStore } from "@/lib/yjsStore";
 import { getSyncState, formatCode, getSignalingServers } from "@/lib/yjsSync";
+import { readUsage, usageReportLines } from "@/lib/study/usage";
+import { perfReportLines } from "@/lib/study/perf";
 import { buildDiagReport, getDiagEntries, getSecurityEvents, type DiagSnapshot } from "@/lib/diagnostics";
 
 declare const __APP_BUILD__: string | undefined;
@@ -57,7 +59,9 @@ export async function collectDiagReport(): Promise<string> {
     },
   };
   // Kod także w postaci z Ustawień (grupy po 4) — gdyby trafił do dziennika przepisany z ekranu.
-  return buildDiagReport(snapshot, getDiagEntries(), sync.code ? [sync.code, formatCode(sync.code)] : [], getSecurityEvents());
+  const report = buildDiagReport(snapshot, getDiagEntries(), sync.code ? [sync.code, formatCode(sync.code)] : [], getSecurityEvents());
+  // Użycie funkcji Pracy (B0.1): same nazwy funkcji i liczby, nic z treści.
+  return [report, "", "użycie funkcji Pracy:", ...usageReportLines(readUsage()), "", "wydajność Pracy (ten przebieg aplikacji):", ...perfReportLines()].join("\n");
 }
 
 /** Zbiera raport i pobiera go jako plik .txt. Nic nie wysyła. */

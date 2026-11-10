@@ -1,4 +1,5 @@
 import { SiteStorageSettings } from "./SiteStorageSettings";
+import { StudyUsageStats } from "./StudyUsageStats";
 import { useEffect, useState } from "react";
 import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, Share2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -385,6 +386,7 @@ export function BackupSettings() {
             <FileDown className="w-3.5 h-3.5" />Pobierz
           </Button>
         </div>
+        <StudyUsageStats />
       </Section>
     </div>
   );

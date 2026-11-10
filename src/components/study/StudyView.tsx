@@ -21,6 +21,8 @@ import { readSiteParam } from "@/lib/study/siteLink";
 import { CUSTOM_PREFILL_EVENT, type CustomPrefill } from "@/lib/study/customPrefill";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { trackUse } from "@/lib/study/usage";
+import { measureSpan, startPerfProbe } from "@/lib/study/perf";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { useHiddenViews, isViewShown } from "@/lib/hiddenViews";
@@ -151,6 +153,8 @@ function StudyScreen() {
   // Wyjście z Planów zdejmuje otwartą analizę z adresu — inaczej „wstecz” i odświeżenie wracałyby do edytora.
   // Tylko przy przejściu z „plans” na inną zakładkę: link `?analiza=` przy wejściu ma najpierw otworzyć Plany.
   const prevTab = useRef(tab);
+  useEffect(() => { startPerfProbe(); }, []);
+  useEffect(() => { const done = measureSpan(`zakladka-${tab}`); trackUse(`zakladka-${tab}`); done(); }, [tab]);
   useEffect(() => {
     const left = prevTab.current === "plans" && tab !== "plans";
     prevTab.current = tab;

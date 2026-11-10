@@ -3,6 +3,7 @@ import { Calculator, Plus, X } from "lucide-react";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
+import { useTrackUse } from "@/lib/study/usage";
 import { parseNum, pipeLiters, PIPES, plNum, SLOPE_TYPICAL, slopeDrop, slopeFromDrop, slopeNote, waterTest } from "@/lib/study/calc";
 import { convertPressure, EXPANSION, PIPE_THREADS, PRESSURE_LABEL, PRESSURE_SOURCE, PRESSURE_UNITS, thermalExpansionMm, THREADS_SOURCE, type PressureUnit } from "@/lib/study/cheats";
 
@@ -17,6 +18,7 @@ const chipClass = "pressable rounded-full border px-3 py-1 text-sm coarse:min-h-
  */
 export function CalculatorsButton({ variant = "pill", className }: { variant?: "pill" | "icon"; className?: string }) {
   const [open, setOpen] = useState(false);
+  useTrackUse("kalkulatory", open);
   return (
     <>
       <button

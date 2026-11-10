@@ -53,6 +53,8 @@ import { buildHandover, type Handover } from "@/lib/study/handover";
 import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref } from "@/lib/study/contact";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { cardClass } from "@/components/ui/card";
+import { useTrackUse } from "@/lib/study/usage";
+import { measureSpan } from "@/lib/study/perf";
 
 
 const EMPTY_FORM = { name: "", address: "", investor: "", phone: "", manager: "", managerPhone: "", supplierPhone: "", access: "" };
@@ -97,6 +99,11 @@ export function SiteCardDialog({
   const endHandover = useCallback(() => setHandover(null), []);
   const [signOpen, setSignOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  useTrackUse("karta-budowy", !!site);
+  const cardOpen = !!site;
+  useEffect(() => { if (cardOpen) measureSpan("otwarcie-karty-budowy")(); }, [cardOpen]);
+  useTrackUse("paczka-budowy", sendOpen);
+  useTrackUse("podpis-klienta", signOpen);
 
   useEffect(() => {
     if (site) setForm(formOf(site));

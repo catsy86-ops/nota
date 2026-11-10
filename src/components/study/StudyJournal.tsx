@@ -29,6 +29,7 @@ import { readSiteParam, takeSiteParam } from "@/lib/study/siteLink";
 import { NewSiteDialog } from "./NewSiteDialog";
 import { SitePackageImportDialog } from "./SitePackageDialogs";
 import { PhotoDayDialog } from "./PhotoDayDialog";
+import { useTrackUse } from "@/lib/study/usage";
 import type { SitePackage } from "@/lib/study/sitePackage";
 import { JobsDialog } from "./JobsDialog";
 import { WholesaleOrderDialog } from "./WholesaleOrderDialog";
@@ -152,6 +153,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const van = useVan();
   const [vanOpen, setVanOpen] = useState(false);
   const [photoDayOpen, setPhotoDayOpen] = useState(false);
+  useTrackUse("zamowienie-hurtownia", wholesaleOpen);
+  useTrackUse("auto", vanOpen);
+  useTrackUse("zdjecia-z-dnia", photoDayOpen);
+  useTrackUse("zlecenia", jobsOpen);
+  useTrackUse("raport", report);
   const vanBuy = useMemo(
     () => van.items.map((i) => vanStock(i, van.events, study.journal)).filter((s) => s.toBuy > 0).map((s) => ({ name: s.item.name, qty: s.toBuy, unit: s.item.unit })),
     [van, study.journal],
