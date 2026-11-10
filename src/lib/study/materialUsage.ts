@@ -5,7 +5,7 @@ import { fittingKey, sumFittings, type Fitting } from "./fittings";
 import { metersLabel, sumPipes, type Pipe } from "./pipes";
 import { entrySiteId } from "./siteKey";
 import type { Shortage } from "./shortages";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 
 /**
  * P2.6 Zużycie materiału na budowie (decyzja P-9: opcjonalna cena jednostkowa, bez faktur).

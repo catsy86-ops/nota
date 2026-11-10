@@ -1,7 +1,7 @@
 import { addAttachmentFiles, describeRejections, type Attachment } from "@/lib/attachments";
 import { yjsStore } from "@/lib/yjsStore";
 import { getStudy } from "./store";
-import { JOURNAL_MAX_RECORDINGS } from "./yStudy";
+import { JOURNAL_MAX_RECORDINGS } from "./journalEntry";
 
 /**
  * Nagranie głosowe z budowy (U8): jeden plik audio jako osobny załącznik wpisu, nie zdjęcie.

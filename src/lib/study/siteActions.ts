@@ -9,7 +9,8 @@ import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
 import { cleanServiceCalls, type ServiceCall } from "./service";
 import { cleanPlanItems, type PlanItem } from "./planItems";
 import { cleanSignature, type SiteSignature } from "./signature";
-import { SITE_MAX, type StudyState } from "./yStudy";
+import { SITE_MAX } from "./journalEntry";
+import { type StudyState } from "./studyDump";
 import { getStudy, siteDirectoryOf } from "./studyProjection";
 
 /** Akcje kart budów (H0.2, z `store.ts`): dane karty, listy (etapy, braki, zamówienia, godziny, dokumenty, serwis, plan) i pola. */

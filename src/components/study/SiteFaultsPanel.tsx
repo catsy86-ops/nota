@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { dayKeyOf } from "@/lib/study/report";
 import { daysToDue, faultStatus, openFaults } from "@/lib/study/faults";
 import { setProblemFault } from "@/lib/study/store";
-import type { JournalEntry } from "@/lib/study/yStudy";
+import type { JournalEntry } from "@/lib/study/journalEntry";
 import type { SiteInfo } from "@/lib/study/sites";
 import { pluralPl } from "@/lib/plural";
 import { photoSaveFailed } from "@/components/study/useJournalPhotoEdits";

@@ -4,7 +4,7 @@ import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { studyDevice, yStudy } from "./data";
 import { dueIds } from "./srs";
-import { type Column, type StudyState } from "./yStudy";
+import { type Column, type StudyState } from "./studyDump";
 import { type ExamResult } from "./exam";
 import { getStudy } from "./studyProjection";
 

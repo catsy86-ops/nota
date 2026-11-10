@@ -115,4 +115,25 @@ export default tseslint.config(
       "no-restricted-imports": "off",
     },
   },
+  {
+    // Praca (B1.5): części fasady `store.ts` nie importują fasady z powrotem — to cykl modułów.
+    files: [
+      "src/lib/study/learnActions.ts",
+      "src/lib/study/journalActions.ts",
+      "src/lib/study/siteActions.ts",
+      "src/lib/study/studyProjection.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            { name: "yjs", message: "Nie importuj yjs bezpośrednio — użyj src/hooks/useNotes.ts / NotesProvider." },
+            { name: "./store", message: "Część fasady nie importuje fasady (cykl): użyj ./studyProjection." },
+            { name: "@/lib/study/store", message: "Część fasady nie importuje fasady (cykl): użyj ./studyProjection." },
+          ],
+        },
+      ],
+    },
+  },
 );

@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Play, Trash, X } from "lucide-react";
 import { formatFileSize } from "@/lib/attachments";
 import { addRecording } from "@/lib/study/recordings";
-import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/yStudy";
+import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/journalEntry";
 import { HeightsButton } from "./HeightsSheet";
 import { PhotoStrip } from "./PhotoStrip";
 import { PressureTestFields } from "./PressureTestFields";

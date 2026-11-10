@@ -5,7 +5,7 @@ import type { Pipe } from "./pipes";
 import { type PressureTest } from "./pressureTest";
 import { JOURNAL_DRAFT_KEY } from "./keys";
 import { type GeoPoint } from "./geo";
-import { cleanEntryParts, JOURNAL_KINDS, type JournalKind } from "./yStudy";
+import { cleanEntryParts, JOURNAL_KINDS, type JournalKind } from "./journalEntry";
 import type { Attachment } from "@/lib/attachments";
 
 /**

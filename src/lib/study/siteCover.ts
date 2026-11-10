@@ -1,6 +1,6 @@
 import { entrySiteId } from "./siteKey";
 import { isImageDoc, type SiteDoc } from "./siteDocs";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 
 /**
  * P5.1: okładka karty budowy — pierwszy plan (zdjęcie wśród dokumentów), a bez niego najnowsze

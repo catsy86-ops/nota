@@ -2,7 +2,7 @@ import { entrySiteId, type SiteCard } from "./sites";
 import { testLine } from "./pressureTest";
 import { dayKeyOf, periodLabel } from "./report";
 import { siteStages, type SiteStage } from "./stages";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 import type { SiteSignature } from "./signature";
 import { pointsProgress, pointType, POINT_STEPS, sidesLabel, STEP_LABEL, type Room, type WaterPoint } from "./points";
 

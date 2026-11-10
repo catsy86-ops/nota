@@ -1,7 +1,7 @@
 import { imageStore } from "@/lib/imageStore";
 import { entrySiteId } from "./siteKey";
 import type { SiteDoc } from "./siteDocs";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 
 /**
  * P3.1 Miejsce zajmowane przez budowę: zdjęcia wpisów (także „po naprawie”), nagrania i dokumenty.

@@ -1,5 +1,5 @@
 import type { Fitting } from "./fittings";
-import type { JournalKind } from "./yStudy";
+import type { JournalKind } from "./journalEntry";
 import { fold, parseSpokenFittings, QTY_WORD, SINGULAR, TENS, UNITS } from "./spokenFittings";
 
 /**

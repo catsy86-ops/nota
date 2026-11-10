@@ -1,4 +1,4 @@
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 import type { SiteInfo } from "./sites";
 import { siteStages, stageProgress } from "./stages";
 import { siteOrder } from "./order";

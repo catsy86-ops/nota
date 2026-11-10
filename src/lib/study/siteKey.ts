@@ -2,7 +2,7 @@
  * Klucze budów i nazw bez zależności od reszty działu Praca. Wydzielone z `sites.ts`,
  * żeby `siteHours.ts` nie musiał importować `sites.ts` (cykl w czasie działania).
  */
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 
 export const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l").replace(/Ł/g, "l").toLowerCase();
 

@@ -1,6 +1,6 @@
 import type { ShiftData } from "@/lib/shifts/model";
 import { cell } from "@/lib/shifts/timesheet";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 import { dayHours, type DayHours, type SiteHours } from "./siteHours";
 import { dayKeyOf, workOn } from "./report";
 import { entrySiteId } from "./sites";

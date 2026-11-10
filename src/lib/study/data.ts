@@ -2,7 +2,8 @@ import { useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { STUDY_STORAGE_KEY } from "./keys";
-import { createYStudy, dumpFromLegacy } from "./yStudy";
+import { dumpFromLegacy } from "./studyDump";
+import { createYStudy } from "./yStudy";
 
 /**
  * Jedna instancja Nauki w dokumencie notatek. Bez materiału do nauki — tę część

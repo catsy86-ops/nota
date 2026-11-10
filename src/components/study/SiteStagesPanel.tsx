@@ -7,7 +7,7 @@ import { setSiteStages } from "@/lib/study/store";
 import type { SiteInfo } from "@/lib/study/sites";
 import { addStage, removeStage, siteStages, stageProgress, STAGE_NAME_MAX, STAGES_MAX, toggleStage } from "@/lib/study/stages";
 import { COVER_STAGE_ID, coverPhotoCount } from "@/lib/study/coverPhotos";
-import type { JournalEntry } from "@/lib/study/yStudy";
+import type { JournalEntry } from "@/lib/study/journalEntry";
 import { CoverPhotoButton } from "./CoverPhotoButton";
 import { cardClass } from "@/components/ui/card";
 

@@ -1,4 +1,4 @@
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 import { entrySiteId } from "./sites";
 import { sumFittings, type Fitting } from "./fittings";
 import { metersLabel, sumPipes, type Pipe } from "./pipes";

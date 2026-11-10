@@ -1,7 +1,7 @@
 import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
 import { dayKeyOf, shiftKey } from "./report";
 import { entrySiteId } from "./sites";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 
 /**
  * Przypomnienie „Raport dnia gotowy”: raz dziennie, po końcu dzisiejszej zmiany z Grafiku

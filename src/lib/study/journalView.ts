@@ -1,5 +1,5 @@
 import { pluralPl } from "@/lib/plural";
-import type { JournalEntry, JournalKind } from "./yStudy";
+import type { JournalEntry, JournalKind } from "./journalEntry";
 import { entrySiteId, fold } from "./sites";
 import { fittingsLine } from "./fittings";
 import { pipesLine } from "./pipes";

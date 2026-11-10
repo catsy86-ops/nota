@@ -7,7 +7,8 @@ import { cleanCard, type ReviewCard } from "./srs";
 import { cleanBoss, cleanGroup } from "./boss";
 import { cleanSite, entrySiteId, siteDirectory, type SiteCard, type SiteInfo } from "./sites";
 import { cleanShortagesCounted } from "./shortages";
-import { cleanEntry, SITE_MAX, type Column, type JournalEntry, type StudyState } from "./yStudy";
+import { cleanEntry, SITE_MAX, type JournalEntry } from "./journalEntry";
+import { type Column, type StudyState } from "./studyDump";
 import { cleanExam, keepLatestExams, type ExamResult } from "./exam";
 
 /**

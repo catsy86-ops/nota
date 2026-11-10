@@ -1,4 +1,4 @@
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 import type { SiteCard } from "./sites";
 import { entrySiteId } from "./siteKey";
 import { openShortages } from "./shortages";

@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { JournalDraft } from "./draft";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 
 /**
  * Czy arkusz „Wpis z budowy” jest otwarty. Poza komponentem, bo otwierają go

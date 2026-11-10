@@ -4715,6 +4715,12 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Wynik.** Wszystkie właściwości przeszły bez poprawek kodu aplikacji. Dwa pierwsze porażki były błędami testu: `dump()` świadomie odrzuca puste wpisy, a `updateEntry` bierze cały wpis.
 - **Pułapka.** Test importuje `yjs`, więc jest na liście wyjątków w `eslint.config.js`. Idempotentny import paczki (dwa razy to samo co raz) nie jest objęty — wymaga magazynów Yjs i jest pokryty przez `e2e/site-package.spec.ts`.
 
+## Praca: importy typów bez cyklu i reguła fasady (B1.5)
+
+- **Co robi.** Typy i stałe wpisu (`JournalEntry`, `JournalKind`, `cleanEntry`, `JOURNAL_MAX_*`) importuje się z `src/lib/study/journalEntry.ts`, a `StudyState`, `Column` i `COLUMNS` z `studyDump.ts` — nie przez `yStudy.ts`. Dzięki temu `sites.ts` już nie importuje `yStudy.ts`, który importuje `sites.ts` (cykl). 35 plików zmienionych tylko w liniach importów.
+- **Reguła.** `eslint.config.js`: `learnActions.ts`, `journalActions.ts`, `siteActions.ts` i `studyProjection.ts` nie mogą importować `./store` (fasada nad nimi). Pozostałe pliki Pracy nadal używają `store.ts` jako publicznego API.
+- **Testy.** `npm run typecheck`, `eslint src/lib/study`, Vitest `src/lib/study` (656).
+
 ## Praca: testy migracji `data.ts` (B1.3)
 
 - `src/lib/study/data.test.ts`: stałe id urządzenia (też bez localStorage), migracja starego zapisu do Yjs raz i bez dubli, uszkodzony JSON, zły kształt, `legacyStudyMerged`, `useStudyReady`. Pokrycie `data.ts` z 59% do 96%.

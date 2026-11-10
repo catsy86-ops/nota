@@ -11,7 +11,7 @@ import { siteOrder } from "./order";
 import { stageName, stageProgress, type SiteStage } from "./stages";
 import { openShortages, shortageLine, type Shortage } from "./shortages";
 import { dayHours, siteMinutesOn } from "./siteHours";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 import type { Attachment } from "@/lib/attachments";
 import { captionText } from "@/lib/study/photoCaption";
 

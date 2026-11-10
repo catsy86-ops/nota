@@ -1,6 +1,6 @@
 import { imageStore } from "@/lib/imageStore";
 import { updateJournalEntry } from "@/lib/study/store";
-import type { JournalEntry } from "@/lib/study/yStudy";
+import type { JournalEntry } from "@/lib/study/journalEntry";
 
 /** Najdłuższy bok miniatury po zakończeniu budowy (P-4, plan Pracy 3.3). */
 export const SHRINK_MAX_SIDE = 800;

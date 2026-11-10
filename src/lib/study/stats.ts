@@ -1,6 +1,6 @@
 import { addDaysToKey } from "@/lib/week";
 import type { ReviewCard } from "./srs";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 
 /**
  * Statystyki działu Praca (N4) — czyste funkcje nad stanem Nauki: trafność z kart

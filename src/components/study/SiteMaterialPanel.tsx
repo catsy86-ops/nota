@@ -9,7 +9,7 @@ import { downloadBlob } from "@/lib/downloadBlob";
 import { materialCsv, materialText, materialUsage, priceOf } from "@/lib/study/materialUsage";
 import { setFittingPrice, usePrices } from "@/lib/study/materialPrices";
 import type { SiteInfo } from "@/lib/study/sites";
-import type { JournalEntry } from "@/lib/study/yStudy";
+import type { JournalEntry } from "@/lib/study/journalEntry";
 
 const zl = (n: number) => `${n.toFixed(2).replace(".", ",")} zł`;
 

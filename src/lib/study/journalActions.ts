@@ -8,7 +8,7 @@ import type { PressureTest } from "./pressureTest";
 import { type GeoPoint } from "./geo";
 import { BOSS_NAME_MAX, normalizeGroupLink, normalizePhone } from "./boss";
 import { resolveSite } from "./sites";
-import { cleanEntryParts, type JournalEntry, type JournalKind } from "./yStudy";
+import { cleanEntryParts, type JournalEntry, type JournalKind } from "./journalEntry";
 import { getStudy, siteDirectoryOf, studyLists } from "./studyProjection";
 
 /** Akcje dziennika z budowy (H0.2, z `store.ts`): wpisy, problemy i usterki, odbiorcy raportu, praktyka tematów. */

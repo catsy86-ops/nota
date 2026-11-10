@@ -1,4 +1,4 @@
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 import { cleanSignature, type SiteSignature } from "./signature";
 import { cleanStages, type SiteStage } from "./stages";
 import { cleanOrderLog, cleanShortages, type OrderLogEntry, type Shortage } from "./shortages";

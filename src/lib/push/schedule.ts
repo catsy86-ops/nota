@@ -13,7 +13,7 @@ import { siteCardUrl } from "@/lib/study/siteLink";
 import { orderLateFrom, type Shortage } from "@/lib/study/shortages";
 import type { ServiceCall } from "@/lib/study/service";
 import type { SiteHours } from "@/lib/study/siteHours";
-import type { JournalEntry } from "@/lib/study/yStudy";
+import type { JournalEntry } from "@/lib/study/journalEntry";
 import { notePath } from "@/lib/viewRoute";
 import { isLeadMinutes, leadPhrase } from "@/lib/reminderLead";
 import { pushKey } from "./shown";

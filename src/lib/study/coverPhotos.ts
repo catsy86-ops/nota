@@ -1,5 +1,5 @@
 import { entrySiteId } from "@/lib/study/siteKey";
-import type { JournalEntry } from "@/lib/study/yStudy";
+import type { JournalEntry } from "@/lib/study/journalEntry";
 
 /** Id etapu „Zakrycie instalacji” (`stages.ts`). */
 export const COVER_STAGE_ID = "zakrycie";

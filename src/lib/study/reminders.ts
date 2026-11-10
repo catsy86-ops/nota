@@ -2,7 +2,7 @@ import { TEST_TOPICS } from "./pressureTest";
 import { dueServiceCalls, serviceDayKey } from "./service";
 import { entrySiteId, type SiteCard } from "./sites";
 import { ORDER_LATE_DAYS, dueDayValue, orderLateFrom } from "./shortages";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 
 /** Problem otwarty dłużej niż tyle dni dostaje przypomnienie (plan Nauki i Dziennika, 2026-10-15). */
 export const REMINDER_PROBLEM_DAYS = 3;

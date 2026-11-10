@@ -1,4 +1,4 @@
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 import { entrySiteId } from "./siteKey";
 
 /**

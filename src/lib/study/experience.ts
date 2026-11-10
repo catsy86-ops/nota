@@ -1,7 +1,7 @@
 import { pluralPl } from "@/lib/plural";
 import type { ReviewCard } from "./srs";
 import { overallAccuracy } from "./stats";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 
 /**
  * Karta doświadczenia: co instalator ma za sobą, w jednym kawałku tekstu do pokazania albo wysłania.

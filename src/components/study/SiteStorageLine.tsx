@@ -6,7 +6,7 @@ import { storageStatus } from "@/lib/study/storageStatus";
 import { cn } from "@/lib/utils";
 import { imageSize, measure, siteStorageRefs } from "@/lib/study/siteStorage";
 import type { SiteInfo } from "@/lib/study/sites";
-import type { JournalEntry } from "@/lib/study/yStudy";
+import type { JournalEntry } from "@/lib/study/journalEntry";
 
 /**
  * P3.1: „Zdjęcia i nagrania: 120 MB” w karcie budowy. Liczone po otwarciu karty, w tle —

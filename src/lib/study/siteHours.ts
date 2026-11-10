@@ -1,5 +1,5 @@
 import { entrySiteId } from "./siteKey";
-import type { JournalEntry } from "./yStudy";
+import type { JournalEntry } from "./journalEntry";
 
 /**
  * Godziny na budowach (H2): ile z dnia pracy w Grafiku przypada na każdą budowę. Pozycja listy karty
