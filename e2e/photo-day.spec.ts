@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { inCard } from "./helpers";
 
 // H4.3 „Zdjęcia z dnia”: zdjęcia z galerii → wpisy z godziną z EXIF, podzielone po przerwie, budowa z wpisów dnia.
 
@@ -90,7 +91,7 @@ test("zdjęcia z dnia: etap i punkt tej budowy przy grupie (H4.4)", async ({ pag
   // Łazienka z szablonu — punkty tej budowy, do których można przypiąć zdjęcie.
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
   const card = page.getByTestId("site-card");
-  await card.getByTestId("site-points").getByRole("button", { name: /^\+ Łazienka/ }).click();
+  await (await inCard(card, "site-points")).getByRole("button", { name: /^\+ Łazienka/ }).click();
   await page.keyboard.press("Escape");
 
   await page.getByTestId("photo-day-open").click();
@@ -107,5 +108,5 @@ test("zdjęcia z dnia: etap i punkt tej budowy przy grupie (H4.4)", async ({ pag
 
   await expect(page.getByTestId("journal-entry-stage").filter({ hasText: "Kanalizacja podposadzkowa" }).first()).toBeVisible();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
-  await expect(page.getByTestId("site-card").getByTestId("site-points").getByRole("img", { name: /Ostatnie zdjęcie:/ })).toHaveCount(1);
+  await expect((await inCard(page, "site-points")).getByRole("img", { name: /Ostatnie zdjęcie:/ })).toHaveCount(1);
 });

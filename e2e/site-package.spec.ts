@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { inCard } from "./helpers";
 
 // H5.2 Paczka budowy: „Wyślij budowę” zapisuje plik .budowa, druga osoba wczytuje go w „Nowa budowa → Z pliku”.
 
@@ -26,11 +27,11 @@ test("paczka budowy: eksport z brakiem i wpisem, import u drugiej osoby jako now
   await setup(page, true);
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const card = page.getByTestId("site-card");
-  const shortages = card.getByTestId("site-shortages");
+  const shortages = (await inCard(card, "site-shortages"));
   await shortages.getByLabel("Czego brakuje").fill("Rura PEX 16");
   await shortages.getByRole("button", { name: "Dodaj brak" }).click();
 
-  await card.getByTestId("site-package-open").click();
+  await (await inCard(card, "site-package-open")).click();
   const dialog = page.getByTestId("site-package-export");
   await expect(dialog.getByRole("checkbox", { name: /Dostęp do budowy/ })).not.toBeChecked();
   const axe = await new AxeBuilder({ page }).include("[data-testid='site-package-export']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
@@ -57,7 +58,7 @@ test("paczka budowy: eksport z brakiem i wpisem, import u drugiej osoby jako now
 
   const helperCard = helper.getByTestId("site-card");
   await expect(helperCard).toBeVisible();
-  await expect(helperCard.getByTestId("site-shortages").getByText("Rura PEX 16")).toBeVisible();
+  await expect((await inCard(helperCard, "site-shortages")).getByText("Rura PEX 16")).toBeVisible();
   await helper.keyboard.press("Escape");
   await expect(helper.getByTestId("study-journal").getByText("Przeciek pod wanną")).toBeVisible();
 

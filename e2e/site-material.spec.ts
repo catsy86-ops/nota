@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // P2.6 Zużycie materiału w karcie budowy: suma kształtek, cena za sztukę, wartość, CSV i Kopiuj.
 test.beforeEach(async ({ page }) => {
@@ -25,7 +26,7 @@ test("zużycie: suma kształtek, cena za sztukę daje wartość, CSV i Kopiuj", 
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
-  const panel = page.getByTestId("site-card").getByTestId("site-material");
+  const panel = (await inCard(page, "site-material"));
   await expect(panel).toContainText("17 szt.");
 
   await panel.getByRole("button", { name: /Zużycie materiału/ }).click();

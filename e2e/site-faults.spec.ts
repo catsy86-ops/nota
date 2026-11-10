@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // P2.3 Usterki w karcie budowy: odpowiedzialny, termin (z czerwienią po terminie) i zdjęcie po naprawie.
 const PNG_B64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
@@ -25,7 +26,7 @@ test("usterka: odpowiedzialny i termin zapisują się, po terminie jest czerwony
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const card = page.getByTestId("site-card");
-  const faults = card.getByTestId("site-faults");
+  const faults = (await inCard(card, "site-faults"));
   await expect(faults).toContainText("Nieszczelna rewizja w łazience");
   await expect(faults).toContainText("bez terminu");
 
@@ -47,7 +48,7 @@ test("usterka: odpowiedzialny i termin zapisują się, po terminie jest czerwony
   await page.reload();
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  const again = page.getByTestId("site-card").getByTestId("site-faults");
+  const again = (await inCard(page, "site-faults"));
   await expect(again.getByLabel("Odpowiedzialny")).toHaveValue("Marek");
   await expect(again).toContainText("po naprawie: 1");
 });

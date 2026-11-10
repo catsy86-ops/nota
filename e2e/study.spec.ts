@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { openLearn } from "./helpers";
+import { openLearn, inCard, inPapiery } from "./helpers";
 
 /** Nauka zapisuje się do IndexedDB (Yjs) asynchronicznie — przeładowanie dopiero po „Zapisano”. */
 async function reloadWhenSaved(page: Page) {
@@ -711,7 +711,7 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const card = page.getByTestId("site-card");
   await expect(card.getByTestId("site-card-stats")).toContainText("2 wpisy · otwarte: 1 problem");
-  await card.getByRole("button", { name: /^Edytuj dane/ }).click();
+  await (await inPapiery(card)).getByRole("button", { name: /^Edytuj dane/ }).click();
   await card.getByLabel("Nazwa", { exact: true }).fill("polna 2");
   await expect(card.getByRole("alert")).toHaveText("Jest już budowa „Polna 2”");
   await expect(card.getByRole("button", { name: "Zapisz kartę" })).toBeDisabled();
@@ -734,7 +734,7 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await journal.getByRole("button", { name: "Dom Nowaków: karta budowy" }).click();
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    card.getByRole("button", { name: "Paczka ZIP" }).click(),
+    (await inPapiery(card)).getByRole("button", { name: "Paczka ZIP" }).click(),
   ]);
   expect(download.suggestedFilename()).toMatch(/^Raport Dom Nowaków .*\.zip$/);
   await expect(page.getByText(/^Paczka gotowa: raport i 0 zdjęć/)).toBeVisible();
@@ -752,7 +752,7 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
 
   // Archiwum: znika z pigułek, wpisy zostają; „Archiwum (1)” ją pokazuje.
   await journal.getByRole("button", { name: "Karta budowy", exact: true }).click();
-  await card.getByRole("button", { name: "Do archiwum" }).click();
+  await (await inPapiery(card)).getByRole("button", { name: "Do archiwum" }).click();
   // P-4: archiwizacja pyta; bez zaznaczenia zdjęcia zostają w pełnym rozmiarze.
   await page.getByRole("alertdialog").getByRole("button", { name: "Zarchiwizuj", exact: true }).click();
   await expect(card).toHaveCount(0);
@@ -766,7 +766,7 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await expect(journal.locator("[data-journal-site]")).toHaveText(["Dom Nowaków", "Polna 2"]);
   await journal.getByRole("button", { name: "Dom Nowaków: karta budowy" }).click();
-  await card.getByRole("button", { name: /^Edytuj dane/ }).click();
+  await (await inPapiery(card)).getByRole("button", { name: /^Edytuj dane/ }).click();
   await expect(card.getByLabel("Inwestor", { exact: true })).toHaveValue("Jan Nowak");
   await expect(card.getByTestId("site-card-stats")).toContainText("w archiwum");
 });
@@ -838,11 +838,11 @@ test("dziennik: karta budowy zapisuje niezapisaną zmianę przy „Pokaż wpisy�
   const journal = page.getByTestId("study-journal");
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const card = page.getByTestId("site-card");
-  await card.getByRole("button", { name: /^Edytuj dane/ }).click();
+  await (await inPapiery(card)).getByRole("button", { name: /^Edytuj dane/ }).click();
   await card.getByLabel("Adres").fill("ul. Testowa 9, Gdańsk");
   // Bez zapisania kartą — „Pokaż wpisy” ma najpierw zapisać adres.
   await card.getByRole("button", { name: /Pokaż wpisy/ }).click();
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   // Zwinięte dane pokazują zapisany adres w linijce podsumowania.
-  await expect(page.getByTestId("site-data")).toContainText("ul. Testowa 9, Gdańsk");
+  await expect((await inCard(page, "site-data"))).toContainText("ul. Testowa 9, Gdańsk");
 });

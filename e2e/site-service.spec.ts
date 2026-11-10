@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // Serwis i gwarancja (H4): zgłoszenie z terminem na dziś → przypomnienie nad Dziennikiem → zamknięcie z opisem; gwarancja.
 
@@ -25,7 +26,7 @@ test("serwis: zgłoszenie na dziś, przypomnienie, zamknięcie z opisem, gwaranc
   await page.goto("/praca");
   const journal = page.getByTestId("study-journal");
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  const service = page.getByTestId("site-service");
+  const service = (await inCard(page, "site-service"));
 
   await service.getByLabel("Koniec gwarancji").fill("2028-10-16");
   await expect(service.getByTestId("site-warranty")).toHaveText("zostało 731 dni");
@@ -41,7 +42,7 @@ test("serwis: zgłoszenie na dziś, przypomnienie, zamknięcie z opisem, gwaranc
   const reminder = page.locator('[data-reminder="service-due"]');
   await expect(reminder).toContainText("Serwis „Lipowa 5” na dziś: Cieknie syfon w łazience");
   await reminder.getByRole("button", { name: "Karta budowy" }).click();
-  const after = page.getByTestId("site-service");
+  const after = (await inCard(page, "site-service"));
   await expect(after.getByTestId("site-warranty")).toHaveText("zostało 731 dni");
 
   await after.getByRole("button", { name: "Załatwione" }).click();

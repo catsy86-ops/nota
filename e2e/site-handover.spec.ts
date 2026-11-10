@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
+import { inCard, inPapiery } from "./helpers";
 
 // Protokół odbioru z karty budowy: wydruk z danymi budowy, etapami, próbą szczelności, uwagami i podpisami.
 
@@ -36,13 +37,13 @@ test("protokół odbioru: dane z karty, etap, próba szczelności, uwagi i podpi
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
   const card = page.getByTestId("site-card");
 
-  await card.getByRole("button", { name: /^Edytuj dane/ }).click();
+  await (await inPapiery(card)).getByRole("button", { name: /^Edytuj dane/ }).click();
   await card.getByLabel("Adres").fill("ul. Lipowa 5, Kraków");
   await card.getByLabel("Inwestor", { exact: true }).fill("Jan Kowalski");
   await card.getByRole("button", { name: "Zapisz kartę" }).click();
-  await card.getByTestId("site-stages").getByRole("checkbox", { name: /Próba szczelności/ }).click();
+  await (await inCard(card, "site-stages")).getByRole("checkbox", { name: /Próba szczelności/ }).click();
 
-  await card.getByRole("button", { name: "Protokół odbioru" }).click();
+  await (await inPapiery(card)).getByRole("button", { name: "Protokół odbioru" }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
   const printed = await page.evaluate(() => (window as unknown as { __printed: string }).__printed);
   expect(printed).toContain("Protokół odbioru instalacji wodno-kanalizacyjnej");
@@ -66,7 +67,7 @@ test("tekst protokołu: bez udostępniania systemowego kopiuje się do schowka",
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
   const card = page.getByTestId("site-card");
-  await card.getByRole("button", { name: "Tekst protokołu" }).click();
+  await (await inPapiery(card)).getByRole("button", { name: "Tekst protokołu" }).click();
   await expect(page.getByText("Skopiowano tekst protokołu")).toBeVisible();
   const copied = await page.evaluate(() => (window as unknown as { __copied: string }).__copied);
   expect(copied.startsWith("# Protokół odbioru instalacji wod-kan — Lipowa 5")).toBe(true);
@@ -104,7 +105,7 @@ test("zdjęcia wpisu, który odhaczył etap, idą do protokołu przy tym etapie 
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
   const card = page.getByTestId("site-card");
-  await card.getByRole("button", { name: "Protokół odbioru" }).click();
+  await (await inPapiery(card)).getByRole("button", { name: "Protokół odbioru" }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
   await expect(page.locator("#report-print [data-handover-photo-group='Kanalizacja podposadzkowa'] img")).toHaveCount(1);
 });
@@ -130,8 +131,8 @@ test("zapisany wpis ze zdjęciem można przypiąć do etapu w edycji — zdjęci
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
   const card = page.getByTestId("site-card");
   // Przypięcie nie odhacza etapu w karcie.
-  await expect(card.getByTestId("site-stages").getByRole("checkbox", { name: /Piony i podejścia/ })).toHaveAttribute("aria-checked", "false");
-  await card.getByRole("button", { name: "Protokół odbioru" }).click();
+  await expect((await inCard(card, "site-stages")).getByRole("checkbox", { name: /Piony i podejścia/ })).toHaveAttribute("aria-checked", "false");
+  await (await inPapiery(card)).getByRole("button", { name: "Protokół odbioru" }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
   await expect(page.locator("#report-print [data-handover-photo-group='Piony i podejścia kanalizacji'] img")).toHaveCount(1);
 });
@@ -146,16 +147,16 @@ test("punkty w protokole i w karcie „Przed wejściem” (H2.4, H2.2)", async (
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
   const card = page.getByTestId("site-card");
-  const panel = card.getByTestId("site-points");
+  const panel = (await inCard(card, "site-points"));
   await panel.getByRole("button", { name: /^\+ Kuchnia/ }).click();
   await panel.getByRole("checkbox", { name: "Zlew: próba" }).click();
 
-  await card.getByRole("button", { name: "Tekst protokołu" }).click();
+  await (await inPapiery(card)).getByRole("button", { name: "Tekst protokołu" }).click();
   await expect(page.getByText("Skopiowano tekst protokołu")).toBeVisible();
   const copied = await page.evaluate(() => (window as unknown as { __copied: string }).__copied);
   expect(copied).toContain("## Punkty (0/2 gotowe)\n### Kuchnia\n- Zlew · Z C K · 48 cm — podejście 16.10.2026, próba 16.10.2026\n- Zmywarka · Z K — do zrobienia");
 
-  await card.getByRole("button", { name: "Protokół odbioru" }).click();
+  await (await inPapiery(card)).getByRole("button", { name: "Protokół odbioru" }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
   const printed = await page.evaluate(() => (window as unknown as { __printed: string }).__printed);
   expect(printed).toContain("Punkty (0/2 gotowe)");
@@ -182,7 +183,7 @@ test("podpis klienta (P2.4): palcem w polu, na wydruku protokołu, usunięcie z 
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
   const card = page.getByTestId("site-card");
 
-  await card.getByRole("button", { name: "Podpis klienta" }).click();
+  await (await inPapiery(card)).getByRole("button", { name: "Podpis klienta" }).click();
   const dialog = page.getByTestId("site-signature");
   await expect(dialog.getByRole("button", { name: "Zapisz podpis" })).toBeDisabled();
   const axe = await new AxeBuilder({ page }).include("[data-testid='site-signature']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
@@ -197,9 +198,9 @@ test("podpis klienta (P2.4): palcem w polu, na wydruku protokołu, usunięcie z 
   await page.mouse.up();
   await dialog.getByRole("button", { name: "Zapisz podpis" }).click();
   await expect(page.getByText("Zapisano podpis — jest na protokole")).toBeVisible();
-  await expect(card.getByTestId("site-signature-open")).toHaveText("Podpisany");
+  await expect((await inCard(card, "site-signature-open"))).toHaveText("Podpisany");
 
-  await card.getByRole("button", { name: "Protokół odbioru" }).click();
+  await (await inPapiery(card)).getByRole("button", { name: "Protokół odbioru" }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
   const out = await page.evaluate(() => {
     const w = window as unknown as { __printed: string; __signature: string; __signatureImg: boolean };
@@ -210,10 +211,10 @@ test("podpis klienta (P2.4): palcem w polu, na wydruku protokołu, usunięcie z 
   expect(out.__signatureImg).toBe(true);
 
   // Usunięcie: pole wraca do pustego, „Cofnij” przywraca ten sam podpis.
-  await card.getByTestId("site-signature-open").click();
+  await (await inCard(card, "site-signature-open")).click();
   await expect(page.getByTestId("site-signature-current").getByRole("img", { name: "Podpis: Jan Kowalski" })).toBeVisible();
   await page.getByTestId("site-signature").getByRole("button", { name: "Usuń podpis" }).click();
-  await expect(card.getByTestId("site-signature-open")).toHaveText("Podpis klienta");
+  await expect((await inCard(card, "site-signature-open"))).toHaveText("Podpis klienta");
   await page.getByRole("button", { name: "Cofnij" }).click();
-  await expect(card.getByTestId("site-signature-open")).toHaveText("Podpisany");
+  await expect((await inCard(card, "site-signature-open"))).toHaveText("Podpisany");
 });

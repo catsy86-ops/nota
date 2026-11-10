@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
+import { inCard, inPapiery } from "./helpers";
 
 // H3.4 Zlecenia własne (fuchy): założenie z listy „Zlecenia”, wycena z marżą, statusy, „Niezapłacone”,
 // PDF wyceny, termin w Kalendarzu, „To nie jest fucha” z „Cofnij”.
@@ -51,7 +52,7 @@ test("fucha: wycena z marżą, status „Zrobione” liczy się do niezapłacony
   const job = card.getByTestId("site-job");
   await expect(job.getByLabel("Co zrobić")).toHaveValue("Wymiana baterii w kuchni");
   // Fucha rozlicza się wyceną — panelu „Rozliczenie” budowy szefa nie ma.
-  await expect(card.getByTestId("site-billing")).toHaveCount(0);
+  await expect(card.getByRole("tab", { name: "Pieniądze", exact: true })).toHaveCount(0);
 
   await addItem(card, "Robocizna", "Wymiana baterii", "150");
   await addItem(card, "Materiał", "Bateria", "250");
@@ -105,7 +106,7 @@ test("fucha: PDF wyceny, termin w Kalendarzu, „To nie jest fucha” z „Cofni
 
   await job.getByRole("button", { name: "To nie jest fucha" }).click();
   await expect(card.getByTestId("site-job")).toHaveCount(0);
-  await expect(card.getByTestId("site-billing")).toBeVisible();
+  await expect((await inCard(card, "site-billing"))).toBeVisible();
   await page.getByRole("button", { name: "Cofnij" }).click();
   await expect(card.getByTestId("site-job")).toBeVisible();
   await expect(card.getByTestId("job-item")).toHaveCount(1);
@@ -123,7 +124,7 @@ test("karta budowy szefa: „To zlecenie własne (fucha)” zamienia ją w fuch�
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
   const card = page.getByTestId("site-card");
   await expect(card.getByTestId("site-job")).toHaveCount(0);
-  await card.getByRole("button", { name: "To zlecenie własne (fucha)" }).click();
+  await (await inPapiery(card)).getByRole("button", { name: "To zlecenie własne (fucha)" }).click();
   await expect(card.getByTestId("site-job")).toBeVisible();
   await expect(card.getByTestId("site-job-summary")).toHaveText("Wycena");
 });
@@ -144,7 +145,7 @@ test("H3.6: raport „Wszystkie budowy szefa” bez fuch, „Wszystkie moje zlec
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Kowalski kran: karta budowy" }).first().click();
-  await page.getByTestId("site-card").getByRole("button", { name: "To zlecenie własne (fucha)" }).click();
+  await (await inPapiery(page)).getByRole("button", { name: "To zlecenie własne (fucha)" }).click();
   await expect(page.getByTestId("site-job")).toBeVisible();
   await page.keyboard.press("Escape");
 

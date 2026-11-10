@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // Dostawa dziś (2.2 planu Praca 2026-10-24): wiersz na Dziś, a po kliknięciu karta tej budowy (2.1).
 // Budowy są w Yjs, więc braki dodajemy przez kartę, tak jak robi to użytkownik.
@@ -23,7 +24,7 @@ test("dostawa dziś: wiersz na Dziś otwiera kartę budowy", async ({ page }) =>
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  const panel = page.getByTestId("site-card").getByTestId("site-shortages");
+  const panel = (await inCard(page, "site-shortages"));
   await panel.getByLabel("Czego brakuje").fill("Klej PCV");
   await panel.getByRole("button", { name: "Dodaj brak" }).click();
   await panel.getByRole("button", { name: "Klej PCV: Brakuje. Zmień status" }).click();

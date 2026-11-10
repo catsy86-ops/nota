@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // Odbiorcy raportu w karcie budowy (1.11 planu Praca 2026-10-24): wiersz „Odbiorcy raportu”
 // rozwija ten sam formularz co okno raportu; zapis przeżywa odświeżenie.
@@ -23,7 +24,7 @@ test("karta budowy: odbiorcy raportu — rozwinięcie, walidacja, zapis i przeż
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
 
-  const row = page.getByTestId("site-recipients");
+  const row = (await inCard(page, "site-recipients"));
   const toggle = row.getByRole("button", { name: /Odbiorcy raportu/ });
   await expect(toggle).toContainText("nie ustawieni");
   await toggle.click();
@@ -47,5 +48,5 @@ test("karta budowy: odbiorcy raportu — rozwinięcie, walidacja, zapis i przeż
   await page.reload();
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  await expect(page.getByTestId("site-recipients").getByRole("button", { name: /Odbiorcy raportu/ })).toContainText("Marek · „Brygada Lipowa”");
+  await expect((await inCard(page, "site-recipients")).getByRole("button", { name: /Odbiorcy raportu/ })).toContainText("Marek · „Brygada Lipowa”");
 });

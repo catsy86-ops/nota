@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // Plany i dokumenty budowy (H3): zdjęcie rzutu i PDF w karcie, powiększenie, otwarcie, usunięcie z „Cofnij”, po przeładowaniu.
 
@@ -27,7 +28,7 @@ test.beforeEach(async ({ page }) => {
 test("plany i dokumenty: zdjęcie i PDF w karcie budowy, powiększenie, otwarcie, usunięcie z Cofnij", async ({ page }) => {
   await page.goto("/praca");
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  const docs = page.getByTestId("site-docs");
+  const docs = (await inCard(page, "site-docs"));
   await expect(docs).toContainText("Rzut, projekt, zdjęcie tablicy");
 
   await docs.getByLabel("Wybierz plany i dokumenty").setInputFiles([
@@ -55,7 +56,7 @@ test("plany i dokumenty: zdjęcie i PDF w karcie budowy, powiększenie, otwarcie
 
   await reloadWhenSaved(page);
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  const after = page.getByTestId("site-docs");
+  const after = (await inCard(page, "site-docs"));
   await expect(after.getByRole("button", { name: "Powiększ: Rzut parteru" })).toBeVisible();
   await expect(after.getByRole("button", { name: "Otwórz: Projekt wod-kan" })).toBeVisible();
 });
@@ -63,7 +64,7 @@ test("plany i dokumenty: zdjęcie i PDF w karcie budowy, powiększenie, otwarcie
 test("inny typ pliku jest pomijany z komunikatem", async ({ page }) => {
   await page.goto("/praca");
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  await page.getByTestId("site-docs").getByLabel("Wybierz plany i dokumenty").setInputFiles([
+  await (await inCard(page, "site-docs")).getByLabel("Wybierz plany i dokumenty").setInputFiles([
     { name: "notatki.txt", mimeType: "text/plain", buffer: Buffer.from("x") },
   ]);
   await expect(page.getByText("Pominięte: notatki.txt (tylko zdjęcia i PDF).")).toBeVisible();
@@ -73,7 +74,7 @@ test("plany i dokumenty na dotyku: przycisk usunięcia ma co najmniej 44 px @mob
   test.skip(!testInfo.project.name.includes("iphone"), "pomiar dotyku tylko na telefonie");
   await page.goto("/praca");
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  const docs = page.getByTestId("site-docs");
+  const docs = (await inCard(page, "site-docs"));
   await docs.getByLabel("Wybierz plany i dokumenty").setInputFiles([{ name: "Rzut.png", mimeType: "image/png", buffer: PNG }]);
   const remove = docs.getByRole("button", { name: /^Usuń: Rzut/ });
   await expect(remove).toBeVisible();

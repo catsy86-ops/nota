@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // „Do zamówienia” w karcie budowy: kształtki od ostatniego zamówienia, kopia listy, zaznaczenie zamówienia.
 
@@ -38,7 +39,7 @@ test("do zamówienia: suma budowy, kopia listy, oznaczenie zamówienia zeruje li
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
 
   const card = page.getByTestId("site-card");
-  const order = card.getByTestId("site-order");
+  const order = (await inCard(card, "site-order"));
   const rows = order.getByTestId("site-order-items").locator("li");
   // Sumy bez wielkości liter; wpis „Polna 2” nie wchodzi.
   await expect(rows).toHaveCount(2);
@@ -60,7 +61,7 @@ test("do zamówienia: suma budowy, kopia listy, oznaczenie zamówienia zeruje li
   await reloadWhenSaved(page);
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  await expect(page.getByTestId("site-card").getByTestId("site-order").getByText(/^Nic do zamówienia od ostatniego zamówienia/)).toBeVisible();
+  await expect((await inCard(page, "site-order")).getByText(/^Nic do zamówienia od ostatniego zamówienia/)).toBeVisible();
 });
 
 test("raport z karty budowy: sekcja „Do zamówienia” na ekranie i w kopiowanym tekście", async ({ page }) => {

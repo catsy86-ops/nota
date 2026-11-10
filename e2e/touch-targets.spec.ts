@@ -1,4 +1,5 @@
 import { test, expect, type Locator } from "@playwright/test";
+import { openSection } from "./helpers";
 
 // Cele dotyku ≥ 44 px (plan UI 2026-10-15, 1.4). Tablet w poziomie: dotyk i pasek boczny naraz.
 test.use({ viewport: { width: 1180, height: 820 }, isMobile: true, hasTouch: true });
@@ -103,7 +104,13 @@ test("praca: „Przed wejściem” i karta budowy mają cele dotyku ≥ 44 px @m
   // Okno otwiera się z lekkim powiększeniem — mierzymy po animacji, nie w jej trakcie.
   await card.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)));
   await expectTarget(card.getByRole("button", { name: "Wpis tutaj" }));
-  for (const name of [/^Etapy:/, /^Braki:/, /^Do zamówienia:/, /^Edytuj dane/, "Wpisz godziny"]) {
+  for (const name of [/^Etapy:/, /^Braki:/, /^Do zamówienia:/, "Wpisz godziny"]) {
     await expectTarget(card.getByRole("button", { name }));
   }
+  // B2.2: segmenty karty i „Edytuj dane” (leży w segmencie Papiery).
+  for (const name of ["Dziś", "Materiał", "Punkty", "Pieniądze", "Papiery"]) {
+    await expectTarget(card.getByRole("tab", { name, exact: true }));
+  }
+  await openSection(card, "Papiery");
+  await expectTarget(card.getByRole("button", { name: /^Edytuj dane/ }));
 });

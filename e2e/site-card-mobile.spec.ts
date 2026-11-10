@@ -1,4 +1,5 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
+import { inCard, inPapiery } from "./helpers";
 
 // Karta budowy na telefonie: etapy, „Do zamówienia”, braki i przyciski protokołu mieszczą się w 320/390 px,
 // a nowe przyciski mają cel dotyku ≥ 44 px.
@@ -59,9 +60,9 @@ for (const width of [320, 390]) {
     await page.getByTestId("study-journal").getByRole("button", { name: "Osiedle Słoneczne, dom nr 12: karta budowy" }).click();
     const card = page.getByTestId("site-card");
 
-    const stages = card.getByTestId("site-stages");
+    const stages = (await inCard(card, "site-stages"));
     await stages.getByRole("checkbox", { name: /Kanalizacja podposadzkowa/ }).click();
-    const shortages = card.getByTestId("site-shortages");
+    const shortages = (await inCard(card, "site-shortages"));
     await shortages.getByLabel("Czego brakuje").fill("Rura PEX 16 w otulinie czerwonej, zwój");
     await shortages.getByLabel("Ile").fill("200 m");
     await shortages.getByRole("button", { name: "Dodaj brak" }).click();
@@ -69,13 +70,13 @@ for (const width of [320, 390]) {
 
     expect(await overflowing(page), `${width} px: wystaje poza ekran`).toEqual([]);
 
-    await expectTarget(stages.getByRole("checkbox", { name: /Kanalizacja podposadzkowa/ }), "etap");
-    await expectTarget(stages.getByRole("button", { name: "Usuń etap: Odbiór" }), "usuń etap");
-    await expectTarget(card.getByTestId("site-order").getByRole("button", { name: "Oznacz jako zamówione" }), "oznacz jako zamówione");
-    await expectTarget(shortages.getByRole("button", { name: /Zmień status/ }), "status braku");
-    await expectTarget(shortages.getByRole("button", { name: "Dodaj brak" }), "dodaj brak");
-    await expectTarget(card.getByRole("button", { name: "Protokół odbioru" }), "protokół odbioru");
-    await expectTarget(card.getByRole("button", { name: "Tekst protokołu" }), "tekst protokołu");
+    await expectTarget((await inCard(card, "site-stages")).getByRole("checkbox", { name: /Kanalizacja podposadzkowa/ }), "etap");
+    await expectTarget((await inCard(card, "site-stages")).getByRole("button", { name: "Usuń etap: Odbiór" }), "usuń etap");
+    await expectTarget((await inCard(card, "site-order")).getByRole("button", { name: "Oznacz jako zamówione" }), "oznacz jako zamówione");
+    await expectTarget((await inCard(card, "site-shortages")).getByRole("button", { name: /Zmień status/ }), "status braku");
+    await expectTarget((await inCard(card, "site-shortages")).getByRole("button", { name: "Dodaj brak" }), "dodaj brak");
+    await expectTarget((await inPapiery(card)).getByRole("button", { name: "Protokół odbioru" }), "protokół odbioru");
+    await expectTarget((await inPapiery(card)).getByRole("button", { name: "Tekst protokołu" }), "tekst protokołu");
   });
 }
 

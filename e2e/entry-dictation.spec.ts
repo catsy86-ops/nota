@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // Cały wpis jedną wypowiedzią: budowa, rodzaj, tekst i kształtki z jednego dyktowania (udawane Web Speech API).
 
@@ -78,7 +79,7 @@ test("„brakuje …” w dyktowaniu dopisuje braki do karty budowy, a nie do wp
   await expect(sheet).toHaveCount(0);
 
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
-  const panel = page.getByTestId("site-card").getByTestId("site-shortages");
+  const panel = (await inCard(page, "site-shortages"));
   await expect(panel.locator("[data-shortage-status]")).toHaveCount(2);
   await expect(panel).toContainText("Klej do PCV");
   await expect(panel).toContainText("Rura PEX 16 · 50 m");
@@ -98,7 +99,7 @@ test("„etap … zrobiony” w dyktowaniu odhacza etap w karcie budowy", async 
   await page.keyboard.press("Escape");
 
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
-  const stages = page.getByTestId("site-card").getByTestId("site-stages");
+  const stages = (await inCard(page, "site-stages"));
   await expect(stages.getByRole("checkbox", { name: /Próba szczelności/ })).toHaveAttribute("aria-checked", "true");
   await expect(stages.getByTestId("site-stages-progress")).toHaveText("1/7");
 });

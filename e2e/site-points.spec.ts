@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // Punkty w pomieszczeniach (H2.1, H2.2): szablon łazienki, kratki stanu, wysokość, nowy punkt,
 // usunięcie z „Cofnij”, licznik w karcie i zapis po odświeżeniu; układ bez przewijania w bok.
@@ -28,7 +29,7 @@ async function openCard(page: Page) {
 test("łazienka z szablonu, kratki stanu, wysokość, nowy punkt i licznik @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const card = await openCard(page);
-  const panel = card.getByTestId("site-points");
+  const panel = (await inCard(card, "site-points"));
   await panel.getByRole("button", { name: /^\+ Łazienka/ }).click();
   await expect(panel.getByTestId("site-point")).toHaveCount(4);
   await expect(card.getByTestId("site-tally").getByRole("button", { name: "Punkty: 0 z 4 gotowe" })).toBeVisible();
@@ -55,7 +56,7 @@ test("łazienka z szablonu, kratki stanu, wysokość, nowy punkt i licznik @mobi
   await expect(page.getByText("Zapisano", { exact: true })).toBeVisible();
   await page.reload();
   const again = await openCard(page);
-  const p2 = again.getByTestId("site-points");
+  const p2 = (await inCard(again, "site-points"));
   await expect(p2.getByTestId("site-point")).toHaveCount(5);
   await expect(p2.getByLabel("Umywalka: wysokość w cm")).toHaveValue("60");
   await expect(p2.getByRole("checkbox", { name: "Prysznic: biały montaż" })).toHaveAttribute("aria-checked", "true");
@@ -64,7 +65,7 @@ test("łazienka z szablonu, kratki stanu, wysokość, nowy punkt i licznik @mobi
 test("usunięcie pomieszczenia z „Cofnij”; własna nazwa; 320 px bez przewijania w bok @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 760 });
   const card = await openCard(page);
-  const panel = card.getByTestId("site-points");
+  const panel = (await inCard(card, "site-points"));
   await panel.getByLabel("Nazwa pomieszczenia").fill("Kotłownia");
   await panel.getByRole("button", { name: "Dodaj", exact: true }).click();
   await expect(panel.getByText("Brak punktów — dodaj pierwszy poniżej.")).toBeVisible();
@@ -85,7 +86,7 @@ test("usunięcie pomieszczenia z „Cofnij”; własna nazwa; 320 px bez przewij
 test("zmiana nazwy pomieszczenia: Enter zapisuje, Esc anuluje, nazwa zostaje po odświeżeniu (H2.2) @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const card = await openCard(page);
-  const panel = card.getByTestId("site-points");
+  const panel = (await inCard(card, "site-points"));
   await panel.getByRole("button", { name: /^\+ Łazienka/ }).click();
 
   await panel.getByRole("button", { name: "Zmień nazwę: Łazienka" }).click();
@@ -102,13 +103,13 @@ test("zmiana nazwy pomieszczenia: Enter zapisuje, Esc anuluje, nazwa zostaje po 
 
   await page.reload();
   const again = await openCard(page);
-  await expect(again.getByTestId("site-points").getByRole("button", { name: "Zmień nazwę: Łazienka piętro" })).toBeVisible();
+  await expect((await inCard(again, "site-points")).getByRole("button", { name: "Zmień nazwę: Łazienka piętro" })).toBeVisible();
 });
 
 test("materiał na start z punktów: szacunek z zestawów i „Dodaj do braków” (H2.5) @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const card = await openCard(page);
-  const panel = card.getByTestId("site-points");
+  const panel = (await inCard(card, "site-points"));
   await panel.getByRole("button", { name: /^\+ Łazienka/ }).click();
   const est = panel.getByTestId("points-estimate");
   await expect(est).toContainText("2 z 4 punktów bez podejścia");
@@ -116,7 +117,7 @@ test("materiał na start z punktów: szacunek z zestawów i „Dodaj do braków�
   await expect(est.getByTestId("points-estimate-items")).toContainText("Kolano naścienne 16");
   await expect(est).toContainText("Bez zestawu: Prysznic ×1, Pralka ×1");
   await est.getByRole("button", { name: "Dodaj do braków" }).click();
-  const shortages = card.getByTestId("site-shortages");
+  const shortages = (await inCard(card, "site-shortages"));
   await expect(shortages).toContainText("Kolano naścienne 16");
   await expect(shortages).toContainText("3 szt.");
   await page.getByRole("button", { name: "Cofnij" }).click();
@@ -129,7 +130,7 @@ const PNG_B64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPh
 test("zdjęcie punktu: wpis z podpisem i miniatura przy punkcie (H2.3) @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const card = await openCard(page);
-  const panel = card.getByTestId("site-points");
+  const panel = (await inCard(card, "site-points"));
   await panel.getByRole("button", { name: /^\+ Łazienka/ }).click();
 
   const chooser = page.waitForEvent("filechooser");

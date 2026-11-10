@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // Etapy budowy w karcie: odhaczanie z datą, własny etap, usuwanie z „Cofnij”, postęp przy budowie i w raporcie.
 
@@ -31,7 +32,7 @@ test("etapy: odhaczenie, własny etap, usunięcie z Cofnij, postęp przy budowie
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
 
   const card = page.getByTestId("site-card");
-  const stages = card.getByTestId("site-stages");
+  const stages = (await inCard(card, "site-stages"));
   await expect(stages.getByTestId("site-stages-progress")).toHaveText("0/7");
   await expect(stages).toContainText("Następny: Kanalizacja podposadzkowa");
 
@@ -64,7 +65,7 @@ test("etapy: odhaczenie, własny etap, usunięcie z Cofnij, postęp przy budowie
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await expect(page.getByTestId("study-journal").locator("[data-site-progress]")).toHaveText("etapy 1/8");
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  await expect(page.getByTestId("site-card").getByTestId("site-stages")).toContainText("Kocioł i grzejniki");
+  await expect((await inCard(page, "site-stages"))).toContainText("Kocioł i grzejniki");
 });
 
 test("wpis „Zrobione” podsuwa następne etapy — stuknięcie odhacza, „Cofnij” przywraca", async ({ page }) => {
@@ -86,7 +87,7 @@ test("wpis „Zrobione” podsuwa następne etapy — stuknięcie odhacza, „Co
   await sheet.getByRole("button", { name: "Odhacz etap: Rozprowadzenie wody" }).click();
   await page.keyboard.press("Escape");
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  const stages = page.getByTestId("site-card").getByTestId("site-stages");
+  const stages = (await inCard(page, "site-stages"));
   await expect(stages.getByTestId("site-stages-progress")).toHaveText("1/7");
   await expect(stages.getByRole("checkbox", { name: /Rozprowadzenie wody/ })).toHaveAttribute("aria-checked", "true");
 });

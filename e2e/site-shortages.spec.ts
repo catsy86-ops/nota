@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // Braki materiału w karcie budowy (status brakuje → zamówione → dostarczone) i historia zamówień kształtek.
 
@@ -29,7 +30,7 @@ test("braki: dopisanie, status, kopia, czyszczenie z Cofnij, raport; historia za
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const card = page.getByTestId("site-card");
-  const panel = card.getByTestId("site-shortages");
+  const panel = (await inCard(card, "site-shortages"));
 
   await panel.getByLabel("Czego brakuje").fill("Rura PEX 16");
   await panel.getByLabel("Ile").fill("50 m");
@@ -55,7 +56,7 @@ test("braki: dopisanie, status, kopia, czyszczenie z Cofnij, raport; historia za
   await expect(panel.locator("[data-shortage-status]")).toHaveCount(2);
 
   // Zamówienie kształtek trafia do historii.
-  const order = card.getByTestId("site-order");
+  const order = (await inCard(card, "site-order"));
   await order.getByRole("button", { name: "Oznacz jako zamówione" }).click();
   const history = order.getByTestId("site-order-history");
   await history.locator("summary").click();
@@ -75,7 +76,7 @@ test("braki: dopisanie, status, kopia, czyszczenie z Cofnij, raport; historia za
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const after = page.getByTestId("site-card");
-  await expect(after.getByTestId("site-shortages").locator("[data-shortage-status]")).toHaveCount(2);
+  await expect((await inCard(after, "site-shortages")).locator("[data-shortage-status]")).toHaveCount(2);
   await expect(after.getByTestId("site-order-history")).toContainText("Poprzednie zamówienia (1)");
 });
 
@@ -83,7 +84,7 @@ test("zamówione ponad 3 dni temu i niedostarczone: przypomnienie nad dziennikie
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  const panel = page.getByTestId("site-card").getByTestId("site-shortages");
+  const panel = (await inCard(page, "site-shortages"));
   await panel.getByLabel("Czego brakuje").fill("Klej PCV");
   await panel.getByRole("button", { name: "Dodaj brak" }).click();
   await panel.getByRole("button", { name: "Klej PCV: Brakuje. Zmień status" }).click();
@@ -100,7 +101,7 @@ test("zamówione ponad 3 dni temu i niedostarczone: przypomnienie nad dziennikie
   await expect(reminder).toContainText("Budowa „Lipowa 5”: zamówione ponad 3 dni temu i nie dojechało — Klej PCV.");
   await reminder.getByRole("button", { name: "Karta budowy" }).click();
   const card = page.getByTestId("site-card");
-  await card.getByTestId("site-shortages").getByRole("button", { name: "Klej PCV: Zamówione. Zmień status" }).click();
+  await (await inCard(card, "site-shortages")).getByRole("button", { name: "Klej PCV: Zamówione. Zmień status" }).click();
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("journal-reminders").locator('[data-reminder="late-order"]')).toHaveCount(0);
 });
@@ -109,7 +110,7 @@ test("braki: po zmianie statusu czytnik dostaje komunikat, po usunięciu fokus w
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  const panel = page.getByTestId("site-card").getByTestId("site-shortages");
+  const panel = (await inCard(page, "site-shortages"));
 
   await panel.getByLabel("Czego brakuje").fill("Złączka 20");
   await panel.getByRole("button", { name: "Dodaj brak" }).click();

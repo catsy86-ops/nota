@@ -91,8 +91,10 @@ test("dzień hydraulika: wejście, zdjęcie, kształtki, brak, etap, godziny, ra
     await expect(journal.getByTestId("journal-fittings").first()).toHaveText("Kolano 16 × 1");
   });
 
-  await step("brak materiału", 2, async () => {
+  // B2.2: panele są w segmentach karty — przełączenie segmentu to dodatkowe stuknięcie.
+  await step("brak materiału", 3, async () => {
     const card = await openCard();
+    await tap(card.getByRole("tab", { name: "Materiał", exact: true }));
     const shortages = card.getByTestId("site-shortages");
     await shortages.getByLabel("Czego brakuje").fill("Rura PEX 16×2");
     await shortages.getByLabel("Ile").fill("50 m");
@@ -100,8 +102,9 @@ test("dzień hydraulika: wejście, zdjęcie, kształtki, brak, etap, godziny, ra
     await expect(shortages.locator("[data-shortage-status]")).toHaveCount(1);
   });
 
-  await step("odhaczony etap", 2, async () => {
+  await step("odhaczony etap", 3, async () => {
     const card = await openCard();
+    await tap(card.getByRole("tab", { name: "Dziś", exact: true }));
     const stage = card.getByTestId("site-stages").getByRole("checkbox", { name: /Kanalizacja podposadzkowa/ });
     await tap(stage);
     await expect(stage).toHaveAttribute("aria-checked", "true");

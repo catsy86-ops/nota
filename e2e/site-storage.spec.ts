@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // P3.1: miejsce zajęte przez budowę — w karcie i w Ustawieniach (Kopia i dane).
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
@@ -21,7 +22,7 @@ test("miejsce budowy: linijka w karcie i lista w Ustawieniach", async ({ page })
   await page.goto("/praca");
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const card = page.getByTestId("site-card");
-  await card.getByTestId("site-docs").getByLabel("Wybierz plany i dokumenty").setInputFiles({ name: "Rzut.png", mimeType: "image/png", buffer: PNG });
+  await (await inCard(card, "site-docs")).getByLabel("Wybierz plany i dokumenty").setInputFiles({ name: "Rzut.png", mimeType: "image/png", buffer: PNG });
   await expect(card.getByTestId("site-storage")).toHaveText(/Zdjęcia, nagrania i dokumenty: \d+(,\d+)? (B|KB)/);
   // Karta jest modalna — dopiero po jej zamknięciu reszta strony jest dostępna.
   await expect(async () => { await page.keyboard.press("Escape"); await expect(card).toBeHidden({ timeout: 1000 }); }).toPass({ timeout: 10000 });

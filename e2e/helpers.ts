@@ -52,3 +52,37 @@ export async function openLearn(page: Page, name: "Quiz" | "Tablica" | "Lista ko
   if (!(await sub.isVisible())) await page.getByRole("tab", { name: "Nauka", exact: true }).click();
   await sub.click();
 }
+
+/**
+ * Segment karty budowy (Dziś, Materiał, Punkty, Pieniądze, Papiery): panele leżą w segmentach, a nieaktywny
+ * segment nie jest w drzewie strony. Bezpieczne, gdy segment jest już otwarty. `card` = `getByTestId("site-card")`.
+ */
+export async function openSection(card: Locator, name: "Dziś" | "Materiał" | "Punkty" | "Pieniądze" | "Papiery"): Promise<void> {
+  const tab = card.getByRole("tab", { name, exact: true });
+  if ((await tab.getAttribute("data-state")) !== "active") await tab.click();
+}
+
+type CardSectionName = "Dziś" | "Materiał" | "Punkty" | "Pieniądze" | "Papiery";
+const PANEL_SECTION: Record<string, CardSectionName> = {
+  "site-stages": "Dziś", "site-plan": "Dziś", "site-faults": "Dziś", "site-time": "Dziś",
+  "site-shortages": "Materiał", "site-material": "Materiał", "site-order": "Materiał",
+  "site-points": "Punkty", "site-billing": "Pieniądze",
+  "site-docs": "Papiery", "site-service": "Papiery", "site-data": "Papiery", "site-recipients": "Papiery",
+  "site-signature-open": "Papiery", "site-package-open": "Papiery",
+};
+const cardOf = (from: Page | Locator): Locator => ("goto" in from ? from.getByTestId("site-card") : from);
+
+/** Panel karty budowy po `data-testid`: otwiera jego segment i zwraca lokator. `from` = strona albo lokator karty. */
+export async function inCard(from: Page | Locator, id: string): Promise<Locator> {
+  const card = cardOf(from);
+  const section = PANEL_SECTION[id];
+  if (section) await openSection(card, section);
+  return card.getByTestId(id);
+}
+
+/** Segment „Papiery” (dane, odbiorcy, dokumenty, protokół, paczki, archiwum): zwraca kartę po otwarciu segmentu. */
+export async function inPapiery(from: Page | Locator): Promise<Locator> {
+  const card = cardOf(from);
+  await openSection(card, "Papiery");
+  return card;
+}

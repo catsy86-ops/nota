@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { inCard, openSection } from "./helpers";
 
 // Sposób rozliczenia budowy (H3.1): godziny, od punktu (domyślna i na typ punktu), ryczałt za całość
 // i za etapy; linia w nagłówku panelu, zapis po odświeżeniu, zła kwota wraca; 320 px bez przewijania w bok.
@@ -23,7 +24,7 @@ async function openBilling(page: Page) {
   await page.goto("/praca");
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
   const card = page.getByTestId("site-card");
-  const panel = card.getByTestId("site-billing");
+  const panel = (await inCard(card, "site-billing"));
   await panel.getByRole("button", { name: /^Rozliczenie/ }).click();
   return { card, panel };
 }
@@ -38,7 +39,8 @@ test("od punktu z wyższą stawką WC i ryczałt za etapy; zapis po odświeżeni
   await page.setViewportSize({ width: 390, height: 844 });
   const { card, panel } = await openBilling(page);
   await expect(panel.getByRole("button", { name: "Godziny", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await card.getByTestId("site-points").getByRole("button", { name: /^\+ Łazienka/ }).click();
+  await (await inCard(card, "site-points")).getByRole("button", { name: /^\+ Łazienka/ }).click();
+  await openSection(card, "Pieniądze");
 
   await panel.getByRole("button", { name: "Od punktu", exact: true }).click();
   await amount(panel, "Za punkt (domyślnie) (zł)", "150");
@@ -89,7 +91,8 @@ test("należności (H3.2): ryczałt i odhaczony etap, zaliczka, zostało, cofni�
   await amount(panel, "Za całą budowę (zł)", "8000");
   await amount(panel, "Rozprowadzenie wody (zł)", "1500");
   await expect(dues.getByTestId("billing-accrued")).toHaveText("8000 zł");
-  await card.getByTestId("site-stages").getByRole("checkbox", { name: /Rozprowadzenie wody/ }).click();
+  await (await inCard(card, "site-stages")).getByRole("checkbox", { name: /Rozprowadzenie wody/ }).click();
+  await openSection(card, "Pieniądze");
   await expect(dues.getByTestId("billing-accrued")).toHaveText("9500 zł");
 
   await dues.getByRole("button", { name: "Wpłata (zaliczka)" }).click();
@@ -121,11 +124,12 @@ test("należności (H3.2): ryczałt i odhaczony etap, zaliczka, zostało, cofni�
 test("miesiąc razem (H3.3): gotowy punkt ze stawką widać w podsumowaniu Grafiku jako „Z budów” @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const { card, panel } = await openBilling(page);
-  await card.getByTestId("site-points").getByRole("button", { name: /^\+ Łazienka/ }).click();
+  await (await inCard(card, "site-points")).getByRole("button", { name: /^\+ Łazienka/ }).click();
+  await openSection(card, "Pieniądze");
   await panel.getByRole("button", { name: "Od punktu", exact: true }).click();
   await amount(panel, "Za punkt (domyślnie) (zł)", "150");
   await amount(panel, "WC (stelaż) ×1 (zł)", "250");
-  const points = card.getByTestId("site-points");
+  const points = (await inCard(card, "site-points"));
   await points.getByRole("checkbox", { name: "Umywalka: biały montaż" }).click();
   await points.getByRole("checkbox", { name: "WC (stelaż): biały montaż" }).click();
   await expect(panel.getByTestId("billing-accrued")).toHaveText("400 zł");

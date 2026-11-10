@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // P2.7 Zaznaczanie na planie: rysunek na planie budowy zapisuje się jako NOWY dokument; oryginał zostaje.
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
@@ -20,7 +21,7 @@ test.beforeEach(async ({ page }) => {
 test("zaznaczony plan jest nowym dokumentem, a oryginał zostaje", async ({ page }) => {
   await page.goto("/praca");
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  const docs = page.getByTestId("site-docs");
+  const docs = (await inCard(page, "site-docs"));
   await docs.getByLabel("Wybierz plany i dokumenty").setInputFiles({ name: "Rzut.png", mimeType: "image/png", buffer: PNG });
   await expect(docs.getByRole("button", { name: "Powiększ: Rzut", exact: true })).toBeVisible();
 

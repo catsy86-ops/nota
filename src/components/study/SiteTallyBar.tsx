@@ -16,7 +16,7 @@ const positionsPl = (n: number) => pluralPl(n, ["pozycja", "pozycje", "pozycji"]
  * Liczniki budowy jak rubryki w zeszycie: etapy, punkty (gdy są, H2.2), braki do zamówienia, kształtki do zamówienia.
  * Stuknięcie przewija do panelu. „Brakuje” na czerwono (jak w panelu braków), zero wyciszone.
  */
-export function SiteTallyBar({ tally, points }: { tally: SiteTally; /** H2.2: punkty gotowe z wszystkich; komórka tylko, gdy są punkty. */ points?: PointsProgress }) {
+export function SiteTallyBar({ tally, points, onSelect }: { tally: SiteTally; /** H2.2: punkty gotowe z wszystkich; komórka tylko, gdy są punkty. */ points?: PointsProgress; /** B2.2: karta w segmentach — najpierw przełącza segment z panelem, potem przewija. */ onSelect?: (panelId: string) => void }) {
   const cells = [
     { id: "site-stages", label: "Etapy", value: `${tally.stages.done}/${tally.stages.total}`, tone: "plain", sub: null,
       aria: `Etapy: ${tally.stages.done} z ${tally.stages.total}` },
@@ -35,7 +35,7 @@ export function SiteTallyBar({ tally, points }: { tally: SiteTally; /** H2.2: pu
         <button
           key={c.id}
           type="button"
-          onClick={() => scrollToPanel(c.id)}
+          onClick={() => { if (!onSelect) { scrollToPanel(c.id); return; } onSelect(c.id); requestAnimationFrame(() => scrollToPanel(c.id)); }}
           aria-label={c.aria}
           className="pressable flex min-w-0 flex-col items-start gap-1 px-3 py-2 text-left first:rounded-l-xl last:rounded-r-xl hover:bg-muted/60 coarse:min-h-11"
         >

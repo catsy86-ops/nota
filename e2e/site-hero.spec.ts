@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { inCard } from "./helpers";
 
 // P5.1: karta budowy z okładką ze zdjęcia (nazwa i adres na niej) i etapami jako linia kropek.
 // Mały, ale kolorowy PNG 8×4 — okładka widoczna na zrzucie.
@@ -24,10 +25,10 @@ test("karta: bez zdjęcia zwykły nagłówek; z planem okładka z nazwą, a etap
   const card = page.getByTestId("site-card");
   await expect(card.getByTestId("site-cover")).toHaveCount(0);
 
-  await card.getByTestId("site-stages").getByRole("checkbox", { name: /Kanalizacja podposadzkowa/ }).click();
+  await (await inCard(card, "site-stages")).getByRole("checkbox", { name: /Kanalizacja podposadzkowa/ }).click();
   await expect(card.getByTestId("site-stage-dots")).toHaveAttribute("aria-label", /Etapy: 1 z 7/);
 
-  await card.getByTestId("site-docs").getByLabel("Wybierz plany i dokumenty").setInputFiles({ name: "Rzut.png", mimeType: "image/png", buffer: PNG });
+  await (await inCard(card, "site-docs")).getByLabel("Wybierz plany i dokumenty").setInputFiles({ name: "Rzut.png", mimeType: "image/png", buffer: PNG });
   const cover = card.getByTestId("site-cover");
   await expect(cover).toBeVisible();
   await expect(cover.getByRole("heading", { name: "Lipowa 5" })).toBeVisible();

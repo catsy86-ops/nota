@@ -6,6 +6,8 @@ import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { isCardSection, rememberSection, sectionOfPanel, SECTION_LABEL, startSection, visibleSections, type CardSection } from "@/lib/study/cardSection";
 import { haptic } from "@/lib/haptics";
 import { useShifts } from "@/lib/shifts";
 import { pluralPl } from "@/lib/plural";
@@ -99,6 +101,12 @@ export function SiteCardDialog({
   const endHandover = useCallback(() => setHandover(null), []);
   const [signOpen, setSignOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  // B2.2: pięć segmentów zamiast kilkunastu paneli pod sobą; start tam, gdzie skończyłeś (`cardSection.ts`).
+  const sections = useMemo(() => visibleSections(!!job), [job]);
+  const [section, setSection] = useState<CardSection>("dzis");
+  const siteIdNow = site?.id;
+  useEffect(() => { if (siteIdNow) setSection(startSection(siteIdNow, sections)); }, [siteIdNow]); // eslint-disable-line react-hooks/exhaustive-deps
+  const pickSection = (sec: CardSection) => { setSection(sec); if (siteIdNow) rememberSection(siteIdNow, sec); };
   useTrackUse("karta-budowy", !!site);
   const cardOpen = !!site;
   useEffect(() => { if (cardOpen) measureSpan("otwarcie-karty-budowy")(); }, [cardOpen]);
@@ -297,261 +305,286 @@ export function SiteCardDialog({
                 </Button>
                 <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void addPhotoEntry(file); }} />
               </div>
-              {tally && <SiteTallyBar tally={tally} points={sitePointsProgress} />}
+              {/* Najczęstsze skróty zostają nad segmentami: wpisy tej budowy i raport dla szefa. */}
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" onClick={() => leaveTo(onShowEntries)} disabled={site.count === 0} className="coarse:h-11">
+                  <ListFilter className="mr-1.5 h-4 w-4" aria-hidden />Pokaż wpisy
+                </Button>
+                <Button variant="outline" onClick={() => leaveTo(onReport)} disabled={site.count === 0} className="coarse:h-11">
+                  <FileText className="mr-1.5 h-4 w-4" aria-hidden />Raport
+                </Button>
+              </div>
+              {tally && <SiteTallyBar tally={tally} points={sitePointsProgress} onSelect={(id) => { const sec = sectionOfPanel(id); if (sec && sections.includes(sec)) pickSection(sec); }} />}
               {job && <SiteJobPanel site={site} job={job} onSign={() => setSignOpen(true)} />}
-              <SiteStagesPanel site={site} journal={study.journal} />
-              <SitePointsPanel site={site} journal={study.journal} />
-              <SiteShortagesPanel site={site} />
-              <SiteFaultsPanel site={site} journal={study.journal} />
-              <SiteMaterialPanel site={site} journal={study.journal} />
-              {hours && <SiteTimePanel site={site} today={hours.today} monthLabel={new Date(`${hours.today}T12:00`).toLocaleDateString("pl-PL", { month: "long", year: "numeric" })} monthDays={hours.monthDays} />}
-              {/* Fucha rozlicza się wyceną w panelu zlecenia — „Rozliczenie” jest dla budów szefa. */}
-              {!job && <SiteBillingPanel site={site} hours={hours?.total} />}
-              <SiteOrderPanel site={site} />
             </div>
 
-            <div className={`${cardClass} mx-5 mt-3`} data-testid="site-data">
-              <button
-                type="button"
-                onClick={() => setEditing((v) => !v)}
-                aria-expanded={editing}
-                aria-controls="site-card-form"
-                className="pressable flex w-full items-center gap-2 rounded-card px-3 py-2.5 text-left coarse:min-h-11"
+            <Tabs value={section} onValueChange={(v) => isCardSection(v) && pickSection(v)}>
+              {/* forceMount: panele zostają w drzewie, więc rozwinięte sekcje i wpisany tekst przeżywają zmianę segmentu. */}
+              <div className="sticky top-0 z-raised border-b border-border bg-background px-5 pb-2 pt-3" data-testid="site-sections">
+                <TabsList aria-label="Sekcje karty budowy" className="h-auto w-full justify-start overflow-x-auto [scrollbar-width:none]">
+                  {sections.map((sec) => (
+                    <TabsTrigger key={sec} value={sec} className="min-w-fit flex-1 px-1.5 coarse:min-h-11">{SECTION_LABEL[sec]}</TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+              <TabsContent value="dzis" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
+                <SiteStagesPanel site={site} journal={study.journal} />
+                <SiteFaultsPanel site={site} journal={study.journal} />
+                {hours && <SiteTimePanel site={site} today={hours.today} monthLabel={new Date(`${hours.today}T12:00`).toLocaleDateString("pl-PL", { month: "long", year: "numeric" })} monthDays={hours.monthDays} />}
+              </TabsContent>
+              <TabsContent value="material" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
+                <SiteShortagesPanel site={site} />
+                <SiteMaterialPanel site={site} journal={study.journal} />
+                <SiteOrderPanel site={site} />
+              </TabsContent>
+              <TabsContent value="punkty" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
+                <SitePointsPanel site={site} journal={study.journal} />
+              </TabsContent>
+              {!job && (
+                <TabsContent value="pieniadze" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
+                  {/* Fucha rozlicza się wyceną w panelu zlecenia — „Rozliczenie” jest dla budów szefa. */}
+                  <SiteBillingPanel site={site} hours={hours?.total} />
+                </TabsContent>
+              )}
+              <TabsContent value="papiery" forceMount className="mt-0 data-[state=inactive]:hidden pb-3 pt-3">
+              <div className={`${cardClass} mx-5 mt-3`} data-testid="site-data">
+                <button
+                  type="button"
+                  onClick={() => setEditing((v) => !v)}
+                  aria-expanded={editing}
+                  aria-controls="site-card-form"
+                  className="pressable flex w-full items-center gap-2 rounded-card px-3 py-2.5 text-left coarse:min-h-11"
+                >
+                  <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Edytuj dane</span>
+                  <span className={cn("min-w-0 flex-1 truncate text-sm", !summary && "text-muted-foreground")}>
+                    {editing ? "" : summary || "bez adresu i kontaktów"}
+                  </span>
+                  {dirty && !editing && <span className="shrink-0 text-xs text-warning-ink">niezapisane</span>}
+                  <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", editing && "rotate-180")} aria-hidden />
+                </button>
+                {editing && (
+              <form
+                id="site-card-form"
+                className="space-y-3 border-t border-border px-3 py-3"
+                onSubmit={(e) => { e.preventDefault(); save(); }}
               >
-                <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-                <span className="shrink-0 text-xs font-semibold text-muted-foreground">Edytuj dane</span>
-                <span className={cn("min-w-0 flex-1 truncate text-sm", !summary && "text-muted-foreground")}>
-                  {editing ? "" : summary || "bez adresu i kontaktów"}
-                </span>
-                {dirty && !editing && <span className="shrink-0 text-xs text-warning-ink">niezapisane</span>}
-                <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", editing && "rotate-180")} aria-hidden />
-              </button>
-              {editing && (
-            <form
-              id="site-card-form"
-              className="space-y-3 border-t border-border px-3 py-3"
-              onSubmit={(e) => { e.preventDefault(); save(); }}
-            >
-              <label className="block space-y-1 text-xs text-muted-foreground">
-                Nazwa
-                <input
-                  value={form.name}
-                  onChange={setField("name")}
-                  maxLength={SITE_NAME_MAX}
-                  aria-invalid={!!error}
-                  aria-describedby={error ? "site-card-error" : undefined}
-                  className={fieldClass}
-                />
-              </label>
-              {error && <p id="site-card-error" className="text-xs text-destructive-ink" role="alert">{error}</p>}
-              <label className="block space-y-1 text-xs text-muted-foreground">
-                Adres
-                <input
-                  value={form.address}
-                  onChange={setField("address")}
-                  maxLength={SITE_FIELD_MAX}
-                  placeholder="ul. Lipowa 5, Kraków"
-                  autoComplete="off"
-                  className={fieldClass}
-                />
-              </label>
-              <label className="block space-y-1 text-xs text-muted-foreground">
-                Inwestor
-                <input
-                  value={form.investor}
-                  onChange={setField("investor")}
-                  maxLength={SITE_FIELD_MAX}
-                  placeholder="np. Jan Kowalski"
-                  autoComplete="off"
-                  className={fieldClass}
-                />
-              </label>
-              <label className="block space-y-1 text-xs text-muted-foreground">
-                Telefon inwestora
-                <input
-                  type="tel"
-                  inputMode="tel"
-                  value={form.phone}
-                  onChange={setField("phone")}
-                  maxLength={SITE_PHONE_MAX}
-                  placeholder="600 100 200"
-                  autoComplete="off"
-                  className={fieldClass}
-                />
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
-                  Kierownik budowy
+                <label className="block space-y-1 text-xs text-muted-foreground">
+                  Nazwa
                   <input
-                    value={form.manager}
-                    onChange={setField("manager")}
+                    value={form.name}
+                    onChange={setField("name")}
+                    maxLength={SITE_NAME_MAX}
+                    aria-invalid={!!error}
+                    aria-describedby={error ? "site-card-error" : undefined}
+                    className={fieldClass}
+                  />
+                </label>
+                {error && <p id="site-card-error" className="text-xs text-destructive-ink" role="alert">{error}</p>}
+                <label className="block space-y-1 text-xs text-muted-foreground">
+                  Adres
+                  <input
+                    value={form.address}
+                    onChange={setField("address")}
                     maxLength={SITE_FIELD_MAX}
-                    placeholder="imię"
+                    placeholder="ul. Lipowa 5, Kraków"
                     autoComplete="off"
                     className={fieldClass}
                   />
                 </label>
-                <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
-                  Telefon kierownika
+                <label className="block space-y-1 text-xs text-muted-foreground">
+                  Inwestor
+                  <input
+                    value={form.investor}
+                    onChange={setField("investor")}
+                    maxLength={SITE_FIELD_MAX}
+                    placeholder="np. Jan Kowalski"
+                    autoComplete="off"
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="block space-y-1 text-xs text-muted-foreground">
+                  Telefon inwestora
                   <input
                     type="tel"
                     inputMode="tel"
-                    value={form.managerPhone}
-                    onChange={setField("managerPhone")}
+                    value={form.phone}
+                    onChange={setField("phone")}
                     maxLength={SITE_PHONE_MAX}
                     placeholder="600 100 200"
                     autoComplete="off"
                     className={fieldClass}
                   />
                 </label>
-                <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
-                  Telefon hurtowni (WhatsApp zamówień)
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    value={form.supplierPhone}
-                    onChange={setField("supplierPhone")}
-                    maxLength={SITE_PHONE_MAX}
-                    placeholder="np. hurtownia 22 000 00 00"
-                    autoComplete="off"
-                    className={fieldClass}
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
+                    Kierownik budowy
+                    <input
+                      value={form.manager}
+                      onChange={setField("manager")}
+                      maxLength={SITE_FIELD_MAX}
+                      placeholder="imię"
+                      autoComplete="off"
+                      className={fieldClass}
+                    />
+                  </label>
+                  <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
+                    Telefon kierownika
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={form.managerPhone}
+                      onChange={setField("managerPhone")}
+                      maxLength={SITE_PHONE_MAX}
+                      placeholder="600 100 200"
+                      autoComplete="off"
+                      className={fieldClass}
+                    />
+                  </label>
+                  <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
+                    Telefon hurtowni (WhatsApp zamówień)
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={form.supplierPhone}
+                      onChange={setField("supplierPhone")}
+                      maxLength={SITE_PHONE_MAX}
+                      placeholder="np. hurtownia 22 000 00 00"
+                      autoComplete="off"
+                      className={fieldClass}
+                    />
+                  </label>
+                </div>
+                <label className="block space-y-1 text-xs text-muted-foreground">
+                  Dostęp do budowy
+                  <textarea
+                    value={form.access}
+                    onChange={setField("access")}
+                    maxLength={SITE_ACCESS_MAX}
+                    rows={2}
+                    placeholder="np. kod do bramy 1234#, klucze u sąsiada spod 7"
+                    className={`${fieldClass} resize-none`}
                   />
                 </label>
+                <Button type="submit" disabled={!dirty || !!error} className="w-full coarse:h-11">Zapisz kartę</Button>
+              </form>
+                )}
               </div>
-              <label className="block space-y-1 text-xs text-muted-foreground">
-                Dostęp do budowy
-                <textarea
-                  value={form.access}
-                  onChange={setField("access")}
-                  maxLength={SITE_ACCESS_MAX}
-                  rows={2}
-                  placeholder="np. kod do bramy 1234#, klucze u sąsiada spod 7"
-                  className={`${fieldClass} resize-none`}
-                />
-              </label>
-              <Button type="submit" disabled={!dirty || !!error} className="w-full coarse:h-11">Zapisz kartę</Button>
-            </form>
-              )}
-            </div>
 
-            {/* Odbiorcy raportu (1.11) — te same dla wszystkich budów, więc formularz jest ten sam co w oknie raportu. */}
-            <div className={`${cardClass} mx-5 mt-3`} data-testid="site-recipients">
-              <button
-                type="button"
-                onClick={() => setRecipientsOpen((v) => !v)}
-                aria-expanded={recipientsOpen}
-                aria-controls="site-card-recipients"
-                className="pressable flex w-full items-center gap-2 rounded-card px-3 py-2.5 text-left coarse:min-h-11"
-              >
-                <Send className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-                <span className="shrink-0 text-xs font-semibold text-muted-foreground">Odbiorcy raportu</span>
-                <span className={cn("min-w-0 flex-1 truncate text-sm", !recipients && "text-muted-foreground")}>
-                  {recipientsOpen ? "" : recipients || "nie ustawieni"}
-                </span>
-                <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", recipientsOpen && "rotate-180")} aria-hidden />
-              </button>
-              {recipientsOpen && (
-                <div id="site-card-recipients" className="border-t border-border px-3 py-3">
-                  <RecipientsForm boss={study.boss} group={study.group} onDone={() => setRecipientsOpen(false)} className="" />
-                </div>
-              )}
-            </div>
+              {/* Odbiorcy raportu (1.11) — te same dla wszystkich budów, więc formularz jest ten sam co w oknie raportu. */}
+              <div className={`${cardClass} mx-5 mt-3`} data-testid="site-recipients">
+                <button
+                  type="button"
+                  onClick={() => setRecipientsOpen((v) => !v)}
+                  aria-expanded={recipientsOpen}
+                  aria-controls="site-card-recipients"
+                  className="pressable flex w-full items-center gap-2 rounded-card px-3 py-2.5 text-left coarse:min-h-11"
+                >
+                  <Send className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Odbiorcy raportu</span>
+                  <span className={cn("min-w-0 flex-1 truncate text-sm", !recipients && "text-muted-foreground")}>
+                    {recipientsOpen ? "" : recipients || "nie ustawieni"}
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", recipientsOpen && "rotate-180")} aria-hidden />
+                </button>
+                {recipientsOpen && (
+                  <div id="site-card-recipients" className="border-t border-border px-3 py-3">
+                    <RecipientsForm boss={study.boss} group={study.group} onDone={() => setRecipientsOpen(false)} className="" />
+                  </div>
+                )}
+              </div>
 
-            <div className="space-y-3 px-5 py-3">
-              <SiteDocsPanel site={site} />
-              <SiteServicePanel site={site} />
-            </div>
+              <div className="space-y-3 px-5 py-3">
+                <SiteDocsPanel site={site} />
+                <SiteServicePanel site={site} />
+              </div>
 
-            <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <Button variant="outline" onClick={() => leaveTo(onShowEntries)} disabled={site.count === 0} className="coarse:h-11">
-                <ListFilter className="mr-1.5 h-4 w-4" aria-hidden />Pokaż wpisy
-              </Button>
-              <Button variant="outline" onClick={() => leaveTo(onReport)} disabled={site.count === 0} className="coarse:h-11">
-                <FileText className="mr-1.5 h-4 w-4" aria-hidden />Raport
-              </Button>
-              <Button
-                variant="outline"
-                onClick={zip}
-                disabled={site.count === 0 || zipping}
-                title="Raport i zdjęcia całej budowy w jednym pliku ZIP"
-                className="col-span-2 coarse:h-11"
-              >
-                <Package className="mr-1.5 h-4 w-4" aria-hidden />{zipping ? "Pakuję…" : "Paczka ZIP"}
-              </Button>
-              <SiteStorageLine site={site} journal={study.journal} />
-              <Button
-                variant="outline"
-                onClick={() => setHandover(buildHandover(study.journal, site, Date.now(), sitePoints))}
-                disabled={site.count === 0 && !site.stages}
-                title="Etapy, próby szczelności, uwagi i zdjęcia na jednej kartce z miejscem na podpisy — wydruk albo PDF"
-                className="coarse:h-11"
-              >
-                <ClipboardCheck className="mr-1.5 h-4 w-4" aria-hidden />Protokół odbioru
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => void shareHandover()}
-                disabled={site.count === 0 && !site.stages}
-                title="Ten sam protokół jako tekst — do wiadomości dla inwestora albo szefa"
-                className="coarse:h-11"
-              >
-                <Share2 className="mr-1.5 h-4 w-4" aria-hidden />Tekst protokołu
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => void pdfHandover()}
-                disabled={(site.count === 0 && !site.stages) || pdfBusy}
-                title="Protokół jako plik PDF z nagłówkiem firmy, zdjęciami i numerami stron — do wysłania albo wydruku"
-                className="coarse:h-11"
-              >
-                <FileText className="mr-1.5 h-4 w-4" aria-hidden />{pdfBusy ? "Przygotowuję…" : "PDF protokołu"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setSignOpen(true)}
-                title={site.signature ? "Podpis klienta jest na protokole — obejrzyj, złóż od nowa albo usuń" : "Klient podpisuje palcem na telefonie; podpis trafia na wydruk i PDF protokołu"}
-                className="coarse:h-11"
-                data-testid="site-signature-open"
-              >
-                <PenLine className="mr-1.5 h-4 w-4" aria-hidden />{site.signature ? "Podpisany" : "Podpis klienta"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setSendOpen(true)}
-                title="Plik .budowa dla pomocnika: etapy, braki, punkty, plan i wpisy — bez pieniędzy i telefonów"
-                className="col-span-2 coarse:h-11"
-                data-testid="site-package-open"
-              >
-                <Send className="mr-1.5 h-4 w-4" aria-hidden />Wyślij budowę pomocnikowi
-              </Button>
-              {!job && (
-                <Button variant="ghost" onClick={() => setJobMeta(site.id, {})} className="col-span-2 text-muted-foreground coarse:h-11"
-                  title="Twoje zlecenie, nie budowa szefa: wycena, status, termin i PDF dla klienta">
-                  <Wrench className="mr-1.5 h-4 w-4" aria-hidden />To zlecenie własne (fucha)
+              <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                <Button
+                  variant="outline"
+                  onClick={zip}
+                  disabled={site.count === 0 || zipping}
+                  title="Raport i zdjęcia całej budowy w jednym pliku ZIP"
+                  className="col-span-2 coarse:h-11"
+                >
+                  <Package className="mr-1.5 h-4 w-4" aria-hidden />{zipping ? "Pakuję…" : "Paczka ZIP"}
                 </Button>
-              )}
-              <Button variant="ghost" onClick={toggleArchive} className="col-span-2 text-muted-foreground coarse:h-11">
-                {site.archived === undefined
-                  ? <><Archive className="mr-1.5 h-4 w-4" aria-hidden />Do archiwum</>
-                  : <><ArchiveRestore className="mr-1.5 h-4 w-4" aria-hidden />Przywróć z archiwum</>}
-              </Button>
-              <AlertDialog open={archiveAsk} onOpenChange={(o) => { if (!archiving) setArchiveAsk(o); }}>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Zarchiwizować „{site.name}”?</AlertDialogTitle>
-                    <AlertDialogDescription>Wpisy zostają. Archiwum nie jest na liście budów; cofnąć można przyciskiem „Przywróć z archiwum”.</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <label className="flex items-start gap-2 text-sm">
-                    <Checkbox checked={shrinkWithZip} onCheckedChange={(v) => setShrinkWithZip(v === true)} className="mt-0.5" />
-                    <span>Zapisz paczkę ZIP i zmniejsz zdjęcia do miniatur (800 px)<span className="block text-xs text-muted-foreground">Oryginały zostaną tylko w paczce. Tej zmiany nie da się cofnąć, dlatego najpierw powstaje ZIP.</span></span>
-                  </label>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={archiving}>Anuluj</AlertDialogCancel>
-                    <AlertDialogAction disabled={archiving} onClick={(e) => { e.preventDefault(); void doArchive(true, shrinkWithZip); }}>{shrinkWithZip ? "Zapisz ZIP i zarchiwizuj" : "Zarchiwizuj"}</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+                <SiteStorageLine site={site} journal={study.journal} />
+                <Button
+                  variant="outline"
+                  onClick={() => setHandover(buildHandover(study.journal, site, Date.now(), sitePoints))}
+                  disabled={site.count === 0 && !site.stages}
+                  title="Etapy, próby szczelności, uwagi i zdjęcia na jednej kartce z miejscem na podpisy — wydruk albo PDF"
+                  className="coarse:h-11"
+                >
+                  <ClipboardCheck className="mr-1.5 h-4 w-4" aria-hidden />Protokół odbioru
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => void shareHandover()}
+                  disabled={site.count === 0 && !site.stages}
+                  title="Ten sam protokół jako tekst — do wiadomości dla inwestora albo szefa"
+                  className="coarse:h-11"
+                >
+                  <Share2 className="mr-1.5 h-4 w-4" aria-hidden />Tekst protokołu
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => void pdfHandover()}
+                  disabled={(site.count === 0 && !site.stages) || pdfBusy}
+                  title="Protokół jako plik PDF z nagłówkiem firmy, zdjęciami i numerami stron — do wysłania albo wydruku"
+                  className="coarse:h-11"
+                >
+                  <FileText className="mr-1.5 h-4 w-4" aria-hidden />{pdfBusy ? "Przygotowuję…" : "PDF protokołu"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setSignOpen(true)}
+                  title={site.signature ? "Podpis klienta jest na protokole — obejrzyj, złóż od nowa albo usuń" : "Klient podpisuje palcem na telefonie; podpis trafia na wydruk i PDF protokołu"}
+                  className="coarse:h-11"
+                  data-testid="site-signature-open"
+                >
+                  <PenLine className="mr-1.5 h-4 w-4" aria-hidden />{site.signature ? "Podpisany" : "Podpis klienta"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setSendOpen(true)}
+                  title="Plik .budowa dla pomocnika: etapy, braki, punkty, plan i wpisy — bez pieniędzy i telefonów"
+                  className="col-span-2 coarse:h-11"
+                  data-testid="site-package-open"
+                >
+                  <Send className="mr-1.5 h-4 w-4" aria-hidden />Wyślij budowę pomocnikowi
+                </Button>
+                {!job && (
+                  <Button variant="ghost" onClick={() => setJobMeta(site.id, {})} className="col-span-2 text-muted-foreground coarse:h-11"
+                    title="Twoje zlecenie, nie budowa szefa: wycena, status, termin i PDF dla klienta">
+                    <Wrench className="mr-1.5 h-4 w-4" aria-hidden />To zlecenie własne (fucha)
+                  </Button>
+                )}
+                <Button variant="ghost" onClick={toggleArchive} className="col-span-2 text-muted-foreground coarse:h-11">
+                  {site.archived === undefined
+                    ? <><Archive className="mr-1.5 h-4 w-4" aria-hidden />Do archiwum</>
+                    : <><ArchiveRestore className="mr-1.5 h-4 w-4" aria-hidden />Przywróć z archiwum</>}
+                </Button>
+                <AlertDialog open={archiveAsk} onOpenChange={(o) => { if (!archiving) setArchiveAsk(o); }}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Zarchiwizować „{site.name}”?</AlertDialogTitle>
+                      <AlertDialogDescription>Wpisy zostają. Archiwum nie jest na liście budów; cofnąć można przyciskiem „Przywróć z archiwum”.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <label className="flex items-start gap-2 text-sm">
+                      <Checkbox checked={shrinkWithZip} onCheckedChange={(v) => setShrinkWithZip(v === true)} className="mt-0.5" />
+                      <span>Zapisz paczkę ZIP i zmniejsz zdjęcia do miniatur (800 px)<span className="block text-xs text-muted-foreground">Oryginały zostaną tylko w paczce. Tej zmiany nie da się cofnąć, dlatego najpierw powstaje ZIP.</span></span>
+                    </label>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={archiving}>Anuluj</AlertDialogCancel>
+                      <AlertDialogAction disabled={archiving} onClick={(e) => { e.preventDefault(); void doArchive(true, shrinkWithZip); }}>{shrinkWithZip ? "Zapisz ZIP i zarchiwizuj" : "Zarchiwizuj"}</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+              </TabsContent>
+            </Tabs>
           </>
         )}
       </ResponsiveDialogContent>
