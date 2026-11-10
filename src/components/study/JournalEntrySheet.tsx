@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X, Maximize2 } from "lucide-react";
 import { formatFileSize } from "@/lib/attachments";
 import { addRecording } from "@/lib/study/recordings";
 import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/journalEntry";
@@ -8,6 +8,7 @@ import { EntrySupplyToggle } from "./entry/EntrySupplyToggle";
 import { EntryTopicPanel } from "./entry/EntryTopicPanel";
 import { PhotoStrip } from "./PhotoStrip";
 import { PressureTestFields } from "./PressureTestFields";
+import { LevelMeter } from "./LevelMeter";
 import { FittingsFields } from "./FittingsFields";
 import { PipesFields } from "./PipesFields";
 import { applyKit, type Kit } from "@/lib/study/kits";
@@ -64,7 +65,7 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "recordings" | "test" | "fittings" | "pipes" | "stage" | "geo">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "level" | "recordings" | "test" | "fittings" | "pipes" | "stage" | "geo">;
 
 /** Odtwarzacz i nagrywanie leniwie, poza główną paczką (jak w notatkach). */
 const VoiceRecorder = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.VoiceRecorder })));
@@ -123,8 +124,10 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [captionDraft, setCaptionDraft] = useState("");
   const [topicOpen, setTopicOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
+  const [levelOpen, setLevelOpen] = useState(false);
   const [fittingsOpen, setFittingsOpen] = useState(false);
   const testVisible = testOpen || !!form.test || TEST_TOPICS.has(topic);
+  const levelVisible = levelOpen || form.level !== undefined;
   const fittingsVisible = fittingsOpen || (form.fittings?.length ?? 0) > 0;
   // B1.1: trzy najczęściej używane kształtki od razu w rzędzie przycisków — 1 stuknięcie zamiast otwierania sekcji.
   const quickFittings = useMemo(() => (fittingsVisible ? [] : sumFittings(fittingHistory).slice(0, 3).map((f) => f.name)), [fittingsVisible, fittingHistory]);
@@ -862,6 +865,19 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 <PressureTestFields value={form.test} topic={topic} onChange={(t) => patch({ test: t })} />
               </div>
             )}
+            {levelVisible && (
+              <div id="journal-level" className="rounded-card border border-border p-2">
+                <button
+                  type="button"
+                  onClick={() => setLevelOpen(true)}
+                  className="pressable flex w-full items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
+                >
+                  <Maximize2 className="h-4 w-4 shrink-0" aria-hidden />
+                  {form.level !== undefined ? `Poziomnica: ${form.level.toFixed(2)}°` : "Dodaj poziomnicę"}
+                </button>
+              </div>
+            )}
+            <LevelMeter open={levelOpen} onOpenChange={setLevelOpen} onSelect={(angle) => patch({ level: angle })} />
             {fittingsVisible && (
               <div id="journal-fittings" className="rounded-card border border-border p-2">
                 <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />

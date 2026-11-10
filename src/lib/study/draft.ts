@@ -22,6 +22,8 @@ export interface JournalDraft {
   captions: Record<string, string>;
   /** Oryginały narysowanych zdjęć (ref rysunku → ref oryginału, H0.1); brak = bez rysunków. */
   drawnFrom?: Record<string, string>;
+  /** B3.4: poziomnica — kąt nachylenia w stopniach; brak = bez pomiaru. */
+  level?: number;
   /** Nagrania głosowe (załączniki audio); starszy szkic dostaje pustą listę (`sanitizeDraft`). */
   recordings: Attachment[];
   /** Protokół próby szczelności; `null` = bez próby. */
@@ -38,7 +40,7 @@ export interface JournalDraft {
   geo?: GeoPoint | null;
 }
 
-export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], captions: {}, recordings: [], test: null, fittings: [], at: null, stage: null, geo: null };
+export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], captions: {}, recordings: [], test: null, fittings: [], at: null, stage: null, geo: null, level: undefined };
 
 export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalDraft {
   if (!stored || typeof stored !== "object") return defaults;
