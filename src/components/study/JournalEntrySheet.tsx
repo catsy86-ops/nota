@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X, Maximize2, QrCode, Sparkles, Aperture } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X, Maximize2, QrCode, Sparkles, Aperture, Radio } from "lucide-react";
 import { formatFileSize } from "@/lib/attachments";
 import { addRecording } from "@/lib/study/recordings";
 import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/journalEntry";
@@ -12,6 +12,7 @@ import { LevelMeter } from "./LevelMeter";
 import { BarcodeScanner } from "./BarcodeScanner";
 import { AISummary } from "./AISummary";
 import { CameraCapture } from "./CameraCapture";
+import { NFCReader } from "./NFCReader";
 import { FittingsFields } from "./FittingsFields";
 import { PipesFields } from "./PipesFields";
 import { applyKit, type Kit } from "@/lib/study/kits";
@@ -131,6 +132,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [barcodeOpen, setBarcodeOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [nfcOpen, setNfcOpen] = useState(false);
   const [fittingsOpen, setFittingsOpen] = useState(false);
   const testVisible = testOpen || !!form.test || TEST_TOPICS.has(topic);
   const levelVisible = levelOpen || form.level !== undefined;
@@ -888,17 +890,28 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             <LevelMeter open={levelOpen} onOpenChange={setLevelOpen} onSelect={(angle) => patch({ level: angle })} />
             {barcodeVisible && (
               <div id="journal-barcode" className="rounded-card border border-border p-2">
-                <button
-                  type="button"
-                  onClick={() => setBarcodeOpen(true)}
-                  className="pressable flex w-full items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
-                >
-                  <QrCode className="h-4 w-4 shrink-0" aria-hidden />
-                  {form.barcode ? `Kod: ${form.barcode}` : "Dodaj kod"}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setBarcodeOpen(true)}
+                    className="pressable flex flex-1 items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
+                  >
+                    <QrCode className="h-4 w-4 shrink-0" aria-hidden />
+                    {form.barcode ? `Kod: ${form.barcode}` : "Dodaj kod"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNfcOpen(true)}
+                    className="pressable flex items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
+                    title="NFC tag"
+                  >
+                    <Radio className="h-4 w-4 shrink-0" aria-hidden />
+                  </button>
+                </div>
               </div>
             )}
             <BarcodeScanner open={barcodeOpen} onOpenChange={setBarcodeOpen} onDetected={(code) => patch({ barcode: code })} />
+            <NFCReader open={nfcOpen} onOpenChange={setNfcOpen} onDetected={(tag) => patch({ barcode: tag })} />
             {aiVisible && (
               <div id="journal-ai" className="rounded-card border border-border p-2">
                 <button
