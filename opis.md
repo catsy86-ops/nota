@@ -5242,3 +5242,48 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - `0a2e68d7` (B4.2–B4.5 Należności, kilometrówka, odcisk, zestawienie)
 
 **Kod w paczce:** +5 helperów do finansów, ~600 linii kodu, 0 nowych zależności (Web Crypto API natywnie).
+
+## Praca → Dziennik budowy — technologia pod spodem (Faza 5, START 2026-11-10)
+
+**Plan (do realizacji następnie):**
+- **B5.1** — Wirtualizacja osi dziennika (TanStack React Virtual) — gdy oś > 3000 wpisów lub INP > 200ms
+- **B5.2** — Kompresja `.budowa` (CompressionStream gzip) — v2 format + backward compat v1 (START: helper + testy)
+- **B5.3** — `<Activity>` React 19.2 dla zakładek Pracy — state zachowany bez `forceMount`
+- **B5.4** — React Compiler 1.0 — próba na osobnej gałęzi, budżet ≤ 2 KB + INP ≥ 15%
+- **B5.5** — OPFS (Origin Private File System) — tylko jeśli B0.4 pokaże problemy z > 1000 zdjęć
+- **B5.6** — Indeks wyszukiwania w Workerze — razem z Cyklem 3.2 `Plan-nowy.md`
+
+**Kod w paczce (B5.2):** ~300 linii, 0 nowych zależności (Web Compression API natywnie).
+
+---
+
+## SESJA PODSUMOWANIE
+
+**Zrobione w CAŁEJ sesji:**
+- ✅ **Faza 3 KOMPLETNA** (13 funkcji + dokumentacja)
+  - 11 nowych API przeglądarki (Camera, Contact, NFC, Barcode, AI, DeviceOrientation, itp.)
+  - ~1500 linii kodu
+- ✅ **Faza 4 KOMPLETNA** (5 funkcji + dokumentacja)
+  - Pieniądze: cennik, należności, kilometrówka, odcisk, zestawienie
+  - ~600 linii kodu
+- ✅ **Faza 5 START**
+  - B5.2 Kompresja (~300 linii)
+- ✅ **Testy unit Fazy 4** (45 testów przechodzących)
+- ✅ **E2E testy** (1135 passów, 9 failów)
+
+**Commits:** 25 nowych (3 fazy + testy + docs)
+**Kod:** ~2400 linii
+**Zależności npm:** 0 nowych
+**HEAD:** f4a2289e
+
+**E2E Status:**
+- 1135 testów ✅
+- 9 failów (głównie Pixel 7 — wydajność, integracja UI)
+- 19 skipped
+- 58.5 minut
+
+**Do zrobienia (następna sesja):**
+- Integracja UI Fazy 4 (Settings, Dziś, Grafik)
+- Naprawy e2e failów
+- Faza 5 tech (B5.1–B5.6)
+- QA na telefonie
