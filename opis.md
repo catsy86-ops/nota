@@ -4709,6 +4709,12 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Ograniczenia.** Bez historii wpisów z kształtkami pigułek nie ma. Przytrzymanie do wpisania ilości nie powstało: ilość poprawia się przyciskami −/+ po dodaniu.
 - **Testy.** `e2e/workday.spec.ts`, `e2e/journal-fittings.spec.ts`, `e2e/journal-kits.spec.ts`.
 
+## Praca: testy własności (B1.4, plan Pracy na budowie 2026-11-10)
+
+- **Co robi.** `src/lib/study/properties.prop.test.ts` (fast-check, nowa zależność dev): 200 losowych przebiegów na właściwość, z kurczeniem przy porażce. Sprawdza: scalanie 2–3 `Y.Doc` w dowolnej kolejności daje ten sam dziennik i niczego nie gubi; dwa telefony piszące to samo pole kończą z tą samą wartością (jedną z obu); rozliczenie — „zostało = naliczone − otrzymane”, brak `NaN`, wyłączony sposób nie dolicza pozycji; stan auta nie zależy od kolejności zdarzeń, a dostawa na budowę go nie zmienia; parser paczki `.budowa` nie rzuca na żadnym tekście (500 przebiegów), a zbudowana i odczytana paczka zachowuje wpisy bez lokalizacji i tematów.
+- **Wynik.** Wszystkie właściwości przeszły bez poprawek kodu aplikacji. Dwa pierwsze porażki były błędami testu: `dump()` świadomie odrzuca puste wpisy, a `updateEntry` bierze cały wpis.
+- **Pułapka.** Test importuje `yjs`, więc jest na liście wyjątków w `eslint.config.js`. Idempotentny import paczki (dwa razy to samo co raz) nie jest objęty — wymaga magazynów Yjs i jest pokryty przez `e2e/site-package.spec.ts`.
+
 ## Praca: testy migracji `data.ts` (B1.3)
 
 - `src/lib/study/data.test.ts`: stałe id urządzenia (też bez localStorage), migracja starego zapisu do Yjs raz i bez dubli, uszkodzony JSON, zły kształt, `legacyStudyMerged`, `useStudyReady`. Pokrycie `data.ts` z 59% do 96%.

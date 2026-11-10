@@ -69,6 +69,7 @@ export default tseslint.config(
       "src/lib/weight/yWeight.test.ts",
       "src/lib/study/yStudy.ts",
       "src/lib/study/yStudy.test.ts",
+      "src/lib/study/properties.prop.test.ts",
       // Odżywki: warstwa Yjs w dokumencie notatek (wzorem yStudy/yDebts), testy na własnym Y.Doc.
       "src/lib/supplements/ySupplements.ts",
       "src/lib/supplements/ySupplements.test.ts",
