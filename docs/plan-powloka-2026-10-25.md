@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie powłoki aplikacji (2026-10-25)
 
+> **Status (2026-11-06):** 1.2 zrobione (`APP_NAME` w `src/lib/appName.ts`, bez resztek „G”). Reszta jak niżej.
+
 > **Status (2026-11-03):** zrobione 1.1, 1.3/PW-1 (71f7831), 1.4/PW-2 i 2.2/PW-3 (6617ed8), 1.5, 1.6 (dc80318), 1.7, 2.1/PW-4 (990244a), 2.3 i 2.4 (447f9c5), 3.1, 3.2 i 3.3 (905a3ed); częściowo 1.2 (marka to „NOTKI”; resztki „G” w `ClipperSettings.tsx:17–29`, brak `APP_NAME`), 2.5 (brak „Zrób kopię”, „Wyślij kopię”, „Połącz urządzenie”, kart Ustawień w palecie), 4.3, 4.4; otwarte 2.6 (okruszki), 4.1 (88 × `uppercase tracking-wider`), 4.2, Etap 5 QA; czeka QA na telefonie w poziomie. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
 
 > **Uzupełnienie (2026-11-05, nowy plan Etap 5, 12035f1):** zrobione 2.6 (okruszki folderu i etykiety; „‹ Rodzic” na telefonie). Praca → budowa bez okruszka: karta budowy to okno. Opis: `opis.md`, sekcja „QoL na co dzień, Etap 5”.

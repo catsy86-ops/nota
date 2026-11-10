@@ -1,4 +1,5 @@
 import { fromB64u, toB64u } from "@/lib/vault";
+import { APP_NAME } from "@/lib/appName";
 
 /**
  * Passkey z rozszerzeniem PRF (V-4). Tylko przeglądarka: WebAuthn. Wynik PRF to 32 bajty, które owijają
@@ -53,7 +54,7 @@ export async function registerPasskey(userName: string, salt: Uint8Array): Promi
   if (!passkeyApiAvailable()) throw new PasskeyError("unsupported");
   const options = {
     publicKey: {
-      rp: { name: "NOTKI" },
+      rp: { name: APP_NAME },
       user: { id: rnd(16), name: userName, displayName: userName },
       challenge: rnd(32),
       pubKeyCredParams: [{ type: "public-key", alg: -7 }],

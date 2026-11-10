@@ -97,3 +97,9 @@ export function takeVoiceRequest(): boolean {
 
 /** Id wpisu dodanego przed chwilą (podświetlenie na osi czasu); czytane przy montażu wiersza. */
 export const freshEntry: { id: string | null } = { id: null };
+
+/** Parametr adresu ze skrótu PWA „Zdjęcie na budowę" (`/praca?zdjecie=1`). */
+export const JOURNAL_PHOTO_PARAM = "zdjecie";
+
+/** Parametr adresu ze skrótu PWA „Brak materiału" (`/praca?sekcja=material`): otwiera kartę w konkretnym segmencie. */
+export const CARD_SECTION_PARAM = "sekcja";

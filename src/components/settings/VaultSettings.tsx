@@ -12,6 +12,7 @@ import { vaultUi } from "@/lib/vaultUi";
 import { Checkbox } from "@/components/ui/checkbox";
 import { setRecoveryNudgeOff, useRecoveryCheck } from "@/lib/vaultRecoveryCheck";
 import { Section } from "./SettingsShared";
+import { APP_NAME } from "@/lib/appName";
 
 const HIDDEN_LABEL = (m: number) => (m === 0 ? "Nie blokuj" : m === 1 ? "Po 1 minucie" : `Po ${m} minutach`);
 const CHOICE_LABEL = (m: number) => (m === 0 ? "Nigdy (do zamknięcia karty)" : m === 1 ? "Po 1 minucie" : `Po ${m} minutach`);
@@ -171,7 +172,7 @@ function PasskeyEnroll() {
     if (busy || !password) return;
     setBusy(true);
     try {
-      await privateNotes.addPasskey(password, "NOTKI");
+      await privateNotes.addPasskey(password, APP_NAME);
       setPassword("");
       toast.success("Dodano odblokowanie biometrią");
     } catch (err) {

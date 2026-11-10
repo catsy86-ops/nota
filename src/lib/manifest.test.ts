@@ -11,8 +11,8 @@ describe("manifest.webmanifest", () => {
     const byName = Object.fromEntries(
       (manifest.shortcuts as { name: string; url: string }[]).map((s) => [s.name, new URL(s.url, "https://x.test")]),
     );
-    // Kolejność ma znaczenie: Android pokazuje tylko kilka pierwszych skrótów.
-    expect(Object.keys(byName)).toEqual(["Nowa notatka", "Wpis z budowy", "Wpis głosowy", "Grafik", "Szukaj", "Nowa lista", "Do skrzynki", "Dziś", "Przypomnienia", "Na dziś"]);
+    // Kolejność ma znaczenie: Android pokazuje tylko kilka pierwszych skrótów (B2.6: Zdjęcie, Brak, Koniec, Wpis).
+    expect(Object.keys(byName)).toEqual(["Zdjęcie na budowę", "Brak materiału", "Zakończ dzień", "Wpis z budowy", "Wpis głosowy", "Nowa notatka", "Grafik", "Szukaj", "Nowa lista", "Do skrzynki", "Dziś", "Przypomnienia", "Na dziś"]);
     expect(byName["Na dziś"].pathname).toBe("/widget");
     expect(byName["Nowa lista"].searchParams.get("new")).toBe("list");
     // Skrzynka 2.3: `skrzynka`, nie `inbox` — ten parametr ma udostępnianie z plikami.
@@ -24,6 +24,10 @@ describe("manifest.webmanifest", () => {
     expect(parseViewRoute(byName["Wpis głosowy"].pathname, "").view).toBe("study");
     expect(byName["Wpis głosowy"].searchParams.get("wpis")).toBe("1");
     expect(byName["Wpis głosowy"].searchParams.get("glos")).toBe("1");
+    expect(parseViewRoute(byName["Zdjęcie na budowę"].pathname, "").view).toBe("study");
+    expect(byName["Zdjęcie na budowę"].searchParams.get("zdjecie")).toBe("1");
+    expect(byName["Brak materiału"].searchParams.get("sekcja")).toBe("material");
+    expect(byName["Zakończ dzień"].searchParams.get("raport")).toBe("koniec");
     expect(byName["Nowa notatka"].searchParams.get("new")).toBe("1");
     expect(parseViewRoute(byName["Dziś"].pathname, "").view).toBe("today");
     expect(parseViewRoute(byName["Grafik"].pathname, "").view).toBe("shifts");

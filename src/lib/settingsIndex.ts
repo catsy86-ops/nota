@@ -48,7 +48,7 @@ export const SETTINGS_INDEX: readonly SettingsEntry[] = [
   { title: "Twoje imię w Pracy", tab: "general", words: "podpis nazwisko" },
   { title: "Domyślny kolor nowej notatki", tab: "general" },
   { title: "Prywatne notatki", tab: "general", words: "skarbiec hasło blokada sejf" },
-  { title: "Zakładka do zapisu stron w G", tab: "general", words: "clipper przeglądarka strony" },
+  { title: "Zakładka do zapisu stron", tab: "general", words: "clipper przeglądarka strony" },
   { title: "Dyktowanie głosem", tab: "general", words: "mikrofon mowa" },
   { title: "Funkcje w przygotowaniu", tab: "general", words: "eksperymenty flagi" },
   { title: "Trwałość danych w tej przeglądarce", tab: "backup", words: "pamięć miejsce" },

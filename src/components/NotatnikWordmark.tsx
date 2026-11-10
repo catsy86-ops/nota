@@ -1,5 +1,6 @@
 import { m as motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/appName";
 
 /**
  * Wordmark „NOTKI” — litery wypisują się odręcznie, jedna po drugiej,
@@ -54,7 +55,7 @@ export function NotatnikWordmark({ className }: { className?: string }) {
     <svg
       viewBox="0 0 264 96"
       role="img"
-      aria-label="NOTKI"
+      aria-label={APP_NAME}
       className={cn("w-64 max-w-full h-auto", className)}
     >
       {/* Napis */}

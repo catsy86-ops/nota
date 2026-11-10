@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/appName";
 
 interface NotkiLogoProps {
   size?: "sm" | "lg";
@@ -41,7 +42,7 @@ export function NotkiLogo({ size = "lg", className }: NotkiLogoProps) {
   return (
     <svg
       role="img"
-      aria-label="NOTKI"
+      aria-label={APP_NAME}
       viewBox="4 3 74 30"
       className={cn("notki-logo inline-block overflow-visible align-[-0.12em]", size === "lg" ? "h-[2em] w-auto" : "h-[1.6em] w-auto", className)}
     >

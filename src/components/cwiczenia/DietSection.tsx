@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
-import { byMealOrder, DIET_KCAL_MAX, DIET_PROTEIN_MAX, DIET_TEXT_MAX, summarizeDay, summarizeRange, type DaySummary, type DietGoals, type Meal } from "@/lib/diet/model";
+import { byMealOrder, DIET_KCAL_MAX, DIET_PROTEIN_MAX, DIET_TEXT_MAX, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type DaySummary, type DietGoals, type Meal, type MealTemplate } from "@/lib/diet/model";
 import { addMeal, removeMeal, restoreMeal, setDietGoals, useDietGoals, useMeals } from "@/lib/diet/store";
 import { pluralPl } from "@/lib/plural";
 
 const MEAL_FORMS: [string, string, string] = ["posiłek", "posiłki", "posiłków"];
 import { toastWithUndo } from "@/lib/undoToast";
+import { toast } from "sonner";
 
 /** Sekcja „Dieta” w dziale Ćwiczenia: dziś (posiłki, sumy, cele), dodawanie i tydzień wstecz. */
 export function DietSection() {
@@ -20,6 +21,9 @@ export function DietSection() {
   const todays = useMemo(() => meals.filter((m) => m.day === today).sort(byMealOrder), [meals, today]);
   const summary = summarizeDay(meals, today);
   const week = useMemo(() => summarizeRange(meals, today, 7, addDaysToKey), [meals, today]);
+  const recent = useMemo(() => recentMeals(meals), [meals]);
+  const yesterday = addDaysToKey(today, -1);
+  const yesterdayCount = useMemo(() => meals.filter((m) => m.day === yesterday).length, [meals, yesterday]);
 
   return (
     <SectionCard icon={Salad} title="Dieta" bodyClassName="space-y-4">
@@ -34,7 +38,7 @@ export function DietSection() {
         </ul>
       )}
 
-      <AddMealForm />
+      <AddMealForm recent={recent} yesterdayCount={yesterdayCount} onRepeatYesterday={() => repeatYesterday(meals, yesterday, today)} />
       <GoalsForm goals={goals} />
       <WeekList days={week} today={today} />
     </SectionCard>
@@ -84,6 +88,16 @@ function deleteWithUndo(meal: Meal) {
   toastWithUndo("Usunięto posiłek", () => restoreMeal(prev), { description: prev.text });
 }
 
+/** „Powtórz wczoraj” (2.4): wczorajsze posiłki jako nowe wpisy na dziś; „Cofnij” usuwa wszystkie dodane. */
+function repeatYesterday(meals: readonly Meal[], yesterday: string, today: string) {
+  const added = repeatDayInputs(meals, yesterday, today).map((input) => addMeal(input)).filter((m): m is Meal => m !== null);
+  if (added.length === 0) {
+    toast.error("Nie udało się skopiować wczorajszych posiłków", { description: "Lista posiłków może być pełna. Usuń stare wpisy i spróbuj ponownie." });
+    return;
+  }
+  toastWithUndo(`Skopiowano ${added.length} ${pluralPl(added.length, MEAL_FORMS)} z wczoraj`, () => { for (const m of added) removeMeal(m.id); });
+}
+
 /** Liczba z pola: pusta = brak wartości; poza zakresem lub nie-liczba = `null` (pole pokazuje błąd). */
 function parseAmountField(text: string, max: number): number | undefined | null {
   const t = text.trim();
@@ -98,7 +112,7 @@ function nowHHMM(): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-function AddMealForm() {
+function AddMealForm({ recent, yesterdayCount, onRepeatYesterday }: { recent: MealTemplate[]; yesterdayCount: number; onRepeatYesterday: () => void }) {
   const [text, setText] = useState("");
   const [time, setTime] = useState(nowHHMM);
   const [kcal, setKcal] = useState("");
@@ -117,13 +131,37 @@ function AddMealForm() {
     setTime(nowHHMM());
   };
 
+  // Pigułka ostatniego posiłku wypełnia formularz; zapis i godzina zostają w rękach użytkownika.
+  const fill = (m: MealTemplate) => {
+    setText(m.text);
+    setKcal(m.kcal !== undefined ? String(m.kcal) : "");
+    setProtein(m.protein !== undefined ? String(m.protein) : "");
+  };
+
   return (
     <form className="space-y-3 border-t border-dashed border-border pt-4" onSubmit={(e) => { e.preventDefault(); save(); }}>
-      <p className="ui-hint font-medium">Dodaj posiłek</p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="ui-hint font-medium">Dodaj posiłek</p>
+        {yesterdayCount > 0 && (
+          <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={onRepeatYesterday}>
+            Powtórz wczoraj · {yesterdayCount} {pluralPl(yesterdayCount, MEAL_FORMS)}
+          </Button>
+        )}
+      </div>
       <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
         <Input aria-label="Co zjedzono" placeholder="np. Owsianka z bananem" maxLength={DIET_TEXT_MAX} value={text} onChange={(e) => setText(e.target.value)} />
         <Input type="time" aria-label="Godzina posiłku" value={time} onChange={(e) => setTime(e.target.value)} className="w-auto coarse:h-11" />
       </div>
+      {recent.length > 0 && (
+        <div role="group" aria-label="Ostatnie posiłki" className="flex flex-wrap gap-1.5" data-testid="diet-recent">
+          {recent.map((m) => (
+            <button key={m.text} type="button" onClick={() => fill(m)}
+              className="pressable max-w-[16rem] truncate rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11">
+              {m.text}{m.kcal !== undefined && <span className="text-muted-foreground"> · {m.kcal} kcal</span>}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="grid gap-2 sm:grid-cols-2">
         <Input inputMode="numeric" aria-label="Kalorie (kcal)" aria-invalid={kcalValue === null} placeholder="kcal, np. 450" value={kcal} onChange={(e) => setKcal(e.target.value)} />
         <Input inputMode="decimal" aria-label="Białko (g)" aria-invalid={proteinValue === null} placeholder="białko w g, np. 30" value={protein} onChange={(e) => setProtein(e.target.value)} />

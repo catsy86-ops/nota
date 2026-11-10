@@ -1639,7 +1639,7 @@ Dziennik instalatora wod-kan: co zrobione, jakie problemy, zdjęcia, na której 
   - **Materiał zamówiony, a niedostarczony** (`late-order`): status „zamówione” dłużej niż 3 dni (od końca dnia dostawy, jeśli podano). Jedno przypomnienie na budowę; archiwum pomijane.
   - **Próba przed zakryciem** (`pre-cover-test`, U1): odhaczony etap instalacji, a bez odhaczonej próby, bez zakrycia i bez wpisu o montażu lub próbie. Pokazuje się w Dzienniku i w Dziś. Nie idzie do push.
 - Liczone przy renderze (`useMemo` na zmianie dziennika), bez timera. Jeśli strona stoi otwarta i przypomnienie przekroczy próg bez zmiany dziennika, pojawi się po następnym renderze.
-- **Raport dnia i tygodnia** (`reportNudge.ts`, `DailyReportNudge.tsx`): raz dziennie po końcu dzisiejszej zmiany z Grafiku (bez zmiany — o 17:00), jeśli są dziś wpisy, dymek „Raport dnia gotowy” i przy zgodzie powiadomienie. W piątek (albo w weekend, jeśli piątku nie było okazji) raport tygodnia, raz na tydzień, zastępuje raport dnia. Dymek raportu dnia ma akcję „Zakończ dzień” (arkusz z 4 krokami, link `?raport=koniec`), raportu tygodnia „Otwórz raport” — Dziennik z zakresem (`?raport=dzis`, `dzis-wszystkie`, `tydzien`, `tydzien-wszystkie`). Bez serwera przypomnienia działają tylko przy otwartej aplikacji.
+- **Raport dnia i tygodnia** (`reportNudge.ts`, `DailyReportNudge.tsx`): raz dziennie po końcu dzisiejszej zmiany z Grafiku (bez zmiany — o 17:00), jeśli są dziś wpisy, dymek „Raport dnia gotowy” i przy zgodzie powiadomienie. W piątek (albo w weekend, jeśli piątku nie było okazji) raport tygodnia, raz na tydzień, zastępuje raport dnia. „Otwórz raport” przechodzi do Dziennika z zakresem (`?raport=dzis`, `dzis-wszystkie`, `tydzien`, `tydzien-wszystkie`). Bez serwera przypomnienia działają tylko przy otwartej aplikacji.
 - **Zamówienia i serwis w push** (`push/schedule.ts`): zamówienie z datą dostawy, serwis dziś o 7:00 (`pushKey.service`, bez podwójnych powiadomień).
 
 ### Wydajność i struktura
@@ -2230,6 +2230,7 @@ Dział opisany w jednym miejscu; zmiany z przeglądu L1–L20 są już uwzględn
   - **Dziś:** suma kcal i białka z dzisiejszych posiłków, z celem (jeśli ustawiony) i liczbą posiłków bez wartości.
   - **Lista posiłków dnia** wg godziny. Usuwanie z „Cofnij”.
   - **Dodawanie:** opis, godzina (domyślnie teraz), kalorie i białko (oba opcjonalne). Nie-liczba lub wartość poza zakresem blokuje przycisk i oznacza pole.
+  - **Szybki posiłek (2.4, 2026-11-06):** pod opisem pigułki 5 ostatnich różnych posiłków (z kcal); stuknięcie wypełnia opis, kcal i białko, a zapis zostaje przyciskiem. „Powtórz wczoraj · N posiłków” (tylko gdy wczoraj coś było) kopiuje wczorajsze posiłki na dziś z tymi samymi godzinami; „Cofnij” usuwa wszystkie dodane.
   - **Cele dzienne:** kcal i białko, puste = bez celu.
   - **Ostatnie 7 dni:** dzień (DD.MM), suma kcal i białka; dni bez posiłków to „—”.
 
@@ -2242,10 +2243,10 @@ Dział opisany w jednym miejscu; zmiany z przeglądu L1–L20 są już uwzględn
   - `src/lib/supplements/store.ts` — `useSupplements()`, `useSupplementsTaken()`, `addSupplement`, `removeSupplement`, `restoreSupplement`, `setSupplementTaken`, `supplementDump`, `mergeSupplementDump`.
   - `src/components/cwiczenia/CwiczeniaView.tsx` — widok, `createSupplement` (odżywka + notatka-przypomnienie), `deleteSupplement`, `removeWithUndo`, `AddSupplementForm`.
 - **Dieta:**
-  - `src/lib/diet/model.ts` — `Meal`, `DietGoals`, `cleanMeal`, `cleanGoals`, `cleanAmount`, `byMealOrder`, `summarizeDay`, `summarizeRange(meals, endDay, days, addDays)` (funkcja dat wstrzykiwana, model czysty).
+  - `src/lib/diet/model.ts` — `Meal`, `DietGoals`, `cleanMeal`, `cleanGoals`, `cleanAmount`, `byMealOrder`, `summarizeDay`, `summarizeRange(meals, endDay, days, addDays)` (funkcja dat wstrzykiwana, model czysty), `recentMeals(meals, limit)` (różne po opisie bez wielkości liter i nadmiarowych spacji, zostaje najnowszy wpis), `repeatDayInputs(meals, from, to)` (posiłki dnia jako nowe wpisy, w kolejności dnia).
   - `src/lib/diet/yDiet.ts` — `createYDiet(doc)`: mapa `dietMeals` (id → posiłek), `dietMeta` (`goals`), origin `DIET_ORIGIN`. `getGoals()` zwraca zamrożony obiekt z cache (stabilny dla `useSyncExternalStore`). `restore` pilnuje limitu `DIET_MAX_MEALS` (ponad limit posiłek nie wchodzi, zwraca `false`).
   - `src/lib/diet/store.ts` — `useMeals()`, `useDietGoals()`, `addMeal`, `removeMeal`, `restoreMeal`, `setDietGoals`, `dietDump`, `mergeDietDump`.
-  - `src/components/cwiczenia/DietSection.tsx` — sekcja (podsumowanie, lista, formularze, tydzień).
+  - `src/components/cwiczenia/DietSection.tsx` — sekcja (podsumowanie, lista, formularze, tydzień); `repeatYesterday` (dodaje przez `addMeal`, „Cofnij” przez `removeMeal`), pigułki w `AddMealForm` (`data-testid="diet-recent"`).
 - **Trening:**
   - `src/lib/training/catalog.ts` — `EXERCISES`, `MUSCLE_GROUPS`, `exerciseById`, `isKnownExercise`.
   - `src/lib/training/model.ts` — `TrainingSet`, `TrainingEntry`, `PlanDay`, `TrainingReminder`, `TrainingEquipment`, `cleanKg`, `cleanSet`, `cleanEntry`, `cleanPlanDay`, `cleanTrainingReminder`, `cleanEquipment`, `overDumbbell`, `bestKg`, `bestKgSeries`, `volumeOf`, `byTrainingTime`, `progressByExercise`, `planLine`.
@@ -2273,6 +2274,7 @@ Dział opisany w jednym miejscu; zmiany z przeglądu L1–L20 są już uwzględn
 - Przypomnienie jest w dwóch miejscach: odżywka odhacza się w Ćwiczeniach, a „Gotowe” w Przypomnieniach przesuwa tylko serię tej notatki. Nie zamykają się nawzajem.
 - Odhaczenia nie wracają przez „Cofnij” przy usunięciu odżywki (dzienny stan jest zbędny po usunięciu).
 - Notatka-przypomnienie jest zwykłą notatką: widać ją na liście i w koszu.
+- „Powtórz wczoraj” nie sprawdza, czy dziś już są te same posiłki — drugi raz doda drugie kopie (stąd „Cofnij”). Przy pełnej liście (`DIET_MAX_MEALS`) dodaje tyle, ile się zmieści, i podaje liczbę w dymku.
 - Brak bazy produktów; kalorie i białko wpisujesz ręcznie. Limity: opis posiłku 200 znaków, kcal do 10 000, białko do 1 000 g; wartości zaokrąglane do całości.
 - Limity danych: 5 000 posiłków, 5 000 wpisów treningu, 20 planów.
 - Wpisy treningu: ciężar co 0,5 kg, powtórki całkowite. Wybór dnia planu tylko ustawia ćwiczenie i serie; ciężary wpisujesz ręcznie.
@@ -4693,7 +4695,7 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Jak działa.** Licznik to jeden klucz localStorage `kaczy.study.usage.v1` (`{ funkcja: { n, last } }`), tylko na tym urządzeniu: nie jest w Yjs, kopii ani sieci. Nazwa funkcji musi pasować do `^[a-z0-9][a-z0-9.-]{0,39}$`, więc nie da się zapisać treści wpisu; limit 60 funkcji (najstarsze odpadają). Pomiar używa `PerformanceObserver` (`event` z `interactionId`, `long-animation-frame`) i dwóch klatek `requestAnimationFrame` dla odcinków; w przeglądarce bez tych typów po prostu nic nie zbiera.
 - **Ograniczenia i pułapki.** Wyniki pomiaru są z jednego przebiegu aplikacji (pamięć, bez zapisu). Czas zakładki liczony jest od efektu po renderze, więc nie obejmuje samego renderu. Zaznaczone „Wyzeruj” kasuje tylko licznik użycia.
 - **Testy.** `src/lib/study/usage.test.ts`, `src/lib/study/perf.test.ts`, `src/lib/diagnostics.test.ts`. Seed sprawdzono przez `cleanDump` (3 000 wpisów, 40 budów).
-- **Commit.** 2026-11-10 (hash w następnym wpisie).
+- **Commit.** Niezacommitowane (2026-11-10).
 
 ## Praca: status zdjęć budowy w karcie (B1.7, plan Pracy na budowie 2026-11-10)
 
@@ -4722,30 +4724,6 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Jak działa.** Wszystkie segmenty są zamontowane (`forceMount`, nieaktywne ukryte), więc rozwinięte panele i wpisany tekst przeżywają zmianę segmentu — jak dawniej, gdy wszystko było w jednym oknie. Pamięć segmentu jest w pamięci aplikacji, nie w localStorage (to wygoda, nie dane). `requestCardSection(...)` pozwala z zewnątrz otworzyć kartę w konkretnym segmencie (jednorazowo); dziś nie jest używane.
 - **Ograniczenia i pułapki.** Przełączenie segmentu to dodatkowe stuknięcie: w teście „dzień hydraulika” kroki „brak materiału” i „odhaczony etap” mają limit 3 (było 2). Testy e2e używają `inCard`, `inPapiery` i `openSection` z `e2e/helpers.ts`, które otwierają właściwy segment; zapamiętany lokator panelu z innego segmentu trzeba odświeżyć po przełączeniu. Zakładka „Pieniądze” znika przy fuchach.
 - **Testy.** `e2e/site-sections.spec.ts` (segmenty, liczniki, pamięć, mieszczenie na 390 px, axe), `src/lib/study/cardSection.test.ts`, przepisane `e2e/site-*.spec.ts`, `jobs`, `photo-day`, `entry-dictation`, `study-delivery`, `study`, `touch-targets`, `workday`.
-
-## Praca: pasek akcji przy kciuku w karcie budowy (B2.3, plan Pracy na budowie 2026-11-10)
-
-- **Co robi.** Na telefonie na dole karty budowy leży przyklejony pasek czterech przycisków (m.in. „Wpisz godziny”), osiągalny kciukiem bez przewijania i bez przełączania segmentu. Na szerokim ekranie pasek jest ukryty (`sm:hidden`), a te same akcje są w panelach segmentów.
-- **Gdzie jest.** `src/components/study/SiteCardDialog.tsx` (blok `data-testid="site-thumb-bar"`).
-- **Jak działa.** Pasek jest `sticky bottom-0` z odstępem na `safe-area-inset-bottom`. Przyciski dublują akcje z paneli (ta sama nazwa dostępna), więc lokator w testach musi zawężać się do paska albo panelu.
-- **Ograniczenia i pułapki.** Dwa przyciski „Wpisz godziny” w karcie naruszają tryb ścisły Playwrighta — używać `getByTestId("site-thumb-bar")`.
-- **Testy.** `e2e/workday.spec.ts` (godziny z paska: 1 stuknięcie), `e2e/site-points.spec.ts`, `e2e/site-card-mobile.spec.ts`.
-
-## Praca: „Zakończ dzień” (B2.4, plan Pracy na budowie 2026-11-10)
-
-- **Co robi.** Jeden arkusz w 4 krokach na koniec pracy, każdy krok można pominąć („Dalej”, „Wstecz”): (1) **Godziny** — podpowiedź z pierwszego i ostatniego wpisu dnia (np. „07:40–15:10, około 7 h 30 min”) i przycisk otwierający okno godzin na budowach; (2) **Raport do szefa** — liczba wpisów i budów, przycisk otwiera raport z dzisiejszym dniem; (3) **Braki na jutro** — liczba list do hurtowni i przycisk „Do hurtowni” (`WholesaleOrderDialog`); (4) **Kopia** — gdy ostatnia kopia jest starsza niż 3 dni albo jej nie ma, przycisk „Zrób kopię”. Otwiera go pastylka „Zakończ dzień” w Dzienniku oraz stuknięcie w przypomnienie „Raport dnia gotowy” (dymek, powiadomienie systemowe i push).
-- **Gdzie jest.** `src/components/study/EndDaySheet.tsx` (`EndDaySheet`), logika `src/lib/study/endDay.ts` (`daySummary`, `backupStale`, `END_DAY_BACKUP_DAYS`), podpięcie w `StudyJournal.tsx`, prośba w `src/lib/study/reportLink.ts` (`JournalReportRequest.endDay`).
-- **Jak działa.** Arkusz sam niczego nie zapisuje poza kopią (`exportFullBackup` + `markBackup`); akcje otwierają istniejące okna nad nim. Link `/praca?raport=koniec` (`reportParam`/`parseReportParam`) daje prośbę `{ range: "day", allSites: true, endDay: true }`, którą Dziennik zamienia na otwarcie arkusza zamiast raportu. Przypomnienie dnia (`DailyReportNudge.tsx`, `lib/push/schedule.ts`) używa tego linku; przypomnienie tygodnia nadal otwiera sam raport 7 dni.
-- **Ograniczenia i pułapki.** „Zacznij dzień” (budowa z lokalizacji, godzina wejścia) z B2.4 jeszcze nie jest zrobione. Podpowiedź godzin to rozpiętość wpisów, nie zapis — godziny zatwierdza się w oknie. Kopia „Zrób kopię” bez wybranego pliku (File System Access) pobiera plik jak w Ustawieniach.
-- **Testy.** `src/lib/study/endDay.test.ts`, `reportLink.test.ts`, `lib/push/schedule.test.ts`, `e2e/end-day.spec.ts`, `e2e/report-nudge.spec.ts`.
-
-## Praca: wyszukiwanie w Pracy (B2.5, plan Pracy na budowie 2026-11-10)
-
-- **Co robi.** Paleta poleceń (Ctrl+K) znajduje w Pracy wpisy, braki i nazwy dokumentów z kart budów bez polskich znaków, z literówkami i po początkach słów; każde słowo zapytania musi pasować, więc „zawór Lipowa” daje wpisy z zaworem na budowie Lipowa. Trafienie pokazuje budowę i ikonę aparatu, gdy wpis ma zdjęcia, a stuknięcie otwiera kartę budowy. Wpisy w grupie „Wpisy w Pracy”, braki i dokumenty w „Braki i dokumenty”.
-- **Gdzie jest.** `src/lib/study/workSearch.ts` (`workDocs`, `buildWorkIndex`, `useWorkSearch`), grupy i `WorkHitItem` w `src/components/CommandPalette.tsx`.
-- **Jak działa.** Indeks MiniSearch (pola: tekst, budowa; tekst waży 2×) powstaje leniwie, dopiero przy pierwszym niepustym zapytaniu, a biblioteka ładuje się osobnym fragmentem. Do tekstu wpisu wchodzą: treść, rozwiązanie, podpisy zdjęć, kształtki i rury. Indeks przebudowuje się przy zmianie wpisów lub budów. Do czasu załadowania biblioteki paleta pokazuje dawne dokładne dopasowanie wpisów. Wartość `CommandItem` zawiera zapytanie, żeby filtr cmdk nie odrzucił trafienia policzonego przez MiniSearch.
-- **Ograniczenia i pułapki.** Jeszcze bez miniatury zdjęcia (tylko ikona), bez punktów i usterek z kart (usterki to wpisy, więc są). Filtr w samym Dzienniku (`filterJournal`) nadal szuka dokładnie, bez literówek.
-- **Testy.** `src/lib/study/workSearch.test.ts`, `e2e/command-palette-study.spec.ts`.
 
 ## Praca: zakładka „Budowa” i grupa „Nauka” (B2.1, plan Pracy na budowie 2026-11-10)
 
@@ -5160,3 +5138,10 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **Uwaga:** komentarz w nagłówku testu podaje wcześniejsze wyniki (LCP 1,1–1,8 s), które nie zgadzają się z ostatnim pomiarem. Przy kolejnej zmianie warto zaktualizować ten komentarz.
 - **Pułapki:** przy obciążonej maszynie LCP potrafi skoczyć (raz 10,6 s). Jeśli test zacznie padać na interakcji, najpierw sprawdzić obciążenie, potem próg. Otwarcie notatki stuknięciem jest najwolniejszą interakcją; osobno do zrobienia: przyspieszyć je na telefonie.
 - **WebKit** (iPhone w Playwright) pomija test: Event Timing API, na którym stoi INP, mierzy tam niewiarygodnie.
+
+## Powłoka — nazwa aplikacji w jednym miejscu (1.2, 2026-11-06)
+
+- **Co robi.** Ustawienia zakładki do zapisu stron mówią o aplikacji jej obecną nazwą („Zapisz w NOTKI”), zamiast starej marki „G”. Tytuł sekcji to „Zakładka do zapisu stron” — bez nazwy, więc nie zestarzeje się przy kolejnej zmianie marki.
+- **Gdzie.** `src/lib/appName.ts` (`APP_NAME`). Używają go: `ClipperSettings.tsx` (treść i przycisk), `overdueBadge.ts` (`BASE_TITLE`, tytuł karty), `passkey.ts` (nazwa strony w WebAuthn), `VaultSettings.tsx` (etykieta passkeya), `exportNotes.ts` (nagłówek eksportu HTML), etykiety `aria-label` logo w `AppSidebar.tsx`, `NotatnikWordmark.tsx`, `NotkiLogo.tsx`.
+- **Ograniczenia.** Pliki statyczne (`index.html`, `public/manifest.webmanifest`) nie importują modułów — nazwę trzeba w nich zmienić ręcznie. Komentarze w kodzie wspominające dawne marki zostały.
+- **Testy.** `src/lib/settingsIndex.test.ts` (tytuł sekcji nadal w kodzie), `e2e/clipper.spec.ts` („Zapisz w NOTKI”).

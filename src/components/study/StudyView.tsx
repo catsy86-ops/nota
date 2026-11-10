@@ -15,7 +15,8 @@ import { STUDY_DUE_PARAM } from "@/components/review/TodayStudyCard";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
 import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
-import { closeJournalSheet, JOURNAL_ENTRY_PARAM, JOURNAL_VOICE_PARAM, openJournalSheet, requestVoiceOnOpen, useJournalSheet } from "@/lib/study/entrySheet";
+import { closeJournalSheet, JOURNAL_ENTRY_PARAM, JOURNAL_VOICE_PARAM, JOURNAL_PHOTO_PARAM, CARD_SECTION_PARAM, openJournalSheet, requestVoiceOnOpen, useJournalSheet } from "@/lib/study/entrySheet";
+import { requestCardSection, isCardSection } from "@/lib/study/cardSection";
 import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
 import { readSiteParam, siteCardUrl } from "@/lib/study/siteLink";
 import { SiteHome } from "./SiteHome";
@@ -233,13 +234,26 @@ function StudyScreen() {
   useEffect(() => { if (sheet.open) setTab("journal"); }, [sheet.open]);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (!params.has(JOURNAL_ENTRY_PARAM)) return;
-    params.delete(JOURNAL_ENTRY_PARAM);
-    if (params.get(JOURNAL_VOICE_PARAM) === "1") requestVoiceOnOpen();
-    params.delete(JOURNAL_VOICE_PARAM);
+    const hasEntry = params.has(JOURNAL_ENTRY_PARAM);
+    const hasPhoto = params.has(JOURNAL_PHOTO_PARAM);
+    const sectionReq = params.get(CARD_SECTION_PARAM);
+    if (!hasEntry && !hasPhoto && !sectionReq) return;
+    if (hasEntry || hasPhoto) {
+      params.delete(JOURNAL_ENTRY_PARAM);
+      if (params.get(JOURNAL_VOICE_PARAM) === "1") requestVoiceOnOpen();
+      params.delete(JOURNAL_PHOTO_PARAM);
+      params.delete(JOURNAL_VOICE_PARAM);
+      openJournalSheet();
+    } else if (sectionReq && isCardSection(sectionReq)) {
+      const siteId = readSiteParam();
+      if (siteId) {
+        requestCardSection(sectionReq);
+        openCard(siteId);
+      }
+      params.delete(CARD_SECTION_PARAM);
+    }
     const rest = params.toString();
-    window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
-    openJournalSheet();
+    window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? "?" + rest : ""));
   }, []);
   // Raport dnia z przypomnienia (dymek albo powiadomienie `?raport=dzis`): Dziennik otworzy okno raportu.
   const reportRequested = useJournalReportRequest();

@@ -38,6 +38,7 @@ import { removeView, renameView, sameSource, saveView, useSavedViews, viewFromCu
 import { getViewPrefs, useViewPrefs } from "@/lib/viewPrefs";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
+import { APP_NAME } from "@/lib/appName";
 
 const MAX_FAVORITES = 10;
 /** 5.1: ostatnio otwierane notatki w pasku (grupa domyślnie zwinięta, żeby pasek nie rósł). */
@@ -258,7 +259,7 @@ export function AppSidebar({
                   type="button"
                   onClick={onLogoClick}
                   className="pressable relative shrink-0 grid place-items-center w-12 h-12 rounded-card bg-linear-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
-                  aria-label="NOTKI"
+                  aria-label={APP_NAME}
                 >
                   <div className="absolute inset-0 rounded-card bg-primary/20 blur-lg opacity-70 -z-raised" />
                   <NMonogramLogo />

@@ -107,3 +107,34 @@ export function summarizeRange(meals: readonly Meal[], endDay: string, days: num
   for (let i = days - 1; i >= 0; i--) out.push(summarizeDay(meals, addDays(endDay, -i)));
   return out;
 }
+
+/** Posiłek do szybkiego powtórzenia: sam opis i wartości, bez dnia i godziny. */
+export type MealTemplate = Pick<Meal, "text" | "kcal" | "protein">;
+
+/**
+ * Ćwiczenia 2.4: ostatnie różne posiłki, najnowszy pierwszy. „Różne” po opisie bez wielkości liter
+ * i nadmiarowych spacji — „Owsianka” i „owsianka ” to ten sam posiłek; zostaje jego najnowszy wpis.
+ */
+export function recentMeals(meals: readonly Meal[], limit = 5): MealTemplate[] {
+  const seen = new Set<string>();
+  const out: MealTemplate[] = [];
+  for (const m of [...meals].sort((a, b) => b.created - a.created)) {
+    const key = m.text.trim().replace(/\s+/g, " ").toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ text: m.text, ...(m.kcal !== undefined ? { kcal: m.kcal } : {}), ...(m.protein !== undefined ? { protein: m.protein } : {}) });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+/** Ćwiczenia 2.4, „Powtórz wczoraj”: posiłki dnia `from` jako nowe wpisy na dzień `to`, z tymi samymi godzinami. */
+export function repeatDayInputs(meals: readonly Meal[], from: string, to: string): { text: string; day: string; time?: string; kcal?: number; protein?: number }[] {
+  return meals.filter((m) => m.day === from).sort(byMealOrder).map((m) => ({
+    text: m.text,
+    day: to,
+    ...(m.time ? { time: m.time } : {}),
+    ...(m.kcal !== undefined ? { kcal: m.kcal } : {}),
+    ...(m.protein !== undefined ? { protein: m.protein } : {}),
+  }));
+}

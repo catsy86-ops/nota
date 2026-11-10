@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie „Ustawień i synchronizacji” (2026-10-25)
 
+> **Status (2026-11-06):** sprawdzone w kodzie — 1.1 (zdanie z radą, surowy błąd tylko w „Szczegóły błędu”) i 4.1 (wersja z `APP_VERSION`) są zrobione (`12035f1f`). Reszta jak niżej.
+
 > **Status (2026-11-03):** zrobione 1.4, 2.1 (53decc7), 2.3/U-2 (7db1010), 2.6/U-3 (3cfe9e6), 3.1 (32b86bb), 4.2/U-4 (d019728), 5.4 (2b325bf), 5.5; częściowo 1.1 (surowe „Błąd połączenia: {lastError}”, `SyncSettings.tsx:139`), 2.5 (brak dzielenia wpisów >512 KB), 3.2 (brak wersji aplikacji i ostrzeżenia o nowszej kopii), 3.3 (brak podziału na zdjęcia i notatki), 3.4 (krok „sync” bez dwóch przycisków); otwarte 1.2, 1.3, 2.2, 2.4, 4.1 (stopka „v1.0” na sztywno), 5.1, 5.2, 5.3; czeka 1.5 (pełne e2e) i QA na telefonie (skaner QR na iPhonie, „Wyślij kopię”). Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
 
 > **Uzupełnienie (2026-11-05, nowy plan Etap 5, 12035f1):** zrobione 1.1 (komunikat błędu Sync), 2.2 („Ostatnio widziane”), 4.1 („O aplikacji” z buildem i stanem Service Workera). Opis: `opis.md`, sekcja „QoL na co dzień, Etap 5”.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { addDaysToKey } from "@/lib/week";
-import { byMealOrder, cleanAmount, cleanGoals, cleanMeal, summarizeDay, summarizeRange, type Meal } from "./model";
+import { byMealOrder, cleanAmount, cleanGoals, cleanMeal, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type Meal } from "./model";
 
 const meal = (id: string, day: string, over: Partial<Meal> = {}): Meal => ({ id, day, text: id, created: 1, ...over });
 
@@ -63,5 +63,35 @@ describe("summarizeRange", () => {
     const days = summarizeRange(meals, "2026-10-20", 3, addDaysToKey);
     expect(days.map((d) => d.day)).toEqual(["2026-10-18", "2026-10-19", "2026-10-20"]);
     expect(days.map((d) => d.kcal)).toEqual([0, 0, 100]);
+  });
+});
+
+describe("recentMeals (2.4)", () => {
+  it("zwraca ostatnie różne posiłki, najnowszy pierwszy, bez powtórzeń po opisie", () => {
+    const meals = [
+      meal("a", "2026-10-20", { text: "Owsianka", kcal: 400, created: 1 }),
+      meal("b", "2026-10-21", { text: "owsianka ", kcal: 450, created: 5 }),
+      meal("c", "2026-10-21", { text: "Kefir", protein: 10, created: 3 }),
+    ];
+    expect(recentMeals(meals)).toEqual([{ text: "owsianka ", kcal: 450 }, { text: "Kefir", protein: 10 }]);
+  });
+
+  it("ogranicza liczbę", () => {
+    const meals = Array.from({ length: 8 }, (_, i) => meal(`m${i}`, "2026-10-20", { text: `P${i}`, created: i }));
+    expect(recentMeals(meals, 5).map((m) => m.text)).toEqual(["P7", "P6", "P5", "P4", "P3"]);
+  });
+});
+
+describe("repeatDayInputs (2.4)", () => {
+  it("kopiuje posiłki jednego dnia na inny z godzinami i wartościami, w kolejności dnia", () => {
+    const meals = [
+      meal("x", "2026-10-20", { text: "Obiad", time: "13:00", kcal: 700 }),
+      meal("y", "2026-10-20", { text: "Śniadanie", time: "08:00", protein: 20 }),
+      meal("z", "2026-10-19", { text: "Inny dzień" }),
+    ];
+    expect(repeatDayInputs(meals, "2026-10-20", "2026-10-21")).toEqual([
+      { text: "Śniadanie", day: "2026-10-21", time: "08:00", protein: 20 },
+      { text: "Obiad", day: "2026-10-21", time: "13:00", kcal: 700 },
+    ]);
   });
 });

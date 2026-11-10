@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Ćwiczenia” (2026-10-25)
 
+> **Status (2026-11-06):** 2.4 zrobione (pigułki ostatnich posiłków, „Powtórz wczoraj” z „Cofnij”). Reszta jak niżej.
+
 > **Status (2026-11-03):** zrobione 1.1, 3.1, 3.2, 3.3, 3.5; częściowo 4.5 (`h3 text-xs` zostały); otwarte 1.2 (stałe `REST_SECONDS = 90`, przerwa po całym wpisie), 1.3 (`cleanAmount` zaokrągla białko), 1.4 (`addNote(…, [], …)` bez etykiety), 2.1–2.6, 3.4, 4.1–4.4; czeka wydanie 1.1 i 2.7 (C-1), C-4. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
 
 > **Status (2026-11-02):** zrobione 1.1 (katalog), 3.1 (masa ciała, C-2), 3.2, 3.3 i 3.5 (2026-11-02). Reszta do sprawdzenia w kodzie przed realizacją; 2.7 czeka na C-1.

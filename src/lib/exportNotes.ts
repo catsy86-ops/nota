@@ -24,6 +24,7 @@ import { download, downloadBlob } from "@/lib/downloadBlob";
 
 export { download };
 import { getViewPrefs } from "@/lib/viewPrefs";
+import { APP_NAME } from "@/lib/appName";
 
 const PUSH_RESTORE_KEY = PUSH_PREFS_KEY;
 
@@ -520,7 +521,7 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
 </style>
 </head>
 <body>
-<h1>NOTKI</h1>
+<h1>${APP_NAME}</h1>
 <p class="date">Eksport: ${escape(dateStr)}</p>
 `;
 
