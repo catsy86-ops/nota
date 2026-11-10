@@ -4739,6 +4739,14 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Ograniczenia i pułapki.** „Zacznij dzień” (budowa z lokalizacji, godzina wejścia) z B2.4 jeszcze nie jest zrobione. Podpowiedź godzin to rozpiętość wpisów, nie zapis — godziny zatwierdza się w oknie. Kopia „Zrób kopię” bez wybranego pliku (File System Access) pobiera plik jak w Ustawieniach.
 - **Testy.** `src/lib/study/endDay.test.ts`, `reportLink.test.ts`, `lib/push/schedule.test.ts`, `e2e/end-day.spec.ts`, `e2e/report-nudge.spec.ts`.
 
+## Praca: wyszukiwanie w Pracy (B2.5, plan Pracy na budowie 2026-11-10)
+
+- **Co robi.** Paleta poleceń (Ctrl+K) znajduje w Pracy wpisy, braki i nazwy dokumentów z kart budów bez polskich znaków, z literówkami i po początkach słów; każde słowo zapytania musi pasować, więc „zawór Lipowa” daje wpisy z zaworem na budowie Lipowa. Trafienie pokazuje budowę i ikonę aparatu, gdy wpis ma zdjęcia, a stuknięcie otwiera kartę budowy. Wpisy w grupie „Wpisy w Pracy”, braki i dokumenty w „Braki i dokumenty”.
+- **Gdzie jest.** `src/lib/study/workSearch.ts` (`workDocs`, `buildWorkIndex`, `useWorkSearch`), grupy i `WorkHitItem` w `src/components/CommandPalette.tsx`.
+- **Jak działa.** Indeks MiniSearch (pola: tekst, budowa; tekst waży 2×) powstaje leniwie, dopiero przy pierwszym niepustym zapytaniu, a biblioteka ładuje się osobnym fragmentem. Do tekstu wpisu wchodzą: treść, rozwiązanie, podpisy zdjęć, kształtki i rury. Indeks przebudowuje się przy zmianie wpisów lub budów. Do czasu załadowania biblioteki paleta pokazuje dawne dokładne dopasowanie wpisów. Wartość `CommandItem` zawiera zapytanie, żeby filtr cmdk nie odrzucił trafienia policzonego przez MiniSearch.
+- **Ograniczenia i pułapki.** Jeszcze bez miniatury zdjęcia (tylko ikona), bez punktów i usterek z kart (usterki to wpisy, więc są). Filtr w samym Dzienniku (`filterJournal`) nadal szuka dokładnie, bez literówek.
+- **Testy.** `src/lib/study/workSearch.test.ts`, `e2e/command-palette-study.spec.ts`.
+
 ## Praca: zakładka „Budowa” i grupa „Nauka” (B2.1, plan Pracy na budowie 2026-11-10)
 
 - **Co robi.** Pasek zakładek Pracy ma cztery pozycje: **Budowa · Dziennik · Plany · Nauka**. „Nauka” grupuje Quiz, Tablicę i Listę kontrolną jako podzakładki. Telefon bez zapamiętanej zakładki zaczyna od Budowy (komputer nadal od Quizu). Budowa pokazuje bieżącą budowę (pigułki budów od ostatnio używanej), kartę z postępem („Etapy 2/6 · Punkty 3/14 · Braki 1”), trzy duże przyciski — **Zdjęcie** (aparat, jeden wybór = nowy wpis tej budowy, bez opuszczania ekranu), **Wpis głosem** (arkusz wpisu z dyktowaniem) i **Brak** (otwiera panel braków z fokusem w polu) — oraz „Plan na dziś” i „Braki materiału”. Pod spodem Wysokości, Kalkulatory i Przewodnik. Stuknięcie karty otwiera kartę budowy w Dzienniku.

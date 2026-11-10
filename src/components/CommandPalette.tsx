@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
-import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette } from "lucide-react";
+import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette, Camera, PackageSearch, FileText } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
@@ -24,6 +24,7 @@ import { useSiteDirectory, useStudy, useStudyLists } from "@/lib/study/store";
 import { searchQuestions, STUDY_TOPIC_PARAM } from "@/lib/study/questionSearch";
 import { topicTitle } from "@/lib/study/content";
 import { siteCardUrl } from "@/lib/study/siteLink";
+import { useWorkSearch, type WorkHit } from "@/lib/study/workSearch";
 import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId, foldName } from "@/lib/study/siteKey";
 import { isViewShown, useHiddenViews } from "@/lib/hiddenViews";
@@ -158,6 +159,11 @@ export function CommandPalette({
     const entries = [...studyState.journal].reverse().filter((e) => foldName(`${e.text} ${e.site}`).includes(q)).slice(0, 6);
     return { sites, entries };
   }, [search, siteDir, studyState.journal]);
+  // B2.5: wpisy, braki i dokumenty z kart budów — MiniSearch (literówki, bez ogonków, „zawór Lipowa”).
+  // Do czasu załadowania biblioteki działa dokładne dopasowanie z `studyHits.entries`.
+  const workHits = useWorkSearch(search, siteDir, studyState.journal);
+  const workEntries = workHits.filter((h) => h.kind === "entry");
+  const workOther = workHits.filter((h) => h.kind !== "entry");
   // P4.2: pytania quizu bez polskich znaków — wynik otwiera quiz z tematu pytania.
   const studyLists = useStudyLists();
   const questionHits = useMemo(() => searchQuestions(studyLists.questions, search, 5), [studyLists.questions, search]);
@@ -317,7 +323,7 @@ export function CommandPalette({
             ))}
           </CommandGroup>
         )}
-        {(studyHits.sites.length > 0 || studyHits.entries.length > 0) && (
+        {(studyHits.sites.length > 0 || studyHits.entries.length > 0 || workHits.length > 0) && (
           <>
             {studyHits.sites.length > 0 && (
               <CommandGroup heading="Budowy">
@@ -329,7 +335,11 @@ export function CommandPalette({
                 ))}
               </CommandGroup>
             )}
-            {studyHits.entries.length > 0 && (
+            {workEntries.length > 0 ? (
+              <CommandGroup heading="Wpisy w Pracy">
+                {workEntries.map((h) => <WorkHitItem key={h.key} hit={h} search={search} run={run} />)}
+              </CommandGroup>
+            ) : studyHits.entries.length > 0 && (
               <CommandGroup heading="Wpisy w Pracy">
                 {studyHits.entries.map((e) => {
                   const id = entrySiteId(e);
@@ -341,6 +351,11 @@ export function CommandPalette({
                     </CommandItem>
                   );
                 })}
+              </CommandGroup>
+            )}
+            {workOther.length > 0 && (
+              <CommandGroup heading="Braki i dokumenty">
+                {workOther.map((h) => <WorkHitItem key={h.key} hit={h} search={search} run={run} />)}
               </CommandGroup>
             )}
             <CommandSeparator />
@@ -551,5 +566,20 @@ export function CommandPalette({
         )}
       </CommandList>
     </CommandDialog>
+  );
+}
+
+/** Trafienie wyszukiwania w Pracy (B2.5): wpis, brak albo dokument — otwiera kartę budowy. */
+function WorkHitItem({ hit, search, run }: { hit: WorkHit; search: string; run: (fn: () => void) => void }) {
+  const navigate = useNavigate();
+  const Icon = hit.kind === "shortage" ? PackageSearch : hit.kind === "doc" ? FileText : HardHat;
+  return (
+    // `value` z bieżącym zapytaniem: trafienie policzył MiniSearch, filtr cmdk go nie rusza.
+    <CommandItem value={`${hit.key} ${search}`} onSelect={() => run(() => navigate(hit.siteId ? siteCardUrl(hit.siteId) : "/praca"))}>
+      <Icon className="w-4 h-4 mr-2 text-muted-foreground" aria-hidden />
+      <span className="truncate">{hit.title}</span>
+      {hit.hasPhotos && <Camera className="ml-1.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label="ze zdjęciem" />}
+      {hit.siteName && <span className="ml-auto shrink-0 pl-3 text-xs text-muted-foreground">{hit.siteName}</span>}
+    </CommandItem>
   );
 }

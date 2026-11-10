@@ -47,3 +47,14 @@ test("paleta: pytania quizu bez polskich znaków — wynik otwiera quiz z tematu
   await expect(page).toHaveURL(/\/praca$/);
   await expect(page.getByRole("tab", { name: "Quiz" })).toHaveAttribute("aria-selected", "true");
 });
+
+test("paleta: „szczelnosc Lipowa” z literówką znajduje wpis na tej budowie (B2.5)", async ({ page }) => {
+  await page.goto("/");
+  await page.keyboard.press("Control+k");
+  await page.getByRole("dialog").getByPlaceholder(/szukaj|wpisz|polec/i).fill("szczelnosc Lipowa");
+  const hit = page.getByRole("option").filter({ hasText: "Próba szczelności pionu" });
+  await expect(hit).toBeVisible({ timeout: 15_000 });
+  await expect(hit).toContainText("Lipowa 5");
+  await hit.click();
+  await expect(page.getByTestId("site-card")).toBeVisible();
+});
