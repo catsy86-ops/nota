@@ -1,18 +1,18 @@
 import { useRef, useState } from "react";
-import { FileUp } from "lucide-react";
+import { FileUp, Contact } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { findSiteByName, siteKey, SITE_FIELD_MAX, SITE_NAME_MAX, type SiteInfo } from "@/lib/study/sites";
-import { SITE_PHONE_MAX } from "@/lib/study/contact";
+import { SITE_PHONE_MAX, hasContactPicker, pickContact } from "@/lib/study/contact";
+import { toast } from "sonner";
 import { saveSiteCard } from "@/lib/study/store";
 import { JOB_SCOPE_MAX } from "@/lib/study/jobs";
 import { setJobMeta } from "@/lib/study/jobsStore";
 import type { SitePackage } from "@/lib/study/sitePackage";
 import { readSitePackageFile } from "@/lib/study/sitePackageIo";
-import { toast } from "sonner";
 
 interface NewSiteDialogProps {
   open: boolean;
@@ -121,7 +121,14 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="new-job-phone">Telefon</Label>
-                  <Input id="new-job-phone" value={form.phone} maxLength={SITE_PHONE_MAX} onChange={field("phone")} type="tel" inputMode="tel" autoComplete="off" />
+                  <div className="flex gap-1">
+                    <Input id="new-job-phone" value={form.phone} maxLength={SITE_PHONE_MAX} onChange={field("phone")} type="tel" inputMode="tel" autoComplete="off" className="flex-1" />
+                    {hasContactPicker() && (
+                      <Button type="button" size="sm" variant="outline" onClick={async () => { const tel = await pickContact(); if (tel) setForm((f) => ({ ...f, phone: tel })); }} className="coarse:h-10" title="Pobierz z kontaktów telefonu">
+                        <Contact className="h-4 w-4" aria-hidden />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="space-y-1.5">

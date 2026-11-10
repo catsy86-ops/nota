@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Archive, ArchiveRestore, Wrench, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, PenLine, Phone, Send, Share2, Plus, Camera, PackageX } from "lucide-react";
+import { Archive, ArchiveRestore, Wrench, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, PenLine, Phone, Send, Share2, Plus, Camera, PackageX, Contact } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -52,7 +52,7 @@ import { QuickLink } from "./QuickLink";
 import { DayHoursDialog } from "./DayHoursDialog";
 import { RecipientsForm } from "./RecipientsForm";
 import { buildHandover, type Handover } from "@/lib/study/handover";
-import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref } from "@/lib/study/contact";
+import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref, hasContactPicker, pickContact } from "@/lib/study/contact";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { cardClass } from "@/components/ui/card";
 import { useTrackUse } from "@/lib/study/usage";
@@ -424,19 +424,26 @@ export function SiteCardDialog({
                     className={fieldClass}
                   />
                 </label>
-                <label className="block space-y-1 text-xs text-muted-foreground">
-                  Telefon inwestora
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    value={form.phone}
-                    onChange={setField("phone")}
-                    maxLength={SITE_PHONE_MAX}
-                    placeholder="600 100 200"
-                    autoComplete="off"
-                    className={fieldClass}
-                  />
-                </label>
+                <div className="block space-y-1 text-xs text-muted-foreground">
+                  <label>Telefon inwestora</label>
+                  <div className="flex gap-1">
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={form.phone}
+                      onChange={setField("phone")}
+                      maxLength={SITE_PHONE_MAX}
+                      placeholder="600 100 200"
+                      autoComplete="off"
+                      className={cn(fieldClass, "flex-1")}
+                    />
+                    {hasContactPicker() && (
+                      <Button type="button" size="sm" variant="outline" onClick={async () => { const tel = await pickContact(); if (tel) setForm((f) => ({ ...f, phone: tel })); }} title="Pobierz z kontaktów">
+                        <Contact className="h-4 w-4" aria-hidden />
+                      </Button>
+                    )}
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
                     Kierownik budowy
@@ -449,32 +456,46 @@ export function SiteCardDialog({
                       className={fieldClass}
                     />
                   </label>
-                  <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
-                    Telefon kierownika
-                    <input
-                      type="tel"
-                      inputMode="tel"
-                      value={form.managerPhone}
-                      onChange={setField("managerPhone")}
-                      maxLength={SITE_PHONE_MAX}
-                      placeholder="600 100 200"
-                      autoComplete="off"
-                      className={fieldClass}
-                    />
-                  </label>
-                  <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
-                    Telefon hurtowni (WhatsApp zamówień)
-                    <input
-                      type="tel"
-                      inputMode="tel"
-                      value={form.supplierPhone}
-                      onChange={setField("supplierPhone")}
-                      maxLength={SITE_PHONE_MAX}
-                      placeholder="np. hurtownia 22 000 00 00"
-                      autoComplete="off"
-                      className={fieldClass}
-                    />
-                  </label>
+                  <div className="block min-w-0 space-y-1 text-xs text-muted-foreground">
+                    <label>Telefon kierownika</label>
+                    <div className="flex gap-1">
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        value={form.managerPhone}
+                        onChange={setField("managerPhone")}
+                        maxLength={SITE_PHONE_MAX}
+                        placeholder="600 100 200"
+                        autoComplete="off"
+                        className={cn(fieldClass, "flex-1")}
+                      />
+                      {hasContactPicker() && (
+                        <Button type="button" size="sm" variant="outline" onClick={async () => { const tel = await pickContact(); if (tel) setForm((f) => ({ ...f, managerPhone: tel })); }} title="Pobierz z kontaktów">
+                          <Contact className="h-4 w-4" aria-hidden />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="block min-w-0 space-y-1 text-xs text-muted-foreground">
+                    <label>Telefon hurtowni (WhatsApp zamówień)</label>
+                    <div className="flex gap-1">
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        value={form.supplierPhone}
+                        onChange={setField("supplierPhone")}
+                        maxLength={SITE_PHONE_MAX}
+                        placeholder="np. hurtownia 22 000 00 00"
+                        autoComplete="off"
+                        className={cn(fieldClass, "flex-1")}
+                      />
+                      {hasContactPicker() && (
+                        <Button type="button" size="sm" variant="outline" onClick={async () => { const tel = await pickContact(); if (tel) setForm((f) => ({ ...f, supplierPhone: tel })); }} title="Pobierz z kontaktów">
+                          <Contact className="h-4 w-4" aria-hidden />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <label className="block space-y-1 text-xs text-muted-foreground">
                   Dostęp do budowy

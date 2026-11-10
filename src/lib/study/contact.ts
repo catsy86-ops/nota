@@ -37,3 +37,31 @@ export function primaryCall(site: { phone?: string; managerPhone?: string }): { 
   if (manager) return { href: manager, label: `Zadzwoń do kierownika: ${prettyPhone(site.managerPhone!)}` };
   return null;
 }
+
+interface ContactsAPINavigator extends Navigator {
+  contacts?: {
+    select(fields: string[], options?: { multiple?: boolean }): Promise<Array<{ tel?: string[] }>>;
+  };
+}
+
+/** B3.8: Contact Picker API dostępny tylko na Android. */
+export const hasContactPicker = () => {
+  if (typeof navigator === "undefined") return false;
+  const nav = navigator as ContactsAPINavigator;
+  return nav.contacts?.select !== undefined && typeof nav.contacts.select === "function";
+};
+
+/** Otwiera Contact Picker, zwraca pierwszy numer telefonu. */
+export async function pickContact(): Promise<string | null> {
+  try {
+    if (!hasContactPicker()) return null;
+    const nav = navigator as ContactsAPINavigator;
+    if (!nav.contacts) return null;
+    const contacts = await nav.contacts.select(["tel"], { multiple: false });
+    if (!contacts || contacts.length === 0) return null;
+    const tel = contacts[0].tel?.[0];
+    return typeof tel === "string" ? tel : null;
+  } catch {
+    return null;
+  }
+}
