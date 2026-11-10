@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import { Check, ListChecks, Plus, X } from "lucide-react";
+import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -8,6 +9,7 @@ import type { SiteInfo } from "@/lib/study/sites";
 import { addStage, removeStage, siteStages, stageProgress, STAGE_NAME_MAX, STAGES_MAX, toggleStage } from "@/lib/study/stages";
 import { COVER_STAGE_ID, coverPhotoCount } from "@/lib/study/coverPhotos";
 import type { JournalEntry } from "@/lib/study/journalEntry";
+import { getSitePoints } from "@/lib/study/pointsStore";
 import { CoverPhotoButton } from "./CoverPhotoButton";
 import { cardClass } from "@/components/ui/card";
 
@@ -26,6 +28,18 @@ export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journa
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   function toggle(id: string) {
+    // B3.2: ostrzeżenie przed zakryciem, gdy brak zdjęć w pomieszczeniach.
+    const isDone = stages.find((s) => s.id === id)?.done !== undefined;
+    if (id === COVER_STAGE_ID && !isDone) {
+      const coverPhotos = coverPhotoCount(journal, site.id);
+      const sitePoints = getSitePoints(site.id);
+      const roomCount = sitePoints.rooms.length;
+      if (roomCount > 0 && coverPhotos === 0) {
+        toast.warning(`${roomCount} pomieszczenia bez zdjęcia`, {
+          description: "Zrób zdjęcie każdego pomieszczenia w karcie lub jako wpis.",
+        });
+      }
+    }
     const next = toggleStage(stages, id, Date.now());
     const nowDone = next.find((s) => s.id === id)?.done !== undefined;
     haptic(nowDone ? "success" : "tap");
