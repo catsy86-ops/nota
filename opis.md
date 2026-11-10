@@ -1639,7 +1639,7 @@ Dziennik instalatora wod-kan: co zrobione, jakie problemy, zdjęcia, na której 
   - **Materiał zamówiony, a niedostarczony** (`late-order`): status „zamówione” dłużej niż 3 dni (od końca dnia dostawy, jeśli podano). Jedno przypomnienie na budowę; archiwum pomijane.
   - **Próba przed zakryciem** (`pre-cover-test`, U1): odhaczony etap instalacji, a bez odhaczonej próby, bez zakrycia i bez wpisu o montażu lub próbie. Pokazuje się w Dzienniku i w Dziś. Nie idzie do push.
 - Liczone przy renderze (`useMemo` na zmianie dziennika), bez timera. Jeśli strona stoi otwarta i przypomnienie przekroczy próg bez zmiany dziennika, pojawi się po następnym renderze.
-- **Raport dnia i tygodnia** (`reportNudge.ts`, `DailyReportNudge.tsx`): raz dziennie po końcu dzisiejszej zmiany z Grafiku (bez zmiany — o 17:00), jeśli są dziś wpisy, dymek „Raport dnia gotowy” i przy zgodzie powiadomienie. W piątek (albo w weekend, jeśli piątku nie było okazji) raport tygodnia, raz na tydzień, zastępuje raport dnia. „Otwórz raport” przechodzi do Dziennika z zakresem (`?raport=dzis`, `dzis-wszystkie`, `tydzien`, `tydzien-wszystkie`). Bez serwera przypomnienia działają tylko przy otwartej aplikacji.
+- **Raport dnia i tygodnia** (`reportNudge.ts`, `DailyReportNudge.tsx`): raz dziennie po końcu dzisiejszej zmiany z Grafiku (bez zmiany — o 17:00), jeśli są dziś wpisy, dymek „Raport dnia gotowy” i przy zgodzie powiadomienie. W piątek (albo w weekend, jeśli piątku nie było okazji) raport tygodnia, raz na tydzień, zastępuje raport dnia. Dymek raportu dnia ma akcję „Zakończ dzień” (arkusz z 4 krokami, link `?raport=koniec`), raportu tygodnia „Otwórz raport” — Dziennik z zakresem (`?raport=dzis`, `dzis-wszystkie`, `tydzien`, `tydzien-wszystkie`). Bez serwera przypomnienia działają tylko przy otwartej aplikacji.
 - **Zamówienia i serwis w push** (`push/schedule.ts`): zamówienie z datą dostawy, serwis dziś o 7:00 (`pushKey.service`, bez podwójnych powiadomień).
 
 ### Wydajność i struktura
@@ -4730,6 +4730,14 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Jak działa.** Pasek jest `sticky bottom-0` z odstępem na `safe-area-inset-bottom`. Przyciski dublują akcje z paneli (ta sama nazwa dostępna), więc lokator w testach musi zawężać się do paska albo panelu.
 - **Ograniczenia i pułapki.** Dwa przyciski „Wpisz godziny” w karcie naruszają tryb ścisły Playwrighta — używać `getByTestId("site-thumb-bar")`.
 - **Testy.** `e2e/workday.spec.ts` (godziny z paska: 1 stuknięcie), `e2e/site-points.spec.ts`, `e2e/site-card-mobile.spec.ts`.
+
+## Praca: „Zakończ dzień” (B2.4, plan Pracy na budowie 2026-11-10)
+
+- **Co robi.** Jeden arkusz w 4 krokach na koniec pracy, każdy krok można pominąć („Dalej”, „Wstecz”): (1) **Godziny** — podpowiedź z pierwszego i ostatniego wpisu dnia (np. „07:40–15:10, około 7 h 30 min”) i przycisk otwierający okno godzin na budowach; (2) **Raport do szefa** — liczba wpisów i budów, przycisk otwiera raport z dzisiejszym dniem; (3) **Braki na jutro** — liczba list do hurtowni i przycisk „Do hurtowni” (`WholesaleOrderDialog`); (4) **Kopia** — gdy ostatnia kopia jest starsza niż 3 dni albo jej nie ma, przycisk „Zrób kopię”. Otwiera go pastylka „Zakończ dzień” w Dzienniku oraz stuknięcie w przypomnienie „Raport dnia gotowy” (dymek, powiadomienie systemowe i push).
+- **Gdzie jest.** `src/components/study/EndDaySheet.tsx` (`EndDaySheet`), logika `src/lib/study/endDay.ts` (`daySummary`, `backupStale`, `END_DAY_BACKUP_DAYS`), podpięcie w `StudyJournal.tsx`, prośba w `src/lib/study/reportLink.ts` (`JournalReportRequest.endDay`).
+- **Jak działa.** Arkusz sam niczego nie zapisuje poza kopią (`exportFullBackup` + `markBackup`); akcje otwierają istniejące okna nad nim. Link `/praca?raport=koniec` (`reportParam`/`parseReportParam`) daje prośbę `{ range: "day", allSites: true, endDay: true }`, którą Dziennik zamienia na otwarcie arkusza zamiast raportu. Przypomnienie dnia (`DailyReportNudge.tsx`, `lib/push/schedule.ts`) używa tego linku; przypomnienie tygodnia nadal otwiera sam raport 7 dni.
+- **Ograniczenia i pułapki.** „Zacznij dzień” (budowa z lokalizacji, godzina wejścia) z B2.4 jeszcze nie jest zrobione. Podpowiedź godzin to rozpiętość wpisów, nie zapis — godziny zatwierdza się w oknie. Kopia „Zrób kopię” bez wybranego pliku (File System Access) pobiera plik jak w Ustawieniach.
+- **Testy.** `src/lib/study/endDay.test.ts`, `reportLink.test.ts`, `lib/push/schedule.test.ts`, `e2e/end-day.spec.ts`, `e2e/report-nudge.spec.ts`.
 
 ## Praca: zakładka „Budowa” i grupa „Nauka” (B2.1, plan Pracy na budowie 2026-11-10)
 

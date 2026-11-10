@@ -16,6 +16,7 @@ import { reportNudgesStore } from "@/lib/study/reportNudgePrefs";
  * w aplikacji i, przy zgodzie, powiadomienie systemowe. W piątek (albo w weekend) raz na tydzień
  * zamiast tego „Raport tygodnia gotowy” (7 dni). „Otwórz raport” prowadzi do okna raportu z tym
  * zakresem — przy kilku budowach od razu wszystkie — skąd jednym stuknięciem idzie do szefa.
+ * Raport dnia otwiera arkusz „Zakończ dzień” (godziny, raport, hurtownia, kopia; B2.4), tygodnia — sam raport.
  * Timer działa przy otwartej aplikacji; przy zamkniętej ten sam termin wysyła serwer push
  * (`lib/push/schedule.ts`), a klucz `pushKey` nie pozwala pokazać go drugi raz.
  *
@@ -37,12 +38,12 @@ export default function DailyReportNudge({ onOpenWork }: { onOpenWork: () => voi
     const read = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
     const write = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* bez localStorage */ } };
 
-    function remind(title: string, description: string, req: JournalReportRequest, tag: string, key: string) {
+    function remind(title: string, description: string, req: JournalReportRequest, tag: string, key: string, label = "Otwórz raport") {
       toast(`📋 ${title}`, {
         id: tag,
         description,
         duration: 20000,
-        action: { label: "Otwórz raport", onClick: () => { requestJournalReport(req); openRef.current(); } },
+        action: { label, onClick: () => { requestJournalReport(req); openRef.current(); } },
       });
       showSystemNotification(title, { body: description, tag, key, url: `/praca?${JOURNAL_REPORT_PARAM}=${reportParam(req)}` });
     }
@@ -65,7 +66,7 @@ export default function DailyReportNudge({ onOpenWork }: { onOpenWork: () => voi
       write(REPORT_NUDGE_KEY, nudge.dayKey);
       // Kilka budów dziś — raport wszystkich, żeby żadna nie wypadła.
       const where = nudge.sites > 1 ? ` na ${nudge.sites} budowach` : "";
-      remind("Raport dnia gotowy", `${entriesPl(nudge.entries)} z dziś${where} — wyślij szefowi jednym stuknięciem.`, { range: "day", allSites: nudge.sites > 1 }, "daily-report-nudge", pushKey.reportDay(nudge.dayKey));
+      remind("Raport dnia gotowy", `${entriesPl(nudge.entries)} z dziś${where} — wyślij szefowi jednym stuknięciem.`, { range: "day", allSites: nudge.sites > 1, endDay: true }, "daily-report-nudge", pushKey.reportDay(nudge.dayKey), "Zakończ dzień");
     }
 
     check();

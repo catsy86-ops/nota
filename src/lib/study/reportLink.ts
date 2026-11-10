@@ -14,11 +14,13 @@ export interface JournalReportRequest {
   allSites: boolean;
   /** Dzień ostatniego wpisu albo ostatnie 7 dni. */
   range: "day" | "week";
+  /** Zamiast okna raportu otwiera arkusz „Zakończ dzień” (B2.4). */
+  endDay?: boolean;
 }
 
-/** Wartość parametru adresu ↔ prośba: `dzis`, `dzis-wszystkie`, `tydzien`, `tydzien-wszystkie`. */
-export const reportParam = (r: JournalReportRequest) => `${r.range === "week" ? "tydzien" : "dzis"}${r.allSites ? "-wszystkie" : ""}`;
-export const parseReportParam = (v: string): JournalReportRequest => ({
+/** Wartość parametru adresu ↔ prośba: `dzis`, `dzis-wszystkie`, `tydzien`, `tydzien-wszystkie`, `koniec` (arkusz „Zakończ dzień”). */
+export const reportParam = (r: JournalReportRequest) => r.endDay ? "koniec" : `${r.range === "week" ? "tydzien" : "dzis"}${r.allSites ? "-wszystkie" : ""}`;
+export const parseReportParam = (v: string): JournalReportRequest => v === "koniec" ? { range: "day", allSites: true, endDay: true } : ({
   range: v.startsWith("tydzien") ? "week" : "day",
   allSites: v.endsWith("-wszystkie"),
 });
@@ -28,7 +30,7 @@ const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
 export function requestJournalReport(req: Partial<JournalReportRequest> = {}): void {
-  pending = { allSites: req.allSites ?? false, range: req.range ?? "day" };
+  pending = { allSites: req.allSites ?? false, range: req.range ?? "day", ...(req.endDay && { endDay: true }) };
   emit();
 }
 

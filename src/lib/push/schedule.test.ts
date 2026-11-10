@@ -50,7 +50,7 @@ describe("buildPushSchedule — Grafik i raporty", () => {
   it("raport dnia tylko z dzisiejszymi wpisami i raz dziennie", () => {
     const items = buildPushSchedule({ now: WED_NOON, notes: [], journal: [entry()] });
     expect(items.map((i) => i.key)).toEqual(["rd:2026-10-14", "rw:2026-10-12"]);
-    expect(items[0]).toMatchObject({ at: at(14, 17), title: "Raport dnia gotowy", url: "/praca?raport=dzis" });
+    expect(items[0]).toMatchObject({ at: at(14, 17), title: "Raport dnia gotowy", url: "/praca?raport=koniec" });
     expect(buildPushSchedule({ now: WED_NOON, notes: [], journal: [entry()], reportNudged: "2026-10-14", weekReportNudged: "2026-10-12" })).toEqual([]);
   });
 

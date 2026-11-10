@@ -26,15 +26,20 @@ test("po końcu dnia pracy: dymek „Raport dnia gotowy” prowadzi do raportu z
   const toast = page.locator("[data-sonner-toast]").filter({ hasText: "Raport dnia gotowy" });
   await expect(toast).toBeVisible();
   await expect(toast).toContainText("1 wpis z dziś");
-  await toast.getByRole("button", { name: "Otwórz raport" }).click();
+  await toast.getByRole("button", { name: "Zakończ dzień" }).click();
 
   await expect(page).toHaveURL(/\/praca/);
+  const endDay = page.getByTestId("end-day");
+  await expect(endDay).toBeVisible();
+  await endDay.getByRole("button", { name: "Dalej" }).click();
+  await endDay.getByRole("button", { name: "Otwórz raport" }).click();
   const report = page.getByTestId("journal-report");
   await expect(report).toBeVisible();
   await expect(report).toContainText("14 października 2026");
   await expect(report).toContainText("Podejścia w łazience");
   await expect(report).not.toContainText("Wczorajszy wpis");
 
+  await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 }).or(page.locator("main")).first()).toBeVisible();
@@ -84,7 +89,10 @@ test("kilka budów jednego dnia: raport dnia otwiera się od razu na wszystkich 
   await page.goto("/");
   const toast = page.locator("[data-sonner-toast]").filter({ hasText: "Raport dnia gotowy" });
   await expect(toast).toContainText("na 2 budowach");
-  await toast.getByRole("button", { name: "Otwórz raport" }).click();
+  await toast.getByRole("button", { name: "Zakończ dzień" }).click();
+  const endDay = page.getByTestId("end-day");
+  await endDay.getByRole("button", { name: "Dalej" }).click();
+  await endDay.getByRole("button", { name: "Otwórz raport" }).click();
   const report = page.getByTestId("journal-report");
   await expect(report.getByRole("combobox", { name: "Budowa raportu" }).locator("option:checked")).toHaveText("Wszystkie budowy");
   await expect(report).toContainText("Podejścia w łazience");

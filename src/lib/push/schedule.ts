@@ -282,7 +282,7 @@ function reportItems(input: PushInput, now: number): PushItem[] {
       out.push({
         key: pushKey.reportDay(today), at, title: "Raport dnia gotowy",
         body: `${entriesPl(day.length)} z dziś${sitesPl(siteCount(day))} — wyślij szefowi jednym stuknięciem.`,
-        url: `/praca?${JOURNAL_REPORT_PARAM}=${reportParam({ range: "day", allSites: siteCount(day) > 1 })}`,
+        url: `/praca?${JOURNAL_REPORT_PARAM}=${reportParam({ range: "day", allSites: siteCount(day) > 1, endDay: true })}`,
       });
     }
   }

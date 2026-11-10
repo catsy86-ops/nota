@@ -15,4 +15,9 @@ describe("reportLink: parametr raportu", () => {
     expect(reportParam({ range: "day", allSites: false })).toBe("dzis");
     expect(reportParam({ range: "week", allSites: true })).toBe("tydzien-wszystkie");
   });
+
+  it("„koniec” otwiera arkusz Zakończ dzień dla wszystkich budów", () => {
+    expect(reportParam({ range: "day", allSites: false, endDay: true })).toBe("koniec");
+    expect(parseReportParam("koniec")).toEqual({ range: "day", allSites: true, endDay: true });
+  });
 });

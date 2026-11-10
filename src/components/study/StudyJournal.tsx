@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { weekSeparators } from "@/lib/study/journalWeeks";
-import { Archive, Clock, ChevronRight, FileText, Images, MapPin, PackageCheck, Plus, Search, Truck, Wrench, X } from "lucide-react";
+import { Archive, Clock, ChevronRight, FileText, Flag, Images, MapPin, PackageCheck, Plus, Search, Truck, Wrench, X } from "lucide-react";
 import { studyReminders } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import { useTrackUse } from "@/lib/study/usage";
 import type { SitePackage } from "@/lib/study/sitePackage";
 import { JobsDialog } from "./JobsDialog";
 import { WholesaleOrderDialog } from "./WholesaleOrderDialog";
+import { EndDaySheet } from "./EndDaySheet";
 import { VanDialog } from "./VanDialog";
 import { useVan } from "@/lib/study/vanStore";
 import { vanStock } from "@/lib/study/van";
@@ -86,6 +87,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   /** Ile starszych niż 30 dni wpisów pokazać — „Pokaż starsze” dokłada `OLDER_STEP`. */
   const [olderShown, setOlderShown] = useState(0);
   const [report, setReport] = useState(false);
+  /** Arkusz „Zakończ dzień” (B2.4). */
+  const [endDayOpen, setEndDayOpen] = useState(false);
   /** Budowa raportu otwartego z karty; `null` = z filtra albo ostatnia. */
   const [reportSite, setReportSite] = useState<string | null>(null);
   // Przypomnienie o raporcie (dnia albo tygodnia): okno raportu z zakresem z prośby — jedna budowa albo
@@ -95,7 +98,9 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   useEffect(() => {
     if (!reportRequested) return;
     const req = consumeJournalReportRequest();
-    if (req) { setReportSite(null); setReportRequest(req); setReport(true); }
+    if (!req) return;
+    if (req.endDay) { setEndDayOpen(true); return; }
+    setReportSite(null); setReportRequest(req); setReport(true);
   }, [reportRequested]);
   const [card, setCard] = useState<string | null>(null);
   /** Dzień w oknie „Godziny na budowach”. */
@@ -344,6 +349,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   >
                     <Images className="h-3.5 w-3.5 shrink-0" aria-hidden />Zdjęcia z dnia
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setEndDayOpen(true)}
+                    data-testid="end-day-open"
+                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                  >
+                    <Flag className="h-3.5 w-3.5 shrink-0" aria-hidden />Zakończ dzień
+                  </button>
                   {wholesaleCount > 0 && (
                     <button
                       type="button"
@@ -520,6 +533,15 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         onOpen={(id) => { setJobsOpen(false); setCard(id); }}
         onNew={() => { setJobsOpen(false); setNewSiteJob(true); setNewSiteOpen(true); }} />
       <JournalReportDialog open={report} onOpenChange={setReport} journal={study.journal} sites={dir} initialSite={reportSite ?? filter.site} initialRequest={reportRequest} />
+      <EndDaySheet
+        open={endDayOpen}
+        onOpenChange={setEndDayOpen}
+        journal={study.journal}
+        wholesaleCount={wholesaleCount}
+        onHours={(key) => setHoursDay({ key, label: "" })}
+        onReport={() => { setReportSite(null); setReportRequest({ range: "day", allSites: true }); setReport(true); }}
+        onOrder={() => setWholesaleOpen(true)}
+      />
       <DayHoursDialog day={hoursDay?.key ?? null} label={hoursDay?.label ?? ""} onOpenChange={(o) => { if (!o) setHoursDay(null); }} />
       <SiteCardDialog
         siteId={card}
