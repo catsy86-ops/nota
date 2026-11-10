@@ -17,7 +17,8 @@ import { useStudyReady } from "@/lib/study/data";
 import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, JOURNAL_VOICE_PARAM, openJournalSheet, requestVoiceOnOpen, useJournalSheet } from "@/lib/study/entrySheet";
 import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
-import { readSiteParam } from "@/lib/study/siteLink";
+import { readSiteParam, siteCardUrl } from "@/lib/study/siteLink";
+import { SiteHome } from "./SiteHome";
 import { CUSTOM_PREFILL_EVENT, type CustomPrefill } from "@/lib/study/customPrefill";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
@@ -30,7 +31,7 @@ import { loadPlansView, preloadView } from "@/lib/viewPreload";
 import { PLAN_PARAM } from "@/lib/plans/planParam";
 import { useDayClock } from "@/lib/dayClock";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
-import { PLANS_TAB_VALUE, readStudyTab, STUDY_TAB_PARAM, writeStudyTab } from "@/lib/study/tab";
+import { LEARN_TABS, PLANS_TAB_VALUE, readStudyTab, STUDY_TAB_PARAM, studyTabGroup, writeStudyTab } from "@/lib/study/tab";
 import { QuizPanel, type QuizScope } from "./QuizPanel";
 import { StudyBoard } from "./StudyBoard";
 import { StudyChecklist } from "./StudyChecklist";
@@ -119,12 +120,14 @@ const PlansView = lazy(loadPlansView);
 const TOOL_PILL = "pressable inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11";
 
 /** Rząd narzędzi Pracy (nowy plan 3.5): każdy przycisk ma ikonę i podpis, na wąskim ekranie zawija się. */
-function StudyTools({ onStats, className }: { onStats: () => void; className?: string }) {
+function StudyTools({ onStats, className }: { onStats?: () => void; className?: string }) {
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
-      <button type="button" onClick={onStats} className={TOOL_PILL}>
-        <ChartColumn className="h-4 w-4" aria-hidden />Statystyki
-      </button>
+      {onStats && (
+        <button type="button" onClick={onStats} className={TOOL_PILL}>
+          <ChartColumn className="h-4 w-4" aria-hidden />Statystyki
+        </button>
+      )}
       <HeightsButton />
       <CalculatorsButton />
       <button type="button" onClick={() => openGuide("work")} aria-label="Przewodnik po Pracy" className={TOOL_PILL}>
@@ -150,6 +153,13 @@ function StudyScreen() {
   const location = useLocation();
   const navigate = useNavigate();
   const setTab = (t: string) => { setTabState(t); writeStudyTab(t); };
+  // „Nauka” grupuje Quiz, Tablicę i Listę: powrót do grupy wraca do ostatniej z nich.
+  const lastLearn = useRef(LEARN_TABS.includes(tab) ? tab : "quiz");
+  if (LEARN_TABS.includes(tab)) lastLearn.current = tab;
+  const group = studyTabGroup(tab);
+  const onGroup = (g: string) => setTab(g === "learn" ? lastLearn.current : g);
+  // Karta budowy mieszka w Dzienniku: link `?budowa=` otwiera ją po wejściu w zakładkę (jak z „Dziś”).
+  const openCard = (siteId: string) => { window.history.replaceState(window.history.state, "", siteCardUrl(siteId)); setTab("journal"); };
   // Wyjście z Planów zdejmuje otwartą analizę z adresu — inaczej „wstecz” i odświeżenie wracałyby do edytora.
   // Tylko przy przejściu z „plans” na inną zakładkę: link `?analiza=` przy wejściu ma najpierw otworzyć Plany.
   const prevTab = useRef(tab);
@@ -261,7 +271,8 @@ function StudyScreen() {
       {/* Na Dzienniku nauka schodzi do jednego wiersza — na budowie liczy się „+ Wpis” i lista, nie pasek opanowania.
           Bez własnego tytułu: „Praca” jest w główce kartki, „Dziennik” w zakładce (plan wyglądu, Faza 1). */}
       {/* Plany nie mają nic wspólnego z nauką: bez paska opanowania nad nimi, edytor planu dostaje całą wysokość. */}
-      {tab === "plans" ? null : tab === "journal" ? (
+      {/* Budowa i Plany bez paska nauki: na Budowie od razu bieżąca budowa, narzędzia są pod nią. */}
+      {tab === "plans" || tab === "site" ? null : tab === "journal" ? (
         <header className="flex flex-wrap items-center gap-x-3 gap-y-2" data-study-header="compact">
           <button
             type="button"
@@ -290,23 +301,19 @@ function StudyScreen() {
         </header>
       )}
 
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={group} onValueChange={onGroup}>
         {/* Na wąskim ekranie (albo przy dużym tekście) zakładki przewijają się w bok zamiast łamać się w dwie linie. */}
         <TabsList ref={tabsRef} className="h-auto w-full justify-start overflow-x-auto [scrollbar-width:none] sm:w-auto">
-          <TabsTrigger value="quiz" className={TAB}>Quiz</TabsTrigger>
-          <TabsTrigger value="board" className={TAB}>Tablica</TabsTrigger>
-          <TabsTrigger value="list" className={TAB} aria-label="Lista kontrolna"><span className="sm:hidden">Lista</span><span className="max-sm:hidden">Lista kontrolna</span></TabsTrigger>
+          <TabsTrigger value="site" className={TAB}>Budowa</TabsTrigger>
           <TabsTrigger value="journal" className={TAB}>Dziennik</TabsTrigger>
           {plansShown && (
             <TabsTrigger value="plans" onPointerDown={() => preloadView("plans")} onFocus={() => preloadView("plans")} className={TAB}>Plany</TabsTrigger>
           )}
+          <TabsTrigger value="learn" className={TAB}>Nauka</TabsTrigger>
         </TabsList>
-        {/* forceMount: runda w toku nie ginie po zajrzeniu do tablicy lub listy. */}
-        <TabsContent value="quiz" forceMount className="mt-4 data-[state=inactive]:hidden">
-          <QuizPanel key={run} scope={scope} onScopeChange={changeScope} />
+        <TabsContent value="site" className="mt-4">
+          <SiteHome onOpenCard={openCard} onOpenJournal={() => setTab("journal")} tools={<StudyTools />} />
         </TabsContent>
-        <TabsContent value="board" className="mt-4"><StudyBoard onPractice={practice} onJournal={openJournal} /></TabsContent>
-        <TabsContent value="list" className="mt-4"><StudyChecklist /></TabsContent>
         <TabsContent value="journal" className="mt-4">
           <StudyJournal onPractice={practice} />
         </TabsContent>
@@ -319,6 +326,21 @@ function StudyScreen() {
             </ViewErrorBoundary>
           </TabsContent>
         )}
+        {/* forceMount: runda quizu w toku nie ginie po zajrzeniu do Dziennika ani Budowy. */}
+        <TabsContent value="learn" forceMount className="mt-4 data-[state=inactive]:hidden">
+          <Tabs value={LEARN_TABS.includes(tab) ? tab : lastLearn.current} onValueChange={setTab}>
+            <TabsList className="h-auto w-full justify-start overflow-x-auto [scrollbar-width:none] sm:w-auto" aria-label="Nauka">
+              <TabsTrigger value="quiz" className={TAB}>Quiz</TabsTrigger>
+              <TabsTrigger value="board" className={TAB}>Tablica</TabsTrigger>
+              <TabsTrigger value="list" className={TAB} aria-label="Lista kontrolna"><span className="sm:hidden">Lista</span><span className="max-sm:hidden">Lista kontrolna</span></TabsTrigger>
+            </TabsList>
+            <TabsContent value="quiz" forceMount className="mt-4 data-[state=inactive]:hidden">
+              <QuizPanel key={run} scope={scope} onScopeChange={changeScope} />
+            </TabsContent>
+            <TabsContent value="board" className="mt-4"><StudyBoard onPractice={practice} onJournal={openJournal} /></TabsContent>
+            <TabsContent value="list" className="mt-4"><StudyChecklist /></TabsContent>
+          </Tabs>
+        </TabsContent>
       </Tabs>
     </div>
   );

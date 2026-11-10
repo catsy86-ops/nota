@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
+import { openLearn } from "./helpers";
 
 // Analizator planów (faza 2): zakładka „Plany” w Pracy (do 2026-11-05 dział /plany; stary adres przekierowuje),
 // import zrzutu z walidacją, edytor z zoomem i dopasowaniem, adres `?analiza=`, usunięcie z „Cofnij”.
@@ -116,7 +117,7 @@ test("Plany: link z ?analiza= otwiera zakładkę, wyjście na inną zakładkę z
   await page.goto(url);
   await expect(page.getByTestId("plan-editor")).toBeVisible();
   await expect(page.getByRole("tab", { name: "Plany" })).toHaveAttribute("aria-selected", "true");
-  await page.getByRole("tab", { name: "Quiz" }).click();
+  await openLearn(page, "Quiz");
   await expect(page).toHaveURL(/\/praca$/);
 });
 

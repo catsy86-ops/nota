@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { openLearn } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -7,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("praca: „Do notatki” z tematu nie tworzy drugiej notatki", async ({ page }) => {
   await page.goto("/praca");
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   const button = page.getByRole("button", { name: /: do notatki$/ }).first();
   await button.click();
   await expect(page.getByText(/Dodano notatkę „Nauka: /)).toBeVisible();

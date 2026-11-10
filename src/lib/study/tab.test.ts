@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { readStudyTab, STUDY_TAB_KEY, writeStudyTab } from "./tab";
+import { readStudyTab, STUDY_TAB_KEY, studyTabGroup, writeStudyTab } from "./tab";
 
 describe("zakładka działu Praca", () => {
   beforeEach(() => localStorage.removeItem(STUDY_TAB_KEY));
 
-  it("bez zapisu: telefon — Dziennik, komputer — Quiz", () => {
-    expect(readStudyTab(true)).toBe("journal");
+  it("bez zapisu: telefon — Budowa, komputer — Quiz", () => {
+    expect(readStudyTab(true)).toBe("site");
     expect(readStudyTab(false)).toBe("quiz");
   });
 
@@ -21,5 +21,12 @@ describe("zakładka działu Praca", () => {
   it("Plany to zakładka Pracy i też się zapamiętują", () => {
     writeStudyTab("plans");
     expect(readStudyTab(true)).toBe("plans");
+  });
+
+  it("zakładka „site” się zapamiętuje, a Quiz, Tablica i Lista należą do grupy Nauka", () => {
+    writeStudyTab("site");
+    expect(readStudyTab(false)).toBe("site");
+    expect(["quiz", "board", "list"].map(studyTabGroup)).toEqual(["learn", "learn", "learn"]);
+    expect(["site", "journal", "plans"].map(studyTabGroup)).toEqual(["site", "journal", "plans"]);
   });
 });

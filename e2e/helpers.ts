@@ -41,3 +41,14 @@ export async function askBeforeTrashAndArchive(page: Page): Promise<void> {
   await page.evaluate(() => localStorage.setItem("kaczy.confirmPrefs.v1", JSON.stringify({ trash: true, archive: true })));
   await page.reload();
 }
+
+/**
+ * Podzakładka „Nauki” w Pracy (Quiz, Tablica, Lista): Quiz, Tablica i Lista leżą pod zakładką „Nauka”,
+ * więc z Budowy, Dziennika albo Planów trzeba najpierw w nią wejść. Bezpieczne, gdy podzakładka jest już widoczna.
+ */
+export async function openLearn(page: Page, name: "Quiz" | "Tablica" | "Lista kontrolna" | "Lista"): Promise<void> {
+  // Zakładka „Lista” ma nazwę dostępną „Lista kontrolna” (aria-label).
+  const sub = name === "Lista" ? page.getByRole("tab", { name: /^Lista/ }) : page.getByRole("tab", { name, exact: true });
+  if (!(await sub.isVisible())) await page.getByRole("tab", { name: "Nauka", exact: true }).click();
+  await sub.click();
+}

@@ -1,10 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { openLearn } from "./helpers";
 
 test("tablica: po przesunięciu tematu fokus zostaje na tej karcie w nowej kolumnie", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/praca");
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
 
   const card = page.locator("li[data-topic]").first();
   const topicId = await card.getAttribute("data-topic");

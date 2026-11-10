@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openLearn } from "./helpers";
 
 // „Jak rozwiązane?”: opis rozwiązania problemu, szukanie po nim i „Moje rozwiązania” przy temacie na tablicy.
 
@@ -49,7 +50,7 @@ test("rozwiązany problem: opis rozwiązania, po przeładowaniu, szukanie i „M
   await expect(after.locator("[data-journal-entry]")).toHaveCount(1);
 
   // Tablica: przy temacie „Spadki kanalizacji” — „Moje rozwiązania (1)”.
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   const topic = page.locator('[data-topic="spadki"]').first();
   const sols = topic.locator("[data-topic-solutions]");
   await sols.locator("summary").click();

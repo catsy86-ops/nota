@@ -1,10 +1,18 @@
 /**
  * Zapamiętana zakładka działu Praca (na tym urządzeniu — telefon i komputer
- * służą do czego innego). Bez zapisu: telefon zaczyna od Dziennika (wpis z budowy),
- * komputer od Quizu.
+ * służą do czego innego). Bez zapisu: telefon zaczyna od „Budowy” (bieżąca budowa i trzy duże
+ * przyciski, plan B2.1), komputer od Quizu.
+ *
+ * Pasek zakładek ma cztery pozycje: Budowa, Dziennik, Plany i Nauka. „Nauka” grupuje Quiz, Tablicę
+ * i Listę kontrolną (podzakładki); zapamiętana jest zawsze zakładka najniższego poziomu.
  */
-export const STUDY_TABS = ["quiz", "board", "list", "journal", "plans"] as const;
+export const STUDY_TABS = ["site", "quiz", "board", "list", "journal", "plans"] as const;
 export type StudyTab = (typeof STUDY_TABS)[number];
+
+/** Zakładki zgrupowane pod „Nauką”. */
+export const LEARN_TABS: readonly string[] = ["quiz", "board", "list"];
+/** Pozycja głównego paska dla zakładki: Quiz, Tablica i Lista to „learn”. */
+export const studyTabGroup = (tab: string): string => (LEARN_TABS.includes(tab) ? "learn" : tab);
 export const STUDY_TAB_KEY = "kaczy.study.tab.v1";
 
 /**
@@ -21,7 +29,7 @@ export function readStudyTab(phone: boolean): StudyTab {
   } catch {
     /* prywatne okno — domyślna */
   }
-  return phone ? "journal" : "quiz";
+  return phone ? "site" : "quiz";
 }
 
 export function writeStudyTab(tab: string): void {

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { openLearn } from "./helpers";
 
 // Szukanie na liście kontrolnej Nauki (4.5 planu Praca 2026-10-24): bez polskich znaków i bez wielkości liter.
 
@@ -8,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 
 test("lista kontrolna: „szczelnosc” znajduje punkt ze „szczelności”, a bez trafień mówi wprost", async ({ page }) => {
   await page.goto("/praca");
-  await page.getByRole("tab", { name: "Lista kontrolna" }).click();
+  await openLearn(page, "Lista kontrolna");
   const search = page.getByRole("searchbox", { name: "Szukaj na liście kontrolnej" });
   await search.fill("szczelnosc");
   await expect(page.getByText("Próba szczelności na zalanie wodą", { exact: false })).toBeVisible();

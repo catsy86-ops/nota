@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openLearn } from "./helpers";
 
 /** Nauka zapisuje się do IndexedDB (Yjs) asynchronicznie — przeładowanie dopiero po „Zapisano”. */
 async function reloadWhenSaved(page: Page) {
@@ -13,7 +14,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("własny punkt listy trafia do tematu, przeżywa przeładowanie i znika po „Cofnij”", async ({ page }) => {
-  await page.getByRole("tab", { name: "Lista" }).click();
+  await openLearn(page, "Lista");
   await page.getByText("Własne punkty").click();
   await page.getByLabel("Treść punktu").fill("Sprawdzić zawór przed płukaniem");
   await page.getByRole("button", { name: "Dodaj punkt" }).click();
@@ -23,7 +24,7 @@ test("własny punkt listy trafia do tematu, przeżywa przeładowanie i znika po 
   await expect(page.getByText("własny", { exact: true })).toBeVisible();
 
   await reloadWhenSaved(page);
-  await page.getByRole("tab", { name: "Lista" }).click();
+  await openLearn(page, "Lista");
   await page.getByText("Własne punkty").click();
   await expect(page.getByTestId("custom-checklist").getByText("Sprawdzić zawór przed płukaniem")).toBeVisible();
 
@@ -59,7 +60,7 @@ test("własne pytanie zapisuje się, przeżywa przeładowanie i jest w liczniku 
   await page.keyboard.press("Escape");
 
   // Runda startuje z puli, do której trafiło własne pytanie.
-  await page.getByRole("tab", { name: "Quiz" }).click();
+  await openLearn(page, "Quiz");
   await page.getByRole("button", { name: "Zacznij rundę" }).click();
   await expect(page.getByText(/Pytanie 1 z \d+/)).toBeVisible();
 });

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openLearn } from "./helpers";
 
 /** Nauka zapisuje się do IndexedDB (Yjs) asynchronicznie — przeładowanie dopiero po „Zapisano”. */
 async function reloadWhenSaved(page: Page) {
@@ -18,13 +19,14 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
 });
 
-test("dział Praca: adres /praca, pozycja w pasku bocznym i cztery zakładki @smoke", async ({ page }) => {
+test("dział Praca: adres /praca, pozycja w pasku bocznym i zakładki @smoke", async ({ page }) => {
   await page.goto("/");
   await page.locator('[data-sidebar-group="praca"] button:not([aria-expanded])', { hasText: "Praca" }).click();
   await expect(page).toHaveURL(/\/praca$/);
   await expect(page.getByTestId("study-view")).toBeVisible();
   await expect(page.getByTestId("mastery-count")).toHaveText("0");
-  for (const name of ["Quiz", "Tablica", "Lista", "Dziennik"]) {
+  // Komputer zaczyna od Nauki, więc widać też jej podzakładki.
+  for (const name of ["Budowa", "Dziennik", "Nauka", "Quiz", "Tablica", "Lista"]) {
     await expect(page.getByRole("tab", { name })).toBeVisible();
   }
 });
@@ -32,14 +34,14 @@ test("dział Praca: adres /praca, pozycja w pasku bocznym i cztery zakładki @sm
 test("zakładka działu Praca jest zapamiętana po odświeżeniu", async ({ page }) => {
   await page.goto("/praca");
   await expect(page.getByRole("tab", { name: "Quiz" })).toHaveAttribute("data-state", "active");
-  await page.getByRole("tab", { name: "Lista" }).click();
+  await openLearn(page, "Lista");
   await page.reload();
   await expect(page.getByRole("tab", { name: "Lista" })).toHaveAttribute("data-state", "active");
 });
 
 test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeżenie @smoke", async ({ page }) => {
   await page.goto("/praca");
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   await expect(page.getByTestId("count-todo")).toHaveText("18");
 
   await page.getByRole("button", { name: /Spadki kanalizacji: przenieś do „W trakcie”/ }).click();
@@ -51,13 +53,13 @@ test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeże
   await expect(page.locator('[data-mastery-module="kan"]')).toContainText(/Kanalizacja\s*1\//);
 
   await reloadWhenSaved(page);
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   await expect(page.getByTestId("count-done")).toHaveText("1");
 });
 
 test("pasek opanowania: pieczątka „Umiem” dopiero, gdy cały moduł jest w „Umiem”", async ({ page }) => {
   await page.goto("/praca");
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   const kan = [
     "Kielichy, uszczelki i fazowanie",
     "Napowietrzenie pionu",
@@ -78,7 +80,7 @@ test("pasek opanowania: pieczątka „Umiem” dopiero, gdy cały moduł jest w 
 
 test("lista do nauki: odhaczanie, filtr krytycznych i ściąga wysokości", async ({ page }) => {
   await page.goto("/praca");
-  await page.getByRole("tab", { name: "Lista" }).click();
+  await openLearn(page, "Lista");
   const progress = page.getByTestId("checklist-progress");
   await expect(progress).toContainText("0");
 
@@ -131,7 +133,7 @@ test("powtórki: pytania z rundy wracają następnego dnia jako „Na dziś: 10�
   await page.clock.setFixedTime(new Date(2026, 9, 17, 9, 0).getTime());
   await page.reload();
   await expect(page.getByTestId("due-chip")).toContainText("Na dziś: 10");
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   await page.getByTestId("due-chip").click();
   await expect(page.getByText("Pytanie 1 z 10")).toBeVisible();
   await expect(page.getByText(/^Na dziś · /)).toBeVisible();
@@ -156,7 +158,7 @@ test("problem z tematem: karta tematu pokazuje go, „Ćwicz teraz” w dziennik
     }));
   });
   await page.goto("/praca");
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   const card = page.locator('[data-topic="otulina"]');
   await expect(card.locator('[data-topic-problem="open"]')).toContainText("Problem na budowie");
   await expect(card.locator('[data-topic-problem="open"]')).toContainText("Otulina za cienka na pionie");
@@ -174,7 +176,7 @@ test("problem z tematem: karta tematu pokazuje go, „Ćwicz teraz” w dziennik
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByRole("button", { name: "Oznacz jako rozwiązany" }).click();
   await expect(page.getByRole("button", { name: /^Ćwicz teraz: / })).toHaveCount(0);
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   await expect(card.locator('[data-topic-problem="resolved"]')).toBeVisible();
 });
 
@@ -203,7 +205,7 @@ test("statystyki: trafność per temat, dzień nauki i wpisy po rundzie quizu", 
 
 test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatkę” dodaje notatkę", async ({ page }) => {
   await page.goto("/praca");
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   await page.getByRole("button", { name: "Spadki kanalizacji: ćwicz pytania" }).click();
 
   // Temat „Spadki” ma dwa pytania (wbudowane i z kalkulatora, §4.4) — runda ma 2 pytania i wraca do quizu.
@@ -222,7 +224,7 @@ test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatk�
   await expect(page.getByRole("button", { name: /Powtórka błędów \(1\)/ })).toBeVisible();
 
   // Zakładki nie kasują stanu; notatka z tematu pojawia się na liście notatek.
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   await page.getByRole("button", { name: "Spadki kanalizacji: do notatki" }).click();
   await expect(page.getByText("Dodano notatkę „Nauka: Spadki kanalizacji”")).toBeVisible();
   await page.getByRole("button", { name: "Notatki" }).first().click();
@@ -231,7 +233,7 @@ test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatk�
 
 test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem cofa temat z „Umiem”", async ({ page }) => {
   await page.goto("/praca");
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   await page.getByRole("button", { name: /Spadki kanalizacji: przenieś do „W trakcie”/ }).click();
   await page.getByRole("button", { name: /Spadki kanalizacji: przenieś do „Umiem”/ }).click();
   await expect(page.getByTestId("count-done")).toHaveText("1");
@@ -261,7 +263,7 @@ test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem c
   await expect(page.getByTestId("journal-week")).toContainText("1 wpis, 1 problem");
 
   // Problem na budowie cofnął temat z „Umiem” do „W trakcie” i widać go na karcie.
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   await expect(page.getByTestId("count-done")).toHaveText("0");
   await expect(page.getByTestId("count-doing")).toHaveText("1");
   await expect(page.locator('[data-topic="spadki"]')).toContainText("budowa 0×, problemów 1");
@@ -288,7 +290,7 @@ test("dziennik: niezapisany wpis ze zdjęciem przeżywa zamknięcie arkusza, „
   await page.keyboard.press("Escape");
   await expect(sheet).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Dokończ wpis" })).toBeVisible();
-  await page.getByRole("tab", { name: "Tablica" }).click();
+  await openLearn(page, "Tablica");
   await page.getByRole("button", { name: "Spadki kanalizacji: wpis z budowy" }).click();
   await expect(sheet.getByLabel("Czego dotyczy")).toHaveValue("spadki");
   await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("Próba ciśnieniowa na 9 bar");
@@ -421,7 +423,7 @@ test.describe("dziennik na telefonie", () => {
   test("telefon: tablica pokazuje jedną kolumnę z przełącznikiem, lista czyści odhaczenia z „Cofnij” @mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/praca");
-    await page.getByRole("tab", { name: "Tablica" }).click();
+    await openLearn(page, "Tablica");
     const columns = page.getByRole("radiogroup", { name: "Kolumna tablicy" });
     await expect(columns.getByRole("radio", { name: /Do nauki/ })).toHaveAttribute("aria-checked", "true");
     await expect(page.getByRole("region", { name: "Umiem" })).toBeHidden();
@@ -432,7 +434,7 @@ test.describe("dziennik na telefonie", () => {
     await columns.getByRole("radio", { name: /W trakcie/ }).click();
     await expect(page.getByRole("region", { name: "W trakcie" }).locator("[data-topic]")).toHaveCount(1);
 
-    await page.getByRole("tab", { name: "Lista" }).click();
+    await openLearn(page, "Lista");
     await page.locator('[id^="study-"]').first().click();
     await page.locator('[id^="study-"]').nth(1).click();
     await expect(page.getByTestId("checklist-progress")).toContainText("2/");
@@ -445,7 +447,7 @@ test.describe("dziennik na telefonie", () => {
   test("telefon: „Dalej” w quizie bez przewijania, ściąga wysokości z nagłówka i z arkusza wpisu @mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 700 });
     await page.goto("/praca");
-    await page.getByRole("tab", { name: "Quiz" }).click();
+    await openLearn(page, "Quiz");
     await page.getByRole("button", { name: "Zacznij rundę" }).click();
     for (let i = 1; i <= 3; i++) {
       await page.getByRole("group", { name: "Odpowiedzi" }).getByRole("button").first().click();
@@ -467,9 +469,11 @@ test.describe("dziennik na telefonie", () => {
     await expect(page.getByTestId("heights-sheet").getByRole("row", { name: /Prysznic/ })).toContainText("110");
   });
 
-  test("telefon bez zapisanej zakładki zaczyna od Dziennika @mobile", async ({ page }) => {
+  test("telefon bez zapisanej zakładki zaczyna od Budowy, a Dziennik ma nagłówek nauki w jednym wierszu @mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/praca");
+    await expect(page.getByRole("tab", { name: "Budowa" })).toHaveAttribute("data-state", "active");
+    await page.getByRole("tab", { name: "Dziennik" }).click();
     await expect(page.getByRole("tab", { name: "Dziennik" })).toHaveAttribute("data-state", "active");
     // Na Dzienniku nagłówek nauki w jednym wierszu; licznik prowadzi do tablicy.
     await expect(page.locator('[data-study-header="compact"]')).toBeVisible();
@@ -498,7 +502,7 @@ test.describe("dziennik na telefonie", () => {
 
     await page.keyboard.press("Escape");
     await expect(sheet).toHaveCount(0);
-    await page.getByRole("tab", { name: "Quiz" }).click();
+    await openLearn(page, "Quiz");
     await page.getByRole("button", { name: "Nowy wpis z budowy" }).click();
     await expect(sheet).toBeVisible();
     await expect(page.getByRole("tab", { name: "Dziennik", includeHidden: true })).toHaveAttribute("data-state", "active");
