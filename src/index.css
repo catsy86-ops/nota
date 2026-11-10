@@ -1373,6 +1373,12 @@ html[data-vt-dir="back"]::view-transition-new(root) { animation: vt-in-left 0.22
    zostaje samo przenikanie, bez przesunięć. */
 @keyframes vt-day-rise { from { transform: translateY(12px); opacity: 0; } }
 @keyframes vt-fade { from { opacity: 0; } }
+
+/* B2.7: View Transitions w karcie budowy (zmiana sekcji, wejście/wyjście) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: vt-fade 0.15s ease-out both;
+}
 html:not([data-motion="reduced"])::view-transition-new(day-panel) { animation: vt-day-rise 0.22s var(--ease-out) both; }
 html[data-motion="reduced"]::view-transition-new(day-panel) { animation: vt-fade 0.2s linear both; }
 html[data-motion="reduced"]::view-transition-group(day-active) { animation-duration: 0s; }

@@ -106,7 +106,15 @@ export function SiteCardDialog({
   const [section, setSection] = useState<CardSection>("dzis");
   const siteIdNow = site?.id;
   useEffect(() => { if (siteIdNow) setSection(startSection(siteIdNow, sections)); }, [siteIdNow]); // eslint-disable-line react-hooks/exhaustive-deps
-  const pickSection = (sec: CardSection) => { setSection(sec); if (siteIdNow) rememberSection(siteIdNow, sec); };
+  const pickSection = (sec: CardSection) => {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (typeof doc.startViewTransition === "function" && !window.matchMedia("(prefers-reduced-motion)").matches) {
+      doc.startViewTransition(() => { setSection(sec); if (siteIdNow) rememberSection(siteIdNow, sec); });
+    } else {
+      setSection(sec);
+      if (siteIdNow) rememberSection(siteIdNow, sec);
+    }
+  };
   /** „Brak” z paska kciuka: segment Materiał i fokus w polu „Czego brakuje” (klawiatura od razu). */
   const addShortageHere = () => {
     pickSection("material");
@@ -175,8 +183,16 @@ export function SiteCardDialog({
   }
 
   function close(open: boolean) {
-    if (!open && persistDirty()) toast.success("Zapisano kartę budowy");
-    onOpenChange(open);
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (!open && typeof doc.startViewTransition === "function" && !window.matchMedia("(prefers-reduced-motion)").matches) {
+      doc.startViewTransition(() => {
+        if (persistDirty()) toast.success("Zapisano kartę budowy");
+        onOpenChange(open);
+      });
+    } else {
+      if (!open && persistDirty()) toast.success("Zapisano kartę budowy");
+      onOpenChange(open);
+    }
   }
 
   /** „Pokaż wpisy”, „Raport” i „+ Wpis tutaj” zamykają kartę w rodzicu — najpierw zapis, potem przejście. */
