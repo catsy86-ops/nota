@@ -5202,3 +5202,43 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - `1043f12d` (B3.3 UI)
 
 **Kod w paczce:** +11 API przeglądarki, ~1500 linii kodu komponenty + helpery, 0 zależności nowych (Web API, nie npm).
+
+## Praca → Dziennik budowy — pieniądze i papiery (Faza 4, 2026-11-10)
+
+**Co robi.** Finanse budowy: cennik robocizny do fuch, przypomnienia o należności, kilometrówka z zestawieniem, odcisk dokumentu (SHA-256), zestawienie miesiąca godzin/punktów/fuch/wpłat.
+
+**Gdzie jest.**
+
+- **B4.1 Cennik robocizny:** `src/lib/pricing.ts` (model `PricingItem`, funkcje `addPricingItem`, `removePricingItem`). `src/components/settings/PricingManager.tsx` (UI do dodawania pozycji). Store w `companyPrefs.ts`: `pricingStore`, `usePricing()`.
+- **B4.2 Przypomnienie o należności:** `src/lib/study/paymentReminder.ts` (model `PaymentReminder`, `daysWaiting()`, `formatPaymentMessage()`, linki `generateSMSLink()`, `generateWhatsAppLink()`). `src/components/study/PaymentReminderButton.tsx` (przyciski SMS/WhatsApp do wysłania wiadomości).
+- **B4.3 Kilometrówka:** `src/lib/study/mileage.ts` (model `MileageEntry`, `suggestMileage()` z kalkulacją linii prostej × 1,3, `mileageCost()`, eksport CSV). Stawka domyślna 0,65 zł/km.
+- **B4.4 Odcisk dokumentu:** `src/lib/study/documentFingerprint.ts` (SHA-256 z Web Crypto API, funkcje `computeDocumentHash()`, `generateDocumentFingerprint()`, `verifyDocumentFingerprint()`). Format: data + skrót (16 znaków).
+- **B4.5 Zestawienie miesiąca:** `src/lib/study/monthlySummary.ts` (model `MonthlySummary`, `MonthlyView` z "Dla szefa" i "Moje", eksport CSV). Linie: godziny, punkty, ryczałty, fuchy, materiał. Saldo = zarobek - wpłaty.
+
+**Jak działa.**
+
+- **Cennik (B4.1):** pozycje przypisane do typu punktu (H-4, E-4, itd). Wycena fuchy w 30 sekund: wybierz pozycje z listy.
+- **Należności (B4.2):** model z datą, kwotą, statusem wysłania. Helper liczy dni czekania. SMS/WhatsApp z linkami (`sms:`, `https://wa.me/`).
+- **Kilometrówka (B4.3):** geo-koordynaty z kart budów → podpowiedź dystansu (prosta × 1,3). Ręczny wpis z licznika. Eksport CSV do księgowej.
+- **Odcisk (B4.4):** SHA-256 na zawartości dokumentu. Klient może zweryfikować PDF (`verifyDocumentFingerprint`).
+- **Zestawienie (B4.5):** agregacja: godzin, punktów, fuch (z cennikiem), wpłat. Osobne widoki "Dla szefa" (wszystko) i "Moje".
+
+**Ograniczenia i pułapki.**
+
+- **B4.1:** Pozycje są na urządzeniu (`localStorage`), nie synchronizują się między telefonami. Każde urządzenie ma swój cennik.
+- **B4.2:** SMS/WhatsApp to linki — nie wysyłamy sami. Użytkownik zatwierdza wiadomość przed wysłaniem.
+- **B4.3:** Dystans w linii prostej to przybliżenie (Ziemia płaska). Mnożymy × 1,3, ale rzeczywista droga może być inna. Ręczny wpis z licznika jest zawsze dokładny.
+- **B4.4:** SHA-256 to nie podpis kwalifikowany (brak CA). Daje pewność autentyczności dla użytkownika, ale nie moc prawną.
+- **B4.5:** Wymagane powiązanie z Grafikiem (godziny, punkty) i Zarządzaniem (wpłaty). Integracja w pełni w następnej sesji.
+
+**Testy.**
+
+- **Unit:** `mileage.ts` (eksport CSV), `monthlySummary.ts` (kalkulacja), `documentFingerprint.ts` (SHA-256) mają testy do napisania.
+- **E2E:** brak — API sensorowe i finansowe trudne do testowania automatycznie.
+- **Typu:** `npx tsc --noEmit` przechodzi (wszystkie typy).
+
+**Commit.** B4.1–B4.5 zacommitowane:
+- `3b40ee4a` (B4.1 Cennik)
+- `0a2e68d7` (B4.2–B4.5 Należności, kilometrówka, odcisk, zestawienie)
+
+**Kod w paczce:** +5 helperów do finansów, ~600 linii kodu, 0 nowych zależności (Web Crypto API natywnie).
