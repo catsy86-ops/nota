@@ -5145,3 +5145,60 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **Gdzie.** `src/lib/appName.ts` (`APP_NAME`). Używają go: `ClipperSettings.tsx` (treść i przycisk), `overdueBadge.ts` (`BASE_TITLE`, tytuł karty), `passkey.ts` (nazwa strony w WebAuthn), `VaultSettings.tsx` (etykieta passkeya), `exportNotes.ts` (nagłówek eksportu HTML), etykiety `aria-label` logo w `AppSidebar.tsx`, `NotatnikWordmark.tsx`, `NotkiLogo.tsx`.
 - **Ograniczenia.** Pliki statyczne (`index.html`, `public/manifest.webmanifest`) nie importują modułów — nazwę trzeba w nich zmienić ręcznie. Komentarze w kodzie wspominające dawne marki zostały.
 - **Testy.** `src/lib/settingsIndex.test.ts` (tytuł sekcji nadal w kodzie), `e2e/clipper.spec.ts` („Zapisz w NOTKI”).
+
+## Praca → Dziennik budowy — sensory i media (Faza 3, 2026-11-10)
+
+**Co robi.** Integracja 11 sensorowych API przeglądarki do wpisu: minutnik próby szczelności (DeviceOrientationEvent), skaner kodów QR/kreskowych (BarcodeDetector), rysowanie wymiarów na zdjęciach (Canvas), poziomnica (DeviceOrientation), kontakty z telefonu (Contact Picker), AI streszczanie tekstu (Chrome Built-in), aparat live preview (Camera), NFC odczyt tagów, plus: ostrzeżenie przy zakryceniu bez zdjęć, kopiowanie budowy z szablonu, przypomnienie gwarancji 30 dni przed.
+
+**Gdzie jest.**
+
+- **B3.1 Minutnik próby szczelności:** `src/components/study/PressureTestTimer.tsx`, integracja w `PressureTestFields.tsx`. Model: `readings` w `PressureTest` (`at`, `bar`). Licznik min:sec, pole ciśnienia początkowego, guzik start/stop, ekran nie gaśnie (`useWakeLock`).
+- **B3.2 Ostrzeżenie przy zakryceniu bez zdjęć:** toast w `SiteStagesPanel.tsx` (`COVER_STAGE_ID`, `coverPhotoCount`, liczba pomieszczeń z `getSitePoints`).
+- **B3.3 Model wymiarów + UI rysowanie:** model `dimensions` w `JournalEntry` (Record keyed by image ref), `src/lib/study/dimensions.ts` (`Dimension`, `cleanDimensions`). UI: `src/components/study/DimensionDrawer.tsx` (canvas, rysowanie linii, input tekstu wymiaru, lista do usunięcia).
+- **B3.4 Poziomnica i spadek:** `src/components/study/LevelMeter.tsx`, model `level` w `JournalEntry`. Sensor `DeviceOrientationEvent` (beta), wyświetl stopnie i % spadku na 1m. Obsługa permisji iOS 13+.
+- **B3.5 Skaner kodów:** `src/lib/barcode.ts` (`hasBarcodeDetector`, `scanBarcode`, `requestCamera`), `src/components/study/BarcodeScanner.tsx`. Wsparcie QR, EAN, Code128, Code39. Fallback: ręczny wpis (`prompt`). Model: `barcode` w `JournalEntry`.
+- **B3.6 AI streszczanie:** `src/lib/aiModel.ts` (`hasAISummarizer`, `summarizeText`), `src/components/study/AISummary.tsx`. Chrome Built-in Model (offline). Model: `summary` w `JournalEntry` (do 500 znaków).
+- **B3.7 Kopiowanie budowy z szablonu:** pole `templateSiteId` w `NewSiteDialog`, kopiowanie pól `stages`, `shortages`, `rate`.
+- **B3.8 Kontakty z telefonu:** `src/lib/study/contact.ts` (`hasContactPicker`, `pickContact`), guziki “Z kontaktów” przy: telefonie inwestora, kierownika, hurtowni w `NewSiteDialog` i `SiteCardDialog`.
+- **B3.9 Aparat live preview:** `src/lib/cameraCapture.ts` (`hasCamera`, `requestCamera`, `captureFrame`), `src/components/study/CameraCapture.tsx`. Zmiana front/back. Zrzut do blob → `imageStore.putBlob`. Integracja: guzik “Aparat” w arkuszu wpisu zamiast systemu.
+- **B3.10 Przypomnienie gwarancji:** `studyReminders` zwraca `warranty-expiring` gdy ≤30 dni. Model: `warranty` w `JournalEntry` (pole `level`, opcjonalne, liczba w stopniach).
+- **B3.11 NFC odczyt tagów:** `src/lib/nfc.ts` (`hasNFC`, `readNFCTag`), `src/components/study/NFCReader.tsx`. Web NFC API (Chrome Android 89+). Odczytane tagi idą do `barcode` (razem ze skanerem QR).
+- **B3.3 UI rysowanie wymiarów:** Canvas do linii ze strzałkami, input tekstu wymiaru, lista do edycji/usunięcia. Zapisuje do `dimensions` wpisu.
+
+**Jak działa.**
+
+- **API check & fallback:** każdy sensor ma funkcję `has*()` które vraca bool. UI pojawia się warunkowe, guzik wyłączony na nieobsługiwanych. Obsługa braku permisji (toast).
+- **Integracja z arkuszem wpisu:** każdy sensor to własny komponent z `open` / `onOpenChange` / callback (`onSelect`, `onDetected`, `onCapture`, `onSave`). Guziki obok istniejących (Galeria, Nagraj).
+- **Modele danych:** wszystkie nowe pola dodane do `JournalDraft` i `JournalEntry`, czyszczenie w `cleanEntryParts`. Pola opcjonalne (`level?`, `barcode?`, `summary?`, `dimensions?`), puste wartości nie idą do wpisu.
+- **Wake Lock (B3.1):** `useWakeLock(open && running)` z `src/hooks/useWakeLock.ts` trzyma ekran włączony.
+- **View Transitions (B2.7, integracja z B3):** nowe zmiany mniej rysuja, co nie wymaga nowych transicji.
+
+**Ograniczenia i pułapki.**
+
+- **B3.1:** Minutnik liczy się w aplikacji; po zamknięciu czasu nie odlicza (brak Service Worker notifications na koniec próby). Odczyty zapisują się, ale bez UI do przeglądania (wykresu).
+- **B3.3:** Wymiary rysują się na canvas — bez warstw, bez cofania (poza usunięciem całego wymiaru). Wielkie zdjęcie może być niewidoczne na małym ekranie (brak skalowania canvas).
+- **B3.4:** DeviceOrientationEvent wymaga permisji na iOS. Android: zawsze dostępny. Rowy osi (beta) mogą się różnić między urządzeniami.
+- **B3.5 i B3.11:** BarcodeDetector i Web NFC to API na razie wąskie (Chrome Android). Safari iOS: brak wsparcia.
+- **B3.6:** Chrome Built-in Model może nie być zainstalowany (offline model na urządzeniu). Fallback: bez streszczenia.
+- **B3.9:** Camera API nie gwarantuje resolu — mogą być różne na zależnie od urządzenia. Canvas draw może być powolny na starszych telefonach.
+
+**Testy.**
+
+- **E2E:** formalne testy brak (API sensorowe trudne do testowania w Playwright). Testują się w `e2e/a11y.spec.ts` jeśli są elementy UI (przycisk, tekst).
+- **Unit:** `src/lib/cameraCapture.ts`, `src/lib/barcode.ts`, `src/lib/nfc.ts`, `src/lib/dimensions.ts` mają czyszczenie i helperów do testu (brak aktualnych testów dla sensorów, bo to browser API).
+- **Typu:** `npx tsc --noEmit` przechodzi (wszystkie typy w `dimensions.ts`, `nfc.ts`, itp.).
+
+**Commit.** B3.1–B3.11 zacommitowane w serii:
+- `9cd58d78` (B3.1 model + B3.7)
+- `4207277d` (B3.10)
+- `6cb5f691` (B3.1 timer)
+- `75584ca6` (B3.3 model)
+- `634dad32` (B3.8)
+- `8f786ee4` (B3.4)
+- `9558183d` (B3.5)
+- `3002d32e` (B3.6)
+- `d5cc487a` (B3.9)
+- `e8cd438e` (B3.11)
+- `1043f12d` (B3.3 UI)
+
+**Kod w paczce:** +11 API przeglądarki, ~1500 linii kodu komponenty + helpery, 0 zależności nowych (Web API, nie npm).
