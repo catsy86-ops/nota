@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Gauge, X } from "lucide-react";
+import { Gauge, X, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { defaultTest, TEST_MEDIA, TEST_MEDIUM_LABEL, type PressureTest, type TestMedium } from "@/lib/study/pressureTest";
+import { PressureTestTimer } from "./PressureTestTimer";
 
 /**
  * Protokół próby szczelności w arkuszu wpisu: medium, ciśnienie, czas, spadek i wynik.
@@ -10,6 +12,7 @@ import { defaultTest, TEST_MEDIA, TEST_MEDIUM_LABEL, type PressureTest, type Tes
  * których nie potrzebuje.
  */
 export function PressureTestFields({ value, topic, onChange }: { value: PressureTest | null; topic: string; onChange: (t: PressureTest | null) => void }) {
+  const [timerOpen, setTimerOpen] = useState(false);
   if (!value) {
     return (
       <button
@@ -24,15 +27,21 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
   const sewer = value.medium === "sewer";
   const set = (patch: Partial<PressureTest>) => onChange({ ...value, ...patch });
   return (
-    <fieldset className="min-w-0 space-y-3 rounded-card border border-primary/40 bg-primary/5 p-3" data-testid="pressure-test">
-      <legend className="sr-only">Protokół próby szczelności</legend>
-      <div className="flex items-center gap-2">
-        <Gauge className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
-        <p className="flex-1 text-sm font-medium">Protokół próby</p>
-        <button type="button" onClick={() => onChange(null)} aria-label="Usuń protokół próby" className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-muted coarse:size-11">
-          <X className="h-4 w-4" aria-hidden />
-        </button>
-      </div>
+    <>
+      <fieldset className="min-w-0 space-y-3 rounded-card border border-primary/40 bg-primary/5 p-3" data-testid="pressure-test">
+        <legend className="sr-only">Protokół próby szczelności</legend>
+        <div className="flex items-center gap-2">
+          <Gauge className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+          <p className="flex-1 text-sm font-medium">Protokół próby</p>
+          {!sewer && (
+            <Button size="sm" variant="outline" onClick={() => setTimerOpen(true)} className="coarse:h-9">
+              <Clock className="mr-1 h-4 w-4" aria-hidden />Minutnik
+            </Button>
+          )}
+          <button type="button" onClick={() => onChange(null)} aria-label="Usuń protokół próby" className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-muted coarse:size-11">
+            <X className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
       <ToggleGroup
         aria-label="Czym próba"
         value={value.medium}
@@ -49,7 +58,9 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
         <ToggleGroupItem value="ok" className="coarse:h-11 data-[state=on]:text-success-ink">Szczelna</ToggleGroupItem>
         <ToggleGroupItem value="fail" className="coarse:h-11 data-[state=on]:text-destructive-ink">Nieszczelna</ToggleGroupItem>
       </ToggleGroup>
-    </fieldset>
+      </fieldset>
+      <PressureTestTimer open={timerOpen} onOpenChange={setTimerOpen} test={value} onUpdate={set} />
+    </>
   );
 }
 
