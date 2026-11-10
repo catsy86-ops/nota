@@ -4721,6 +4721,12 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Reguła.** `eslint.config.js`: `learnActions.ts`, `journalActions.ts`, `siteActions.ts` i `studyProjection.ts` nie mogą importować `./store` (fasada nad nimi). Pozostałe pliki Pracy nadal używają `store.ts` jako publicznego API.
 - **Testy.** `npm run typecheck`, `eslint src/lib/study`, Vitest `src/lib/study` (656).
 
+## Praca: arkusz wpisu — wydzielone panele (B1.6, część)
+
+- **Co robi.** Bez zmiany działania: panel zestawów, przełącznik „Z auta / Dostawa na budowę” i panel tematu z listą kontrolną to osobne komponenty w `src/components/study/entry/` (`EntryKitsPanel`, `EntrySupplyToggle`, `EntryTopicPanel`). `JournalEntrySheet.tsx` ma 924 linie zamiast 973.
+- **Czego nie zrobiono.** Reduktor szkicu (`useReducer`) i wydzielenie sekcji etapu, zdjęć, lokalizacji i godziny — stan arkusza to ok. 25 powiązanych `useState`, a zmiana ich modelu bez szerszych testów charakteryzujących jest ryzykowna.
+- **Testy.** `e2e/journal-*.spec.ts`, `e2e/study.spec.ts`, `e2e/workday.spec.ts` (51 na chromium), `JournalEntrySheet.test.tsx`.
+
 ## Praca: testy migracji `data.ts` (B1.3)
 
 - `src/lib/study/data.test.ts`: stałe id urządzenia (też bez localStorage), migracja starego zapisu do Yjs raz i bez dubli, uszkodzony JSON, zły kształt, `legacyStudyMerged`, `useStudyReady`. Pokrycie `data.ts` z 59% do 96%.

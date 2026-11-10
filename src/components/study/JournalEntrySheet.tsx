@@ -1,14 +1,16 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Play, Trash, X } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X } from "lucide-react";
 import { formatFileSize } from "@/lib/attachments";
 import { addRecording } from "@/lib/study/recordings";
 import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/journalEntry";
-import { HeightsButton } from "./HeightsSheet";
+import { EntryKitsPanel } from "./entry/EntryKitsPanel";
+import { EntrySupplyToggle } from "./entry/EntrySupplyToggle";
+import { EntryTopicPanel } from "./entry/EntryTopicPanel";
 import { PhotoStrip } from "./PhotoStrip";
 import { PressureTestFields } from "./PressureTestFields";
 import { FittingsFields } from "./FittingsFields";
 import { PipesFields } from "./PipesFields";
-import { applyKit, kitSummary, type Kit } from "@/lib/study/kits";
+import { applyKit, type Kit } from "@/lib/study/kits";
 import { useKits } from "@/lib/study/kitsStore";
 const KitsDialog = lazy(() => import("./KitsDialog").then((m) => ({ default: m.KitsDialog })));
 import { TEST_TOPICS } from "@/lib/study/pressureTest";
@@ -28,7 +30,7 @@ import { useDictation } from "@/hooks/useDictation";
 import { prepareImage } from "@/lib/imagePrepare";
 import { imageStore } from "@/lib/imageStore";
 import { requestPersistentStorage } from "@/lib/storagePersistence";
-import { MODULES, TOPICS } from "@/lib/study/content";
+import { TOPICS } from "@/lib/study/content";
 import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteStages, updateJournalEntry, useSiteDirectory, useStudy, useStudyLists, type JournalKind } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, freshEntry, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
@@ -865,27 +867,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
               </div>
             )}
-            {kitsOpen && (
-              <div id="journal-kits" className="space-y-2 rounded-card border border-border p-3" data-testid="journal-kits">
-                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Zestawy materiału">
-                  {kits.map((kit) => (
-                    <button
-                      key={kit.id}
-                      type="button"
-                      onClick={() => addKit(kit)}
-                      aria-label={`${kit.name}: ${kitSummary(kit)}`}
-                      className="pressable flex flex-col items-start rounded-card bg-muted px-3 py-1.5 text-left hover:bg-primary/10 coarse:min-h-11"
-                    >
-                      <span className="text-sm">{kit.name}</span>
-                      <span className="text-2xs text-muted-foreground">{kitSummary(kit)}</span>
-                    </button>
-                  ))}
-                </div>
-                <button type="button" onClick={() => setKitsDialogOpen(true)} className="pressable text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline coarse:min-h-11">
-                  {kits.length > 0 ? "Zmień zestawy" : "Dodaj zestaw"}
-                </button>
-              </div>
-            )}
+            {kitsOpen && <EntryKitsPanel kits={kits} onAdd={addKit} onEdit={() => setKitsDialogOpen(true)} />}
             {kitsDialogOpen && (
               <Suspense fallback={null}>
                 <KitsDialog open={kitsDialogOpen} onOpenChange={setKitsDialogOpen} fittingHistory={fittingHistory} pipeHistory={pipeHistory} />
@@ -896,59 +878,13 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 <PipesFields value={form.pipes ?? []} history={pipeHistory} onChange={(p) => patch({ pipes: p })} />
               </div>
             )}
-            {hasMaterial && van.items.length > 0 && (
-              <div className="grid grid-cols-2 gap-1 rounded-field border border-border p-0.5" role="group" aria-label="Skąd materiał" data-testid="entry-supply">
-                {([["van", "Z auta"], ["site", "Dostawa na budowę"]] as const).map(([v, label]) => (
-                  <button key={v} type="button" aria-pressed={supply === v} onClick={() => setSupplyChoice(v)}
-                    className={cn("pressable rounded-[calc(var(--r-field)-2px)] px-2 py-1 text-xs coarse:min-h-11 coarse:text-sm",
-                      supply === v ? "bg-primary/12 font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
+            {hasMaterial && van.items.length > 0 && <EntrySupplyToggle supply={supply} onChange={setSupplyChoice} />}
             {topicOpen && (
-              <div id="journal-topic" className="rounded-card border border-border" data-testid="journal-topic-panel">
-                {topic === "punkty" && <div className="px-2 py-1"><HeightsButton variant="link" /></div>}
-                <label className="block space-y-1 text-xs text-muted-foreground">
-                  Czego dotyczy
-                  <select
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    className="w-full rounded-field border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="">Ogólnie (bez tematu)</option>
-                    {MODULES.map((m) => (
-                      <optgroup key={m.id} label={m.label}>
-                        {TOPICS.filter((t) => t.module === m.id).map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                      </optgroup>
-                    ))}
-                  </select>
-                </label>
-                {current && (
-                  <>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="text-sm leading-snug text-muted-foreground">{current.summary}</p>
-                      <Button type="button" variant="outline" size="sm" onClick={() => { closeJournalSheet(); onPractice(current.id); }}>
-                        <Play className="mr-1.5 h-3.5 w-3.5" />Ćwicz pytania
-                      </Button>
-                    </div>
-                    <p className="text-xs font-medium text-foreground">Sprawdź przed przejściem dalej</p>
-                    <ul className="space-y-2">
-                      {items.map((item) => (
-                        <li key={item.id} className="flex items-start gap-2.5">
-                          <Checkbox id={`journal-${item.id}`} checked={checked.has(item.id)} onCheckedChange={() => toggle(item.id)} className="mt-0.5" />
-                          <label htmlFor={`journal-${item.id}`} className="cursor-pointer text-sm leading-snug">
-                            {item.critical && <span className="mr-1 inline-flex align-[-2px]" role="img" aria-label="Punkt krytyczny"><TriangleAlert className="h-3.5 w-3.5 text-warning-ink" aria-hidden /></span>}
-                            {item.text}
-                            {item.risk && <span className="mt-0.5 block text-xs text-muted-foreground">Ryzyko: {item.risk.replace(/^[^=]*= ?/, "")}</span>}
-                          </label>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </div>
+              <EntryTopicPanel
+                topic={topic} current={current} items={items} checked={checked}
+                onTopic={setTopic} onToggle={toggle}
+                onPractice={(id) => { closeJournalSheet(); onPractice(id); }}
+              />
             )}
           </div>
         </div>
