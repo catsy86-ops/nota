@@ -18,6 +18,8 @@ export interface PressureTest {
   drop: number | null;
   /** Wynik: szczelna. */
   ok: boolean;
+  /** B3.1: odczyty ciśnienia w trakcie próby (czas i ciśnienie); brak = nie rejestrowano. */
+  readings?: Array<{ at: number; bar: number }>;
 }
 
 /** Tematy, przy których arkusz wpisu od razu proponuje protokół. */
@@ -38,12 +40,20 @@ export function cleanTest(raw: unknown): PressureTest | null {
   const t = raw as Partial<PressureTest> | null;
   if (!t || typeof t !== "object" || !TEST_MEDIA.includes(t.medium as TestMedium) || typeof t.ok !== "boolean") return null;
   const sewer = t.medium === "sewer";
+  const readings = Array.isArray(t.readings)
+    ? t.readings.flatMap((r) => {
+        const at = typeof r?.at === "number" && Number.isFinite(r.at) ? Math.max(0, Math.round(r.at)) : null;
+        const bar = sewer ? null : num(r?.bar, 100);
+        return at !== null && bar !== null ? [{ at, bar }] : [];
+      })
+    : undefined;
   return {
     medium: t.medium as TestMedium,
     bar: sewer ? null : num(t.bar, 100),
     minutes: num(t.minutes, 10_000),
     drop: sewer ? null : num(t.drop, 100),
     ok: t.ok,
+    ...(readings?.length ? { readings } : {}),
   };
 }
 

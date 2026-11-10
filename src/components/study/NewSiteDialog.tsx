@@ -27,7 +27,7 @@ interface NewSiteDialogProps {
   onPackage?: (pkg: SitePackage) => void;
 }
 
-const EMPTY = { name: "", client: "", phone: "", address: "", scope: "" };
+const EMPTY = { name: "", client: "", phone: "", address: "", scope: "", templateSiteId: "" };
 
 /**
  * „Nowa budowa” bez wpisu: sama nazwa, reszta na karcie. Id to `siteKey(nazwa)`, więc ta sama
@@ -63,9 +63,14 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
   function create() {
     if (!trimmed || error) return;
     const id = siteKey(trimmed);
-    const card = job
+    const base = job
       ? { name: trimmed, address: form.address.trim(), investor: form.client.trim(), ...(form.phone.trim() ? { phone: form.phone.trim() } : {}) }
       : { name: trimmed, address: "", investor: "" };
+    // B3.7: kopiuj etapy, pomieszczenia, zestawy, sposób rozliczenia i odbiorców z poprzedniej budowy.
+    const template = form.templateSiteId ? dir.find((s) => s.id === form.templateSiteId) : null;
+    const card = template
+      ? { ...base, stages: template.stages, shortages: template.shortages, rate: template.rate }
+      : base;
     if (!saveSiteCard(id, card)) return;
     if (job) setJobMeta(id, { scope: form.scope.trim() || undefined });
     reset();
@@ -97,6 +102,16 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
             <Input id="new-site-name" value={form.name} maxLength={SITE_NAME_MAX} autoFocus onChange={field("name")} placeholder={job ? "np. Kowalski — kran" : "np. Lipowa 5"} className="shake-invalid" aria-invalid={!!error} aria-describedby={error ? "new-site-error" : undefined} />
             {error && <p id="new-site-error" role="alert" className="text-xs text-destructive-ink">{error}</p>}
           </div>
+          {!job && (
+            <div className="space-y-1.5">
+              <Label htmlFor="new-site-template">Jak poprzednia budowa</Label>
+              <select id="new-site-template" value={form.templateSiteId} onChange={(e) => setForm((f) => ({ ...f, templateSiteId: e.target.value }))}
+                className="w-full rounded-field border border-border bg-background px-3 py-2 text-sm">
+                <option value="">bez szablonu</option>
+                {dir.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+          )}
           {job && (
             <>
               <div className="grid grid-cols-2 gap-2">
