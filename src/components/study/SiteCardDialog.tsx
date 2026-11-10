@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Archive, ArchiveRestore, Wrench, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, PenLine, Phone, Send, Share2, Plus, Camera } from "lucide-react";
+import { Archive, ArchiveRestore, Wrench, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, PenLine, Phone, Send, Share2, Plus, Camera, PackageX } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -107,6 +107,11 @@ export function SiteCardDialog({
   const siteIdNow = site?.id;
   useEffect(() => { if (siteIdNow) setSection(startSection(siteIdNow, sections)); }, [siteIdNow]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickSection = (sec: CardSection) => { setSection(sec); if (siteIdNow) rememberSection(siteIdNow, sec); };
+  /** „Brak” z paska kciuka: segment Materiał i fokus w polu „Czego brakuje” (klawiatura od razu). */
+  const addShortageHere = () => {
+    pickSection("material");
+    requestAnimationFrame(() => document.querySelector<HTMLInputElement>('[data-testid="site-card"] [data-testid="site-shortages"] input')?.focus());
+  };
   useTrackUse("karta-budowy", !!site);
   const cardOpen = !!site;
   useEffect(() => { if (cardOpen) measureSpan("otwarcie-karty-budowy")(); }, [cardOpen]);
@@ -296,14 +301,14 @@ export function SiteCardDialog({
 
             <div className="space-y-3 px-5 pt-4">
               {/* B2: zdjęcie obok „Wpis tutaj”, nie na dole karty — pod panelami na telefonie nikt go nie szuka. */}
-              <div className="flex gap-2">
+              <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void addPhotoEntry(file); }} />
+              <div className="flex gap-2 max-sm:hidden">
                 <Button onClick={() => leaveTo(onNewEntry)} className="min-w-0 flex-1 coarse:h-11">
                   <Plus className="mr-1.5 h-4 w-4" aria-hidden />Wpis tutaj
                 </Button>
                 <Button variant="outline" onClick={() => photoInput.current?.click()} disabled={photoBusy} aria-label={photoBusy ? "Zapisuję zdjęcie" : "Zdjęcie do wpisu"} className="shrink-0 coarse:h-11">
                   <Camera className="h-4 w-4" aria-hidden />{photoBusy ? "…" : <span className="max-[380px]:sr-only">Zdjęcie</span>}
                 </Button>
-                <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void addPhotoEntry(file); }} />
               </div>
               {/* Najczęstsze skróty zostają nad segmentami: wpisy tej budowy i raport dla szefa. */}
               <div className="grid grid-cols-2 gap-2">
@@ -585,6 +590,29 @@ export function SiteCardDialog({
               </div>
               </TabsContent>
             </Tabs>
+            {/* B2.3: na telefonie stałe akcje przy kciuku — wpis, zdjęcie, brak i godziny zawsze pod ręką, bez przewijania do góry karty. */}
+            <div className="sticky bottom-0 z-raised grid grid-cols-4 gap-1.5 border-t border-border bg-background px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:hidden" data-testid="site-thumb-bar">
+              {([
+                { key: "entry", label: "Wpis tutaj", aria: undefined, icon: Plus, primary: true, disabled: false, onClick: () => leaveTo(onNewEntry) },
+                { key: "photo", label: photoBusy ? "Zapisuję…" : "Zdjęcie", aria: photoBusy ? "Zapisuję zdjęcie" : "Zdjęcie do wpisu", icon: Camera, primary: false, disabled: photoBusy, onClick: () => photoInput.current?.click() },
+                { key: "shortage", label: "Brak", aria: "Dodaj brak materiału", icon: PackageX, primary: false, disabled: false, onClick: addShortageHere },
+                { key: "hours", label: "Godziny", aria: "Wpisz godziny", icon: Clock, primary: false, disabled: false, onClick: () => setHoursOpen(true) },
+              ] as const).map((b) => (
+                <button
+                  key={b.key}
+                  type="button"
+                  onClick={b.onClick}
+                  disabled={b.disabled}
+                  aria-label={b.aria}
+                  className={cn(
+                    "pressable flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-card border px-1 text-xs font-medium disabled:opacity-60",
+                    b.primary ? "border-transparent bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:bg-muted",
+                  )}
+                >
+                  <b.icon className="h-5 w-5" aria-hidden />{b.label}
+                </button>
+              ))}
+            </div>
           </>
         )}
       </ResponsiveDialogContent>
