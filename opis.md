@@ -5207,11 +5207,11 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 
 **Co robi.** Finanse budowy: cennik robocizny do fuch, przypomnienia o należności, kilometrówka z zestawieniem, odcisk dokumentu (SHA-256), zestawienie miesiąca godzin/punktów/fuch/wpłat.
 
-**Stan integracji (2026-11-11).** Podpięte w UI: B4.1 (cennik i numer konta w Ustawienia → Ogólne → Praca, `GeneralSettings.tsx`, `PricingManager`, `bankAccountStore` w `companyPrefs.ts`) i B4.2 (przyciski SMS/WhatsApp w „Należnościach” karty budowy, `SiteBillingDues.tsx`; kwota to „Zostało do zapłaty” z rozliczenia, telefon z pola „Telefon inwestora”, czekanie liczone od ostatniej wpłaty albo założenia karty; bez telefonu lub przy saldzie ≤ 0 przycisków nie ma). B4.3 kilometrówka podpięta (okno „Kilometrówka” w Dzienniku, patrz niżej). B4.5 zestawienie miesiąca podpięte w podsumowaniu Grafiku. NIEPODPIĘTE (tylko biblioteka z testami, bez ekranu): B4.4 odcisk. Cennik (B4.1) nie jest jeszcze używany do wyceny fuch — jest tylko lista pozycji.
+**Stan integracji (2026-11-11).** Podpięte w UI: B4.1 (cennik i numer konta w Ustawienia → Ogólne → Praca, `GeneralSettings.tsx`, `PricingManager`, `bankAccountStore` w `companyPrefs.ts`) i B4.2 (przyciski SMS/WhatsApp w „Należnościach” karty budowy, `SiteBillingDues.tsx`; kwota to „Zostało do zapłaty” z rozliczenia, telefon z pola „Telefon inwestora”, czekanie liczone od ostatniej wpłaty albo założenia karty; bez telefonu lub przy saldzie ≤ 0 przycisków nie ma). B4.3 kilometrówka podpięta (okno „Kilometrówka” w Dzienniku, patrz niżej). B4.5 zestawienie miesiąca podpięte w podsumowaniu Grafiku. NIEPODPIĘTE (tylko biblioteka z testami, bez ekranu): B4.4 odcisk. Cennik (B4.1) zasila wyceny fuch (patrz niżej).
 
 **Gdzie jest.**
 
-- **B4.1 Cennik robocizny:** `src/lib/pricing.ts` (model `PricingItem`, funkcje `addPricingItem`, `removePricingItem`). `src/components/settings/PricingManager.tsx` (UI do dodawania pozycji). Store w `companyPrefs.ts`: `pricingStore`, `usePricing()`.
+- **B4.1 Cennik robocizny:** `src/lib/pricing.ts` (model `PricingItem`, `cleanPricing`, `addPricingItem`, `removePricingItem`; limity: 100 pozycji, nazwa 80 znaków, cena do 10 mln, ujemne i nieskończone odpadają). `src/components/settings/PricingManager.tsx` (Ustawienia → Ogólne → Praca). Store w `companyPrefs.ts`: `pricingStore`, `usePricing()` (klucz `kaczy.study.pricing.v1`). **Użycie w wycenie fuchy:** w formularzu „Nowa pozycja wyceny” (`SiteJobPanel.tsx`), przy rodzaju „Robocizna”, rząd przycisków „Z cennika” (`data-testid="job-pricing"`); stuknięcie wypełnia nazwę i cenę (ilość 1, jednostka domyślna), a ilość i cenę można poprawić przed „Dodaj”. Przy „Materiał” przyciski znikają; przy pustym cenniku jest podpowiedź, gdzie go dodać.
 - **B4.2 Przypomnienie o należności:** `src/lib/study/paymentReminder.ts` (model `PaymentReminder`, `daysWaiting()`, `formatPaymentMessage()`, linki `generateSMSLink()`, `generateWhatsAppLink()`). `src/components/study/PaymentReminderButton.tsx` (przyciski SMS/WhatsApp do wysłania wiadomości).
 - **B4.3 Kilometrówka (okno w Dzienniku, przycisk „Kilometrówka” obok „Zakończ dzień”):** `src/components/study/MileageDialog.tsx` (ładowane leniwie z `StudyJournal.tsx`). Logika: `src/lib/study/mileage.ts` (`MileageEntry`, `cleanMileage`, `monthEntries`, `mileageTotals`, `suggestMileage`, `exportMileageCSV`); magazyn `mileageStore` / `addMileageEntry` / `removeMileageEntry` w `companyPrefs.ts` (klucz `kaczy.study.mileage.v1`). Stawka domyślna 0,65 zł/km, zapamiętywana z ostatniego przejazdu.
 - **B4.4 Odcisk dokumentu:** `src/lib/study/documentFingerprint.ts` (SHA-256 z Web Crypto API, funkcje `computeDocumentHash()`, `generateDocumentFingerprint()`, `verifyDocumentFingerprint()`). Format: data + skrót (16 znaków).
@@ -5219,7 +5219,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 
 **Jak działa.**
 
-- **Cennik (B4.1):** pozycje przypisane do typu punktu (H-4, E-4, itd). Wycena fuchy w 30 sekund: wybierz pozycje z listy.
+- **Cennik (B4.1):** pozycje przypisane do typu punktu (H-4, E-4, itd). Wycena fuchy: stuknij pozycję z cennika, popraw ilość, „Dodaj”. Pole „typ punktu” w cenniku służy dziś tylko do opisu (wycena pokazuje wszystkie pozycje).
 - **Należności (B4.2):** model z datą, kwotą, statusem wysłania. Helper liczy dni czekania. SMS/WhatsApp z linkami (`sms:`, `https://wa.me/`).
 - **Kilometrówka (B4.3):** wybierasz dzień, budowy po kolei (numerowane przystanki) i kilometry z licznika; gdy co najmniej dwie budowy mają zapisaną lokalizację, okno podpowiada dystans (haversine w linii prostej × 1,3) z przyciskiem „Wpisz”. Lista przejazdów wybranego miesiąca z „Cofnij” po usunięciu i sumą „km · zł”. CSV w formacie jak reszta eksportów (BOM, średnik, przecinek dziesiętny, CRLF; kolumna „Trasa” z nazwami budów, `cell()` chroni przed formułami).
 - **Odcisk (B4.4):** SHA-256 na zawartości dokumentu. To suma kontrolna wykrywająca przypadkowe zmiany; NIE uwierzytelnia dokumentu (kto zmieni PDF, przeliczy skrót). Bez `crypto.subtle` funkcje odmawiają (`computeDocumentHash` rzuca, `verifyDocumentFingerprint` zwraca `false`).
@@ -5227,7 +5227,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 
 **Ograniczenia i pułapki.**
 
-- **B4.1:** Pozycje są na urządzeniu (`localStorage`), nie synchronizują się między telefonami. Każde urządzenie ma swój cennik.
+- **B4.1:** Pozycje są na urządzeniu (`localStorage`), nie synchronizują się między telefonami i nie wchodzą do kopii zapasowej. Cena z cennika jest kopiowana do pozycji wyceny — późniejsza zmiana cennika nie zmienia istniejących wycen.
 - **B4.2:** SMS/WhatsApp to linki — nie wysyłamy sami. Użytkownik zatwierdza wiadomość przed wysłaniem.
 - **B4.3:** Dystans w linii prostej × 1,3 to przybliżenie (wcześniej liczony jak na płaskiej mapie bez cos(szerokości) i zawyżał wschód–zachód ~1,6 razy; teraz haversine z `geo.ts`). Wpis z licznika jest zawsze dokładny. Przejazdy są tylko na tym urządzeniu (nie synchronizują się i nie wchodzą do kopii zapasowej). Limity: 2000 przejazdów, 3000 km i 20 zł/km na wpis, 20 przystanków. Trasa nie obejmuje dojazdu z domu — liczy się tylko między budowami.
 - **B4.4:** SHA-256 bez klucza to suma kontrolna, nie podpis ani dowód autentyczności. Wyświetlany skrót ma 16 znaków (64 bity) — do porównań służy pełny hash.
@@ -5236,7 +5236,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 **Testy.**
 
 - **Unit:** `mileage.test.ts` (odległość, CSV, czyszczenie magazynu, sumy), `monthlySummary.test.ts`, `documentFingerprint.test.ts`.
-- **E2E:** `e2e/site-billing.spec.ts` (miesiąc razem: wpłaty i CSV zestawienia), `e2e/mileage.spec.ts` (podpowiedź z lokalizacji, zapis, CSV, „Cofnij”, axe, telefon 390 px). `e2e/payment-reminder.spec.ts` (przyciski przypomnienia pojawiają się dopiero z telefonem i kwotą; konto i cennik w Ustawieniach zostają po odświeżeniu). Linki: `paymentReminder.test.ts` (numer czyszczony do cyfr i opcjonalnego „+”).
+- **E2E:** `e2e/jobs.spec.ts` (wycena z cennika), `src/lib/pricing.test.ts`, `e2e/site-billing.spec.ts` (miesiąc razem: wpłaty i CSV zestawienia), `e2e/mileage.spec.ts` (podpowiedź z lokalizacji, zapis, CSV, „Cofnij”, axe, telefon 390 px). `e2e/payment-reminder.spec.ts` (przyciski przypomnienia pojawiają się dopiero z telefonem i kwotą; konto i cennik w Ustawieniach zostają po odświeżeniu). Linki: `paymentReminder.test.ts` (numer czyszczony do cyfr i opcjonalnego „+”).
 - **Typu:** `npx tsc --noEmit` przechodzi (wszystkie typy).
 
 **Commit.** B4.1–B4.5 zacommitowane:

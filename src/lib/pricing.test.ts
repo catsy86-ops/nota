@@ -12,16 +12,32 @@ describe("pricing", () => {
     expect(result).toEqual(EMPTY_PRICING);
   });
 
-  it("cleanPricing: filtruje nieprawidłowe pozycje", () => {
+  it("cleanPricing: odrzuca pustą nazwę, ujemną i nieskończoną cenę, śmieci", () => {
     const data = {
       items: [
         { id: "p1", name: "WC", price: 350, pointType: "H-4", createdAt: 123 },
-        { id: "p2", name: "", price: 100, pointType: "E-4", createdAt: 123 }, // empty name
-        { id: "p3", name: "Bateria", price: -50, pointType: "H-4", createdAt: 123 }, // negative (ale cleanPricing nie filtruje po price)
+        { id: "p2", name: "  ", price: 100, pointType: "E-4", createdAt: 123 },
+        { id: "p3", name: "Bateria", price: -50, pointType: "H-4", createdAt: 123 },
+        { id: "p4", name: "Zawór", price: Infinity, pointType: "H-4", createdAt: 123 },
+        null,
+        "x",
       ],
     };
-    const result = cleanPricing(data);
-    expect(result.items).toHaveLength(3); // cleanPricing nie sprawdza price/name wartości
+    expect(cleanPricing(data).items.map((i) => i.id)).toEqual(["p1"]);
+  });
+
+  it("cleanPricing: limity — nazwa 80 znaków, najwyżej 100 pozycji", () => {
+    const many = Array.from({ length: 150 }, (_, i) => ({ id: `p${i}`, name: "x".repeat(200), price: 1, pointType: "H-4", createdAt: 1 }));
+    const out = cleanPricing({ items: many });
+    expect(out.items).toHaveLength(100);
+    expect(out.items[0].name).toHaveLength(80);
+  });
+
+  it("addPricingItem: zaokrągla cenę do groszy i nie przekracza limitu pozycji", () => {
+    expect(addPricingItem(EMPTY_PRICING, "Kran", 12.345, "H-4").items[0].price).toBe(12.35);
+    let p = EMPTY_PRICING;
+    for (let i = 0; i < 100; i++) p = addPricingItem(p, `Poz ${i}`, 1, "H-4");
+    expect(addPricingItem(p, "ponad limit", 1, "H-4").items).toHaveLength(100);
   });
 
   it("cleanPricing: zachowuje prawidłowe pozycje", () => {

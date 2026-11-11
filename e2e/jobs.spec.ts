@@ -199,3 +199,38 @@ test("H3.5: po „Zrobione” podpis klienta i PDF „Potwierdzenie wykonania”
   await addItem(card, "Materiał", "Bateria", "250");
   await expect(job.getByTestId("job-sign")).toHaveText("Podpisz ponownie");
 });
+
+test("wycena z cennika (B4.1): pozycja wypełnia formularz, ilość można zmienić; bez cennika jest podpowiedź", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const card = await newJob(page);
+  const form = card.getByRole("form", { name: "Nowa pozycja wyceny" });
+  // Pusty cennik: podpowiedź, gdzie go dodać.
+  await expect(form.getByText(/dodasz w Ustawieniach/)).toBeVisible();
+
+  await page.evaluate(() => localStorage.setItem("kaczy.study.pricing.v1", JSON.stringify({
+    items: [
+      { id: "p1", name: "WC podwieszane", price: 350, pointType: "H-4", createdAt: 1 },
+      { id: "p2", name: "Wymiana baterii", price: 120.5, pointType: "H-4", createdAt: 2 },
+    ],
+  })));
+  await page.reload();
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("jobs-open").click();
+  await page.getByTestId("jobs-dialog").getByText("Kowalski kran").click();
+  const job = page.getByTestId("site-card").getByTestId("site-job");
+  const pricing = job.getByRole("group", { name: "Z cennika" });
+  await expect(pricing.getByRole("button")).toHaveCount(2);
+
+  await pricing.getByRole("button", { name: /WC podwieszane/ }).click();
+  const f = job.getByRole("form", { name: "Nowa pozycja wyceny" });
+  await expect(f.getByLabel("Nazwa pozycji")).toHaveValue("WC podwieszane");
+  await expect(f.getByLabel("Cena za jednostkę (zł)")).toHaveValue("350");
+  await f.getByLabel("Ilość").fill("2");
+  await f.getByRole("button", { name: "Dodaj" }).click();
+  await expect(job.getByTestId("job-item")).toHaveCount(1);
+  await expect(job.getByTestId("job-total")).toHaveText("700 zł");
+
+  // Materiał to nie robocizna: cennik się chowa.
+  await f.getByRole("button", { name: "Materiał" }).click();
+  await expect(job.getByRole("group", { name: "Z cennika" })).toHaveCount(0);
+});

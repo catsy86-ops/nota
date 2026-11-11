@@ -7,7 +7,8 @@ import { haptic } from "@/lib/haptics";
 import { localDayKey } from "@/lib/dayDone";
 import { toastWithUndo } from "@/lib/undoToast";
 import { amountInput, money, parseAmount } from "@/lib/study/billing";
-import { companyNameStore } from "@/lib/study/companyPrefs";
+import { companyNameStore, usePricing } from "@/lib/study/companyPrefs";
+import type { PricingItem } from "@/lib/pricing";
 import {
   itemClientTotal, JOB_SCOPE_MAX, JOB_STATUS_LABEL, JOB_STATUSES, parseMargin, parseQty, QUOTE_KIND_LABEL, QUOTE_KINDS,
   QUOTE_NAME_MAX, QUOTE_UNIT_MAX, quoteTotals, signatureValidFor, type Job, type QuoteKind,
@@ -31,6 +32,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
   const [qty, setQty] = useState("1");
   const [unit, setUnit] = useState("");
   const [price, setPrice] = useState("");
+  const pricing = usePricing();
   const totals = quoteTotals(job);
   /** Podpis z karty złożony po ostatniej zmianie wyceny (H3.5). */
   const signed = signatureValidFor(job, site.signature);
@@ -55,6 +57,16 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
     setName("");
     setQty("1");
     setPrice("");
+    haptic("selection");
+  }
+
+  /** Pozycja z cennika (B4.1) wypełnia formularz robocizną; ilość i cenę można jeszcze poprawić przed „Dodaj”. */
+  function fromPricing(item: PricingItem) {
+    setKind("labor");
+    setName(item.name);
+    setPrice(amountInput(item.price));
+    setUnit("");
+    setQty("1");
     haptic("selection");
   }
 
@@ -182,6 +194,18 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
                 </button>
               ))}
             </div>
+            {kind === "labor" && (pricing.items.length > 0 ? (
+              <div className="flex flex-wrap gap-1" role="group" aria-label="Z cennika" data-testid="job-pricing">
+                {pricing.items.map((it) => (
+                  <button key={it.id} type="button" onClick={() => fromPricing(it)}
+                    className="pressable max-w-full truncate rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm">
+                    {it.name} · {money(it.price)}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="ui-hint">Własne pozycje robocizny (np. „WC podwieszane: 350 zł”) dodasz w Ustawieniach → Ogólne → Praca.</p>
+            ))}
             <input value={name} onChange={(e) => setName(e.target.value)} maxLength={QUOTE_NAME_MAX} aria-label="Nazwa pozycji"
               placeholder={kind === "labor" ? "np. Wymiana baterii" : "np. Bateria zlewozmywakowa"} className={cn(fieldCls, "w-full")} />
             <div className="flex items-center gap-1.5">
