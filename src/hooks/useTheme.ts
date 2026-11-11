@@ -1,3 +1,4 @@
+import { canViewTransition } from "@/lib/viewTransition";
 import { useCallback, useSyncExternalStore } from "react";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { isEffectEnabled } from "@/lib/effectsSettings";
@@ -107,7 +108,7 @@ function applyAppearance(dark: boolean, skin: Skin) {
   const reduced = isMotionReduced();
   const doc = document as DocWithVT;
   const vt = shouldUseViewTransition({
-    supported: typeof doc.startViewTransition === "function",
+    supported: canViewTransition(),
     reduced,
     enabled: isEffectEnabled("themeFade"),
     changed,

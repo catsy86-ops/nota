@@ -52,6 +52,7 @@ import { QuickLink } from "./QuickLink";
 import { DayHoursDialog } from "./DayHoursDialog";
 import { RecipientsForm } from "./RecipientsForm";
 import { buildHandover, type Handover } from "@/lib/study/handover";
+import { canViewTransition, withViewTransition } from "@/lib/viewTransition";
 import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref, hasContactPicker, pickContact } from "@/lib/study/contact";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { cardClass } from "@/components/ui/card";
@@ -107,9 +108,8 @@ export function SiteCardDialog({
   const siteIdNow = site?.id;
   useEffect(() => { if (siteIdNow) setSection(startSection(siteIdNow, sections)); }, [siteIdNow]); // eslint-disable-line react-hooks/exhaustive-deps
   const pickSection = (sec: CardSection) => {
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
-    if (typeof doc.startViewTransition === "function" && !window.matchMedia("(prefers-reduced-motion)").matches) {
-      doc.startViewTransition(() => { setSection(sec); if (siteIdNow) rememberSection(siteIdNow, sec); });
+    if (canViewTransition() && !window.matchMedia("(prefers-reduced-motion)").matches) {
+      withViewTransition(() => { setSection(sec); if (siteIdNow) rememberSection(siteIdNow, sec); });
     } else {
       setSection(sec);
       if (siteIdNow) rememberSection(siteIdNow, sec);
@@ -183,9 +183,8 @@ export function SiteCardDialog({
   }
 
   function close(open: boolean) {
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
-    if (!open && typeof doc.startViewTransition === "function" && !window.matchMedia("(prefers-reduced-motion)").matches) {
-      doc.startViewTransition(() => {
+    if (!open && canViewTransition() && !window.matchMedia("(prefers-reduced-motion)").matches) {
+      withViewTransition(() => {
         if (persistDirty()) toast.success("Zapisano kartę budowy");
         onOpenChange(open);
       });

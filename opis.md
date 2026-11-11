@@ -108,7 +108,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 - **Mikrointerakcje stanów:** pole z błędem (`aria-invalid`) ma czerwoną ramkę, a z klasą `shake-invalid` także drga przy próbie zapisu; liczniki w nawigacji pulsują przy zmianie (`count-bump`); przełączniki i checkboxy podświetlają się po najechaniu; suwak ma halo; tosty mają przycisk × (błąd 9 s można zamknąć); Enter i Spacja po dotyku nie włączają ramki fokusu (`src/lib/inputModality.ts`). Przycisk „ładuje” (wspólny prop `loading`) nie jest zrobiony.
 - **Podpis wciśnięcia** przycisków to klasa `pressable`, nie skala framer-motion.
 - **Przejście motywu** kołem (View Transitions, `clip-path: circle()` od ostatniego dotknięcia, ≤1,5 s). Wyłączone przy ograniczonym ruchu i efekcie „themeFade”.
-- **Przejście widoku** przez `document.startViewTransition` z `flushSync` w `Index.tsx`; bez View Transitions zmiana natychmiastowa.
+- **Przejście widoku** przez `document.startViewTransition` z `flushSync` w `Index.tsx`; bez View Transitions zmiana natychmiastowa. **Strażnik WebKit (2026-11-11):** `src/lib/viewTransition.ts` (`canViewTransition`, `withViewTransition`, `isWebKitOnly`) wyłącza przejścia widoku w WebKit (Safari i każda przeglądarka na iOS) — szybkie przełączanie widoków w karcie budowy kończyło się „Old view transition aborted by new view transition” i awarią procesu renderującego (e2e `workday.spec.ts` na iPhonie 14, WebKit). Tam zmiana jest natychmiastowa; Chromium bez zmian. Używają go karta budowy (segmenty, zamknięcie), kalendarz (wybór dnia) i przejście motywu. Test: `viewTransition.test.ts`, `e2e/workday.spec.ts`.
 
 ### Wygląd: style, kroje, tokeny, pieczątki
 

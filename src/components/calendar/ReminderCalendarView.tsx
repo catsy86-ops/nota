@@ -1,3 +1,4 @@
+import { canViewTransition, withViewTransition } from "@/lib/viewTransition";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { filterChipClass } from "@/components/ui/chip";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -105,8 +106,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
   // Ruch wyłącza CSS (`data-motion="reduced"`, `index.css`), więc tu zawsze idzie przejście, jeśli przeglądarka je zna.
   // `useCallback`: siatka miesiąca jest zmemoizowana (K5.1), więc funkcja ma być stabilna.
   const pickDay = useCallback((day: Date) => {
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
-    if (typeof doc.startViewTransition === "function") doc.startViewTransition(() => flushSync(() => setSelectedDay(day)));
+    if (canViewTransition()) withViewTransition(() => flushSync(() => setSelectedDay(day)));
     else setSelectedDay(day);
   }, []);
   const [showKeys, setShowKeys] = useState(false);
