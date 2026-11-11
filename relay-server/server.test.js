@@ -88,3 +88,28 @@ test("DELETE /rooms/:id: bez tokenu i ze złym tokenem odmowa, z dobrym kasuje p
   assert.equal(await alive(), true, log);
 });
 
+test("limit nowych pokoi na adres na dobę: trzeci nowy pokój dostaje 429, zapis do istniejącego nie jest liczony (S4)", async () => {
+  const dir2 = mkdtempSync(join(tmpdir(), "notki-relay-lim-"));
+  const port2 = await freePort();
+  const child2 = spawn(process.execPath, ["server.js"], { cwd: import.meta.dirname, env: { PATH: process.env.PATH, PORT: String(port2), DATA_DIR: dir2, RATE_PER_MIN: "10000", ROOMS_PER_IP_PER_DAY: "2" }, stdio: "ignore" });
+  const b = `http://127.0.0.1:${port2}`;
+  try {
+    for (let i = 0; i < 60; i++) {
+      try { if ((await fetch(`${b}/health`)).ok) break; } catch { /* startuje */ }
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    const token = "t".repeat(43);
+    const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+    const post = (room) => fetch(`${b}/rooms/${room}/updates`, { method: "POST", headers, body: JSON.stringify({ data: "AAAA" }) });
+    const ids = ["a1", "b2", "c3"].map((x) => x.repeat(32));
+    assert.equal((await post(ids[0])).status, 200);
+    assert.equal((await post(ids[1])).status, 200);
+    assert.equal((await post(ids[2])).status, 429);
+    assert.equal((await post(ids[0])).status, 200); // istniejący pokój: bez limitu
+    assert.equal((await post(ids[1])).status, 200);
+  } finally {
+    child2.kill();
+    rmSync(dir2, { recursive: true, force: true });
+  }
+});
+

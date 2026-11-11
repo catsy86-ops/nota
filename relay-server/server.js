@@ -19,6 +19,8 @@ import {
   openRoomForWrite,
   parseSince,
   validBlobId,
+  validRoomId,
+  validToken,
 } from "./core.js";
 
 const PORT = Number(process.env.PORT) || 4466;
@@ -26,6 +28,8 @@ const DATA_DIR = process.env.DATA_DIR || "./data";
 const ORIGINS = (process.env.ALLOWED_ORIGINS || "*").split(",").map((s) => s.trim()).filter(Boolean);
 const TRUST_PROXY = process.env.TRUST_PROXY === "1";
 const RATE_PER_MIN = Number(process.env.RATE_PER_MIN) || 300;
+/** Ile NOWYCH pokoi może założyć jeden adres na dobę (S4 audytu: jedno urządzenie nie zapełni serwera). */
+const ROOMS_PER_IP_PER_DAY = Number(process.env.ROOMS_PER_IP_PER_DAY) || 20;
 const MAX_BODY = 1024 * 1024;
 const MAX_SOCKETS_PER_ROOM = 20;
 const SWEEP_MS = 60 * 60 * 1000;
@@ -70,9 +74,25 @@ function rateLimited(ip, now) {
   return slot.count > RATE_PER_MIN;
 }
 
+// Zakładanie nowych pokoi: okno doby na adres.
+const creations = new Map();
+/**
+ * `true`, gdy to żądanie założyłoby nowy pokój, a adres wyczerpał dobowy limit. Istniejący pokój (zapis z tokenem)
+ * nie jest liczony; liczymy tylko żądania z poprawnym identyfikatorem i tokenem, czyli takie, które pokój założą.
+ */
+function creationLimited(req, roomId, now) {
+  if (store.rooms[roomId] || !validRoomId(roomId) || !validToken(tokenOf(req))) return false;
+  const ip = clientIp(req);
+  const slot = creations.get(ip);
+  if (!slot || now - slot.start >= 86_400_000) { creations.set(ip, { start: now, count: 1 }); return false; }
+  slot.count += 1;
+  return slot.count > ROOMS_PER_IP_PER_DAY;
+}
+
 /** Usuwa wygasłe liczniki limitu (inaczej mapa rośnie z każdym nowym adresem). */
 function sweepHits(now) {
   for (const [ip, slot] of hits) if (now - slot.start >= 60_000) hits.delete(ip);
+  for (const [ip, slot] of creations) if (now - slot.start >= 86_400_000) creations.delete(ip);
 }
 
 function clientIp(req) {
@@ -205,6 +225,7 @@ async function handleBlob(req, res, roomId, blobId) {
   const path = join(BLOB_DIR, roomId, blobId);
 
   if (req.method === "PUT") {
+    if (creationLimited(req, roomId, Date.now())) return send(res, 429, { error: "Za dużo nowych pokoi z tego adresu" });
     const r = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
     if (r.error) return send(res, r.error, { error: r.message });
     const bytes = await readRaw(req, LIMITS.MAX_BLOB_BYTES);
@@ -275,6 +296,7 @@ async function handle(req, res) {
 
   if (req.method === "POST" && action === "updates") {
     const body = await readJson(req);
+    if (creationLimited(req, roomId, Date.now())) return send(res, 429, { error: "Za dużo nowych pokoi z tego adresu" });
     const r = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
     if (r.error) return send(res, r.error, { error: r.message });
     const a = appendEntry(r.room, body.data, Date.now());
@@ -286,6 +308,7 @@ async function handle(req, res) {
 
   if (req.method === "PUT" && action === "snapshot") {
     const body = await readJson(req);
+    if (creationLimited(req, roomId, Date.now())) return send(res, 429, { error: "Za dużo nowych pokoi z tego adresu" });
     const r = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
     if (r.error) return send(res, r.error, { error: r.message });
     const s = applySnapshot(r.room, body.upto, body.data, Date.now());

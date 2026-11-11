@@ -5395,3 +5395,7 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Kopia pełna** (`exportNotes.ts` → `SETTINGS_KEYS`) niesie teraz też dane firmy wykonawcy: nazwę firmy, kilometrówkę, cennik usług, cennik kształtek i imię autora. Numer konta i odciski dokumentów zostają poza kopią (dane tego urządzenia). Test: `fullBackup.test.ts`.
 - **Przywracanie:** Praca/Nauka jest zastępowana kopią, a rozliczenia, wpłaty, zlecenia, punkty wodne, zestawy i materiał w aucie są scalane (nic nie kasuje nowszych danych). Okno „Przywrócić ten backup?” mówi o tym wprost (`BackupSettings.tsx`, `restore-money-note`).
 
+## Audyt, siedemnasta partia: nowe pokoje na przekaźniku (S4, 2026-11-11)
+
+`relay-server/server.js` — `creationLimited`: jeden adres może założyć najwyżej `ROOMS_PER_IP_PER_DAY` (domyślnie 20) nowych pokoi na dobę (429 powyżej); zapis do istniejącego pokoju nie jest liczony; liczniki sprząta `sweepHits`. Test: `relay-server/server.test.js`.
+

@@ -57,7 +57,7 @@ Pierwszy zapis do pokoju ustawia jego token. Później wymagany jest ten sam tok
 - wpis: 700 000 znaków base64 (ok. 512 KB);
 - pokój: 50 MB zaszyfrowanych danych, 5000 wpisów (powyżej klient musi zrobić snapshot);
 - serwer: 5000 pokoi; pokój nieruszany 180 dni znika;
-- zapytania: 300/min na IP (`RATE_PER_MIN`); ciało żądania do 1 MB;
+- zapytania: 300/min na IP (`RATE_PER_MIN`); nowe pokoje: 20 na dobę na IP (`ROOMS_PER_IP_PER_DAY`), łącznie 5000 pokoi; ciało żądania do 1 MB;
 - bloby: 24 MB na jeden (zaszyfrowany obraz do 20 MB), 300 MB i 5000 blobów na pokój;
 - WebSocket: 20 gniazd na pokój, 4 KB na wiadomość.
 

@@ -82,8 +82,8 @@
 | S1 | przekaźnik: brak `ws.on("error")` — jedna zła ramka zabija proces | naprawione: `ws.on("error")`, `relay-server/server.test.js` |
 | S2 | przekaźnik: `new URL` w `upgrade` bez `try/catch` — crash bez uwierzytelnienia | naprawione: `try/catch` w `upgrade`, `relay-server/server.test.js` |
 | S3 | pokój WebRTC = szybki SHA-256 z kodu ~59 bitów | otwarte (decyzja projektowa) |
-| S4 | przekaźnik: tworzenie pokojów bez uwierzytelnienia, wyczerpanie zasobów | otwarte |
-| S5 | przekaźnik: `TRUST_PROXY=1` domyślnie w Dockerfile; mapa `hits` rośnie | otwarte (Dockerfile bez domyślnego `TRUST_PROXY` — partia 1) |
+| S4 | przekaźnik: tworzenie pokojów bez uwierzytelnienia, wyczerpanie zasobów | naprawione częściowo: dobowy limit nowych pokoi na adres (`ROOMS_PER_IP_PER_DAY`, domyślnie 20) obok limitu 5000 pokoi i zapytań na minutę; `relay-server/server.test.js`. Pełne uwierzytelnianie tworzenia (klucz serwera) nie dodane |
+| S5 | przekaźnik: `TRUST_PROXY=1` domyślnie w Dockerfile; mapa `hits` rośnie | naprawione w partii 1 (Dockerfile bez domyślnego `TRUST_PROXY`, sprzątanie mapy, ostatni wpis `X-Forwarded-For`) |
 | S6 | Share Target: `Origin: null` przechodzi, zapis bez zgody | naprawione (decyzja właściciela): „Zapisać udostępnione w NOTKACH?” przed zapisem (`useLaunchIntents.ts`); `e2e/share-files.spec.ts`, `share-to-entry.spec.ts` |
 | S7 | `?share=` dodaje notatkę bez potwierdzenia | naprawione: pytanie „Dodać udostępnioną notatkę?” (`useImportExport.ts`); zmiana formatu linku na `#share=` nie zrobiona |
 | S8 | `?akcja=shift-done&dzien=` zapisuje dowolne nadgodziny | naprawione: zakres −2 h…+16 h w `finishNow.ts`; `finishNow.test.ts` |
