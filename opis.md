@@ -5414,3 +5414,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Ograniczenia:** brak wysyłki do KSeF (API nie ma CORS, wymaga serwera-pośrednika — Etap 2), brak korekt i kodów QR. Skrypt walidacji przycina `maxOccurs` w kopii XSD (parser JDK nie buduje modelu z limitem 50 000), więc nie sprawdza górnych limitów liczności.
 - **Testy:** `src/lib/ksef/ksef.test.ts` (NIP, escapowanie i próby wstrzyknięcia, zaokrąglenia, walidacja, struktura XML); ręcznie: 3 przykładowe faktury przeszły `ValidateFa3.java` względem `crd.gov.pl/wzor/2025/06/25/13775/schemat.xsd`.
 
+## Faktury KSeF, Etap 1 — zapis, numeracja, kopia (2026-11-11)
+
+- **Co robi:** wystawiona faktura zapisuje się jako niezmienny rekord (numer, dane faktury, zapisany XML FA(3) i jego SHA-256) w dokumencie Yjs; numer nadaje seria tego telefonu.
+- **Gdzie:** `src/lib/ksef/numbering.ts` (`nextInvoiceNumber`, `findDuplicateNumbers`, `findGaps`), `yInvoices.ts` (mapa `studyInvoices`, `cleanRecord`, `verifyRecord`, `mergeDump`), `invoicesStore.ts` (`issueInvoice`, `useInvoices`), `sellerPrefs.ts` (dane sprzedawcy i seria). Kopia pełna niesie sekcję `invoices` (scalanie bez nadpisywania) i dane sprzedawcy; seria `kaczy.ksef.series.v1` zostaje poza kopią.
+- **Jak działa:** numer to `FV/{seria}/{rok}/{kolejny}` — kolejny wynika z faktur już zapisanych (największy numer serii w roku + 1), więc przeżywa przywrócenie kopii; telefony z różnymi seriami nie kolidują, a ta sama seria na dwóch telefonach da duplikat, który wykrywa `findDuplicateNumbers`. Rekord nie jest edytowany ani nadpisywany (`add` odmawia istniejącego id, kopia dokłada tylko brakujące); `verifyRecord` wykrywa zmianę XML po wystawieniu. Niepoprawna faktura nie zużywa numeru.
+- **Ograniczenia:** brak interfejsu (okno wystawiania, lista, PDF) — następny krok; brak wysyłki do KSeF (Etap 2). Faktury w kopii pełnej są jawne jak reszta kopii JSON — szyfrowany eksport faktur do dopisania.
+- **Testy:** `src/lib/ksef/invoices.test.ts`, `fullBackup.test.ts`.
+

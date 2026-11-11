@@ -174,6 +174,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   const { pointsDump } = await import("@/lib/study/pointsStore");
   const { billingDump } = await import("@/lib/study/billingStore");
   const { jobsDump } = await import("@/lib/study/jobsStore");
+  const { invoicesDump } = await import("@/lib/ksef/invoicesStore");
   const { vanDump } = await import("@/lib/study/vanStore");
   const { plansDump } = await import("@/lib/plans/plansStore");
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES, opts.planImages ?? getViewPrefs().backupPlanImages);
@@ -219,6 +220,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     billing: JSON.stringify(billingDump()),
     // Zlecenia własne — fuchy (H3.4): status, wycena; osobna mapa, scalana bez nadpisywania.
     jobs: JSON.stringify(jobsDump()),
+    invoices: JSON.stringify(invoicesDump()),
     // Materiał w aucie (H1.3): pozycje i zdarzenia (inwentaryzacje, przyjęcia), scalane bez nadpisywania.
     van: JSON.stringify(vanDump()),
     // Analizy planów (mapa `plans`) — scalane bez nadpisywania.
@@ -286,7 +288,7 @@ export const SETTINGS_KEYS = [
   // Dane firmy wykonawcy (Praca, W14/D10 audytu): nazwa na PDF-ach, kilometrówka dla księgowej, cennik usług i cennik
   // kształtek, imię autora wpisów. Bez wpływu na sekrety; czyszczone przy odczycie przez swoje magazyny. Numer konta
   // (`kaczy.study.bankAccount.v1`) i odciski dokumentów (`…fingerprints.v1`) zostają poza kopią — to dane tego urządzenia.
-  "kaczy.study.companyName.v1", "kaczy.study.mileage.v1", "kaczy.study.pricing.v1", "kaczy.study.prices.v1", "kaczy.study.author.v1",
+  "kaczy.study.companyName.v1", "kaczy.study.seller.v1", "kaczy.study.mileage.v1", "kaczy.study.pricing.v1", "kaczy.study.prices.v1", "kaczy.study.author.v1",
   // Flagi funkcji w przygotowaniu (src/lib/featureFlags.ts) — zwykłe przełączniki.
   "kaczy.features.v1",
   // Push: wpis jest, ale przy przywracaniu push wyłączamy (patrz `PUSH_RESTORE_KEY`) — subskrypcja jest na urządzeniu.
@@ -394,6 +396,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   if (backup.plans) await import("@/lib/plans/plansStore").then((m) => m.mergePlansDump(JSON.parse(backup.plans!))).catch((err) => fail("Plany", err));
   if (backup.billing) await import("@/lib/study/billingStore").then((m) => m.mergeBillingDump(JSON.parse(backup.billing!))).catch((err) => fail("Rozliczenia", err));
   if (backup.van) await import("@/lib/study/vanStore").then((m) => m.mergeVanDump(JSON.parse(backup.van!))).catch((err) => fail("Auto", err));
+  if (backup.invoices) await import("@/lib/ksef/invoicesStore").then((m) => m.mergeInvoicesDump(JSON.parse(backup.invoices!))).catch((err) => fail("Faktury", err));
   if (backup.jobs) await import("@/lib/study/jobsStore").then((m) => m.mergeJobsDump(JSON.parse(backup.jobs!))).catch((err) => fail("Fuchy", err));
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
