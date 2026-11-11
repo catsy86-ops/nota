@@ -184,12 +184,14 @@ function RestoreBackup() {
         toast.error("Nie zapisałem kopii sprzed przywrócenia, więc przywracanie wstrzymane" + (err instanceof Error ? ": " + err.message : ""));
         return;
       }
-      const { studyDropped, schedulesSkipped } = await restoreFullBackup(backup, opts);
+      const { studyDropped, schedulesSkipped, failed } = await restoreFullBackup(backup, opts);
       const notes: string[] = [];
       if (studyDropped > 0) notes.push(`Pominięto ${studyDropped} ${pluralPl(studyDropped, ["wpis Nauki", "wpisy Nauki", "wpisów Nauki"])} o nieznanym kształcie`);
       if (schedulesSkipped > 0) notes.push(`Nie przywrócono ${schedulesSkipped} ${pluralPl(schedulesSkipped, ["grafiku", "grafików", "grafików"])} (limit albo zły plik)`);
+      if (failed.length > 0) notes.push(`Nie udało się przywrócić: ${failed.join(", ")}`);
       // Przy pominiętych danych dajemy czas na przeczytanie komunikatu przed odświeżeniem.
-      toast.success(`Przywrócono kopię — ${backup.notes.length} notatek, odświeżam stronę…`,
+      // Błąd sekcji to nie „Przywrócono”: ostrzeżenie zamiast sukcesu (W8).
+      (failed.length > 0 ? toast.warning : toast.success)(`${failed.length > 0 ? "Przywrócono kopię z błędami" : "Przywrócono kopię"} — ${backup.notes.length} notatek, odświeżam stronę…`,
         notes.length ? { description: `${notes.join(". ")} — ślad jest w diagnostyce.`, duration: 8000 } : undefined);
       setTimeout(() => window.location.reload(), notes.length ? 6000 : 1200);
     } catch (err) {

@@ -43,11 +43,11 @@ export const PUSH_HORIZON_DAYS = 14;
  */
 export const PUSH_CATEGORIES = [
   { id: "notatki", label: "Przypomnienia notatek", prefixes: ["n:"] },
-  { id: "grafik", label: "Grafik na jutro, alarm przed zmianą i koniec zmiany", prefixes: ["e:", "a:", "s:"] },
+  { id: "grafik", label: "Grafik na jutro, alarm przed zmianą i koniec zmiany", prefixes: ["e:", "a:", "s:", "z:"] },
   { id: "raporty", label: "Raport dnia i tygodnia", prefixes: ["rd:", "rw:"] },
   { id: "problemy", label: "Problem w dzienniku budowy", prefixes: ["p:"] },
   { id: "serwis", label: "Serwis dziś i zaległy", prefixes: ["v:"] },
-  { id: "zamowienia", label: "Materiał zamówiony, a nie dojechał", prefixes: ["o:"] },
+  { id: "zamowienia", label: "Materiał zamówiony, a nie dojechał; dostawa dziś", prefixes: ["o:", "d:"] },
   { id: "proby", label: "Koniec próby szczelności", prefixes: ["t:"] },
 ] as const;
 export type PushCategoryId = (typeof PUSH_CATEGORIES)[number]["id"];
@@ -153,6 +153,14 @@ const atMinute = (dayKey: string, minute: number) => {
  * Koniec zmiany (G4.1): push o planowanym końcu z akcją „Skończyłem” (SW, `public/sw-notifications.js`).
  * Dzień, który już ma odchylenie od planu (`extraMin`), jest zamknięty — bez przypomnienia.
  */
+/**
+ * Chwila o godzinie zegarowej `minutes` (od północy) danego dnia. Minuty mogą przekraczać dobę (zmiana nocna). Liczone
+ * przez konstruktor `Date`, a nie „północ + minuty·60 000”, bo w dniu zmiany czasu doba ma 23 albo 25 godzin (W7).
+ */
+function wallClock(day: Date, minutes: number): number {
+  return new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, minutes).getTime();
+}
+
 function shiftEndItems(input: PushInput, now: number): PushItem[] {
   const { shifts } = input;
   if (!shifts) return [];
@@ -169,7 +177,7 @@ function shiftEndItems(input: PushInput, now: number): PushItem[] {
     const span = shiftSpan(t);
     if (!span) continue;
     // `to` może przekroczyć dobę (zmiana nocna): dzień początku plus minuty daje właściwą chwilę.
-    const at = new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime() + span.to * 60_000;
+    const at = wallClock(day, span.to);
     if (at <= now) continue;
     out.push({
       key: pushKey.shiftEnd(key), at,
@@ -202,7 +210,7 @@ function shiftAlarmItems(input: PushInput, now: number): PushItem[] {
     if (t.kind !== "work") continue;
     const span = shiftSpan(t);
     if (!span) continue;
-    const start = new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime() + span.from * 60_000;
+    const start = wallClock(day, span.from);
     const at = start - min * 60_000;
     if (at <= now) continue;
     out.push({

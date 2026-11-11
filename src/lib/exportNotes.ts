@@ -332,7 +332,10 @@ export interface RestoreOptions { versions: boolean; settings: boolean; achievem
 /** L1: w dzienniku diagnostycznym zostaje tylko nazwa błędu — komunikat `JSON.parse` może zawierać fragment kopii. */
 const errName = (e: unknown): string => (e instanceof Error ? e.name : "błąd");
 
-export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number }> {
+export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number; failed: string[] }> {
+  /** Sekcje, których nie udało się przywrócić (W8): wołający pokazuje je zamiast „Przywrócono”. */
+  const failed: string[] = [];
+  const fail = (name: string, err: unknown) => { failed.push(name); logDiag("warn", "backup", `cannot restore ${name}`, errName(err)); };
   let studyDropped = 0;
   let schedulesSkipped = 0;
   await yjsStore.ready();
@@ -344,42 +347,42 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
     try {
       const { mergeSupplementDump } = await import("@/lib/supplements/store");
       mergeSupplementDump(JSON.parse(backup.supplements));
-    } catch (err) { logDiag("warn", "backup", "cannot restore supplements", errName(err)); }
+    } catch (err) { fail("Suplementy", err); }
   }
   if (backup.diet) {
     try {
       const { mergeDietDump } = await import("@/lib/diet/store");
       mergeDietDump(JSON.parse(backup.diet));
-    } catch (err) { logDiag("warn", "backup", "cannot restore diet", errName(err)); }
+    } catch (err) { fail("Dieta", err); }
   }
   if (backup.weight) {
     try {
       const { mergeWeightDump } = await import("@/lib/weight/store");
       mergeWeightDump(JSON.parse(backup.weight));
-    } catch (err) { logDiag("warn", "backup", "cannot restore weight", errName(err)); }
+    } catch (err) { fail("Waga", err); }
   }
   if (backup.training) {
     try {
       const { mergeTrainingDump } = await import("@/lib/training/store");
       // Notatki z kopii są już wczytane (wyżej), więc można sprawdzić, czy przypomnienie ma swoją notatkę.
       mergeTrainingDump(JSON.parse(backup.training), (id) => yjsStore.projectNotes().some((n) => n.id === id));
-    } catch (err) { logDiag("warn", "backup", "cannot restore training", errName(err)); }
+    } catch (err) { fail("Trening", err); }
   }
   if (backup.debts) {
     try {
       const { mergeDebtsDump } = await import("@/lib/debts/store");
       mergeDebtsDump(JSON.parse(backup.debts));
-    } catch (err) { logDiag("warn", "backup", "cannot restore debts", errName(err)); }
+    } catch (err) { fail("Długi", err); }
   }
   // Lista przed wejściem: scalanie bez kasowania; uszkodzona sekcja po prostu się pomija.
-  if (backup.entryCheck) await import("@/lib/study/entryCheckStore").then((m) => m.mergeEntryCheckDump(JSON.parse(backup.entryCheck!))).catch(() => {});
-  if (backup.kits) await import("@/lib/study/kitsStore").then((m) => m.mergeKitsDump(JSON.parse(backup.kits!))).catch(() => {});
-  if (backup.views) await import("@/lib/savedViews").then((m) => m.mergeViewsDump(JSON.parse(backup.views!))).catch((err) => logDiag("warn", "backup", "cannot restore views", errName(err)));
-  if (backup.points) await import("@/lib/study/pointsStore").then((m) => m.mergePointsDump(JSON.parse(backup.points!))).catch(() => {});
-  if (backup.plans) await import("@/lib/plans/plansStore").then((m) => m.mergePlansDump(JSON.parse(backup.plans!))).catch(() => {});
-  if (backup.billing) await import("@/lib/study/billingStore").then((m) => m.mergeBillingDump(JSON.parse(backup.billing!))).catch(() => {});
-  if (backup.van) await import("@/lib/study/vanStore").then((m) => m.mergeVanDump(JSON.parse(backup.van!))).catch((err) => logDiag("warn", "backup", "restore van failed", err));
-  if (backup.jobs) await import("@/lib/study/jobsStore").then((m) => m.mergeJobsDump(JSON.parse(backup.jobs!))).catch((err) => logDiag("warn", "backup", "restore jobs failed", err));
+  if (backup.entryCheck) await import("@/lib/study/entryCheckStore").then((m) => m.mergeEntryCheckDump(JSON.parse(backup.entryCheck!))).catch((err) => fail("Lista przed wejściem", err));
+  if (backup.kits) await import("@/lib/study/kitsStore").then((m) => m.mergeKitsDump(JSON.parse(backup.kits!))).catch((err) => fail("Zestawy", err));
+  if (backup.views) await import("@/lib/savedViews").then((m) => m.mergeViewsDump(JSON.parse(backup.views!))).catch((err) => fail("Widoki", err));
+  if (backup.points) await import("@/lib/study/pointsStore").then((m) => m.mergePointsDump(JSON.parse(backup.points!))).catch((err) => fail("Punkty wodne", err));
+  if (backup.plans) await import("@/lib/plans/plansStore").then((m) => m.mergePlansDump(JSON.parse(backup.plans!))).catch((err) => fail("Plany", err));
+  if (backup.billing) await import("@/lib/study/billingStore").then((m) => m.mergeBillingDump(JSON.parse(backup.billing!))).catch((err) => fail("Rozliczenia", err));
+  if (backup.van) await import("@/lib/study/vanStore").then((m) => m.mergeVanDump(JSON.parse(backup.van!))).catch((err) => fail("Auto", err));
+  if (backup.jobs) await import("@/lib/study/jobsStore").then((m) => m.mergeJobsDump(JSON.parse(backup.jobs!))).catch((err) => fail("Fuchy", err));
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
   if (opts.versions && backup.versions) {
@@ -401,7 +404,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
       const raw = JSON.parse(backup.shifts);
       // M8: bez pola `bonuses` (kopia sprzed premii) premie z tego telefonu zostają.
       restoreShifts(migrate(raw), Array.isArray(raw?.bonuses));
-    } catch (err) { logDiag("warn", "backup", "cannot restore shifts", errName(err)); }
+    } catch (err) { fail("Grafik", err); }
     // M4: dodatkowe grafiki — każdy osobno; odrzucone (limit, zły id, zły kształt) są liczone i zgłaszane.
     try {
       const extra = backup.shiftSchedules ? JSON.parse(backup.shiftSchedules) as { id: string; name: string; data: unknown }[] : [];
@@ -428,12 +431,12 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
         logDiag("warn", "backup", `przywracanie Nauki: pominięto ${studyDropped} wpisów`);
       }
       yStudy.replaceAll(dump);
-    } catch (err) { logDiag("warn", "backup", "cannot restore study", errName(err)); }
+    } catch (err) { fail("Nauka i Praca", err); }
   }
   for (const [k, v] of Object.entries(writes)) {
     try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }
   }
-  return { studyDropped, schedulesSkipped };
+  return { studyDropped, schedulesSkipped, failed };
 }
 
 /**

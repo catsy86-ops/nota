@@ -37,6 +37,8 @@ export function journalImageRefs(): Set<string> {
     addFrom(draft?.images);
     // Oryginały narysowanych zdjęć szkicu (H0.1) — „Cofnij rysunek” je przywraca.
     addFrom(draft?.drawnFrom && typeof draft.drawnFrom === "object" ? Object.values(draft.drawnFrom) : null);
+    // Nagrania szkicu (W9): bajty leżą w `imageStore` od chwili nagrania, a wpis jeszcze ich nie wskazuje.
+    addFrom(Array.isArray(draft?.recordings) ? draft.recordings.map((r: { hash?: unknown }) => r?.hash) : null);
   } catch {
     /* uszkodzony szkic — szkic wróci pusty */
   }

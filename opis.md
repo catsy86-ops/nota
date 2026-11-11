@@ -5316,3 +5316,11 @@ Pełna lista i statusy: `docs/audyt-bledow-2026-11-11.md`. **Naprawione i przete
 - **W4 edycja wpisu a drugi telefon:** `entrySheet.ts` zapamiętuje wpis z chwili otwarcia (`getJournalEditBase`), `updateJournalEntry` dostaje `base`, a `mergeEdit` (`editMerge.ts`) zostawia pola nieruszone przez użytkownika takie, jak są teraz w dokumencie. Pole zmienione w arkuszu wygrywa; listy zmienione w arkuszu (np. zdjęcia) zastępują całość.
 - **W5 zamówienie kształtek:** wpis ma opcjonalne `added` (moment zapisu, ustawiany w `addJournalEntry`, zachowywany przy edycji); `siteOrder` liczy od `added ?? at`, więc wpis z datą wsteczną dodany po zamówieniu trafia do kolejnego. Starsze wpisy bez `added` liczą się od `at`. Testy: `order.test.ts`, `journalAdded.test.ts`.
 
+## Audyt błędów, trzecia partia (2026-11-11): W6–W10
+
+- **W6 kategorie push:** `PUSH_CATEGORIES` (`lib/push/schedule.ts`) obejmuje teraz `z:` (kontrola zmiany → „Grafik”) i `d:` (dostawa dziś → „Materiał zamówiony…”), więc da się je wyłączyć; test w `categories.test.ts` sprawdza każdy klucz z `pushKey`.
+- **W7 zmiana czasu:** alarm przed zmianą i koniec zmiany liczone przez `wallClock` (konstruktor `Date` z godziną zegarową), nie „północ + minuty·60 000” — w dniach 29.03 i 25.10 nie przesuwają się o godzinę. Test: `schedule.dst.test.ts`.
+- **W8 przywracanie kopii:** `restoreFullBackup` zwraca `failed` (nazwy sekcji, których nie udało się przywrócić); `BackupSettings` pokazuje wtedy ostrzeżenie „Przywrócono kopię z błędami” z listą, zamiast sukcesu.
+- **W9 ochrona przed GC:** w dokumencie `after`, `drawnFrom` i nagrania były już chronione (`journalRefsIn`); dołożone nagrania szkicu (`images.ts`) i otwartej edycji (`journalEditImageRefs`).
+- **W10 wyścig GC:** `imageStore` — zapis tego samego hasha czeka na trwające usuwanie (`deleting`), a GC pomija zdjęcia dodane w trakcie biegu (`touched`). Testy: `imageStore.test.ts`.
+

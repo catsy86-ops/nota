@@ -101,6 +101,10 @@ export function createImageStore(dbName: string) {
   const known = new Set<string>();
   let loadPromise: Promise<void> | null = null;
   const listeners = new Set<(hash: string) => void>();
+  /** Zdjęcia dodane (lub dodane ponownie) od startu bieżącego odśmiecania — GC ich nie usuwa (W10). */
+  let touched = new Set<string>();
+  /** Usunięcia w toku: zapis tego samego hasha czeka, żeby nie uznać zdjęcia za obecne tuż przed jego skasowaniem. */
+  const deleting = new Map<string, Promise<void>>();
   const urls = new Map<string, { url: string; refs: number }>();
   const pendingUrls = new Map<string, Promise<string | null>>();
 
@@ -127,6 +131,8 @@ export function createImageStore(dbName: string) {
     if (expected !== undefined && bytes.length > MAX_PEER_BLOB_BYTES) throw new Error("Obraz od peera jest zbyt duży");
     const hash = await sha256Hex(bytes);
     if (expected !== undefined && hash !== expected) throw new Error("Obraz nie pasuje do swojego hasha");
+    touched.add(hash);
+    await deleting.get(hash);
     if (known.has(hash)) return hash;
     const value: StoredImage = { bytes: bytes.slice().buffer, type, addedAt: Date.now() };
     await idbSet(hash, value, db);
@@ -229,15 +235,22 @@ export function createImageStore(dbName: string) {
     await load();
     const candidates = [...known].filter((h) => !referenced.has(h));
     if (!candidates.length) return 0;
+    touched = new Set();
     let removed = 0;
     try {
       const records = await idbGetMany<StoredImage | undefined>(candidates, db);
       for (let i = 0; i < candidates.length; i++) {
         const rec = records[i];
         if (rec && now - rec.addedAt < graceMs) continue;
-        await idbDel(candidates[i], db);
-        await idbDel(candidates[i], thumbDb).catch(() => undefined);
-        known.delete(candidates[i]);
+        const hash = candidates[i];
+        if (touched.has(hash) || referenced.has(hash)) continue; // dodane ponownie w trakcie sprzątania
+        const del = (async () => {
+          await idbDel(hash, db);
+          await idbDel(hash, thumbDb).catch(() => undefined);
+          known.delete(hash);
+        })();
+        deleting.set(hash, del);
+        try { await del; } finally { deleting.delete(hash); }
         removed++;
       }
     } catch (err) { logDiag("error", "imageStore", "garbage collection failed", err); }

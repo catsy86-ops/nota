@@ -50,6 +50,13 @@ describe("pełny backup v2", () => {
     expect(shiftStore.get().days["2026-10-01"].type).toBe("d");
   });
 
+  it("zgłasza sekcje, których nie udało się przywrócić, zamiast udawać sukces (W8)", async () => {
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect((await restoreFullBackup(backup, ALL)).failed).toEqual([]);
+    const broken = { ...backup, diet: "{to nie jest json", kits: "[", points: "nie json" } as typeof backup;
+    expect((await restoreFullBackup(broken, ALL)).failed.sort()).toEqual(["Dieta", "Punkty wodne", "Zestawy"]);
+  });
+
   it("carries versions, settings and achievements — but never the pairing code", async () => {
     yjsStore.upsertNote(makeNote());
     versionsStore.add("n1", "stara wersja", "…");

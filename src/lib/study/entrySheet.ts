@@ -78,7 +78,8 @@ export function patchJournalEditForm(patch: Partial<JournalEditForm>) {
  * Zdjęcia dodane w edycji leżą w `imageStore`, zanim wpis się zapisze — chronione przed odśmiecaniem.
  * Razem z oryginałami narysowanych zdjęć (H0.1), żeby „Cofnij rysunek” miało co przywrócić.
  */
-export const journalEditImageRefs = (): string[] => (editForm ? [...editForm.images, ...Object.values(editForm.drawnFrom ?? {})] : []);
+export const journalEditImageRefs = (): string[] =>
+  editForm ? [...editForm.images, ...Object.values(editForm.drawnFrom ?? {}), ...editForm.recordings.map((r) => r.hash)] : [];
 
 const subscribe = (cb: () => void) => { listeners.add(cb); return () => listeners.delete(cb); };
 

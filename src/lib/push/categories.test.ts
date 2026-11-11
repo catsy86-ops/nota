@@ -46,3 +46,20 @@ describe("kategorie push — zapis preferencji", () => {
     expect(pushPrefs.get().off).not.toContain("serwis");
   });
 });
+
+describe("każdy klucz przypomnienia ma kategorię (W6)", () => {
+  it("żaden prefiks z pushKey nie zostaje bez kategorii, którą można wyłączyć", async () => {
+    const { pushKey } = await import("./shown");
+    const keys = [
+      pushKey.note("a", 1), pushKey.noteLead("a", 1), pushKey.evening("x"), pushKey.shiftCheck("2026-11-11"), pushKey.shiftAlarm("2026-11-11"),
+      pushKey.shiftEnd("2026-11-11"), pushKey.reportDay("2026-11-11"), pushKey.reportWeek("2026-W46"), pushKey.problem("p"),
+      pushKey.order("s", 1), pushKey.delivery("s", 1), pushKey.service("c", "2026-11-11"), pushKey.pressure(1),
+    ];
+    for (const k of keys) {
+      const cat = PUSH_CATEGORIES.find((c) => c.prefixes.some((p) => k.startsWith(p)));
+      expect(cat, `klucz ${k} bez kategorii`).toBeDefined();
+      expect(isPushCategoryOff(k, [cat!.id])).toBe(true);
+    }
+  });
+});
+

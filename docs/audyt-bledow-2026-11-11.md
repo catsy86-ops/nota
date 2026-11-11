@@ -14,11 +14,11 @@
 | W3 | `.budowa` ze zdjęciami nie przepisuje kluczy `dimensions` | naprawione: `remapEntryImages` przenosi też `dimensions` i `after`; `sitePackageApply.test.ts` |
 | W4 | edycja wpisu nadpisuje zmiany z drugiego telefonu (porównanie z bieżącym dokumentem, nie z bazą formularza) | naprawione: trójstronne scalanie `mergeEdit` (baza = wpis z otwarcia arkusza); `editMerge.test.ts` |
 | W5 | zamówienie kształtek pomija wpisy z datą wsteczną | naprawione: pole `added` (moment zapisu), zamówienie liczy od niego; `order.test.ts`, `journalAdded.test.ts` |
-| W6 | kategorie push nie obejmują kluczy `d:` i `z:` | do weryfikacji |
-| W7 | alarm przed zmianą / koniec zmiany o godzinę w dni zmiany czasu (`schedule.ts:172,205`) | do weryfikacji |
-| W8 | przywracanie sekcji połyka błędy, UI pokazuje sukces | otwarte |
-| W9 | nagrania (`recordings`) i `after` bez ochrony przed GC zdjęć | do weryfikacji |
-| W10 | wyścig GC z ponownym dodaniem zdjęcia | otwarte |
+| W6 | kategorie push nie obejmują kluczy `d:` i `z:` | naprawione: `d:` w „zamówieniach”, `z:` w „grafiku”; test pilnuje każdego prefiksu (`categories.test.ts`) |
+| W7 | alarm przed zmianą / koniec zmiany o godzinę w dni zmiany czasu (`schedule.ts:172,205`) | naprawione: `wallClock` zamiast „północ + minuty”; `schedule.dst.test.ts` (marzec i październik) |
+| W8 | przywracanie sekcji połyka błędy, UI pokazuje sukces | naprawione: `restoreFullBackup` zwraca `failed`, UI pokazuje ostrzeżenie; `fullBackup.test.ts` |
+| W9 | nagrania (`recordings`) i `after` bez ochrony przed GC zdjęć | naprawione: nagrania szkicu i otwartej edycji chronione (doc: `after`, `drawnFrom`, nagrania były już chronione); `images.test.ts` |
+| W10 | wyścig GC z ponownym dodaniem zdjęcia | naprawione: `touched` + `deleting` w `imageStore`; `imageStore.test.ts` |
 | W11 | listy zdjęć/nagrań LWW: dwa telefony tracą dodane elementy | otwarte (zmiana modelu Yjs) |
 | W12 | dzień z przyszłości psuje serię w Nauce | otwarte |
 | W13 | kopia pełna nie sprawdza własnego rozmiaru względem limitu importu | otwarte |
@@ -71,4 +71,8 @@ K1, K2, K3, S1, S2, T1, T2, T9 oraz UI #1–#7 i #12. Dodatkowo `relay-server`: 
 ## Zrobione 2026-11-11 (druga partia)
 
 W1–W5. Nowe pole wpisu `added` (opcjonalne, w `JOURNAL_ENTRY_KEYS`); starsze wpisy bez niego liczą się od `at`. Edycja wpisu przekazuje `base` do `updateJournalEntry`.
+
+## Zrobione 2026-11-11 (trzecia partia)
+
+W6–W10.
 

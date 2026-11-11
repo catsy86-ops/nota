@@ -118,5 +118,24 @@ describe("niezaufane dane obrazu (A03/A04)", () => {
     expect(removed).toBe(1);
     expect(store.has(ref)).toBe(false);
   });
+
+  // W10: to samo zdjęcie dodane ponownie w trakcie odśmiecania nie może zniknąć.
+  it("GC: zdjęcie dodane ponownie podczas sprzątania zostaje", async () => {
+    const ref = await store.putDataUrl(PNG);
+    const later = Date.now() + GC_GRACE_MS + 1;
+    const gc = store.collectGarbage(new Set(), later); // zdjęcie nieużywane i po karencji: kandydat do usunięcia
+    const again = store.putDataUrl(PNG); // użytkownik dodaje je ponownie w tej samej chwili
+    await Promise.all([gc, again]);
+    expect(store.has(ref)).toBe(true);
+    expect(await store.getDataUrl(ref)).toBe(PNG);
+  });
+
+  it("GC: zdjęcie dodane ponownie tuż po sprzątaniu jest zapisane od nowa", async () => {
+    const ref = await store.putDataUrl(PNG);
+    await store.collectGarbage(new Set(), Date.now() + GC_GRACE_MS + 1);
+    expect(store.has(ref)).toBe(false);
+    await store.putDataUrl(PNG);
+    expect(await store.getDataUrl(ref)).toBe(PNG);
+  });
 });
 
