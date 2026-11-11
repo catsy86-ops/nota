@@ -45,6 +45,8 @@ async function shareImages(page: Page, n: number) {
     document.body.append(form);
     form.submit();
   }, n);
+  // S6: najpierw potwierdzenie zapisu, dopiero potem wybór „Wpis z budowy” / „Notatka”.
+  await page.locator("[data-sonner-toast]").filter({ hasText: "Zapisać udostępnione w NOTKACH?" }).getByRole("button", { name: "Zapisz" }).click();
 }
 
 test("7 zdjęć → „Wpis z budowy”: 5 w arkuszu z bieżącą budową, reszta w kolejnym wpisie", async ({ page }) => {

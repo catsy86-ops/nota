@@ -49,8 +49,24 @@ export function useLaunchIntents(deps: LaunchIntentsDeps) {
           return;
         }
         if (received.skipped > 0) toast.warning(received.skipped === 1 ? "Jeden plik pominięty" : `Pominięte pliki: ${received.skipped}`, { description: "Jedno udostępnienie przyjmuje do 30 plików, każdy do 10 MB." });
+        // Formularz z obcej strony też może trafić na `/share` (Origin: null przechodzi sprawdzenie w sw-share.js), więc
+        // zapis czeka na „Zapisz” jak przy udostępnieniu samego tekstu (S6 audytu).
+        const preview = parseShare(SHARE_PATH, received.query);
+        const saveIt = await new Promise<boolean>((resolve) => {
+          const n = received.files.length;
+          toast("Zapisać udostępnione w NOTKACH?", {
+            id: "share-inbox-confirm",
+            duration: 30_000,
+            description: preview?.title || (n > 0 ? (n === 1 ? "1 plik" : `Pliki: ${n}`) : preview?.content.slice(0, 120)),
+            action: { label: "Zapisz", onClick: () => resolve(true) },
+            cancel: { label: "Pomiń", onClick: () => resolve(false) },
+            onDismiss: () => resolve(false),
+            onAutoClose: () => resolve(false),
+          });
+        });
+        if (!saveIt) return;
         const imported = await importNoteFiles(received.files);
-        const text = parseShare(SHARE_PATH, received.query) ?? { title: "", content: "" };
+        const text = preview ?? { title: "", content: "" };
         if (!text.title && !text.content && imported.images.length === 0 && imported.attachments.length === 0) {
           toast.error("Z udostępnienia nie ma czego zapisać");
           return;

@@ -1,6 +1,6 @@
 ﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { describeBackupSkipped } from "./backupSkipped";
-import { isBackupOversize, buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY } from "./exportNotes";
+import { isBackupOversize, buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, SETTING_VALUE_MAX, ACHIEVEMENTS_KEY } from "./exportNotes";
 import { setDayShift, shiftStore } from "./shifts/store";
 import { yjsStore } from "./yjsStore";
 import { versionsStore } from "./versionsStore";
@@ -60,6 +60,14 @@ describe("pełny backup v2", () => {
     expect((await restoreFullBackup(backup, ALL)).failed).toEqual([]);
     const broken = { ...backup, diet: "{to nie jest json", kits: "[", points: "nie json" } as typeof backup;
     expect((await restoreFullBackup(broken, ALL)).failed.sort()).toEqual(["Dieta", "Punkty wodne", "Zestawy"]);
+  });
+
+  it("ustawienie ponad limit albo nie-tekst jest pomijane przy przywracaniu (S15)", async () => {
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    localStorage.setItem("kaczy.viewPrefs.v1", "stare");
+    const evil = { ...backup, settings: { ...backup.settings, "kaczy.viewPrefs.v1": "x".repeat(SETTING_VALUE_MAX + 1) } } as typeof backup;
+    await restoreFullBackup(evil, ALL);
+    expect(localStorage.getItem("kaczy.viewPrefs.v1")).toBe("stare");
   });
 
   it("carries versions, settings and achievements — but never the pairing code", async () => {

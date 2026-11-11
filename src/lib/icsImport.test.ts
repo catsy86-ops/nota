@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseIcs } from "./icsImport";
+import { ICS_CONTENT_MAX, ICS_EVENTS_MAX, ICS_TITLE_MAX, parseIcs } from "./icsImport";
 
 const NOW = new Date(2026, 9, 14, 12, 0).getTime();
 const ics = (...events: string[]) => ["BEGIN:VCALENDAR", ...events, "END:VCALENDAR"].join("\r\n");
@@ -43,3 +43,19 @@ describe("parseIcs (import przypomnień, QoL)", () => {
     expect(r.events[0].title).toBe("Przypomnienie z kalendarza");
   });
 });
+
+describe("parseIcs: limity (S14)", () => {
+  it("ponad limit zdarzeń reszta liczy się jako pominięta", () => {
+    const many = Array.from({ length: ICS_EVENTS_MAX + 50 }, (_, i) => event("DTSTART:20261015T093000", `SUMMARY:Z${i}`));
+    const r = parseIcs(ics(...many), NOW);
+    expect(r.events).toHaveLength(ICS_EVENTS_MAX);
+    expect(r.skipped).toBe(50);
+  });
+
+  it("tytuł i opis są przycinane", () => {
+    const r = parseIcs(ics(event("DTSTART:20261015T093000", `SUMMARY:${"t".repeat(ICS_TITLE_MAX + 500)}`, `DESCRIPTION:${"d".repeat(ICS_CONTENT_MAX + 500)}`)), NOW);
+    expect(r.events[0].title).toHaveLength(ICS_TITLE_MAX);
+    expect(r.events[0].content).toHaveLength(ICS_CONTENT_MAX);
+  });
+});
+

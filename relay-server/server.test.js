@@ -70,3 +70,21 @@ test("subskrypcja z nieistniejącym pokojem kończy się zamknięciem gniazda, a
   assert.notEqual(code, "timeout");
   assert.equal(await alive(), true, log);
 });
+
+test("DELETE /rooms/:id: bez tokenu i ze złym tokenem odmowa, z dobrym kasuje pokój (S13)", async () => {
+  const room = "ab".repeat(32);
+  const token = "t".repeat(43);
+  const auth = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+  const created = await fetch(`${base}/rooms/${room}/updates`, { method: "POST", headers: auth, body: JSON.stringify({ data: "AAAA" }) });
+  assert.equal(created.status, 200, await created.text());
+
+  assert.equal((await fetch(`${base}/rooms/${room}`, { method: "DELETE" })).status, 401);
+  assert.equal((await fetch(`${base}/rooms/${room}`, { method: "DELETE", headers: { Authorization: `Bearer ${"x".repeat(43)}` } })).status, 403);
+  assert.equal((await fetch(`${base}/rooms/${room}/updates?since=0`, { headers: auth })).status, 200); // nadal jest
+
+  assert.equal((await fetch(`${base}/rooms/${room}`, { method: "DELETE", headers: auth })).status, 200);
+  assert.equal((await fetch(`${base}/rooms/${room}/updates?since=0`, { headers: auth })).status, 404);
+  assert.equal((await fetch(`${base}/rooms/${room}`, { method: "DELETE", headers: auth })).status, 404); // drugi raz: nie ma
+  assert.equal(await alive(), true, log);
+});
+

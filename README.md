@@ -187,7 +187,7 @@ Zasady:
 - Dziennik zdarzeń bezpieczeństwa w diagnostyce (np. nieudane odblokowania, naruszenia CSP).
 - Adresy z powiadomień i wiadomości service workera są walidowane (tylko ścieżki wewnątrz aplikacji).
 - Kod parowania generowany bez obciążenia statystycznego; stary pokój z FNV wyłączony domyślnie, ostrzeżenie przy krótkim kodzie.
-- Nagłówki hostingu (`netlify.toml`): `nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy` oraz **CSP w trybie Report-Only** — po okresie bez zgłoszeń naruszeń zmień nazwę nagłówka na `Content-Security-Policy`. `public/offline.html` ma jeden inline-skrypt i do czasu przeniesienia go zgłosi naruszenie.
+- Nagłówki hostingu (`vercel.json`, `netlify.toml`, zgodność pilnuje `securityHeaders.test.ts`): `nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, HSTS na rok (bez `includeSubDomains`) oraz **egzekwowane CSP** (`Content-Security-Policy`, bez skryptów inline; `offline.html` korzysta z `offline.js`).
 - Znane luki bezpieczeństwa i plan ich naprawy są w [`roadmap.md`](./roadmap.md) (sekcja „Audyt i rozszerzenia”).
 
 ## Dostępność i wydajność

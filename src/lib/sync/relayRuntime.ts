@@ -80,6 +80,27 @@ export async function checkRelay(url: string, timeoutMs = 5000): Promise<{ ok: t
   }
 }
 
+/**
+ * Usuwa z przekaźnika cały pokój grupy (zaszyfrowane wpisy i bloby) — dla WSZYSTKICH urządzeń grupy (S13 audytu).
+ * Wymaga kodu grupy (z niego wynika token pokoju). `true` = usunięto albo pokoju już nie było.
+ */
+export async function deleteRelayRoom(code: string, timeoutMs = 10_000): Promise<boolean> {
+  const base = validRelayUrl(getRelayUrl());
+  if (!base) return false;
+  try {
+    const keys = await deriveRelayKeys(code);
+    const res = await fetch(`${base}/rooms/${keys.roomId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${keys.token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    return res.ok || res.status === 404;
+  } catch {
+    return false;
+  }
+}
+
 export function getRelayView(): RelayView {
   return view;
 }

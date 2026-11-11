@@ -34,8 +34,19 @@ export function useImportExport(importNotes: (notes: Note[]) => void, addNote: A
       // Adres to wejście z zewnątrz: kształt i rozmiary sprawdza `parseShareParam`.
       const shared = parseShareParam(shareData);
       if (shared) {
-        addNote(shared.title, shared.content, shared.color, shared.labels, null, [], shared.checklist);
-        toast.success("Zaimportowano udostępnioną notatkę");
+        // Link z zewnątrz nie dopisuje notatki sam (synchronizuje się na inne urządzenia) — najpierw pytamy (S7 audytu).
+        toast("Dodać udostępnioną notatkę?", {
+          description: shared.title || "Bez tytułu",
+          duration: Infinity,
+          action: {
+            label: "Dodaj",
+            onClick: () => {
+              addNote(shared.title, shared.content, shared.color, shared.labels, null, [], shared.checklist);
+              toast.success("Zaimportowano udostępnioną notatkę");
+            },
+          },
+          cancel: { label: "Pomiń", onClick: () => undefined },
+        });
       } else {
         logSecurity("rejected-share-link", "link ?share= odrzucony (zły kształt lub rozmiar)");
         toast.error("Nieprawidłowy link udostępniania");

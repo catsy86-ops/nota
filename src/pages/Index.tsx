@@ -113,6 +113,7 @@ import { Button } from "@/components/ui/button";
 import { requestSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import type { DebtReminderApi } from "@/components/debts/DebtsView";
 import { repeatUpdate, toRule, type RepeatInput } from "@/lib/reminderRepeat";
+import { pairCodeFromLocation } from "@/lib/pairLink";
 
 const Index = () => {
   const {
@@ -203,7 +204,7 @@ const Index = () => {
   // Link `?settings=<karta>` (faza 3c) otwiera Ustawienia od razu na tej karcie.
   const [settingsOpen, setSettingsOpen] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.has("pair") || settingsTabFromParam(params.get(SETTINGS_PARAM)) !== null;
+    return pairCodeFromLocation(window.location.search, window.location.hash) !== null || settingsTabFromParam(params.get(SETTINGS_PARAM)) !== null;
   });
   const [statsOpen, setStatsOpen] = useState(false);
   /** Skrzynka 2.3: małe okno „Do skrzynki” (Alt+K, paleta, skrót PWA) — widok pod spodem zostaje. */

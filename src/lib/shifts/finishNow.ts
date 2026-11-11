@@ -7,9 +7,14 @@ import { haptic } from "@/lib/haptics";
  * „Skończyłem teraz”: odchylenie od planu = różnica między teraz a planowanym końcem. Wspólne dla karty
  * „Teraz” w Grafiku i karty zmiany w Dziś (Dziś 2.1), żeby obie zapisywały koniec tak samo.
  */
+/** Odchylenie od planu, które da się uznać za „skończyłem teraz”: od 2 h wcześniej do 16 h później (S8 audytu — link z adresu nie zapisze tysięcy minut). */
+export const FINISH_EXTRA_MIN = -120;
+export const FINISH_EXTRA_MAX = 16 * 60;
+
 export function finishShiftNow(occ: ShiftOccurrence): void {
   const plannedEnd = occ.end.getTime() - (occ.entry.extraMin ?? 0) * 60_000;
   const extra = Math.round((Date.now() - plannedEnd) / 60_000);
+  if (extra < FINISH_EXTRA_MIN || extra > FINISH_EXTRA_MAX) { toast("Tej zmiany nie da się tak zakończyć — popraw godzinę w Grafiku"); return; }
   if (extra === (occ.entry.extraMin ?? 0)) { toast("Zmiana już ma taki koniec"); return; }
   const before = occ.entry;
   const { extraMin: _drop, ...rest } = before;

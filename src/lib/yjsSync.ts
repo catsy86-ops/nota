@@ -161,7 +161,7 @@ export const CODE_PATTERN = "^[A-HJKMNP-Za-hjkmnp-z2-9]*$";
  * Odrzuca znaki spoza alfabetu (np. kropkę z końca zdania), tnie do 12.
  */
 export function codeFromPaste(raw: string): string {
-  const fromLink = raw.match(/[?&]pair=([^&#\s]+)/)?.[1];
+  const fromLink = raw.match(/[?&#]pair=([^&#\s]+)/)?.[1];
   const code = normalizeCode(fromLink ?? raw);
   return [...code].filter((c) => CODE_ALPHABET.includes(c)).join("").slice(0, CODE_LENGTH);
 }

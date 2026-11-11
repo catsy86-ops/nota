@@ -35,6 +35,12 @@ describe("nagłówki bezpieczeństwa", () => {
     expect(csp).toContain("frame-ancestors 'none'");
   });
 
+  it("HSTS na rok, bez includeSubDomains (S17)", () => {
+    const hsts = vercelHeaders()["Strict-Transport-Security"];
+    expect(hsts).toBe("max-age=31536000");
+    expect(hsts).not.toContain("includeSubDomains");
+  });
+
   it("Permissions-Policy nie blokuje kamery (kod QR) ani lokalizacji („Tu jestem”) tej stronie", () => {
     const pp = vercelHeaders()["Permissions-Policy"];
     expect(pp).toContain("camera=(self)");

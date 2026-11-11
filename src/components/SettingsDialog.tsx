@@ -10,6 +10,7 @@ import { BackupSettings } from "@/components/settings/BackupSettings";
 import { consumeRequestedSettingsSection, consumeRequestedSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { SyncFileSection } from "@/components/settings/SyncFileSection";
+import { clearPairFromLocation, pairCodeFromLocation } from "@/lib/pairLink";
 
 // qrcode.react (used only here, for device pairing) kept out of the eager
 // main bundle — TabsContent below only mounts this once the Sync tab is active.
@@ -75,14 +76,16 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   // A QR code from another device links here as ?pair=<code> — jump straight
   // to the Sync tab with the code pre-filled and open the dialog if needed.
   useEffect(() => {
-    const pairCode = searchParams.get("pair");
+    const pairCode = pairCodeFromLocation(window.location.search, window.location.hash);
     if (!pairCode) return;
     setJoinPrefill(pairCode);
     setActiveTab("sync");
     onOpenChange?.(true);
+    // Kod jest we fragmencie (`#pair=`) albo, w starych linkach, w zapytaniu.
     const next = new URLSearchParams(searchParams);
     next.delete("pair");
     setSearchParams(next, { replace: true });
+    clearPairFromLocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 

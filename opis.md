@@ -5368,3 +5368,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Klucze z kopii:** odczyt kwot etapów/typów tylko z własnych pól (`billing.ts`), `studyDump.ts` pomija `__proto__`.
 - **Push:** `client.ts` — limit czasu 15 s i kolejka `uploadSchedule`.
 
+## Audyt, trzynasta partia: bezpieczeństwo (2026-11-11)
+
+- **Udostępnianie z systemu i linki:** `useLaunchIntents.ts` pyta „Zapisać udostępnione w NOTKACH?” przed zapisem plików (Share Target), `useImportExport.ts` pyta przed dodaniem notatki z `?share=`. Link parowania używa fragmentu `#pair=` (`src/lib/pairLink.ts`), stare `?pair=` działa nadal.
+- **Zakresy i limity:** `finishNow.ts` (koniec zmiany −2 h…+16 h), `icsImport.ts` (2000 zdarzeń, pola ucinane), `exportNotes.ts` (`SETTING_VALUE_MAX`), `vault.ts` (`MAX_KDF_ITERATIONS` 3 mln).
+- **Przekaźnik:** `DELETE /rooms/:id` (token pokoju) usuwa pokój, bloby i zamyka gniazda; w Ustawieniach → Sync okno „Odłączyć to urządzenie?” ma opcję „Odłącz i usuń z przekaźnika (wszystkie urządzenia)” (`relayRuntime.ts` `deleteRelayRoom`).
+- **Nagłówki:** HSTS `max-age=31536000` w `vercel.json` i `netlify.toml` (`securityHeaders.test.ts`).
+- **Testy:** `finishNow.test.ts`, `icsImport.test.ts`, `pairLink.test.ts`, `fullBackup.test.ts`, `useImportExport.test.ts`, `securityHeaders.test.ts`, `relay-server/server.test.js`, e2e `share-files`, `share-to-entry`, `sync-code`.
+

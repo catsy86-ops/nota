@@ -17,7 +17,7 @@ export function barcodeDetectorCtor(): BarcodeDetectorCtor | null {
  * Inaczej niż przy wklejaniu: tu cały odczytany tekst musi być kodem, bo skaner nie ma wycinać „zdania”.
  */
 export function codeFromScan(text: string): string | null {
-  const fromLink = text.match(/[?&]pair=([^&#\s]+)/)?.[1];
+  const fromLink = text.match(/[?&#]pair=([^&#\s]+)/)?.[1];
   const candidate = normalizeCode(fromLink ?? text);
   if (candidate.length !== CODE_LENGTH || ![...candidate].every((c) => CODE_ALPHABET.includes(c))) return null;
   return candidate;

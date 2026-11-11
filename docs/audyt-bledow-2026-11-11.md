@@ -81,9 +81,21 @@
 | S2 | przekaźnik: `new URL` w `upgrade` bez `try/catch` — crash bez uwierzytelnienia | naprawione: `try/catch` w `upgrade`, `relay-server/server.test.js` |
 | S3 | pokój WebRTC = szybki SHA-256 z kodu ~59 bitów | otwarte (decyzja projektowa) |
 | S4 | przekaźnik: tworzenie pokojów bez uwierzytelnienia, wyczerpanie zasobów | otwarte |
-| S5 | przekaźnik: `TRUST_PROXY=1` domyślnie w Dockerfile; mapa `hits` rośnie | otwarte |
-| S6 | `?share=` dodaje notatkę bez potwierdzenia | do weryfikacji |
-| S7–S20 | akcje z adresu, Skarbiec offline, historia przekaźnika, AAD bez `seq`, kod w `localStorage`/QR, brak DELETE pokoju, Share Target `Origin: null`, `.ics` bez limitów, przywracanie ustawień, CSP/nagłówki, `npm audit` | patrz raport |
+| S5 | przekaźnik: `TRUST_PROXY=1` domyślnie w Dockerfile; mapa `hits` rośnie | otwarte (Dockerfile bez domyślnego `TRUST_PROXY` — partia 1) |
+| S6 | Share Target: `Origin: null` przechodzi, zapis bez zgody | naprawione (decyzja właściciela): „Zapisać udostępnione w NOTKACH?” przed zapisem (`useLaunchIntents.ts`); `e2e/share-files.spec.ts`, `share-to-entry.spec.ts` |
+| S7 | `?share=` dodaje notatkę bez potwierdzenia | naprawione: pytanie „Dodać udostępnioną notatkę?” (`useImportExport.ts`); zmiana formatu linku na `#share=` nie zrobiona |
+| S8 | `?akcja=shift-done&dzien=` zapisuje dowolne nadgodziny | naprawione: zakres −2 h…+16 h w `finishNow.ts`; `finishNow.test.ts` |
+| S9 | `?akcja=done` na `/notatka/<id>` | bez zmian (wymaga znajomości id, odwracalne) |
+| S10 | pozostałe akcje z adresu | brak błędu |
+| S11 | kod synchronizacji w adresie `?pair=` | naprawione (decyzja właściciela): `#pair=` + czytanie starego `?pair=` (`pairLink.ts`); kod w `localStorage` bez zmian |
+| S12 | AAD przekaźnika bez `seq` | bez zmian: zysk znikomy, zmiana łamie zgodność; przekaźnik jest zaufany tylko co do dostępności |
+| S13 | brak usuwania pokoju na przekaźniku | naprawione (decyzja właściciela): `DELETE /rooms/:id` + „Odłącz i usuń z przekaźnika”; `relay-server/server.test.js`. `ALLOWED_ORIGINS` nadal `*` domyślnie (zalecenie w README) |
+| S14 | import `.ics` bez limitów | naprawione: 2000 zdarzeń, tytuł 1000, opis 20 000, błąd duplikatów między plikami; `icsImport.test.ts` |
+| S15 | przywracanie ustawień z kopii | naprawione: wartość ≤ 2,5 mln znaków i tylko tekst (`SETTING_VALUE_MAX`); `fullBackup.test.ts`. Autolock skarbca z kopii bez walidacji (decyzja UX) |
+| S16 | Skarbiec: sufit iteracji KDF 10 mln | naprawione: 3 mln (`vault.ts`) |
+| S17 | nagłówki | naprawione: HSTS na rok bez `includeSubDomains` (decyzja właściciela), README poprawione; COOP nie dodane (wymaga testu okien) |
+| S18 | `npm audit` | `audit fix` bez `--force` (16 → 14; reszta to narzędzia dev, wymaga zmian łamiących) |
+| S19–S20 | brak osobnych pozycji w raporcie | — |
 
 ## Testy i CI
 
@@ -129,3 +141,6 @@ T6 (treść PDF-ów: `pdfBuilders.test.ts` z atrapą jsPDF — nagłówki, kwoty
 
 T26 (`viewTransition.test.ts` rozbity na osobne przypadki, Firefox), T27 (granice `van`: minimum równe stanowi, `cleanVanQty`, `VAN_ITEMS_MAX`), T28 (prawdziwa bomba gzip, format v1, próg kompresji), T30 (`﻿` zamiast literalnego BOM), T32 (dwa 2,5-sekundowe sleepy w `private-notes.spec.ts` zastąpione `expect.poll` na zawartości IndexedDB), T35 (poprawki rozbieżności w `opis.md`). Zostają: pozostałe `waitForTimeout` w e2e (to czekania na brak zdarzenia, bez sygnału do odpytywania), testy komponentów (T31), T33.
 
+## Zrobione 2026-11-11 (trzynasta partia, bezpieczeństwo)
+
+S6–S8, S11, S13–S18. Zostają S3–S5 (decyzje projektowe), S9, S12 (świadomie bez zmian).

@@ -271,6 +271,9 @@ export const BACKUP_OVERSIZE_NOTE = `Kopia jest większa niż ${MAX_IMPORT_FILE_
  * (kod parowania to sekret, a na nowym urządzeniu paruje się od nowa) i bez
  * znaczników „kiedy ostatnio przypominano”.
  */
+/** Największa wartość jednego ustawienia przy przywracaniu kopii (znaki). */
+export const SETTING_VALUE_MAX = 2_500_000;
+
 export const SETTINGS_KEYS = [
   "kaczy.viewPrefs.v1", "kaczy.motion.v1", "kaczy.confirmPrefs.v1",
   "kaczy.effectsSettings.v1", "kaczy.seasonTheme.v1", "kaczy.templates.v1", "kaczy.siteMode.v1",
@@ -399,7 +402,10 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   if (opts.settings && backup.settings) {
     for (const k of SETTINGS_KEYS) {
       if (!(k in backup.settings)) continue;
-      writes[k] = k === PUSH_RESTORE_KEY ? pushPrefsForRestore(backup.settings[k]) : backup.settings[k];
+      const value = backup.settings[k];
+      // Obca kopia nie wypełni localStorage jedną wartością (S15 audytu); uczciwe ustawienia są dużo mniejsze.
+      if (typeof value !== "string" || value.length > SETTING_VALUE_MAX) { logDiag("warn", "backup", `pominięto ustawienie ${k}: zła wartość`); continue; }
+      writes[k] = k === PUSH_RESTORE_KEY ? pushPrefsForRestore(value) : value;
     }
   }
   if (opts.achievements && backup.achievements !== undefined) writes[ACHIEVEMENTS_KEY] = backup.achievements;

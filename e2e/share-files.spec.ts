@@ -32,6 +32,8 @@ test("udostępnienie z PDF-em trafia do załącznika notatki przez service worke
     form.submit();
   });
 
+  // S6: udostępnione pliki zapisują się dopiero po „Zapisz”.
+  await page.locator("[data-sonner-toast]").filter({ hasText: "Zapisać udostępnione w NOTKACH?" }).getByRole("button", { name: "Zapisz" }).click();
   await expect(page.getByText("Zapisano w NOTKACH")).toBeVisible();
   expect(new URL(page.url()).search).toBe("");
   const card = page.locator("[data-note-id]").filter({ hasText: "Faktura maj" });
@@ -74,6 +76,8 @@ test("udostępnione zdjęcie trafia do obrazów notatki, nie do załączników",
     form.submit();
   }, png);
 
+  // S6: udostępnione pliki zapisują się dopiero po „Zapisz”.
+  await page.locator("[data-sonner-toast]").filter({ hasText: "Zapisać udostępnione w NOTKACH?" }).getByRole("button", { name: "Zapisz" }).click();
   await expect(page.getByText("Zapisano w NOTKACH")).toBeVisible();
   const card = page.locator("[data-note-id]").filter({ hasText: "Zdjęcie z budowy" });
   await expect(card).toHaveCount(1);
@@ -119,4 +123,40 @@ test("POST na /share z obcej strony nie zapisuje niczego", async ({ page }) => {
   await expect(page.locator("[data-note-id]").filter({ hasText: "Obcy formularz" })).toHaveCount(0);
   const left = await page.evaluate(async () => (await (await caches.open("share-inbox-v1")).keys()).map((r) => r.url));
   expect(left.filter((u) => u.includes("/share-inbox/"))).toEqual([]);
+});
+
+// S6 (audyt 2026-11-11): „Pomiń” nie zapisuje niczego — formularz z obcej strony nie dopisze notatki sam.
+test("udostępnienie z plikiem: „Pomiń” nie tworzy notatki", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+  await page.goto("/");
+  await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+  await page.reload();
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+
+  await page.evaluate(() => {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/share";
+    form.enctype = "multipart/form-data";
+    const title = document.createElement("input");
+    title.name = "title";
+    title.value = "Obca notatka";
+    form.append(title);
+    const file = document.createElement("input");
+    file.type = "file";
+    file.name = "files";
+    const dt = new DataTransfer();
+    dt.items.add(new File(["%PDF-1.4 test"], "obcy.pdf", { type: "application/pdf" }));
+    file.files = dt.files;
+    form.append(file);
+    document.body.append(form);
+    form.submit();
+  });
+
+  const ask = page.locator("[data-sonner-toast]").filter({ hasText: "Zapisać udostępnione w NOTKACH?" });
+  await expect(ask).toBeVisible();
+  await ask.getByRole("button", { name: "Pomiń" }).click();
+  await expect(ask).toHaveCount(0);
+  await expect(page.locator("[data-note-id]").filter({ hasText: "Obca notatka" })).toHaveCount(0);
+  await expect(page.getByText("Zapisano w NOTKACH")).toHaveCount(0);
 });

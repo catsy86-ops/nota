@@ -10,7 +10,7 @@ vi.mock("@/lib/exportNotes", () => ({
 }));
 
 vi.mock("sonner", () => ({
-  toast: { success: vi.fn(), error: vi.fn() },
+  toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
 }));
 
 function makeNote(overrides: Partial<Note> = {}): Note {
@@ -64,7 +64,7 @@ describe("useImportExport — handleImport", () => {
 });
 
 describe("useImportExport — ?share= link handling", () => {
-  it("decodes a share link, adds the note and strips the query param", async () => {
+  it("decodes a share link, asks first (S7), adds the note only after \"Dodaj\" and strips the query param", async () => {
     const payload = { t: "Tytuł", c: "Treść", co: "mint", l: ["dom"], cl: [] };
     const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
     window.history.replaceState({}, "", `/?share=${encoded}`);
@@ -72,7 +72,11 @@ describe("useImportExport — ?share= link handling", () => {
 
     renderHook(() => useImportExport(vi.fn(), addNote));
 
-    await waitFor(() => expect(addNote).toHaveBeenCalledWith("Tytuł", "Treść", "mint", ["dom"], null, [], []));
+    await waitFor(() => expect(toast).toHaveBeenCalled());
+    expect(addNote).not.toHaveBeenCalled(); // link sam niczego nie dopisuje
+    const opts = vi.mocked(toast).mock.calls.at(-1)![1] as unknown as { action: { onClick: () => void } };
+    opts.action.onClick();
+    expect(addNote).toHaveBeenCalledWith("Tytuł", "Treść", "mint", ["dom"], null, [], []);
     expect(toast.success).toHaveBeenCalledWith("Zaimportowano udostępnioną notatkę");
     expect(window.location.search).toBe("");
   });

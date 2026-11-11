@@ -1,4 +1,5 @@
 import { olderDevices } from "@/lib/formatSchema";
+import { pairLink } from "@/lib/pairLink";
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { lazy, Suspense } from "react";
@@ -11,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { checkRelay, getRelayUrl, setRelayUrl, startRelay, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
+import { checkRelay, deleteRelayRoom, getRelayUrl, setRelayUrl, startRelay, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
 import { formatDistanceToNow } from "date-fns";
 import { syncErrorText } from "@/lib/syncErrorText";
 import { seenOffline, useSeenDevices } from "@/lib/syncSeen";
@@ -95,6 +96,15 @@ export function SyncSettings({ prefillCode }: Props) {
     toast.success("Odłączono to urządzenie");
   }
 
+  /** Odłącza i kasuje dane grupy z przekaźnika (dla wszystkich urządzeń). Kod jest potrzebny, więc kasujemy przed odłączeniem. */
+  async function handleForgetAndDelete() {
+    const code = syncState.code;
+    const gone = code ? await deleteRelayRoom(code) : false;
+    handleForget();
+    if (gone) toast.success("Dane grupy usunięte z przekaźnika");
+    else toast.error("Nie udało się usunąć danych z przekaźnika", { description: "Wygasną same po 180 dniach bez zapisu." });
+  }
+
   async function handleCopy() {
     if (!syncState.code) return;
     try {
@@ -107,7 +117,7 @@ export function SyncSettings({ prefillCode }: Props) {
   }
 
   const pairUrl = syncState.code
-    ? `${window.location.origin}${window.location.pathname}?pair=${syncState.code}`
+    ? pairLink(window.location.origin, window.location.pathname, syncState.code)
     : "";
 
   const statusLabel =
@@ -229,6 +239,11 @@ export function SyncSettings({ prefillCode }: Props) {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                {getRelayUrl() && (
+                  <AlertDialogAction className={buttonVariants({ variant: "outline" })} onClick={() => { setForgetOpen(false); void handleForgetAndDelete(); }} data-testid="forget-and-delete-relay">
+                    Odłącz i usuń z przekaźnika (wszystkie urządzenia)
+                  </AlertDialogAction>
+                )}
                 <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => { setForgetOpen(false); handleForget(); }}>Odłącz</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

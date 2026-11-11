@@ -15,6 +15,13 @@ test("link ?pair= wypełnia kratki kodem", async ({ page }) => {
   await expect(page).not.toHaveURL(/pair=/);
 });
 
+test("link #pair= (fragment) wypełnia kratki kodem i znika z adresu (S11)", async ({ page }) => {
+  await page.goto("/#pair=abcd-efgh-jkmn");
+  const field = page.getByLabel("Kod z innego urządzenia");
+  await expect(field).toHaveValue("ABCDEFGHJKMN");
+  await expect(page).not.toHaveURL(/pair=/);
+});
+
 test("kod parowania ma 12 znaków, krótsze nie są przyjmowane, bez znaków spoza alfabetu", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Ustawienia" }).first().click();

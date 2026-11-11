@@ -42,6 +42,7 @@ Stan do przeglądu: `security-review` przed wdrożeniem.
 | `GET /rooms/:id/updates?since=n` | wpisy o numerze > n (najwyżej 500), `last`, `hasMore` |
 | `POST /rooms/:id/updates` | `{data}` dopisuje wpis, zwraca `{seq, last}` |
 | `PUT /rooms/:id/snapshot` | `{upto, data}` zastępuje wpisy ≤ upto jednym (kompaktowanie) |
+| `DELETE /rooms/:id` | usuwa pokój razem z blobami (token pokoju); zamyka jego gniazda WebSocket. Wywołuje go „Odłącz i usuń z przekaźnika” w Ustawieniach → Sync |
 | `PUT /rooms/:id/blobs/:bid` | surowe bajty zaszyfrowanego bloba (obraz/załącznik), `bid` = HMAC z hasha treści; ponowny zapis tego samego `bid` nic nie zmienia |
 | `GET` / `HEAD /rooms/:id/blobs/:bid` | pobranie bloba (`404`, gdy go nie ma) albo samo sprawdzenie, czy jest |
 | `WS /ws` | po połączeniu wysyłasz `{type:"subscribe", room, token}`; serwer odpowiada `ready` albo zamyka z kodem 4003; po każdym zapisie przychodzi `{type:"updated", last}` |

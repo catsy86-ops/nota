@@ -27,7 +27,7 @@ export const KDF_ITERATIONS = 600_000;
  * backup) — `iter: 2e9` zawiesiłoby kartę na odblokowaniu (DoS), a to wartość,
  * której uczciwy klient nigdy nie zapisze.
  */
-export const MAX_KDF_ITERATIONS = 10_000_000;
+export const MAX_KDF_ITERATIONS = 3_000_000;
 export const SALT_BYTES = 16;
 export const IV_BYTES = 12;
 const DK_BYTES = 32;

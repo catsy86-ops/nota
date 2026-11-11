@@ -68,6 +68,11 @@ function parseRepeat(rrule: string | undefined): IcsRepeat {
   return "none";
 }
 
+/** Najwięcej zdarzeń z jednego pliku i długość pól: plik 5 MB nie zrobi 100 tys. notatek (S14 audytu). */
+export const ICS_EVENTS_MAX = 2000;
+export const ICS_TITLE_MAX = 1000;
+export const ICS_CONTENT_MAX = 20_000;
+
 /** Czyta VEVENT-y z tekstu pliku .ics. `now` odcina terminy już minione. */
 /** `keepPast` (E3): zdarzenia z przeszłości zostają — import grafiku dotyczy dni, które już minęły. */
 export function parseIcs(text: string, now: number = Date.now(), opts: { keepPast?: boolean } = {}): IcsParseResult {
@@ -81,11 +86,12 @@ export function parseIcs(text: string, now: number = Date.now(), opts: { keepPas
       if (current) {
         const start = startLine ? parseStart(startLine) : null;
         if (!start) skipped++;
+        else if (events.length >= ICS_EVENTS_MAX) skipped++;
         else if (opts.keepPast || start.ms >= now) {
-          const title = unescapeText(current.SUMMARY ?? "").trim() || "Przypomnienie z kalendarza";
+          const title = unescapeText(current.SUMMARY ?? "").trim().slice(0, ICS_TITLE_MAX) || "Przypomnienie z kalendarza";
           events.push({
             title,
-            content: unescapeText(current.DESCRIPTION ?? ""),
+            content: unescapeText(current.DESCRIPTION ?? "").slice(0, ICS_CONTENT_MAX),
             reminder: start.ms,
             repeat: parseRepeat(current.RRULE),
             rrule: current.RRULE,
@@ -151,8 +157,8 @@ export async function importIcsFiles(files: File[], existing: readonly Note[]): 
     skipped += parsed.skipped;
     const n = importIcsEvents(parsed.events, known);
     created += n;
-    // Dopisz do „znanych”, żeby duplikaty między plikami też wypadały.
-    known.push(...parsed.events.slice(0, n).map((ev) => ({ title: ev.title, reminder: ev.reminder }) as unknown as Note));
+    // Dopisz do „znanych”, żeby duplikaty między plikami też wypadały (wszystkie zdarzenia pliku, nie tylko pierwsze `n`).
+    known.push(...parsed.events.map((ev) => ({ title: ev.title, reminder: ev.reminder }) as unknown as Note));
   }
   return { created, skipped };
 }

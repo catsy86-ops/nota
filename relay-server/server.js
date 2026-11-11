@@ -88,7 +88,7 @@ function cors(req, res) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
   }
-  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Max-Age", "86400");
 }
@@ -248,6 +248,20 @@ async function handle(req, res) {
 
   const blob = url.pathname.match(/^\/rooms\/([^/]+)\/blobs\/([^/]+)$/);
   if (blob) return handleBlob(req, res, blob[1], blob[2]);
+
+  // Usunięcie pokoju razem z blobami („Opuść grupę” → „usuń też z przekaźnika”). Wymaga tokenu pokoju (S13 audytu).
+  const roomOnly = url.pathname.match(/^\/rooms\/([^/]+)$/);
+  if (roomOnly && req.method === "DELETE") {
+    const roomId = roomOnly[1];
+    const r = openRoomForRead(store, roomId, tokenOf(req));
+    if (r.error) return send(res, r.error, { error: r.message });
+    delete store.rooms[roomId];
+    rmSync(join(BLOB_DIR, roomId), { recursive: true, force: true });
+    for (const ws of sockets.get(roomId) ?? []) ws.close(4004, "pokój usunięty");
+    sockets.delete(roomId);
+    scheduleSave();
+    return send(res, 200, { ok: true });
+  }
 
   const m = url.pathname.match(/^\/rooms\/([^/]+)\/(updates|snapshot)$/);
   if (!m) return send(res, 404, { error: "Nie ma takiej trasy" });
