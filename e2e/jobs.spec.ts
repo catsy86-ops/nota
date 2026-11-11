@@ -77,7 +77,9 @@ test("fucha: wycena z marżą, status „Zrobione” liczy się do niezapłacony
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("jobs-open")).not.toContainText("zł");
 
-  // Po odświeżeniu wszystko zostaje (Yjs).
+  // Po odświeżeniu wszystko zostaje (Yjs). Zapis do IndexedDB dobiega w tle — pod obciążeniem odświeżenie tuż po
+  // kliknięciu gubiło ostatnią zmianę, więc dajemy mu chwilę (nie ma zdarzenia „zapisano” do odpytania).
+  await page.waitForTimeout(1500);
   await page.reload();
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("jobs-open").click();
