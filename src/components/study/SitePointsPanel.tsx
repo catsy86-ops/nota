@@ -181,7 +181,7 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
                       <li key={p.id} className="space-y-1" data-testid="site-point">
                         <div className="flex items-center gap-2">
                           {photos.get(p.id) && (
-                            <NoteImage imageRef={photos.get(p.id)!} alt={`Ostatnie zdjęcie: ${t.label}`} className="size-9 shrink-0 rounded-field object-cover" placeholderClassName="size-9 shrink-0 rounded-field" />
+                            <NoteImage thumb imageRef={photos.get(p.id)!} alt={`Ostatnie zdjęcie: ${t.label}`} className="size-9 shrink-0 rounded-field object-cover" placeholderClassName="size-9 shrink-0 rounded-field" />
                           )}
                           <span className="min-w-0 flex-1 truncate text-sm">{t.label}</span>
                           {p.sides.length > 0 && <span className="font-mono text-2xs text-muted-foreground" aria-label={`Strony: ${p.sides.length}`}>{sidesLabel(p.sides)}</span>}

@@ -5,9 +5,9 @@ import { imageStore, isDataUrl } from "@/lib/imageStore";
  * Adres do `<img src>` dla klucza z `imageStore` (współdzielony object URL,
  * zwalniany przy odmontowaniu). `null` — obrazu jeszcze nie ma na tym
  * urządzeniu; hook sam podmieni adres, gdy dotrze (P2P, plik sync).
- * `undefined` — trwa wczytywanie.
+ * `undefined` — trwa wczytywanie. `thumb`: miniatura (siatki, paski, listy) zamiast pełnego obrazu.
  */
-export function useImageUrl(imageRef: string): string | null | undefined {
+export function useImageUrl(imageRef: string, thumb = false): string | null | undefined {
   const [url, setUrl] = useState<string | null | undefined>(() => (isDataUrl(imageRef) ? imageRef : undefined));
 
   useEffect(() => {
@@ -17,9 +17,9 @@ export function useImageUrl(imageRef: string): string | null | undefined {
     setUrl(undefined);
 
     const acquire = () => {
-      imageStore.acquireUrl(imageRef).then((u) => {
+      (thumb ? imageStore.acquireThumbUrl(imageRef) : imageStore.acquireUrl(imageRef)).then((u) => {
         if (!u) { if (!cancelled) setUrl(null); return; }
-        if (cancelled) { imageStore.releaseUrl(imageRef); return; }
+        if (cancelled) { (thumb ? imageStore.releaseThumbUrl : imageStore.releaseUrl)(imageRef); return; }
         acquired = true;
         setUrl(u);
       });
@@ -30,9 +30,9 @@ export function useImageUrl(imageRef: string): string | null | undefined {
     return () => {
       cancelled = true;
       off();
-      if (acquired) imageStore.releaseUrl(imageRef);
+      if (acquired) (thumb ? imageStore.releaseThumbUrl : imageStore.releaseUrl)(imageRef);
     };
-  }, [imageRef]);
+  }, [imageRef, thumb]);
 
   return url;
 }

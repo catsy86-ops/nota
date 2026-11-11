@@ -11,11 +11,13 @@ interface Props {
   loading?: "lazy" | "eager";
   /** Opis dla czytnika ekranu; pusty = obraz dekoracyjny. */
   alt?: string;
+  /** Miniatura (małe kafle: paski, siatki, listy) — nie czyta pełnych bajtów oryginału. */
+  thumb?: boolean;
 }
 
 /** Obraz notatki z `imageStore`; kafel zastępczy, gdy bajty jeszcze nie dotarły na to urządzenie. */
-export function NoteImage({ imageRef, className, placeholderClassName, loading = "lazy", alt = "" }: Props) {
-  const url = useImageUrl(imageRef);
+export function NoteImage({ imageRef, className, placeholderClassName, loading = "lazy", alt = "", thumb = false }: Props) {
+  const url = useImageUrl(imageRef, thumb);
   if (url) return <img src={url} alt={alt} className={className} loading={loading} />;
   return (
     <div

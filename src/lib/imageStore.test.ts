@@ -97,4 +97,26 @@ describe("niezaufane dane obrazu (A03/A04)", () => {
     const big = new Uint8Array(MAX_PEER_BLOB_BYTES + 1);
     await expect(store.putBytes(big, "image/png", await sha256Hex(big))).rejects.toThrow(/zbyt duży/);
   });
+
+  // B5.5: miniatura obok oryginału. jsdom nie ma createImageBitmap, więc to ścieżka „nie da się” — zawsze oryginał.
+  it("miniatura: bez możliwości jej utworzenia daje oryginał i pamięta to (false), a zwolnienie zwalnia oryginał", async () => {
+    const ref = await store.putDataUrl(PNG);
+    const u1 = await store.acquireThumbUrl(ref);
+    const full = await store.acquireUrl(ref);
+    expect(u1).toBeTruthy();
+    expect(u1).toBe(full); // współdzielony object URL oryginału
+    store.releaseThumbUrl(ref);
+    store.releaseUrl(ref);
+    expect(await store.acquireThumbUrl("a".repeat(64))).toBeNull(); // brak obrazu
+  });
+
+  it("miniatura: GC kasuje ją razem z oryginałem", async () => {
+    const ref = await store.putDataUrl(PNG);
+    await store.acquireThumbUrl(ref);
+    store.releaseThumbUrl(ref);
+    const removed = await store.collectGarbage(new Set(), Date.now() + GC_GRACE_MS + 1);
+    expect(removed).toBe(1);
+    expect(store.has(ref)).toBe(false);
+  });
 });
+

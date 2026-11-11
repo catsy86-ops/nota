@@ -184,7 +184,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
               {e.images.map((ref, i) => (
                 <li key={ref}>
                   <button type="button" onClick={() => onZoom(e.images, i)} aria-label={`Powiększ zdjęcie ${i + 1} z ${e.images.length}`} className="relative block overflow-hidden rounded-field">
-                    <NoteImage imageRef={ref} alt="" className="h-16 w-16 object-cover" placeholderClassName="h-16 w-16" />
+                    <NoteImage thumb imageRef={ref} alt="" className="h-16 w-16 object-cover" placeholderClassName="h-16 w-16" />
                     {/* Numer zdjęcia na miniaturze (§D3): od razu widać, które z kolei jest w galerii. */}
                     {e.images.length > 1 && <span aria-hidden className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 font-mono text-2xs leading-4 text-white tabular-nums">{i + 1}</span>}
                   </button>

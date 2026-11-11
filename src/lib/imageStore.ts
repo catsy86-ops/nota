@@ -94,6 +94,9 @@ export const GC_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function createImageStore(dbName: string) {
   const db: UseStore = createStore(dbName, "images");
+  /** Miniatury obok oryginałów (B5.5): osobna baza, więc oryginały i ich migracje zostają nietknięte. Dane pochodne —
+   *  zawsze do odtworzenia z oryginału, dlatego bez kopii i bez synchronizacji. */
+  const thumbDb: UseStore = createStore(`${dbName}-thumbs`, "thumbs");
   /** Klucze obecne na dysku — synchroniczne `has` dla projekcji i P2P. */
   const known = new Set<string>();
   let loadPromise: Promise<void> | null = null;
@@ -200,15 +203,17 @@ export function createImageStore(dbName: string) {
     return url;
   }
 
-  function releaseUrl(hash: string): void {
-    const entry = urls.get(hash);
+  function releaseKey(key: string): void {
+    const entry = urls.get(key);
     if (!entry) return;
     entry.refs--;
     if (entry.refs <= 0) {
-      urls.delete(hash);
+      urls.delete(key);
       URL.revokeObjectURL(entry.url);
     }
   }
+
+  const releaseUrl = releaseKey;
 
   /** Powiadamia, gdy obraz pojawi się w store (np. dociągnięty od peera). */
   function onAdded(listener: (hash: string) => void): () => void {
@@ -231,6 +236,7 @@ export function createImageStore(dbName: string) {
         const rec = records[i];
         if (rec && now - rec.addedAt < graceMs) continue;
         await idbDel(candidates[i], db);
+        await idbDel(candidates[i], thumbDb).catch(() => undefined);
         known.delete(candidates[i]);
         removed++;
       }
@@ -238,9 +244,49 @@ export function createImageStore(dbName: string) {
     return removed;
   }
 
+  /**
+   * Adres miniatury (do siatek, pasków, list). Pierwszy raz tworzy ją z oryginału i zapisuje obok (`false` = obraz za
+   * mały albo się nie da — wtedy zawsze oryginał). Odczyt miniatury nie dotyka pełnych bajtów, więc lista kilkudziesięciu
+   * zdjęć nie czyta dziesiątek megabajtów. Zwalniać `releaseThumbUrl`.
+   */
+  async function acquireThumbUrl(hash: string): Promise<string | null> {
+    const key = `t:${hash}`;
+    const cached = urls.get(key);
+    if (cached) { cached.refs++; return cached.url; }
+    let pending = pendingUrls.get(key);
+    if (!pending) {
+      pending = (async () => {
+        try {
+          let thumb = await idbGet<Blob | false>(hash, thumbDb).catch(() => undefined);
+          if (thumb === undefined) {
+            const rec = await getRecord(hash);
+            if (!rec) return null;
+            const { makeThumbBlob } = await import("./imageThumb");
+            thumb = (await makeThumbBlob(rec.bytes, rec.type).catch(() => null)) ?? false;
+            await idbSet(hash, thumb, thumbDb).catch(() => undefined);
+          }
+          if (!thumb) return null;
+          const url = URL.createObjectURL(thumb);
+          urls.set(key, { url, refs: 0 });
+          return url;
+        } finally { pendingUrls.delete(key); }
+      })();
+      pendingUrls.set(key, pending);
+    }
+    const thumbUrl = await pending;
+    if (thumbUrl) { const entry = urls.get(key); if (entry) entry.refs++; return thumbUrl; }
+    return acquireUrl(hash); // brak miniatury: oryginał
+  }
+
+  function releaseThumbUrl(hash: string): void {
+    if (urls.has(`t:${hash}`)) releaseKey(`t:${hash}`);
+    else releaseUrl(hash);
+  }
+
   /** Test-only. */
   async function resetForTests(): Promise<void> {
     for (const k of await idbKeys(db)) await idbDel(k, db);
+    for (const k of await idbKeys(thumbDb)) await idbDel(k, thumbDb);
     known.clear();
     urls.forEach((e) => URL.revokeObjectURL(e.url));
     urls.clear();
@@ -250,7 +296,7 @@ export function createImageStore(dbName: string) {
 
   return {
     load, has, putBytes, putDataUrl, putBlob, ingest, get: getRecord, getDataUrl, resolve,
-    acquireUrl, releaseUrl, onAdded, collectGarbage, resetForTests,
+    acquireUrl, releaseUrl, acquireThumbUrl, releaseThumbUrl, onAdded, collectGarbage, resetForTests,
   };
 }
 
