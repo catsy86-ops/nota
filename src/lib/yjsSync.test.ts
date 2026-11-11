@@ -81,6 +81,9 @@ function mainProviders(): MockProvider[] {
 // connect()/startImageSync() now load y-webrtc via dynamic import() so it's
 // out of the eager main bundle — even mocked, that's still a real Promise
 // tick before the provider exists. Wait for it instead of asserting synchronously.
+// Pod obciążeniem (pełny przebieg Vitesta) liczenie PBKDF2 pokoju v3 potrafi przekroczyć domyślne 5 s testu.
+vi.setConfig({ testTimeout: 30_000 });
+
 // Pokój v3 liczy PBKDF2 (200 tys. iteracji), więc połączenie pod obciążeniem trwa dłużej niż domyślna sekunda.
 const waitFor = (fn: () => void) => vi.waitFor(fn, { timeout: 8000 });
 
