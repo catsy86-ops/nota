@@ -6,8 +6,8 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { join } from "node:path";
 import webpush from "web-push";
 import {
-  bearerOf, cleanItems, cleanStore, cleanSubscription, clientIp, corsOrigin, createRateLimiter, dueItems, emptyStore, LIMITS,
-  normalizeEndpoint, parseOrigins, payloadOf, removeItems, staleSubs, subKey, tokenOk,
+  bearerOf, cleanItems, cleanStore, cleanSubscription, clientIp, corsOrigin, createRateLimiter, emptyStore, LIMITS,
+  normalizeEndpoint, parseOrigins, payloadOf, subKey, tickStore, tokenOk,
 } from "./core.js";
 
 const PORT = Number(process.env.PORT) || 4455;
@@ -128,20 +128,16 @@ function readJson(req) {
   });
 }
 
-/** Wysyłka z obsługą wygasłej subskrypcji (404/410 = telefon ją odwołał). */
-async function push(id, subscription, payload) {
+/** Wysyłka jednej wiadomości: "gone" = telefon odwołał subskrypcję (404/410), "error" = inny błąd (bez ponawiania). */
+async function sendOne(id, subscription, payload) {
   try {
     // Limit czasu: zawieszony serwis push nie może blokować pętli wysyłki ani gniazd.
     await webpush.sendNotification(subscription, payload, { TTL: 3600, urgency: "high", timeout: 10_000 });
-    return true;
+    return "ok";
   } catch (e) {
-    if (e.statusCode === 404 || e.statusCode === 410) {
-      delete store.subs[id];
-      console.log("Subskrypcja wygasła:", id);
-    } else {
-      console.error("Błąd wysyłki", id, e.statusCode || "", e.message);
-    }
-    return false;
+    if (e.statusCode === 404 || e.statusCode === 410) { console.log("Subskrypcja wygasła:", id); return "gone"; }
+    console.error("Błąd wysyłki", id, e.statusCode || "", e.message);
+    return "error";
   }
 }
 
@@ -150,19 +146,7 @@ async function tick() {
   if (ticking) return; // poprzedni obieg jeszcze trwa (wolna usługa push) — nie mnożymy wywołań
   ticking = true;
   try {
-    const now = Date.now();
-    let dirty = false;
-    for (const id of staleSubs(store, now)) { delete store.subs[id]; dirty = true; console.log("Subskrypcja bez aktywności usunięta:", id); }
-    const { send: due, drop } = dueItems(store, now);
-    for (const { id, item } of drop) removeItems(store, id, [item.key]);
-    for (const { id, item } of due) {
-      const sub = store.subs[id];
-      if (!sub) continue;
-      // Nieudana wysyłka (poza wygasłą subskrypcją) nie jest ponawiana — jak spóźniony termin.
-      removeItems(store, id, [item.key]);
-      await push(id, sub.subscription, payloadOf(item));
-    }
-    if (dirty || due.length > 0 || drop.length > 0) save();
+    if (await tickStore(store, Date.now(), sendOne)) save();
   } finally {
     ticking = false;
   }
@@ -238,9 +222,11 @@ async function handle(req, res) {
       const id = subKey(subscription.endpoint);
       const sub = perSubTest.hit(id, now);
       if (!sub.ok) return tooMany(res, sub.retryAfterSec);
-      const ok = await push(id, subscription, payloadOf({
+      const result = await sendOne(id, subscription, payloadOf({
         key: `test:${Date.now()}`, title: "Próbne powiadomienie", body: "Serwer powiadomień działa — przypomnienia przyjdą też przy zamkniętej aplikacji.", url: "/",
       }));
+      if (result === "gone") { delete store.subs[id]; save(); }
+      const ok = result === "ok";
       return send(res, ok ? 200 : 502, { ok });
     }
 

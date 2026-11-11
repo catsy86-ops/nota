@@ -50,3 +50,45 @@ describe("readNFCTag", () => {
     expect(await t).toEqual({ ok: false, reason: "timeout" });
   });
 });
+
+describe("readNFCTag: pozostałe powody (T25)", () => {
+  const withReader = (R: unknown) => { (window as { NDEFReader?: unknown }).NDEFReader = R; };
+
+  it("błąd odczytu tagu i pusty tag dają „empty”", async () => {
+    class Err { onreading = null; onreadingerror: (() => void) | null = null; async scan() { setTimeout(() => this.onreadingerror?.(), 0); } }
+    withReader(Err);
+    expect(await readNFCTag()).toEqual({ ok: false, reason: "empty" });
+    class Empty { onreading: ((e: unknown) => void) | null = null; onreadingerror = null; async scan() { setTimeout(() => this.onreading?.({ message: { records: [] } }), 0); } }
+    withReader(Empty);
+    expect(await readNFCTag()).toEqual({ ok: false, reason: "empty" });
+  });
+
+  it("nieznany wyjątek ze scan to „error”, AbortError to „aborted”", async () => {
+    class Boom { onreading = null; onreadingerror = null; async scan() { throw new Error("coś"); } }
+    withReader(Boom);
+    expect(await readNFCTag()).toEqual({ ok: false, reason: "error" });
+    class Abort { onreading = null; onreadingerror = null; async scan() { throw Object.assign(new Error("x"), { name: "AbortError" }); } }
+    withReader(Abort);
+    expect(await readNFCTag()).toEqual({ ok: false, reason: "aborted" });
+  });
+
+  it("po udanym odczycie późniejsze przerwanie nie zmienia wyniku", async () => {
+    class Once { onreading: ((e: unknown) => void) | null = null; onreadingerror = null; async scan() { setTimeout(() => this.onreading?.({ serialNumber: "04:07" }), 0); } }
+    withReader(Once);
+    const c = new AbortController();
+    const result = await readNFCTag(c.signal);
+    c.abort();
+    expect(result).toEqual({ ok: true, value: "04:07" });
+  });
+});
+
+describe("readNFCTag: limit czasu osobno", () => {
+  it("bez tagu przez limit: „timeout”", async () => {
+    class Silent2 { onreading = null; onreadingerror = null; async scan() { /* czeka */ } }
+    (window as { NDEFReader?: unknown }).NDEFReader = Silent2;
+    vi.useFakeTimers();
+    const t = readNFCTag(undefined, 500);
+    await vi.advanceTimersByTimeAsync(501);
+    expect(await t).toEqual({ ok: false, reason: "timeout" });
+  });
+});

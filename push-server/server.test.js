@@ -178,3 +178,14 @@ test("limit /schedule na subskrypcję i /test: kolejne żądania dostają 429", 
     assert.equal((await fetch(`${lim.base}/schedule`, json({ subscription: other, items: [] }, auth))).status, 200);
   } finally { await lim.stop(); }
 });
+
+test("/unsubscribe z tokenem usuwa subskrypcję, także gdy adres ma inną wielkość liter w hoście", async () => {
+  const endpoint = "https://fcm.googleapis.com/fcm/send/unsub-happy";
+  const put = await fetch(`${srv.base}/schedule`, json({ subscription: { ...VALID_SUB, endpoint }, items: [] }, auth));
+  assert.equal(put.status, 200);
+  const un = await fetch(`${srv.base}/unsubscribe`, { method: "POST", headers: { "Content-Type": "application/json", ...auth }, body: JSON.stringify({ endpoint: "https://FCM.googleapis.com/fcm/send/unsub-happy" }) });
+  assert.equal(un.status, 200);
+  // Ponowny zapis działa jak świeża subskrypcja (limit na subskrypcję nie jest „zajęty” starym wpisem).
+  const again = await fetch(`${srv.base}/schedule`, json({ subscription: { ...VALID_SUB, endpoint }, items: [] }, auth));
+  assert.equal(again.status, 200);
+});

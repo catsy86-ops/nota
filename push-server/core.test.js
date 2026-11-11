@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cleanItems, cleanStore, cleanSubscription, dueItems, isPushServiceUrl, LIMITS, payloadOf, removeItems, subKey } from "./core.js";
+import { cleanItems, cleanStore, cleanSubscription, dueItems, isPushServiceUrl, LIMITS, payloadOf, removeItems, subKey, tickStore } from "./core.js";
 
 test("endpoint tylko z serwisu Web Push przeglądarki (bez otwartego przekaźnika)", () => {
   assert.equal(isPushServiceUrl("https://fcm.googleapis.com/fcm/send/abc"), true);
@@ -77,4 +77,42 @@ test("terminy: „Odłóż” tylko dla przypomnień jednorazowych (`snooze: tru
   assert.equal(series.snooze, false);
   assert.equal(JSON.parse(payloadOf(once)).snooze, true);
   assert.equal(JSON.parse(payloadOf(series)).snooze, false);
+});
+
+// ── tickStore: obieg wysyłki bez sieci (T20 audytu) ─────────────────────────────────────────────
+const TICK_NOW = 1_800_000_000_000;
+const storeWith = (items, updated = TICK_NOW) => ({ subs: { s1: { subscription: { endpoint: "https://fcm.googleapis.com/x", keys: {} }, items, updated } } });
+const item = (key, at) => ({ key, at, title: key, body: "", url: "/", snooze: false });
+
+test("tickStore: wysyła nadchodzące terminy raz i usuwa je z listy", async () => {
+  const store = storeWith([item("a", TICK_NOW - 1000), item("później", TICK_NOW + 60_000)]);
+  const sent = [];
+  const dirty = await tickStore(store, TICK_NOW, async (id, _sub, payload) => { sent.push([id, JSON.parse(payload).key]); return "ok"; });
+  assert.equal(dirty, true);
+  assert.deepEqual(sent, [["s1", "a"]]);
+  assert.deepEqual(store.subs.s1.items.map((i) => i.key), ["później"]);
+  assert.equal(await tickStore(store, TICK_NOW, async () => "ok"), false); // nic więcej do zrobienia
+});
+
+test("tickStore: 410/404 usuwa subskrypcję, błąd 5xx tylko termin (bez ponawiania)", async () => {
+  const gone = storeWith([item("a", TICK_NOW - 1000)]);
+  await tickStore(gone, TICK_NOW, async () => "gone");
+  assert.equal(gone.subs.s1, undefined);
+
+  const failing = storeWith([item("a", TICK_NOW - 1000)]);
+  await tickStore(failing, TICK_NOW, async () => "error");
+  assert.ok(failing.subs.s1, "subskrypcja zostaje");
+  assert.deepEqual(failing.subs.s1.items, [], "termin nie jest ponawiany");
+});
+
+test("tickStore: spóźnione terminy przepadają bez wysyłki, nieaktywne subskrypcje są usuwane", async () => {
+  const late = storeWith([item("stary", TICK_NOW - LIMITS.lateMs - 1000)]);
+  let calls = 0;
+  assert.equal(await tickStore(late, TICK_NOW, async () => { calls++; return "ok"; }), true);
+  assert.equal(calls, 0);
+  assert.deepEqual(late.subs.s1.items, []);
+
+  const stale = storeWith([item("a", TICK_NOW + 1000)], TICK_NOW - LIMITS.staleMs - 1000);
+  assert.equal(await tickStore(stale, TICK_NOW, async () => "ok"), true);
+  assert.equal(stale.subs.s1, undefined);
 });

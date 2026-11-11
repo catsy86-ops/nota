@@ -33,3 +33,24 @@ describe("aiModel (Summarizer)", () => {
     expect(await summarizeText("   ")).toBeNull();
   });
 });
+
+describe("aiModel: stany pobierania (T24)", () => {
+  it("model „do pobrania” jest uruchamiany świadomie (pobranie przy pierwszym użyciu), „pobiera się” też", async () => {
+    for (const state of ["downloadable", "downloading"]) {
+      const create = vi.fn().mockResolvedValue({ summarize: async () => "Wynik" });
+      setApi({ availability: async () => state, create });
+      expect(await aiAvailability()).toBe(state);
+      expect(await summarizeText("tekst"), state).toBe("Wynik");
+      expect(create).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it("availability rzuca wyjątek: niedostępny, bez próby tworzenia modelu", async () => {
+    const create = vi.fn();
+    setApi({ availability: async () => { throw new Error("boom"); }, create });
+    expect(await aiAvailability()).toBe("unavailable");
+    expect(await summarizeText("tekst")).toBeNull();
+    expect(create).not.toHaveBeenCalled();
+  });
+});
+

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { hasCamera, hasTorch, openCamera, setTorch, stopStream } from "./cameraCapture";
+import { captureFrame, hasCamera, hasTorch, openCamera, setTorch, stopStream } from "./cameraCapture";
 
 const track = (caps: unknown, apply = vi.fn().mockResolvedValue(undefined)) => ({ getCapabilities: () => caps, applyConstraints: apply, stop: vi.fn() }) as unknown as MediaStreamTrack;
 const stream = (t: MediaStreamTrack) => ({ getVideoTracks: () => [t], getTracks: () => [t] }) as unknown as MediaStream;
@@ -49,5 +49,39 @@ describe("cameraCapture (B3.9)", () => {
     const t = track({});
     stopStream(stream(t));
     expect((t as unknown as { stop: ReturnType<typeof vi.fn> }).stop).toHaveBeenCalled();
+  });
+});
+
+describe("captureFrame (T23)", () => {
+  const video = (over: Partial<HTMLVideoElement> = {}) => ({ readyState: 4, videoWidth: 640, videoHeight: 480, ...over }) as unknown as HTMLVideoElement;
+  const fakeCanvas = (ctx: unknown, blob: Blob | null = new Blob(["x"])) => {
+    const toBlob = vi.fn((cb: (b: Blob | null) => void) => cb(blob));
+    vi.spyOn(document, "createElement").mockReturnValue({ width: 0, height: 0, getContext: () => ctx, toBlob } as unknown as HTMLElement);
+    return toBlob;
+  };
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("kamera jeszcze bez obrazu: null", async () => {
+    expect(await captureFrame(video({ readyState: 1 }))).toBeNull();
+    expect(await captureFrame(video({ videoWidth: 0 }))).toBeNull();
+    expect(await captureFrame(video({ videoHeight: 0 }))).toBeNull();
+  });
+
+  it("brak kontekstu 2D albo pusty toBlob: null", async () => {
+    fakeCanvas(null);
+    expect(await captureFrame(video())).toBeNull();
+    vi.restoreAllMocks();
+    fakeCanvas({ drawImage: vi.fn() }, null);
+    expect(await captureFrame(video())).toBeNull();
+  });
+
+  it("poprawna klatka: rysuje wideo i oddaje JPEG 0,9", async () => {
+    const drawImage = vi.fn();
+    const toBlob = fakeCanvas({ drawImage });
+    const v = video();
+    const blob = await captureFrame(v);
+    expect(blob).toBeInstanceOf(Blob);
+    expect(drawImage).toHaveBeenCalledWith(v, 0, 0);
+    expect(toBlob).toHaveBeenCalledWith(expect.any(Function), "image/jpeg", 0.9);
   });
 });

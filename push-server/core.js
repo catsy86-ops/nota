@@ -229,3 +229,22 @@ export function createRateLimiter({ windowMs, max, maxKeys = 10_000 }) {
 export function staleSubs(store, now) {
   return Object.entries(store.subs).filter(([, sub]) => now - (Number(sub.updated) || 0) > LIMITS.staleMs).map(([id]) => id);
 }
+
+/**
+ * Jeden obieg wysyłki: usuwa nieaktywne subskrypcje, wysyła terminy, które nadeszły, i porzuca spóźnione. Samą wysyłkę
+ * (`sendOne(id, subscription, payload)` → "ok" | "gone" | "error") wstrzykuje serwer, więc obieg da się testować bez sieci.
+ * Nieudana wysyłka nie jest ponawiana; "gone" (404/410) usuwa subskrypcję. Zwraca `true`, gdy trzeba zapisać stan.
+ */
+export async function tickStore(store, now, sendOne) {
+  let dirty = false;
+  for (const id of staleSubs(store, now)) { delete store.subs[id]; dirty = true; }
+  const { send, drop } = dueItems(store, now);
+  for (const { id, item } of drop) removeItems(store, id, [item.key]);
+  for (const { id, item } of send) {
+    const sub = store.subs[id];
+    if (!sub) continue;
+    removeItems(store, id, [item.key]);
+    if ((await sendOne(id, sub.subscription, payloadOf(item))) === "gone") delete store.subs[id];
+  }
+  return dirty || send.length > 0 || drop.length > 0;
+}

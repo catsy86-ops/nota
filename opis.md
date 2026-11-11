@@ -5349,3 +5349,8 @@ Pełna lista i statusy: `docs/audyt-bledow-2026-11-11.md`. **Naprawione i przete
 
 Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.ts` (dodaj → usuń → cofnij, limit 2000 wpisów, trasa do 20 budów), wektor referencyjny SHA-256 i brak `crypto.subtle` w `documentFingerprint.test.ts`, granice `cleanTest`/minutnika w `pressureTest.test.ts`, linia podpisu w `handover.test.ts`. `e2e/jobs.spec.ts`: etykiety „Klient” i „Adres” z `exact: true` (nie trafiają w przycisk kontaktów).
 
+## Audyt, ósma partia: testy PDF, paczek, push i czujników (2026-11-11)
+
+- **Serwer push:** `push-server/core.js` `tickStore(store, now, sendOne)` — jeden obieg wysyłki z wstrzykiwaną wysyłką; `server.js` używa go w `tick()` (obsługa 404/410 → usunięcie subskrypcji, inny błąd → termin nie jest ponawiany). `/test` korzysta z tego samego `sendOne`. Testy: `core.test.js`, `server.test.js`.
+- **Testy:** `src/lib/study/pdfBuilders.test.ts` (atrapa jsPDF), `src/lib/push/client.test.ts`, rozszerzone `sitePackageApply.test.ts`, `nfc.test.ts`, `cameraCapture.test.ts`, `aiModel.test.ts`.
+
