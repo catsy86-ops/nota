@@ -115,3 +115,7 @@ T-pozycje z raportu testów: wektor SHA-256 i brak Web Crypto (`documentFingerpr
 
 T6 (treść PDF-ów: `pdfBuilders.test.ts` z atrapą jsPDF — nagłówki, kwoty, stopka z odciskiem na każdej stronie, numeracja), T7 (eksport → odczyt → import i idempotentność w `sitePackageApply.test.ts`), T19 (`push/client.test.ts`: odmowa zgody, serwer niedostępny/5xx, wymiana subskrypcji, `keepalive`), T20–T21 (`tickStore` wyniesiony do `push-server/core.js` z wstrzykiwaną wysyłką; testy 410/5xx/spóźnione/nieaktywne oraz `/unsubscribe` z tokenem), T23 (`captureFrame`), T24 (stany pobierania modelu), T25 (powody NFC). Zostają: sleepy w e2e (T32–T33), testy komponentów (T31), `viewTransition` rozbić na osobne `it` (T26), `van`/`budowaCompression`/`monthlySummary` (T27, T28, T30), rozbieżności `opis.md` (T35).
 
+## Zrobione 2026-11-11 (dziesiąta partia, testy)
+
+T26 (`viewTransition.test.ts` rozbity na osobne przypadki, Firefox), T27 (granice `van`: minimum równe stanowi, `cleanVanQty`, `VAN_ITEMS_MAX`), T28 (prawdziwa bomba gzip, format v1, próg kompresji), T30 (`﻿` zamiast literalnego BOM), T32 (dwa 2,5-sekundowe sleepy w `private-notes.spec.ts` zastąpione `expect.poll` na zawartości IndexedDB), T35 (poprawki rozbieżności w `opis.md`). Zostają: pozostałe `waitForTimeout` w e2e (to czekania na brak zdarzenia, bez sygnału do odpytywania), testy komponentów (T31), T33.
+

@@ -96,3 +96,25 @@ describe("budowaCompression", () => {
     expect(await decompressBudowa(new NodeBlob([bytes.subarray(0, 4)]) as unknown as Blob)).toBeNull();
   });
 });
+
+describe("budowaCompression — limity (T28)", () => {
+  beforeAll(() => { vi.stubGlobal("Blob", NodeBlob); });
+  afterAll(() => { vi.unstubAllGlobals(); });
+  it("prawdziwa bomba: nagłówek zgodny z rozmiarem, ale dane ponad limit po rozpakowaniu → null", async () => {
+    const { DECOMPRESSED_MAX_BYTES } = await import("./budowaCompression");
+    const bomb = await compressBudowa("x".repeat(DECOMPRESSED_MAX_BYTES + 1000));
+    expect(bomb.size).toBeLessThan(1_000_000); // kilkadziesiąt MB powtórzeń mieści się w kilkudziesięciu KB
+    expect(await decompressBudowa(bomb)).toBeNull();
+  }, 30_000);
+
+  it("zwykły JSON (format v1, bez nagłówka) wczytuje się bez zmian", async () => {
+    const json = JSON.stringify({ v: 1, a: "zażółć" });
+    expect(await decompressBudowa(new Blob([json]))).toBe(json);
+  });
+
+  it("próg kompresji jest zdefiniowany na 1 MB (mniejsze paczki zostają JSON-em)", async () => {
+    const { COMPRESS_MIN_BYTES } = await import("./budowaCompression");
+    expect(COMPRESS_MIN_BYTES).toBe(1_000_000);
+  });
+});
+

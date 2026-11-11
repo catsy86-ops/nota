@@ -108,7 +108,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 - **Mikrointerakcje stanów:** pole z błędem (`aria-invalid`) ma czerwoną ramkę, a z klasą `shake-invalid` także drga przy próbie zapisu; liczniki w nawigacji pulsują przy zmianie (`count-bump`); przełączniki i checkboxy podświetlają się po najechaniu; suwak ma halo; tosty mają przycisk × (błąd 9 s można zamknąć); Enter i Spacja po dotyku nie włączają ramki fokusu (`src/lib/inputModality.ts`). Przycisk „ładuje” (wspólny prop `loading`) nie jest zrobiony.
 - **Podpis wciśnięcia** przycisków to klasa `pressable`, nie skala framer-motion.
 - **Przejście motywu** kołem (View Transitions, `clip-path: circle()` od ostatniego dotknięcia, ≤1,5 s). Wyłączone przy ograniczonym ruchu i efekcie „themeFade”.
-- **Przejście widoku** przez `document.startViewTransition` z `flushSync` w `Index.tsx`; bez View Transitions zmiana natychmiastowa. **Strażnik WebKit (2026-11-11):** `src/lib/viewTransition.ts` (`canViewTransition`, `withViewTransition`, `isWebKitOnly`) wyłącza przejścia widoku w WebKit (Safari i każda przeglądarka na iOS) — szybkie przełączanie widoków w karcie budowy kończyło się „Old view transition aborted by new view transition” i awarią procesu renderującego (e2e `workday.spec.ts` na iPhonie 14, WebKit). Tam zmiana jest natychmiastowa; Chromium bez zmian. Używają go karta budowy (segmenty, zamknięcie), kalendarz (wybór dnia) i przejście motywu. Test: `viewTransition.test.ts`, `e2e/workday.spec.ts`.
+- **Przejście widoku** przez `document.startViewTransition` z `flushSync` w `Index.tsx`; bez View Transitions zmiana natychmiastowa. **Strażnik WebKit (2026-11-11):** `src/lib/viewTransition.ts` (`canViewTransition`, `withViewTransition`, `isWebKitOnly`) wyłącza przejścia widoku w WebKit (Safari i każda przeglądarka na iOS) — szybkie przełączanie widoków w karcie budowy kończyło się „Old view transition aborted by new view transition” i awarią procesu renderującego (e2e `workday.spec.ts` na iPhonie 14, WebKit). Tam zmiana jest natychmiastowa; Chromium bez zmian. Używają go karta budowy (segmenty, zamknięcie), kalendarz (wybór dnia), `Index.tsx`, `viewChange.ts` (przez `canViewTransition`) i przejście motywu; `viewTransitionGuard.test.ts` pilnuje, że `startViewTransition` nie jest wołane poza strażnikiem. Test: `viewTransition.test.ts`, `e2e/workday.spec.ts`.
 
 ### Wygląd: style, kroje, tokeny, pieczątki
 
@@ -5187,7 +5187,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 **Testy.**
 
 - **E2E:** formalne testy brak (API sensorowe trudne do testowania w Playwright). Testują się w `e2e/a11y.spec.ts` jeśli są elementy UI (przycisk, tekst).
-- **Unit:** `src/lib/cameraCapture.ts`, `src/lib/barcode.ts`, `src/lib/nfc.ts`, `src/lib/dimensions.ts` mają czyszczenie i helperów do testu (brak aktualnych testów dla sensorów, bo to browser API).
+- **Unit:** `src/lib/cameraCapture.ts`, `src/lib/barcode.ts`, `src/lib/nfc.ts`, `src/lib/study/dimensions.ts` mają czyszczenie i helpery; testy: `cameraCapture.test.ts`, `barcode.test.ts`, `nfc.test.ts`, `aiModel.test.ts`, `slope.test.ts`, `dimensions.test.ts` (API przeglądarki są atrapami).
 - **Typu:** `npx tsc --noEmit` przechodzi (wszystkie typy w `dimensions.ts`, `nfc.ts`, itp.).
 
 **Commit.** B3.1–B3.11 zacommitowane w serii:
@@ -5238,7 +5238,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 **Testy.**
 
 - **Unit:** `mileage.test.ts` (odległość, CSV, czyszczenie magazynu, sumy), `monthlySummary.test.ts`, `documentFingerprint.test.ts`.
-- **E2E:** `e2e/handover-pdf.spec.ts` (odcisk zapisany i sprawdzany w Ustawieniach), `fingerprintStore.test.ts`, `e2e/jobs.spec.ts` (wycena z cennika), `src/lib/pricing.test.ts`, `e2e/site-billing.spec.ts` (miesiąc razem: wpłaty i CSV zestawienia), `e2e/mileage.spec.ts` (podpowiedź z lokalizacji, zapis, CSV, „Cofnij”, axe, telefon 390 px). `e2e/payment-reminder.spec.ts` (przyciski przypomnienia pojawiają się dopiero z telefonem i kwotą; konto i cennik w Ustawieniach zostają po odświeżeniu). Linki: `paymentReminder.test.ts` (numer czyszczony do cyfr i opcjonalnego „+”).
+- **Unit:** `fingerprintStore.test.ts`, `documentFingerprint.test.ts` (wektor referencyjny SHA-256), `pdfBuilders.test.ts` (treść PDF). **E2E:** `e2e/handover-pdf.spec.ts` (odcisk zapisany i sprawdzany w Ustawieniach), `e2e/jobs.spec.ts` (wycena z cennika), `src/lib/pricing.test.ts`, `e2e/site-billing.spec.ts` (miesiąc razem: wpłaty i CSV zestawienia), `e2e/mileage.spec.ts` (podpowiedź z lokalizacji, zapis, CSV, „Cofnij”, axe, telefon 390 px). `e2e/payment-reminder.spec.ts` (przyciski przypomnienia pojawiają się dopiero z telefonem i kwotą; konto i cennik w Ustawieniach zostają po odświeżeniu). Linki: `paymentReminder.test.ts` (numer czyszczony do cyfr i opcjonalnego „+”).
 - **Typu:** `npx tsc --noEmit` przechodzi (wszystkie typy).
 
 **Commit.** B4.1–B4.5 zacommitowane:

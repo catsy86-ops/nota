@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
-import { cleanVanEvent, cleanVanItem, findVanItemByCode, parseVanQty, usedSince, vanStock, type VanItem } from "./van";
+import { cleanVanEvent, cleanVanItem, cleanVanQty, findVanItemByCode, parseVanQty, usedSince, vanStock, VAN_ITEMS_MAX, VAN_QTY_MAX, type VanItem } from "./van";
 import { createYVan } from "./yVan";
 import { wholesaleText } from "./order";
 
@@ -90,3 +90,27 @@ describe("kod z opakowania (B3.5)", () => {
     expect(a.get().items[0].code).toBeUndefined();
   });
 });
+
+describe("materiał w aucie — granice (T27)", () => {
+  it("minimum równe stanowi nie wymaga dokupienia, o jeden mniej — tak", () => {
+    const at = (qty: number) => [{ id: "c", item: "k", kind: "count" as const, qty, at: 200 }];
+    expect(vanStock(kolano, at(10), []).toBuy).toBe(0);
+    expect(vanStock(kolano, at(9), []).toBuy).toBe(1);
+  });
+
+  it("cleanVanQty odrzuca NaN, Infinity, ujemne i ponad limit; zaokrągla do 2 miejsc", () => {
+    for (const bad of [NaN, Infinity, -1, VAN_QTY_MAX + 1, "5", null]) expect(cleanVanQty(bad), String(bad)).toBeUndefined();
+    expect(cleanVanQty(0)).toBe(0);
+    expect(cleanVanQty(2.345)).toBe(2.35);
+    expect(cleanVanQty(VAN_QTY_MAX)).toBe(VAN_QTY_MAX);
+  });
+
+  it("magazyn przyjmuje najwyżej VAN_ITEMS_MAX pozycji", () => {
+    const y = createYVan(new Y.Doc());
+    for (let i = 0; i < VAN_ITEMS_MAX; i++) expect(y.saveItem({ id: `p${i}`, name: `Poz ${i}`, unit: "szt.", at: 100 + i, order: i })).toBe(true);
+    expect(y.saveItem({ id: "ponad", name: "Ponad limit", unit: "szt.", at: 999, order: 999 })).toBe(false);
+    // istniejącą pozycję można dalej edytować
+    expect(y.saveItem({ id: "p0", name: "Zmieniona", unit: "szt.", at: 100, order: 0 })).toBe(true);
+  });
+});
+

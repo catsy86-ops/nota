@@ -16,23 +16,37 @@ describe("viewTransition", () => {
     for (const ua of [CHROME_ANDROID, CHROME_DESKTOP, EDGE]) expect(isWebKitOnly(ua), ua).toBe(false);
   });
 
-  it("withViewTransition: bez API albo w WebKit od razu, w Chromium przez przejście", () => {
+  it("withViewTransition: bez API (jsdom) wykonuje zmianę od razu", () => {
     const update = vi.fn();
     withViewTransition(update);
-    expect(update).toHaveBeenCalledTimes(1); // brak API w jsdom
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it("withViewTransition: w Chromium z API idzie przez przejście", () => {
     const start = vi.fn((cb: () => void) => cb());
     (document as { startViewTransition?: unknown }).startViewTransition = start;
     vi.spyOn(navigator, "userAgent", "get").mockReturnValue(CHROME_DESKTOP);
     expect(canViewTransition()).toBe(true);
-    const u2 = vi.fn();
-    withViewTransition(u2);
+    const update = vi.fn();
+    withViewTransition(update);
     expect(start).toHaveBeenCalledTimes(1);
-    expect(u2).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it("withViewTransition: w WebKit bez przejścia, ale zmiana wykonana", () => {
+    const start = vi.fn((cb: () => void) => cb());
+    (document as { startViewTransition?: unknown }).startViewTransition = start;
     vi.spyOn(navigator, "userAgent", "get").mockReturnValue(SAFARI);
     expect(canViewTransition()).toBe(false);
-    const u3 = vi.fn();
-    withViewTransition(u3);
-    expect(start).toHaveBeenCalledTimes(1); // bez przejścia
-    expect(u3).toHaveBeenCalledTimes(1);
+    const update = vi.fn();
+    withViewTransition(update);
+    expect(start).not.toHaveBeenCalled();
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it("Firefox (Gecko bez AppleWebKit) to nie WebKit; pusty UA też nie", () => {
+    const FIREFOX = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0";
+    expect(isWebKitOnly(FIREFOX)).toBe(false);
+    expect(isWebKitOnly("")).toBe(false);
   });
 });

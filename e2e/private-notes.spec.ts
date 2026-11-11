@@ -167,8 +167,7 @@ test("backup, localStorage i IndexedDB nie zawierają jawnego tekstu; reload zac
   await page.keyboard.press("Escape");
 
   // Dziennik IndexedDB zostaje zagęszczony po zablokowaniu notatki.
-  await page.waitForTimeout(2500);
-  expect(await dumpDocIdb(page)).not.toContain(SECRET);
+  await expect.poll(() => dumpDocIdb(page), { timeout: 15_000 }).not.toContain(SECRET);
   const ls = await page.evaluate(() => JSON.stringify(Object.fromEntries(Object.keys(localStorage).map((k) => [k, localStorage.getItem(k)]))));
   expect(ls).not.toContain(SECRET);
   expect(ls).not.toContain(PASSWORD);
@@ -228,10 +227,7 @@ test("edycja odblokowanej notatki zapisuje się wyłącznie jako szyfrogram i pr
   await lockNowFromPalette(page);
   expect(await page.content()).not.toContain(EDITED);
   // Dziennik IndexedDB: ani nowy, ani stary tekst nie leży jawnie.
-  await page.waitForTimeout(2500);
-  const idb = await dumpDocIdb(page);
-  expect(idb).not.toContain(EDITED);
-  expect(idb).not.toContain(SECRET);
+  await expect.poll(async () => { const idb = await dumpDocIdb(page); return idb.includes(EDITED) || idb.includes(SECRET); }, { timeout: 15_000 }).toBe(false);
 
   await page.reload();
   await unlockViaTile(page, PASSWORD);
