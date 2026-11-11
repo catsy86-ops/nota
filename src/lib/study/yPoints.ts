@@ -116,16 +116,17 @@ export function createYPoints(doc: Y.Doc) {
     const sites = (raw as Partial<PointsDump> | null)?.sites;
     if (!sites || typeof sites !== "object") return;
     doc.transact(() => {
-      for (const [site, data] of Object.entries(sites)) {
+      // Limity jak przy ręcznych zapisach: plik kopii nie rozdmie dokumentu (D4); punkt bez pomieszczenia odpada (D5).
+      for (const [site, data] of Object.entries(sites).slice(0, 500)) {
         if (!site || site.length > 64 || !data || typeof data !== "object") continue;
         const d = data as Partial<SitePoints>;
-        for (const raw of Array.isArray(d.rooms) ? d.rooms : []) {
+        for (const raw of (Array.isArray(d.rooms) ? d.rooms : []).slice(0, ROOMS_MAX)) {
           const r = cleanRoom(raw);
           if (r && !map.has(roomKey(site, r.id))) map.set(roomKey(site, r.id), r);
         }
-        for (const raw of Array.isArray(d.points) ? d.points : []) {
+        for (const raw of (Array.isArray(d.points) ? d.points : []).slice(0, POINTS_MAX)) {
           const p = cleanPoint(raw);
-          if (p && !map.has(pointKey(site, p.id))) map.set(pointKey(site, p.id), p);
+          if (p && map.has(roomKey(site, p.room)) && !map.has(pointKey(site, p.id))) map.set(pointKey(site, p.id), p);
         }
       }
     }, POINTS_ORIGIN);

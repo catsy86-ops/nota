@@ -141,7 +141,7 @@ export function createYJobs(doc: Y.Doc) {
     const jobs = (raw as Partial<JobsDump> | null)?.jobs;
     if (!jobs || typeof jobs !== "object") return;
     doc.transact(() => {
-      for (const [site, data] of Object.entries(jobs)) {
+      for (const [site, data] of Object.entries(jobs).slice(0, 500)) {
         if (!isId(site) || !data || typeof data !== "object") continue;
         const meta = cleanJobMeta(data);
         if (!meta) continue;

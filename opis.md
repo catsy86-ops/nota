@@ -5361,3 +5361,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Skaner (`BarcodeScanner.tsx`):** w trybie bez automatycznego użycia po wykryciu kodu jest „Skanuj ponownie” (restart kamery).
 - **Drobne:** adres obrazu zaznaczania planu zwalniany przy odmontowaniu `SiteDocsPanel`. Testy: `e2e/pressure-timer.spec.ts` (nowy test i poluzowane kruche asercje licznika).
 
+## Audyt, jedenasta partia: dane i czas (D1–D9, 2026-11-11)
+
+- **Zmiana czasu:** `useNextBoundary.ts` liczy następną północ zegarowo (nie „+24 h”), `push/schedule.ts` `shiftEndItems` zaczyna od wczoraj (zmiana nocna), `paymentReminder.ts` `daysWaiting` poprawia różnicę przesunięcia strefy. Testy: `useNextBoundary.test.ts`, `schedule.dst.test.ts`, `paymentReminder.test.ts`.
+- **Scalanie kopii (`mergeDump`):** rozliczenia ograniczają wpłaty do `PAYMENTS_MAX` razem z istniejącymi; punkty, auto, zestawy, zlecenia i odhaczenia mają limity wejścia; zdarzenia auta i punkty bez rodzica nie są zapisywane. Test: `mergeLimits.test.ts`, `billing.test.ts`.
+- **Klucze z kopii:** odczyt kwot etapów/typów tylko z własnych pól (`billing.ts`), `studyDump.ts` pomija `__proto__`.
+- **Push:** `client.ts` — limit czasu 15 s i kolejka `uploadSchedule`.
+

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Note } from "@/hooks/useNotes";
-import { endOfDayOffset, startOfDayOf } from "@/lib/dueTerms";
+import { endOfDayOffset } from "@/lib/dueTerms";
 
 /** Najdłuższy pojedynczy `setTimeout` (ok. 24,8 dnia). */
 const MAX_TIMEOUT_MS = 2_147_483_647;
@@ -10,8 +10,9 @@ const MAX_TIMEOUT_MS = 2_147_483_647;
  * termin notatki, koniec dnia całodziennego terminu albo północ. `null`, gdy nic przed nami nie ma.
  */
 export function nextBoundary(notes: Pick<Note, "reminder" | "reminderAllDay">[], now: number): number | null {
-  const midnight = startOfDayOf(now) + 24 * 60 * 60 * 1000;
-  let best: number | null = midnight;
+  // Następna północ lokalna, nie „+24 h”: w dniu zmiany czasu doba ma 23 albo 25 h (D1 audytu — inaczej timer odpalał się co 5 ms).
+  const midnight = endOfDayOffset(now) + 1;
+  let best: number | null = midnight > now ? midnight : null;
   for (const n of notes) {
     if (n.reminder === null) continue;
     const candidates = [n.reminder, n.reminderAllDay === true ? endOfDayOffset(n.reminder) + 1 : n.reminder];

@@ -127,10 +127,13 @@ export function createYBilling(doc: Y.Doc) {
         put(key("l", site), cleanAmount(d.lump));
         for (const [t, v] of entries(d.typeRates).slice(0, DUMP_MAP_MAX)) if (isId(t)) put(key("t", site, t), cleanAmount(v));
         for (const [s, v] of entries(d.stageAmounts).slice(0, DUMP_MAP_MAX)) if (isId(s)) put(key("s", site, s), cleanAmount(v));
+        // Razem z wpłatami, które budowa już ma, nie więcej niż `PAYMENTS_MAX` (D3 audytu — inaczej „Dodaj wpłatę” przestawało działać).
+        let room = PAYMENTS_MAX - get(site).payments.length;
         for (const v of (Array.isArray(d.payments) ? d.payments : []).slice(0, DUMP_PAYMENTS_MAX)) {
+          if (room <= 0) break;
           const id = (v as Partial<Payment> | null)?.id;
           const pay = typeof id === "string" && isId(id) ? cleanPayment(v, id) : null;
-          if (pay) { const { id: _, ...value } = pay; put(key("p", site, pay.id), value); }
+          if (pay && !map.has(key("p", site, pay.id))) { const { id: _, ...value } = pay; put(key("p", site, pay.id), value); room--; }
         }
       }
     }, BILLING_ORIGIN);

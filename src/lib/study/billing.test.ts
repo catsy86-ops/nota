@@ -200,3 +200,28 @@ describe("miesiąc razem (H3.3)", () => {
     expect(run({ modes: ["lump"], lump: 8000 }, [], [{ id: "a", done: d(5, 10) }]).lump).toBe(0);
   });
 });
+
+describe("rozliczenie: odporność na dane z kopii (D3, D6)", () => {
+  it("id etapu „constructor” albo „toString” nie daje kwoty z prototypu (NaN)", () => {
+    const st = billingStatement({
+      billing: bill({ modes: ["lump"], lump: 1000, stageAmounts: {} }), rate: undefined, minutes: 0, unsplit: 0, points: [],
+      stages: [{ id: "constructor", name: "Kanalizacja", done: 1_700_000_000_000 }, { id: "toString", name: "Woda", done: 1_700_000_000_000 }],
+      typeLabel: (id) => id,
+    });
+    expect(st.lines.map((l) => l.label)).toEqual(["Ryczałt za budowę"]);
+    expect(Number.isNaN(st.accrued)).toBe(false);
+    expect(pointRateFor(bill({ pointRate: 100 }), "constructor")).toBe(100);
+  });
+
+  it("scalanie kopii nie przekracza limitu wpłat budowy (razem z istniejącymi)", () => {
+    const y = createYBilling(new Y.Doc());
+    const payments = Array.from({ length: 300 }, (_, i) => ({ id: `p${i}`, day: "2026-11-01", amount: 10 + i }));
+    y.mergeDump({ sites: { s1: { typeRates: {}, stageAmounts: {}, payments } } });
+    expect(y.get("s1").payments.length).toBeLessThanOrEqual(100);
+    expect(y.get("s1").payments.length).toBe(100);
+    // ponowne scalenie tej samej kopii niczego nie dokłada
+    y.mergeDump({ sites: { s1: { typeRates: {}, stageAmounts: {}, payments } } });
+    expect(y.get("s1").payments.length).toBe(100);
+  });
+});
+

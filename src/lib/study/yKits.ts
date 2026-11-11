@@ -99,7 +99,7 @@ export function createYKits(doc: Y.Doc) {
   function mergeDump(raw: unknown): void {
     const d = (raw && typeof raw === "object" ? raw : {}) as Partial<KitsDump>;
     if (d.own !== true || !Array.isArray(d.kits)) return;
-    const kits = d.kits.map(cleanKit).filter((k): k is Kit => !!k);
+    const kits = d.kits.slice(0, KITS_MAX).map(cleanKit).filter((k): k is Kit => !!k);
     doc.transact(() => {
       adopt();
       kits.forEach((k, i) => { if (!map.has(PREFIX + k.id)) map.set(PREFIX + k.id, { ...k, order: Date.now() + i }); });

@@ -107,7 +107,7 @@ export function cleanDump(raw: unknown): StudyDump {
   const rounds: Record<string, DeviceRounds> = {};
   if (s.rounds && typeof s.rounds === "object") {
     for (const [k, v] of Object.entries(s.rounds as Record<string, Partial<DeviceRounds>>)) {
-      if (!v || typeof v !== "object" || typeof v.rounds !== "number" || !(v.rounds >= 0)) continue;
+      if (k === "__proto__" || !v || typeof v !== "object" || typeof v.rounds !== "number" || !(v.rounds >= 0)) continue; // „__proto__” ustawiłby prototyp zamiast pola (D7)
       rounds[k] = { rounds: Math.floor(v.rounds), best: isPercent(v.best) ? Math.round(v.best) : null };
     }
   }
@@ -133,7 +133,7 @@ function cleanReviews(raw: unknown): Record<string, ReviewCard> {
   const out: Record<string, ReviewCard> = {};
   if (!raw || typeof raw !== "object") return out;
   for (const [k, v] of Object.entries(raw)) {
-    const card = k.length <= 64 ? cleanCard(v) : null;
+    const card = k.length <= 64 && k !== "__proto__" ? cleanCard(v) : null;
     if (card) out[k] = card;
   }
   return out;

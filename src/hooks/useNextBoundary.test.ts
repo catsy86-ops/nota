@@ -21,3 +21,17 @@ describe("nextBoundary (T 1.1)", () => {
     expect(nextBoundary([{ reminder: at(19, 8), reminderAllDay: false }], at(19, 12))).toBe(at(20, 0));
   });
 });
+
+describe("nextBoundary: zmiana czasu (D1)", () => {
+  it("w dniu zmiany na zimowy (25 h) następna północ jest o prawdziwej północy, nie o 23:00", () => {
+    // 2026-10-25 w Europe/Warsaw: 03:00 → 02:00. Po 23:00 granica musi być jutrzejszą północą.
+    const now = new Date(2026, 9, 25, 23, 30).getTime();
+    expect(nextBoundary([], now)).toBe(new Date(2026, 9, 26, 0, 0).getTime());
+    expect(nextBoundary([], now)).toBeGreaterThan(now);
+  });
+
+  it("w dniu zmiany na letni (23 h) granica też wypada o północy", () => {
+    const now = new Date(2026, 2, 29, 12, 0).getTime();
+    expect(nextBoundary([], now)).toBe(new Date(2026, 2, 30, 0, 0).getTime());
+  });
+});

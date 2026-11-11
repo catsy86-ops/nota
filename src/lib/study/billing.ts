@@ -54,7 +54,10 @@ export function parseAmount(raw: string): number | null | undefined {
 }
 
 /** Stawka za punkt danego typu: własna typu albo domyślna; `undefined` = bez stawki. */
-export const pointRateFor = (b: Pick<SiteBilling, "pointRate" | "typeRates">, typeId: string): number | undefined => b.typeRates[typeId] ?? b.pointRate;
+/** Wartość pod kluczem tylko z własnych pól: id etapu albo typu z kopii może brzmieć `constructor` (D6 audytu — inaczej kwota = funkcja, suma NaN). */
+const own = (o: Record<string, number>, k: string): number | undefined => (Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined);
+
+export const pointRateFor = (b: Pick<SiteBilling, "pointRate" | "typeRates">, typeId: string): number | undefined => own(b.typeRates, typeId) ?? b.pointRate;
 
 /** „1 250,50 zł” / „8 000 zł”. */
 export const money = (n: number) => `${n.toLocaleString("pl-PL", { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })} zł`;
@@ -178,7 +181,7 @@ export function billingStatement(input: BillingInput): BillingStatement {
   if (on("lump")) {
     if (b.lump !== undefined) lines.push({ kind: "lump", label: "Ryczałt za budowę", detail: "umówiona kwota", amount: b.lump });
     for (const s of stages) {
-      const amount = b.stageAmounts[s.id];
+      const amount = own(b.stageAmounts, s.id);
       if (amount !== undefined && s.done !== undefined) lines.push({ kind: "stage", label: s.name, detail: `etap odhaczony ${dmy(s.done)}`, amount });
     }
   }
@@ -257,7 +260,7 @@ export function monthSiteEarnings(
   }
   if (b.modes.includes("lump")) {
     for (const s of stages) {
-      const amount = b.stageAmounts[s.id];
+      const amount = own(b.stageAmounts, s.id);
       if (amount !== undefined && inMonth(s.done)) { out.stages.count++; out.stages.amount = round2(out.stages.amount + amount); }
     }
     const finished = stages.length > 0 && stages.every((s) => s.done !== undefined);

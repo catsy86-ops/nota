@@ -26,7 +26,17 @@
 | W15 | sekcje pieniężne wracają przez scalanie, Nauka przez zastąpienie | otwarte |
 | W16 | zlecenia: `touch()` może cofnąć status z drugiego telefonu | naprawione: znacznik zmiany wyceny w osobnym kluczu `c␁budowa` (touch nie przepisuje statusu); `jobs.test.ts`. Pozostaje LWW całego wpisu zlecenia przy `setMeta` z dwóch telefonów naraz |
 | W17 | `cleanEntry.at`/`resolved` bez zakresu | naprawione: `timeInRange` (1970…3000) w `cleanEntry`; `journalAdded.test.ts` |
-| D1–D19 | drobne (limity przy scalaniu, osierocone dane, DST, push, zaokrąglenia, `__proto__`, wydajność 3000+) | patrz raport |
+| D1 | `useNextBoundary`: pętla co 5 ms w dniu zmiany na czas zimowy | naprawione: `endOfDayOffset(now) + 1` zamiast „+24 h”; `useNextBoundary.test.ts` |
+| D2 | brak pusha „Koniec zmiany” dla zmiany nocnej zaczętej wczoraj | naprawione: pętla od wczoraj; `schedule.dst.test.ts` |
+| D3 | scalanie rozliczeń omija limit wpłat | naprawione: `mergeDump` liczy wpłaty z istniejącymi; `billing.test.ts` |
+| D4 | brak limitów w `mergeDump` (punkty, auto, zestawy, zlecenia, odhaczenia) | naprawione: limity wejścia; `mergeLimits.test.ts` |
+| D5 | osierocone zdarzenia auta i punkty bez pomieszczenia | naprawione w `mergeDump` (nie są zapisywane); sprzątanie już istniejących nie dodane |
+| D6 | id etapu „constructor” daje kwotę NaN | naprawione: odczyt tylko własnych pól (`own` w `billing.ts`); `billing.test.ts` |
+| D7 | `__proto__` w kluczach kopii Nauki | naprawione: `studyDump.ts`; `studyDumpProto.test.ts` |
+| D8 | wysyłka harmonogramu push bez timeoutu i kolejki | naprawione: `AbortSignal.timeout(15 s)` i kolejka wysyłek (`client.ts`) |
+| D9 | `daysWaiting` błędny o dzień wokół zmiany czasu | naprawione: poprawka o różnicę przesunięcia strefy; `paymentReminder.test.ts` (inna `7*DAY_MS` w `StudyJournal` zostaje, błąd do 1 h) |
+| D10 | kilometrówka/cenniki poza kopią | = W14 (czeka na decyzję) |
+| D11 | koszt przebudowy migawki przy 3000+ wpisach | otwarte (wymaga pomiaru i cache per wpis) |
 
 ## UI Pracy
 

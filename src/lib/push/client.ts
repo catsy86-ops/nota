@@ -44,6 +44,8 @@ async function call(server: string, path: string, method: string, body?: unknown
       headers,
       body: body ? JSON.stringify(body) : undefined,
       keepalive,
+      // Zawieszony serwer nie może blokować wysyłki w nieskończoność (D8 audytu).
+      ...(typeof AbortSignal !== "undefined" && "timeout" in AbortSignal ? { signal: AbortSignal.timeout(15_000) } : {}),
     });
   } catch {
     throw new Error("Brak połączenia z serwerem powiadomień.");
@@ -108,8 +110,17 @@ function hashOf(s: string): string {
 /** Po tylu godzinach wysyłamy listę ponownie, nawet bez zmian — przesuwa się horyzont i serwer mógł stracić dane. */
 const RESEND_MS = 6 * 60 * 60 * 1000;
 
+/** Wysyłki idą jedna po drugiej: dwa nakładające się wywołania nie zapiszą `sentHash` w odwrotnej kolejności (D8). */
+let uploadQueue: Promise<void> = Promise.resolve();
+
 /** Wysyła harmonogram, jeśli się zmienił. `keepalive` — przy chowaniu aplikacji. */
-export async function uploadSchedule(items: PushItem[], keepalive = false): Promise<void> {
+export function uploadSchedule(items: PushItem[], keepalive = false): Promise<void> {
+  const run = uploadQueue.then(() => uploadNow(items, keepalive));
+  uploadQueue = run.catch(() => undefined);
+  return run;
+}
+
+async function uploadNow(items: PushItem[], keepalive: boolean): Promise<void> {
   const prefs = pushPrefs.get();
   if (!prefs.enabled) return;
   const sub = await currentSubscription().catch(() => null);

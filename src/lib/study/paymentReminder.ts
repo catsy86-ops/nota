@@ -16,7 +16,9 @@ export interface BankAccount {
 }
 
 export function daysWaiting(dueDate: number, now = Date.now()): number {
-  const days = Math.floor((now - dueDate) / (24 * 60 * 60 * 1000));
+  // Różnica zegarowa, nie 24 h * n: między terminem a dziś może być zmiana czasu (doba 23/25 h), D9 audytu.
+  const shiftMin = new Date(dueDate).getTimezoneOffset() - new Date(now).getTimezoneOffset();
+  const days = Math.floor((now - dueDate + shiftMin * 60_000) / (24 * 60 * 60 * 1000));
   return Math.max(0, days);
 }
 

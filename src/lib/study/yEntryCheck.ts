@@ -90,7 +90,7 @@ export function createYEntryCheck(doc: Y.Doc) {
   function mergeDump(raw: unknown): void {
     const d = (raw && typeof raw === "object" ? raw : {}) as Partial<EntryCheckDump>;
     const items = cleanCheckItems(d.items);
-    const records = Array.isArray(d.records) ? d.records.map(cleanRecord).filter((r): r is CheckRecord => !!r) : [];
+    const records = Array.isArray(d.records) ? d.records.slice(0, 5000).map(cleanRecord).filter((r): r is CheckRecord => !!r) : [];
     doc.transact(() => {
       if (items && !map.has(ITEMS_KEY)) map.set(ITEMS_KEY, items);
       for (const r of records) {

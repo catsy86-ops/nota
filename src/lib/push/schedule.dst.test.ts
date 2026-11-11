@@ -22,3 +22,16 @@ describe("alarm i koniec zmiany w dniu zmiany czasu (strefa Europe/Warsaw)", () 
     });
   }
 });
+
+// D2: zmiana nocna zaczęta wczoraj kończy się dziś — „Koniec zmiany” musi trafić do harmonogramu.
+describe("koniec zmiany nocnej zaczętej wczoraj", () => {
+  it("dziś o 02:00 widać koniec o 06:00 dla zmiany 22:00–06:00 z wczoraj", () => {
+    const night = { id: "nz", name: "Noc", short: "N", color: "#000000", start: "22:00", end: "06:00", breakMin: 0, kind: "work" as const };
+    const shifts: ShiftData = { ...EMPTY_SHIFT_DATA, types: [...EMPTY_SHIFT_DATA.types, night], days: { "2026-11-10": { type: "nz" } } };
+    const now = new Date(2026, 10, 11, 2, 0).getTime();
+    const end = buildPushSchedule({ now, notes: [], shifts }).find((i) => i.key === "s:2026-11-10");
+    expect(end).toBeDefined();
+    expect(end!.at).toBe(new Date(2026, 10, 11, 6, 0).getTime());
+  });
+});
+

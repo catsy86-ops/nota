@@ -69,3 +69,15 @@ describe("paymentReminder", () => {
     expect(link).toContain("2%20400");
   });
 });
+
+describe("daysWaiting: zmiana czasu (D9)", () => {
+  it("dwie doby kalendarzowe przez przejście na czas letni to 2 dni, nie 1", () => {
+    const due = new Date(2026, 2, 28, 0, 0).getTime(); // 28 marca, północ
+    const now = new Date(2026, 2, 30, 0, 0).getTime(); // 30 marca, północ (doba 29.03 miała 23 h)
+    expect(daysWaiting(due, now)).toBe(2);
+  });
+  it("przez przejście na czas zimowy też 2 dni", () => {
+    expect(daysWaiting(new Date(2026, 9, 24, 0, 0).getTime(), new Date(2026, 9, 26, 0, 0).getTime())).toBe(2);
+  });
+});
+

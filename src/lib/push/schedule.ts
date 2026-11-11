@@ -166,7 +166,8 @@ function shiftEndItems(input: PushInput, now: number): PushItem[] {
   if (!shifts) return [];
   const typesById = new Map<string, ShiftType>(shifts.types.map((t) => [t.id, t]));
   const out: PushItem[] = [];
-  for (let i = 0; i < PUSH_HORIZON_DAYS; i++) {
+  // Od wczoraj: zmiana nocna zaczęta wczoraj kończy się dziś (D2 audytu); minione końce odsiewa `at <= now`.
+  for (let i = -1; i < PUSH_HORIZON_DAYS; i++) {
     const day = addDays(new Date(now), i);
     const key = dayKeyOf(day.getTime());
     const entry = shifts.days[key];

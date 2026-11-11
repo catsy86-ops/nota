@@ -123,10 +123,11 @@ export function createYVan(doc: Y.Doc) {
         const it = typeof id === "string" ? cleanVanItem(v, id) : null;
         if (it && !map.has(key("i", it.id))) { const { id: _, ...value } = it; map.set(key("i", it.id), value); }
       }
-      for (const v of Array.isArray(d.events) ? d.events : []) {
+      // Zdarzenia tylko znanych pozycji i w rozsądnej liczbie (D4, D5 audytu).
+      for (const v of (Array.isArray(d.events) ? d.events : []).slice(0, 20_000)) {
         const e = v as Partial<VanEvent> | null;
         const ev = e && typeof e.item === "string" && typeof e.id === "string" ? cleanVanEvent(e, e.item, e.id) : null;
-        if (ev && !map.has(key("e", ev.item, ev.id))) { const { id, item, ...value } = ev; map.set(key("e", item, id), value); }
+        if (ev && map.has(key("i", ev.item)) && !map.has(key("e", ev.item, ev.id))) { const { id, item, ...value } = ev; map.set(key("e", item, id), value); }
       }
     }, VAN_ORIGIN);
   }
