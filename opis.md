@@ -5383,3 +5383,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Testy komponentów:** `MileageDialog.test.tsx`, `SiteBillingDues.test.tsx`.
 - **Wydajność (D11):** przebudowa migawki Nauki po zmianie to 26 ms przy 3000 wpisach (Node); bez zmian w kodzie.
 
+## Audyt, piętnasta partia: równoległe zmiany we wpisie dziennika (W11, 2026-11-11)
+
+- **Gdzie:** `src/lib/study/yStudy.ts` (`writeEntry`, `setKeyedMap`, `ensureContainers`), `journalEntry.ts` (`ORDERED_ENTRY_LISTS` + `KEYED_ENTRY_MAPS`), `journalFields.ts`.
+- **Jak działa:** `images`, `fittings`, `recordings`, `pipes` to `Y.Array`; `captions`, `dimensions`, `drawnFrom` to `Y.Map` z osobnym kluczem na zdjęcie. Dwa telefony dodające nagrania albo opisujące różne zdjęcia nie nadpisują się. Wpis od początku ma puste kontenery.
+- **Ograniczenia:** wpisy utworzone przed tą zmianą dostają kontenery przy pierwszej edycji; jeśli dwa telefony zrobią tę pierwszą edycję jednocześnie, jeden może przegrać (jednorazowo). Starsze wersje aplikacji czytają `Y.Array`/`Y.Map` przez wspólne `journalFields`.
+- **Testy:** `yStudy.test.ts` (nagrania, rury, podpisy i wymiary z dwóch telefonów, migracja starego zapisu).
+

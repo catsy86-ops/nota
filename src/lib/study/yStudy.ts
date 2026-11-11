@@ -3,7 +3,7 @@ import { journalFields } from "./journalFields";
 import { foldName, SITE_CARD_KEYS, type SiteCard } from "./sites";
 import { cleanDump, stateFromDump, type Column, type DeviceRounds, type StudyDump, type StudyState } from "./studyDump";
 import {
-  cleanEntry, DAY_RE, FAULT_AFTER_MAX, FAULT_OWNER_MAX, JOURNAL_ENTRY_KEYS, JOURNAL_SOLUTION_MAX, ORDERED_ENTRY_LISTS,
+  cleanEntry, DAY_RE, FAULT_AFTER_MAX, FAULT_OWNER_MAX, JOURNAL_ENTRY_KEYS, JOURNAL_SOLUTION_MAX, KEYED_ENTRY_MAPS, ORDERED_ENTRY_LISTS,
   type JournalEntry,
 } from "./journalEntry";
 import { cleanCard, reviewCard, type ReviewCard } from "./srs";
@@ -104,13 +104,25 @@ export function createYStudy(doc: Y.Doc) {
       const m = new Y.Map<unknown>();
       journal.set(id, m);
       for (const [k, v] of Object.entries(next)) if (v !== undefined) setEntryField(m, k, v);
+      ensureContainers(m, next);
       return;
     }
-    for (const k of Array.from(cur.keys())) if (next[k] === undefined && JOURNAL_ENTRY_KEYS.has(k)) cur.delete(k);
+    // Listy i słowniki zostają jako puste kontenery zamiast znikać: dwa telefony, które dopiero zaczynają dodawać
+    // elementy, muszą pisać do tego samego `Y.Array`/`Y.Map`, inaczej jeden z nich tworzy własny i przegrywa (W11).
+    for (const k of Array.from(cur.keys())) {
+      if (next[k] === undefined && JOURNAL_ENTRY_KEYS.has(k) && !ORDERED_ENTRY_LISTS.has(k) && !KEYED_ENTRY_MAPS.has(k)) cur.delete(k);
+    }
+    ensureContainers(cur, next);
     // Pole zapisujemy tylko, gdy się zmieniło — brak zbędnych zapisów, które nadpisywałyby cudze zmiany.
     for (const [k, v] of Object.entries(next)) {
       if (v !== undefined) setEntryField(cur, k, v);
     }
+  }
+
+  /** Tworzy brakujące puste listy/słowniki wpisu (albo opróżnia te, których nowa wartość nie ma). */
+  function ensureContainers(m: Y.Map<unknown>, next: Record<string, unknown>): void {
+    for (const k of ORDERED_ENTRY_LISTS) if (next[k] === undefined) setOrderedList(m, k, []);
+    for (const k of KEYED_ENTRY_MAPS) if (next[k] === undefined) setKeyedMap(m, k, {});
   }
 
   /**
@@ -137,7 +149,28 @@ export function createYStudy(doc: Y.Doc) {
       setOrderedList(m, k, v);
       return;
     }
+    if (KEYED_ENTRY_MAPS.has(k) && v && typeof v === "object" && !Array.isArray(v)) {
+      setKeyedMap(m, k, v as Record<string, unknown>);
+      return;
+    }
     if (JSON.stringify(m.get(k)) !== JSON.stringify(v)) m.set(k, v);
+  }
+
+  /**
+   * Słownik per zdjęcie jako `Y.Map`: zapisuje tylko klucze, które się zmieniły, i kasuje te, których już nie ma.
+   * Starszy zapis (zwykły obiekt) zamienia się na `Y.Map` przy pierwszym zapisie; odczyt działa dla obu postaci.
+   */
+  function setKeyedMap(m: Y.Map<unknown>, k: string, next: Record<string, unknown>): void {
+    let cur = m.get(k);
+    if (!(cur instanceof Y.Map)) {
+      m.set(k, new Y.Map<unknown>());
+      cur = m.get(k) as Y.Map<unknown>;
+    }
+    const map = cur as Y.Map<unknown>;
+    for (const key of Array.from(map.keys())) if (next[key] === undefined) map.delete(key);
+    for (const [key, val] of Object.entries(next)) {
+      if (val !== undefined && JSON.stringify(map.get(key)) !== JSON.stringify(val)) map.set(key, val);
+    }
   }
 
   /**

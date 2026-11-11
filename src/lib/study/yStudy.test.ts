@@ -579,3 +579,57 @@ describe("autor wpisu (H5.1)", () => {
     expect(b.get().journal.find((e) => e.id === "m")).toMatchObject({ text: "poprawione", by: "Marek" });
   });
 });
+
+describe("wpis dziennika: listy i słowniki przy równoległych zmianach (W11)", () => {
+  const r = (c: string) => c.repeat(64);
+  const rec = (c: string) => ({ hash: r(c), name: `nagranie-${c}.m4a`, size: 100, type: "audio/mp4" });
+  const dim = (text: string) => [{ from: [0.1, 0.1] as [number, number], to: [0.5, 0.5] as [number, number], text }];
+
+  it("nagrania i rury dodane na dwóch telefonach zostają obie", () => {
+    const { a, b, sync } = pair();
+    a.addEntry(entry("w11-1", 1, { images: [r("a")] }));
+    sync();
+    const base = a.get().journal.find((e) => e.id === "w11-1")!;
+    a.updateEntry({ ...base, recordings: [rec("1")], pipes: [{ name: "Rura PEX 16×2", cm: 250 }] });
+    b.updateEntry({ ...b.get().journal.find((e) => e.id === "w11-1")!, recordings: [rec("2")], pipes: [{ name: "Rura PP 32", cm: 100 }] });
+    sync();
+    for (const side of [a, b]) {
+      const e = side.get().journal.find((x) => x.id === "w11-1")!;
+      expect((e.recordings ?? []).map((x) => x.hash).sort()).toEqual([r("1"), r("2")]);
+      expect((e.pipes ?? []).map((x) => x.name).sort()).toEqual(["Rura PEX 16×2", "Rura PP 32"]);
+    }
+  });
+
+  it("podpisy i wymiary różnych zdjęć tego samego wpisu z dwóch telefonów zostają oba", () => {
+    const { a, b, sync } = pair();
+    a.addEntry(entry("w11-2", 1, { images: [r("a"), r("b")] }));
+    sync();
+    a.updateEntry({ ...a.get().journal.find((e) => e.id === "w11-2")!, captions: { [r("a")]: "pion" }, dimensions: { [r("a")]: dim("35 cm") } });
+    b.updateEntry({ ...b.get().journal.find((e) => e.id === "w11-2")!, captions: { [r("b")]: "kratka" }, dimensions: { [r("b")]: dim("120 cm") } });
+    sync();
+    for (const side of [a, b]) {
+      const e = side.get().journal.find((x) => x.id === "w11-2")!;
+      expect(e.captions).toEqual({ [r("a")]: "pion", [r("b")]: "kratka" });
+      expect(Object.keys(e.dimensions ?? {}).sort()).toEqual([r("a"), r("b")]);
+    }
+  });
+
+  it("usunięcie podpisu zdejmuje go ze słownika, a stary zapis (zwykły obiekt) czyta się i migruje", () => {
+    const { a, docA } = pair();
+    docA.transact(() => {
+      const m = new Y.Map<unknown>();
+      docA.getMap<unknown>("studyJournal").set("stary-2", m);
+      m.set("id", "stary-2"); m.set("at", 1); m.set("kind", "ok"); m.set("topic", null); m.set("text", "x");
+      m.set("site", ""); m.set("checked", []); m.set("images", [r("a")]); m.set("captions", { [r("a")]: "stary podpis" });
+    });
+    const old = a.get().journal.find((e) => e.id === "stary-2")!;
+    expect(old.captions).toEqual({ [r("a")]: "stary podpis" });
+    const { captions: _drop, ...rest } = old;
+    a.updateEntry({ ...rest } as JournalEntry);
+    expect(a.get().journal.find((e) => e.id === "stary-2")!.captions).toBeUndefined();
+    a.updateEntry({ ...rest, captions: { [r("a")]: "nowy" } } as JournalEntry);
+    expect(docA.getMap<Y.Map<unknown>>("studyJournal").get("stary-2")!.get("captions")).toBeInstanceOf(Y.Map);
+    expect(a.get().journal.find((e) => e.id === "stary-2")!.captions).toEqual({ [r("a")]: "nowy" });
+  });
+});
+

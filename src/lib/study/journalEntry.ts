@@ -196,7 +196,12 @@ export const timeInRange = (v: unknown): v is number => typeof v === "number" &&
 export const cleanEntryStage = (v: unknown): string | undefined => (typeof v === "string" && v && v.length <= 40 ? v : undefined);
 
 /** Pola wpisu, które są uporządkowanymi listami `Y.Array` (wersja 2 kopii). */
-export const ORDERED_ENTRY_LISTS = new Set<string>(["images", "fittings"]);
+export const ORDERED_ENTRY_LISTS = new Set<string>(["images", "fittings", "recordings", "pipes"]);
+/**
+ * Pola wpisu będące słownikami „klucz zdjęcia → wartość” (podpisy, oryginały rysunków, wymiary). Zapisane jako `Y.Map`
+ * z osobnym wpisem na klucz: dwa telefony opisujące różne zdjęcia tego samego wpisu nie nadpisują się (W11).
+ */
+export const KEYED_ENTRY_MAPS = new Set<string>(["captions", "drawnFrom", "dimensions"]);
 /**
  * Pola wpisu, które ta wersja zna. Przy zapisie kasujemy tylko te, których brak w `next`;
  * pola z nowszej wersji (nieznane tutaj) zostają, żeby stara edycja ich nie wycinała.

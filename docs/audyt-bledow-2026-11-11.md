@@ -19,7 +19,7 @@
 | W8 | przywracanie sekcji połyka błędy, UI pokazuje sukces | naprawione: `restoreFullBackup` zwraca `failed`, UI pokazuje ostrzeżenie; `fullBackup.test.ts` |
 | W9 | nagrania (`recordings`) i `after` bez ochrony przed GC zdjęć | naprawione: nagrania szkicu i otwartej edycji chronione (doc: `after`, `drawnFrom`, nagrania były już chronione); `images.test.ts` |
 | W10 | wyścig GC z ponownym dodaniem zdjęcia | naprawione: `touched` + `deleting` w `imageStore`; `imageStore.test.ts` |
-| W11 | listy zdjęć/nagrań LWW: dwa telefony tracą dodane elementy | otwarte (zmiana modelu Yjs) |
+| W11 | listy zdjęć/nagrań LWW: dwa telefony tracą dodane elementy | naprawione: `images` i `fittings` były już `Y.Array`; teraz też `recordings` i `pipes`, a podpisy/wymiary/oryginały rysunków (`captions`, `dimensions`, `drawnFrom`) są `Y.Map` z kluczem per zdjęcie; wpis ma od początku puste kontenery (inaczej oba telefony tworzyły własny i jeden przegrywał); `yStudy.test.ts` |
 | W12 | dzień z przyszłości psuje serię w Nauce | naprawione: `stateFromDump` pomija dni po jutrze; `studyStreak.test.ts` |
 | W13 | kopia pełna nie sprawdza własnego rozmiaru względem limitu importu | naprawione: `isBackupOversize` + ostrzeżenie po zapisie kopii; `fullBackup.test.ts` |
 | W14 | kilometrówka, cennik, nazwa firmy, autor poza kopią zapasową | do weryfikacji (decyzja: które klucze) |
@@ -150,3 +150,7 @@ S6–S8, S11, S13–S18. Zostają S3–S5 (decyzje projektowe), S9, S12 (świado
 ## Zrobione 2026-11-11 (czternasta partia)
 
 UI #26, #31, T31 (testy komponentów `MileageDialog`, `SiteBillingDues`), D11 (pomiar). Zostają wyłącznie decyzje właściciela (W11, W14/D10, W15, S3–S5) oraz pozycje świadomie bez zmian (UI #10, #22, #33, S9, S12).
+
+## Zrobione 2026-11-11 (piętnasta partia)
+
+W11. Zostają W14/D10, W15 i S3–S5 (decyzje).

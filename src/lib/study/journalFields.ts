@@ -10,6 +10,8 @@ export function journalFields(raw: unknown): unknown {
     // Odhaczone punkty to mapa `id → true` (krok 3 planu Etap 6); listy (`images`, `fittings`) to `Y.Array`
     // (wersja 2). Czytający dostają z powrotem zwykłe tablice, bez znajomości `yjs`.
     if (k === "checked" && isMapLike(v)) out[k] = Array.from(v.keys());
+    // Podpisy, wymiary i oryginały rysunków: mapa wpisów per zdjęcie (W11) wraca jako zwykły obiekt.
+    else if (isMapLike(v)) out[k] = Object.fromEntries(v.entries());
     else if (isListLike(v)) out[k] = v.toArray();
     else out[k] = v;
   }
