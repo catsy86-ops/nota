@@ -24,7 +24,8 @@ import { hasLocalSpeechApi, installLocalSpeech, localSpeechReady, localSpeechSta
 import { setBadgeEnabled, setInboxBadgeEnabled, useBadgeEnabled, useInboxBadgeEnabled } from "@/lib/overdueBadge";
 import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
 import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
-import { AUTHOR_MAX, COMPANY_NAME_MAX, setAuthor, setCompanyName, useAuthor, useCompanyName } from "@/lib/study/companyPrefs";
+import { AUTHOR_MAX, BANK_ACCOUNT_MAX, COMPANY_NAME_MAX, setAuthor, setBankAccount, setCompanyName, setPricing, useAuthor, useBankAccount, useCompanyName, usePricing } from "@/lib/study/companyPrefs";
+import { PricingManager } from "./PricingManager";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -132,6 +133,8 @@ export function GeneralSettings() {
   const reportNudges = useReportNudges();
   const siteArrival = useSiteArrival();
   const companyName = useCompanyName();
+  const bankAccount = useBankAccount();
+  const pricing = usePricing();
   const author = useAuthor();
 
   return (
@@ -244,6 +247,17 @@ export function GeneralSettings() {
           <Label htmlFor="company-name" className="text-xs text-muted-foreground">Pojawi się na nagłówku protokołu odbioru (zostaje na tym urządzeniu)</Label>
           <Input id="company-name" key={companyName} defaultValue={companyName} maxLength={COMPANY_NAME_MAX} placeholder="np. Instalacje Kowalski"
             onBlur={(e) => { if (e.target.value.trim() !== companyName) setCompanyName(e.target.value.trim()); }} />
+        </Section>
+
+        <Section title="Konto do przypomnień o należności">
+          <Label htmlFor="bank-account" className="text-xs text-muted-foreground">Numer konta dopisywany do SMS-a lub WhatsAppa z przypomnieniem (zostaje na tym urządzeniu)</Label>
+          <Input id="bank-account" key={bankAccount} defaultValue={bankAccount} maxLength={BANK_ACCOUNT_MAX} inputMode="numeric" placeholder="np. 12 3456 7890 …"
+            onBlur={(e) => { if (e.target.value.trim() !== bankAccount) setBankAccount(e.target.value); }} />
+        </Section>
+
+        <Section title="Cennik robocizny (fuchy)">
+          <Label className="text-xs text-muted-foreground">Własne pozycje, np. „WC podwieszane: 350 zł” (zostają na tym urządzeniu)</Label>
+          <PricingManager pricing={pricing} onUpdate={setPricing} />
         </Section>
 
         <Section title="Twoje imię w Pracy">

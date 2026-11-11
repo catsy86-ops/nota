@@ -62,7 +62,9 @@ export function exportMileageCSV(month: MileageMonth): string {
     .join("\n");
 
   const total = month.entries.reduce((sum, e) => sum + mileageCost(e.distance, e.rate), 0);
-  const summary = `\nRazem,,${month.entries.reduce((sum, e) => sum + e.distance, 0)},,${""}Razem: ${total.toFixed(2)} zł`;
+  const km = month.entries.reduce((sum, e) => sum + e.distance, 0);
+  // Wiersz sumy ma te same kolumny co dane: tekst tylko w pierwszej, liczby w liczbowych.
+  const summary = `\nRazem,,${Math.round(km * 10) / 10},,${total.toFixed(2)}`;
 
   return header + rows + summary;
 }

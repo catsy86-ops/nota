@@ -28,10 +28,16 @@ export function formatPaymentMessage(siteName: string, amount: number, days: num
   return message;
 }
 
+/** Numer tylko z cyfr i opcjonalnym wiodącym „+”; reszta (np. „?”, „&”, „;”) odpada, by nie wstrzyknąć parametrów linku. */
+export const cleanPhone = (phone: string) => {
+  const plus = phone.trim().startsWith("+") ? "+" : "";
+  return plus + phone.replace(/\D/g, "");
+};
+
 export function generateSMSLink(message: string, phone: string): string {
-  return `sms:${phone}?body=${encodeURIComponent(message)}`;
+  return `sms:${cleanPhone(phone)}?body=${encodeURIComponent(message)}`;
 }
 
 export function generateWhatsAppLink(message: string, phone: string): string {
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${cleanPhone(phone).replace("+", "")}?text=${encodeURIComponent(message)}`;
 }

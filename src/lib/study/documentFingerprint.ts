@@ -1,7 +1,8 @@
 /**
  * B4.4: Odcisk dokumentu — skrót SHA-256 + data w stopce PDF.
- * Pozwala klientowi sprawdzić, że PDF u niego to dokument oryginalny.
- * Nie jest to podpis kwalifikowany (brak CA), ale daje pewność autentyczności.
+ * To suma kontrolna: wykrywa przypadkowe zmiany treści względem odcisku podanego osobnym kanałem.
+ * NIE uwierzytelnia dokumentu — kto zmieni PDF, przeliczy skrót i podmieni odcisk. Autentyczność
+ * wymagałaby klucza (HMAC albo podpis z kluczem publicznym przekazanym osobno).
  */
 
 export interface DocumentFingerprint {
@@ -10,10 +11,8 @@ export interface DocumentFingerprint {
 }
 
 export async function computeDocumentHash(content: string): Promise<string> {
-  if (!("crypto" in globalThis)) {
-    // Fallback dla starych przeglądarek (nie powinien się zdarzyć)
-    return `UNSUPPORTED-${Date.now()}`;
-  }
+  // `crypto.subtle` bywa niedostępne w niezabezpieczonym kontekście (HTTP) — wtedy odmawiamy, zamiast zgadywać.
+  if (!globalThis.crypto?.subtle) throw new Error("Brak Web Crypto (crypto.subtle) — nie można policzyć odcisku");
 
   const encoder = new TextEncoder();
   const data = encoder.encode(content);
@@ -38,5 +37,8 @@ export async function generateDocumentFingerprint(content: string): Promise<Docu
 }
 
 export function verifyDocumentFingerprint(content: string, fp: DocumentFingerprint): Promise<boolean> {
-  return computeDocumentHash(content).then((newHash) => newHash === fp.hash);
+  return computeDocumentHash(content).then(
+    (newHash) => newHash === fp.hash.toLowerCase(),
+    () => false,
+  );
 }

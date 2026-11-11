@@ -9,7 +9,8 @@ import { downloadBlob } from "@/lib/downloadBlob";
 import { shareOrCopy } from "@/lib/shareOrCopy";
 import { billingCsv, billingStatement, billingText, money, parseAmount, PAYMENT_NOTE_MAX, type SiteBilling } from "@/lib/study/billing";
 import { addPayment, removePayment } from "@/lib/study/billingStore";
-import { companyNameStore } from "@/lib/study/companyPrefs";
+import { bankAccountStore, companyNameStore } from "@/lib/study/companyPrefs";
+import { PaymentReminderButton } from "./PaymentReminderButton";
 import { pointStage, pointType, POINT_STEPS, type WaterPoint } from "@/lib/study/points";
 import { siteStages } from "@/lib/study/stages";
 import type { SiteInfo } from "@/lib/study/sites";
@@ -36,6 +37,9 @@ export function SiteBillingDues({ site, billing, hours, points }: {
     stages: siteStages(site), typeLabel: (id) => pointType(id).label,
   }), [billing, site, hours, points]);
   const [adding, setAdding] = useState(false);
+  // Liczymy czekanie od ostatniej wpłaty, a bez wpłat od założenia karty.
+  const lastPayDay = st.payments.reduce((m, p) => (p.day > m ? p.day : m), "");
+  const reminderSince = lastPayDay ? new Date(`${lastPayDay}T12:00:00`).getTime() : site.created;
 
   function savePayment(form: HTMLFormElement) {
     const data = new FormData(form);
@@ -123,6 +127,17 @@ export function SiteBillingDues({ site, billing, hours, points }: {
           {money(Math.abs(st.due))}
         </span>
       </p>
+      {st.due > 0 && site.phone && (
+        <div className="flex items-center justify-between gap-2" data-testid="billing-remind">
+          <span className="text-xs text-muted-foreground">Przypomnij inwestorowi o zapłacie</span>
+          <PaymentReminderButton
+            reminder={{ siteId: site.id, amount: st.due, dueDate: reminderSince }}
+            siteName={site.name}
+            phone={site.phone.replace(/[^\d+]/g, "")}
+            account={bankAccountStore.get().trim() ? { number: bankAccountStore.get().trim(), owner: "" } : undefined}
+          />
+        </div>
+      )}
       {st.warnings.length > 0 && (
         <ul className="space-y-0.5 text-2xs text-muted-foreground" aria-label="Uwagi do rozliczenia" data-testid="billing-warnings">
           {st.warnings.map((w) => <li key={w}>• {w}</li>)}

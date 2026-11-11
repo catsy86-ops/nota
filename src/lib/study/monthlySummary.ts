@@ -1,3 +1,5 @@
+import { cell } from "@/lib/shifts/timesheet";
+
 /**
  * B4.5: Zestawienie miesiąca — godziny, punkty, ryczałty, fuchy, wpłaty, koszt materiału.
  * Osobno „Dla szefa" i „Moje" (H3.6). Rozwinięcie linii „Z budów" w Grafiku.
@@ -57,13 +59,13 @@ export function exportMonthlySummaryCSV(view: MonthlyView): string {
   const header = "Lp.,Pozycja,Ilość,Stawka (zł),Razem (zł)\n";
 
   const fullLines = full.lines
-    .map((line, idx) => `${idx + 1},${line.label},${line.quantity},${line.rate},${line.total.toFixed(2)}`)
+    .map((line, idx) => `${idx + 1},${cell(line.label)},${line.quantity},${line.rate},${line.total.toFixed(2)}`)
     .join("\n");
 
   const paymentLines = full.payments
     .map((p, idx) => {
       const date = new Date(p.date).toLocaleDateString("pl-PL");
-      return `${full.lines.length + idx + 1},Wpłata (${date}),1,${p.amount},${p.amount.toFixed(2)}`;
+      return `${full.lines.length + idx + 1},${cell(`Wpłata (${date})`)},1,${p.amount},${p.amount.toFixed(2)}`;
     })
     .join("\n");
 

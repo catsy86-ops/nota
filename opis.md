@@ -5207,6 +5207,8 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 
 **Co robi.** Finanse budowy: cennik robocizny do fuch, przypomnienia o należności, kilometrówka z zestawieniem, odcisk dokumentu (SHA-256), zestawienie miesiąca godzin/punktów/fuch/wpłat.
 
+**Stan integracji (2026-11-11).** Podpięte w UI: B4.1 (cennik i numer konta w Ustawienia → Ogólne → Praca, `GeneralSettings.tsx`, `PricingManager`, `bankAccountStore` w `companyPrefs.ts`) i B4.2 (przyciski SMS/WhatsApp w „Należnościach” karty budowy, `SiteBillingDues.tsx`; kwota to „Zostało do zapłaty” z rozliczenia, telefon z pola „Telefon inwestora”, czekanie liczone od ostatniej wpłaty albo założenia karty; bez telefonu lub przy saldzie ≤ 0 przycisków nie ma). NIEPODPIĘTE (tylko biblioteki z testami, bez ekranu): B4.3 kilometrówka, B4.4 odcisk, B4.5 zestawienie miesiąca. Widoku „Moje” w B4.5 nie podpinać, dopóki `summaryForDisplay` nie filtruje linii (dziś zwraca wszystko). Cennik (B4.1) nie jest jeszcze używany do wyceny fuch — jest tylko lista pozycji.
+
 **Gdzie jest.**
 
 - **B4.1 Cennik robocizny:** `src/lib/pricing.ts` (model `PricingItem`, funkcje `addPricingItem`, `removePricingItem`). `src/components/settings/PricingManager.tsx` (UI do dodawania pozycji). Store w `companyPrefs.ts`: `pricingStore`, `usePricing()`.
@@ -5220,7 +5222,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **Cennik (B4.1):** pozycje przypisane do typu punktu (H-4, E-4, itd). Wycena fuchy w 30 sekund: wybierz pozycje z listy.
 - **Należności (B4.2):** model z datą, kwotą, statusem wysłania. Helper liczy dni czekania. SMS/WhatsApp z linkami (`sms:`, `https://wa.me/`).
 - **Kilometrówka (B4.3):** geo-koordynaty z kart budów → podpowiedź dystansu (prosta × 1,3). Ręczny wpis z licznika. Eksport CSV do księgowej.
-- **Odcisk (B4.4):** SHA-256 na zawartości dokumentu. Klient może zweryfikować PDF (`verifyDocumentFingerprint`).
+- **Odcisk (B4.4):** SHA-256 na zawartości dokumentu. To suma kontrolna wykrywająca przypadkowe zmiany; NIE uwierzytelnia dokumentu (kto zmieni PDF, przeliczy skrót). Bez `crypto.subtle` funkcje odmawiają (`computeDocumentHash` rzuca, `verifyDocumentFingerprint` zwraca `false`).
 - **Zestawienie (B4.5):** agregacja: godzin, punktów, fuch (z cennikiem), wpłat. Osobne widoki "Dla szefa" (wszystko) i "Moje".
 
 **Ograniczenia i pułapki.**
@@ -5228,13 +5230,13 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **B4.1:** Pozycje są na urządzeniu (`localStorage`), nie synchronizują się między telefonami. Każde urządzenie ma swój cennik.
 - **B4.2:** SMS/WhatsApp to linki — nie wysyłamy sami. Użytkownik zatwierdza wiadomość przed wysłaniem.
 - **B4.3:** Dystans w linii prostej to przybliżenie (Ziemia płaska). Mnożymy × 1,3, ale rzeczywista droga może być inna. Ręczny wpis z licznika jest zawsze dokładny.
-- **B4.4:** SHA-256 to nie podpis kwalifikowany (brak CA). Daje pewność autentyczności dla użytkownika, ale nie moc prawną.
+- **B4.4:** SHA-256 bez klucza to suma kontrolna, nie podpis ani dowód autentyczności. Wyświetlany skrót ma 16 znaków (64 bity) — do porównań służy pełny hash.
 - **B4.5:** Wymagane powiązanie z Grafikiem (godziny, punkty) i Zarządzaniem (wpłaty). Integracja w pełni w następnej sesji.
 
 **Testy.**
 
 - **Unit:** `mileage.ts` (eksport CSV), `monthlySummary.ts` (kalkulacja), `documentFingerprint.ts` (SHA-256) mają testy do napisania.
-- **E2E:** brak — API sensorowe i finansowe trudne do testowania automatycznie.
+- **E2E:** `e2e/payment-reminder.spec.ts` (przyciski przypomnienia pojawiają się dopiero z telefonem i kwotą; konto i cennik w Ustawieniach zostają po odświeżeniu). Linki: `paymentReminder.test.ts` (numer czyszczony do cyfr i opcjonalnego „+”).
 - **Typu:** `npx tsc --noEmit` przechodzi (wszystkie typy).
 
 **Commit.** B4.1–B4.5 zacommitowane:
@@ -5253,7 +5255,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **B5.5** — OPFS (Origin Private File System) — tylko jeśli B0.4 pokaże problemy z > 1000 zdjęć
 - **B5.6** — Indeks wyszukiwania w Workerze — razem z Cyklem 3.2 `Plan-nowy.md`
 
-**Kod w paczce (B5.2):** ~300 linii, 0 nowych zależności (Web Compression API natywnie).
+**Kod w paczce (B5.2):** ~300 linii, 0 nowych zależności (Web Compression API natywnie). **Stan:** sam helper `src/lib/study/budowaCompression.ts` — NIE jest podpięty do eksportu ani importu `.budowa` (`sitePackageIo.ts` czyta zwykły JSON). Po przeglądzie bezpieczeństwa (2026-11-11): limit rozpakowania (`DECOMPRESSED_MAX_BYTES` = 1,4 × `SITE_PACKAGE_MAX_BYTES`, liczony w strumieniu), zgodność rozmiaru z nagłówkiem, odczyt długości metadanych przez `DataView` (wcześniej `Uint16Array` na nieparzystym offsecie rzucał i każdy plik v2 był odrzucany), sprawdzenie granic i wersji. Przed podpięciem: jedna funkcja `readBudowa` = rozpakowanie + `parseSitePackage` (decompress sam niczego nie waliduje). Testy: `budowaCompression.test.ts` (z natywnym `Blob`, bo jsdom nie ma `Blob.stream`).
 
 ---
 

@@ -131,7 +131,7 @@ Nauka zostaje w zakładce „Nauka” (B2.1). Otwarte punkty bez zmian: 4.6 (wi�
 | B-4 | Czy potrzebujesz kilometrówki (B4.3)? | **Tylko jeśli jeździsz prywatnym autem i rozliczasz kilometry.** Inaczej punkt odpada. |
 | B-5 | Skaner: tylko natywny czy z zapasową biblioteką? | **Natywny, a biblioteka zxing-wasm leniwie, tylko gdy przeglądarka nie ma skanera.** Biblioteka nie trafia do precache (`globIgnores`). |
 | B-6 | NFC (B3.11)? | **Najpierw QR z B3.5.** NFC tylko wtedy, gdy QR okaże się za wolny. |
-| B-7 | OPFS dla zdjęć (B5.5)? | **Tylko po pomiarze.** Migracja magazynu zdjęć to największe ryzyko utraty danych w całym planie. |
+| B-7 | OPFS dla zdjęć (B5.5)? | **ODŁOŻONE (przegląd architekta 2026-11-11).** Najpierw tańsze: miniatura obok oryginału (`acquireUrl` ładuje dziś pełne bajty), zmniejszanie zdjęcia przy zapisie, `persist()` po pierwszym zdjęciu we wszystkich ścieżkach, ostrzeżenie o quocie. OPFS dopiero gdy pomiar (>300 ms lista zdjęć albo błędy quoty przy >1 000) i te kroki nie wystarczą; wtedy za interfejsem `ImageBackend` w `imageStore.ts`, flaga `kaczy.images.backend` (idb / opfs-dual / opfs), dual-write, migracja partiami pod `navigator.locks` z weryfikacją hash, stary magazyn kasowany tylko ręcznie po kopii ZIP. **Tylko po pomiarze.** Migracja magazynu zdjęć to największe ryzyko utraty danych w całym planie. |
 | B-8 | React Compiler (B5.4)? | **Próba na gałęzi.** Do master trafia tylko przy spełnionych progach. |
 
 ## Kolejność wdrażania

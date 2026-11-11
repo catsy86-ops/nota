@@ -4,7 +4,11 @@
  * Nowy format v2 (header + gzip), stary v1 (JSON) nadal się wczytuje.
  */
 
+import { SITE_PACKAGE_MAX_BYTES } from "./sitePackage";
+
 const COMPRESSION_VERSION = 2;
+/** Górny limit tekstu po rozpakowaniu — taki sam jak w `parseSitePackage` (chroni przed bombą gzip). */
+export const DECOMPRESSED_MAX_BYTES = Math.floor(SITE_PACKAGE_MAX_BYTES * 1.4);
 const COMPRESSION_MAGIC = new Uint8Array([0x42, 0x44, 0x57]); // "BDW" (Budowa compressed)
 
 export interface CompressionMetadata {
@@ -26,7 +30,8 @@ export async function compressBudowa(jsonData: string): Promise<Blob> {
   // Header: magic + metadata
   const metadataJson = JSON.stringify(metadata);
   const metadataBytes = encoder.encode(metadataJson);
-  const metadataLength = new Uint16Array([metadataBytes.byteLength]);
+  const metadataLength = new Uint8Array(2);
+  new DataView(metadataLength.buffer).setUint16(0, metadataBytes.byteLength, true);
 
   // Kompresja: data → gzip
   const dataBlob = new Blob([data]);
@@ -49,7 +54,7 @@ export async function compressBudowa(jsonData: string): Promise<Blob> {
   // Złożenie: magic + metadataLength + metadata + compressedData
   const parts: Uint8Array[] = [
     COMPRESSION_MAGIC,
-    new Uint8Array(metadataLength.buffer),
+    metadataLength,
     metadataBytes,
   ];
 
@@ -74,38 +79,46 @@ export async function decompressBudowa(blob: Blob): Promise<string | null> {
       return new TextDecoder().decode(data);
     }
 
-    // Odczyt metadataLength
-    const metadataLength = new Uint16Array(data.buffer, 3, 1)[0];
+    // Odczyt metadataLength (little-endian, bez wyrównania — Uint16Array wymagałby parzystego offsetu)
+    if (data.length < 5) return null;
+    const metadataLength = new DataView(data.buffer, data.byteOffset).getUint16(3, true);
     const metadataStart = 5;
     const metadataEnd = metadataStart + metadataLength;
+    if (metadataEnd > data.length) return null;
 
     // Metadane
     const metadataBytes = data.slice(metadataStart, metadataEnd);
     const metadata = JSON.parse(new TextDecoder().decode(metadataBytes)) as CompressionMetadata;
+    if (metadata.version !== COMPRESSION_VERSION) return null;
+    if (typeof metadata.originalSize !== "number" || metadata.originalSize > DECOMPRESSED_MAX_BYTES) return null;
 
-    // Dekompresja gzip
-    const compressedData = data.slice(metadataEnd);
-    const compressedBlob = new Blob([compressedData]);
+    // Dekompresja gzip z licznikiem: przerywamy, gdy wynik przekroczy limit lub deklarację z nagłówka
+    const compressedBlob = new Blob([data.slice(metadataEnd)]);
     const decompressedStream = compressedBlob
       .stream()
       .pipeThrough(new DecompressionStream("gzip"));
 
     const chunks: Uint8Array[] = [];
     const reader = decompressedStream.getReader();
+    let total = 0;
 
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        total += value.byteLength;
+        if (total > metadata.originalSize) {
+          await reader.cancel();
+          return null;
+        }
         chunks.push(value);
       }
     } finally {
       reader.releaseLock();
     }
+    if (total !== metadata.originalSize) return null;
 
-    const decompressed = new Uint8Array(
-      chunks.reduce((sum, arr) => sum + arr.byteLength, 0)
-    );
+    const decompressed = new Uint8Array(total);
     let offset = 0;
     for (const chunk of chunks) {
       decompressed.set(chunk, offset);

@@ -38,7 +38,7 @@ export function PaymentReminderButton({
       return;
     }
     const link = generateWhatsAppLink(message, phone);
-    window.open(link, "_blank");
+    window.open(link, "_blank", "noopener,noreferrer");
     onSent?.();
   }
 
@@ -51,7 +51,8 @@ export function PaymentReminderButton({
         onClick={sendSMS}
         disabled={!phone}
         title="Wyślij SMS"
-        className="coarse:h-10"
+        aria-label="Przypomnij SMS-em"
+        className="coarse:h-11 coarse:w-11"
       >
         <MessageSquare className="h-4 w-4" aria-hidden />
       </Button>
@@ -62,7 +63,8 @@ export function PaymentReminderButton({
         onClick={sendWhatsApp}
         disabled={!phone}
         title="Wyślij WhatsApp"
-        className="coarse:h-10"
+        aria-label="Przypomnij na WhatsAppie"
+        className="coarse:h-11 coarse:w-11"
       >
         <MessageCircle className="h-4 w-4" aria-hidden />
       </Button>

@@ -71,6 +71,6 @@ describe("mileage", () => {
     expect(csv).toContain("Data,Liczba budów,Dystans (km)");
     expect(csv).toContain("2026-11-01,2,50,0.65,32.50");
     expect(csv).toContain("2026-11-02,1,30,0.65,19.50");
-    expect(csv).toContain("Razem: 52.00 zł");
+    expect(csv.split("\n").pop()).toMatch(/^Razem,,[\d.]+,,52\.00$/);
   });
 });

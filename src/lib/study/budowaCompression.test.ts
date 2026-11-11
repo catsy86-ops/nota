@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
+import { Blob as NodeBlob } from "node:buffer";
 import {
   compressBudowa,
   decompressBudowa,
@@ -6,6 +7,10 @@ import {
 } from "./budowaCompression";
 
 describe("budowaCompression", () => {
+  // jsdom nie ma Blob.stream()/arrayBuffer() — używamy natywnego Blob z Node.
+  beforeAll(() => { vi.stubGlobal("Blob", NodeBlob); });
+  afterAll(() => { vi.unstubAllGlobals(); });
+
   const testData = JSON.stringify({
     id: "site-123",
     name: "Lipowa 5",
@@ -43,7 +48,7 @@ describe("budowaCompression", () => {
   });
 
   it("decompressBudowa: zwraca null dla uszkodzonych danych", async () => {
-    const corrupt = new Blob([new Uint8Array([0xff, 0xff, 0xff])]);
+    const corrupt = new Blob([new Uint8Array([0x42, 0x44, 0x57, 0xff, 0xff, 0xff])]);
     const result = await decompressBudowa(corrupt);
     expect(result).toBeNull();
   });
@@ -72,5 +77,22 @@ describe("budowaCompression", () => {
       const decompressed = await decompressBudowa(blob);
       expect(decompressed).toBe(data);
     }
+  });
+
+  it("decompressBudowa: odrzuca bombę gzip i zły nagłówek", async () => {
+    const big = await compressBudowa("x".repeat(1000));
+    const bytes = new Uint8Array(await big.arrayBuffer());
+    // metadane zaniżają rozmiar → rozpakowanie przekracza deklarację
+    const meta = JSON.stringify({ version: 2, timestamp: 1, originalSize: 10 });
+    const mb = new TextEncoder().encode(meta);
+    const metaEnd = 5 + new DataView(bytes.buffer, bytes.byteOffset).getUint16(3, true);
+    const forged = new Uint8Array(5 + mb.length + (bytes.length - metaEnd));
+    forged.set(bytes.subarray(0, 3), 0);
+    new DataView(forged.buffer).setUint16(3, mb.length, true);
+    forged.set(mb, 5);
+    forged.set(bytes.subarray(metaEnd), 5 + mb.length);
+    expect(await decompressBudowa(new NodeBlob([forged]) as unknown as Blob)).toBeNull();
+    // obcięty nagłówek
+    expect(await decompressBudowa(new NodeBlob([bytes.subarray(0, 4)]) as unknown as Blob)).toBeNull();
   });
 });

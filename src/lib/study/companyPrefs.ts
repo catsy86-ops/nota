@@ -17,6 +17,17 @@ export const companyNameStore = createPersistedStore<string>(COMPANY_NAME_KEY, "
 export const setCompanyName = (name: string) => companyNameStore.set(name.slice(0, COMPANY_NAME_MAX));
 export const useCompanyName = () => companyNameStore.use();
 
+/** Numer konta do przypomnień o należności (B4.2); na urządzeniu, jak nazwa firmy. Pusty = wiadomość bez konta. */
+export const BANK_ACCOUNT_KEY = "kaczy.study.bankAccount.v1";
+export const BANK_ACCOUNT_MAX = 40;
+
+export const bankAccountStore = createPersistedStore<string>(BANK_ACCOUNT_KEY, "", {
+  merge: (def, stored) => (typeof stored === "string" ? safeLine(stored).slice(0, BANK_ACCOUNT_MAX) : def),
+});
+
+export const setBankAccount = (v: string) => bankAccountStore.set(safeLine(v).slice(0, BANK_ACCOUNT_MAX));
+export const useBankAccount = () => bankAccountStore.use();
+
 /**
  * B4.1 Cennik robocizny dla fuch (własne pozycje typu „WC: 350 zł").
  * Trzymany na urządzeniu — dane firmy, nie budowy.
