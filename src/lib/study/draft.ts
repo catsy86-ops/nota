@@ -28,6 +28,8 @@ export interface JournalDraft {
   barcode?: string;
   /** B3.6: streszczenie AI tekstu (offline); brak = bez streszczenia. */
   summary?: string;
+  /** B3.9: punkt z karty budowy, którego dotyczy wpis (wybrany w aparacie); brak = bez punktu. */
+  point?: string;
   /** B3.3: wymiary na zdjęciach (ref → lista); brak = bez wymiarów. */
   dimensions?: Record<string, Array<{ from: [number, number]; to: [number, number]; text: string }>>;
   /** Nagrania głosowe (załączniki audio); starszy szkic dostaje pustą listę (`sanitizeDraft`). */
@@ -62,6 +64,7 @@ export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalD
     captions: parts.captions,
     ...(Object.keys(parts.drawnFrom).length ? { drawnFrom: parts.drawnFrom } : {}),
     ...(Object.keys(parts.dimensions).length ? { dimensions: parts.dimensions } : {}),
+    ...(typeof s.point === "string" && s.point && s.point.length <= 64 ? { point: s.point } : {}),
     ...(parts.level !== undefined ? { level: parts.level } : {}),
     ...(parts.barcode ? { barcode: parts.barcode } : {}),
     ...(parts.summary ? { summary: parts.summary } : {}),

@@ -11,6 +11,8 @@ import { PressureTestFields } from "./PressureTestFields";
 import { LevelMeter } from "./LevelMeter";
 import { BarcodeScanner } from "./BarcodeScanner";
 import { hasNFC } from "@/lib/nfc";
+import { useSitePoints } from "@/lib/study/pointsStore";
+import { pointType } from "@/lib/study/points";
 import { slopeLabel } from "@/lib/study/slope";
 import { hasAISummarizer } from "@/lib/aiModel";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -74,7 +76,7 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "dimensions" | "level" | "barcode" | "summary" | "recordings" | "test" | "fittings" | "pipes" | "stage" | "geo">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "dimensions" | "point" | "level" | "barcode" | "summary" | "recordings" | "test" | "fittings" | "pipes" | "stage" | "geo">;
 
 /** Odtwarzacz i nagrywanie leniwie, poza główną paczką (jak w notatkach). */
 const VoiceRecorder = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.VoiceRecorder })));
@@ -204,6 +206,12 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const hasMaterial = (form.fittings?.length ?? 0) > 0 || (form.pipes?.length ?? 0) > 0;
   const rememberSupply = () => { if (hasMaterial && supplySiteId) setSiteSupply(supplySiteId, supply); };
   const siteId = siteCard?.id ?? "";
+  // Punkty budowy do wyboru w aparacie (B3.9): „Łazienka · WC (stelaż)”.
+  const sitePoints = useSitePoints(siteId);
+  const cameraPoints = useMemo(() => {
+    const roomName = new Map(sitePoints.rooms.map((r) => [r.id, r.name] as const));
+    return sitePoints.points.map((p) => ({ id: p.id, label: `${roomName.get(p.room) ?? "Pomieszczenie"} · ${pointType(p.type).label}` }));
+  }, [sitePoints]);
   /** Najbliższe nieodhaczone etapy budowy — przy „Zrobione” do odhaczenia jednym stuknięciem. */
   const nextStages = useMemo(() => (siteCard ? siteStages(siteCard).filter((s) => s.done === undefined).slice(0, 3) : []), [siteCard]);
 
@@ -365,7 +373,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     commitSite();
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, captions: form.captions, drawnFrom: form.drawnFrom, recordings: form.recordings, at, test: form.test, fittings: form.fittings, pipes: form.pipes, supply, stage: form.stage, geo: form.geo ?? null, level: form.level, barcode: form.barcode, summary: form.summary, dimensions: form.dimensions });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, captions: form.captions, drawnFrom: form.drawnFrom, recordings: form.recordings, at, test: form.test, fittings: form.fittings, pipes: form.pipes, supply, stage: form.stage, geo: form.geo ?? null, level: form.level, barcode: form.barcode, summary: form.summary, dimensions: form.dimensions, ...(form.point ? { point: form.point } : {}) });
     if (entry) { freshEntry.id = entry.id; rememberSupply(); }
     if (!entry) {
       haptic("warn");
@@ -796,6 +804,12 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 ))}
               </ul>
             )}
+            {!isEdit && form.point && (
+              <p className="ui-hint flex items-center gap-2" data-testid="entry-point">
+                <span className="min-w-0 flex-1">Wpis przypiszę do punktu: {cameraPoints.find((p) => p.id === form.point)?.label ?? "punkt"}</span>
+                <button type="button" onClick={() => patch({ point: undefined })} className="pressable shrink-0 underline coarse:min-h-11">Bez punktu</button>
+              </p>
+            )}
             <PhotoStrip
               images={images}
               processing={processing}
@@ -962,7 +976,17 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </div>
             )}
             <AISummary open={aiOpen} onOpenChange={setAiOpen} text={form.text} onSelect={(s) => patch({ summary: s })} />
-            <CameraCapture open={cameraOpen} onOpenChange={setCameraOpen} onCapture={async (blob) => { try { const ref = await imageStore.putBlob(blob); const now = getForm().images; if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) { patch({ images: [...now, ref] }); haptic("tap"); } } catch { photoSaveFailed(); } }} />
+            {/* B3.9: zdjęcia z aparatu przechodzą tę samą obróbkę co z galerii (`addPhotos`: limit 2 MB, magazyn, limit wpisu). */}
+            <CameraCapture
+              open={cameraOpen}
+              onOpenChange={setCameraOpen}
+              onCapture={(blob) => addPhotos([new File([blob], "aparat.jpg", { type: blob.type || "image/jpeg" })])}
+              count={images.length + processing}
+              max={JOURNAL_MAX_IMAGES}
+              points={isEdit ? [] : cameraPoints}
+              point={form.point}
+              onPoint={(id) => patch({ point: id })}
+            />
             {fittingsVisible && (
               <div id="journal-fittings" className="rounded-card border border-border p-2">
                 <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
