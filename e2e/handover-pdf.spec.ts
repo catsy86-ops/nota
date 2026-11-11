@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { inPapiery } from "./helpers";
 
 // P2.5: protokół odbioru jako plik PDF (nazwa firmy z Ustawień, nazwa pliku z budowy, rozmiar > 0).
 test.beforeEach(async ({ page }) => {
@@ -26,7 +27,7 @@ test("PDF protokołu: pobiera plik nazwany od budowy i z rozmiarem dokumentu", a
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const card = page.getByTestId("site-card");
   const download = page.waitForEvent("download", { timeout: 30000 });
-  await card.getByRole("button", { name: "PDF protokołu" }).click();
+  await (await inPapiery(card)).getByRole("button", { name: "PDF protokołu" }).click();
   const file = await download;
   expect(file.suggestedFilename()).toBe("Protokol odbioru - Lipowa 5.pdf");
   const path = await file.path();
@@ -34,4 +35,30 @@ test("PDF protokołu: pobiera plik nazwany od budowy i z rozmiarem dokumentu", a
   const bytes = fs.readFileSync(path!);
   expect(bytes.subarray(0, 5).toString("ascii")).toBe("%PDF-");
   expect(bytes.length).toBeGreaterThan(2000);
+});
+
+test("odcisk protokołu (B4.4): PDF zapisuje odcisk na telefonie, a Ustawienia go potwierdzają i wykrywają zmieniony kod", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  const download = page.waitForEvent("download", { timeout: 30000 });
+  await (await inPapiery(page.getByTestId("site-card"))).getByRole("button", { name: "PDF protokołu" }).click();
+  await download;
+
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("kaczy.study.fingerprints.v1") ?? "[]"));
+  expect(stored).toHaveLength(1);
+  expect(stored[0]).toMatchObject({ site: "Lipowa 5", kind: "protokół odbioru" });
+  expect(stored[0].hash).toMatch(/^[0-9a-f]{64}$/);
+  // Kod jak w stopce PDF: 24 znaki hex wielkimi literami, po 4.
+  const code = stored[0].hash.slice(0, 24).toUpperCase().replace(/(.{4})(?=.)/g, "$1-");
+
+  await page.goto("/?settings=ogolne");
+  const input = page.locator("#fingerprint-check");
+  const result = page.getByTestId("fingerprint-result");
+  await input.fill(code.toLowerCase());
+  await expect(result).toContainText("Zgadza się: protokół odbioru „Lipowa 5”");
+  await input.fill(code.slice(0, 20) + "0000");
+  await expect(result).toContainText("Brak takiego odcisku");
+  await input.fill("3F2A-91C0");
+  await expect(result).toContainText("co najmniej 12 znaków");
 });

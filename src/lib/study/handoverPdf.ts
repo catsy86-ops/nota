@@ -15,6 +15,8 @@ export interface HandoverPdfOptions {
   photos: HandoverPdfPhoto[];
   /** P2.4: obraz podpisu klienta jako data URL (bajty z `imageStore`); brak = puste pola. */
   signatureDataUrl?: string;
+  /** B4.4: tekst stopki z odciskiem dokumentu (na każdej stronie); brak = bez stopki. */
+  footer?: string;
 }
 
 /** Nazwa pliku dla protokołu. */
@@ -67,5 +69,5 @@ export async function buildHandoverPdf(h: Handover, opts: HandoverPdfOptions): P
     ? { dataUrl: opts.signatureDataUrl, caption: `${signerLabel(h.signature)}, ${shortDate(h.signature.at)}${opts.signatureDataUrl ? "" : " (obraz podpisu niedostępny)"}` }
     : undefined;
   w.signatures(["Wykonawca", "Inwestor"], signed);
-  return w.finish();
+  return w.finish(opts.footer);
 }

@@ -42,3 +42,16 @@ export function verifyDocumentFingerprint(content: string, fp: DocumentFingerpri
     () => false,
   );
 }
+
+/** Długość kodu w stopce PDF: 24 znaki hex = 96 bitów (do porównania z zapisem na telefonie wystawcy). */
+export const FINGERPRINT_CODE_HEX = 24;
+/** Najmniej znaków hex, jakie przyjmuje sprawdzanie (krótszy wpis pasowałby do zbyt wielu). */
+export const FINGERPRINT_MIN_HEX = 12;
+
+/** „3F2A-91C0-77DD-B1E4-5A60-C2D9” z pełnego skrótu. */
+export function fingerprintCode(hash: string): string {
+  return hash.slice(0, FINGERPRINT_CODE_HEX).toUpperCase().replace(/(.{4})(?=.)/g, "$1-");
+}
+
+/** Wpis użytkownika → same cyfry hex wielkimi literami (myślniki, spacje i małe litery nie przeszkadzają). */
+export const normalizeFingerprintInput = (input: string): string => input.toUpperCase().replace(/[^0-9A-F]/g, "");

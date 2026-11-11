@@ -110,7 +110,12 @@ export function useSiteCardActions({
       const signatureDataUrl = await loadSignature(h.signature);
       // Karta mówi „Podpisany”, a obrazu nie ma (nie dojechał z innego urządzenia) — nie wysyłaj tego po cichu.
       if (h.signature && !signatureDataUrl) toast.warning("Obraz podpisu jeszcze nie dotarł na to urządzenie — w PDF jest tylko imię i data");
-      const blob = await buildHandoverPdf(h, { company: companyNameStore.get(), photos, signatureDataUrl });
+      // B4.4: odcisk treści protokołu (z kluczami zdjęć i podpisem) w stopce i w zapisie na tym telefonie.
+      const company = companyNameStore.get();
+      const [{ generateDocumentFingerprint, fingerprintCode }, { registerFingerprint }] = await Promise.all([import("@/lib/study/documentFingerprint"), import("@/lib/study/fingerprintStore")]);
+      const fp = await generateDocumentFingerprint(JSON.stringify({ v: 1, company, handover: h })).catch(() => null);
+      const blob = await buildHandoverPdf(h, { company, photos, signatureDataUrl, ...(fp ? { footer: `Odcisk dokumentu: ${fingerprintCode(fp.hash)}` } : {}) });
+      if (fp) registerFingerprint({ hash: fp.hash, site: site.name, kind: "protokół odbioru", at: fp.date });
       const outcome = await sharePdf(blob, handoverPdfName(site.name));
       if (outcome === "downloaded") toast.success("Zapisano protokół PDF");
     } catch {

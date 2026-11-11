@@ -26,6 +26,7 @@ import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
 import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
 import { AUTHOR_MAX, BANK_ACCOUNT_MAX, COMPANY_NAME_MAX, setAuthor, setBankAccount, setCompanyName, setPricing, useAuthor, useBankAccount, useCompanyName, usePricing } from "@/lib/study/companyPrefs";
 import { PricingManager } from "./PricingManager";
+import { FingerprintCheck } from "./FingerprintCheck";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -258,6 +259,10 @@ export function GeneralSettings() {
         <Section title="Cennik robocizny (fuchy)">
           <Label className="text-xs text-muted-foreground">Własne pozycje, np. „WC podwieszane: 350 zł” (zostają na tym urządzeniu)</Label>
           <PricingManager pricing={pricing} onUpdate={setPricing} />
+        </Section>
+
+        <Section title="Sprawdź odcisk protokołu">
+          <FingerprintCheck />
         </Section>
 
         <Section title="Twoje imię w Pracy">

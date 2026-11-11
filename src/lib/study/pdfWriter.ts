@@ -179,8 +179,8 @@ export class PdfWriter {
     this.line(signed ? `Podpisał: ${signed.caption}` : "Data: ____________________", 10);
   }
 
-  /** Numery stron i zwrot pliku. */
-  finish(): Blob {
+  /** Numery stron, opcjonalna stopka po lewej (np. odcisk dokumentu) i zwrot pliku. */
+  finish(footer?: string): Blob {
     const { doc } = this;
     const total = doc.getNumberOfPages();
     for (let p = 1; p <= total; p++) {
@@ -188,6 +188,7 @@ export class PdfWriter {
       doc.setFont(FONT_ID, "normal");
       doc.setFontSize(8);
       doc.text(`Strona ${p} z ${total}`, PAGE_W - MARGIN, PAGE_H - 8, { align: "right" });
+      if (footer) doc.text(footer, MARGIN, PAGE_H - 8);
     }
     return doc.output("blob");
   }
