@@ -117,7 +117,7 @@ export function useSiteCardActions({
       // B4.4: odcisk treści protokołu (z kluczami zdjęć i podpisem) w stopce i w zapisie na tym telefonie.
       const company = companyNameStore.get();
       const [{ generateDocumentFingerprint, fingerprintCode }, { registerFingerprint }] = await Promise.all([import("@/lib/study/documentFingerprint"), import("@/lib/study/fingerprintStore")]);
-      const fp = await generateDocumentFingerprint(JSON.stringify({ v: 1, company, handover: h })).catch(() => null);
+      const fp = await generateDocumentFingerprint(JSON.stringify({ v: 1, company, handover: h, captions: photos.map((p) => p.caption) })).catch(() => null);
       const blob = await buildHandoverPdf(h, { company, photos, signatureDataUrl, ...(fp ? { footer: `Odcisk dokumentu: ${fingerprintCode(fp.hash)}` } : {}) });
       if (fp) registerFingerprint({ hash: fp.hash, site: site.name, kind: "protokół odbioru", at: fp.date });
       const outcome = await sharePdf(blob, handoverPdfName(site.name));

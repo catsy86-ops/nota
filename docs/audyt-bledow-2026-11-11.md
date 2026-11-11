@@ -39,7 +39,7 @@
 | 5 | `LevelMeter`: nasłuch `deviceorientation` po zamknięciu (iOS) | naprawione: cleanup nasłuchu przy zamknięciu (iOS) |
 | 6 | wpis z samym pomiarem/kodem odrzucany jako pusty | naprawione: pomiar i kod liczą się jako treść; `journalSensors.test.ts` |
 | 7 | `point` z aparatu zostaje po zmianie budowy | naprawione: `point` czyszczony przy zmianie budowy |
-| 8 | karta budowy gubi niezapisane zmiany przy błędnym formularzu | otwarte |
+| 8 | karta budowy gubi niezapisane zmiany przy błędnym formularzu | naprawione: `blockedByError` w `SiteCardDialog.tsx` (karta zostaje, toast z „Odrzuć zmiany”); `e2e/study.spec.ts` |
 | 9–16, 17–33 | miarka (zamknięcie, klawiatura, przeciągnięcie), alarm próby w edycji, stawka km, fokus „Brak”, pigułki `aria-pressed`, licznik zdjęć z aparatu, NFC, etykiety, i in. | patrz raport |
 
 ## Bezpieczeństwo
@@ -60,7 +60,7 @@
 |---|---|---|
 | T1 | `push-server/*.test.js` nie jest w CI | zrobione: job `servers` w CI (testy + `npm audit`) |
 | T2 | CI instaluje tylko Chromium, a projekty iPhone/WebKit istnieją | zrobione: `playwright install chromium webkit` w CI |
-| T3 | odcisk protokołu nie obejmuje podpisów zdjęć z wymiarami (`useSiteCardActions.ts`) | do weryfikacji |
+| T3 | odcisk protokołu nie obejmuje podpisów zdjęć z wymiarami (`useSiteCardActions.ts`) | naprawione: podpisy (z wymiarami) wchodzą do treści odcisku |
 | T9 | `startViewTransition` wołane bezpośrednio w `Index.tsx` i `viewChange.ts` (poza strażnikiem WebKit) | naprawione: `canViewTransition` w `Index.tsx`/`viewChange.ts`; `viewTransitionGuard.test.ts` |
 | T4–T35 | słabe asercje (mileage), brak wektora referencyjnego SHA-256, luki pokrycia (PDF, sitePackageIo, push client, tick), sleepy, rozbieżności `opis.md` | patrz raport |
 
@@ -80,3 +80,6 @@ W6–W10.
 
 W12, W13, W16, W17. W11, W14 i W15 czekają na decyzje (model Yjs list zdjęć; klucze kopii; scalanie sekcji pieniężnych).
 
+## Zrobione 2026-11-11 (piąta partia)
+
+UI #8, T3.

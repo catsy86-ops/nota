@@ -5331,3 +5331,8 @@ Pełna lista i statusy: `docs/audyt-bledow-2026-11-11.md`. **Naprawione i przete
 - **W16 zlecenia:** `touch()` (`yJobs.ts`) zapisuje znacznik zmiany wyceny w osobnym kluczu `c␁budowa` zamiast przepisywać cały wpis zlecenia, więc dopisanie pozycji nie cofa statusu zmienionego na drugim telefonie; `all()` bierze większy z `changedAt` wpisu i znacznika. Ograniczenie: `setMeta` nadal zapisuje cały wpis (ostatni zapis wygrywa).
 - **W17 czasy wpisów:** `cleanEntry` odrzuca wpis z `at` poza 1970…3000, a `resolved` poza zakresem tylko pomija (wpis zostaje otwarty); wpisów z zegarem do przodu nie gubi (`timeInRange`, `journalEntry.ts`).
 
+## Audyt, piąta partia: karta budowy i odcisk protokołu (2026-11-11)
+
+- **Karta budowy z błędnym formularzem (UI #8):** `SiteCardDialog.tsx` — `blockedByError()`; zamknięcie (Esc, X) i „Pokaż wpisy”/„Raport” przy niezapisanych zmianach i błędzie (np. zajęta nazwa) nie zamyka karty, tylko pokazuje komunikat z przyciskiem „Odrzuć zmiany”. Wcześniej zmiany ginęły po cichu. Test: `e2e/study.spec.ts` (karta budowy).
+- **Odcisk protokołu (T3):** `useSiteCardActions.ts` — do treści odcisku dochodzą podpisy zdjęć razem z wymiarami, więc zmiana podpisu zmienia odcisk w stopce PDF.
+

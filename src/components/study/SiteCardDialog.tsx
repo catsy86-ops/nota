@@ -182,7 +182,15 @@ export function SiteCardDialog({
     }
   }
 
+  /** Formularz z błędem nie da się zapisać — zamknięcie po cichu zgubiłoby wpisane dane, więc pytamy (audyt, UI #8). */
+  function blockedByError(): boolean {
+    if (!site || !dirty || !error) return false;
+    toast.error(`Karta ma błąd: ${error}`, { action: { label: "Odrzuć zmiany", onClick: () => onOpenChange(false) } });
+    return true;
+  }
+
   function close(open: boolean) {
+    if (!open && blockedByError()) return;
     if (!open && canViewTransition() && !window.matchMedia("(prefers-reduced-motion)").matches) {
       withViewTransition(() => {
         if (persistDirty()) toast.success("Zapisano kartę budowy");
@@ -196,7 +204,7 @@ export function SiteCardDialog({
 
   /** „Pokaż wpisy”, „Raport” i „+ Wpis tutaj” zamykają kartę w rodzicu — najpierw zapis, potem przejście. */
   function leaveTo(go: (siteId: string) => void) {
-    if (!site) return;
+    if (!site || blockedByError()) return;
     persistDirty();
     go(site.id);
   }

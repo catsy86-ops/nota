@@ -715,6 +715,10 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await card.getByLabel("Nazwa", { exact: true }).fill("polna 2");
   await expect(card.getByRole("alert")).toHaveText("Jest już budowa „Polna 2”");
   await expect(card.getByRole("button", { name: "Zapisz kartę" })).toBeDisabled();
+  // Audyt UI #8: zamknięcie z błędnym formularzem nie gubi zmian po cichu — karta zostaje i pyta.
+  await page.keyboard.press("Escape");
+  await expect(page.getByText("Karta ma błąd: Jest już budowa „Polna 2”")).toBeVisible();
+  await expect(card).toBeVisible();
   await card.getByLabel("Nazwa", { exact: true }).fill("Dom Nowaków");
   await card.getByLabel("Adres").fill("ul. Lipowa 5, Kraków");
   await card.getByLabel("Inwestor", { exact: true }).fill("Jan Nowak");
