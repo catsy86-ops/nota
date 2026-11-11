@@ -23,19 +23,19 @@ test.beforeEach(async ({ page }) => {
 test("wpis z poziomicą, kodem i streszczeniem: lista, edycja i zapis zmian", async ({ page }) => {
   await page.goto("/praca");
   const entry = page.locator("[data-journal-entry]");
-  await expect(entry.getByTestId("journal-sensors")).toContainText("Nachylenie 1,2° · Kod: 5901234123457");
+  await expect(entry.getByTestId("journal-sensors")).toContainText("Spadek 2,1% (1,2°) · Kod: 5901234123457");
   await expect(entry.getByTestId("journal-summary")).toHaveText("Streszczenie: Pion sprawdzony, spadek w normie.");
 
   await entry.getByRole("button", { name: "Opcje wpisu" }).click();
   await page.getByRole("menuitem", { name: "Edytuj wpis" }).click();
   const sheet = page.getByTestId("journal-entry-sheet");
-  await expect(sheet.getByText("Poziomnica: 1.20°")).toBeVisible();
+  await expect(sheet.getByText("Spadek: 2,1% (1,2°)")).toBeVisible();
 
   await sheet.getByLabel("Co się dzieje?").fill("Pion w łazience, poprawiony");
   await sheet.getByRole("button", { name: "Zapisz zmiany" }).click();
   await expect(sheet).toHaveCount(0);
 
   await expect(entry).toContainText("Pion w łazience, poprawiony");
-  await expect(entry.getByTestId("journal-sensors")).toContainText("Nachylenie 1,2° · Kod: 5901234123457");
+  await expect(entry.getByTestId("journal-sensors")).toContainText("Spadek 2,1% (1,2°) · Kod: 5901234123457");
   await expect(entry.getByTestId("journal-summary")).toBeVisible();
 });

@@ -28,7 +28,7 @@ export function AISummary({ open, onOpenChange, text, onSelect }: AISummaryProps
     }
 
     setLoading(true);
-    summarizeText(text, "tl;dr")
+    summarizeText(text, "tldr")
       .then((result) => {
         if (result) {
           setSummary(result);

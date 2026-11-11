@@ -1,74 +1,49 @@
 /**
- * Streszczanie i odpowiadanie na pytania za pomocą Chrome Built-in AI Model.
- * Dostępny na Chrome Android 131+. Offline — brak wysyłania danych. (B3.6)
+ * Streszczenie tekstu modelem wbudowanym w przeglądarkę (Chrome: globalny `Summarizer`, wersja 138+, głównie
+ * komputer). Działa na urządzeniu — tekst nie wychodzi do chmury. Eksperyment (B3.6): model może nie być
+ * zainstalowany, a język polski nie jest oficjalnie wspierany, więc wynik zawsze trafia do edycji, nigdy automatycznie do wpisu.
  */
 
-interface AISummarizer {
-  summarize(options: { text: string; type?: "key-points" | "teaser" | "tl;dr" }): Promise<string>;
+export type SummarizerAvailability = "unavailable" | "downloadable" | "downloading" | "available";
+export type SummaryType = "tldr" | "key-points" | "teaser" | "headline";
+
+interface SummarizerLike {
+  summarize(text: string, options?: { context?: string }): Promise<string>;
+  destroy?(): void;
 }
 
-interface AIWriter {
-  write(text: string, options: { tone?: string; format?: string; length?: "short" | "medium" | "long" }): Promise<string>;
+interface SummarizerStatic {
+  availability(options?: Record<string, unknown>): Promise<SummarizerAvailability>;
+  create(options?: Record<string, unknown>): Promise<SummarizerLike>;
 }
 
-interface SelfAI {
-  summarizer?: {
-    create(): Promise<AISummarizer>;
-  };
-  writer?: {
-    create(): Promise<AIWriter>;
-  };
+const api = (): SummarizerStatic | undefined => (globalThis as { Summarizer?: SummarizerStatic }).Summarizer;
+
+/** Czy przeglądarka ma API streszczania (model może jeszcze wymagać pobrania — patrz `aiAvailability`). */
+export const hasAISummarizer = (): boolean => typeof api()?.create === "function";
+
+/** Stan modelu: `available` gotowy, `downloadable` do pobrania przy pierwszym użyciu, `unavailable` brak. */
+export async function aiAvailability(): Promise<SummarizerAvailability> {
+  try { return (await api()?.availability()) ?? "unavailable"; } catch { return "unavailable"; }
 }
 
-declare global {
-  interface WorkerNavigator {
-    ai?: SelfAI;
-  }
-  interface Navigator {
-    ai?: SelfAI;
-  }
-}
+/** Najdłuższy tekst oddawany modelowi; dłuższy jest przycinany (okno kontekstu modelu jest małe). */
+export const AI_INPUT_MAX = 4000;
 
-/** Eksperymentalne API Chrome (`navigator.ai`) — brak w typach DOM, więc luźny kształt. */
-const selfAi = (): { summarizer?: { create(): Promise<{ summarize(o: { text: string; type: string }): Promise<string> }> }; writer?: { create(): Promise<Record<string, (...a: never[]) => Promise<string>>> } } | undefined =>
-  (navigator as unknown as { ai?: ReturnType<typeof selfAi> }).ai;
-
-export const hasAISummarizer = (): boolean => {
-  if (typeof navigator === "undefined") return false;
-  return selfAi()?.summarizer !== undefined;
-};
-
-/** Streszczanie tekstu za pomocą AI na urządzeniu. Zwraca `null` gdy niedostępne. */
-export async function summarizeText(text: string, type: "key-points" | "teaser" | "tl;dr" = "tl;dr"): Promise<string | null> {
+/** Streszcza tekst na urządzeniu. `null` = brak API, model niedostępny, błąd albo pusty wynik. */
+export async function summarizeText(text: string, type: SummaryType = "tldr"): Promise<string | null> {
+  const clean = text.trim().slice(0, AI_INPUT_MAX);
+  if (!clean) return null;
+  let summarizer: SummarizerLike | undefined;
   try {
-    if (!hasAISummarizer()) return null;
-    const ai = selfAi();
-    if (!ai?.summarizer) return null;
-
-    const summarizer = await ai.summarizer.create();
-    const summary = await summarizer.summarize({ text, type });
-    return summary || null;
+    const s = api();
+    if (!s || (await aiAvailability()) === "unavailable") return null;
+    summarizer = await s.create({ type, format: "plain-text", length: "short" });
+    const out = (await summarizer.summarize(clean)).trim();
+    return out || null;
   } catch {
     return null;
-  }
-}
-
-export const hasAIWriter = (): boolean => {
-  if (typeof navigator === "undefined") return false;
-  return selfAi()?.writer !== undefined;
-};
-
-/** Dopisywanie/rozwijanie tekstu za pomocą AI. */
-export async function expandText(text: string, tone: "formal" | "casual" = "casual"): Promise<string | null> {
-  try {
-    if (!hasAIWriter()) return null;
-    const ai = selfAi();
-    if (!ai?.writer) return null;
-
-    const writer = await ai.writer.create();
-    const expanded = await writer.write(text, { tone, length: "medium" });
-    return expanded || null;
-  } catch {
-    return null;
+  } finally {
+    try { summarizer?.destroy?.(); } catch { /* model już zwolniony */ }
   }
 }

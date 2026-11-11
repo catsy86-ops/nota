@@ -12,6 +12,7 @@ export type VanUnit = "szt." | "m";
 export const VAN_UNITS: readonly VanUnit[] = ["szt.", "m"];
 export const VAN_NAME_MAX = 60;
 export const VAN_ITEMS_MAX = 120;
+export const VAN_CODE_MAX = 64;
 export const VAN_QTY_MAX = 100_000;
 
 export interface VanItem {
@@ -20,6 +21,8 @@ export interface VanItem {
   unit: VanUnit;
   /** Poniżej tego „Do dokupienia”; brak = bez minimum. */
   min?: number;
+  /** B3.5: kod z opakowania (EAN); skan znajduje po nim pozycję, więc nazwę wpisuje się raz. Brak = bez kodu. */
+  code?: string;
   /** Założenie pozycji (ms) — stan liczy się od zera od tej chwili, dopóki nie ma inwentaryzacji. */
   at: number;
   order: number;
@@ -49,7 +52,8 @@ export function cleanVanItem(raw: unknown, id: string): VanItem | null {
   const at = time(r.at);
   if (!name || at === undefined) return null;
   const min = cleanVanQty(r.min);
-  return { id, name, unit: r.unit === "m" ? "m" : "szt.", ...(min ? { min } : {}), at, order: typeof r.order === "number" && Number.isFinite(r.order) ? r.order : 0 };
+  const code = typeof r.code === "string" ? safeLine(r.code).slice(0, VAN_CODE_MAX) : "";
+  return { id, name, unit: r.unit === "m" ? "m" : "szt.", ...(min ? { min } : {}), ...(code ? { code } : {}), at, order: typeof r.order === "number" && Number.isFinite(r.order) ? r.order : 0 };
 }
 
 export function cleanVanEvent(raw: unknown, item: string, id: string): VanEvent | null {
@@ -111,4 +115,10 @@ export const vanQtyLabel = (qty: number, unit: VanUnit) => `${qty.toLocaleString
 export function parseVanQty(raw: string): number | undefined {
   const t = raw.replace(/\s/g, "").replace(",", ".");
   return /^\d+(\.\d{0,2})?$/.test(t) ? cleanVanQty(Number(t)) : undefined;
+}
+
+/** Pozycja z tym kodem (skan z opakowania); porównanie bez wielkości liter i spacji na brzegach. */
+export function findVanItemByCode(items: readonly VanItem[], code: string): VanItem | undefined {
+  const c = safeLine(code).toLowerCase();
+  return c ? items.find((i) => i.code?.toLowerCase() === c) : undefined;
 }

@@ -7,6 +7,7 @@ import { requestCustomPrefill } from "@/lib/study/customPrefill";
 import { CHIP_ACCENT } from "@/components/ui/chip";
 import { cn } from "@/lib/utils";
 import { readingsLine, testLine } from "@/lib/study/pressureTest";
+import { slopeLabel } from "@/lib/study/slope";
 import { mapsUrl } from "@/lib/study/geo";
 import { Button } from "@/components/ui/button";
 import { NoteImage } from "@/components/NoteImage";
@@ -90,7 +91,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
             <p className="ui-hint mt-1 flex items-start gap-1.5" data-testid="journal-sensors">
               <Ruler className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
               <span className="min-w-0 break-words">{[
-                e.level !== undefined && `Nachylenie ${e.level.toLocaleString("pl-PL", { maximumFractionDigits: 2 })}°`,
+                e.level !== undefined && `Spadek ${slopeLabel(e.level)}`,
                 e.barcode && `Kod: ${e.barcode}`,
                 dimensionCount > 0 && `Wymiary na zdjęciach: ${dimensionCount}`,
               ].filter(Boolean).join(" · ")}</span>

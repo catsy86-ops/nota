@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
-import { cleanVanEvent, cleanVanItem, parseVanQty, usedSince, vanStock, type VanItem } from "./van";
+import { cleanVanEvent, cleanVanItem, findVanItemByCode, parseVanQty, usedSince, vanStock, type VanItem } from "./van";
 import { createYVan } from "./yVan";
 import { wholesaleText } from "./order";
 
@@ -59,5 +59,34 @@ describe("materiał w aucie — stan z historii (H1.3)", () => {
 
   it("lista do hurtowni: grupa „Do auta”", () => {
     expect(wholesaleText([], [{ name: "Kolano 16", qty: 6, unit: "szt." }]).split(String.fromCharCode(10))).toEqual(["Zamówienie do hurtowni", "", "Do auta:", "- Kolano 16: 6 szt."]);
+  });
+});
+
+describe("kod z opakowania (B3.5)", () => {
+  const item = (id: string, name: string, code?: string): VanItem => ({ id, name, unit: "szt.", at: 1000, order: 0, ...(code ? { code } : {}) });
+
+  it("cleanVanItem zachowuje kod (czyszczony, do 64 znaków), a pusty kod pomija", () => {
+    expect(cleanVanItem({ name: "Kolano 16", at: 1, code: " 5901234567890\n" }, "v1")?.code).toBe("5901234567890");
+    expect(cleanVanItem({ name: "Kolano 16", at: 1, code: "x".repeat(200) }, "v1")?.code).toHaveLength(64);
+    expect(cleanVanItem({ name: "Kolano 16", at: 1, code: "   " }, "v1")).not.toHaveProperty("code");
+    expect(cleanVanItem({ name: "Kolano 16", at: 1, code: 5 }, "v1")).not.toHaveProperty("code");
+  });
+
+  it("findVanItemByCode: znajduje pozycję po kodzie bez względu na wielkość liter i spacje", () => {
+    const items = [item("a", "Kolano 16", "ABC-123"), item("b", "Trójnik 20")];
+    expect(findVanItemByCode(items, " abc-123 ")?.id).toBe("a");
+    expect(findVanItemByCode(items, "nieznany")).toBeUndefined();
+    expect(findVanItemByCode(items, "")).toBeUndefined();
+  });
+
+  it("kod przeżywa zapis do Yjs i scalenie z innego telefonu", () => {
+    const docA = new Y.Doc(), docB = new Y.Doc();
+    const a = createYVan(docA), b = createYVan(docB);
+    expect(a.saveItem(item("v1", "Kolano 16", "5901234567890"))).toBe(true);
+    Y.applyUpdate(docB, Y.encodeStateAsUpdate(docA));
+    expect(b.get().items[0].code).toBe("5901234567890");
+    // Zmiana nazwy bez kodu usuwa kod (cały wpis pozycji jest zastępowany).
+    a.saveItem({ ...a.get().items[0], code: undefined });
+    expect(a.get().items[0].code).toBeUndefined();
   });
 });

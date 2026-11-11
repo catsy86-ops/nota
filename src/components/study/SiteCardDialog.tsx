@@ -433,6 +433,7 @@ export function SiteCardDialog({
                       value={form.phone}
                       onChange={setField("phone")}
                       maxLength={SITE_PHONE_MAX}
+                      aria-label="Telefon inwestora"
                       placeholder="600 100 200"
                       autoComplete="off"
                       className={cn(fieldClass, "flex-1")}
@@ -465,7 +466,8 @@ export function SiteCardDialog({
                         value={form.managerPhone}
                         onChange={setField("managerPhone")}
                         maxLength={SITE_PHONE_MAX}
-                        placeholder="600 100 200"
+                        aria-label="Telefon kierownika"
+                      placeholder="600 100 200"
                         autoComplete="off"
                         className={cn(fieldClass, "flex-1")}
                       />
@@ -485,7 +487,8 @@ export function SiteCardDialog({
                         value={form.supplierPhone}
                         onChange={setField("supplierPhone")}
                         maxLength={SITE_PHONE_MAX}
-                        placeholder="np. hurtownia 22 000 00 00"
+                        aria-label="Telefon hurtowni (WhatsApp zamówień)"
+                      placeholder="np. hurtownia 22 000 00 00"
                         autoComplete="off"
                         className={cn(fieldClass, "flex-1")}
                       />

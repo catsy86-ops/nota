@@ -10,6 +10,10 @@ import { PhotoStrip } from "./PhotoStrip";
 import { PressureTestFields } from "./PressureTestFields";
 import { LevelMeter } from "./LevelMeter";
 import { BarcodeScanner } from "./BarcodeScanner";
+import { hasNFC } from "@/lib/nfc";
+import { slopeLabel } from "@/lib/study/slope";
+import { hasAISummarizer } from "@/lib/aiModel";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { AISummary } from "./AISummary";
 import { CameraCapture } from "./CameraCapture";
 import { NFCReader } from "./NFCReader";
@@ -134,6 +138,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [aiOpen, setAiOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [nfcOpen, setNfcOpen] = useState(false);
+  const touchDevice = useMediaQuery("(pointer: coarse)");
   const [fittingsOpen, setFittingsOpen] = useState(false);
   const testVisible = testOpen || !!form.test || TEST_TOPICS.has(topic);
   const levelVisible = levelOpen || form.level !== undefined;
@@ -860,6 +865,29 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               >
                 {(form.pipes?.length ?? 0) > 0 ? "✓ " : "+ "}Rury
               </button>
+              {/* Czujniki i narzędzia (Faza 3): pigułki otwierają okna; po zapisie wartość widać w blokach poniżej. */}
+              {touchDevice && typeof DeviceOrientationEvent !== "undefined" && (
+                <button type="button" onClick={() => setLevelOpen(true)} data-testid="pill-level"
+                  className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5">
+                  {form.level !== undefined ? "✓ " : "+ "}Spadek
+                </button>
+              )}
+              <button type="button" onClick={() => setBarcodeOpen(true)} data-testid="pill-barcode"
+                className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5">
+                {form.barcode ? "✓ " : "+ "}Kod
+              </button>
+              {touchDevice && hasNFC() && (
+                <button type="button" onClick={() => setNfcOpen(true)} data-testid="pill-nfc"
+                  className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5">
+                  + NFC
+                </button>
+              )}
+              {hasAISummarizer() && (
+                <button type="button" onClick={() => setAiOpen(true)} data-testid="pill-ai"
+                  className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5">
+                  {form.summary ? "✓ " : "+ "}Streszczenie
+                </button>
+              )}
               <button
                 type="button"
                 aria-expanded={kitsOpen}
@@ -892,7 +920,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   className="pressable flex w-full items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
                 >
                   <Maximize2 className="h-4 w-4 shrink-0" aria-hidden />
-                  {form.level !== undefined ? `Poziomnica: ${form.level.toFixed(2)}°` : "Dodaj poziomnicę"}
+                  {form.level !== undefined ? `Spadek: ${slopeLabel(form.level)}` : "Zmierz spadek"}
                 </button>
               </div>
             )}

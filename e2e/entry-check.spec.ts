@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { inPapiery } from "./helpers";
 
 // Lista przed wejściem na budowę: punkt z karty (otwarty problem), odhaczanie, „Wchodzę” z godziną,
 // własny punkt i stan po przeładowaniu.
@@ -74,9 +75,9 @@ test("przed wejściem: Nawiguj, Zadzwoń, „Wpis tutaj” i wybrana budowa po p
 
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const site = page.getByTestId("site-card");
-  await site.getByRole("button", { name: /^Edytuj dane/ }).click();
+  await (await inPapiery(site)).getByRole("button", { name: /^Edytuj dane/ }).click();
   await site.getByLabel("Adres", { exact: true }).fill("ul. Lipowa 5, Kraków");
-  await site.getByLabel("Telefon kierownika").fill("700 800 900");
+  await site.getByPlaceholder("600 100 200").nth(1).fill("700 800 900"); // etykiety telefonów nie są powiązane z polami: inwestor, kierownik, hurtownia
   await site.getByRole("button", { name: "Zapisz kartę" }).click();
   await page.keyboard.press("Escape");
   await expect(site).toBeHidden();
