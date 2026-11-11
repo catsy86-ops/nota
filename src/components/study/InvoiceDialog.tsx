@@ -81,6 +81,8 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
   const [buyer, setBuyer] = useState(() => ({ name: site.investor || site.name, nip: "", address1: site.address, address2: "" }));
   const [priceMode, setPriceMode] = useState<PriceMode>("gross");
   const [rate, setRate] = useState<VatRate>(23);
+  /** Stawki ustawione osobno dla pozycji (indeks → stawka); zmiana stawki ogólnej je zeruje. */
+  const [overrides, setOverrides] = useState<Record<number, VatRate>>({});
   const [form, setForm] = useState<1 | 2 | 6 | 7>(6);
   const [due, setDue] = useState(() => addDays(today, 14));
   const [saleDate, setSaleDate] = useState(() => localDayKey(new Date(job.statusAt)));
@@ -88,7 +90,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
   const [problems, setProblems] = useState<string[]>([]);
   const [okMap, setOkMap] = useState<Record<string, boolean>>({});
 
-  const lines = useMemo(() => linesFromJob(job, rate), [job, rate]);
+  const lines = useMemo(() => linesFromJob(job, rate).map((l, i) => (overrides[i] === undefined ? l : { ...l, rate: overrides[i] })), [job, rate, overrides]);
   const draft: Omit<Invoice, "number"> = useMemo(() => ({
     issueDate: today, saleDate, seller, buyer, priceMode, lines,
     payment: { form, ...(form === 6 || form === 2 ? { dueDate: due } : {}), ...(form === 6 && bankAccountStore.get().trim() ? { account: bankAccountStore.get().trim() } : {}) },
@@ -161,8 +163,8 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
               </button>
             ))}
             <label className="ml-auto flex items-center gap-1.5 text-sm">
-              Stawka VAT
-              <select aria-label="Stawka VAT" value={rate} onChange={(e) => setRate(Number(e.target.value) as VatRate)} className={cn(fieldCls, "w-auto")}>
+              Stawka VAT dla wszystkich
+              <select aria-label="Stawka VAT dla wszystkich" value={rate} onChange={(e) => { setRate(Number(e.target.value) as VatRate); setOverrides({}); }} className={cn(fieldCls, "w-auto")}>
                 {VAT_RATES.map((r) => <option key={r} value={r}>{r === 0 ? "0% (krajowa)" : `${r}%`}</option>)}
               </select>
             </label>
@@ -172,6 +174,9 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
               <li key={i} className="flex items-baseline gap-2" data-testid="invoice-line">
                 <span className="min-w-0 flex-1 truncate">{l.name}</span>
                 <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{l.qtyMilli / 1000} {l.unit}</span>
+                <select aria-label={`Stawka VAT pozycji ${i + 1}`} value={l.rate} onChange={(e) => setOverrides((o) => ({ ...o, [i]: Number(e.target.value) as VatRate }))} className={cn(fieldCls, "h-8 w-auto shrink-0 px-1 coarse:h-11")}>
+                  {VAT_RATES.map((r) => <option key={r} value={r}>{r === 0 ? "0%" : `${r}%`}</option>)}
+                </select>
                 <span className="shrink-0 font-mono tabular-nums">{fromGrosze(totals.lines[i].gross)}</span>
               </li>
             ))}

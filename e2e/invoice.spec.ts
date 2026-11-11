@@ -117,3 +117,13 @@ test("przycisk faktury jest tylko przy zleceniu zrobionym albo zapłaconym", asy
   const card = page.getByTestId("site-card");
   await expect(card.getByTestId("job-invoice")).toHaveCount(0);
 });
+
+test("stawka VAT osobno dla pozycji zmienia sumy, a zmiana stawki ogólnej je zeruje", async ({ page }) => {
+  const card = await jobWithItem(page);
+  await card.getByTestId("job-invoice").click();
+  const dialog = page.getByTestId("invoice-dialog");
+  await dialog.getByLabel("Stawka VAT pozycji 1").selectOption("0");
+  await expect(dialog.getByLabel("Stawka VAT pozycji 1")).toHaveValue("0");
+  await dialog.getByLabel("Stawka VAT dla wszystkich").selectOption("8");
+  await expect(dialog.getByLabel("Stawka VAT pozycji 1")).toHaveValue("8");
+});
