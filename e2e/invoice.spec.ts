@@ -75,6 +75,13 @@ test("faktura z wyceny: dane sprzedawcy, numer z serii, XML do pobrania, druga f
   expect(xml).toContain("<P_15>123.00</P_15>");
   expect(xml).toContain("<BrakID>1</BrakID>");
 
+  const [pdf] = await Promise.all([
+    page.waitForEvent("download"),
+    dialog.getByRole("button", { name: "Pobierz PDF faktury FV/A/2026/001" }).click(),
+  ]);
+  expect(pdf.suggestedFilename()).toMatch(/^Faktura - .*\.pdf$/);
+  expect(readFileSync((await pdf.path())!).subarray(0, 5).toString("latin1")).toBe("%PDF-");
+
   await dialog.getByRole("button", { name: "Sprawdź" }).click();
   await expect(dialog.getByTestId("invoice-item").first()).toContainText("skrót zgodny");
 

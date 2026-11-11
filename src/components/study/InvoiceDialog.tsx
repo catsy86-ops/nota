@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Download, FileCode2 } from "lucide-react";
+import { Download, FileCode2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -42,6 +42,16 @@ const addDays = (key: string, days: number) => {
   d.setDate(d.getDate() + days);
   return localDayKey(d);
 };
+
+async function downloadPdf(r: InvoiceRecord) {
+  try {
+    const [{ buildInvoicePdf, invoicePdfName }, { sharePdf }] = await Promise.all([import("@/lib/ksef/invoicePdf"), import("@/lib/study/pdfWriter")]);
+    const blob = await buildInvoicePdf(r);
+    if ((await sharePdf(blob, invoicePdfName(r.number))) === "downloaded") toast.success("Pobrano PDF faktury");
+  } catch {
+    toast.error("Nie udało się zrobić PDF faktury");
+  }
+}
 
 function download(r: InvoiceRecord) {
   downloadBlob(new Blob([r.xml], { type: "application/xml;charset=utf-8" }), invoiceFileName(r.number));
@@ -213,6 +223,9 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
                   </span>
                   <span className="shrink-0 font-mono tabular-nums">{fromGrosze(computeInvoice(r.invoice).gross)}</span>
                   <Button type="button" variant="ghost" size="sm" onClick={() => void check(r)} className="coarse:h-11">Sprawdź</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => void downloadPdf(r)} className="coarse:h-11" aria-label={`Pobierz PDF faktury ${r.number}`}>
+                    <FileText className="h-4 w-4" aria-hidden />PDF
+                  </Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => download(r)} className="coarse:h-11" aria-label={`Pobierz XML faktury ${r.number}`}>
                     <Download className="h-4 w-4" aria-hidden />XML
                   </Button>

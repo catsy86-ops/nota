@@ -24,6 +24,8 @@ import { hasLocalSpeechApi, installLocalSpeech, localSpeechReady, localSpeechSta
 import { setBadgeEnabled, setInboxBadgeEnabled, useBadgeEnabled, useInboxBadgeEnabled } from "@/lib/overdueBadge";
 import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
 import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
+import { SERIES_MAX } from "@/lib/ksef/numbering";
+import { setSeries, useSeries } from "@/lib/ksef/sellerPrefs";
 import { AUTHOR_MAX, BANK_ACCOUNT_MAX, COMPANY_NAME_MAX, setAuthor, setBankAccount, setCompanyName, setPricing, useAuthor, useBankAccount, useCompanyName, usePricing } from "@/lib/study/companyPrefs";
 import { PricingManager } from "./PricingManager";
 import { FingerprintCheck } from "./FingerprintCheck";
@@ -137,6 +139,7 @@ export function GeneralSettings() {
   const bankAccount = useBankAccount();
   const pricing = usePricing();
   const author = useAuthor();
+  const invoiceSeries = useSeries();
 
   return (
     <div className="space-y-4">
@@ -254,6 +257,14 @@ export function GeneralSettings() {
           <Label htmlFor="bank-account" className="text-xs text-muted-foreground">Numer konta dopisywany do SMS-a lub WhatsAppa z przypomnieniem (zostaje na tym urządzeniu)</Label>
           <Input id="bank-account" key={bankAccount} defaultValue={bankAccount} maxLength={BANK_ACCOUNT_MAX} inputMode="numeric" placeholder="np. 12 3456 7890 …"
             onBlur={(e) => { if (e.target.value.trim() !== bankAccount) setBankAccount(e.target.value); }} />
+        </Section>
+
+        <Section title="Faktury (KSeF): seria numeracji">
+          <Label htmlFor="invoice-series" className="text-xs text-muted-foreground">
+            Numer faktury to FV/seria/rok/kolejny. Jeśli faktury wystawiasz z kilku telefonów, każdy powinien mieć inną serię (np. A i B) — wtedy numery się nie powtórzą. Zostaje na tym urządzeniu.
+          </Label>
+          <Input id="invoice-series" key={invoiceSeries} defaultValue={invoiceSeries} maxLength={SERIES_MAX} placeholder="A" className="w-28 font-mono"
+            onBlur={(e) => { if (e.target.value.trim().toUpperCase() !== invoiceSeries) setSeries(e.target.value); }} />
         </Section>
 
         <Section title="Cennik robocizny (fuchy)">

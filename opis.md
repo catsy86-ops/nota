@@ -5429,3 +5429,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Ograniczenia:** aplikacja niczego nie wysyła do KSeF — XML trzeba wgrać ręcznie lub przekazać księgowej (wysyłka to Etap 2, wymaga serwera). Brak PDF z kodem QR i brak korekt. Stawka VAT jest jedna na całą fakturę. Domyślnie ceny są traktowane jako brutto, stawka 23% — do zmiany w oknie przed wystawieniem. Seria numeracji domyślnie „A”; drugi telefon powinien dostać inną (ustawienie serii nie ma jeszcze pola w Ustawieniach).
 - **Testy:** `e2e/invoice.spec.ts` (wystawienie, brak danych sprzedawcy, pobranie XML, kolejny numer, odświeżenie, axe, brak przycisku przy nowym zleceniu), `src/lib/ksef/*.test.ts`.
 
+## Faktury KSeF, Etap 1 — PDF z kodem QR i seria numeracji (2026-11-11)
+
+- **Co robi:** lista „Wystawione” w oknie faktury ma też „PDF”: wizualizacja faktury (sprzedawca, nabywca, pozycje, podsumowanie per stawka, płatność) z KODEM I KSeF i podpisem „OFFLINE” oraz skrótem SHA-256 pliku XML. Ustawienia → Ogólne → Praca → „Faktury (KSeF): seria numeracji” pozwalają zmienić serię tego telefonu (do 6 znaków, wielkie litery i cyfry).
+- **Gdzie:** `src/lib/ksef/invoicePdf.ts` (`buildInvoicePdf`, ładowany leniwie), `qr.ts` (`invoiceQrUrl`, `hexToBase64Url`, `qrPngDataUrl` — QR z `qrcode.react` renderowany poza ekranem), `GeneralSettings.tsx` (pole serii).
+- **Jak działa:** adres kodu to `https://qr.ksef.mf.gov.pl/invoice/{NIP}/{DD-MM-RRRR z P_1}/{SHA-256 XML w Base64URL}` (środowisko produkcyjne). Bez canvasa (testy) PDF powstaje bez kodu.
+- **Ograniczenia:** podpis pod kodem to zawsze „OFFLINE” — aplikacja nie zna numeru KSeF, bo niczego nie wysyła (Etap 2). PDF jest kopią dla klienta; obowiązuje plik XML.
+- **Testy:** `src/lib/ksef/invoicePdf.test.ts` (wektor Base64URL, adres kodu, treść PDF z atrapą jsPDF), `e2e/invoice.spec.ts` (pobranie PDF), `e2e/a11y.spec.ts`, `e2e/settings-links.spec.ts`.
+
