@@ -28,7 +28,7 @@ interface NFCNavigator extends Navigator {
 
 export const hasNFC = (): boolean => {
   if (typeof navigator === "undefined") return false;
-  const nfc = (navigator as any).nfc;
+  const nfc = (navigator as unknown as { nfc?: { NDEFReader?: new () => { scan(): Promise<unknown> } } }).nfc;
   return nfc?.NDEFReader !== undefined;
 };
 
@@ -37,7 +37,7 @@ export async function readNFCTag(): Promise<string | null> {
   try {
     if (!hasNFC()) return null;
 
-    const nfc = (navigator as any).nfc;
+    const nfc = (navigator as unknown as { nfc?: { NDEFReader?: new () => { scan(): Promise<unknown> } } }).nfc;
     if (!nfc?.NDEFReader) return null;
 
     const reader = new nfc.NDEFReader();

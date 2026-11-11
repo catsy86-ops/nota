@@ -21,7 +21,7 @@ describe("mileage", () => {
 
   it("suggestMileage: ignoruje undefined koordynaty", () => {
     const coords = [[52.0, 21.0] as const, undefined, [52.1, 21.0] as const];
-    const suggested = suggestMileage(coords as any);
+    const suggested = suggestMileage(coords as unknown as Parameters<typeof suggestMileage>[0]);
     expect(suggested).toBeGreaterThan(10);
   });
 

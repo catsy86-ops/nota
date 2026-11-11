@@ -103,6 +103,11 @@ export function createYBilling(doc: Y.Doc) {
     if (map.has(k)) doc.transact(() => map.delete(k), BILLING_ORIGIN);
   };
 
+  // Limity przy scalaniu kopii z zewnątrz: spreparowany plik nie rozdmie dokumentu Yjs.
+  const DUMP_SITES_MAX = 500;
+  const DUMP_MAP_MAX = 100;
+  const DUMP_PAYMENTS_MAX = 2000;
+
   function dump(): BillingDump {
     return { sites: Object.fromEntries(all()) };
   }
@@ -114,15 +119,15 @@ export function createYBilling(doc: Y.Doc) {
     const put = (k: string, v: unknown) => { if (v !== undefined && !map.has(k)) map.set(k, v); };
     const entries = (o: unknown) => (o && typeof o === "object" ? Object.entries(o as Record<string, unknown>) : []);
     doc.transact(() => {
-      for (const [site, data] of Object.entries(sites)) {
+      for (const [site, data] of Object.entries(sites).slice(0, DUMP_SITES_MAX)) {
         if (!isId(site) || !data || typeof data !== "object") continue;
         const d = data as Partial<StoredBilling>;
         put(key("m", site), cleanModes(d.modes));
         put(key("d", site), cleanAmount(d.pointRate));
         put(key("l", site), cleanAmount(d.lump));
-        for (const [t, v] of entries(d.typeRates)) if (isId(t)) put(key("t", site, t), cleanAmount(v));
-        for (const [s, v] of entries(d.stageAmounts)) if (isId(s)) put(key("s", site, s), cleanAmount(v));
-        for (const v of Array.isArray(d.payments) ? d.payments : []) {
+        for (const [t, v] of entries(d.typeRates).slice(0, DUMP_MAP_MAX)) if (isId(t)) put(key("t", site, t), cleanAmount(v));
+        for (const [s, v] of entries(d.stageAmounts).slice(0, DUMP_MAP_MAX)) if (isId(s)) put(key("s", site, s), cleanAmount(v));
+        for (const v of (Array.isArray(d.payments) ? d.payments : []).slice(0, DUMP_PAYMENTS_MAX)) {
           const id = (v as Partial<Payment> | null)?.id;
           const pay = typeof id === "string" && isId(id) ? cleanPayment(v, id) : null;
           if (pay) { const { id: _, ...value } = pay; put(key("p", site, pay.id), value); }

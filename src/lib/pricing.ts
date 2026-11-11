@@ -25,18 +25,17 @@ export function cleanPricing(data: unknown): CompanyPricing {
 
   return {
     items: items
-      .filter((item) => {
+      .filter((item): item is PricingItem => {
+        if (!item || typeof item !== "object") return false;
+        const o = item as Record<string, unknown>;
         return (
-          item &&
-          typeof item === "object" &&
-          typeof (item as any).id === "string" &&
-          typeof (item as any).name === "string" &&
-          typeof (item as any).price === "number" &&
-          typeof (item as any).pointType === "string" &&
-          typeof (item as any).createdAt === "number"
+          typeof o.id === "string" &&
+          typeof o.name === "string" &&
+          typeof o.price === "number" && Number.isFinite(o.price) &&
+          typeof o.pointType === "string" &&
+          typeof o.createdAt === "number"
         );
-      })
-      .map((item) => item as PricingItem),
+      }),
   };
 }
 

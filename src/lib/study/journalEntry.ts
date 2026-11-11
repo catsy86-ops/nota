@@ -229,13 +229,12 @@ export function cleanDimensions(raw: unknown, images: readonly string[]): Record
     if (!Array.isArray(v)) continue;
     const dims: Array<{ from: [number, number]; to: [number, number]; text: string }> = [];
     for (const d of v) {
-      const from = Array.isArray((d as any)?.from) && (d as any).from.length === 2 && (d as any).from.every((n: unknown) => typeof n === "number")
-        ? [(d as any).from[0], (d as any).from[1]] as [number, number]
-        : null;
-      const to = Array.isArray((d as any)?.to) && (d as any).to.length === 2 && (d as any).to.every((n: unknown) => typeof n === "number")
-        ? [(d as any).to[0], (d as any).to[1]] as [number, number]
-        : null;
-      const text = typeof (d as any)?.text === "string" ? String((d as any).text).slice(0, 80) : null;
+      const o = (d && typeof d === "object" ? d : {}) as Record<string, unknown>;
+      const pair = (v: unknown): [number, number] | null =>
+        Array.isArray(v) && v.length === 2 && v.every((n) => typeof n === "number") ? [v[0], v[1]] : null;
+      const from = pair(o.from);
+      const to = pair(o.to);
+      const text = typeof o.text === "string" ? o.text.slice(0, 80) : null;
       if (from && to && text) dims.push({ from, to, text });
     }
     if (dims.length) out[ref] = dims;

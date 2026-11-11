@@ -81,13 +81,13 @@ export function PressureTestTimer({ open, onOpenChange, test, onUpdate }: Pressu
               disabled={running}
               inputMode="decimal"
               step="0.1"
-              className="w-full rounded-field border border-input bg-background px-3 py-2 text-base font-mono tabular-nums text-foreground outline-hidden focus:ring-2 focus:ring-ring disabled:opacity-60 coarse:h-11"
+              className="w-full rounded-field border border-input bg-background px-3 py-2 text-base font-mono tabular-nums text-foreground outline-hidden focus:ring-2 focus:ring-ring disabled:text-muted-foreground coarse:h-11"
             />
           </div>
 
           <div className="rounded-card border border-border bg-muted p-4 text-center">
             <div className="font-mono text-4xl font-bold tabular-nums text-foreground">{display}</div>
-            <p className="mt-1 text-xs text-muted-foreground">Upłynęło czasu</p>
+            <p className="ui-hint mt-1">Upłynęło czasu</p>
           </div>
 
           <div className="flex gap-2">

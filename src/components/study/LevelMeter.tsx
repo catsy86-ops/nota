@@ -38,8 +38,9 @@ export function LevelMeter({ open, onOpenChange, onSelect }: LevelMeterProps) {
     window.addEventListener("deviceorientation", handleOrientation);
 
     // Żądanie pozwolenia na iOS 13+
-    if (typeof (DeviceOrientationEvent as any)?.requestPermission === "function") {
-      (DeviceOrientationEvent as any)
+    const orientationApi = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> };
+    if (typeof orientationApi.requestPermission === "function") {
+      orientationApi
         .requestPermission()
         .then((permission: string) => {
           if (permission === "granted") {
@@ -95,7 +96,7 @@ export function LevelMeter({ open, onOpenChange, onSelect }: LevelMeterProps) {
             <>
               <div className="rounded-card border border-border bg-muted p-6 text-center">
                 <div className="text-5xl font-bold font-mono tabular-nums text-foreground">{angle.toFixed(1)}°</div>
-                <p className="mt-2 text-xs text-muted-foreground">Kąt nachylenia</p>
+                <p className="ui-hint mt-2">Kąt nachylenia</p>
               </div>
 
               <div className="rounded-card border border-border bg-muted p-4">

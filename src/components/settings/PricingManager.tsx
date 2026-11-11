@@ -48,6 +48,7 @@ export function PricingManager({ pricing, onUpdate }: PricingManagerProps) {
         />
         <Input
           type="number"
+          inputMode="decimal"
           placeholder="Cena (zł)"
           value={price}
           onChange={(e) => setPrice(e.target.value)}

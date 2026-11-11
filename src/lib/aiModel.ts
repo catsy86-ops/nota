@@ -29,16 +29,20 @@ declare global {
   }
 }
 
+/** Eksperymentalne API Chrome (`navigator.ai`) — brak w typach DOM, więc luźny kształt. */
+const selfAi = (): { summarizer?: { create(): Promise<{ summarize(o: { text: string; type: string }): Promise<string> }> }; writer?: { create(): Promise<Record<string, (...a: never[]) => Promise<string>>> } } | undefined =>
+  (navigator as unknown as { ai?: ReturnType<typeof selfAi> }).ai;
+
 export const hasAISummarizer = (): boolean => {
   if (typeof navigator === "undefined") return false;
-  return (navigator as any).ai?.summarizer !== undefined;
+  return selfAi()?.summarizer !== undefined;
 };
 
 /** Streszczanie tekstu za pomocą AI na urządzeniu. Zwraca `null` gdy niedostępne. */
 export async function summarizeText(text: string, type: "key-points" | "teaser" | "tl;dr" = "tl;dr"): Promise<string | null> {
   try {
     if (!hasAISummarizer()) return null;
-    const ai = (navigator as any).ai;
+    const ai = selfAi();
     if (!ai?.summarizer) return null;
 
     const summarizer = await ai.summarizer.create();
@@ -51,14 +55,14 @@ export async function summarizeText(text: string, type: "key-points" | "teaser" 
 
 export const hasAIWriter = (): boolean => {
   if (typeof navigator === "undefined") return false;
-  return (navigator as any).ai?.writer !== undefined;
+  return selfAi()?.writer !== undefined;
 };
 
 /** Dopisywanie/rozwijanie tekstu za pomocą AI. */
 export async function expandText(text: string, tone: "formal" | "casual" = "casual"): Promise<string | null> {
   try {
     if (!hasAIWriter()) return null;
-    const ai = (navigator as any).ai;
+    const ai = selfAi();
     if (!ai?.writer) return null;
 
     const writer = await ai.writer.create();

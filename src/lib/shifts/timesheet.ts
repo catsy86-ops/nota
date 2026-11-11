@@ -10,7 +10,7 @@ const clock = (min: number) => { const m = ((min % 1440) + 1440) % 1440; return 
 /** Pole CSV w cudzysłowie, gdy zawiera separator, cudzysłów albo koniec linii; chroni też przed formułami arkusza. */
 export function cell(v: string | number): string {
   let s = String(v);
-  if (/^[=+\-@\t\r]/.test(s) && typeof v === "string") s = `'${s}`;
+  if (/^\s*[=+\-@＝＋－＠]|^[\t\r]/.test(s) && typeof v === "string") s = `'${s}`;
   return /[;"\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
