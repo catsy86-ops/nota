@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Activity, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Archive, ArchiveRestore, Wrench, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, PenLine, Phone, Send, Share2, Plus, Camera, PackageX, Contact } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -339,7 +339,7 @@ export function SiteCardDialog({
             </div>
 
             <Tabs value={section} onValueChange={(v) => isCardSection(v) && pickSection(v)}>
-              {/* forceMount: panele zostają w drzewie, więc rozwinięte sekcje i wpisany tekst przeżywają zmianę segmentu. */}
+              {/* forceMount + Activity: panele zostają w drzewie (rozwinięte sekcje i wpisany tekst przeżywają zmianę segmentu), a ukryte renderują się z niskim priorytetem i bez efektów — karta otwiera się szybciej. */}
               <div className="sticky top-0 z-raised border-b border-border bg-background px-5 pb-2 pt-3" data-testid="site-sections">
                 <TabsList aria-label="Sekcje karty budowy" className="h-auto w-full justify-start overflow-x-auto [scrollbar-width:none]">
                   {sections.map((sec) => (
@@ -348,25 +348,34 @@ export function SiteCardDialog({
                 </TabsList>
               </div>
               <TabsContent value="dzis" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
+                <Activity mode={section === "dzis" ? "visible" : "hidden"}>
                 <SiteStagesPanel site={site} journal={study.journal} />
                 <SiteFaultsPanel site={site} journal={study.journal} />
                 {hours && <SiteTimePanel site={site} today={hours.today} monthLabel={new Date(`${hours.today}T12:00`).toLocaleDateString("pl-PL", { month: "long", year: "numeric" })} monthDays={hours.monthDays} />}
+                </Activity>
               </TabsContent>
               <TabsContent value="material" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
+                <Activity mode={section === "material" ? "visible" : "hidden"}>
                 <SiteShortagesPanel site={site} />
                 <SiteMaterialPanel site={site} journal={study.journal} />
                 <SiteOrderPanel site={site} />
+                </Activity>
               </TabsContent>
               <TabsContent value="punkty" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
+                <Activity mode={section === "punkty" ? "visible" : "hidden"}>
                 <SitePointsPanel site={site} journal={study.journal} />
+                </Activity>
               </TabsContent>
               {!job && (
                 <TabsContent value="pieniadze" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
+                  <Activity mode={section === "pieniadze" ? "visible" : "hidden"}>
                   {/* Fucha rozlicza się wyceną w panelu zlecenia — „Rozliczenie” jest dla budów szefa. */}
                   <SiteBillingPanel site={site} hours={hours?.total} />
+                  </Activity>
                 </TabsContent>
               )}
               <TabsContent value="papiery" forceMount className="mt-0 data-[state=inactive]:hidden pb-3 pt-3">
+                <Activity mode={section === "papiery" ? "visible" : "hidden"}>
               <div className={`${cardClass} mx-5 mt-3`} data-testid="site-data">
                 <button
                   type="button"
@@ -627,6 +636,7 @@ export function SiteCardDialog({
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+                </Activity>
               </TabsContent>
             </Tabs>
             {/* B2.3: na telefonie stałe akcje przy kciuku — wpis, zdjęcie, brak i godziny zawsze pod ręką, bez przewijania do góry karty. */}

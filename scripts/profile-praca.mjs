@@ -49,7 +49,7 @@ const fn = new Map(), file = new Map();
 for (const [id, us] of self) {
   const n = byId.get(id); const c = n.callFrame;
   const f = c.url.split("/").pop()?.split("?")[0] || "(natywne)";
-  const key = `${c.functionName || "(anonimowa)"} @ ${f}:${c.lineNumber + 1}`;
+  const key = `${c.functionName || "(anonimowa)"} @ ${f}:${c.lineNumber + 1}:${c.columnNumber}`;
   fn.set(key, (fn.get(key) ?? 0) + us); file.set(f, (file.get(f) ?? 0) + us);
 }
 const top = (m, n) => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${Math.round(v / 1000).toString().padStart(6)} ms  ${k}`);
