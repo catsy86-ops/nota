@@ -29,6 +29,8 @@ export function BarcodeScanner({ open, onOpenChange, onDetected, autoUse = false
   const [camera, setCamera] = useState<CameraState>("starting");
   const [code, setCode] = useState("");
   const [manual, setManual] = useState("");
+  /** Zmiana restartuje kamerę po wykryciu kodu („Skanuj ponownie”, audyt UI #19). */
+  const [scanRun, setScanRun] = useState(0);
   // Najnowsze wywołania bez restartu kamery przy każdej zmianie rodzica.
   const live = useRef({ onDetected, onOpenChange, autoUse });
   live.current = { onDetected, onOpenChange, autoUse };
@@ -79,7 +81,7 @@ export function BarcodeScanner({ open, onOpenChange, onDetected, autoUse = false
 
     return () => { cancelled = true; stop(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- tylko otwarcie/zamknięcie; reszta idzie przez `live`
-  }, [open]);
+  }, [open, scanRun]);
 
   function use() {
     if (!code) return;
@@ -118,7 +120,7 @@ export function BarcodeScanner({ open, onOpenChange, onDetected, autoUse = false
             <>
               <video ref={videoRef} className="aspect-video w-full rounded-card border border-border bg-black object-cover" playsInline muted aria-label="Podgląd z kamery" />
               <p className="ui-hint" role="status" data-testid="scanner-status">
-                {camera === "starting" ? "Uruchamiam kamerę…" : "Przytrzymaj kod przed kamerą. Wykryję go sam."}
+                {camera === "starting" ? "Uruchamiam kamerę…" : code ? "Kod wykryty." : "Przytrzymaj kod przed kamerą. Wykryję go sam."}
               </p>
             </>
           )}
@@ -145,6 +147,9 @@ export function BarcodeScanner({ open, onOpenChange, onDetected, autoUse = false
           </Button>
           {!autoUse && (
             <Button type="button" onClick={use} disabled={!code} className="coarse:h-11">Użyj</Button>
+          )}
+          {!autoUse && code && !noCamera && (
+            <Button type="button" variant="outline" onClick={() => setScanRun((n) => n + 1)} className="col-span-2 coarse:h-11" data-testid="scanner-again">Skanuj ponownie</Button>
           )}
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>

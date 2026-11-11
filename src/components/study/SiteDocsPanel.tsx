@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileText, FolderOpen, Maximize2, Minimize2, Pencil, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,10 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
     }
   }
 
+  // Zamknięcie karty z otwartym zaznaczaniem odmontowuje panel — adres obrazu nie może zostać w pamięci (audyt UI #24).
+  const markingUrl = marking?.url;
+  useEffect(() => () => { if (markingUrl) URL.revokeObjectURL(markingUrl); }, [markingUrl]);
+
   async function startMarking(d: SiteDoc) {
     const rec = await imageStore.get(d.id);
     if (!rec) { toast.error("Tego planu nie ma na tym urządzeniu"); return; }
@@ -58,7 +62,6 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
   }
 
   function closeMarking() {
-    if (marking) URL.revokeObjectURL(marking.url);
     setMarking(null);
   }
 

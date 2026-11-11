@@ -5354,3 +5354,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Serwer push:** `push-server/core.js` `tickStore(store, now, sendOne)` — jeden obieg wysyłki z wstrzykiwaną wysyłką; `server.js` używa go w `tick()` (obsługa 404/410 → usunięcie subskrypcji, inny błąd → termin nie jest ponawiany). `/test` korzysta z tego samego `sendOne`. Testy: `core.test.js`, `server.test.js`.
 - **Testy:** `src/lib/study/pdfBuilders.test.ts` (atrapa jsPDF), `src/lib/push/client.test.ts`, rozszerzone `sitePackageApply.test.ts`, `nfc.test.ts`, `cameraCapture.test.ts`, `aiModel.test.ts`.
 
+## Audyt, dziewiąta partia: decyzje właściciela (2026-11-11)
+
+- **Próba szczelności (`PressureTestTimer.tsx`):** „Zakończ” przed upływem czasu pokazuje „Próba jeszcze trwa — Minęło X z Y” z przyciskiem „Zakończ mimo to”; wynik liczony jak dotąd.
+- **Cofnij (`SiteJobPanel.tsx`, `SiteCardDialog.tsx`):** zmiana statusu zlecenia i „To zlecenie własne (fucha)” mają toast „Cofnij” (`toastWithUndo`).
+- **Skaner (`BarcodeScanner.tsx`):** w trybie bez automatycznego użycia po wykryciu kodu jest „Skanuj ponownie” (restart kamery).
+- **Drobne:** adres obrazu zaznaczania planu zwalniany przy odmontowaniu `SiteDocsPanel`. Testy: `e2e/pressure-timer.spec.ts` (nowy test i poluzowane kruche asercje licznika).
+

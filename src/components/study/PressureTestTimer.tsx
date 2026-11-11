@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Clock, Play, Square, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
@@ -81,10 +82,19 @@ export function PressureTestTimer({ open, onOpenChange, test, onUpdate }: {
     haptic("selection");
   }
 
-  function finish() {
+  function finish(early = false) {
     const bar = readBar(reading !== "" ? reading : fmtBar(last));
     if (bar === undefined) { setError("Wpisz ciśnienie końcowe z manometru"); return; }
     setError("");
+    // Audyt UI #30: wynik „szczelna” zależy tylko od spadku, więc koniec przed czasem pytamy, zamiast wpisywać po cichu.
+    if (!early && test.minutes !== null && left > 0) {
+      toast("Próba jeszcze trwa", {
+        description: `Minęło ${clockLabel(elapsed)} z ${clockLabel(Math.round(test.minutes * 60))}. Zakończyć wcześniej?`,
+        action: { label: "Zakończ mimo to", onClick: () => finish(true) },
+        duration: 10_000,
+      });
+      return;
+    }
     onUpdate(finishRun(test, bar, Date.now()));
     setFinishing(false);
     setReading("");

@@ -39,8 +39,10 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
 
   function setStatus(status: Job["status"]) {
     if (status === job.status) return;
+    const prev = job.status;
     setJobMeta(site.id, { status });
     haptic(status === "paid" ? "success" : "selection");
+    toastWithUndo(`Status: ${JOB_STATUS_LABEL[status]}`, () => setJobMeta(site.id, { status: prev }));
   }
 
   function addItem() {

@@ -56,10 +56,10 @@ test("minutnik: start, odczyt, powrót po przeładowaniu, alert, blokada zapisu 
   // Zamknięcie okna i przeładowanie strony: licznik liczy się od zapisanego startu.
   await page.keyboard.press("Escape");
   await expect(timer).toHaveCount(0);
-  await expect(sheet.getByTestId("timer-badge")).toHaveText("· 15:00");
+  await expect(sheet.getByTestId("timer-badge")).toHaveText(/^· 15:0[0-5]$/); // zegar Playwrighta płynie dalej, pod obciążeniem mija kilka sekund
   await page.reload();
   await page.getByRole("button", { name: "Dokończ wpis" }).click();
-  await expect(sheet.getByTestId("timer-badge")).toContainText("· 1");
+  await expect(sheet.getByTestId("timer-badge")).toHaveText(/^· 1[4-6]:\d\d$/); // po przeładowaniu licznik liczy od zapisanego startu
 
   // Trwającej próby nie da się zapisać jako wpisu.
   await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
@@ -102,4 +102,20 @@ test("minutnik: „Przerwij próbę” kasuje start i odczyty, a protokół zost
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("journal-entry-sheet").getByTestId("pressure-test")).toBeVisible();
   await expect(page.getByTestId("journal-entry-sheet").getByTestId("timer-badge")).toHaveCount(0);
+});
+
+test("minutnik: koniec przed czasem pyta o potwierdzenie (audyt UI #30)", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("button", { name: /^Wpis$/ }).click();
+  const timer = await openTimer(page);
+  await timer.getByTestId("timer-start-bar").fill("6");
+  await timer.getByTestId("timer-start").click();
+  await expect(timer.getByTestId("timer-clock")).toHaveText(/^(30:00|29:\d\d)$/);
+  await timer.getByTestId("timer-finish").click();
+  await timer.getByTestId("timer-reading").fill("6");
+  await timer.getByTestId("timer-finish").click();
+  await expect(page.getByText("Próba jeszcze trwa")).toBeVisible();
+  await expect(timer).toBeVisible();
+  await page.getByRole("button", { name: "Zakończ mimo to" }).click();
+  await expect(timer).toHaveCount(0);
 });

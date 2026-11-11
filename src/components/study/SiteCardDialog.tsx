@@ -36,7 +36,8 @@ import { SiteMaterialPanel } from "./SiteMaterialPanel";
 import { SiteTimePanel } from "./SiteTimePanel";
 import { SiteBillingPanel } from "./SiteBillingPanel";
 import { SiteJobPanel } from "./SiteJobPanel";
-import { setJobMeta, useJob } from "@/lib/study/jobsStore";
+import { removeJob, setJobMeta, useJob } from "@/lib/study/jobsStore";
+import { toastWithUndo } from "@/lib/undoToast";
 import { SiteStorageLine } from "./SiteStorageLine";
 import { StageDots } from "./StageDots";
 import { NoteImage } from "@/components/NoteImage";
@@ -626,7 +627,7 @@ export function SiteCardDialog({
                   <Send className="mr-1.5 h-4 w-4" aria-hidden />Wyślij budowę pomocnikowi
                 </Button>
                 {!job && (
-                  <Button variant="ghost" onClick={() => setJobMeta(site.id, {})} className="col-span-2 text-muted-foreground coarse:h-11"
+                  <Button variant="ghost" onClick={() => { setJobMeta(site.id, {}); toastWithUndo(`„${site.name}” to teraz zlecenie własne`, () => { removeJob(site.id); }); }} className="col-span-2 text-muted-foreground coarse:h-11"
                     title="Twoje zlecenie, nie budowa szefa: wycena, status, termin i PDF dla klienta">
                     <Wrench className="mr-1.5 h-4 w-4" aria-hidden />To zlecenie własne (fucha)
                   </Button>

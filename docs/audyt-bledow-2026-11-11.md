@@ -41,7 +41,7 @@
 | 7 | `point` z aparatu zostaje po zmianie budowy | naprawione: `point` czyszczony przy zmianie budowy |
 | 8 | karta budowy gubi niezapisane zmiany przy błędnym formularzu | naprawione: `blockedByError` w `SiteCardDialog.tsx` (karta zostaje, toast z „Odrzuć zmiany”); `e2e/study.spec.ts` |
 | 9 | miarka kasuje rozpoczętą pracę przy zamknięciu | naprawione: `finalList` + pytanie przy zamknięciu (`DimensionDrawer.tsx`) |
-| 10 | miarka bez alternatywy klawiaturowej | częściowo: opis przez `aria-describedby`, informacja „dotykiem lub myszą”; pełna obsługa klawiaturą wymaga osobnego projektu |
+| 10 | miarka bez alternatywy klawiaturowej | decyzja właściciela: nie teraz; zrobione tylko: opis przez `aria-describedby`, informacja „dotykiem lub myszą”; pełna obsługa klawiaturą wymaga osobnego projektu |
 | 11 | alarm końca próby nie działa w edycji wpisu | naprawione: `PressureRunWatcher` obserwuje też `useJournalEditForm` |
 | 12 | stawka km nie dała się wyczyścić | już naprawione wcześniej (`rate: string | null`) |
 | 13 | fokus z „Brak” nie trafiał w pole | naprawione: fokus w efekcie po zmianie segmentu (`SiteCardDialog.tsx`) |
@@ -50,7 +50,12 @@
 | 16 | licznik zdjęć z aparatu liczy odrzucone | naprawione: `addPhotos` zwraca liczbę dodanych, `catch` z toastem |
 | 17 | przycisk NFC zawsze widoczny | naprawione: `hasNFC()` |
 | 18 | etykiety bez `htmlFor` w karcie | nie potwierdzone (etykiety obejmują pola) |
-| 19, 22, 24, 26, 27, 30, 31, 33 | skaner bez „Skanuj ponownie”, martwy input z `capture`, wycieki URL w StrictMode, klucze `key` pól zlecenia, brak cofania zmiany rodzaju/statusu, próba skończona wcześniej, pola minutnika, efekty resetu | otwarte (drobne, wymagają decyzji produktowych) |
+| 19 | skaner bez „Skanuj ponownie” | naprawione (decyzja właściciela): przycisk po wykryciu kodu (`BarcodeScanner.tsx`) |
+| 22 | martwy input z `capture` | bez zmian: e2e `study.spec.ts` pilnuje jego atrybutu, nieszkodliwy |
+| 24 | wycieki object URL | naprawione w `SiteDocsPanel.tsx` (cleanup w efekcie); `PhotoDayDialog` ma cleanup, StrictMode tylko w dev |
+| 26, 31, 33 | `key` pól zlecenia, pola minutnika, efekty resetu | otwarte (rzadkie/kosmetyczne) |
+| 27 | brak cofania zmiany rodzaju/statusu | naprawione (decyzja właściciela): toast „Cofnij” przy statusie zlecenia i „To zlecenie własne” |
+| 30 | próba skończona wcześniej zawsze „szczelna” | naprawione (decyzja właściciela): ostrzeżenie „Próba jeszcze trwa” z „Zakończ mimo to”; `e2e/pressure-timer.spec.ts` |
 | 20, 21 | NFC bez `role="status"`, `aria-label` na `<span>` w kilometrówce | naprawione |
 | 23 | wyścig `useDictation.onend` | już naprawione wcześniej |
 | 25 | „Z budów 0,00 zł” przy samych wpłatach | naprawione: „Wpłaty z budów” + suma wpłat |
