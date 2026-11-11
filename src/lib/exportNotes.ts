@@ -29,14 +29,15 @@ import { APP_NAME } from "@/lib/appName";
 const PUSH_RESTORE_KEY = PUSH_PREFS_KEY;
 
 /**
- * Przywracanie ustawień push: adres serwera zostaje, a push się wyłącza (subskrypcja i
- * „ostatnio wysłane” należą do przeglądarki, na której była kopia — nie do nowego telefonu).
+ * Przywracanie ustawień push: push się wyłącza (subskrypcja i „ostatnio wysłane” należą do przeglądarki, na której
+ * była kopia — nie do nowego telefonu), a adres serwera się zeruje. Złośliwa kopia mogłaby wskazać serwer atakującego,
+ * a użytkownik wpisałby tam swój token; adres wpisuje się więc od nowa, razem z tokenem.
  */
 function pushPrefsForRestore(raw: string): string {
   try {
     const p = JSON.parse(raw) as Partial<PushPrefs>;
     const off = Array.isArray(p.off) ? p.off.filter((x): x is string => typeof x === "string") : [];
-    return JSON.stringify({ server: typeof p.server === "string" ? p.server : "", enabled: false, off });
+    return JSON.stringify({ server: "", enabled: false, off });
   } catch {
     return JSON.stringify({ server: "", enabled: false, off: [] });
   }

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import { disablePush, enablePush, pushSupport, sendTestPush } from "@/lib/push/client";
-import { normalizePushServer, pushPrefs, setPushCategory } from "@/lib/push/prefs";
+import { cleanPushToken, normalizePushServer, pushPrefs, pushToken, PUSH_TOKEN_MAX, setPushCategory } from "@/lib/push/prefs";
 import { PUSH_CATEGORIES } from "@/lib/push/schedule";
 import { PUSH_SUMMARY_KEY, readPushSummary } from "@/lib/push/summary";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ const safeGet = (k: string) => { try { return localStorage.getItem(k); } catch {
 export function PushSettings() {
   const prefs = pushPrefs.use();
   const [server, setServer] = useState(prefs.server);
+  const [token, setToken] = useState(() => pushToken.get());
   const [busy, setBusy] = useState<null | "on" | "off" | "test">(null);
   // Wskaźnik dopiero po 300 ms (plan 3.3): szybkie włączenie/wyłączenie bez mignięcia.
   const spinOn = useDelayedFlag(busy === "on");
@@ -45,8 +46,10 @@ export function PushSettings() {
   const onEnable = () => {
     const url = normalizePushServer(server);
     if (!url) { toast.error("Wpisz adres serwera zaczynający się od https://"); return; }
+    const secret = cleanPushToken(token);
+    if (!secret) { toast.error("Wpisz token serwera — ten sam, który ustawiono jako PUSH_TOKEN na serwerze"); return; }
     setServer(url);
-    void run("on", () => enablePush(url), "Powiadomienia włączone — przypomnienia przyjdą też przy zamkniętej aplikacji");
+    void run("on", () => enablePush(url, secret), "Powiadomienia włączone — przypomnienia przyjdą też przy zamkniętej aplikacji");
   };
 
   const last = prefs.last;
@@ -75,7 +78,7 @@ export function PushSettings() {
           </p>
         ) : (
           <>
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex flex-col gap-2">
               <label htmlFor="push-server" className="sr-only">Adres serwera powiadomień</label>
               <Input
                 id="push-server"
@@ -88,13 +91,27 @@ export function PushSettings() {
                 disabled={prefs.enabled || busy !== null}
                 className="font-mono text-sm"
               />
+              <label htmlFor="push-token" className="sr-only">Token serwera powiadomień</label>
+              <Input
+                id="push-token"
+                type="password"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Token serwera"
+                maxLength={PUSH_TOKEN_MAX}
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                disabled={prefs.enabled || busy !== null}
+                className="font-mono text-sm"
+                data-testid="push-token"
+              />
               {prefs.enabled ? (
-                <Button type="button" variant="outline" className="pressable shrink-0" disabled={busy !== null}
+                <Button type="button" variant="outline" className="pressable shrink-0 sm:self-start" disabled={busy !== null}
                   onClick={() => void run("off", disablePush, "Powiadomienia przy zamkniętej aplikacji wyłączone")}>
                   {spinOff && <Loader2 className="w-4 h-4 animate-spin" />}Wyłącz
                 </Button>
               ) : (
-                <Button type="button" className="pressable shrink-0" disabled={busy !== null || !server.trim()} onClick={onEnable}>
+                <Button type="button" className="pressable shrink-0 sm:self-start" disabled={busy !== null || !server.trim() || !token.trim()} onClick={onEnable}>
                   {spinOn && <Loader2 className="w-4 h-4 animate-spin" />}Włącz
                 </Button>
               )}

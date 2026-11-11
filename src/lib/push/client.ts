@@ -1,4 +1,4 @@
-import { pushPrefs, updatePushPrefs } from "./prefs";
+import { pushPrefs, pushToken, updatePushPrefs } from "./prefs";
 import type { PushItem } from "./schedule";
 
 /**
@@ -25,19 +25,30 @@ function keyBytes(base64url: string): Uint8Array {
 const sameKey = (a: ArrayBuffer | null | undefined, b: Uint8Array) =>
   !!a && a.byteLength === b.byteLength && new Uint8Array(a).every((v, i) => v === b[i]);
 
-async function call(server: string, path: string, method: string, body?: unknown, keepalive = false): Promise<Response> {
+/** Komunikat dla kodu odpowiedzi serwera (`push-server/server.js`): 401 zły token, 429 za dużo żądań. */
+export function pushErrorText(status: number): string {
+  if (status === 401) return "Serwer odrzucił token. Sprawdź token serwera w Ustawieniach.";
+  if (status === 429) return "Serwer ogranicza liczbę żądań. Spróbuj za chwilę.";
+  if (status === 413) return "Harmonogram jest za duży dla serwera.";
+  return `Serwer odpowiedział ${status}`;
+}
+
+async function call(server: string, path: string, method: string, body?: unknown, keepalive = false, token = pushToken.get()): Promise<Response> {
   let res: Response;
+  const headers: Record<string, string> = {};
+  if (body) headers["Content-Type"] = "application/json";
+  if (token) headers.Authorization = `Bearer ${token}`;
   try {
     res = await fetch(`${server}${path}`, {
       method,
-      headers: body ? { "Content-Type": "application/json" } : undefined,
+      headers,
       body: body ? JSON.stringify(body) : undefined,
       keepalive,
     });
   } catch {
     throw new Error("Brak połączenia z serwerem powiadomień.");
   }
-  if (!res.ok) throw new Error(`Serwer odpowiedział ${res.status}`);
+  if (!res.ok) throw new Error(pushErrorText(res.status));
   return res;
 }
 
@@ -50,10 +61,10 @@ async function currentSubscription(): Promise<PushSubscription | null> {
  * Włącza powiadomienia: zgoda, klucz serwera, subskrypcja. Wołać z kliknięcia —
  * prośba o zgodę idzie przed pierwszym `await`, bo przeglądarka wymaga gestu.
  */
-export async function enablePush(server: string): Promise<void> {
+export async function enablePush(server: string, token = ""): Promise<void> {
   const permission = Notification.requestPermission();
   if ((await permission) !== "granted") throw new Error("Brak zgody na powiadomienia w przeglądarce.");
-  const { publicKey } = (await (await call(server, "/vapid", "GET")).json()) as { publicKey?: string };
+  const { publicKey } = (await (await call(server, "/vapid", "GET", undefined, false, token)).json()) as { publicKey?: string };
   if (typeof publicKey !== "string") throw new Error("To nie jest serwer powiadomień G.");
   const key = keyBytes(publicKey);
   const reg = await navigator.serviceWorker.ready;
@@ -64,6 +75,11 @@ export async function enablePush(server: string): Promise<void> {
     sub = null;
   }
   if (!sub) await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+  // Token sprawdzamy żądaniem wymagającym uwierzytelnienia, zanim włączymy push: zły token od razu da czytelny błąd,
+  // a nie „harmonogram nie wysłany” po chwili. Pusta lista terminów nic nie zmienia na serwerze poza subskrypcją.
+  const subscription = (await reg.pushManager.getSubscription())?.toJSON();
+  if (subscription) await call(server, "/schedule", "PUT", { subscription, items: [] }, false, token);
+  pushToken.set(token);
   updatePushPrefs({ server, enabled: true, sentHash: undefined, last: undefined });
 }
 

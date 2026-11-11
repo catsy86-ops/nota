@@ -1,6 +1,7 @@
 // Czysta logika serwera powiadomień: walidacja tego, co przysyła aplikacja,
 // i wybór terminów do wysłania. Bez sieci i bez dysku — testy w core.test.js.
-import { createHash } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
+import { parse as legacyParse } from "node:url";
 
 export const LIMITS = {
   /** Terminów na jedno urządzenie (subskrypcję). */
@@ -13,6 +14,8 @@ export const LIMITS = {
   key: 120,
   /** Jak daleko w przód można zaplanować termin. */
   horizonMs: 35 * 24 * 60 * 60 * 1000,
+  /** Subskrypcja bez żadnej aktywności (ostatni `PUT /schedule`) tak długo jest uznawana za martwą i sprzątana. */
+  staleMs: 60 * 24 * 60 * 60 * 1000,
   /** Termin spóźniony bardziej niż tyle (np. serwer stał) przepada zamiast przyjść w nocy. */
   lateMs: 60 * 60 * 1000,
 };
@@ -33,24 +36,45 @@ const PUSH_SERVICE_HOSTS = [
   /(^|\.)push\.apple\.com$/, // Safari, iOS
 ];
 
-/** Adres endpointu to https i jeden z serwisów Web Push z listy. */
-export function isPushServiceUrl(endpoint) {
-  try {
-    const url = new URL(endpoint);
-    return url.protocol === "https:" && PUSH_SERVICE_HOSTS.some((re) => re.test(url.hostname));
-  } catch {
-    return false;
-  }
+// Etykiety DNS: litery, cyfry i myślniki. Parser WHATWG przepuszcza w nazwie hosta m.in. `;`, `!`, `$`, a `web-push`
+// używa starszego `url.parse`, który kończy nazwę hosta na `;` — adres `https://127.0.0.1;x.notify.windows.com/`
+// przeszedłby allowlistę, a żądanie poszłoby na 127.0.0.1. Dlatego host sprawdzamy ścisłym wzorcem.
+const DNS_HOST = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/;
+
+/**
+ * Adres endpointu w postaci znormalizowanej (`href`) albo `null`. Warunki: ASCII bez znaków sterujących, spacji
+ * i `\`, https, port 443, bez danych logowania, host z listy serwisów Web Push zapisany jako poprawne etykiety DNS
+ * — i ten sam host oraz port widziane przez `url.parse` (tym parserem wysyła `web-push`). Serwer wysyła żądanie
+ * dokładnie pod zwracany adres, więc każde poluzowanie to otwarty przekaźnik (SSRF).
+ */
+export function normalizeEndpoint(endpoint) {
+  if (typeof endpoint !== "string" || endpoint.length === 0 || endpoint.length > 1000) return null;
+  if (/[\u0000-\u0020\u007f-\uffff\\]/.test(endpoint)) return null;
+  let url;
+  try { url = new URL(endpoint); } catch { return null; }
+  if (url.protocol !== "https:" || url.username || url.password) return null;
+  if (url.port && url.port !== "443") return null;
+  if (!DNS_HOST.test(url.hostname) || !PUSH_SERVICE_HOSTS.some((re) => re.test(url.hostname))) return null;
+  const legacy = legacyParse(url.href);
+  if (legacy.protocol !== "https:" || legacy.hostname !== url.hostname) return null;
+  if (legacy.port !== null && legacy.port !== "443") return null;
+  if (typeof legacy.path !== "string" || !legacy.path.startsWith("/")) return null;
+  return url.href;
 }
+
+/** Czy adres przechodzi `normalizeEndpoint`. */
+export const isPushServiceUrl = (endpoint) => normalizeEndpoint(endpoint) !== null;
 
 /** Subskrypcja Web Push z `PushSubscription.toJSON()`; tylko https z serwisu push. */
 export function cleanSubscription(raw) {
   if (!raw || typeof raw !== "object") return null;
   const { endpoint, keys } = raw;
-  if (typeof endpoint !== "string" || endpoint.length > 1000 || !isPushServiceUrl(endpoint)) return null;
+  const href = normalizeEndpoint(endpoint);
+  if (!href) return null;
   if (!keys || typeof keys.p256dh !== "string" || typeof keys.auth !== "string") return null;
   if (keys.p256dh.length > 200 || keys.auth.length > 100) return null;
-  return { endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } };
+  // Zapisujemy i wysyłamy znormalizowany adres, nie surowy napis od klienta.
+  return { endpoint: href, keys: { p256dh: keys.p256dh, auth: keys.auth } };
 }
 
 /**
@@ -122,4 +146,86 @@ export function cleanStore(raw, now) {
     store.subs[subKey(subscription.endpoint)] = { subscription, items, updated: Number(sub.updated) || now };
   }
   return store;
+}
+
+// ── Uwierzytelnianie, CORS i limity żądań (czyste funkcje; sieć jest w server.js) ─────────────────────
+
+/** Token porównywany w stałym czasie (przez skróty o tej samej długości), żeby czas odpowiedzi nie zdradzał prefiksu. */
+export function tokenOk(provided, expected) {
+  if (typeof provided !== "string" || typeof expected !== "string" || !expected) return false;
+  const a = createHash("sha256").update(provided).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
+/** Token z nagłówka `Authorization: Bearer …`; pusty = brak albo zły format. */
+export function bearerOf(header) {
+  const m = /^Bearer\s+(\S{1,512})$/i.exec(typeof header === "string" ? header : "");
+  return m ? m[1] : "";
+}
+
+/** `ALLOWED_ORIGINS` → lista adresów; pusta = żadna strona z innej domeny nie ma dostępu (CORS wyłączony). */
+export const parseOrigins = (raw) => String(raw ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+
+/** Wartość `Access-Control-Allow-Origin` dla żądania albo `null` (bez nagłówka CORS). `*` tylko, gdy wpisano go wprost. */
+export function corsOrigin(origin, allowed) {
+  if (allowed.includes("*")) return "*";
+  return typeof origin === "string" && allowed.includes(origin) ? origin : null;
+}
+
+/**
+ * Adres klienta do limitów. Za zaufanym reverse proxy (`TRUST_PROXY=1`) bierzemy OSTATNI wpis `X-Forwarded-For`
+ * (dopisany przez nasze proxy); pierwszy dałoby się podrobić nagłówkiem od klienta i obejść limit.
+ */
+export function clientIp(remote, forwardedFor, trustProxy) {
+  if (trustProxy && typeof forwardedFor === "string") {
+    const parts = forwardedFor.split(",").map((s) => s.trim()).filter(Boolean);
+    if (parts.length > 0) return parts[parts.length - 1].slice(0, 64);
+  }
+  return remote || "unknown";
+}
+
+/**
+ * Limit „najwyżej `max` zdarzeń w oknie `windowMs`” na klucz (adres, subskrypcja). `check` tylko sprawdza,
+ * `record` zapisuje, `hit` = oba. Liczba kluczy jest ograniczona, żeby sam limiter nie zjadł pamięci.
+ */
+export function createRateLimiter({ windowMs, max, maxKeys = 10_000 }) {
+  const hits = new Map();
+  const fresh = (key, now) => (hits.get(key) ?? []).filter((t) => now - t < windowMs);
+  const result = (arr, now) => (arr.length >= max
+    ? { ok: false, retryAfterSec: Math.max(1, Math.ceil((arr[0] + windowMs - now) / 1000)) }
+    : { ok: true, retryAfterSec: 0 });
+  const api = {
+    check(key, now) { return result(fresh(key, now), now); },
+    record(key, now) {
+      const arr = fresh(key, now);
+      arr.push(now);
+      hits.set(key, arr);
+      if (hits.size > maxKeys) api.sweep(now, true);
+    },
+    hit(key, now) {
+      const r = api.check(key, now);
+      if (r.ok) api.record(key, now);
+      return r;
+    },
+    /** Usuwa wygasłe klucze; `force` przy przepełnieniu zostawia tylko najnowszą połowę. */
+    sweep(now, force = false) {
+      for (const [k, arr] of hits) {
+        const keep = arr.filter((t) => now - t < windowMs);
+        if (keep.length) hits.set(k, keep); else hits.delete(k);
+      }
+      if (force && hits.size > maxKeys) {
+        const newest = [...hits.entries()].sort((a, b) => b[1][b[1].length - 1] - a[1][a[1].length - 1]).slice(0, Math.floor(maxKeys / 2));
+        hits.clear();
+        for (const [k, v] of newest) hits.set(k, v);
+      }
+    },
+    size: () => hits.size,
+  };
+  return api;
+}
+
+/** Martwe subskrypcje (np. po ponownym włączeniu powiadomień na telefonie zostaje stary adres): do usunięcia. */
+export function staleSubs(store, now) {
+  return Object.entries(store.subs).filter(([, sub]) => now - (Number(sub.updated) || 0) > LIMITS.staleMs).map(([id]) => id);
 }

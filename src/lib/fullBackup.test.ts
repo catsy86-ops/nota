@@ -424,7 +424,7 @@ describe("ustawienia w kopii — zakres i push", () => {
     expect(JSON.stringify(backup)).not.toContain("SEKRET");
   });
 
-  it("restores push with the server address but switched off and without device state", async () => {
+  it("restores push switched off, without device state and WITHOUT the server address (a malicious backup must not redirect the token)", async () => {
     const backup = await buildFullBackup();
     backup.settings = {
       ...backup.settings,
@@ -432,7 +432,7 @@ describe("ustawienia w kopii — zakres i push", () => {
     };
     await restoreFullBackup(backup, { versions: false, settings: true, achievements: false, shifts: false, study: false });
     const restored = JSON.parse(localStorage.getItem("kaczy.push.v1")!);
-    expect(restored).toEqual({ server: "https://push.example.com", enabled: false, off: [] });
+    expect(restored).toEqual({ server: "", enabled: false, off: [] });
   });
 
   it("keeps switched-off push categories when restoring", async () => {

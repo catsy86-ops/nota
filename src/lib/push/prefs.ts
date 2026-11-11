@@ -7,6 +7,19 @@ import { createPersistedStore } from "@/lib/persistedStore";
  */
 export const PUSH_PREFS_KEY = "kaczy.push.v1";
 
+/**
+ * Token serwera powiadomień (`PUSH_TOKEN` na serwerze). Osobny klucz niż `PUSH_PREFS_KEY`, bo ten wchodzi do kopii
+ * zapasowej, a token to sekret: nie ma go w plikach kopii ani w eksporcie, a na nowym telefonie wpisuje się go od nowa.
+ */
+export const PUSH_TOKEN_KEY = "kaczy.push.token.v1";
+export const PUSH_TOKEN_MAX = 200;
+
+export const cleanPushToken = (raw: string): string => raw.replace(/\s+/g, "").slice(0, PUSH_TOKEN_MAX);
+
+export const pushToken = createPersistedStore<string>(PUSH_TOKEN_KEY, "", {
+  merge: (d, s) => (typeof s === "string" ? cleanPushToken(s) : d),
+});
+
 export interface PushSyncResult {
   at: number;
   ok: boolean;
