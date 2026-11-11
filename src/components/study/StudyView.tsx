@@ -22,7 +22,7 @@ import { readSiteParam, siteCardUrl } from "@/lib/study/siteLink";
 import { SiteHome } from "./SiteHome";
 import { CUSTOM_PREFILL_EVENT, type CustomPrefill } from "@/lib/study/customPrefill";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Activity, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { trackUse } from "@/lib/study/usage";
 import { measureSpan, startPerfProbe } from "@/lib/study/perf";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -327,11 +327,20 @@ function StudyScreen() {
           )}
           <TabsTrigger value="learn" className={TAB}>Nauka</TabsTrigger>
         </TabsList>
-        <TabsContent value="site" className="mt-4">
-          <SiteHome onOpenCard={openCard} onOpenJournal={() => setTab("journal")} tools={<StudyTools />} />
+        {/*
+          B5.3: zakładki zostają zamontowane w `<Activity>` — ukryta zakładka zachowuje stan i przewinięcie, a jej efekty
+          (timery, nasłuchy) stoją, dopóki nie wróci. Powrót na Dziennik nie renderuje osi od nowa (na telefonie z 3000
+          wpisami to było ~600 ms). `forceMount` utrzymuje poddrzewo w Radix; ukrywa je atrybut `hidden`.
+        */}
+        <TabsContent value="site" forceMount className="mt-4 data-[state=inactive]:hidden">
+          <Activity mode={group === "site" ? "visible" : "hidden"}>
+            <SiteHome onOpenCard={openCard} onOpenJournal={() => setTab("journal")} tools={<StudyTools />} />
+          </Activity>
         </TabsContent>
-        <TabsContent value="journal" className="mt-4">
-          <StudyJournal onPractice={practice} />
+        <TabsContent value="journal" forceMount className="mt-4 data-[state=inactive]:hidden">
+          <Activity mode={group === "journal" ? "visible" : "hidden"}>
+            <StudyJournal onPractice={practice} />
+          </Activity>
         </TabsContent>
         {plansShown && (
           <TabsContent value="plans" className="mt-4">
@@ -342,8 +351,9 @@ function StudyScreen() {
             </ViewErrorBoundary>
           </TabsContent>
         )}
-        {/* forceMount: runda quizu w toku nie ginie po zajrzeniu do Dziennika ani Budowy. */}
+        {/* forceMount + Activity: runda quizu w toku nie ginie po zajrzeniu do Dziennika ani Budowy, a ukryta Nauka nie liczy się w tle. */}
         <TabsContent value="learn" forceMount className="mt-4 data-[state=inactive]:hidden">
+          <Activity mode={group === "learn" ? "visible" : "hidden"}>
           <Tabs value={LEARN_TABS.includes(tab) ? tab : lastLearn.current} onValueChange={setTab}>
             <TabsList className="h-auto w-full justify-start overflow-x-auto [scrollbar-width:none] sm:w-auto" aria-label="Nauka">
               <TabsTrigger value="quiz" className={TAB}>Quiz</TabsTrigger>
@@ -356,6 +366,7 @@ function StudyScreen() {
             <TabsContent value="board" className="mt-4"><StudyBoard onPractice={practice} onJournal={openJournal} /></TabsContent>
             <TabsContent value="list" className="mt-4"><StudyChecklist /></TabsContent>
           </Tabs>
+          </Activity>
         </TabsContent>
       </Tabs>
     </div>

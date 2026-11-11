@@ -108,9 +108,9 @@ Przed kodem: skill `frontend-design`. Po kodzie: `refactoring-ui` i `ux-heuristi
 
 | # | Co | Warunek wejścia | W | N |
 |---|----|-----------------|---|---|
-| B5.1 | **Wirtualizacja osi dziennika** (`@tanstack/react-virtual`, leniwie). | Oś z 3 000 wpisów przekracza 300 ms albo INP > 200 ms | 2 | M |
+| B5.1 | ❌ **Odrzucone po pomiarze (2026-11-11, `docs/PERFORMANCE.md`): oś ma 120 wpisów w DOM, powrót na nią po B5.3 kosztuje ~200 ms.** **Wirtualizacja osi dziennika** (`@tanstack/react-virtual`, leniwie). | Oś z 3 000 wpisów przekracza 300 ms albo INP > 200 ms | 2 | M |
 | B5.2 | **Kompresja `.budowa` i archiwum budowy** przez natywne `CompressionStream("gzip")`, bez zależności. Paczka z dużą liczbą wpisów jest wtedy kilka razy mniejsza w WhatsApp. Nowy nagłówek pliku, a stary format nadal się wczytuje. | Zawsze (mały koszt), ale z testem starego formatu | 2 | S |
-| B5.3 | **`<Activity>` z React 19.2 dla zakładek Pracy.** Quiz i oś zachowują stan i przewinięcie bez `forceMount` i ukrywania przez CSS. | Pomiar pamięci na telefonie bez regresji | 1 | S |
+| B5.3 | ✅ **(2026-11-11; Dziennik 570 → 203 ms, INP p75 592 → 216 ms, pamięć 39 → 32 MB)** **`<Activity>` z React 19.2 dla zakładek Pracy.** Quiz i oś zachowują stan i przewinięcie bez `forceMount` i ukrywania przez CSS. | Pomiar pamięci na telefonie bez regresji | 1 | S |
 | B5.4 | **React Compiler 1.0** na Pracy (próba na osobnej gałęzi). Wymaga `@vitejs/plugin-react` z Babel zamiast SWC. | Zysk INP ≥ 15%, paczka + ≤ 2 KB, build ≤ +20%. Decyzja **B-8** | 1 | M |
 | B5.5 | **Zdjęcia w OPFS** (Origin Private File System w Workerze) zamiast blobów w IndexedDB, z migracją w tle i powrotem do IndexedDB. | Tylko gdy B0.2 lub B0.4 pokażą wolne miniatury albo problemy z miejscem przy > 1 000 zdjęć. Decyzja **B-7** | 2 | L |
 | B5.6 | **Indeks wyszukiwania (B2.5) w Workerze** razem z Cyklem 3.2 z `Plan-nowy.md`. | Budowanie indeksu > 100 ms na telefonie | 1 | M |
