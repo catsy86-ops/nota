@@ -315,7 +315,7 @@ test("dziennik: pusty wpis się nie zapisuje, usunięcie wpisu w arkuszu ma Cofn
   await openEntry(page);
   const sheet = page.getByTestId("journal-entry-sheet");
   await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
-  await expect(page.getByText("Wpisz, co się dzieje, albo dodaj zdjęcie, nagranie, próbę, kształtki albo etap")).toBeVisible();
+  await expect(page.getByText("Wpisz, co się dzieje, albo dodaj zdjęcie, nagranie, próbę, kształtki, etap, pomiar spadku albo kod")).toBeVisible();
   await expect(sheet).toBeVisible();
   await sheet.getByLabel("Co się dzieje?").fill("Przejście przez ścianę w tulei");
   await sheet.getByLabel("Co się dzieje?").press("Control+Enter");

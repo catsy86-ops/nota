@@ -85,7 +85,7 @@ export const getJournalDraft = () => store.get();
 
 /** Szkic ma treść (tekst, zdjęcia, nagrania, odhaczenia, próba albo kształtki) — „Dokończ wpis” zamiast „Wpis”. */
 export function draftHasContent(d: JournalDraft): boolean {
-  return !!d.text.trim() || d.images.length > 0 || d.recordings.length > 0 || d.checked.length > 0 || d.test !== null || d.fittings.length > 0 || (d.pipes?.length ?? 0) > 0;
+  return !!d.text.trim() || d.images.length > 0 || d.recordings.length > 0 || d.checked.length > 0 || d.test !== null || d.fittings.length > 0 || (d.pipes?.length ?? 0) > 0 || d.level !== undefined || !!d.barcode;
 }
 
 /** Samo „czy jest szkic” — pisanie w arkuszu nie przerysowuje dziennika, bo wartość zmienia się tylko na granicy pusty/niepusty. */

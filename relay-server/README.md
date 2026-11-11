@@ -77,8 +77,10 @@ docker run -d -p 4466:4466 -v notki-relay:/data --restart unless-stopped notki-r
 ```
 
 Za reverse proxy (Caddy: `sync.twojadomena.pl { reverse_proxy localhost:4466 }`) ustaw
-`TRUST_PROXY=1`, żeby limit działał na prawdziwych adresach klientów (obraz Dockera ma to
-ustawione). Bez proxy i z `TRUST_PROXY=1` każdy może podać własny `X-Forwarded-For`.
+`TRUST_PROXY=1`, żeby limit działał na prawdziwych adresach klientów (obraz Dockera NIE ma tego
+ustawionego domyślnie). Włączaj tylko, gdy port jest dostępny wyłącznie z proxy, które nadpisuje
+`X-Forwarded-For` (Caddy i nginx to robią): bez proxy i z `TRUST_PROXY=1` każdy może podać własny
+`X-Forwarded-For` i obejść limit.
 
 ## Pliki
 

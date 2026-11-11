@@ -57,7 +57,8 @@ export function useDictation(onText: (text: string) => void) {
       if (local && e.error !== "aborted" && e.error !== "no-speech") setLocalSpeechReady(false);
       if (e.error !== "aborted") toast.error(ERRORS[e.error] ?? "Dyktowanie nie powiodło się");
     };
-    rec.onend = () => { setListening(false); recRef.current = null; };
+    // Stary obiekt może zakończyć się po starcie nowego — wtedy nie wolno zgubić referencji do aktywnego nasłuchu.
+    rec.onend = () => { setListening(false); if (recRef.current === rec) recRef.current = null; };
     recRef.current = rec;
     try { rec.start(); setListening(true); } catch { setListening(false); }
   }, []);
@@ -90,5 +91,5 @@ export function useDictation(onText: (text: string) => void) {
 
   useEffect(() => () => { recRef.current?.abort(); }, []);
 
-  return { supported, listening, toggle };
+  return { supported, listening, toggle, stop };
 }

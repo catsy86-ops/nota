@@ -63,7 +63,11 @@ export function LevelMeter({ open, onOpenChange, onSelect }: LevelMeterProps) {
     if (typeof window === "undefined" || !("DeviceOrientationEvent" in window)) { setStatus("nosensor"); return; }
     // iOS 13+ pyta o zgodę tylko z kliknięcia — wtedy czekamy na przycisk „Włącz czujnik”.
     const needsPermission = typeof (DeviceOrientationEvent as unknown as { requestPermission?: unknown }).requestPermission === "function";
-    if (needsPermission) { setStatus("idle"); return; }
+    if (needsPermission) {
+      setStatus("idle");
+      // Nasłuch uruchomiony po kliknięciu „Włącz czujnik” trzeba zwolnić przy zamknięciu okna (komponent stoi zamontowany).
+      return () => { stopRef.current?.(); stopRef.current = null; };
+    }
     return listen();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `listen` zależy tylko od stanu lokalnego
   }, [open]);

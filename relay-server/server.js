@@ -44,13 +44,17 @@ try {
 // Zapis partiami: aktualizacje przychodzą co sekundę z każdego aktywnego pokoju,
 // więc pełny zapis po każdej nie ma sensu. Zapis przez plik tymczasowy.
 let saveTimer = null;
+function saveNow() {
+  const tmp = `${STORE_FILE}.tmp`;
+  writeFileSync(tmp, JSON.stringify(store));
+  renameSync(tmp, STORE_FILE);
+}
 function scheduleSave() {
   if (saveTimer) return;
   saveTimer = setTimeout(() => {
     saveTimer = null;
-    const tmp = `${STORE_FILE}.tmp`;
-    writeFileSync(tmp, JSON.stringify(store));
-    renameSync(tmp, STORE_FILE);
+    // Pełny dysk albo brak uprawnień nie mogą zabić procesu (nieprzechwycony wyjątek w timerze) — logujemy i ponawiamy.
+    try { saveNow(); } catch (e) { console.error("Zapis przekaźnika nieudany, ponawiam:", e.message); scheduleSave(); }
   }, 500);
 }
 
@@ -66,8 +70,14 @@ function rateLimited(ip, now) {
   return slot.count > RATE_PER_MIN;
 }
 
+/** Usuwa wygasłe liczniki limitu (inaczej mapa rośnie z każdym nowym adresem). */
+function sweepHits(now) {
+  for (const [ip, slot] of hits) if (now - slot.start >= 60_000) hits.delete(ip);
+}
+
 function clientIp(req) {
-  if (TRUST_PROXY && req.headers["x-forwarded-for"]) return String(req.headers["x-forwarded-for"]).split(",")[0].trim();
+  // Ostatni wpis dopisało nasze zaufane proxy; pierwszy dałoby się podrobić nagłówkiem od klienta (obejście limitu).
+  if (TRUST_PROXY && req.headers["x-forwarded-for"]) return String(req.headers["x-forwarded-for"]).split(",").map((x) => x.trim()).filter(Boolean).pop() || req.socket.remoteAddress || "?";
   return req.socket.remoteAddress || "?";
 }
 
@@ -148,7 +158,12 @@ function notify(roomId, last) {
   for (const ws of set) if (ws.readyState === ws.OPEN) ws.send(msg);
 }
 
+// Zbyt długa albo uszkodzona ramka powoduje zdarzenie `error` na gnieździe; bez nasłuchu Node kończy proces
+// (jeden anonimowy pakiet = awaria usługi).
+wss.on("error", (e) => console.error("wss", e.message));
+
 wss.on("connection", (ws) => {
+  ws.on("error", () => ws.terminate());
   let roomId = null;
   // Klient ma 10 s na przedstawienie się; bez tego gniazda wiszą bez końca.
   const timeout = setTimeout(() => ws.close(4000, "brak subskrypcji"), 10_000);
@@ -282,12 +297,17 @@ const server = createServer(async (req, res) => {
 });
 
 server.on("upgrade", (req, socket, head) => {
-  if (new URL(req.url, "http://relay").pathname !== "/ws") return socket.destroy();
+  socket.on("error", () => socket.destroy());
+  // `new URL` rzuca dla niektórych ścieżek (np. `//`) — bez `try` jedno żądanie Upgrade zabijało proces.
+  let pathname;
+  try { pathname = new URL(req.url, "http://relay").pathname; } catch { return socket.destroy(); }
+  if (pathname !== "/ws") return socket.destroy();
   if (rateLimited(clientIp(req), Date.now())) return socket.destroy();
   wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
 });
 
 setInterval(() => {
+  sweepHits(Date.now());
   const gone = expiredRooms(store, Date.now());
   for (const id of gone) {
     delete store.rooms[id];
@@ -299,3 +319,14 @@ setInterval(() => {
 server.listen(PORT, () => {
   console.log(`Przekaźnik na porcie ${PORT}; dane w ${DATA_DIR}; limit ${RATE_PER_MIN}/min na IP; wpis ≤ ${LIMITS.MAX_ENTRY_CHARS} zn.`);
 });
+
+// Łagodne zamknięcie: niezapisane zmiany (do 500 ms) trafiają na dysk, zanim proces się skończy.
+for (const sig of ["SIGTERM", "SIGINT"]) {
+  process.on(sig, () => {
+    try { if (saveTimer) clearTimeout(saveTimer); saveNow(); } catch (e) { console.error("Zapis przy zamknięciu nieudany:", e.message); }
+    process.exit(0);
+  });
+}
+// Nieprzewidziany błąd w jednym żądaniu nie może zabić całej usługi.
+process.on("uncaughtException", (e) => console.error("uncaughtException", e.message));
+process.on("unhandledRejection", (e) => console.error("unhandledRejection", e?.message ?? e));

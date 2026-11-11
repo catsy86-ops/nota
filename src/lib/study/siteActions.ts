@@ -54,7 +54,7 @@ export function saveSiteCard(id: string, input: SiteCardInput, now: number = Dat
     id, name,
     address: input.address,
     investor: input.investor,
-    phone: keep("phone"), manager: keep("manager"), managerPhone: keep("managerPhone"), access: keep("access"),
+    phone: keep("phone"), manager: keep("manager"), managerPhone: keep("managerPhone"), supplierPhone: keep("supplierPhone"), access: keep("access"),
     created: prev?.created ?? now,
   });
   if (!card) return false;

@@ -36,7 +36,8 @@ export function MileageDialog({ open, onOpenChange, dir }: {
   const [day, setDay] = useState(today);
   const [route, setRoute] = useState<string[]>([]);
   const [distance, setDistance] = useState("");
-  const [rate, setRate] = useState("");
+  /** `null` = pole nietknięte (pokazuje stawkę z magazynu); tekst, także pusty, to wpis użytkownika. */
+  const [rate, setRate] = useState<string | null>(null);
   const [view, setView] = useState(() => ({ y: new Date().getFullYear(), m: new Date().getMonth() + 1 }));
 
   const active = useMemo(() => dir.filter((s) => s.archived === undefined), [dir]);
@@ -48,7 +49,7 @@ export function MileageDialog({ open, onOpenChange, dir }: {
   const missingGeo = routeSites.filter((s) => !s.geo);
   const suggested = withGeo.length >= 2 ? suggestMileage(withGeo.map((s) => [s.geo!.lat, s.geo!.lng])) : 0;
 
-  const rateText = rate !== "" ? rate : String(store.rate).replace(".", ",");
+  const rateText = rate ?? String(store.rate).replace(".", ",");
   const entries = monthEntries(store.entries, view.y, view.m);
   const totals = mileageTotals(entries);
 
@@ -75,7 +76,7 @@ export function MileageDialog({ open, onOpenChange, dir }: {
     setView({ y: d.getFullYear(), m: d.getMonth() + 1 });
     setRoute([]);
     setDistance("");
-    setRate("");
+    setRate(null);
     toast.success(`Dodano przejazd: ${num(km)} km, ${money(mileageCost(km, rt))}`);
   }
 

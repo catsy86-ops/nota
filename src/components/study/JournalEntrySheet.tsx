@@ -248,7 +248,12 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
 
   function writeSite(next: string) {
     pendingSite.current = null;
-    if (isEdit) patchJournalEditForm({ site: next }); else if (next !== study.site) setSite(next);
+    if (isEdit) patchJournalEditForm({ site: next });
+    else if (next !== study.site) {
+      setSite(next);
+      // Punkt wybrany w aparacie należy do poprzedniej budowy — przy innej zostałby cudzym punktem we wpisie.
+      if (getForm().point) patch({ point: undefined });
+    }
   }
 
   /** Zatwierdza wpisaną budowę (blur, Enter, zapis wpisu) — jeden zapis zamiast zapisu przy każdym klawiszu. */
@@ -301,7 +306,10 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const dictation = useDictation((spoken) => applySpokenEntry(spoken, { setText, recentSites, knownFittings, site, dir, pickSite, patch, getForm }));
   // Skrót „Wpis głosowy” (`?wpis=1&glos=1`): arkusz otwarty z żądaniem startuje dyktowanie od razu.
   // Bez zgody na usługę mowy pokaże się zwykłe pytanie o zgodę — zgodę zawsze daje kliknięcie.
-  const { supported: dictationSupported, toggle: toggleDictation } = dictation;
+  const { supported: dictationSupported, toggle: toggleDictation, stop: stopDictation, listening: dictating } = dictation;
+  // Zamknięcie arkusza (zapis, Esc, tło) kończy nasłuch: arkusz jest zamontowany cały czas, więc bez tego mikrofon
+  // działał dalej i dopisywał mowę do szkicu następnego wpisu.
+  useEffect(() => { if (!open && dictating) stopDictation(); }, [open, dictating, stopDictation]);
   useEffect(() => {
     if (!open) return;
     const voice = takeVoiceRequest();
@@ -338,6 +346,9 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (batch.length === 0) return;
     if (!persistAsked) { persistAsked = true; void requestPersistentStorage(); }
     setProcessing((n) => n + batch.length);
+    // Ile zdjęć z paczki jeszcze nie oddało swojej części licznika: wyjątek przerywa pętlę, a przycisk „Zapisz wpis”
+    // czeka na `processing === 0` — bez tego zostawał zablokowany na stałe.
+    let unreleased = batch.length;
     try {
       for (const file of batch) {
         try {
@@ -348,11 +359,14 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           const now = getForm().images;
           if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) { patch({ images: [...now, ref] }); haptic("tap"); }
         } finally {
+          unreleased -= 1;
           setProcessing((n) => n - 1);
         }
       }
     } catch {
       photoSaveFailed();
+    } finally {
+      if (unreleased > 0) setProcessing((n) => n - unreleased);
     }
     if (skipped > 0) toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB");
   }
@@ -1018,7 +1032,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         <div className="shrink-0 border-t border-border bg-background px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
           {emptyAttempt && (
             <p id="journal-empty-hint" role="alert" className="text-xs text-destructive-ink">
-              Wpisz, co się dzieje, albo dodaj zdjęcie, nagranie, próbę, kształtki albo etap.
+              Wpisz, co się dzieje, albo dodaj zdjęcie, nagranie, próbę, kształtki, etap, pomiar spadku albo kod.
             </p>
           )}
           <div className="flex gap-2">

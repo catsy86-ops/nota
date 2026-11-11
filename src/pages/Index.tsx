@@ -1,3 +1,4 @@
+import { canViewTransition } from "@/lib/viewTransition";
 import { loadShiftPresets } from "@/hooks/useShiftPresets";
 import { pulseSkinSignal } from "@/lib/skinSignal";
 import { isAppView } from "@/lib/viewMeta";
@@ -133,7 +134,7 @@ const Index = () => {
   // Zmiana widoku przenika się ze starym (View Transitions); bez wsparcia albo przy ograniczonym ruchu — od razu.
   const setView = useCallback((v: View) => {
     const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
-    if (typeof doc.startViewTransition === "function" && !isMotionReduced()) {
+    if (canViewTransition() && !isMotionReduced()) {
       // Kierunek przesunięcia (plan 2.2): w prawo do działów dalej w kolejności, w lewo do wcześniejszych.
       const dir = VIEW_ORDER.indexOf(v) >= VIEW_ORDER.indexOf(view) ? "fwd" : "back";
       document.documentElement.dataset.vtDir = dir;
@@ -557,7 +558,7 @@ const Index = () => {
   const openPreviewFromCard = useCallback((id: string) => {
     const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
     const card = document.querySelector<HTMLElement>(`[data-note-id-wrap="${CSS.escape(id)}"]`);
-    if (typeof doc.startViewTransition !== "function" || isMotionReduced() || !card) { showInReader(id, "preview"); return; }
+    if (!canViewTransition() || isMotionReduced() || !card) { showInReader(id, "preview"); return; }
     card.style.viewTransitionName = "note-shared";
     const t = doc.startViewTransition(() => flushSync(() => showInReader(id, "preview")));
     void t.finished.finally(() => { card.style.viewTransitionName = ""; });

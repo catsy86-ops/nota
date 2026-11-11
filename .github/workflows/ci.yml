@@ -14,7 +14,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - run: npm ci
@@ -31,8 +31,35 @@ jobs:
       - name: Build
         run: npm run build
 
+      # WebKit potrzebny, bo projekt „iphone-14” w playwright.config.ts to WebKit (tam wykryliśmy awarię View Transitions).
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: E2E tests
         run: npm run test:e2e
+
+  # Serwery pomocnicze mają własne testy (bezpieczeństwo: uwierzytelnianie, SSRF, limity, odporność na złośliwe pakiety).
+  servers:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: [push-server, relay-server]
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+
+      - run: npm ci
+
+      - name: Testy serwera
+        run: npm test
+
+      - name: Audyt zależności (tylko produkcyjne)
+        run: npm audit --omit=dev --audit-level=high

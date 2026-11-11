@@ -1,3 +1,4 @@
+import { canViewTransition } from "@/lib/viewTransition";
 import { flushSync } from "react-dom";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 
@@ -133,8 +134,8 @@ export function changeView(apply: () => void): void {
   };
 
   const doc = document as DocWithVT;
-  if (typeof doc.startViewTransition === "function" && !isMotionReduced()) {
-    doc.startViewTransition(settle);
+  if (canViewTransition() && !isMotionReduced()) {
+    doc.startViewTransition!(settle);
     return;
   }
   settle();

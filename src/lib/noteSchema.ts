@@ -17,6 +17,13 @@ const checklistItemSchema = z.object({
   indent: z.catch(z.optional(z.literal(1)), undefined),
 }) satisfies z.ZodMiniType<ChecklistItem, unknown>;
 
+/** Reguła powtarzania z nowszych wersji (dni robocze, co 2 tyg., rok, wybrane dni, co N dni) — bez niej kopia i import ją gubiły. */
+const repeatRuleSchema = z.object({
+  kind: z.enum(["none", "daily", "weekly", "monthly", "workdays", "biweekly", "yearly", "weekdays", "every"]),
+  days: z.optional(z.array(z.int().check(z.gte(0), z.lte(6))).check(z.maxLength(7))),
+  every: z.optional(z.int().check(z.gte(1), z.lte(365))),
+});
+
 /** Validates one imported note, filling in safe fallbacks for missing/malformed fields. */
 export const noteSchema = z.object({
   id: z.catch(z.string(), () => crypto.randomUUID()),
@@ -31,6 +38,7 @@ export const noteSchema = z.object({
   aliases: z.catch(z.optional(z.array(z.string().check(z.maxLength(200))).check(z.maxLength(20))), undefined),
   reminder: z.catch(z.nullable(z.number()), null),
   reminderRepeat: z.catch(z.optional(z.enum(["none", "daily", "weekly", "monthly"])), undefined),
+  reminderRule: z.catch(z.optional(repeatRuleSchema), undefined),
   reminderDay: z.catch(z.optional(z.int().check(z.gte(1), z.lte(31))), undefined),
   reminderRepeatUntil: z.catch(z.optional(z.number()), undefined),
   reminderAllDay: z.catch(z.optional(z.boolean()), undefined),
@@ -162,12 +170,22 @@ const versionSchema = z.object({
   timestamp: z.number(),
 });
 
+/** Tablica, w której zły element odpada pojedynczo (a nie unieważnia całości). */
+function tolerantArray<T extends z.ZodMiniType>(item: T) {
+  return z.pipe(
+    z.catch(z.array(z.unknown()), []),
+    z.transform((arr) => arr.flatMap((x) => { const r = z.safeParse(item, x); return r.success ? [r.data as z.output<T>] : []; })),
+  );
+}
+
 export const fullBackupSchema = z.object({
   version: z.catch(z.union([z.literal(1), z.literal(2), z.literal(3)]), 1),
   exportedAt: z.catch(z.number(), () => Date.now()),
-  notes: z.catch(z.array(noteSchema), []),
+  // Element po elemencie: jeden uszkodzony wpis odpada, reszta zostaje. Wcześniej `z.catch` na całej tablicy zerował ją
+  // przy pierwszym złym elemencie, a „Przywróć” kasowało wszystkie notatki użytkownika.
+  notes: tolerantArray(noteSchema),
   labels: z.catch(z.array(z.string()), []),
-  folders: z.catch(z.array(folderSchema), []),
+  folders: tolerantArray(folderSchema),
   // Uszkodzona sekcja opcjonalna = brak sekcji, nie odrzucenie całego pliku.
   versions: z.catch(z.optional(z.array(versionSchema)), undefined),
   settings: z.catch(z.optional(z.record(z.string(), z.string())), undefined),

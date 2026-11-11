@@ -116,7 +116,9 @@ export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?:
   const pipes = cleanPipes(e.pipes);
   const stage = cleanEntryStage(e.stage);
   const geo = cleanGeo(e.geo);
-  const empty = !text.trim() && checked.length === 0 && images.length === 0 && recordings.length === 0 && !test && fittings.length === 0 && pipes.length === 0 && !stage;
+  // Sam pomiar spadku (B3.4) albo odczytany kod/tag (B3.5, B3.11) to pełnoprawny wpis; samo streszczenie i wymiary — nie
+  // (streszczenie opisuje tekst, wymiary wymagają zdjęcia, które samo liczy się wyżej).
+  const empty = !text.trim() && checked.length === 0 && images.length === 0 && recordings.length === 0 && !test && fittings.length === 0 && pipes.length === 0 && !stage && level === undefined && !barcode;
   return { text, checked, images, captions, drawnFrom, dimensions, level, barcode, summary, recordings, test, fittings, pipes, stage, geo, empty };
 }
 

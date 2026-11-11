@@ -85,10 +85,18 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
     else if (start) { ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(start[0] * w, start[1] * h, 6 * unit, 0, Math.PI * 2); ctx.fill(); }
   }, [img, list, start, live, pending]);
 
+  /**
+   * Punkt względem OBRAZU (0–1), nie ramki płótna. Płótno ma `object-contain` i limit wysokości, więc zdjęcie pionowe
+   * jest w ramce wyśrodkowane z pustymi pasami po bokach — liczenie od ramki przesuwało wymiary w poziomie.
+   */
   function pointOf(e: React.PointerEvent<HTMLCanvasElement>): Pt {
-    const r = e.currentTarget.getBoundingClientRect();
+    const cv = e.currentTarget;
+    const r = cv.getBoundingClientRect();
     const clamp = (n: number) => Math.min(1, Math.max(0, n));
-    return [clamp((e.clientX - r.left) / r.width), clamp((e.clientY - r.top) / r.height)];
+    if (!cv.width || !cv.height || !r.width || !r.height) return [clamp((e.clientX - r.left) / (r.width || 1)), clamp((e.clientY - r.top) / (r.height || 1))];
+    const scale = Math.min(r.width / cv.width, r.height / cv.height);
+    const w = cv.width * scale, h = cv.height * scale;
+    return [clamp((e.clientX - (r.left + (r.width - w) / 2)) / w), clamp((e.clientY - (r.top + (r.height - h) / 2)) / h)];
   }
 
   function finish(from: Pt, to: Pt) {

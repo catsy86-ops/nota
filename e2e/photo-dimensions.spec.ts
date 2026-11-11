@@ -113,3 +113,42 @@ test.describe("telefon", () => {
     await expect(drawer.getByTestId("dimension-item")).toHaveText(/2,5 m/);
   });
 });
+
+test("zdjęcie pionowe: wymiar zapisuje się względem obrazu, nie ramki płótna (audyt UI #1)", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await sheet.getByLabel("Co się dzieje?").fill("Pion");
+  // Pionowe 3:4: przy szerokości okna wysokość przekracza limit 50 dvh, więc obraz ma puste pasy po bokach.
+  const b64 = await page.evaluate(() => { const c = document.createElement("canvas"); c.width = 240; c.height = 320; c.getContext("2d")!.fillRect(0, 0, 240, 320); return c.toDataURL("image/png").split(",")[1]; });
+  await sheet.getByTestId("journal-photo-input").setInputFiles({ name: "pion.png", mimeType: "image/png", buffer: Buffer.from(b64, "base64") });
+  await sheet.getByRole("button", { name: "Dodaj wymiary na zdjęciu 1" }).click();
+  const drawer = page.getByTestId("dimension-drawer");
+  const canvas = drawer.getByTestId("dimension-canvas");
+  await expect(canvas).toBeVisible();
+  await expect.poll(() => canvas.evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
+
+  // Układ ustala się po załadowaniu obrazu (płótno zmienia rozmiar) — czekamy, aż prostokąt przestanie się zmieniać.
+  await expect.poll(async () => { const a = await canvas.boundingBox(); await page.waitForTimeout(150); const b = await canvas.boundingBox(); return JSON.stringify(a) === JSON.stringify(b); }).toBe(true);
+
+  // Prostokąt samego obrazu wewnątrz ramki (object-contain).
+  const rect = await canvas.evaluate((c: HTMLCanvasElement) => {
+    const r = c.getBoundingClientRect();
+    const scale = Math.min(r.width / c.width, r.height / c.height);
+    const w = c.width * scale, h = c.height * scale;
+    return { x: r.left + (r.width - w) / 2, y: r.top + (r.height - h) / 2, w, h, frameW: r.width };
+  });
+  expect(rect.frameW - rect.w, "obraz ma puste pasy po bokach").toBeGreaterThan(20);
+
+  // Stuknięcia w 25% i 75% szerokości OBRAZU na wysokości 50%.
+  await page.mouse.click(rect.x + rect.w * 0.25, rect.y + rect.h * 0.5);
+  await page.mouse.click(rect.x + rect.w * 0.75, rect.y + rect.h * 0.5);
+  await drawer.getByLabel("Wymiar", { exact: true }).fill("1 m");
+  await drawer.getByLabel("Wymiar", { exact: true }).press("Enter");
+  await drawer.getByRole("button", { name: "Zapisz wymiary" }).click();
+
+  const dims = await page.evaluate(() => Object.values(JSON.parse(localStorage.getItem("kaczy.study.draft.v1") ?? "{}").dimensions ?? {})[0] as Array<{ from: number[]; to: number[] }>);
+  expect(dims[0].from[0]).toBeCloseTo(0.25, 1);
+  expect(dims[0].to[0]).toBeCloseTo(0.75, 1);
+  expect(dims[0].from[1]).toBeCloseTo(0.5, 1);
+});

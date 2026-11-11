@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { sanitizeDraft, EMPTY_DRAFT } from "./draft";
+import { draftHasContent, sanitizeDraft, EMPTY_DRAFT } from "./draft";
 import { getJournalEditForm, openJournalEdit, closeJournalSheet } from "./entrySheet";
 import { addJournalEntry, getStudy, updateJournalEntry } from "./store";
 import { resetStudyForTests } from "./data";
@@ -56,5 +56,14 @@ describe("pola czujników we wpisie", () => {
     const d = sanitizeDraft(EMPTY_DRAFT, { ...EMPTY_DRAFT, text: "x", images: [REF], level: 1.5, barcode: "XYZ", summary: "S", dimensions: dims });
     expect(d).toMatchObject({ level: 1.5, barcode: "XYZ", summary: "S" });
     expect(d.dimensions?.[REF]).toHaveLength(1);
+  });
+
+  it("wpis z samym pomiarem spadku albo kodem jest pełnoprawny; samo streszczenie nie (audyt UI #6)", () => {
+    expect(addJournalEntry({ kind: "ok", topic: null, text: "", level: 1.2 })).not.toBeNull();
+    expect(addJournalEntry({ kind: "ok", topic: null, text: "", barcode: "5901234567890" })).not.toBeNull();
+    expect(addJournalEntry({ kind: "ok", topic: null, text: "", summary: "tylko streszczenie" })).toBeNull();
+    expect(draftHasContent({ ...EMPTY_DRAFT, level: 0.4 })).toBe(true);
+    expect(draftHasContent({ ...EMPTY_DRAFT, barcode: "X" })).toBe(true);
+    expect(draftHasContent(EMPTY_DRAFT)).toBe(false);
   });
 });

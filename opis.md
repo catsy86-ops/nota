@@ -5291,3 +5291,8 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - Naprawy e2e failów
 - Faza 5 tech (B5.1–B5.6)
 - QA na telefonie
+
+## Audyt błędów 2026-11-11 (cztery agenty, tylko odczyt) i pierwsza partia poprawek
+
+Pełna lista i statusy: `docs/audyt-bledow-2026-11-11.md`. **Naprawione i przetestowane:** kopia pełna nie kasuje już wszystkich notatek przy jednym uszkodzonym elemencie (`tolerantArray` w `noteSchema.ts`), kopia i import zachowują `reminderRule` (serie „dni robocze / co N dni”), zapis karty budowy nie gubi telefonu hurtowni (`siteActions.ts`), przekaźnik synchronizacji nie ginie od jednego pakietu WebSocket ani od nieparsowalnej ścieżki Upgrade (`relay-server/server.js`, test `server.test.js`), a jego Dockerfile działa bez roota i bez domyślnego `TRUST_PROXY`; CI uruchamia testy i `npm audit` obu serwerów oraz instaluje WebKit; `startViewTransition` wolno wołać tylko przez strażnik (`viewTransitionGuard.test.ts`); w UI: miarka na zdjęciach pionowych (współrzędne względem obrazu), licznik obróbki zdjęć nie blokuje „Zapisz wpis” po błędzie, dyktowanie gaśnie po zamknięciu arkusza, poziomica zwalnia nasłuch, sam pomiar spadku albo kod to pełny wpis, punkt z aparatu nie przechodzi na inną budowę, stawka w kilometrówce da się wyczyścić, Auto i Kilometrówka są dostępne przy pustym dzienniku. **Otwarte (decyzje/zmiany modelu):** edycja wpisu nadpisująca zmiany z drugiego telefonu, listy zdjęć LWW, kopia zapasowa bez kilometrówki i cennika, kod pokoju WebRTC z szybkiego SHA-256, pokoje przekaźnika bez uwierzytelnienia tworzenia.
+
