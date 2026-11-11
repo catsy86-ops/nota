@@ -20,12 +20,12 @@
 | W9 | nagrania (`recordings`) i `after` bez ochrony przed GC zdjęć | naprawione: nagrania szkicu i otwartej edycji chronione (doc: `after`, `drawnFrom`, nagrania były już chronione); `images.test.ts` |
 | W10 | wyścig GC z ponownym dodaniem zdjęcia | naprawione: `touched` + `deleting` w `imageStore`; `imageStore.test.ts` |
 | W11 | listy zdjęć/nagrań LWW: dwa telefony tracą dodane elementy | otwarte (zmiana modelu Yjs) |
-| W12 | dzień z przyszłości psuje serię w Nauce | otwarte |
-| W13 | kopia pełna nie sprawdza własnego rozmiaru względem limitu importu | otwarte |
+| W12 | dzień z przyszłości psuje serię w Nauce | naprawione: `stateFromDump` pomija dni po jutrze; `studyStreak.test.ts` |
+| W13 | kopia pełna nie sprawdza własnego rozmiaru względem limitu importu | naprawione: `isBackupOversize` + ostrzeżenie po zapisie kopii; `fullBackup.test.ts` |
 | W14 | kilometrówka, cennik, nazwa firmy, autor poza kopią zapasową | do weryfikacji (decyzja: które klucze) |
 | W15 | sekcje pieniężne wracają przez scalanie, Nauka przez zastąpienie | otwarte |
-| W16 | zlecenia: `touch()` może cofnąć status z drugiego telefonu | otwarte |
-| W17 | `cleanEntry.at`/`resolved` bez zakresu | otwarte |
+| W16 | zlecenia: `touch()` może cofnąć status z drugiego telefonu | naprawione: znacznik zmiany wyceny w osobnym kluczu `c␁budowa` (touch nie przepisuje statusu); `jobs.test.ts`. Pozostaje LWW całego wpisu zlecenia przy `setMeta` z dwóch telefonów naraz |
+| W17 | `cleanEntry.at`/`resolved` bez zakresu | naprawione: `timeInRange` (1970…3000) w `cleanEntry`; `journalAdded.test.ts` |
 | D1–D19 | drobne (limity przy scalaniu, osierocone dane, DST, push, zaokrąglenia, `__proto__`, wydajność 3000+) | patrz raport |
 
 ## UI Pracy
@@ -75,4 +75,8 @@ W1–W5. Nowe pole wpisu `added` (opcjonalne, w `JOURNAL_ENTRY_KEYS`); starsze w
 ## Zrobione 2026-11-11 (trzecia partia)
 
 W6–W10.
+
+## Zrobione 2026-11-11 (czwarta partia)
+
+W12, W13, W16, W17. W11, W14 i W15 czekają na decyzje (model Yjs list zdjęć; klucze kopii; scalanie sekcji pieniężnych).
 

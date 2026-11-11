@@ -86,6 +86,24 @@ describe("zlecenia własne — Yjs (H3.4)", () => {
     expect(yb.get("s")!.items.map((i) => i.id)).toEqual(["a", "b"]);
   });
 
+  it("dopisanie pozycji na jednym telefonie nie cofa statusu zmienionego na drugim (W16)", () => {
+    const a = new Y.Doc();
+    const b = new Y.Doc();
+    const ya = createYJobs(a);
+    const yb = createYJobs(b);
+    ya.setMeta("s", {}, 1);
+    Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+    yb.setMeta("s", { status: "paid" }, 5); // drugi telefon: zapłacone
+    ya.saveItem("s", { id: "a", kind: "labor", name: "Montaż", qty: 1, unit: "usł.", price: 150, order: 0 }); // pierwszy: nowa pozycja
+    Y.applyUpdate(a, Y.encodeStateAsUpdate(b));
+    Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+    for (const y of [ya, yb]) {
+      expect(y.get("s")!.status).toBe("paid");
+      expect(y.get("s")!.items.map((i) => i.id)).toEqual(["a"]);
+      expect(y.get("s")!.changedAt).toBeGreaterThan(0);
+    }
+  });
+
   it("usunięcie zdejmuje zlecenie z pozycjami, „Cofnij” je przywraca; kopia scala bez nadpisywania", () => {
     const y = createYJobs(new Y.Doc());
     y.setMeta("s", { status: "done" }, 1);

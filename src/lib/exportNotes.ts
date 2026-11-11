@@ -242,11 +242,11 @@ export async function buildFullBackup(): Promise<FullBackup> {
 export async function exportFullBackup(
   filename?: string,
   { allowDownload = true, confirm }: { allowDownload?: boolean; confirm?: (report: BackupAttachmentReport) => Promise<boolean> } = {},
-): Promise<{ filename: string; size: number; savedToFile: boolean; downloaded: boolean; attachments: BackupAttachmentReport; cancelled: boolean }> {
+): Promise<{ filename: string; size: number; savedToFile: boolean; downloaded: boolean; attachments: BackupAttachmentReport; cancelled: boolean; oversize: boolean }> {
   const { backup, attachments } = await buildFullBackupWithReport();
   // D3: gdy kopia pominie załączniki, pytamy przed zapisem (kopia jest już zbudowana, nic nie buduje się drugi raz).
   if (confirm && describeSkippedAttachments(attachments) && !(await confirm(attachments))) {
-    return { filename: "", size: 0, savedToFile: false, downloaded: false, attachments, cancelled: true };
+    return { filename: "", size: 0, savedToFile: false, downloaded: false, attachments, cancelled: true, oversize: false };
   }
   const data = JSON.stringify(backup, null, 2);
   const name = filename || `notki-kopia-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
@@ -255,11 +255,16 @@ export async function exportFullBackup(
   // auto-backup przekazuje `allowDownload: false` i prosi o kliknięcie.
   const downloaded = !savedToFile && allowDownload;
   if (downloaded) download(data, name, "application/json");
-  return { filename: name, size: new Blob([data]).size, savedToFile, downloaded, attachments, cancelled: false };
+  const size = new Blob([data]).size;
+  return { filename: name, size, savedToFile, downloaded, attachments, cancelled: false, oversize: isBackupOversize(size) };
 }
 
 // Załączniki (do 40 MB surowych, ~53 MB jako base64) mieszczą się obok notatek i obrazów.
 const MAX_IMPORT_FILE_SIZE = 120 * 1024 * 1024; // 120 MB
+
+/** Kopia większa niż limit wczytywania nie da się przywrócić — trzeba ostrzec przy zapisie, nie przy awarii (W13). */
+export const isBackupOversize = (bytes: number): boolean => bytes > MAX_IMPORT_FILE_SIZE;
+export const BACKUP_OVERSIZE_NOTE = `Kopia jest większa niż ${MAX_IMPORT_FILE_SIZE / (1024 * 1024)} MB, więc aplikacja nie da rady jej wczytać. Zmniejsz załączniki albo zdjęcia (Praca → zmniejsz zdjęcia) i zrób kopię jeszcze raz.`;
 
 /**
  * Ustawienia wchodzące do pełnego backupu. Świadomie **bez** `kaczy.sync.v1`

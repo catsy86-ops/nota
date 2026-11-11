@@ -149,7 +149,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
   const e = raw as Partial<JournalEntry> | null;
   if (!e || typeof e !== "object") return null;
   if (typeof e.id !== "string" || !e.id || e.id.length > 64) return null;
-  if (typeof e.at !== "number" || !Number.isFinite(e.at)) return null;
+  if (!timeInRange(e.at)) return null;
   if (!JOURNAL_KINDS.includes(e.kind as JournalKind)) return null;
   const { text, checked, images, captions, drawnFrom, dimensions, level, barcode, summary, recordings, test, fittings, pipes, stage, geo, empty } = cleanEntryParts(e);
   if (empty) return null;
@@ -169,7 +169,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(barcode ? { barcode } : {}),
     ...(summary ? { summary } : {}),
     ...(recordings.length ? { recordings } : {}),
-    ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
+    ...(e.kind === "problem" && timeInRange(e.resolved) ? { resolved: e.resolved } : {}),
     ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
     ...(e.kind === "problem" && typeof e.owner === "string" && e.owner.trim() ? { owner: e.owner.trim().slice(0, FAULT_OWNER_MAX) } : {}),
     ...(e.kind === "problem" && typeof e.due === "string" && DAY_RE.test(e.due) ? { due: e.due } : {}),
@@ -184,6 +184,13 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(e.supply === "site" ? { supply: "site" as const } : {}),
   };
 }
+
+/**
+ * Znacznik czasu w rozsądnym zakresie (1970…3000). Nie jest to „nie z przyszłości” — telefon z przesuniętym zegarem nie
+ * ma gubić wpisów — tylko odcięcie oczywistych śmieci (`9e15`, ujemne), które wygrywałyby każde sortowanie (W17).
+ */
+export const TIME_MAX = Date.UTC(3000, 0, 1);
+export const timeInRange = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v >= 0 && v < TIME_MAX;
 
 /** Id etapu przy wpisie; śmieci → brak. */
 export const cleanEntryStage = (v: unknown): string | undefined => (typeof v === "string" && v && v.length <= 40 ? v : undefined);

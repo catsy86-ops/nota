@@ -5,7 +5,7 @@ import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, Share2
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
-import { buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, shareFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
+import { BACKUP_OVERSIZE_NOTE, buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, shareFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import { dniPl, pluralPl } from "@/lib/plural";
 import type { FullBackup } from "@/lib/noteSchema";
@@ -145,7 +145,8 @@ async function exportNow(confirm: SkipConfirm) {
     const { savedToFile, attachments } = res;
     try { localStorage.setItem(LAST_AUTO_EXPORT_KEY, String(Date.now())); } catch { /* ignore */ }
     const skipped = describeSkippedAttachments(attachments);
-    toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾", skipped ? { description: skipped, duration: 12000 } : undefined);
+    if (res.oversize) toast.warning(savedToFile ? "Backup zapisany, ale jest za duży do wczytania" : "Backup pobrany, ale jest za duży do wczytania", { description: BACKUP_OVERSIZE_NOTE, duration: 15000 });
+    else toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾", skipped ? { description: skipped, duration: 12000 } : undefined);
   } catch {
     toast.error("Nie udało się wygenerować backupu");
   }

@@ -5324,3 +5324,10 @@ Pełna lista i statusy: `docs/audyt-bledow-2026-11-11.md`. **Naprawione i przete
 - **W9 ochrona przed GC:** w dokumencie `after`, `drawnFrom` i nagrania były już chronione (`journalRefsIn`); dołożone nagrania szkicu (`images.ts`) i otwartej edycji (`journalEditImageRefs`).
 - **W10 wyścig GC:** `imageStore` — zapis tego samego hasha czeka na trwające usuwanie (`deleting`), a GC pomija zdjęcia dodane w trakcie biegu (`touched`). Testy: `imageStore.test.ts`.
 
+## Audyt błędów, czwarta partia (2026-11-11): W12, W13, W16, W17
+
+- **W12 seria nauki:** `stateFromDump` (`studyDump.ts`) pomija dni późniejsze niż jutro (zapas na strefy), więc telefon z błędnym zegarem nie wyprzedza „dziś” i nie zeruje serii. Test: `studyStreak.test.ts`.
+- **W13 rozmiar kopii:** `exportFullBackup` zwraca `oversize` (kopia większa niż limit wczytywania 120 MB, `isBackupOversize`); `BackupSettings` i auto-kopia pokazują ostrzeżenie (`BACKUP_OVERSIZE_NOTE`) zamiast „zapisano”.
+- **W16 zlecenia:** `touch()` (`yJobs.ts`) zapisuje znacznik zmiany wyceny w osobnym kluczu `c␁budowa` zamiast przepisywać cały wpis zlecenia, więc dopisanie pozycji nie cofa statusu zmienionego na drugim telefonie; `all()` bierze większy z `changedAt` wpisu i znacznika. Ograniczenie: `setMeta` nadal zapisuje cały wpis (ostatni zapis wygrywa).
+- **W17 czasy wpisów:** `cleanEntry` odrzuca wpis z `at` poza 1970…3000, a `resolved` poza zakresem tylko pomija (wpis zostaje otwarty); wpisów z zegarem do przodu nie gubi (`timeInRange`, `journalEntry.ts`).
+

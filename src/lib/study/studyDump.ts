@@ -1,4 +1,5 @@
 import { addDaysToKey } from "@/lib/week";
+import { localDayKey } from "@/lib/dayDone";
 import { cleanSite, type SiteCard } from "./sites";
 import { cleanEntry, DAY_RE, SITE_MAX, type JournalEntry } from "./journalEntry";
 import { cleanCard, type ReviewCard } from "./srs";
@@ -166,11 +167,15 @@ export function dumpFromLegacy(raw: unknown, device: string): StudyDump {
 }
 
 /** Zrzut → dawny kształt `StudyState` (projekcja i zapis dla starszych wersji aplikacji). */
-export function stateFromDump(d: StudyDump): StudyState {
+export function stateFromDump(d: StudyDump, today: string = localDayKey()): StudyState {
   const devices = Object.values(d.rounds);
   const bests = devices.map((r) => r.best).filter((b): b is number => b !== null);
   const days = new Set(d.days);
-  const lastDay = d.days.length ? d.days.reduce((a, b) => (b > a ? b : a)) : null;
+  // Dzień z przyszłości (telefon z błędnym zegarem) nie liczy się do serii: inaczej `lastDay` wyprzedzałby „dziś”
+  // i seria wyzerowałaby się aż do tego dnia (W12). Doba zapasu na strefy czasowe.
+  const limit = addDaysToKey(today, 1);
+  const real = d.days.filter((k) => k <= limit);
+  const lastDay = real.length ? real.reduce((a, b) => (b > a ? b : a)) : null;
   let streak = 0;
   for (let day = lastDay; day && days.has(day); day = addDaysToKey(day, -1)) streak++;
   return {

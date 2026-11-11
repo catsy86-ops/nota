@@ -16,3 +16,16 @@ describe("JournalEntry.added", () => {
     expect(saved.added).toBe(now);
   });
 });
+
+describe("cleanEntry — zakres czasu (W17)", () => {
+  const base = { id: "x", kind: "ok", topic: null, text: "t", site: "S", checked: [], images: [] };
+  it("odcina śmieciowe znaczniki, nie odrzuca wpisu z lekko przesuniętym zegarem", async () => {
+    const { cleanEntry } = await import("./journalEntry");
+    expect(cleanEntry({ ...base, at: 9e15 })).toBeNull();
+    expect(cleanEntry({ ...base, at: -5 })).toBeNull();
+    expect(cleanEntry({ ...base, at: Date.now() + 30 * 86_400_000 })).not.toBeNull(); // zegar do przodu o miesiąc
+    const e = cleanEntry({ ...base, kind: "problem", at: 1000, resolved: 9e15 });
+    expect(e).not.toBeNull();
+    expect(e).not.toHaveProperty("resolved");
+  });
+});

@@ -1,6 +1,6 @@
 ﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { describeBackupSkipped } from "./backupSkipped";
-import { buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY } from "./exportNotes";
+import { isBackupOversize, buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY } from "./exportNotes";
 import { setDayShift, shiftStore } from "./shifts/store";
 import { yjsStore } from "./yjsStore";
 import { versionsStore } from "./versionsStore";
@@ -48,6 +48,11 @@ describe("pełny backup v2", () => {
     expect(shiftStore.get().days["2026-10-01"].type).toBe("n");
     await restoreFullBackup(backup, ALL);
     expect(shiftStore.get().days["2026-10-01"].type).toBe("d");
+  });
+
+  it("kopia większa niż limit wczytywania jest oznaczona jako za duża (W13)", () => {
+    expect(isBackupOversize(120 * 1024 * 1024)).toBe(false);
+    expect(isBackupOversize(120 * 1024 * 1024 + 1)).toBe(true);
   });
 
   it("zgłasza sekcje, których nie udało się przywrócić, zamiast udawać sukces (W8)", async () => {

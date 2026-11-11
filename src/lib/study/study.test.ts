@@ -135,6 +135,9 @@ describe("store", () => {
   });
 
   it("recordRound liczy serię dni: dzień po dniu rośnie, ten sam dzień nie, przerwa zeruje", () => {
+    // Seria ignoruje dni z przyszłości (W12), więc zegar musi stać na końcu sprawdzanego okresu.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 3, 12));
     expect(recordRound(1, 1, [], [], "2026-10-30")).toMatchObject({ streak: 1, streakGrew: true });
     expect(recordRound(1, 1, [], [], "2026-10-30")).toMatchObject({ streak: 1, streakGrew: false });
     expect(recordRound(1, 1, [], [], "2026-10-31")).toMatchObject({ streak: 2, streakGrew: true });
@@ -142,6 +145,7 @@ describe("store", () => {
     expect(activeStreak(getStudy(), "2026-11-02")).toBe(3);
     expect(activeStreak(getStudy(), "2026-11-03")).toBe(0);
     expect(recordRound(1, 1, [], [], "2026-11-03")).toMatchObject({ streak: 1, streakGrew: true });
+    vi.useRealTimers();
   });
 });
 

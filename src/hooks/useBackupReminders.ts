@@ -23,13 +23,14 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
         // Bez gestu użytkownika działa tylko zapis do wybranego pliku
         // (File System Access). Inaczej nie udajemy pobrania „w tle” —
         // prosimy o jedno kliknięcie, a backup liczy się dopiero wtedy.
-        const { exportFullBackup, describeSkippedAttachments } = await loadExport();
-        const { filename, size, savedToFile, attachments } = await exportFullBackup(undefined, { allowDownload: false });
+        const { exportFullBackup, describeSkippedAttachments, BACKUP_OVERSIZE_NOTE } = await loadExport();
+        const { filename, size, savedToFile, attachments, oversize } = await exportFullBackup(undefined, { allowDownload: false });
         const count = notes.length + archivedNotes.length;
         if (savedToFile) {
           markBackup();
           const kb = Math.max(1, Math.round(size / 1024));
           const skipped = describeSkippedAttachments(attachments);
+          if (oversize) { toast.warning("Auto-backup zapisany, ale jest za duży do wczytania", { description: BACKUP_OVERSIZE_NOTE, duration: 20000 }); return; }
           toast.success("Auto-backup zapisany", { description: `${filename} • ${kb} KB • ${count} notatek${skipped ? ` — ${skipped}` : ""}`, duration: skipped ? 14000 : 8000 });
           return;
         }

@@ -3,7 +3,8 @@ import { cleanJobMeta, cleanQuoteItem, QUOTE_ITEMS_MAX, type Job, type JobMeta, 
 
 /**
  * Zlecenia własne (H3.4) w Y.Doc notatek — synchronizacja i kopia jak reszta danych. Mapa `studyJobs`:
- * `j␁budowa` wpis zlecenia (status, zakres, termin, marża), `i␁budowa␁id` pozycja wyceny. Dwa telefony
+ * `j␁budowa` wpis zlecenia (status, zakres, termin, marża), `i␁budowa␁id` pozycja wyceny, `c␁budowa` znacznik zmiany
+ * treści wyceny (osobny klucz, żeby zmiana pozycji nie przepisywała statusu zmienionego na drugim telefonie). Dwa telefony
  * dopisujące różne pozycje scalają się bez strat. Osobno od karty budowy (pieniądze — zasada 4 planu)
  * i od `yStudy.ts` (paczka startowa).
  */
@@ -31,10 +32,12 @@ export function createYJobs(doc: Y.Doc) {
     if (snapshot) return snapshot;
     const metas = new Map<string, JobMeta>();
     const items = new Map<string, QuoteItem[]>();
+    const changed = new Map<string, number>();
     for (const [k, v] of map.entries()) {
       const [kind, site, id] = k.split(SEP);
       if (!site || !isId(site)) continue;
       if (kind === "j") { const m = cleanJobMeta(v); if (m) metas.set(site, m); continue; }
+      if (kind === "c") { if (typeof v === "number" && Number.isFinite(v) && v > 0) changed.set(site, v); continue; }
       if (kind === "i" && id && isId(id)) {
         const it = cleanQuoteItem(v, id);
         if (it) { const list = items.get(site) ?? []; list.push(it); items.set(site, list); }
@@ -44,7 +47,8 @@ export function createYJobs(doc: Y.Doc) {
     // Pozycje bez wpisu zlecenia (usunięte na innym telefonie) nie robią z budowy fuchy.
     for (const [site, meta] of metas) {
       const list = (items.get(site) ?? []).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
-      out.set(site, { ...meta, items: list });
+      const changedAt = Math.max(meta.changedAt ?? 0, changed.get(site) ?? 0);
+      out.set(site, { ...meta, ...(changedAt > 0 ? { changedAt } : {}), items: list });
     }
     snapshot = out;
     return out;
@@ -90,11 +94,10 @@ export function createYJobs(doc: Y.Doc) {
 
   /** Znacznik zmiany treści wyceny (H3.5) — w tej samej transakcji co zmiana pozycji. */
   function touch(site: string, now = Date.now()): void {
-    const meta = get(site);
-    if (!meta) return;
-    const { items: _items, ...rest } = meta;
-    const clean = cleanJobMeta({ ...rest, changedAt: now });
-    if (clean) map.set(key("j", site), clean);
+    if (!get(site)) return;
+    // Osobny klucz: wcześniej `touch` przepisywał cały wpis zlecenia ze stanu tego telefonu i mógł cofnąć status
+    // zmieniony w tym czasie na drugim (W16).
+    map.set(key("c", site), now);
   }
 
   function removeItem(site: string, id: string): QuoteItem | null {
@@ -110,6 +113,7 @@ export function createYJobs(doc: Y.Doc) {
     if (!prev) return null;
     doc.transact(() => {
       map.delete(key("j", site));
+      map.delete(key("c", site));
       for (const i of prev.items) map.delete(key("i", site, i.id));
     }, JOBS_ORIGIN);
     return prev;

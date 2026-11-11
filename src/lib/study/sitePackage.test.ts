@@ -84,7 +84,9 @@ describe("parseSitePackage", () => {
       points: [{ id: "pt", room: "r1", type: "umywalka", sides: [], steps: { podejscie: far }, order: 0 }],
     }));
     if (!r.ok) throw new Error(r.error);
-    expect(r.pkg.entries.map((e) => e.id)).toEqual(["ok"]);
+    // Wpis z czasem z przyszłości odpada; wpis ze śmieciowym `resolved` zostaje jako otwarty problem (W17), bez tego pola.
+    expect(r.pkg.entries.map((e) => e.id)).toEqual(["ok", "bad-resolved"]);
+    expect(r.pkg.entries[1]).not.toHaveProperty("resolved");
     expect(r.pkg.stages.map((s) => s.id)).toEqual(["b"]);
     expect(r.pkg.shortages).toEqual([]);
     expect(r.pkg.plan).toEqual([]);
