@@ -56,6 +56,12 @@ export async function buildHandoverPdf(h: Handover, opts: HandoverPdfOptions): P
     if (t.readings) w.line(`Odczyty: ${t.readings}`, 9, "normal", 6);
   }
 
+  if (h.slopes.length > 0) {
+    w.heading("Spadki rur (pomiar orientacyjny z telefonu)");
+    for (const sl of h.slopes) w.line(`${shortDate(sl.at)} ${sl.line}`, 10, "normal", 2);
+    w.line("Czujnik telefonu myli się o ok. 0,1–0,2°; pomiar nie zastępuje poziomicy.", 8, "normal", 2);
+  }
+
   w.heading("Uwagi (otwarte problemy)");
   if (h.remarks.length === 0) w.line("Brak uwag — wszystkie zgłoszone problemy rozwiązane.", 10, "normal", 2);
   for (const r of h.remarks) {

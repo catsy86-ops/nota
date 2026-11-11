@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem("kaczy.study.v1", JSON.stringify({
       site: "Lipowa 5",
       journal: [
-        { id: "a", at: Date.now() - 3600_000, kind: "ok", topic: null, text: "Próba szczelności pionu", site: "Lipowa 5", checked: [], images: [] },
+        { id: "a", at: Date.now() - 3600_000, kind: "ok", topic: null, text: "Próba szczelności pionu", site: "Lipowa 5", checked: [], images: [], level: 1.2 },
         { id: "p", at: Date.now() - 1800_000, kind: "problem", topic: null, text: "Nieszczelna rewizja", site: "Lipowa 5", checked: [], images: [] },
       ],
     }));

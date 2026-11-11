@@ -1,5 +1,6 @@
 import { entrySiteId, type SiteCard } from "./sites";
 import { readingsLine, testLine } from "./pressureTest";
+import { slopeLabel } from "./slope";
 import { dayKeyOf, periodLabel } from "./report";
 import { siteStages, type SiteStage } from "./stages";
 import type { JournalEntry } from "./journalEntry";
@@ -59,6 +60,13 @@ export interface HandoverRoom {
   points: HandoverPoint[];
 }
 
+/** B3.4: spadek rury zmierzony poziomicą w telefonie (orientacyjnie), z opisem wpisu. */
+export interface HandoverSlope {
+  at: number;
+  /** „Spadek 2,1% (1,2°) — Pion w łazience”. */
+  line: string;
+}
+
 export interface Handover {
   site: string;
   address: string;
@@ -70,6 +78,8 @@ export interface Handover {
   /** Etapy z karty; `null` = karta bez etapów. */
   stages: SiteStage[] | null;
   tests: HandoverTest[];
+  /** Spadki rur z poziomicy telefonu (B3.4); puste = żadnego pomiaru. */
+  slopes: HandoverSlope[];
   /** Otwarte problemy — uwagi do odbioru. */
   remarks: HandoverRemark[];
   /** Zdjęcia od najstarszego (przed zakryciem są zwykle pierwsze), do `HANDOVER_PHOTOS_MAX`. */
@@ -124,6 +134,12 @@ export function buildHandover(
     date: periodLabel(dayKeyOf(now), dayKeyOf(now)),
     stages: site.stages ? site.stages.map((s) => ({ ...s })) : null,
     tests: entries.filter((e) => e.test).map((e) => ({ at: e.at, line: testLine(e.test!), ok: e.test!.ok, ...(readingsLine(e.test!) ? { readings: readingsLine(e.test!) } : {}) })),
+    slopes: entries
+      .filter((e) => e.level !== undefined)
+      .map((e) => {
+        const what = e.text.trim().split("\n")[0].slice(0, 80);
+        return { at: e.at, line: `Spadek ${slopeLabel(e.level!)}${what ? ` — ${what}` : ""}` };
+      }),
     remarks: entries
       .filter((e) => e.kind === "problem" && e.resolved === undefined)
       .map((e) => ({ at: e.at, text: e.text.trim().split("\n")[0] || "bez opisu", owner: e.owner, due: e.due, photosBefore: e.images.length, photosAfter: e.after?.length ?? 0 })),
@@ -188,6 +204,10 @@ export function handoverText(h: Handover): string {
   lines.push("", "## Próby szczelności");
   if (h.tests.length === 0) lines.push("Brak protokołów prób w dzienniku.");
   for (const t of h.tests) lines.push(`- ${shortDate(t.at)} ${t.line}`);
+  if (h.slopes.length > 0) {
+    lines.push("", "## Spadki rur (pomiar orientacyjny z telefonu)");
+    for (const sl of h.slopes) lines.push(`- ${shortDate(sl.at)} ${sl.line}`);
+  }
   lines.push("", "## Uwagi");
   if (h.remarks.length === 0) lines.push("Brak uwag — wszystkie zgłoszone problemy rozwiązane.");
   for (const r of h.remarks) {

@@ -34,6 +34,17 @@ describe("protokół odbioru", () => {
     expect(h.tests.filter((t) => !t.readings)).toHaveLength(1);
   });
 
+  it("spadki z poziomicy trafiają do protokołu z opisem wpisu (B3.4); bez pomiarów sekcji nie ma", () => {
+    const withSlope = e("s", at(2), { text: "Pion w łazience\nszczegóły", level: 1.2 });
+    const h = buildHandover([...journal, withSlope], card, at(16));
+    expect(h.slopes).toEqual([{ at: at(2), line: "Spadek 2,1% (1,2°) — Pion w łazience" }]);
+    expect(handoverText(h)).toContain("## Spadki rur (pomiar orientacyjny z telefonu)");
+    expect(handoverText(h)).toContain("Spadek 2,1% (1,2°) — Pion w łazience");
+    const none = buildHandover(journal, card, at(16));
+    expect(none.slopes).toEqual([]);
+    expect(handoverText(none)).not.toContain("Spadki rur");
+  });
+
   it("etapy z karty, zdjęcia od najstarszych do limitu", () => {
     const many = Array.from({ length: 15 }, (_, i) => e(`p${i}`, at(1) + i, { images: [IMG(i)] }));
     const h = buildHandover(many, { ...card, stages: [{ id: "woda", name: "Rozprowadzenie wody", done: at(2) }] }, at(16));
