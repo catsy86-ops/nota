@@ -101,3 +101,8 @@ W12, W13, W16, W17. W11, W14 i W15 czekają na decyzje (model Yjs list zdjęć; 
 UI #8, T3.
 
 UI #9–#17, #20, #21, #25, #28, #29, #32 (szósta partia).
+
+## Zrobione 2026-11-11 (siódma partia, testy)
+
+T-pozycje z raportu testów: wektor SHA-256 i brak Web Crypto (`documentFingerprint.test.ts`), trafienie we właściwy wpis (`fingerprintStore.test.ts`), `dimensions.test.ts`, limity kilometrówki i magazyn (`companyPrefs.test.ts`), granice protokołu próby (`pressureTest.test.ts`), podpis w protokole odbioru (`handover.test.ts`), `exact: true` w `newJob` (`e2e/jobs.spec.ts`). Asercje kilometrówki (T11–T12) były już poprawione wcześniej. Nadal otwarte: testy PDF (T6), `sitePackageIo` (T7), `push/client` i `tick()` w serwerze push (T19–T21), `captureFrame`, NFC, `aiModel`, sleepy w e2e, testy komponentów.
+

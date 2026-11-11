@@ -24,6 +24,7 @@ describe("zapis i sprawdzanie odcisków", () => {
     const list = fingerprintStore.get();
     const hit = lookupFingerprint("3f2a-91c0-77dd-b1e4-5a60-c2d9", list);
     expect(hit.state).toBe("found");
+    expect(hit.state === "found" && hit.entry.hash).toBe(H1); // trafia we właściwy dokument, nie w pierwszy z brzegu
     expect(lookupFingerprint("3F2A91C077DD", list).state).toBe("found"); // 12 znaków wystarcza
   });
 

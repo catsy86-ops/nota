@@ -83,3 +83,33 @@ describe("minutnik próby (B3.1)", () => {
     expect(clockLabel(5)).toBe("0:05");
   });
 });
+
+describe("cleanTest i minutnik: granice", () => {
+  it("odczyty: ujemny czas przycina do 0, ponad 60 ucina, przy kanalizacji znikają", () => {
+    const water = cleanTest({ medium: "water", bar: 6, minutes: 30, drop: 0, ok: true, readings: [{ at: -5, bar: 6 }, { at: "x", bar: 6 }, { at: 10, bar: NaN }] });
+    expect(water?.readings).toEqual([{ at: 0, bar: 6 }]);
+    const many = Array.from({ length: READINGS_MAX + 20 }, (_, i) => ({ at: i, bar: 6 }));
+    expect(cleanTest({ medium: "air", bar: 6, minutes: 30, drop: 0, ok: true, readings: many })?.readings).toHaveLength(READINGS_MAX);
+    expect(cleanTest({ medium: "sewer", bar: 6, minutes: 30, drop: 0, ok: true, readings: [{ at: 1, bar: 6 }] })?.readings).toBeUndefined();
+  });
+
+  it("ok musi być boolean", () => {
+    expect(cleanTest({ medium: "water", bar: 6, ok: "tak" })).toBeNull();
+    expect(cleanTest({ medium: "water", bar: 6, ok: 1 })).toBeNull();
+  });
+
+  it("bez czasu próby nie ma końca ani pozostałego czasu", () => {
+    const t = { medium: "air" as const, bar: 6, minutes: null, drop: null, ok: true, startedAt: 1_000 };
+    expect(remainingSec(t, 5_000)).toBe(0);
+    expect(runEndsAt(t)).toBeNull();
+  });
+
+  it("finishRun przy kanalizacji (bez ciśnienia) zostawia wynik bez zmian", () => {
+    const t = { medium: "sewer" as const, bar: null, minutes: 15, drop: null, ok: false, startedAt: 0 };
+    const done = finishRun(t, 0, 60_000);
+    expect(done.drop).toBe(0);
+    const sewerNoReadings = finishRun({ ...t, readings: undefined }, 0, 60_000);
+    expect(sewerNoReadings.startedAt).toBeUndefined();
+  });
+});
+

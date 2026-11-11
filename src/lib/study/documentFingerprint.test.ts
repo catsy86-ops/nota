@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import {
   computeDocumentHash,
   formatFingerprint,
@@ -67,5 +67,22 @@ describe("documentFingerprint", () => {
     const modified = "test."; // jeden znak
     const valid = await verifyDocumentFingerprint(modified, fp);
     expect(valid).toBe(false);
+  });
+});
+
+describe("documentFingerprint: wektor referencyjny i brak Web Crypto", () => {
+  it("SHA-256 zgodny ze znanym wektorem (FIPS 180-2: \"abc\")", async () => {
+    expect(await computeDocumentHash("abc")).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    expect(await computeDocumentHash("")).toBe("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+  });
+
+  it("bez crypto.subtle: policzenie rzuca, a sprawdzenie odmawia", async () => {
+    vi.stubGlobal("crypto", {});
+    try {
+      await expect(computeDocumentHash("abc")).rejects.toThrow(/Web Crypto/);
+      await expect(verifyDocumentFingerprint("abc", { hash: "x", date: 0 })).resolves.toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

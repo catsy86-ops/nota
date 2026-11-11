@@ -29,8 +29,8 @@ async function newJob(page: Page) {
   await expect(list.getByText("Nie masz jeszcze zleceń własnych.", { exact: false })).toBeVisible();
   await list.getByRole("button", { name: "Nowe zlecenie" }).click();
   await page.getByLabel("Nazwa zlecenia").fill("Kowalski kran");
-  await page.getByLabel("Klient").fill("Jan Kowalski");
-  await page.getByLabel("Adres").fill("Polna 3, Kraków");
+  await page.getByLabel("Klient", { exact: true }).fill("Jan Kowalski");
+  await page.getByLabel("Adres", { exact: true }).fill("Polna 3, Kraków");
   await page.getByLabel("Co zrobić").fill("Wymiana baterii w kuchni");
   await page.getByRole("button", { name: "Utwórz zlecenie" }).click();
   const card = page.getByTestId("site-card");

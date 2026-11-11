@@ -139,3 +139,18 @@ describe("punkty w protokole (H2.4)", () => {
     expect(handoverText(h)).not.toContain("## Punkty");
   });
 });
+
+describe("protokół odbioru: podpis", () => {
+  const sig = (name: string) => ({ ...card, signature: { image: "a".repeat(64), name, at: at(10) } });
+
+  it("podpisany protokół ma linię z podpisującym i datą", () => {
+    const text = handoverText(buildHandover([e("a", at(1))], sig("Jan Kowalski"), at(16)));
+    expect(text).toContain("Odbiór podpisał: Jan Kowalski, ");
+  });
+
+  it("bez nazwiska podpisuje „inwestor”, bez podpisu nie ma linii", () => {
+    expect(handoverText(buildHandover([e("a", at(1))], sig(""), at(16)))).toContain("Odbiór podpisał: inwestor, ");
+    expect(handoverText(buildHandover([e("a", at(1))], card, at(16)))).not.toContain("Odbiór podpisał");
+  });
+});
+

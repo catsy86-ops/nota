@@ -5345,3 +5345,7 @@ Pełna lista i statusy: `docs/audyt-bledow-2026-11-11.md`. **Naprawione i przete
 - **Drobne:** `NFCReader` ogłasza stany (`role="status"`), numer przystanku w kilometrówce czytnik odczytuje, „Wpłaty z budów” zamiast zera, lista „ostatnich 30 dni” odświeża się o północy, auto: toast przy nieudanym stanie początkowym.
 - **Testy:** istniejące e2e Pracy (aparat, miarka, próba, kilometrówka, auto, karta, dziennik) — 54 zielone; Vitest 3390.
 
+## Audyt, siódma partia: testy (2026-11-11)
+
+Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.ts` (dodaj → usuń → cofnij, limit 2000 wpisów, trasa do 20 budów), wektor referencyjny SHA-256 i brak `crypto.subtle` w `documentFingerprint.test.ts`, granice `cleanTest`/minutnika w `pressureTest.test.ts`, linia podpisu w `handover.test.ts`. `e2e/jobs.spec.ts`: etykiety „Klient” i „Adres” z `exact: true` (nie trafiają w przycisk kontaktów).
+
