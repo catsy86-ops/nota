@@ -30,6 +30,8 @@ export interface JournalEditForm extends Omit<JournalDraft, "at"> {
 
 let state: JournalSheetState = { open: false, topicFirst: false, editing: null };
 let editForm: JournalEditForm | null = null;
+/** Wpis w chwili otwarcia edycji — baza trójstronnego scalania przy zapisie (W4). */
+let editBase: JournalEntry | null = null;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -39,11 +41,12 @@ function set(next: JournalSheetState) {
   emit();
 }
 
-export const openJournalSheet = (topicFirst = false) => { editForm = null; set({ open: true, topicFirst, editing: null }); };
-export const closeJournalSheet = () => { editForm = null; set({ open: false, topicFirst: false, editing: null }); };
+export const openJournalSheet = (topicFirst = false) => { editForm = null; editBase = null; set({ open: true, topicFirst, editing: null }); };
+export const closeJournalSheet = () => { editForm = null; editBase = null; set({ open: false, topicFirst: false, editing: null }); };
 
 /** Otwiera arkusz z zapisanym wpisem; lista kontrolna rozwinięta, jeśli wpis ma odhaczone punkty. */
 export function openJournalEdit(entry: JournalEntry) {
+  editBase = structuredClone(entry);
   editForm = {
     id: entry.id, at: entry.at, kind: entry.kind, topic: entry.topic ?? "", text: entry.text,
     checked: [...entry.checked], images: [...entry.images], captions: { ...(entry.captions ?? {}) }, drawnFrom: { ...(entry.drawnFrom ?? {}) }, recordings: [...(entry.recordings ?? [])], site: entry.site, resolved: entry.resolved ?? null,
@@ -62,6 +65,7 @@ export function openJournalEdit(entry: JournalEntry) {
 }
 
 export const getJournalEditForm = () => editForm;
+export const getJournalEditBase = () => editBase;
 
 /** Zmiana formularza edycji; po zamknięciu arkusza (np. zdjęcie dokończone później) — nic. */
 export function patchJournalEditForm(patch: Partial<JournalEditForm>) {

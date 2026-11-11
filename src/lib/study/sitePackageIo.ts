@@ -5,6 +5,7 @@ import { canCompress, compressBudowa, COMPRESS_MIN_BYTES, decompressBudowa } fro
 import { currentAuthor } from "./companyPrefs";
 import { entrySiteId, findSiteByName, siteKey, type SiteInfo } from "./sites";
 import { getStudy, restoreJournalEntry, saveSiteCard, setSitePlan, setSiteShortages, setSiteStages, siteDirectoryOf } from "./store";
+import type { JournalEntry } from "./journalEntry";
 import { getSitePoints, restoreRoom, savePoint } from "./pointsStore";
 import {
   buildSitePackage, collisionName, packageImageRefs, parseSitePackage, planImport, SITE_PACKAGE_IMAGE_BYTES, SITE_PACKAGE_MAX_BYTES,
@@ -47,6 +48,30 @@ const blobToDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => {
  * Plik `.budowa` dla budowy `siteId`. `images` dokłada zdjęcia wpisów (bez EXIF); po ponownym kodowaniu
  * zdjęcie ma nowy klucz, więc wpisy w paczce wskazują na nowe klucze. `access` — kod do bramy, klucze.
  */
+/**
+ * Wpis do paczki ze zdjęciami pod nowymi kluczami (kopia bez EXIF ma inny hash): `images`, `after`, podpisy i wymiary
+ * (W3) przechodzą na nowe klucze, a wszystko, czego zdjęcia nie trafiły do paczki, odpada. Pusta mapa = paczka bez zdjęć.
+ */
+export function remapEntryImages(e: JournalEntry, renamed: ReadonlyMap<string, string>): JournalEntry {
+  const { captions, dimensions, after, ...rest } = e;
+  const list = (refs: readonly string[]) => refs.filter((r) => renamed.has(r)).map((r) => renamed.get(r)!);
+  const rekey = <T,>(rec: Record<string, T> | undefined): Record<string, T> | undefined => {
+    if (!rec) return undefined;
+    const out = Object.fromEntries(Object.entries(rec).filter(([r]) => renamed.has(r)).map(([r, v]) => [renamed.get(r)!, v]));
+    return Object.keys(out).length ? out : undefined;
+  };
+  const caps = rekey(captions);
+  const dims = rekey(dimensions);
+  const afterList = after ? list(after) : [];
+  return {
+    ...rest,
+    images: list(e.images),
+    ...(afterList.length ? { after: afterList } : {}),
+    ...(caps ? { captions: caps } : {}),
+    ...(dims ? { dimensions: dims } : {}),
+  };
+}
+
 export async function exportSitePackage(siteId: string, opts: { images: boolean; access: boolean }): Promise<{ file: File; entries: number; images: number; missingImages: number; compressed: boolean }> {
   const s = getStudy();
   const card = siteDirectoryOf(s).find((x) => x.id === siteId);
@@ -68,16 +93,11 @@ export async function exportSitePackage(siteId: string, opts: { images: boolean;
       out[hash] = await blobToDataUrl(clean);
       images++;
     }
-    const map = (list: readonly string[]) => list.filter((r) => renamed.has(r)).map((r) => renamed.get(r)!);
-    pkg.entries = pkg.entries.map((e) => {
-      const { captions, ...rest } = e;
-      const caps = captions ? Object.fromEntries(Object.entries(captions).filter(([r]) => renamed.has(r)).map(([r, c]) => [renamed.get(r)!, c])) : undefined;
-      return { ...rest, images: map(e.images), ...(e.after ? { after: map(e.after) } : {}), ...(caps && Object.keys(caps).length ? { captions: caps } : {}) };
-    });
+    pkg.entries = pkg.entries.map((e) => remapEntryImages(e, renamed));
     pkg.images = out;
   } else {
     // Bez zdjęć: klucze zdjęć nie wychodzą z urządzenia (nic by nie wskazywały u odbiorcy).
-    pkg.entries = pkg.entries.map((e) => { const { captions: _c, after: _a, ...rest } = e; return { ...rest, images: [] }; });
+    pkg.entries = pkg.entries.map((e) => remapEntryImages(e, new Map()));
   }
   const json = JSON.stringify(pkg);
   // Duża paczka (zdjęcia) idzie skompresowana; mała zostaje JSON-em, który czyta też starsza wersja aplikacji (B5.2).
@@ -182,8 +202,12 @@ export async function applySitePackage(pkg: SitePackage, target: ImportTarget): 
     if (plan.listsChanged.stages) setSiteStages(target.id, plan.stages, card?.stages ?? []);
     if (plan.listsChanged.shortages) setSiteShortages(target.id, plan.shortages, card?.shortages ?? []);
     if (plan.listsChanged.plan) setSitePlan(target.id, plan.plan, card?.plan ?? []);
-    for (const room of plan.rooms) restoreRoom(target.id, { room, points: [] });
-    for (const p of plan.points) savePoint(target.id, p);
+    // Migawka punktów odświeża się dopiero po transakcji, więc `savePoint` nie widziałby pomieszczenia dodanego chwilę
+    // wcześniej i po cichu odrzucał punkt (W1). Punkty nowych pomieszczeń idą razem z pomieszczeniem; reszta (pomieszczenia
+    // już istniejące) pojedynczo.
+    const newRooms = new Set(plan.rooms.map((r) => r.id));
+    for (const room of plan.rooms) restoreRoom(target.id, { room, points: plan.points.filter((p) => p.room === room.id) });
+    for (const p of plan.points) if (!newRooms.has(p.room)) savePoint(target.id, p);
     for (const e of plan.entries) restoreJournalEntry(e);
   });
   return { counts: plan.counts, rejectedImages };

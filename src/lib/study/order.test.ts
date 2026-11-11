@@ -23,6 +23,17 @@ describe("siteOrder — kształtki do zamówienia", () => {
     expect(o.since).toBeNull();
   });
 
+  it("wpis z datą wsteczną, zapisany po zamówieniu, nadal trafia do następnego zamówienia (W5)", () => {
+    const ordered = day(10);
+    const journal = [
+      { ...entry("wstecz", day(8), [{ name: "Kolano 16", qty: 5 }]), added: day(11) }, // data z przed zamówienia, zapisany po nim
+      { ...entry("przed", day(8), [{ name: "Kolano 16", qty: 7 }]), added: day(9) }, // naprawdę sprzed zamówienia
+      entry("stary-bez-added", day(8), [{ name: "Kolano 16", qty: 1 }]), // wpis sprzed pola: liczony od daty
+    ];
+    const o = siteOrder(journal, SITE, ordered);
+    expect(o.items).toEqual([{ name: "Kolano 16", qty: 5 }]);
+  });
+
   it("nie liczy wpisów sprzed ostatniego zamówienia", () => {
     const journal = [
       entry("stary", day(1), [{ name: "Kolano 16", qty: 10 }]),

@@ -7,7 +7,7 @@ import type { Shortage } from "./shortages";
 
 /**
  * Zamówienie kształtek dla budowy (punkt „Do zamówienia” w karcie budowy). Liczy kształtki
- * zużyte od ostatniego zamówienia (`orderedAt` karty), a nie od początku budowy — inaczej lista
+ * zużyte od ostatniego zamówienia (`orderedAt` karty; wpis liczy się od chwili zapisu `added`, więc wpis z datą wsteczną, dodany po zamówieniu, nie ginie), a nie od początku budowy — inaczej lista
  * rosłaby bez końca i nie mówiłaby, czego jeszcze brakuje. Czysta funkcja, bez Yjs i bez UI.
  */
 
@@ -24,7 +24,7 @@ export interface SiteOrder {
 
 export function siteOrder(journal: readonly JournalEntry[], siteId: string, orderedAt?: number): SiteOrder {
   const after = orderedAt ?? -Infinity;
-  const picked = journal.filter((e) => entrySiteId(e) === siteId && e.at > after && ((e.fittings?.length ?? 0) > 0 || (e.pipes?.length ?? 0) > 0));
+  const picked = journal.filter((e) => entrySiteId(e) === siteId && (e.added ?? e.at) > after && ((e.fittings?.length ?? 0) > 0 || (e.pipes?.length ?? 0) > 0));
   return {
     items: sumFittings(picked.map((e) => e.fittings)),
     pipes: sumPipes(picked.map((e) => e.pipes)),

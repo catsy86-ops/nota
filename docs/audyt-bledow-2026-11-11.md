@@ -9,11 +9,11 @@
 | K1 | `noteSchema` (`z.catch(z.array(...), [])`): jeden zły element w `notes` zeruje całą tablicę, a `restoreFullBackup` kasuje wszystkie notatki | naprawione: `tolerantArray` w `noteSchema`; `backupRobustness.test.ts` |
 | K2 | `noteSchema` nie ma `reminderRule`: serie „dni robocze / co N dni” giną przy kopii i imporcie | naprawione: `reminderRule` w `noteSchema`; `backupRobustness.test.ts` |
 | K3 | `siteActions.ts`: `supplierPhone` jest wycinany przy każdym zapisie karty budowy | naprawione: `supplierPhone` w `siteActions.ts`; `siteContactSave.test.ts` |
-| W1 | import `.budowa`: punkty w nowych pomieszczeniach odpadają (cache `yPoints` w transakcji) | otwarte |
-| W2 | `.budowa`: import tnie do 500 najstarszych wpisów bez komunikatu | otwarte |
-| W3 | `.budowa` ze zdjęciami nie przepisuje kluczy `dimensions` | otwarte |
-| W4 | edycja wpisu nadpisuje zmiany z drugiego telefonu (porównanie z bieżącym dokumentem, nie z bazą formularza) | otwarte |
-| W5 | zamówienie kształtek pomija wpisy z datą wsteczną | otwarte |
+| W1 | import `.budowa`: punkty w nowych pomieszczeniach odpadają (cache `yPoints` w transakcji) | naprawione: punkty idą razem z nowym pomieszczeniem (`applySitePackage`); `sitePackageApply.test.ts` |
+| W2 | `.budowa`: import tnie do 500 najstarszych wpisów bez komunikatu | naprawione: ponad 500 wpisów zostają najnowsze, liczba pominiętych w podsumowaniu importu; `sitePackageApply.test.ts` |
+| W3 | `.budowa` ze zdjęciami nie przepisuje kluczy `dimensions` | naprawione: `remapEntryImages` przenosi też `dimensions` i `after`; `sitePackageApply.test.ts` |
+| W4 | edycja wpisu nadpisuje zmiany z drugiego telefonu (porównanie z bieżącym dokumentem, nie z bazą formularza) | naprawione: trójstronne scalanie `mergeEdit` (baza = wpis z otwarcia arkusza); `editMerge.test.ts` |
+| W5 | zamówienie kształtek pomija wpisy z datą wsteczną | naprawione: pole `added` (moment zapisu), zamówienie liczy od niego; `order.test.ts`, `journalAdded.test.ts` |
 | W6 | kategorie push nie obejmują kluczy `d:` i `z:` | do weryfikacji |
 | W7 | alarm przed zmianą / koniec zmiany o godzinę w dni zmiany czasu (`schedule.ts:172,205`) | do weryfikacji |
 | W8 | przywracanie sekcji połyka błędy, UI pokazuje sukces | otwarte |
@@ -67,3 +67,8 @@
 ## Zrobione 2026-11-11 (pierwsza partia)
 
 K1, K2, K3, S1, S2, T1, T2, T9 oraz UI #1–#7 i #12. Dodatkowo `relay-server`: sprzątanie mapy limitów, zapis z ponawianiem, łagodne zamknięcie, ostatni wpis `X-Forwarded-For`, Dockerfile bez roota i bez domyślnego `TRUST_PROXY`. Reszta ustaleń wymaga weryfikacji i decyzji (zmiany modelu Yjs: W4, W11, W16; kopia zapasowa: W14, W15; pokoje i kod synchronizacji: S3–S5, S11–S13).
+
+## Zrobione 2026-11-11 (druga partia)
+
+W1–W5. Nowe pole wpisu `added` (opcjonalne, w `JOURNAL_ENTRY_KEYS`); starsze wpisy bez niego liczą się od `at`. Edycja wpisu przekazuje `base` do `updateJournalEntry`.
+

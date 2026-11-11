@@ -1,3 +1,4 @@
+import { mergeEdit } from "./editMerge";
 import type { Fitting } from "./fittings";
 import { currentAuthor } from "./companyPrefs";
 import type { Pipe } from "./pipes";
@@ -110,7 +111,7 @@ export function addJournalEntry(input: NewJournalEntry, now: number = Date.now()
   const { siteId, site, card } = resolveSite(siteDirectoryOf(s), input.site ?? s.site, now);
   const point = typeof input.point === "string" && input.point && input.point.length <= 64 ? input.point : undefined;
   const by = currentAuthor();
-  const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, site, ...(siteId ? { siteId } : {}), ...(point ? { point } : {}), ...(by ? { by } : {}) };
+  const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, added: now, site, ...(siteId ? { siteId } : {}), ...(point ? { point } : {}), ...(by ? { by } : {}) };
   yStudy.addEntry(entry, card);
   return entry;
 }
@@ -119,6 +120,8 @@ export interface JournalEdit extends NewJournalEntry {
   site: string;
   /** Problem rozwiązany: moment rozwiązania; `null` = otwarty. Inny rodzaj gubi rozwiązanie. */
   resolved: number | null;
+  /** Wpis w chwili otwarcia edycji: pola, których nie zmieniono, zostają takie jak w dokumencie teraz (W4). */
+  base?: JournalEntry;
 }
 
 /** Zapisuje zmiany wpisu z arkusza; `null` = pusty wpis (nic się nie zmienia). */
@@ -135,6 +138,8 @@ export function updateJournalEntry(id: string, input: JournalEdit, now: number =
     point: prev?.point,
     // Autor zostaje ten, kto wpis zapisał (H5.1) — poprawka nie zmienia autora.
     by: prev?.by,
+    // Moment zapisu zostaje pierwotny (zamówienie liczy od niego, nie od daty wpisu).
+    added: prev?.added,
     ...(fields.kind === "problem" && prev ? { solution: prev.solution, owner: prev.owner, due: prev.due, after: prev.after } : {}),
   };
   const entry: JournalEntry = {
@@ -143,8 +148,9 @@ export function updateJournalEntry(id: string, input: JournalEdit, now: number =
     ...(fields.kind === "problem" && input.resolved !== null ? { resolved: input.resolved } : {}),
     ...Object.fromEntries(Object.entries(kept).filter(([, v]) => v !== undefined)),
   };
-  yStudy.updateEntry(entry, card);
-  return entry;
+  const merged = mergeEdit(input.base, entry, prev);
+  yStudy.updateEntry(merged, card);
+  return merged;
 }
 
 /** Problem rozwiązany albo z powrotem otwarty — z listy, bez otwierania arkusza. */

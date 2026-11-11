@@ -19,8 +19,10 @@ export const JOURNAL_KINDS: JournalKind[] = ["ok", "problem", "note"];
 
 export interface JournalEntry {
   id: string;
-  /** Moment wpisu (ms). */
+  /** Moment wpisu (ms). Można go cofnąć w arkuszu („wpis z wczoraj”). */
   at: number;
+  /** Kiedy wpis faktycznie zapisano (ms) — nie zmienia się przy cofnięciu `at`; brak = wpis sprzed tego pola (zamówienie liczy wtedy od `at`). */
+  added?: number;
   kind: JournalKind;
   /** Temat z materiału, którego dotyczy wpis; `null` = ogólny. */
   topic: string | null;
@@ -153,6 +155,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
   if (empty) return null;
   return {
     id: e.id, at: e.at, kind: e.kind as JournalKind,
+    ...(typeof e.added === "number" && Number.isFinite(e.added) && e.added >= 0 ? { added: e.added } : {}),
     topic: typeof e.topic === "string" && e.topic.length <= 64 ? e.topic : null,
     text,
     site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
@@ -192,7 +195,7 @@ export const ORDERED_ENTRY_LISTS = new Set<string>(["images", "fittings"]);
  * pola z nowszej wersji (nieznane tutaj) zostają, żeby stara edycja ich nie wycinała.
  */
 export const JOURNAL_ENTRY_KEYS: ReadonlySet<string> = new Set([
-  "id", "at", "kind", "topic", "text", "site", "siteId", "checked", "images", "captions", "drawnFrom", "dimensions", "level", "barcode", "summary", "recordings",
+  "id", "at", "added", "kind", "topic", "text", "site", "siteId", "checked", "images", "captions", "drawnFrom", "dimensions", "level", "barcode", "summary", "recordings",
   "resolved", "solution", "test", "fittings", "pipes", "stage", "geo", "owner", "due", "after", "point", "by", "supply",
 ]);
 

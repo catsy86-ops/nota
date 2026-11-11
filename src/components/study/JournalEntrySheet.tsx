@@ -45,7 +45,7 @@ import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { TOPICS } from "@/lib/study/content";
 import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteStages, updateJournalEntry, useSiteDirectory, useStudy, useStudyLists, type JournalKind } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
-import { closeJournalSheet, freshEntry, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
+import { closeJournalSheet, freshEntry, getJournalEditBase, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
 import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput, whenLabel, yesterdaySiteText } from "@/lib/study/journalView";
 import { findSiteByName, siteKey } from "@/lib/study/sites";
 import { setSiteSupply, useVan } from "@/lib/study/vanStore";
@@ -417,6 +417,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const prev = study.journal.find((e) => e.id === f.id);
     const demotes = editDemotesTopic({ kind: f.kind, topic: f.topic }, prev, !!f.topic && columnOf(study, f.topic) === "done");
     const saved = updateJournalEntry(f.id, {
+      base: getJournalEditBase() ?? undefined,
       kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, captions: f.captions, drawnFrom: f.drawnFrom, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, pipes: f.pipes, supply, stage: f.stage, geo: f.geo ?? null, level: f.level, barcode: f.barcode, summary: f.summary, dimensions: f.dimensions,
     });
     if (!saved) {

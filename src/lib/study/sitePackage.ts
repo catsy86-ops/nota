@@ -45,6 +45,8 @@ export interface SitePackage {
   entries: JournalEntry[];
   /** Klucz zdjęcia (SHA-256) → data URL; brak = paczka bez zdjęć. */
   images?: Record<string, string>;
+  /** Tylko po wczytaniu (nie jest częścią pliku): ile wpisów z pliku pominięto ponad limit — pokazywane przed wczytaniem. */
+  entriesSkipped?: number;
 }
 
 /** Wpis w paczce: bez lokalizacji, nagrań, oryginałów rysunków, danych Nauki i odpowiedzialnego. */
@@ -103,7 +105,14 @@ export function parseSitePackage(raw: string, now: number): ParseResult {
   const name = text(s?.name, SITE_NAME_MAX);
   if (!s || !isId(s.id) || !name) return { ok: false, error: "W pliku brakuje danych budowy." };
 
-  const entries = (Array.isArray(d.entries) ? d.entries.slice(0, SITE_PACKAGE_ENTRIES_MAX) : [])
+  // Ponad limit zostają najnowsze wpisy (nie pierwsze z pliku), a liczba pominiętych trafia do podsumowania (W2).
+  const rawEntries: unknown[] = Array.isArray(d.entries) ? d.entries : [];
+  const atOf = (e: unknown) => { const t = (e as { at?: unknown } | null)?.at; return typeof t === "number" ? t : 0; };
+  const kept = rawEntries.length > SITE_PACKAGE_ENTRIES_MAX
+    ? [...rawEntries].sort((a, b) => atOf(b) - atOf(a)).slice(0, SITE_PACKAGE_ENTRIES_MAX)
+    : rawEntries;
+  const entriesSkipped = rawEntries.length - kept.length;
+  const entries = kept
     .map(cleanEntry)
     .filter((e): e is JournalEntry => !!e && timeOk(e.at, now) && (e.resolved === undefined || timeOk(e.resolved, now)))
     .map(packageEntry);
@@ -138,6 +147,7 @@ export function parseSitePackage(raw: string, now: number): ParseResult {
       site: { id: s.id, name, address: text(s.address, FIELD_MAX), ...(access ? { access } : {}) },
       stages, shortages, plan, rooms, points, entries,
       ...(Object.keys(images).length ? { images } : {}),
+      ...(entriesSkipped > 0 ? { entriesSkipped } : {}),
     },
   };
 }
@@ -242,7 +252,7 @@ export function planImport(
       plan: pl.added + pl.updated,
       points: points.length,
       images: [...imageRefs].filter((r) => pkg.images?.[r] && !local.hasImage?.(r)).length,
-      dropped: st.dropped + sh.dropped + pl.dropped + room.dropped + pointsDropped,
+      dropped: st.dropped + sh.dropped + pl.dropped + room.dropped + pointsDropped + (pkg.entriesSkipped ?? 0),
     },
     listsChanged: { stages: st.added + st.updated > 0, shortages: sh.added + sh.updated > 0, plan: pl.added + pl.updated > 0 },
   };
