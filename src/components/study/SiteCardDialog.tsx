@@ -439,7 +439,7 @@ export function SiteCardDialog({
                       className={cn(fieldClass, "flex-1")}
                     />
                     {hasContactPicker() && (
-                      <Button type="button" size="sm" variant="outline" onClick={async () => { const tel = await pickContact(); if (tel) setForm((f) => ({ ...f, phone: tel })); }} title="Pobierz z kontaktów">
+                      <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, phone: c.tel, investor: f.investor || c.name || "" })); }} title="Z kontaktów" aria-label="Wybierz inwestora z kontaktów" data-testid="pick-contact-investor">
                         <Contact className="h-4 w-4" aria-hidden />
                       </Button>
                     )}
@@ -472,7 +472,7 @@ export function SiteCardDialog({
                         className={cn(fieldClass, "flex-1")}
                       />
                       {hasContactPicker() && (
-                        <Button type="button" size="sm" variant="outline" onClick={async () => { const tel = await pickContact(); if (tel) setForm((f) => ({ ...f, managerPhone: tel })); }} title="Pobierz z kontaktów">
+                        <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, managerPhone: c.tel, manager: f.manager || c.name || "" })); }} title="Z kontaktów" aria-label="Wybierz kierownika z kontaktów" data-testid="pick-contact-manager">
                           <Contact className="h-4 w-4" aria-hidden />
                         </Button>
                       )}
@@ -493,7 +493,7 @@ export function SiteCardDialog({
                         className={cn(fieldClass, "flex-1")}
                       />
                       {hasContactPicker() && (
-                        <Button type="button" size="sm" variant="outline" onClick={async () => { const tel = await pickContact(); if (tel) setForm((f) => ({ ...f, supplierPhone: tel })); }} title="Pobierz z kontaktów">
+                        <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, supplierPhone: c.tel })); }} title="Z kontaktów" aria-label="Wybierz hurtownię z kontaktów" data-testid="pick-contact-supplier">
                           <Contact className="h-4 w-4" aria-hidden />
                         </Button>
                       )}

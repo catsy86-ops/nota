@@ -40,27 +40,35 @@ export function primaryCall(site: { phone?: string; managerPhone?: string }): { 
 
 interface ContactsAPINavigator extends Navigator {
   contacts?: {
-    select(fields: string[], options?: { multiple?: boolean }): Promise<Array<{ tel?: string[] }>>;
+    select(properties: string[], options?: { multiple?: boolean }): Promise<Array<{ name?: string[]; tel?: string[] }>>;
   };
 }
 
-/** B3.8: Contact Picker API dostępny tylko na Android. */
-export const hasContactPicker = () => {
+/** B3.8: Contact Picker API — Chrome na Androidzie, https i po geście użytkownika. */
+export const hasContactPicker = (): boolean => {
   if (typeof navigator === "undefined") return false;
-  const nav = navigator as ContactsAPINavigator;
-  return nav.contacts?.select !== undefined && typeof nav.contacts.select === "function";
+  return typeof (navigator as ContactsAPINavigator).contacts?.select === "function";
 };
 
-/** Otwiera Contact Picker, zwraca pierwszy numer telefonu. */
-export async function pickContact(): Promise<string | null> {
+export interface PickedContact {
+  /** Numer telefonu pierwszego numeru kontaktu. */
+  tel: string;
+  /** Imię i nazwisko z kontaktu (do pola, jeśli puste). */
+  name?: string;
+}
+
+const FIELD_MAX = 80;
+
+/** Wybrany kontakt: pierwszy numer i nazwa. `null` = anulowano, kontakt bez numeru albo API zawiodło. */
+export async function pickContact(): Promise<PickedContact | null> {
   try {
-    if (!hasContactPicker()) return null;
     const nav = navigator as ContactsAPINavigator;
     if (!nav.contacts) return null;
-    const contacts = await nav.contacts.select(["tel"], { multiple: false });
-    if (!contacts || contacts.length === 0) return null;
-    const tel = contacts[0].tel?.[0];
-    return typeof tel === "string" ? tel : null;
+    const picked = await nav.contacts.select(["name", "tel"], { multiple: false });
+    const tel = picked?.[0]?.tel?.find((t) => typeof t === "string" && t.trim() !== "");
+    if (!tel) return null;
+    const name = picked[0].name?.find((n) => typeof n === "string" && n.trim() !== "");
+    return { tel: tel.trim().slice(0, SITE_PHONE_MAX), ...(name ? { name: name.replace(/\s+/g, " ").trim().slice(0, FIELD_MAX) } : {}) };
   } catch {
     return null;
   }

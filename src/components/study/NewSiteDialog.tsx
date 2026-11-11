@@ -124,7 +124,7 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
                   <div className="flex gap-1">
                     <Input id="new-job-phone" value={form.phone} maxLength={SITE_PHONE_MAX} onChange={field("phone")} type="tel" inputMode="tel" autoComplete="off" className="flex-1" />
                     {hasContactPicker() && (
-                      <Button type="button" size="sm" variant="outline" onClick={async () => { const tel = await pickContact(); if (tel) setForm((f) => ({ ...f, phone: tel })); }} className="coarse:h-10" title="Pobierz z kontaktów telefonu">
+                      <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, phone: c.tel, client: f.client || c.name || "" })); }} className="coarse:h-10 coarse:w-11" title="Z kontaktów" aria-label="Wybierz klienta z kontaktów" data-testid="pick-contact">
                         <Contact className="h-4 w-4" aria-hidden />
                       </Button>
                     )}

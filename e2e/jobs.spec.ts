@@ -234,3 +234,19 @@ test("wycena z cennika (B4.1): pozycja wypełnia formularz, ilość można zmien
   await f.getByRole("button", { name: "Materiał" }).click();
   await expect(job.getByRole("group", { name: "Z cennika" })).toHaveCount(0);
 });
+
+test("nowe zlecenie: klient i telefon z kontaktów telefonu (B3.8)", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "contacts", { configurable: true, value: { select: async () => [{ name: ["Jan Kowalski"], tel: ["600 100 200"] }] } });
+  });
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await expect(async () => {
+    await page.getByTestId("jobs-open").click();
+    await expect(page.getByTestId("jobs-dialog")).toBeVisible({ timeout: 1000 });
+  }).toPass();
+  await page.getByTestId("jobs-dialog").getByRole("button", { name: "Nowe zlecenie" }).click();
+  await page.getByRole("button", { name: "Wybierz klienta z kontaktów" }).click();
+  await expect(page.getByLabel("Klient", { exact: true })).toHaveValue("Jan Kowalski");
+  await expect(page.getByLabel("Telefon", { exact: true })).toHaveValue("600 100 200");
+});

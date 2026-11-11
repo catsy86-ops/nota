@@ -53,3 +53,44 @@ test("kontakt i dojazd: Nawiguj, Zadzwoń, SMS, kierownik i dostęp z karty budo
   await expect(page.getByTestId("site-card").getByLabel("Telefon kierownika")).toHaveValue("+48 700-800-900");
   await expect(page.getByTestId("site-access")).toContainText("Kod do bramy 1234#");
 });
+
+test("kontakty z telefonu (B3.8): przyciski wypełniają numer i puste pole imienia, nie nadpisują wpisanego", async ({ page }) => {
+  await page.addInitScript(() => {
+    const queue = [
+      { name: ["Jan Kowalski"], tel: ["600 100 200"] },
+      { name: ["Marek Nowak"], tel: ["+48 700 800 900"] },
+      { tel: ["22 000 00 00"] },
+    ];
+    Object.defineProperty(navigator, "contacts", { configurable: true, value: { select: async () => [queue.shift()] } });
+  });
+  await page.goto("/praca");
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  const card = page.getByTestId("site-card");
+  await (await inPapiery(card)).getByRole("button", { name: /^Edytuj dane/ }).click();
+
+  // Inwestor: numer i (puste) imię.
+  await card.getByRole("button", { name: "Wybierz inwestora z kontaktów" }).click();
+  await expect(card.getByLabel("Telefon inwestora")).toHaveValue("600 100 200");
+  await expect(card.getByLabel("Inwestor", { exact: true })).toHaveValue("Jan Kowalski");
+
+  // Kierownik: wpisane imię zostaje, numer się podmienia.
+  await card.getByLabel("Kierownik budowy").fill("Marek");
+  await card.getByRole("button", { name: "Wybierz kierownika z kontaktów" }).click();
+  await expect(card.getByLabel("Telefon kierownika")).toHaveValue("+48 700 800 900");
+  await expect(card.getByLabel("Kierownik budowy")).toHaveValue("Marek");
+
+  // Hurtownia: sam numer.
+  await card.getByRole("button", { name: "Wybierz hurtownię z kontaktów" }).click();
+  await expect(card.getByLabel(/^Telefon hurtowni/)).toHaveValue("22 000 00 00");
+
+  await card.getByRole("button", { name: "Zapisz kartę" }).click();
+  await expect(page.getByTestId("site-card").getByTestId("site-quick").getByRole("link", { name: /Zadzwoń do inwestora/ })).toHaveAttribute("href", "tel:+48600100200");
+});
+
+test("bez Contact Picker (komputer, iPhone) przycisków z kontaktów nie ma", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  const card = page.getByTestId("site-card");
+  await (await inPapiery(card)).getByRole("button", { name: /^Edytuj dane/ }).click();
+  await expect(card.getByTestId("pick-contact-investor")).toHaveCount(0);
+});
