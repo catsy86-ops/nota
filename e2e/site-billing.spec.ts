@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 import { inCard, openSection } from "./helpers";
 
 // Sposób rozliczenia budowy (H3.1): godziny, od punktu (domyślna i na typ punktu), ryczałt za całość
@@ -134,10 +135,28 @@ test("miesiąc razem (H3.3): gotowy punkt ze stawką widać w podsumowaniu Grafi
   await points.getByRole("checkbox", { name: "WC (stelaż): biały montaż" }).click();
   await expect(panel.getByTestId("billing-accrued")).toHaveText("400 zł");
 
+  // B4.5: wpłata z tego miesiąca pojawia się w zestawieniu (osobno od zarobku, bez „salda miesiąca”).
+  await openSection(card, "Pieniądze");
+  const dues = panel.getByTestId("billing-dues");
+  await dues.getByRole("button", { name: "Wpłata (zaliczka)" }).click();
+  await dues.getByLabel("Kwota wpłaty (zł)").fill("150");
+  await dues.getByRole("button", { name: "Zapisz wpłatę" }).click();
+
   await page.goto("/grafik");
   const line = page.getByTestId("site-month-earnings");
   await expect(line.getByTestId("site-month-total")).toHaveText("400 zł");
   await line.locator("summary").click();
   await expect(line).toContainText("Lipowa 5 2 punkty");
   await expect(line.getByTestId("site-month-grand")).toHaveText("400 zł");
+  await expect(line.getByTestId("month-paid-total")).toHaveText("150 zł");
+  await expect(line.getByTestId("month-payments")).toContainText("22.10.2026 Lipowa 5");
+
+  const download = page.waitForEvent("download");
+  await line.getByTestId("month-csv").click();
+  const dl = await download;
+  expect(dl.suggestedFilename()).toBe("Zestawienie 2026-10.csv");
+  const csv = (await readFile(await dl.path())).toString("utf8").replace("\uFEFF", "").trim().split("\r\n");
+  expect(csv).toContain("Zarobek;Lipowa 5 — punkty;2;400,00");
+  expect(csv).toContain("Wpłata;Lipowa 5 (2026-10-22);1;150,00");
+  expect(csv.at(-1)).toBe("Razem;Wpłacone w miesiącu;;150,00");
 });

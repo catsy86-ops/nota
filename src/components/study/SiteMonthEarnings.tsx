@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { FileSpreadsheet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { downloadBlob } from "@/lib/downloadBlob";
 import { pluralPl } from "@/lib/plural";
 import { studyReady, useStudyReady } from "@/lib/study/data";
 import { useSiteDirectory } from "@/lib/study/store";
@@ -8,6 +11,10 @@ import { money, monthSiteEarnings } from "@/lib/study/billing";
 import { siteStages } from "@/lib/study/stages";
 import { useJobs } from "@/lib/study/jobsStore";
 import { quoteTotals } from "@/lib/study/jobs";
+import { createMonthlySummary, exportMonthlySummaryCSV, type MonthlySummaryLine } from "@/lib/study/monthlySummary";
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+const dmy = (key: string) => key.split("-").reverse().join(".");
 
 /** Licznik zmian rozliczeń i punktów — przelicza linię, gdy coś się zmieni w Pracy. */
 let tick = 0;
@@ -60,7 +67,15 @@ export function SiteMonthEarnings({ monthKey, base }: {
     }
     return { sum: Math.round(sum * 100) / 100, count };
   }, [jobs, from, to]);
-  if (!ready || (rows.length === 0 && own.count === 0)) return null;
+  // Wpłaty z rozliczeń budów (poza fuchami, te mają własny status „zapłacone”), które wpłynęły w oglądanym miesiącu.
+  const paid = useMemo(() => {
+    void t;
+    const items = dir.flatMap((s) => jobs.has(s.id) ? [] : getSiteBilling(s.id).payments
+      .filter((p) => p.day.startsWith(`${monthKey}-`))
+      .map((p) => ({ day: p.day, site: s.name, amount: p.amount })));
+    return { items, sum: round2(items.reduce((n, p) => n + p.amount, 0)) };
+  }, [dir, jobs, monthKey, t]);
+  if (!ready || (rows.length === 0 && own.count === 0 && paid.items.length === 0)) return null;
   const ownLine = own.count > 0 && (
     <p className="flex items-baseline gap-2 px-3 text-sm" data-testid="own-month-earnings">
       <span className="font-medium">Moje zlecenia</span>
@@ -69,9 +84,19 @@ export function SiteMonthEarnings({ monthKey, base }: {
       <span className="font-mono font-semibold tabular-nums">{money(own.sum)}</span>
     </p>
   );
-  if (rows.length === 0) return ownLine;
+  if (rows.length === 0 && paid.items.length === 0) return ownLine;
   const total = Math.round(rows.reduce((sum, r) => sum + r.e.total, 0) * 100) / 100;
   const noRate = rows.reduce((sum, r) => sum + r.e.pointsNoRate, 0);
+
+  function csv() {
+    const lines: MonthlySummaryLine[] = rows.flatMap(({ site, e }) => [
+      ...(e.points.count > 0 ? [{ label: `${site.name} — punkty`, quantity: e.points.count, total: e.points.amount }] : []),
+      ...(e.stages.count > 0 ? [{ label: `${site.name} — etapy`, quantity: e.stages.count, total: e.stages.amount }] : []),
+      ...(e.lump > 0 ? [{ label: `${site.name} — ryczałt (koniec budowy)`, quantity: 1, total: e.lump }] : []),
+    ]);
+    if (own.count > 0) lines.push({ label: "Moje zlecenia (zapłacone)", quantity: own.count, total: own.sum });
+    downloadBlob(new Blob([exportMonthlySummaryCSV(createMonthlySummary(monthKey, lines, paid.items))], { type: "text/csv;charset=utf-8" }), `Zestawienie ${monthKey}.csv`);
+  }
 
   return (
     <>
@@ -97,11 +122,32 @@ export function SiteMonthEarnings({ monthKey, base }: {
           </li>
         ))}
       </ul>
+      {paid.items.length > 0 && (
+        <div className="mt-2 border-t border-dashed border-border pt-1" data-testid="month-payments">
+          <p className="flex justify-between text-sm">
+            <span className="font-medium">Wpłaty w miesiącu</span>
+            <span className="font-mono font-semibold tabular-nums" data-testid="month-paid-total">{money(paid.sum)}</span>
+          </p>
+          <ul className="mt-1 space-y-0.5 text-xs" aria-label="Wpłaty w miesiącu">
+            {paid.items.map((p, i) => (
+              <li key={`${p.site}-${p.day}-${i}`} className="flex items-baseline gap-2">
+                <span className="min-w-0 flex-1 truncate"><span className="font-mono tabular-nums text-muted-foreground">{dmy(p.day)}</span> {p.site}</span>
+                <span className="shrink-0 font-mono tabular-nums">{money(p.amount)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {noRate > 0 && <p className="mt-1 text-2xs text-muted-foreground">Gotowe punkty bez stawki (nie liczone): {noRate}. Stawki ustawisz w karcie budowy → Rozliczenie.</p>}
-      <p className="mt-2 flex justify-between border-t border-dashed border-border pt-1 text-sm">
-        <span className="text-muted-foreground">Razem z godzinami z Grafiku</span>
-        <span className="font-mono font-semibold tabular-nums" data-testid="site-month-grand">{money(Math.round((base + total) * 100) / 100)}</span>
-      </p>
+      {rows.length > 0 && (
+        <p className="mt-2 flex justify-between border-t border-dashed border-border pt-1 text-sm">
+          <span className="text-muted-foreground">Razem z godzinami z Grafiku</span>
+          <span className="font-mono font-semibold tabular-nums" data-testid="site-month-grand">{money(Math.round((base + total) * 100) / 100)}</span>
+        </p>
+      )}
+      <Button type="button" variant="outline" size="sm" onClick={csv} className="mt-2 w-full coarse:h-11" data-testid="month-csv">
+        <FileSpreadsheet className="h-4 w-4" aria-hidden />Pobierz zestawienie (CSV)
+      </Button>
     </details>
     {ownLine}
     </>
