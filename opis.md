@@ -5422,3 +5422,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Ograniczenia:** brak interfejsu (okno wystawiania, lista, PDF) — następny krok; brak wysyłki do KSeF (Etap 2). Faktury w kopii pełnej są jawne jak reszta kopii JSON — szyfrowany eksport faktur do dopisania.
 - **Testy:** `src/lib/ksef/invoices.test.ts`, `fullBackup.test.ts`.
 
+## Faktury KSeF, Etap 1 — okno wystawiania (2026-11-11)
+
+- **Co robi:** przy zleceniu własnym ze statusem „Zrobione” albo „Zapłacone” (i z pozycjami wyceny) pojawia się przycisk „Faktura”. Otwiera okno: dane sprzedawcy (zapamiętywane), nabywca (domyślnie inwestor i adres z karty; NIP puste = konsument), ceny netto albo brutto, stawka VAT (23/8/5/0%), forma i termin płatności, data wykonania. Pozycje i kwoty pochodzą z wyceny (cena dla klienta z marżą przy materiale). „Wystaw fakturę” waliduje dane, nadaje numer z serii telefonu, zapisuje niezmienny rekord i daje plik XML FA(3) do pobrania; lista „Wystawione” ma pobranie XML, „Sprawdź” (zgodność skrótu SHA-256) i znacznik powtórzonego numeru.
+- **Gdzie:** `src/components/study/InvoiceDialog.tsx` (`linesFromJob`), przycisk w `SiteJobPanel.tsx` (`data-testid="job-invoice"`); logika w `src/lib/ksef/`.
+- **Ograniczenia:** aplikacja niczego nie wysyła do KSeF — XML trzeba wgrać ręcznie lub przekazać księgowej (wysyłka to Etap 2, wymaga serwera). Brak PDF z kodem QR i brak korekt. Stawka VAT jest jedna na całą fakturę. Domyślnie ceny są traktowane jako brutto, stawka 23% — do zmiany w oknie przed wystawieniem. Seria numeracji domyślnie „A”; drugi telefon powinien dostać inną (ustawienie serii nie ma jeszcze pola w Ustawieniach).
+- **Testy:** `e2e/invoice.spec.ts` (wystawienie, brak danych sprzedawcy, pobranie XML, kolejny numer, odświeżenie, axe, brak przycisku przy nowym zleceniu), `src/lib/ksef/*.test.ts`.
+

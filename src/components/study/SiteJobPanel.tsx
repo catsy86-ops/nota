@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ChevronDown, FileCheck, FileText, PenLine, Plus, Wrench, X } from "lucide-react";
+import { ChevronDown, FileCheck, FileCode2, FileText, PenLine, Plus, Wrench, X } from "lucide-react";
+import { InvoiceDialog } from "./InvoiceDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
@@ -42,6 +43,7 @@ function useFieldKey(remote: string) {
  */
 export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; /** Okno podpisu klienta (ten sam podpis co na protokole, P2.4). */ onSign: () => void }) {
   const [open, setOpen] = useState(true);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
   const scopeField = useFieldKey(job.scope ?? "");
   const marginField = useFieldKey(job.margin === undefined ? "" : String(job.margin));
   const [kind, setKind] = useState<QuoteKind>("labor");
@@ -273,8 +275,14 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
                 <PenLine className="h-4 w-4" aria-hidden />{signed ? "Podpisane" : site.signature ? "Podpisz ponownie" : "Podpis klienta"}
               </Button>
               <Button type="button" size="sm" onClick={sendDonePdf} className="coarse:h-11"><FileCheck className="h-4 w-4" aria-hidden />Potwierdzenie wykonania</Button>
+              {job.items.length > 0 && (
+                <Button type="button" variant="outline" size="sm" onClick={() => setInvoiceOpen(true)} className="coarse:h-11" data-testid="job-invoice">
+                  <FileCode2 className="h-4 w-4" aria-hidden />Faktura
+                </Button>
+              )}
             </div>
           )}
+          {invoiceOpen && <InvoiceDialog open={invoiceOpen} onOpenChange={setInvoiceOpen} site={site} job={job} />}
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Button type="button" variant="outline" size="sm" onClick={sendPdf} className="coarse:h-11"><FileText className="h-4 w-4" aria-hidden />PDF wyceny</Button>
