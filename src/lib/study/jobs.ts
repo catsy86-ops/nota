@@ -6,7 +6,8 @@ import { safeLine } from "@/lib/safeText";
  * materiał, godziny) z wpisem w osobnej mapie Yjs `studyJobs` (`yJobs.ts`): status, zakres prac,
  * termin i wycena. Rodzaj karty nie siedzi w `SiteCard`, bo starsza wersja przepisuje kartę przez
  * `cleanSite` i zgubiłaby nieznane pole — fucha stałaby się budową szefa. Pieniądze zostają poza
- * kartą (zasada 4 planu). Faktur nie ma (decyzja H-3): wycena i potwierdzenie wykonania w PDF.
+ * kartą (zasada 4 planu). Decyzja H-3 („faktur nie ma”) została uchylona w ADR-6 (KSeF): faktury to osobny moduł
+ * `src/lib/ksef/`, który kopiuje pozycje wyceny w chwili wystawienia; wycena i potwierdzenie wykonania w PDF zostają.
  */
 
 export const JOB_STATUSES = ["quote", "booked", "done", "paid"] as const;

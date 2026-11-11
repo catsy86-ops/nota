@@ -59,3 +59,15 @@ Krótki zapis decyzji, które łatwo podważyć przy następnej zmianie (Plan-no
   - Zeszyt słucha wspólnego przełącznika jasności, inne style pamiętają własny schemat (`kaczy.skinScheme.v1`).
   - Kolory zapisane w CSS stylu (ozdoby) nie zmieniają się z akcentem.
 - **Kod:** `src/lib/skinList.ts`, `src/lib/skins.ts`, `src/hooks/useTheme.ts` (`resolveDark`), `src/styles/skins/*.css`, `src/styles/accents.css` (generowany), testy `src/lib/skinContract.test.ts`, `src/lib/skinContrast.test.ts`, `e2e/a11y.spec.ts`.
+
+## ADR-6. Faktury w KSeF: moduł `src/lib/ksef/`, Etap 1 bez wysyłki (uchyla H-3)
+
+- **Decyzja:** uchylamy H-3 („faktur w aplikacji nie ma”). Aplikacja wystawia faktury VAT w schemacie FA(3) z wyceny zlecenia własnego. **Etap 1 (ta decyzja):** generowanie XML FA(3) i wizualizacji PDF, eksport do ręcznego wgrania do KSeF lub programu księgowego — bez wysyłki z aplikacji. Wysyłka (Etap 2) wymaga własnego serwera-pośrednika (patrz niżej) i będzie osobną decyzją.
+- **Zakres Etapu 1:** czynny podatnik VAT, zwykła faktura (`RodzajFaktury` = VAT) dla klienta krajowego (firma albo konsument), stawki 23 / 8 / 5 / 0 (krajowa), ceny netto albo brutto. Poza zakresem: odwrotne obciążenie, zaliczki, korekty, waluty obce, tryby offline24/awaryjny z kodami QR.
+- **Powód wysyłki przez serwer:** API KSeF (prod/test/demo) nie zwraca nagłówków CORS i odrzuca preflight (405), więc przeglądarka nie może go wołać bezpośrednio (sprawdzone 2026-11-11). Poświadczenia KSeF (token, certyfikat) nie mogą trafić do Yjs, przekaźnika, kopii zapasowej ani logów.
+- **Zasady:**
+  - kwoty w groszach (liczby całkowite), VAT liczony raz na stawkę; wystawiona faktura jest niezmienna (korekta zamiast edycji, Etap 3);
+  - XML składany z typowanych struktur z escapowaniem i usuwaniem znaków niedozwolonych w XML 1.0 (`src/lib/ksef/xml.ts`), kolejność elementów zgodna z XSD, kontrola `scripts/ksef/ValidateFa3.java`;
+  - numeracja bez kolizji między urządzeniami (jedno urządzenie wystawiające albo serie per urządzenie) — licznik w Yjs odrzucony, bo offline daje duplikaty;
+  - dane osobowe nabywców tylko na urządzeniu i w Yjs w obrębie grupy; faktury poza share inbox; eksport faktur szyfrowany.
+- **Kod:** `src/lib/ksef/` (`nip.ts`, `xml.ts`, `invoice.ts`, `fa3.ts`), testy `src/lib/ksef/ksef.test.ts`, rozpoznanie w `docs/ksef-integracja-2026-11-11.md`.
