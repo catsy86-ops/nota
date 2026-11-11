@@ -5376,3 +5376,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Nagłówki:** HSTS `max-age=31536000` w `vercel.json` i `netlify.toml` (`securityHeaders.test.ts`).
 - **Testy:** `finishNow.test.ts`, `icsImport.test.ts`, `pairLink.test.ts`, `fullBackup.test.ts`, `useImportExport.test.ts`, `securityHeaders.test.ts`, `relay-server/server.test.js`, e2e `share-files`, `share-to-entry`, `sync-code`.
 
+## Audyt, czternasta partia: pola, testy komponentów, pomiar (2026-11-11)
+
+- **Zlecenie własne (`SiteJobPanel.tsx`):** pola „Co zrobić” i „Marża” nie są przemontowywane w trakcie pisania, gdy dane zmienią się na drugim telefonie (`useFieldKey`).
+- **Minutnik (`PressureTestTimer.tsx`):** po zakończeniu lub przerwaniu próby na innym telefonie pola wracają do wartości protokołu.
+- **Testy komponentów:** `MileageDialog.test.tsx`, `SiteBillingDues.test.tsx`.
+- **Wydajność (D11):** przebudowa migawki Nauki po zmianie to 26 ms przy 3000 wpisach (Node); bez zmian w kodzie.
+

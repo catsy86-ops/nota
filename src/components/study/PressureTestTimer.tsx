@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Clock, Play, Square, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,16 @@ export function PressureTestTimer({ open, onOpenChange, test, onUpdate }: {
     setStartBar(fmtBar(test.bar)); setMinutes(fmtBar(test.minutes ?? 30)); setReading(""); setFinishing(false); setError("");
     // eslint-disable-next-line react-hooks/exhaustive-deps -- tylko przy otwarciu; pola nie mogą się nadpisywać w trakcie pisania
   }, [open]);
+
+  // Próba zakończona albo przerwana na innym telefonie (synchronizacja): pola formularza wracają do protokołu (audyt UI #31).
+  const wasRunning = useRef(running);
+  useEffect(() => {
+    if (wasRunning.current && !running) {
+      setStartBar(fmtBar(test.bar)); setMinutes(fmtBar(test.minutes ?? 30)); setReading(""); setFinishing(false); setError("");
+    }
+    wasRunning.current = running;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reaguje tylko na koniec trwania próby
+  }, [running]);
 
   const last = test.readings?.at(-1)?.bar;
   const left = remainingSec(test, now);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, FileCheck, FileText, PenLine, Plus, Wrench, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,29 @@ const qtyText = (n: number) => n.toLocaleString("pl-PL", { maximumFractionDigits
 const newItemId = () => `q-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 /**
+ * Klucz pola nieskontrolowanego: zmiana wartości z drugiego telefonu przemontowuje pole, ale nie w trakcie pisania —
+ * inaczej wpisany tekst znikałby (audyt UI #26). Po opuszczeniu pola klucz dogania zapisaną wartość.
+ */
+function useFieldKey(remote: string) {
+  const focused = useRef(false);
+  const [shown, setShown] = useState(remote);
+  useEffect(() => { if (!focused.current) setShown(remote); }, [remote]);
+  return {
+    key: shown,
+    onFocus: () => { focused.current = true; },
+    onBlurKey: () => { focused.current = false; setShown(remote); },
+  };
+}
+
+/**
  * H3.4 Zlecenie własne (fucha) w karcie budowy: status (wycena → umówione → zrobione → zapłacone),
  * zakres prac, termin (widoczny w Kalendarzu), wycena z robocizną i materiałem z marżą, PDF „Wycena”.
  * Dane w mapie `studyJobs` (`jobsStore.ts`), nie w karcie — pieniądze zostają przy Tobie.
  */
 export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; /** Okno podpisu klienta (ten sam podpis co na protokole, P2.4). */ onSign: () => void }) {
   const [open, setOpen] = useState(true);
+  const scopeField = useFieldKey(job.scope ?? "");
+  const marginField = useFieldKey(job.margin === undefined ? "" : String(job.margin));
   const [kind, setKind] = useState<QuoteKind>("labor");
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
@@ -143,12 +160,13 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
           <label className="block space-y-1 text-sm">
             <span className="text-xs font-semibold text-muted-foreground">Co zrobić</span>
             <textarea
-              key={job.scope ?? ""}
+              key={scopeField.key}
               defaultValue={job.scope ?? ""}
+              onFocus={scopeField.onFocus}
               maxLength={JOB_SCOPE_MAX}
               rows={2}
               placeholder="np. Wymiana baterii w kuchni, przeciek pod zlewem"
-              onBlur={(e) => { const v = e.currentTarget.value.trim(); if (v !== (job.scope ?? "")) setJobMeta(site.id, { scope: v || undefined }); }}
+              onBlur={(e) => { const v = e.currentTarget.value.trim(); if (v !== (job.scope ?? "")) setJobMeta(site.id, { scope: v || undefined }); scopeField.onBlurKey(); }}
               className="w-full rounded-field border border-input bg-background px-2.5 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm"
             />
           </label>
@@ -227,9 +245,10 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
           <label className="flex items-center gap-2 text-sm">
             <span className="min-w-0 flex-1">Marża na materiał</span>
             <input
-              key={job.margin ?? "none"}
+              key={marginField.key}
               defaultValue={job.margin === undefined ? "" : amountInput(job.margin)}
-              onBlur={(e) => saveMargin(e.currentTarget)}
+              onFocus={marginField.onFocus}
+              onBlur={(e) => { saveMargin(e.currentTarget); marginField.onBlurKey(); }}
               onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
               inputMode="decimal"
               placeholder="0"

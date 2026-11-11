@@ -36,7 +36,7 @@
 | D8 | wysyłka harmonogramu push bez timeoutu i kolejki | naprawione: `AbortSignal.timeout(15 s)` i kolejka wysyłek (`client.ts`) |
 | D9 | `daysWaiting` błędny o dzień wokół zmiany czasu | naprawione: poprawka o różnicę przesunięcia strefy; `paymentReminder.test.ts` (inna `7*DAY_MS` w `StudyJournal` zostaje, błąd do 1 h) |
 | D10 | kilometrówka/cenniki poza kopią | = W14 (czeka na decyzję) |
-| D11 | koszt przebudowy migawki przy 3000+ wpisach | otwarte (wymaga pomiaru i cache per wpis) |
+| D11 | koszt przebudowy migawki przy 3000+ wpisach | zmierzone 2026-11-11: najgorsza przebudowa po zmianie 26 ms przy 3000 wpisach (Node, komputer; telefon ×4–6 ≈ 100–150 ms), w pomiarach telefonu (`docs/PERFORMANCE.md`) bez blokowania — bez zmian, cache per wpis niepotrzebny do ok. 10 tys. wpisów |
 
 ## UI Pracy
 
@@ -63,7 +63,9 @@
 | 19 | skaner bez „Skanuj ponownie” | naprawione (decyzja właściciela): przycisk po wykryciu kodu (`BarcodeScanner.tsx`) |
 | 22 | martwy input z `capture` | bez zmian: e2e `study.spec.ts` pilnuje jego atrybutu, nieszkodliwy |
 | 24 | wycieki object URL | naprawione w `SiteDocsPanel.tsx` (cleanup w efekcie); `PhotoDayDialog` ma cleanup, StrictMode tylko w dev |
-| 26, 31, 33 | `key` pól zlecenia, pola minutnika, efekty resetu | otwarte (rzadkie/kosmetyczne) |
+| 26 | `key` pól zlecenia kasuje pisany tekst | naprawione: `useFieldKey` — pole nie jest przemontowywane w trakcie pisania (`SiteJobPanel.tsx`) |
+| 31 | pola minutnika po zmianie z innego telefonu | naprawione: reset pól po zakończeniu próby (`PressureTestTimer.tsx`) |
+| 33 | zbędne efekty resetu stanu | bez zmian (kosmetyka, ryzyko regresji większe niż zysk) |
 | 27 | brak cofania zmiany rodzaju/statusu | naprawione (decyzja właściciela): toast „Cofnij” przy statusie zlecenia i „To zlecenie własne” |
 | 30 | próba skończona wcześniej zawsze „szczelna” | naprawione (decyzja właściciela): ostrzeżenie „Próba jeszcze trwa” z „Zakończ mimo to”; `e2e/pressure-timer.spec.ts` |
 | 20, 21 | NFC bez `role="status"`, `aria-label` na `<span>` w kilometrówce | naprawione |
@@ -144,3 +146,7 @@ T26 (`viewTransition.test.ts` rozbity na osobne przypadki, Firefox), T27 (granic
 ## Zrobione 2026-11-11 (trzynasta partia, bezpieczeństwo)
 
 S6–S8, S11, S13–S18. Zostają S3–S5 (decyzje projektowe), S9, S12 (świadomie bez zmian).
+
+## Zrobione 2026-11-11 (czternasta partia)
+
+UI #26, #31, T31 (testy komponentów `MileageDialog`, `SiteBillingDues`), D11 (pomiar). Zostają wyłącznie decyzje właściciela (W11, W14/D10, W15, S3–S5) oraz pozycje świadomie bez zmian (UI #10, #22, #33, S9, S12).
