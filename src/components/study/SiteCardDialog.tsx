@@ -116,10 +116,19 @@ export function SiteCardDialog({
     }
   };
   /** „Brak” z paska kciuka: segment Materiał i fokus w polu „Czego brakuje” (klawiatura od razu). */
+  // Fokus idzie po przełączeniu segmentu (w efekcie), bo przejście widoku podmienia segment dopiero w następnej klatce (audyt UI #13).
+  const focusShortage = useRef(false);
   const addShortageHere = () => {
+    focusShortage.current = true;
     pickSection("material");
-    requestAnimationFrame(() => document.querySelector<HTMLInputElement>('[data-testid="site-card"] [data-testid="site-shortages"] input')?.focus());
   };
+  useEffect(() => {
+    if (section !== "material" || !focusShortage.current) return;
+    focusShortage.current = false;
+    document.querySelector<HTMLInputElement>('[data-testid="site-card"] [data-testid="site-shortages"] input')?.focus();
+  }, [section]);
+  // Segment, którego już nie ma (np. zlecenie zniknęło po synchronizacji), nie zostawia pustej karty (audyt UI #28).
+  useEffect(() => { if (!sections.includes(section)) setSection(sections[0]); }, [sections, section]);
   useTrackUse("karta-budowy", !!site);
   const cardOpen = !!site;
   useEffect(() => { if (cardOpen) measureSpan("otwarcie-karty-budowy")(); }, [cardOpen]);

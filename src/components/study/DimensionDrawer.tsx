@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
@@ -35,6 +36,8 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
   const [pending, setPending] = useState<{ from: Pt; to: Pt } | null>(null);
   const [text, setText] = useState("");
   const down = useRef<{ x: number; y: number; at: Pt } | null>(null);
+  /** Przeciągnięcie już ruszyło w tym geście (początek = punkt dotknięcia, nie wcześniejsze stuknięcie). */
+  const dragging = useRef(false);
 
   // Każde otwarcie zaczyna od zapisanych wymiarów. Tylko `open` jest zależnością: rodzic przekazuje nową tablicę
   // przy każdym renderze i wyzerowałby rozpoczętą pracę.
@@ -109,14 +112,17 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
     if (pending || list.length >= MAX_DIMENSIONS_PER_IMAGE) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     down.current = { x: e.clientX, y: e.clientY, at: pointOf(e) };
+    dragging.current = false;
     if (start) setLive(pointOf(e));
   }
 
   function onMove(e: React.PointerEvent<HTMLCanvasElement>) {
     const d = down.current;
     if (!d) return;
-    if (!start && Math.hypot(e.clientX - d.x, e.clientY - d.y) > TAP_SLOP_PX) setStart(d.at);
-    if (start || Math.hypot(e.clientX - d.x, e.clientY - d.y) > TAP_SLOP_PX) setLive(pointOf(e));
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) <= TAP_SLOP_PX) { if (start && !dragging.current) setLive(pointOf(e)); return; }
+    // Audyt UI #14: przeciągnięcie po wcześniejszym stuknięciu zaczyna się tam, gdzie palec dotknął, nie od starego punktu.
+    if (!dragging.current) { dragging.current = true; setStart(d.at); }
+    setLive(pointOf(e));
   }
 
   function onUp(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -125,7 +131,7 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
     if (!d) return;
     const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y) > TAP_SLOP_PX;
     const here = pointOf(e);
-    if (moved) { finish(start ?? d.at, here); return; }
+    if (moved) { dragging.current = false; finish(d.at, here); return; }
     // Stuknięcie: pierwsze ustawia początek, drugie kończy linię.
     if (start) finish(start, here); else setStart(here);
   }
@@ -137,10 +143,24 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
     setPending(null); setText("");
   }
 
+  /** Lista do zapisu: linia czekająca na opis też wchodzi, jeśli opis jest już wpisany (audyt UI #9). */
+  function finalList(): Dimension[] {
+    const label = text.replace(/\s+/g, " ").trim();
+    return pending && label ? [...list, { from: pending.from, to: pending.to, text: label }] : list;
+  }
+
+  /** Zamknięcie z niezapisaną pracą nie kasuje jej po cichu. */
+  function requestClose(next: boolean) {
+    if (next) { onOpenChange(true); return; }
+    const changed = JSON.stringify(finalList()) !== JSON.stringify(dimensions) || !!pending;
+    if (!changed) { onOpenChange(false); return; }
+    toast("Wymiary nie są zapisane", { action: { label: "Odrzuć", onClick: () => onOpenChange(false) } });
+  }
+
   function cancelPending() { setPending(null); setStart(null); setLive(null); setText(""); }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={requestClose}>
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-2xl" data-testid="dimension-drawer">
         <div className="border-b border-border px-5 pb-4 pt-5">
           <DialogTitle className="font-display text-lg">Wymiary na zdjęciu</DialogTitle>
@@ -151,7 +171,8 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
           <canvas
             ref={canvasRef}
             role="img"
-            aria-label="Zdjęcie z wymiarami. Zaznacz dwa punkty, aby dodać wymiar."
+            aria-label="Zdjęcie z wymiarami. Zaznacz dwa punkty dotykiem lub myszą, aby dodać wymiar."
+            aria-describedby="dimension-hint"
             onPointerDown={onDown}
             onPointerMove={onMove}
             onPointerUp={onUp}
@@ -176,7 +197,7 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
             </form>
           )}
           {/* Linia stała (nie pojawia się i znika): zmiana wysokości okna między dwoma stuknięciami przesuwałaby płótno. */}
-          <p className="ui-hint min-h-5" role="status" data-testid="dimension-hint">
+          <p id="dimension-hint" className="ui-hint min-h-5" role="status" data-testid="dimension-hint">
             {pending ? "" : list.length >= MAX_DIMENSIONS_PER_IMAGE ? `Najwięcej ${MAX_DIMENSIONS_PER_IMAGE} wymiarów na zdjęciu.` : start ? "Stuknij drugi koniec wymiaru." : "Przeciągnij albo stuknij pierwszy koniec."}
           </p>
 
@@ -196,8 +217,8 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
         </div>
 
         <ResponsiveDialogFooter className="grid grid-cols-2 gap-2 border-t border-border px-5 pb-5 pt-4">
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="coarse:h-11">Zamknij</Button>
-          <Button type="button" onClick={() => { onSave(list); onOpenChange(false); }} className="coarse:h-11">Zapisz wymiary</Button>
+          <Button type="button" variant="ghost" onClick={() => requestClose(false)} className="coarse:h-11">Zamknij</Button>
+          <Button type="button" onClick={() => { onSave(finalList()); onOpenChange(false); }} className="coarse:h-11">Zapisz wymiary</Button>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </Dialog>

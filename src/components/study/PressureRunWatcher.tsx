@@ -4,6 +4,7 @@ import { haptic } from "@/lib/haptics";
 import { pushKey } from "@/lib/push/shown";
 import { showSystemNotification } from "@/lib/systemNotification";
 import { useJournalDraft } from "@/lib/study/draft";
+import { useJournalEditForm } from "@/lib/study/entrySheet";
 import { runEndsAt } from "@/lib/study/pressureTest";
 
 /**
@@ -12,7 +13,10 @@ import { runEndsAt } from "@/lib/study/pressureTest";
  * a przy powrocie alert pojawia się od razu. Klucz `showSystemNotification` pilnuje, żeby nie było dwóch powiadomień.
  */
 export function PressureRunWatcher() {
-  const { test } = useJournalDraft();
+  // Próba może biec w nowym wpisie (szkic) albo w edycji zapisanego (audyt UI #11) — alarm obejmuje oba.
+  const draftTest = useJournalDraft().test;
+  const editTest = useJournalEditForm()?.test;
+  const test = editTest?.startedAt !== undefined ? editTest : draftTest;
   const startedAt = test?.startedAt;
   const endsAt = test ? runEndsAt(test) : null;
 

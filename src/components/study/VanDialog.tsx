@@ -97,7 +97,7 @@ export function VanDialog({ open, onOpenChange, journal }: { open: boolean; onOp
     const id = newId("v");
     const order = van.items.reduce((o, i) => Math.max(o, i.order + 1), 0);
     if (!saveVanItem({ id, name: n, unit, ...(m ? { min: m } : {}), at, order })) { toast.error("Nie dodano — za dużo pozycji albo pusta nazwa"); return; }
-    if (s !== undefined) addVanEvent({ id: newId("e"), item: id, kind: "count", qty: s, at: at + 1 });
+    if (s !== undefined && !addVanEvent({ id: newId("e"), item: id, kind: "count", qty: s, at: at + 1 })) toast.error("Dodano pozycję, ale bez stanu początkowego — wpisz go przez „Policz”");
     setName(""); setMin(""); setStart("");
     haptic("selection");
   }

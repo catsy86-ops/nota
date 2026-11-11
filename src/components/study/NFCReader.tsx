@@ -64,14 +64,14 @@ export function NFCReader({ open, onOpenChange, onDetected }: NFCReaderProps) {
               <div className="text-sm" data-testid="nfc-unsupported">Ta przeglądarka nie obsługuje NFC (działa w Chrome na Androidzie).</div>
             </div>
           ) : reading ? (
-            <div className="flex flex-col items-center justify-center py-6 gap-2">
+            <div className="flex flex-col items-center justify-center py-6 gap-2" role="status">
               <div className="animate-pulse">
-                <Radio className="h-8 w-8 text-primary" />
+                <Radio className="h-8 w-8 text-primary" aria-hidden />
               </div>
               <p className="text-sm text-muted-foreground">Przytrzymaj tag przy telefonie…</p>
             </div>
           ) : tag ? (
-            <div className="rounded-card border border-success bg-success/5 p-3">
+            <div className="rounded-card border border-success bg-success/5 p-3" role="status">
               <p className="text-2xs text-muted-foreground mb-1">Odczytany tag:</p>
               <p className="font-mono text-sm text-foreground break-all">{tag}</p>
             </div>

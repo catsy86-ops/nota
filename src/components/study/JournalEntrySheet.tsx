@@ -142,15 +142,18 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [nfcOpen, setNfcOpen] = useState(false);
   const touchDevice = useMediaQuery("(pointer: coarse)");
   const [fittingsOpen, setFittingsOpen] = useState(false);
-  const testVisible = testOpen || !!form.test || TEST_TOPICS.has(topic);
+  const testForced = !!form.test || TEST_TOPICS.has(topic);
+  const testVisible = testOpen || testForced;
   const levelVisible = levelOpen || form.level !== undefined;
   const barcodeVisible = barcodeOpen || form.barcode !== undefined;
   const aiVisible = aiOpen || form.summary !== undefined;
-  const fittingsVisible = fittingsOpen || (form.fittings?.length ?? 0) > 0;
+  const fittingsForced = (form.fittings?.length ?? 0) > 0;
+  const fittingsVisible = fittingsOpen || fittingsForced;
   // B1.1: trzy najczęściej używane kształtki od razu w rzędzie przycisków — 1 stuknięcie zamiast otwierania sekcji.
   const quickFittings = useMemo(() => (fittingsVisible ? [] : sumFittings(fittingHistory).slice(0, 3).map((f) => f.name)), [fittingsVisible, fittingHistory]);
   const [pipesOpen, setPipesOpen] = useState(false);
-  const pipesVisible = pipesOpen || (form.pipes?.length ?? 0) > 0;
+  const pipesForced = (form.pipes?.length ?? 0) > 0;
+  const pipesVisible = pipesOpen || pipesForced;
   // Zestawy materiału (H1.2): pigułki pod „+ Zestaw”, edycja w osobnym oknie (ładowanym leniwie).
   const [kitsOpen, setKitsOpen] = useState(false);
   const [kitsDialogOpen, setKitsDialogOpen] = useState(false);
@@ -337,13 +340,15 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
 
   const { saveCaption, drawing, setDrawing, openDrawing, saveDrawing, undoDrawing, measuring, setMeasuring, openDimensions, saveDimensions } = useJournalPhotoEdits({ getForm, patch, setProcessing, setCaptioning, setCaptionDraft });
 
-  async function addPhotos(files: File[]) {
+  /** Zwraca, ile zdjęć faktycznie trafiło do wpisu (licznik zdjęć z aparatu liczy tylko te). */
+  async function addPhotos(files: File[]): Promise<number> {
     let skipped = 0;
+    let added = 0;
     // Miejsca liczone z góry: dwa szybkie wybory zdjęć nie przekroczą limitu wpisu.
     const room = JOURNAL_MAX_IMAGES - getForm().images.length - processing;
     if (files.length > room) toast(`Wpis mieści maksymalnie ${JOURNAL_MAX_IMAGES} ${pluralPl(JOURNAL_MAX_IMAGES, ["zdjęcie", "zdjęcia", "zdjęć"])}`);
     const batch = files.slice(0, Math.max(0, room));
-    if (batch.length === 0) return;
+    if (batch.length === 0) return 0;
     if (!persistAsked) { persistAsked = true; void requestPersistentStorage(); }
     setProcessing((n) => n + batch.length);
     // Ile zdjęć z paczki jeszcze nie oddało swojej części licznika: wyjątek przerywa pętlę, a przycisk „Zapisz wpis”
@@ -357,7 +362,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           const ref = await imageStore.putBlob(prepared);
           // Szkic czytany na świeżo: w trakcie obróbki mogło zniknąć inne zdjęcie albo zmienić się tekst.
           const now = getForm().images;
-          if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) { patch({ images: [...now, ref] }); haptic("tap"); }
+          if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) { patch({ images: [...now, ref] }); added += 1; haptic("tap"); }
         } finally {
           unreleased -= 1;
           setProcessing((n) => n - 1);
@@ -369,6 +374,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
       if (unreleased > 0) setProcessing((n) => n - unreleased);
     }
     if (skipped > 0) toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB");
+    return added;
   }
 
   function submit() {
@@ -861,7 +867,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 type="button"
                 aria-pressed={testVisible}
                 aria-controls="journal-test"
-                onClick={() => setTestOpen((o) => !o)}
+                aria-disabled={testForced || undefined}
+                onClick={() => { if (!testForced) setTestOpen((o) => !o); }}
                 className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
               >
                 {form.test ? "✓ " : "+ "}Próba
@@ -870,7 +877,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 type="button"
                 aria-pressed={fittingsVisible}
                 aria-controls="journal-fittings"
-                onClick={() => setFittingsOpen((o) => !o)}
+                aria-disabled={fittingsForced || undefined}
+                onClick={() => { if (!fittingsForced) setFittingsOpen((o) => !o); }}
                 className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
               >
                 {(form.fittings?.length ?? 0) > 0 ? "✓ " : "+ "}Kształtki
@@ -889,7 +897,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 type="button"
                 aria-pressed={pipesVisible}
                 aria-controls="journal-pipes"
-                onClick={() => setPipesOpen((o) => !o)}
+                aria-disabled={pipesForced || undefined}
+                onClick={() => { if (!pipesForced) setPipesOpen((o) => !o); }}
                 className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
               >
                 {(form.pipes?.length ?? 0) > 0 ? "✓ " : "+ "}Rury
@@ -965,14 +974,17 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                     <QrCode className="h-4 w-4 shrink-0" aria-hidden />
                     {form.barcode ? `Kod: ${form.barcode}` : "Dodaj kod"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setNfcOpen(true)}
-                    className="pressable flex items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
-                    title="NFC tag"
-                  >
-                    <Radio className="h-4 w-4 shrink-0" aria-hidden />
-                  </button>
+                  {hasNFC() && (
+                    <button
+                      type="button"
+                      onClick={() => setNfcOpen(true)}
+                      className="pressable flex items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
+                      title="NFC tag"
+                      aria-label="Odczytaj tag NFC"
+                    >
+                      <Radio className="h-4 w-4 shrink-0" aria-hidden />
+                    </button>
+                  )}
                 </div>
               </div>
             )}

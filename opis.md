@@ -5336,3 +5336,12 @@ Pełna lista i statusy: `docs/audyt-bledow-2026-11-11.md`. **Naprawione i przete
 - **Karta budowy z błędnym formularzem (UI #8):** `SiteCardDialog.tsx` — `blockedByError()`; zamknięcie (Esc, X) i „Pokaż wpisy”/„Raport” przy niezapisanych zmianach i błędzie (np. zajęta nazwa) nie zamyka karty, tylko pokazuje komunikat z przyciskiem „Odrzuć zmiany”. Wcześniej zmiany ginęły po cichu. Test: `e2e/study.spec.ts` (karta budowy).
 - **Odcisk protokołu (T3):** `useSiteCardActions.ts` — do treści odcisku dochodzą podpisy zdjęć razem z wymiarami, więc zmiana podpisu zmienia odcisk w stopce PDF.
 
+## Audyt, szósta partia: poprawki interfejsu Pracy (2026-11-11)
+
+- **Miarka (`DimensionDrawer.tsx`):** „Zapisz wymiary” dopisuje linię czekającą na opis (jeśli opis wpisany); zamknięcie z niezapisaną pracą pokazuje toast „Wymiary nie są zapisane” z „Odrzuć”; przeciągnięcie po wcześniejszym stuknięciu zaczyna się tam, gdzie palec dotknął. Płótno ma `aria-describedby` na podpowiedź. Obsługa samą klawiaturą nadal nie istnieje.
+- **Alarm próby (`PressureRunWatcher.tsx`):** działa także dla próby uruchomionej w edycji zapisanego wpisu.
+- **Arkusz wpisu (`JournalEntrySheet.tsx`, `CameraCapture.tsx`):** pigułki Próba/Kształtki/Rury są nieaktywne (`aria-disabled`), gdy sekcja jest otwarta przez dane; `addPhotos` zwraca liczbę dodanych zdjęć, licznik serii z aparatu liczy tylko te; NFC w bloku „Kod” tylko gdy `hasNFC()`.
+- **Karta budowy (`SiteCardDialog.tsx`):** fokus po „Brak” w efekcie po zmianie segmentu; brakujący segment (np. po zniknięciu zlecenia) zastępuje pierwszy dostępny.
+- **Drobne:** `NFCReader` ogłasza stany (`role="status"`), numer przystanku w kilometrówce czytnik odczytuje, „Wpłaty z budów” zamiast zera, lista „ostatnich 30 dni” odświeża się o północy, auto: toast przy nieudanym stanie początkowym.
+- **Testy:** istniejące e2e Pracy (aparat, miarka, próba, kilometrówka, auto, karta, dziennik) — 54 zielone; Vitest 3390.
+

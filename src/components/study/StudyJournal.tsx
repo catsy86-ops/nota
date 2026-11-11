@@ -184,9 +184,10 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
     const matches = filterJournal(study.journal, filter, topicTitle);
 
     if (filtered) return { days: groupJournal(matches), shown: matches.length, older: 0 };
+    void dayTick; // granica „ostatnich 30 dni” przesuwa się o północy (audyt UI #32)
     const { recent, older } = splitRecent(matches, Date.now(), olderShown);
     return { days: groupJournal(recent), shown: recent.length, older };
-  }, [study.journal, filter, filtered, olderShown]);
+  }, [study.journal, filter, filtered, olderShown, dayTick]);
 
   // Podział godzin każdego dnia (H2, `siteHours.ts`): zegar w nagłówku otwiera okno zawsze (1.5 planu
   // Praca 2026-10-24); godziny przy budowach i „a + b h” tylko przy kilku budowach albo wpisanych godzinach.

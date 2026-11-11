@@ -102,10 +102,10 @@ export function SiteMonthEarnings({ monthKey, base }: {
     <>
     <details className="group rounded-card border border-dashed border-border px-3 py-2" data-testid="site-month-earnings">
       <summary className="flex cursor-pointer list-none items-baseline gap-2 text-sm coarse:min-h-11 coarse:items-center">
-        <span className="font-medium">Z budów</span>
+        <span className="font-medium">{rows.length === 0 ? "Wpłaty z budów" : "Z budów"}</span>
         <span className="text-xs text-muted-foreground">punkty, ryczałt</span>
         <span aria-hidden className="min-w-4 flex-1 translate-y-[-0.2em] border-b border-dotted border-muted-foreground/50" />
-        <span className="font-mono font-semibold tabular-nums text-primary-ink" data-testid="site-month-total">{money(total)}</span>
+        <span className="font-mono font-semibold tabular-nums text-primary-ink" data-testid="site-month-total">{money(rows.length === 0 ? paid.sum : total)}</span>
       </summary>
       <ul className="mt-2 space-y-1 text-xs">
         {rows.map(({ site, e }) => (

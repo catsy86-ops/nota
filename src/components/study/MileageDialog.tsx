@@ -122,7 +122,7 @@ export function MileageDialog({ open, onOpenChange, dir }: {
                     <button key={s.id} type="button" onClick={() => toggle(s.id)} aria-pressed={i >= 0}
                       className={cn("pressable inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1 text-sm coarse:min-h-11",
                         i >= 0 ? "border-primary bg-primary/10 font-medium text-foreground" : "border-border text-muted-foreground hover:text-foreground")}>
-                      {i >= 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 font-mono text-2xs text-primary-foreground" aria-label={`przystanek ${i + 1}`}>{i + 1}</span>}
+                      {i >= 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 font-mono text-2xs text-primary-foreground" ><span aria-hidden>{i + 1}</span><span className="sr-only">przystanek {i + 1}</span></span>}
                       <span className="truncate">{s.name}</span>
                     </button>
                   );

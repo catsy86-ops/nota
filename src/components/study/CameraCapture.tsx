@@ -31,7 +31,7 @@ export function CameraCapture({ open, onOpenChange, onCapture, count, max, point
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Zdjęcie ze zrzutu klatki; rodzic przygotowuje je i dodaje do wpisu. */
-  onCapture: (blob: Blob) => void | Promise<void>;
+  onCapture: (blob: Blob) => void | number | Promise<void | number>;
   /** Zdjęcia, które wpis już ma (z galerią i trwającą obróbką), i limit wpisu. */
   count: number;
   max: number;
@@ -92,8 +92,11 @@ export function CameraCapture({ open, onOpenChange, onCapture, count, max, point
       haptic("tap");
       setFlash(true);
       window.setTimeout(() => setFlash(false), 120);
-      await onCapture(blob);
-      setShots((n) => n + 1);
+      // Rodzic zwraca liczbę zdjęć, które trafiły do wpisu (odrzucone nie zawyżają licznika serii).
+      const added = await onCapture(blob);
+      setShots((n) => n + (typeof added === "number" ? added : 1));
+    } catch {
+      toast.error("Nie udało się zapisać zdjęcia z aparatu");
     } finally {
       setBusy(false);
     }

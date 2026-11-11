@@ -40,7 +40,23 @@
 | 6 | wpis z samym pomiarem/kodem odrzucany jako pusty | naprawione: pomiar i kod liczą się jako treść; `journalSensors.test.ts` |
 | 7 | `point` z aparatu zostaje po zmianie budowy | naprawione: `point` czyszczony przy zmianie budowy |
 | 8 | karta budowy gubi niezapisane zmiany przy błędnym formularzu | naprawione: `blockedByError` w `SiteCardDialog.tsx` (karta zostaje, toast z „Odrzuć zmiany”); `e2e/study.spec.ts` |
-| 9–16, 17–33 | miarka (zamknięcie, klawiatura, przeciągnięcie), alarm próby w edycji, stawka km, fokus „Brak”, pigułki `aria-pressed`, licznik zdjęć z aparatu, NFC, etykiety, i in. | patrz raport |
+| 9 | miarka kasuje rozpoczętą pracę przy zamknięciu | naprawione: `finalList` + pytanie przy zamknięciu (`DimensionDrawer.tsx`) |
+| 10 | miarka bez alternatywy klawiaturowej | częściowo: opis przez `aria-describedby`, informacja „dotykiem lub myszą”; pełna obsługa klawiaturą wymaga osobnego projektu |
+| 11 | alarm końca próby nie działa w edycji wpisu | naprawione: `PressureRunWatcher` obserwuje też `useJournalEditForm` |
+| 12 | stawka km nie dała się wyczyścić | już naprawione wcześniej (`rate: string | null`) |
+| 13 | fokus z „Brak” nie trafiał w pole | naprawione: fokus w efekcie po zmianie segmentu (`SiteCardDialog.tsx`) |
+| 14 | przeciągnięcie po stuknięciu rysuje od złego punktu | naprawione: `dragging` + `d.at` (`DimensionDrawer.tsx`) |
+| 15 | pigułki Próba/Kształtki/Rury „wciśnięte”, a nic nie robią | naprawione: `aria-disabled`, gdy sekcja wymuszona danymi |
+| 16 | licznik zdjęć z aparatu liczy odrzucone | naprawione: `addPhotos` zwraca liczbę dodanych, `catch` z toastem |
+| 17 | przycisk NFC zawsze widoczny | naprawione: `hasNFC()` |
+| 18 | etykiety bez `htmlFor` w karcie | nie potwierdzone (etykiety obejmują pola) |
+| 19, 22, 24, 26, 27, 30, 31, 33 | skaner bez „Skanuj ponownie”, martwy input z `capture`, wycieki URL w StrictMode, klucze `key` pól zlecenia, brak cofania zmiany rodzaju/statusu, próba skończona wcześniej, pola minutnika, efekty resetu | otwarte (drobne, wymagają decyzji produktowych) |
+| 20, 21 | NFC bez `role="status"`, `aria-label` na `<span>` w kilometrówce | naprawione |
+| 23 | wyścig `useDictation.onend` | już naprawione wcześniej |
+| 25 | „Z budów 0,00 zł” przy samych wpłatach | naprawione: „Wpłaty z budów” + suma wpłat |
+| 28 | aktywny segment karty znika po synchronizacji | naprawione: efekt wybiera pierwszy dostępny segment |
+| 29 | cichy błąd stanu początkowego w aucie | naprawione: toast |
+| 32 | „ostatnie 30 dni” nie odświeża się po północy | naprawione: `dayTick` w zależnościach |
 
 ## Bezpieczeństwo
 
@@ -83,3 +99,5 @@ W12, W13, W16, W17. W11, W14 i W15 czekają na decyzje (model Yjs list zdjęć; 
 ## Zrobione 2026-11-11 (piąta partia)
 
 UI #8, T3.
+
+UI #9–#17, #20, #21, #25, #28, #29, #32 (szósta partia).
