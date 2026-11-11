@@ -22,8 +22,8 @@
 | W11 | listy zdjęć/nagrań LWW: dwa telefony tracą dodane elementy | naprawione: `images` i `fittings` były już `Y.Array`; teraz też `recordings` i `pipes`, a podpisy/wymiary/oryginały rysunków (`captions`, `dimensions`, `drawnFrom`) są `Y.Map` z kluczem per zdjęcie; wpis ma od początku puste kontenery (inaczej oba telefony tworzyły własny i jeden przegrywał); `yStudy.test.ts` |
 | W12 | dzień z przyszłości psuje serię w Nauce | naprawione: `stateFromDump` pomija dni po jutrze; `studyStreak.test.ts` |
 | W13 | kopia pełna nie sprawdza własnego rozmiaru względem limitu importu | naprawione: `isBackupOversize` + ostrzeżenie po zapisie kopii; `fullBackup.test.ts` |
-| W14 | kilometrówka, cennik, nazwa firmy, autor poza kopią zapasową | do weryfikacji (decyzja: które klucze) |
-| W15 | sekcje pieniężne wracają przez scalanie, Nauka przez zastąpienie | otwarte |
+| W14 | kilometrówka, cennik, nazwa firmy, autor poza kopią zapasową | naprawione (domyślna decyzja, do potwierdzenia): do `SETTINGS_KEYS` weszły `companyName`, `mileage`, `pricing`, `prices`, `author`; numer konta i odciski dokumentów zostają poza kopią; `fullBackup.test.ts` |
+| W15 | sekcje pieniężne wracają przez scalanie, Nauka przez zastąpienie | decyzja właściciela: zostaje scalanie; okno przywracania wyjaśnia różnicę (`restore-money-note`), kod bez zmian |
 | W16 | zlecenia: `touch()` może cofnąć status z drugiego telefonu | naprawione: znacznik zmiany wyceny w osobnym kluczu `c␁budowa` (touch nie przepisuje statusu); `jobs.test.ts`. Pozostaje LWW całego wpisu zlecenia przy `setMeta` z dwóch telefonów naraz |
 | W17 | `cleanEntry.at`/`resolved` bez zakresu | naprawione: `timeInRange` (1970…3000) w `cleanEntry`; `journalAdded.test.ts` |
 | D1 | `useNextBoundary`: pętla co 5 ms w dniu zmiany na czas zimowy | naprawione: `endOfDayOffset(now) + 1` zamiast „+24 h”; `useNextBoundary.test.ts` |
@@ -35,7 +35,7 @@
 | D7 | `__proto__` w kluczach kopii Nauki | naprawione: `studyDump.ts`; `studyDumpProto.test.ts` |
 | D8 | wysyłka harmonogramu push bez timeoutu i kolejki | naprawione: `AbortSignal.timeout(15 s)` i kolejka wysyłek (`client.ts`) |
 | D9 | `daysWaiting` błędny o dzień wokół zmiany czasu | naprawione: poprawka o różnicę przesunięcia strefy; `paymentReminder.test.ts` (inna `7*DAY_MS` w `StudyJournal` zostaje, błąd do 1 h) |
-| D10 | kilometrówka/cenniki poza kopią | = W14 (czeka na decyzję) |
+| D10 | kilometrówka/cenniki poza kopią | = W14 (naprawione) |
 | D11 | koszt przebudowy migawki przy 3000+ wpisach | zmierzone 2026-11-11: najgorsza przebudowa po zmianie 26 ms przy 3000 wpisach (Node, komputer; telefon ×4–6 ≈ 100–150 ms), w pomiarach telefonu (`docs/PERFORMANCE.md`) bez blokowania — bez zmian, cache per wpis niepotrzebny do ok. 10 tys. wpisów |
 
 ## UI Pracy
@@ -154,3 +154,7 @@ UI #26, #31, T31 (testy komponentów `MileageDialog`, `SiteBillingDues`), D11 (p
 ## Zrobione 2026-11-11 (piętnasta partia)
 
 W11. Zostają W14/D10, W15 i S3–S5 (decyzje).
+
+## Zrobione 2026-11-11 (szesnasta partia)
+
+W14/D10 (klucze kopii; wybrane domyślnie, jeśli ma być inaczej — do zmiany w `SETTINGS_KEYS`), W15 (scalanie zostaje, wyjaśnienie w oknie). Zostają tylko S3–S5 (decyzje projektowe o pokojach WebRTC i przekaźniku).

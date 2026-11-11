@@ -62,6 +62,21 @@ describe("pełny backup v2", () => {
     expect((await restoreFullBackup(broken, ALL)).failed.sort()).toEqual(["Dieta", "Punkty wodne", "Zestawy"]);
   });
 
+  it("kopia niesie kilometrówkę, cennik, nazwę firmy i autora, ale nie numer konta (W14)", async () => {
+    localStorage.setItem("kaczy.study.mileage.v1", JSON.stringify({ rate: 0.89, entries: [] }));
+    localStorage.setItem("kaczy.study.companyName.v1", JSON.stringify("Hydro-Serwis"));
+    localStorage.setItem("kaczy.study.bankAccount.v1", JSON.stringify("PL61109010140000071219812874"));
+    const text = JSON.stringify(await buildFullBackup());
+    expect(text).toContain("kaczy.study.mileage.v1");
+    expect(text).toContain("Hydro-Serwis");
+    expect(text).not.toContain("PL61109010140000071219812874");
+    const backup = await parseFullBackup(text);
+    localStorage.clear();
+    await restoreFullBackup(backup, ALL);
+    expect(localStorage.getItem("kaczy.study.companyName.v1")).toContain("Hydro-Serwis");
+    expect(localStorage.getItem("kaczy.study.bankAccount.v1")).toBeNull();
+  });
+
   it("ustawienie ponad limit albo nie-tekst jest pomijane przy przywracaniu (S15)", async () => {
     const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
     localStorage.setItem("kaczy.viewPrefs.v1", "stare");

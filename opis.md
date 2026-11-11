@@ -5390,3 +5390,8 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Ograniczenia:** wpisy utworzone przed tą zmianą dostają kontenery przy pierwszej edycji; jeśli dwa telefony zrobią tę pierwszą edycję jednocześnie, jeden może przegrać (jednorazowo). Starsze wersje aplikacji czytają `Y.Array`/`Y.Map` przez wspólne `journalFields`.
 - **Testy:** `yStudy.test.ts` (nagrania, rury, podpisy i wymiary z dwóch telefonów, migracja starego zapisu).
 
+## Audyt, szesnasta partia: zakres kopii i przywracanie (W14, W15, 2026-11-11)
+
+- **Kopia pełna** (`exportNotes.ts` → `SETTINGS_KEYS`) niesie teraz też dane firmy wykonawcy: nazwę firmy, kilometrówkę, cennik usług, cennik kształtek i imię autora. Numer konta i odciski dokumentów zostają poza kopią (dane tego urządzenia). Test: `fullBackup.test.ts`.
+- **Przywracanie:** Praca/Nauka jest zastępowana kopią, a rozliczenia, wpłaty, zlecenia, punkty wodne, zestawy i materiał w aucie są scalane (nic nie kasuje nowszych danych). Okno „Przywrócić ten backup?” mówi o tym wprost (`BackupSettings.tsx`, `restore-money-note`).
+

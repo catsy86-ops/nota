@@ -4,7 +4,7 @@ import type { PriceList } from "./materialUsage";
 
 /**
  * P2.6: ceny jednostkowe kształtek (zł/szt.) po nazwie. Na urządzeniu, jak nazwa firmy —
- * to cennik użytkownika, nie dane budowy, i nie idzie do dokumentu Nauki ani do kopii.
+ * to cennik użytkownika, nie dane budowy, i nie idzie do dokumentu Nauki. Wchodzi do pełnej kopii zapasowej (W14).
  */
 export const PRICES_KEY = "kaczy.study.prices.v1";
 export const PRICE_MAX = 100_000;

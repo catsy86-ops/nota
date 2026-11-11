@@ -246,6 +246,12 @@ function RestoreBackup() {
               Praca i dziennik z budowy z tego pliku zastąpią też dane na sparowanych urządzeniach, nie tylko tutaj.
             </p>
           )}
+          {backup && opts.study && (
+            <p className="ui-hint" data-testid="restore-money-note">
+              Rozliczenia, wpłaty, zlecenia, punkty wodne, zestawy i materiał w aucie są <strong>scalane</strong>: to, co już masz na tym telefonie, zostaje,
+              a kopia dokłada tylko brakujące wartości. Stare stawki i wpłaty z kopii nie nadpiszą nowszych.
+            </p>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={busy}>Anuluj</AlertDialogCancel>
             <AlertDialogAction className={buttonVariants({ variant: "destructive" })} disabled={busy} onClick={(e) => { e.preventDefault(); void restore(); }}>Przywróć backup</AlertDialogAction>

@@ -283,6 +283,10 @@ export const SETTINGS_KEYS = [
   "kaczy:review.day", "kaczy:badge.enabled", "kaczy.vault.autolock.v1",
   // Skarbiec 1.6 i 2.4: blokada po schowaniu karty i daty sprawdzenia kodu awaryjnego (bez kodu) — na tym urządzeniu.
   "kaczy.vault.hiddenLock.v1", "kaczy.vault.recoveryCheck.v1",
+  // Dane firmy wykonawcy (Praca, W14/D10 audytu): nazwa na PDF-ach, kilometrówka dla księgowej, cennik usług i cennik
+  // kształtek, imię autora wpisów. Bez wpływu na sekrety; czyszczone przy odczycie przez swoje magazyny. Numer konta
+  // (`kaczy.study.bankAccount.v1`) i odciski dokumentów (`…fingerprints.v1`) zostają poza kopią — to dane tego urządzenia.
+  "kaczy.study.companyName.v1", "kaczy.study.mileage.v1", "kaczy.study.pricing.v1", "kaczy.study.prices.v1", "kaczy.study.author.v1",
   // Flagi funkcji w przygotowaniu (src/lib/featureFlags.ts) — zwykłe przełączniki.
   "kaczy.features.v1",
   // Push: wpis jest, ale przy przywracaniu push wyłączamy (patrz `PUSH_RESTORE_KEY`) — subskrypcja jest na urządzeniu.
