@@ -52,6 +52,10 @@ export function openJournalEdit(entry: JournalEntry) {
     pipes: entry.pipes ?? [],
     stage: entry.stage ?? null,
     geo: entry.geo ?? null,
+    ...(entry.dimensions ? { dimensions: structuredClone(entry.dimensions) } : {}),
+    ...(entry.level !== undefined ? { level: entry.level } : {}),
+    ...(entry.barcode ? { barcode: entry.barcode } : {}),
+    ...(entry.summary ? { summary: entry.summary } : {}),
   };
   state = { open: true, topicFirst: entry.checked.length > 0, editing: entry.id };
   emit();

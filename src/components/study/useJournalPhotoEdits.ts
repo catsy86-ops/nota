@@ -5,6 +5,7 @@ import { prepareImage } from "@/lib/imagePrepare";
 import { dataUrlToBlob, imageStore } from "@/lib/imageStore";
 import type { JournalDraft } from "@/lib/study/draft";
 import type { PhotoEntryResult } from "@/lib/study/photoEntry";
+import type { Dimension } from "@/lib/study/dimensions";
 
 /** Błąd zapisu zdjęcia (brak miejsca w przeglądarce) — wspólny komunikat dla podpisu i rysunku. */
 export function photoSaveFailed() {
@@ -20,8 +21,8 @@ export function photoEntryToast(result: PhotoEntryResult, okMessage: string) {
 }
 
 interface JournalPhotoEditsDeps {
-  getForm: () => Pick<JournalDraft, "captions" | "images" | "drawnFrom">;
-  patch: (p: Partial<Pick<JournalDraft, "captions" | "images" | "drawnFrom">>) => void;
+  getForm: () => Pick<JournalDraft, "captions" | "images" | "drawnFrom" | "dimensions">;
+  patch: (p: Partial<Pick<JournalDraft, "captions" | "images" | "drawnFrom" | "dimensions">>) => void;
   setProcessing: Dispatch<SetStateAction<number>>;
   setCaptioning: (ref: string | null) => void;
   setCaptionDraft: (text: string) => void;
@@ -69,7 +70,10 @@ export function useJournalPhotoEdits({ getForm, patch, setProcessing, setCaption
     const drawnFrom = { ...form.drawnFrom };
     delete drawnFrom[from];
     if (original) drawnFrom[to] = original;
-    patch({ images: form.images.map((r) => (r === from ? to : r)), captions, drawnFrom });
+    // Wymiary (B3.3) są względne (0–1), więc wędrują z podmienionym zdjęciem.
+    const dimensions = { ...form.dimensions };
+    if (dimensions[from]) { dimensions[to] = dimensions[from]; delete dimensions[from]; }
+    patch({ images: form.images.map((r) => (r === from ? to : r)), captions, drawnFrom, ...(Object.keys(dimensions).length ? { dimensions } : { dimensions: undefined }) });
   }
 
   /** „Cofnij rysunek” (H0.1): wraca oryginał sprzed pierwszego rysowania. */
@@ -99,5 +103,25 @@ export function useJournalPhotoEdits({ getForm, patch, setProcessing, setCaption
     }
   }
 
-  return { saveCaption, drawing, setDrawing, openDrawing, saveDrawing, undoDrawing };
+  /** Zdjęcie otwarte do wymiarowania (B3.3); `null` = okno zamknięte. */
+  const [measuring, setMeasuring] = useState<{ ref: string; url: string } | null>(null);
+  useEffect(() => () => { if (measuring) URL.revokeObjectURL(measuring.url); }, [measuring]);
+
+  async function openDimensions(ref: string) {
+    const rec = await imageStore.get(ref);
+    if (!rec) { toast.error("Tego zdjęcia nie ma na tym urządzeniu"); return; }
+    setMeasuring({ ref, url: URL.createObjectURL(new Blob([rec.bytes], { type: rec.type })) });
+  }
+
+  /** Zapis wymiarów zdjęcia we wpisie; pusta lista kasuje wymiary tego zdjęcia. */
+  function saveDimensions(list: Dimension[]) {
+    const ref = measuring?.ref;
+    if (!ref) return;
+    const next = { ...getForm().dimensions };
+    if (list.length) next[ref] = list; else delete next[ref];
+    patch({ dimensions: Object.keys(next).length ? next : undefined });
+    haptic("success");
+  }
+
+  return { saveCaption, drawing, setDrawing, openDrawing, saveDrawing, undoDrawing, measuring, setMeasuring, openDimensions, saveDimensions };
 }

@@ -1,5 +1,5 @@
 import { lazy, memo, Suspense, useEffect, useState } from "react";
-import { Check, CircleCheck, Cylinder, Flag, Gauge, MapPin, Mic, Package, Play, Wrench } from "lucide-react";
+import { Check, CircleCheck, Cylinder, Flag, Gauge, MapPin, Mic, Package, Play, Ruler, Wrench } from "lucide-react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { pipesLine } from "@/lib/study/pipes";
 import { freshEntry } from "@/lib/study/entrySheet";
@@ -40,6 +40,7 @@ export const JournalItem = memo(JournalItemRow, (a, b) =>
 
 function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }: JournalItemProps) {
   const resolved = e.kind === "problem" && e.resolved !== undefined;
+  const dimensionCount = Object.values(e.dimensions ?? {}).reduce((n, list) => n + list.length, 0);
   /** Pole „Jak rozwiązane?” otwarte — samo po oznaczeniu problemu jako rozwiązanego, jeśli brak opisu. */
   const [solving, setSolving] = useState(false);
   // Świeżo dodany wpis: podświetlenie przy montażu wiersza (§9 W5); jednorazowe, bez zapamiętywania.
@@ -81,6 +82,19 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
             <p className={cn("mt-1 inline-flex items-start gap-1.5 text-xs font-medium", e.test.ok ? "text-success-ink" : "text-destructive-ink")} data-testid="journal-test">
               <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(e.test)}
             </p>
+          )}
+          {(e.level !== undefined || e.barcode || dimensionCount > 0) && (
+            <p className="ui-hint mt-1 flex items-start gap-1.5" data-testid="journal-sensors">
+              <Ruler className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+              <span className="min-w-0 break-words">{[
+                e.level !== undefined && `Nachylenie ${e.level.toLocaleString("pl-PL", { maximumFractionDigits: 2 })}°`,
+                e.barcode && `Kod: ${e.barcode}`,
+                dimensionCount > 0 && `Wymiary na zdjęciach: ${dimensionCount}`,
+              ].filter(Boolean).join(" · ")}</span>
+            </p>
+          )}
+          {e.summary && (
+            <p className="ui-hint mt-1" data-testid="journal-summary">Streszczenie: {e.summary}</p>
           )}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span>{resolved ? "Problem rozwiązany" : KIND_LABEL[e.kind]}</span>

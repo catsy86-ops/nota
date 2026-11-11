@@ -1,202 +1,184 @@
 import { useEffect, useRef, useState } from "react";
-import { Trash2, Check, X } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
-import { toast } from "sonner";
-import type { Dimension } from "@/lib/study/dimensions";
+import { DIMENSION_MIN_LENGTH, DIMENSION_TEXT_MAX, MAX_DIMENSIONS_PER_IMAGE, type Dimension } from "@/lib/study/dimensions";
 
-interface DimensionDrawerProps {
+type Pt = [number, number];
+
+/** Najdłuższy bok płótna w pikselach — zdjęcia z aparatu są większe, a podgląd i tak mieści się w oknie. */
+const CANVAS_MAX = 1600;
+/** Ruch krótszy niż tyle pikseli ekranu to stuknięcie (punkt po punkcie), dłuższy — przeciągnięcie. */
+const TAP_SLOP_PX = 8;
+
+/**
+ * B3.3 Miarka: linie z opisem na zdjęciu. Dwa sposoby dodania: przeciągnięcie palcem od punktu do punktu albo
+ * dwa stuknięcia (pierwszy i drugi koniec) — drugi nie wymaga przeciągania. Współrzędne są względne (0–1),
+ * dane zostają przy zdjęciu, oryginał się nie zmienia.
+ */
+export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSave }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   imageUrl: string;
-  dimensions: Dimension[];
+  dimensions: readonly Dimension[];
   onSave: (dimensions: Dimension[]) => void;
-}
-
-export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSave }: DimensionDrawerProps) {
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [drawing, setDrawing] = useState(false);
-  const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
-  const [currentDimensions, setCurrentDimensions] = useState(dimensions);
-  const [textInput, setTextInput] = useState("");
-  const [showTextInput, setShowTextInput] = useState(false);
-  const [endPoint, setEndPoint] = useState<[number, number] | null>(null);
+  const [img, setImg] = useState<HTMLImageElement | null>(null);
+  const [list, setList] = useState<Dimension[]>([...dimensions]);
+  /** Pierwszy koniec (stuknięcie) albo początek przeciągania. */
+  const [start, setStart] = useState<Pt | null>(null);
+  /** Bieżący koniec w trakcie przeciągania. */
+  const [live, setLive] = useState<Pt | null>(null);
+  /** Linia narysowana, czeka na opis. */
+  const [pending, setPending] = useState<{ from: Pt; to: Pt } | null>(null);
+  const [text, setText] = useState("");
+  const down = useRef<{ x: number; y: number; at: Pt } | null>(null);
+
+  // Każde otwarcie zaczyna od zapisanych wymiarów. Tylko `open` jest zależnością: rodzic przekazuje nową tablicę
+  // przy każdym renderze i wyzerowałby rozpoczętą pracę.
+  const saved = useRef(dimensions);
+  saved.current = dimensions;
+  useEffect(() => {
+    if (!open) return;
+    setList([...saved.current]);
+    setStart(null); setLive(null); setPending(null); setText("");
+  }, [open]);
+
+  // Zdjęcie ładujemy raz, nie przy każdym ruchu palca.
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    const el = new Image();
+    el.onload = () => { if (alive) setImg(el); };
+    el.src = imageUrl;
+    return () => { alive = false; setImg(null); };
+  }, [open, imageUrl]);
 
   useEffect(() => {
-    if (!open || !canvasRef.current) return;
-
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const img = new Image();
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      redrawDimensions(ctx, img, currentDimensions);
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx || !img) return;
+    const scale = Math.min(1, CANVAS_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    ctx.drawImage(img, 0, 0, w, h);
+    const unit = w / 360; // grubość linii i pismo rosną razem z płótnem
+    const line = (a: Pt, b: Pt, color: string, dashed = false) => {
+      ctx.strokeStyle = color; ctx.lineWidth = 2.5 * unit; ctx.setLineDash(dashed ? [8 * unit, 6 * unit] : []);
+      ctx.beginPath(); ctx.moveTo(a[0] * w, a[1] * h); ctx.lineTo(b[0] * w, b[1] * h); ctx.stroke(); ctx.setLineDash([]);
+      for (const p of [a, b]) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p[0] * w, p[1] * h, 4 * unit, 0, Math.PI * 2); ctx.fill(); }
     };
-    img.src = imageUrl;
-  }, [open, imageUrl, currentDimensions]);
+    for (const d of list) {
+      line(d.from, d.to, "#f59e0b");
+      // Opis na jasnej tabliczce, żeby czytało się na każdym tle.
+      ctx.font = `600 ${13 * unit}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const mx = ((d.from[0] + d.to[0]) / 2) * w, my = ((d.from[1] + d.to[1]) / 2) * h;
+      const tw = ctx.measureText(d.text).width + 10 * unit;
+      ctx.fillStyle = "rgba(255,255,255,0.92)"; ctx.fillRect(mx - tw / 2, my - 11 * unit, tw, 22 * unit);
+      ctx.fillStyle = "#111"; ctx.fillText(d.text, mx, my);
+    }
+    if (pending) line(pending.from, pending.to, "#ef4444");
+    else if (start && live) line(start, live, "#ef4444", true);
+    else if (start) { ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(start[0] * w, start[1] * h, 6 * unit, 0, Math.PI * 2); ctx.fill(); }
+  }, [img, list, start, live, pending]);
 
-  function redrawDimensions(ctx: CanvasRenderingContext2D, img: HTMLImageElement, dims: Dimension[]) {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.drawImage(img, 0, 0);
-
-    dims.forEach((dim) => {
-      drawDimension(ctx, dim);
-    });
+  function pointOf(e: React.PointerEvent<HTMLCanvasElement>): Pt {
+    const r = e.currentTarget.getBoundingClientRect();
+    const clamp = (n: number) => Math.min(1, Math.max(0, n));
+    return [clamp((e.clientX - r.left) / r.width), clamp((e.clientY - r.top) / r.height)];
   }
 
-  function drawDimension(ctx: CanvasRenderingContext2D, dim: Dimension) {
-    const [x1, y1] = dim.from;
-    const [x2, y2] = dim.to;
-
-    // Linia
-    ctx.strokeStyle = "#3b82f6";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-
-    // Punkty
-    ctx.fillStyle = "#3b82f6";
-    ctx.fillRect(x1 - 4, y1 - 4, 8, 8);
-    ctx.fillRect(x2 - 4, y2 - 4, 8, 8);
-
-    // Tekst
-    const midX = (x1 + x2) / 2;
-    const midY = (y1 + y2) / 2;
-    ctx.fillStyle = "#000";
-    ctx.font = "14px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(dim.text, midX, midY - 10);
+  function finish(from: Pt, to: Pt) {
+    setStart(null); setLive(null);
+    if (Math.hypot(to[0] - from[0], to[1] - from[1]) < DIMENSION_MIN_LENGTH) return;
+    setPending({ from, to });
   }
 
-  function handleCanvasMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    setStartPoint([x, y]);
-    setDrawing(true);
+  function onDown(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (pending || list.length >= MAX_DIMENSIONS_PER_IMAGE) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    down.current = { x: e.clientX, y: e.clientY, at: pointOf(e) };
+    if (start) setLive(pointOf(e));
   }
 
-  function handleCanvasMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
-    if (!drawing || !startPoint || !canvasRef.current) return;
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const ctx = canvasRef.current.getContext("2d");
-    if (!ctx) return;
-
-    const img = new Image();
-    img.onload = () => {
-      redrawDimensions(ctx, img, currentDimensions);
-
-      // Rysuj linię tymczasową
-      ctx.strokeStyle = "#ef4444";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(startPoint[0], startPoint[1]);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    };
-    img.src = imageUrl;
-
-    setEndPoint([x, y]);
+  function onMove(e: React.PointerEvent<HTMLCanvasElement>) {
+    const d = down.current;
+    if (!d) return;
+    if (!start && Math.hypot(e.clientX - d.x, e.clientY - d.y) > TAP_SLOP_PX) setStart(d.at);
+    if (start || Math.hypot(e.clientX - d.x, e.clientY - d.y) > TAP_SLOP_PX) setLive(pointOf(e));
   }
 
-  function handleCanvasMouseUp() {
-    if (!drawing || !startPoint || !endPoint) return;
-    setDrawing(false);
-    setShowTextInput(true);
+  function onUp(e: React.PointerEvent<HTMLCanvasElement>) {
+    const d = down.current;
+    down.current = null;
+    if (!d) return;
+    const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y) > TAP_SLOP_PX;
+    const here = pointOf(e);
+    if (moved) { finish(start ?? d.at, here); return; }
+    // Stuknięcie: pierwsze ustawia początek, drugie kończy linię.
+    if (start) finish(start, here); else setStart(here);
   }
 
   function addDimension() {
-    if (!startPoint || !endPoint || !textInput.trim()) return;
-
-    const newDim: Dimension = {
-      from: startPoint,
-      to: endPoint,
-      text: textInput.trim(),
-    };
-
-    const updated = [...currentDimensions, newDim];
-    setCurrentDimensions(updated);
-    setTextInput("");
-    setShowTextInput(false);
-    setStartPoint(null);
-    setEndPoint(null);
-    toast.success("Wymiar dodany");
+    const label = text.replace(/\s+/g, " ").trim();
+    if (!pending || !label) return;
+    setList((l) => [...l, { from: pending.from, to: pending.to, text: label }]);
+    setPending(null); setText("");
   }
 
-  function removeDimension(index: number) {
-    const updated = currentDimensions.filter((_, i) => i !== index);
-    setCurrentDimensions(updated);
-  }
-
-  function save() {
-    onSave(currentDimensions);
-    onOpenChange(false);
-  }
+  function cancelPending() { setPending(null); setStart(null); setLive(null); setText(""); }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-2xl" data-testid="dimension-drawer">
         <div className="border-b border-border px-5 pb-4 pt-5">
           <DialogTitle className="font-display text-lg">Wymiary na zdjęciu</DialogTitle>
-          <DialogDescription className="text-xs">Kliknij dwa punkty, wpisz wymiar. Powtórz dla więcej wymiarów (B3.3)</DialogDescription>
+          <DialogDescription className="text-xs">Przeciągnij palcem od punktu do punktu albo stuknij dwa końce, potem wpisz wymiar. Zdjęcie zostaje bez zmian.</DialogDescription>
         </div>
 
         <div className="space-y-3 px-5 py-4">
           <canvas
             ref={canvasRef}
-            onMouseDown={handleCanvasMouseDown}
-            onMouseMove={handleCanvasMouseMove}
-            onMouseUp={handleCanvasMouseUp}
-            className="w-full border border-border rounded-card bg-black cursor-crosshair"
-            style={{ maxHeight: "400px", objectFit: "contain" }}
+            role="img"
+            aria-label="Zdjęcie z wymiarami. Zaznacz dwa punkty, aby dodać wymiar."
+            onPointerDown={onDown}
+            onPointerMove={onMove}
+            onPointerUp={onUp}
+            onPointerCancel={() => { down.current = null; }}
+            data-testid="dimension-canvas"
+            className="max-h-[50dvh] w-full cursor-crosshair touch-none select-none rounded-card border border-border bg-muted object-contain"
           />
 
-          {showTextInput && (
-            <div className="flex gap-2">
+          {pending && (
+            <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); addDimension(); }} aria-label="Opis wymiaru">
               <input
-                type="text"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder="np. 120 cm, 5m"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") addDimension();
-                }}
-                className="flex-1 rounded-field border border-input bg-background px-3 py-2 text-sm outline-hidden focus:ring-2 focus:ring-ring"
                 autoFocus
+                value={text}
+                maxLength={DIMENSION_TEXT_MAX}
+                onChange={(e) => setText(e.target.value)}
+                aria-label="Wymiar"
+                placeholder="np. 35 cm od narożnika"
+                className="min-w-0 flex-1 rounded-field border border-input bg-background px-3 py-2 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
               />
-              <Button size="sm" onClick={addDimension} className="coarse:h-10">
-                <Check className="h-4 w-4" aria-hidden />
-              </Button>
-            </div>
+              <Button type="submit" size="sm" disabled={!text.trim()} className="coarse:h-11" aria-label="Dodaj wymiar"><Check className="h-4 w-4" aria-hidden /></Button>
+              <Button type="button" size="sm" variant="ghost" onClick={cancelPending} className="coarse:h-11">Anuluj</Button>
+            </form>
           )}
+          {/* Linia stała (nie pojawia się i znika): zmiana wysokości okna między dwoma stuknięciami przesuwałaby płótno. */}
+          <p className="ui-hint min-h-5" role="status" data-testid="dimension-hint">
+            {pending ? "" : list.length >= MAX_DIMENSIONS_PER_IMAGE ? `Najwięcej ${MAX_DIMENSIONS_PER_IMAGE} wymiarów na zdjęciu.` : start ? "Stuknij drugi koniec wymiaru." : "Przeciągnij albo stuknij pierwszy koniec."}
+          </p>
 
-          {currentDimensions.length > 0 && (
-            <ul className="space-y-1">
-              {currentDimensions.map((dim, idx) => (
-                <li key={idx} className="flex items-center justify-between rounded-card bg-muted px-3 py-2 text-sm">
-                  <span>{dim.text}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeDimension(idx)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
+          {list.length > 0 && (
+            <ul className="space-y-1" aria-label="Wymiary na zdjęciu">
+              {list.map((d, i) => (
+                <li key={i} className="flex items-center justify-between gap-2 rounded-card bg-muted px-3 py-1.5 text-sm" data-testid="dimension-item">
+                  <span className="min-w-0 truncate">{d.text}</span>
+                  <button type="button" onClick={() => setList((l) => l.filter((_, j) => j !== i))} aria-label={`Usuń wymiar ${d.text}`}
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
                     <Trash2 className="h-4 w-4" aria-hidden />
                   </button>
                 </li>
@@ -206,13 +188,8 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
         </div>
 
         <ResponsiveDialogFooter className="grid grid-cols-2 gap-2 border-t border-border px-5 pb-5 pt-4">
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="coarse:h-11">
-            <X className="mr-1 h-4 w-4" aria-hidden />
-            Zamknij
-          </Button>
-          <Button type="button" onClick={save} className="coarse:h-11">
-            Zapisz wymiary
-          </Button>
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="coarse:h-11">Zamknij</Button>
+          <Button type="button" onClick={() => { onSave(list); onOpenChange(false); }} className="coarse:h-11">Zapisz wymiary</Button>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </Dialog>

@@ -12,6 +12,7 @@ import { shrinkSitePhotos } from "@/lib/study/photoShrink";
 import { buildHandover, handoverText } from "@/lib/study/handover";
 import { getSitePoints } from "@/lib/study/pointsStore";
 import type { HandoverPdfPhoto } from "@/lib/study/handoverPdf";
+import { dimensionsLine } from "@/lib/study/dimensions";
 import { companyNameStore } from "@/lib/study/companyPrefs";
 import { imageStore } from "@/lib/imageStore";
 import { useShifts } from "@/lib/shifts";
@@ -102,7 +103,10 @@ export function useSiteCardActions({
         if (!rec) continue;
         const entry = study.journal.find((e) => e.images.includes(ref));
         const dataUrl = await blobToDataUrl(new Blob([rec.bytes], { type: rec.type }));
-        photos.push({ dataUrl, caption: entry?.captions?.[ref] ?? (entry ? new Date(entry.at).toLocaleDateString("pl-PL") : "") });
+        const base = entry?.captions?.[ref] ?? (entry ? new Date(entry.at).toLocaleDateString("pl-PL") : "");
+        // B3.3: wymiary zdjęcia trafiają do podpisu w protokole („… · wymiary: 35 cm, 120 cm”).
+        const dims = dimensionsLine(entry?.dimensions?.[ref]);
+        photos.push({ dataUrl, caption: dims ? `${base}${base ? " · " : ""}wymiary: ${dims}` : base });
       }
       // Generator PDF leniwie: rzadko używany, poza precache (jak sam jsPDF).
       const { buildHandoverPdf, handoverPdfName, sharePdf, signatureDataUrl: loadSignature } = await import("@/lib/study/handoverPdf");

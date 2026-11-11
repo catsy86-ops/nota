@@ -1,10 +1,12 @@
 import type { Dispatch, SetStateAction } from "react";
-import { PenTool, Type, Undo2, X } from "lucide-react";
+import { PenTool, Ruler, Type, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NoteImage } from "@/components/NoteImage";
 import { cn } from "@/lib/utils";
 import { CAPTION_MAX } from "@/lib/study/photoCaption";
 import { DelayedSpinner } from "@/components/DelayedSpinner";
+import type { Dimension } from "@/lib/study/dimensions";
+import { dimensionsLine } from "@/lib/study/dimensions";
 
 /**
  * Pasek zdjęć wpisu w arkuszu i formularz podpisu pod nim (§5.5). Stan wpisu zostaje w arkuszu;
@@ -12,7 +14,7 @@ import { DelayedSpinner } from "@/components/DelayedSpinner";
  */
 const CAPTION_CHIPS = ["Przed zakryciem", "Łazienka", "Kuchnia", "Kotłownia"];
 
-export function PhotoStrip({ images, captions, processing, captioning, captionDraft, onCaptionDraft, onToggleCaption, onCancelCaption, onSubmitCaption, onRemoveCaption, onDraw, onUndoDrawing, drawnFrom = {}, onRemove }: {
+export function PhotoStrip({ images, captions, processing, captioning, captionDraft, onCaptionDraft, onToggleCaption, onCancelCaption, onSubmitCaption, onRemoveCaption, onDraw, onUndoDrawing, drawnFrom = {}, onMeasure, dimensions = {}, onRemove }: {
   images: string[];
   /** Podpisy zdjęć wpisu (ref → tekst); pokazane pod paskiem, wypalane dopiero przy eksporcie. */
   captions: Record<string, string>;
@@ -28,6 +30,10 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
   /** Oryginały narysowanych zdjęć (ref rysunku → oryginał, H0.1); przy takim zdjęciu jest „Cofnij rysunek”. */
   drawnFrom?: Record<string, string>;
   onUndoDrawing?: (ref: string) => void;
+  /** B3.3: otwiera miarkę dla zdjęcia; brak = bez przycisku. */
+  onMeasure?: (ref: string) => void;
+  /** Wymiary zdjęć wpisu (ref → lista); pokazane pod paskiem. */
+  dimensions?: Record<string, Dimension[]>;
   onRemove: (ref: string) => void;
 }) {
   return (
@@ -66,6 +72,20 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
               >
                 <PenTool className="h-3.5 w-3.5" aria-hidden />
               </button>
+              {onMeasure && (
+                <button
+                  type="button"
+                  onClick={() => onMeasure(ref)}
+                  aria-label={dimensions[ref]?.length ? `Wymiary na zdjęciu ${i + 1} (${dimensions[ref].length})` : `Dodaj wymiary na zdjęciu ${i + 1}`}
+                  title="Wymiar na zdjęciu — linia z opisem, zdjęcie zostaje bez zmian"
+                  className={cn(
+                    "absolute -bottom-1.5 left-1/2 grid h-6 w-6 -translate-x-1/2 place-items-center rounded-full border border-border bg-card text-foreground shadow-elevation-1 relative coarse:after:absolute coarse:after:-inset-1.5 coarse:after:content-['']",
+                    dimensions[ref]?.length && "border-primary bg-primary text-primary-foreground",
+                  )}
+                >
+                  <Ruler className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              )}
               {drawnFrom[ref] && onUndoDrawing && (
                 <button
                   type="button"
@@ -90,6 +110,11 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
       {images.some((r) => captions[r]) && (
         <ul className="space-y-0.5 text-xs text-muted-foreground" aria-label="Podpisy zdjęć">
           {images.map((r, i) => (captions[r] ? <li key={r}>Zdjęcie {i + 1}: {captions[r]}</li> : null))}
+        </ul>
+      )}
+      {images.some((r) => dimensions[r]?.length) && (
+        <ul className="space-y-0.5 text-xs text-muted-foreground" aria-label="Wymiary na zdjęciach" data-testid="photo-dimensions">
+          {images.map((r, i) => (dimensions[r]?.length ? <li key={r}>Zdjęcie {i + 1}: wymiary {dimensionsLine(dimensions[r])}</li> : null))}
         </ul>
       )}
       {captioning && images.includes(captioning) && (

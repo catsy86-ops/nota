@@ -5154,7 +5154,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 
 - **B3.1 Minutnik próby szczelności:** `src/components/study/PressureTestTimer.tsx`, integracja w `PressureTestFields.tsx`. Model: `readings` w `PressureTest` (`at`, `bar`). Licznik min:sec, pole ciśnienia początkowego, guzik start/stop, ekran nie gaśnie (`useWakeLock`).
 - **B3.2 Ostrzeżenie przy zakryceniu bez zdjęć:** toast w `SiteStagesPanel.tsx` (`COVER_STAGE_ID`, `coverPhotoCount`, liczba pomieszczeń z `getSitePoints`).
-- **B3.3 Model wymiarów + UI rysowanie:** model `dimensions` w `JournalEntry` (Record keyed by image ref), `src/lib/study/dimensions.ts` (`Dimension`, `cleanDimensions`). UI: `src/components/study/DimensionDrawer.tsx` (canvas, rysowanie linii, input tekstu wymiaru, lista do usunięcia).
+- **B3.3 Miarka (wymiary na zdjęciu):** `src/lib/study/dimensions.ts` (`Dimension`, `cleanDimensions` — współrzędne względne 0–1, opis do 80 znaków, najwyżej 20 na zdjęcie, `dimensionsLine`), pole `dimensions` we wpisie (ref zdjęcia → lista; czyszczone przez `cleanEntryParts` tak jak podpisy, więc tylko zdjęcia ze `images`). UI: `src/components/study/DimensionDrawer.tsx` (okno z płótnem), przycisk linijki na miniaturze w `PhotoStrip.tsx`, stan w `useJournalPhotoEdits.ts` (`openDimensions`, `saveDimensions`; rysunek podmieniający zdjęcie przenosi wymiary na nowy klucz). Dodawanie: przeciągnięcie albo dwa stuknięcia (alternatywa dla przeciągania), stała linia podpowiedzi, bo zmiana wysokości okna między stuknięciami przesuwała płótno. Wymiary są danymi, nie wypalają się w obraz: oryginał zostaje. W protokole PDF trafiają do podpisu zdjęcia („… · wymiary: 35 cm, 120 cm”); na liście wpisów: „Wymiary na zdjęciach: n”.
 - **B3.4 Poziomnica i spadek:** `src/components/study/LevelMeter.tsx`, model `level` w `JournalEntry`. Sensor `DeviceOrientationEvent` (beta), wyświetl stopnie i % spadku na 1m. Obsługa permisji iOS 13+.
 - **B3.5 Skaner kodów:** `src/lib/barcode.ts` (`hasBarcodeDetector`, `scanBarcode`, `requestCamera`), `src/components/study/BarcodeScanner.tsx`. Wsparcie QR, EAN, Code128, Code39. Fallback: ręczny wpis (`prompt`). Model: `barcode` w `JournalEntry`.
 - **B3.6 AI streszczanie:** `src/lib/aiModel.ts` (`hasAISummarizer`, `summarizeText`), `src/components/study/AISummary.tsx`. Chrome Built-in Model (offline). Model: `summary` w `JournalEntry` (do 500 znaków).
@@ -5163,7 +5163,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - **B3.9 Aparat live preview:** `src/lib/cameraCapture.ts` (`hasCamera`, `requestCamera`, `captureFrame`), `src/components/study/CameraCapture.tsx`. Zmiana front/back. Zrzut do blob → `imageStore.putBlob`. Integracja: guzik “Aparat” w arkuszu wpisu zamiast systemu.
 - **B3.10 Przypomnienie gwarancji:** `studyReminders` zwraca `warranty-expiring` gdy ≤30 dni. Model: `warranty` w `JournalEntry` (pole `level`, opcjonalne, liczba w stopniach).
 - **B3.11 NFC odczyt tagów:** `src/lib/nfc.ts` (`hasNFC`, `readNFCTag`), `src/components/study/NFCReader.tsx`. Web NFC API (Chrome Android 89+). Odczytane tagi idą do `barcode` (razem ze skanerem QR).
-- **B3.3 UI rysowanie wymiarów:** Canvas do linii ze strzałkami, input tekstu wymiaru, lista do edycji/usunięcia. Zapisuje do `dimensions` wpisu.
+- **Zapis wyników czujników (naprawa 2026-11-11):** `level` (poziomnica), `barcode` (skaner/NFC), `summary` (AI) i `dimensions` przechodzą teraz przez cały tor: formularz → `addJournalEntry` / `updateJournalEntry` (`journalActions.ts`, `entryFields`) → Yjs, edycję (`openJournalEdit`) i szkic (`sanitizeDraft`). Wcześniej akcje ich nie przyjmowały i wyniki ginęły przy „Zapisz wpis”. Na liście wpisów widać je w `JournalItem.tsx` (`journal-sensors`, `journal-summary`). Testy: `journalSensors.test.ts`, `e2e/journal-sensors.spec.ts`.
 
 **Jak działa.**
 
@@ -5176,7 +5176,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 **Ograniczenia i pułapki.**
 
 - **B3.1:** Minutnik liczy się w aplikacji; po zamknięciu czasu nie odlicza (brak Service Worker notifications na koniec próby). Odczyty zapisują się, ale bez UI do przeglądania (wykresu).
-- **B3.3:** Wymiary rysują się na canvas — bez warstw, bez cofania (poza usunięciem całego wymiaru). Wielkie zdjęcie może być niewidoczne na małym ekranie (brak skalowania canvas).
+- **B3.3:** Wymiar nie ma edycji — usuwa się go i dodaje od nowa. Płótno skaluje się do okna (zdjęcie ≤ 1600 px po dłuższym boku w podglądzie). Brak obsługi samej klawiatury (wymiar wymaga wskazania punktów na zdjęciu). W PDF wymiary są w podpisie zdjęcia, nie narysowane na obrazie.
 - **B3.4:** DeviceOrientationEvent wymaga permisji na iOS. Android: zawsze dostępny. Rowy osi (beta) mogą się różnić między urządzeniami.
 - **B3.5 i B3.11:** BarcodeDetector i Web NFC to API na razie wąskie (Chrome Android). Safari iOS: brak wsparcia.
 - **B3.6:** Chrome Built-in Model może nie być zainstalowany (offline model na urządzeniu). Fallback: bez streszczenia.
@@ -5192,7 +5192,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 - `9cd58d78` (B3.1 model + B3.7)
 - `4207277d` (B3.10)
 - `6cb5f691` (B3.1 timer)
-- `75584ca6` (B3.3 model)
+- `75584ca6` (B3.3 model; UI przepisane 2026-11-11)
 - `634dad32` (B3.8)
 - `8f786ee4` (B3.4)
 - `9558183d` (B3.5)

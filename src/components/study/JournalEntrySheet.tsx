@@ -13,6 +13,7 @@ import { BarcodeScanner } from "./BarcodeScanner";
 import { AISummary } from "./AISummary";
 import { CameraCapture } from "./CameraCapture";
 import { NFCReader } from "./NFCReader";
+import { DimensionDrawer } from "./DimensionDrawer";
 import { FittingsFields } from "./FittingsFields";
 import { PipesFields } from "./PipesFields";
 import { applyKit, type Kit } from "@/lib/study/kits";
@@ -69,7 +70,7 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "level" | "barcode" | "summary" | "recordings" | "test" | "fittings" | "pipes" | "stage" | "geo">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "dimensions" | "level" | "barcode" | "summary" | "recordings" | "test" | "fittings" | "pipes" | "stage" | "geo">;
 
 /** Odtwarzacz i nagrywanie leniwie, poza główną paczką (jak w notatkach). */
 const VoiceRecorder = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.VoiceRecorder })));
@@ -313,7 +314,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     else patchJournalDraft({ at: next });
   }
 
-  const { saveCaption, drawing, setDrawing, openDrawing, saveDrawing, undoDrawing } = useJournalPhotoEdits({ getForm, patch, setProcessing, setCaptioning, setCaptionDraft });
+  const { saveCaption, drawing, setDrawing, openDrawing, saveDrawing, undoDrawing, measuring, setMeasuring, openDimensions, saveDimensions } = useJournalPhotoEdits({ getForm, patch, setProcessing, setCaptioning, setCaptionDraft });
 
   async function addPhotos(files: File[]) {
     let skipped = 0;
@@ -353,7 +354,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     commitSite();
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, captions: form.captions, drawnFrom: form.drawnFrom, recordings: form.recordings, at, test: form.test, fittings: form.fittings, pipes: form.pipes, supply, stage: form.stage, geo: form.geo ?? null });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, captions: form.captions, drawnFrom: form.drawnFrom, recordings: form.recordings, at, test: form.test, fittings: form.fittings, pipes: form.pipes, supply, stage: form.stage, geo: form.geo ?? null, level: form.level, barcode: form.barcode, summary: form.summary, dimensions: form.dimensions });
     if (entry) { freshEntry.id = entry.id; rememberSupply(); }
     if (!entry) {
       haptic("warn");
@@ -383,7 +384,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const prev = study.journal.find((e) => e.id === f.id);
     const demotes = editDemotesTopic({ kind: f.kind, topic: f.topic }, prev, !!f.topic && columnOf(study, f.topic) === "done");
     const saved = updateJournalEntry(f.id, {
-      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, captions: f.captions, drawnFrom: f.drawnFrom, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, pipes: f.pipes, supply, stage: f.stage, geo: f.geo ?? null,
+      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, captions: f.captions, drawnFrom: f.drawnFrom, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, pipes: f.pipes, supply, stage: f.stage, geo: f.geo ?? null, level: f.level, barcode: f.barcode, summary: f.summary, dimensions: f.dimensions,
     });
     if (!saved) {
       haptic("warn");
@@ -796,6 +797,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               captions={getForm().captions}
               onRemoveCaption={(ref) => saveCaption(ref, "")}
               onDraw={(ref) => void openDrawing(ref)}
+              onMeasure={(ref) => void openDimensions(ref)}
+              dimensions={getForm().dimensions}
               drawnFrom={getForm().drawnFrom}
               onUndoDrawing={undoDrawing}
               onRemove={(ref) => {
@@ -980,6 +983,14 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           onOpenChange={(o) => { if (!o) setDrawing(null); }}
           initialImage={drawing?.url ?? null}
           onSave={(dataUrl) => void saveDrawing(dataUrl)}
+        />
+        {/* B3.3 Miarka: wymiary jako dane przy zdjęciu, oryginał bez zmian. */}
+        <DimensionDrawer
+          open={measuring !== null}
+          onOpenChange={(o) => { if (!o) setMeasuring(null); }}
+          imageUrl={measuring?.url ?? ""}
+          dimensions={measuring ? getForm().dimensions?.[measuring.ref] ?? [] : []}
+          onSave={saveDimensions}
         />
       </SheetContent>
     </Sheet>

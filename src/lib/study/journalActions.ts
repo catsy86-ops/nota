@@ -39,6 +39,14 @@ export interface NewJournalEntry {
   stage?: string | null;
   /** „Tu jestem” — lokalizacja wpisu; `null`/brak = bez lokalizacji. Sama nie czyni wpisu niepustym. */
   geo?: GeoPoint | null;
+  /** B3.4: kąt z poziomicy (stopnie); brak = bez pomiaru. */
+  level?: number;
+  /** B3.5/B3.11: kod ze skanera albo tagu NFC; brak = bez kodu. */
+  barcode?: string;
+  /** B3.6: streszczenie wpisu z AI na urządzeniu; brak = bez streszczenia. */
+  summary?: string;
+  /** B3.3: wymiary na zdjęciach (ref zdjęcia → lista); czyszczone jak podpisy (tylko zdjęcia ze `images`). */
+  dimensions?: Record<string, Array<{ from: [number, number]; to: [number, number]; text: string }>>;
   /** Punkt w pomieszczeniu (H2.3) — zdjęcie punktu z karty budowy; brak = bez punktu. */
   point?: string;
   /** Budowa wpisu (nazwa; H4.3 zdjęcia z dnia); przy nowym wpisie brak = bieżąca budowa. */
@@ -55,6 +63,10 @@ function entryFields(input: NewJournalEntry, now: number) {
     images: input.images ?? [],
     captions: input.captions,
     drawnFrom: input.drawnFrom,
+    dimensions: input.dimensions,
+    level: input.level,
+    barcode: input.barcode,
+    summary: input.summary,
     recordings: input.recordings ?? [],
     test: input.test,
     fittings: input.fittings,
@@ -63,7 +75,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     geo: input.geo,
   });
   if (parts.empty) return null;
-  const { text, checked, images, captions, drawnFrom, recordings, test, fittings, pipes, stage, geo } = parts;
+  const { text, checked, images, captions, drawnFrom, dimensions, level, barcode, summary, recordings, test, fittings, pipes, stage, geo } = parts;
   return {
     at: typeof input.at === "number" && Number.isFinite(input.at) ? Math.min(input.at, now) : now,
     kind: input.kind,
@@ -74,6 +86,10 @@ function entryFields(input: NewJournalEntry, now: number) {
     ...(input.supply === "site" && (fittings.length || pipes.length) ? { supply: "site" as const } : {}),
     ...(Object.keys(captions).length ? { captions } : {}),
     ...(Object.keys(drawnFrom).length ? { drawnFrom } : {}),
+    ...(Object.keys(dimensions).length ? { dimensions } : {}),
+    ...(level !== undefined ? { level } : {}),
+    ...(barcode ? { barcode } : {}),
+    ...(summary ? { summary } : {}),
     ...(recordings.length ? { recordings } : {}),
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),

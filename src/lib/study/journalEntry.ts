@@ -1,3 +1,4 @@
+import { cleanDimensions as cleanDimList } from "./dimensions";
 import { cleanFittings, type Fitting } from "./fittings";
 import { cleanAuthor } from "./companyPrefs";
 import { cleanPipes, type Pipe } from "./pipes";
@@ -227,16 +228,7 @@ export function cleanDimensions(raw: unknown, images: readonly string[]): Record
   for (const ref of images) {
     const v = (raw as Record<string, unknown>)[ref];
     if (!Array.isArray(v)) continue;
-    const dims: Array<{ from: [number, number]; to: [number, number]; text: string }> = [];
-    for (const d of v) {
-      const o = (d && typeof d === "object" ? d : {}) as Record<string, unknown>;
-      const pair = (v: unknown): [number, number] | null =>
-        Array.isArray(v) && v.length === 2 && v.every((n) => typeof n === "number") ? [v[0], v[1]] : null;
-      const from = pair(o.from);
-      const to = pair(o.to);
-      const text = typeof o.text === "string" ? o.text.slice(0, 80) : null;
-      if (from && to && text) dims.push({ from, to, text });
-    }
+    const dims = cleanDimList(v);
     if (dims.length) out[ref] = dims;
   }
   return out;
