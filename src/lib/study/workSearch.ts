@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type MiniSearch from "minisearch";
-import { fold } from "@/lib/searchQuery";
+import { searchWorkKeys } from "@/workers/workSearch";
+import { makeIndex, searchKeys, type IndexDoc } from "./workSearchCore";
 import { entrySiteId, type SiteInfo } from "./sites";
 import { fittingsLine } from "./fittings";
 import { pipesLine } from "./pipes";
@@ -27,14 +28,6 @@ export interface WorkHit {
   hasPhotos: boolean;
   at: number;
 }
-
-interface IndexDoc {
-  key: string;
-  text: string;
-  site: string;
-}
-
-const tokenize = (s: string) => fold(s).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
 
 /** Dokumenty indeksu i opisy trafień — czysta funkcja, testowana bez biblioteki. */
 export function workDocs(dir: readonly SiteInfo[], journal: readonly JournalEntry[]): { docs: IndexDoc[]; hits: Map<string, WorkHit> } {
@@ -74,40 +67,29 @@ export interface WorkIndex {
 
 export function buildWorkIndex(Engine: typeof MiniSearch, dir: readonly SiteInfo[], journal: readonly JournalEntry[]): WorkIndex {
   const { docs, hits } = workDocs(dir, journal);
-  const mini = new Engine<IndexDoc>({
-    idField: "key",
-    fields: ["text", "site"],
-    storeFields: [],
-    tokenize,
-    processTerm: (t) => fold(t),
-    searchOptions: { boost: { text: 2 }, prefix: true, fuzzy: 0.2, combineWith: "AND" },
-  });
-  mini.addAll(docs);
+  const mini = makeIndex(Engine, docs);
   return {
-    search: (query, limit = 8) => {
-      if (!query.trim()) return [];
-      return mini.search(query).slice(0, limit).flatMap((r) => { const h = hits.get(String(r.id)); return h ? [h] : []; });
-    },
+    search: (query, limit = 8) => searchKeys(mini, query, limit).flatMap((k) => { const h = hits.get(k); return h ? [h] : []; }),
   };
 }
 
-let engine: Promise<typeof MiniSearch> | null = null;
-const loadEngine = () => (engine ??= import("minisearch").then((m) => m.default));
-
 /**
- * Trafienia dla zapytania; do czasu załadowania biblioteki i zbudowania indeksu zwraca `[]`
- * (wołający może w tym czasie pokazać swoje dokładne dopasowanie). Indeks przebudowuje się tylko
- * przy zmianie wpisów albo budów i tylko gdy zapytanie nie jest puste.
+ * Trafienia dla zapytania. Indeks MiniSearch buduje i przeszukuje Worker (B5.6), więc pierwsze zapytanie nie blokuje
+ * wątku UI; do czasu odpowiedzi zostają poprzednie trafienia (albo `[]` na początku — wołający może w tym czasie pokazać
+ * swoje dokładne dopasowanie). Dokumenty przebudowują się tylko przy zmianie wpisów albo budów i tylko gdy zapytanie
+ * nie jest puste.
  */
 export function useWorkSearch(query: string, dir: readonly SiteInfo[], journal: readonly JournalEntry[], limit = 8): WorkHit[] {
-  const [Engine, setEngine] = useState<typeof MiniSearch | null>(null);
   const active = query.trim() !== "";
+  const prepared = useMemo(() => (active ? workDocs(dir, journal) : null), [active, dir, journal]);
+  const [found, setFound] = useState<WorkHit[]>([]);
   useEffect(() => {
-    if (!active || Engine) return;
+    if (!prepared) { setFound([]); return; }
     let alive = true;
-    void loadEngine().then((e) => { if (alive) setEngine(() => e); });
+    void searchWorkKeys(prepared.docs, query, limit).then((keys) => {
+      if (alive) setFound(keys.flatMap((k) => { const h = prepared.hits.get(k); return h ? [h] : []; }));
+    });
     return () => { alive = false; };
-  }, [active, Engine]);
-  const index = useMemo(() => (active && Engine ? buildWorkIndex(Engine, dir, journal) : null), [active, Engine, dir, journal]);
-  return useMemo(() => index?.search(query, limit) ?? [], [index, query, limit]);
+  }, [prepared, query, limit]);
+  return active ? found : [];
 }

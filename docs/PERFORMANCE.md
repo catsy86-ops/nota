@@ -46,4 +46,4 @@ wpisami, bez zmiany); oś ma w DOM 120 wpisów (ostatnie 30 dni), cały DOM ok. 
 - **B5.1 (wirtualizacja osi) nie jest potrzebna:** oś ma 120 wpisów w DOM, grupy dni mają `content-visibility: auto`, a po B5.3 powrót na oś kosztuje ~200 ms.
 - **Karta budowy 503 ms** (cel 300) — osobny temat (renderowanie karty), nie dotyczy Fazy 5.
 - **B5.5 (OPFS) zostaje odłożone** (decyzja architekta B-7): pamięć ~35 MB, zdjęć w pomiarze nie ma, brak sygnału.
-
+- **B5.6 zrobione:** indeks wyszukiwania w Workerze, pierwsze zapytanie 445 → 229 ms; precache +19 KB (próg 4,25 MiB).
