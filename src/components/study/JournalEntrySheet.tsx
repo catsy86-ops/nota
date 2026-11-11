@@ -19,7 +19,7 @@ import { PipesFields } from "./PipesFields";
 import { applyKit, type Kit } from "@/lib/study/kits";
 import { useKits } from "@/lib/study/kitsStore";
 const KitsDialog = lazy(() => import("./KitsDialog").then((m) => ({ default: m.KitsDialog })));
-import { TEST_TOPICS } from "@/lib/study/pressureTest";
+import { isRunning, TEST_TOPICS } from "@/lib/study/pressureTest";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -351,6 +351,12 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   }
 
   function submitOnce() {
+    // B3.1: trwająca próba nie przechodzi do wpisu w połowie — najpierw wynik albo przerwanie.
+    const live = (isEdit ? getJournalEditForm() : getJournalDraft())?.test;
+    if (live && isRunning(live)) {
+      toast.error("Próba szczelności trwa", { description: "Zakończ ją w Minutniku (wpisz ciśnienie końcowe) albo ją przerwij, potem zapisz wpis." });
+      return;
+    }
     commitSite();
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";

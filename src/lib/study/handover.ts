@@ -1,5 +1,5 @@
 import { entrySiteId, type SiteCard } from "./sites";
-import { testLine } from "./pressureTest";
+import { readingsLine, testLine } from "./pressureTest";
 import { dayKeyOf, periodLabel } from "./report";
 import { siteStages, type SiteStage } from "./stages";
 import type { JournalEntry } from "./journalEntry";
@@ -19,6 +19,8 @@ export interface HandoverTest {
   at: number;
   line: string;
   ok: boolean;
+  /** B3.1: odczyty ciśnienia w trakcie próby („0 min 6 bar → 30 min 6 bar”); brak = nie rejestrowano. */
+  readings?: string;
 }
 
 export interface HandoverRemark {
@@ -121,7 +123,7 @@ export function buildHandover(
     period: first !== undefined && last !== undefined ? periodLabel(dayKeyOf(first), dayKeyOf(last)) : null,
     date: periodLabel(dayKeyOf(now), dayKeyOf(now)),
     stages: site.stages ? site.stages.map((s) => ({ ...s })) : null,
-    tests: entries.filter((e) => e.test).map((e) => ({ at: e.at, line: testLine(e.test!), ok: e.test!.ok })),
+    tests: entries.filter((e) => e.test).map((e) => ({ at: e.at, line: testLine(e.test!), ok: e.test!.ok, ...(readingsLine(e.test!) ? { readings: readingsLine(e.test!) } : {}) })),
     remarks: entries
       .filter((e) => e.kind === "problem" && e.resolved === undefined)
       .map((e) => ({ at: e.at, text: e.text.trim().split("\n")[0] || "bez opisu", owner: e.owner, due: e.due, photosBefore: e.images.length, photosAfter: e.after?.length ?? 0 })),

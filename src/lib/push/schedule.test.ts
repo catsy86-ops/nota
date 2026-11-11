@@ -168,3 +168,25 @@ describe("buildPushSchedule — koniec zmiany (G4.1)", () => {
     expect(ends(buildPushSchedule({ now: WED_NOON, notes: [], shifts, off: ["grafik"] }))).toEqual([]);
   });
 });
+
+describe("buildPushSchedule — koniec próby szczelności (B3.1)", () => {
+  const now = new Date(2026, 10, 11, 14, 0).getTime(); // środa po południu
+  const endsAt = now + 20 * 60_000;
+
+  it("planuje powiadomienie na koniec trwającej próby — o tej godzinie, bez przesuwania na rano", () => {
+    const items = buildPushSchedule({ now, notes: [], pressure: { startedAt: now - 10 * 60_000, endsAt } });
+    expect(items).toEqual([expect.objectContaining({ key: `t:${now - 10 * 60_000}`, at: endsAt, title: "Próba szczelności: czas minął", url: "/praca" })]);
+  });
+
+  it("nie planuje, gdy próba już się skończyła, nie trwa albo kategoria jest wyłączona", () => {
+    expect(buildPushSchedule({ now, notes: [], pressure: { startedAt: now - 50 * 60_000, endsAt: now - 1000 } })).toEqual([]);
+    expect(buildPushSchedule({ now, notes: [], pressure: null })).toEqual([]);
+    expect(buildPushSchedule({ now, notes: [], pressure: { startedAt: now, endsAt }, off: ["proby"] })).toEqual([]);
+  });
+
+  it("w nocy też: koniec próby to umówiony moment, nie przypomnienie", () => {
+    const night = new Date(2026, 10, 11, 23, 30).getTime();
+    const items = buildPushSchedule({ now: night, notes: [], pressure: { startedAt: night, endsAt: night + 30 * 60_000 } });
+    expect(items[0].at).toBe(night + 30 * 60_000);
+  });
+});

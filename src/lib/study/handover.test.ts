@@ -27,6 +27,13 @@ describe("protokół odbioru", () => {
     expect(h.remarks).toEqual([{ at: at(3), text: "Brak rewizji w łazience", photosBefore: 0, photosAfter: 0 }]);
   });
 
+  it("odczyty z minutnika trafiają do protokołu (B3.1); próba bez odczytów ich nie ma", () => {
+    const withReadings = e("r", at(2), { test: { medium: "air", bar: 6, minutes: 30, drop: 0.1, ok: false, readings: [{ at: 0, bar: 6 }, { at: 900, bar: 5.95 }, { at: 1800, bar: 5.9 }] } });
+    const h = buildHandover([...journal, withReadings], card, at(16));
+    expect(h.tests.find((t) => t.readings)?.readings).toBe("0 min 6 bar → 15 min 5,95 bar → 30 min 5,9 bar");
+    expect(h.tests.filter((t) => !t.readings)).toHaveLength(1);
+  });
+
   it("etapy z karty, zdjęcia od najstarszych do limitu", () => {
     const many = Array.from({ length: 15 }, (_, i) => e(`p${i}`, at(1) + i, { images: [IMG(i)] }));
     const h = buildHandover(many, { ...card, stages: [{ id: "woda", name: "Rozprowadzenie wody", done: at(2) }] }, at(16));

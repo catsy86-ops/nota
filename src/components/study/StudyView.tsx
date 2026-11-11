@@ -37,6 +37,7 @@ import { QuizPanel, type QuizScope } from "./QuizPanel";
 import { StudyBoard } from "./StudyBoard";
 import { StudyChecklist } from "./StudyChecklist";
 import { StudyJournal } from "./StudyJournal";
+import { PressureRunWatcher } from "./PressureRunWatcher";
 
 /**
  * Pasek opanowania (nowy plan 3.5): jeden odcinek na moduł zamiast 18 kwadracików.
@@ -315,6 +316,7 @@ function StudyScreen() {
         </header>
       )}
 
+      <PressureRunWatcher />
       <Tabs value={group} onValueChange={onGroup}>
         {/* Na wąskim ekranie (albo przy dużym tekście) zakładki przewijają się w bok zamiast łamać się w dwie linie. */}
         <TabsList ref={tabsRef} className="h-auto w-full justify-start overflow-x-auto [scrollbar-width:none] sm:w-auto">

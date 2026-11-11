@@ -51,7 +51,10 @@ export async function buildHandoverPdf(h: Handover, opts: HandoverPdfOptions): P
 
   w.heading("Próby szczelności");
   if (h.tests.length === 0) w.line("Brak protokołów prób w dzienniku.", 10, "normal", 2);
-  for (const t of h.tests) w.line(`${shortDate(t.at)} ${t.line}`, 10, "normal", 2);
+  for (const t of h.tests) {
+    w.line(`${shortDate(t.at)} ${t.line}`, 10, "normal", 2);
+    if (t.readings) w.line(`Odczyty: ${t.readings}`, 9, "normal", 6);
+  }
 
   w.heading("Uwagi (otwarte problemy)");
   if (h.remarks.length === 0) w.line("Brak uwag — wszystkie zgłoszone problemy rozwiązane.", 10, "normal", 2);

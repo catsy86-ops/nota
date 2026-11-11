@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Gauge, X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-import { defaultTest, TEST_MEDIA, TEST_MEDIUM_LABEL, type PressureTest, type TestMedium } from "@/lib/study/pressureTest";
+import { clockLabel, defaultTest, isRunning, readingsLine, remainingSec, TEST_MEDIA, TEST_MEDIUM_LABEL, type PressureTest, type TestMedium } from "@/lib/study/pressureTest";
+import { PressureChart } from "./PressureChart";
 import { PressureTestTimer } from "./PressureTestTimer";
 
 /**
@@ -13,6 +14,15 @@ import { PressureTestTimer } from "./PressureTestTimer";
  */
 export function PressureTestFields({ value, topic, onChange }: { value: PressureTest | null; topic: string; onChange: (t: PressureTest | null) => void }) {
   const [timerOpen, setTimerOpen] = useState(false);
+  // Licznik na przycisku, gdy próba trwa, a okno minutnika jest zamknięte.
+  const running = !!value && isRunning(value);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!running) return;
+    setNow(Date.now());
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [running]);
   if (!value) {
     return (
       <button
@@ -36,6 +46,7 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
           {!sewer && (
             <Button size="sm" variant="outline" onClick={() => setTimerOpen(true)} className="coarse:h-9">
               <Clock className="mr-1 h-4 w-4" aria-hidden />Minutnik
+              {isRunning(value) && <span className="ml-1 font-mono tabular-nums" data-testid="timer-badge">· {clockLabel(remainingSec(value, now))}</span>}
             </Button>
           )}
           <button type="button" onClick={() => onChange(null)} aria-label="Usuń protokół próby" className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-muted coarse:size-11">
@@ -58,8 +69,15 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
         <ToggleGroupItem value="ok" className="coarse:h-11 data-[state=on]:text-success-ink">Szczelna</ToggleGroupItem>
         <ToggleGroupItem value="fail" className="coarse:h-11 data-[state=on]:text-destructive-ink">Nieszczelna</ToggleGroupItem>
       </ToggleGroup>
+      {!running && value.readings && value.readings.length > 1 && (
+        <div data-testid="test-readings">
+          <PressureChart test={value} />
+          <p className="ui-hint mt-1">{readingsLine(value)}</p>
+        </div>
+      )}
       </fieldset>
-      <PressureTestTimer open={timerOpen} onOpenChange={setTimerOpen} test={value} onUpdate={set} />
+      {/* Minutnik zwraca cały protokół (koniec próby usuwa `startedAt`), więc zastępujemy, nie scalamy. */}
+      <PressureTestTimer open={timerOpen} onOpenChange={setTimerOpen} test={value} onUpdate={onChange} />
     </>
   );
 }
@@ -67,6 +85,14 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
 /** Pole liczby z przecinkiem dziesiętnym; tekst trzymany lokalnie, żeby „0,” nie znikało w trakcie pisania. */
 function NumField({ label, value, onChange }: { label: string; value: number | null; onChange: (v: number | null) => void }) {
   const [text, setText] = useState(value === null ? "" : String(value).replace(".", ","));
+  // Wartość zmieniona z zewnątrz (minutnik wpisuje czas i spadek) musi trafić do pola; pisanie nie jest nadpisywane,
+  // bo „0,” i „0” to ta sama liczba.
+  useEffect(() => {
+    const typed = Number.parseFloat(text.replace(",", "."));
+    const same = value === null ? !Number.isFinite(typed) : typed === value;
+    if (!same) setText(value === null ? "" : String(value).replace(".", ","));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reaguje tylko na `value`
+  }, [value]);
   return (
     <label className="block space-y-1 text-xs text-muted-foreground">
       {label}

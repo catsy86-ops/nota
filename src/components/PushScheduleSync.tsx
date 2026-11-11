@@ -6,6 +6,8 @@ import { buildPushSchedulePlan, PUSH_MAX_ITEMS, type PushNote } from "@/lib/push
 import { PUSH_SUMMARY_KEY } from "@/lib/push/summary";
 import { EVENING_NUDGED_KEY, readEveningNudgeTime, useShifts, useShiftsReady } from "@/lib/shifts";
 import { useStudyReady, yStudy } from "@/lib/study/data";
+import { getJournalDraft } from "@/lib/study/draft";
+import { runEndsAt } from "@/lib/study/pressureTest";
 import { REPORT_NUDGE_KEY, WEEK_REPORT_NUDGE_KEY } from "@/lib/study/reportNudge";
 
 const read = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -32,8 +34,11 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
   useEffect(() => {
     if (!ready) return;
     const send = (keepalive = false) => {
+      const test = getJournalDraft().test;
+      const endsAt = test ? runEndsAt(test) : null;
       const plan = buildPushSchedulePlan({
         now: Date.now(),
+        pressure: test?.startedAt !== undefined && endsAt !== null ? { startedAt: test.startedAt, endsAt } : null,
         notes: notesRef.current,
         journal: studyRef.current.journal,
         sites: studyRef.current.sites,

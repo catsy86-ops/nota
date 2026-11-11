@@ -48,6 +48,7 @@ export const PUSH_CATEGORIES = [
   { id: "problemy", label: "Problem w dzienniku budowy", prefixes: ["p:"] },
   { id: "serwis", label: "Serwis dziś i zaległy", prefixes: ["v:"] },
   { id: "zamowienia", label: "Materiał zamówiony, a nie dojechał", prefixes: ["o:"] },
+  { id: "proby", label: "Koniec próby szczelności", prefixes: ["t:"] },
 ] as const;
 export type PushCategoryId = (typeof PUSH_CATEGORIES)[number]["id"];
 
@@ -100,6 +101,8 @@ export interface PushInput {
   eveningNudged?: string | null;
   reportNudged?: string | null;
   weekReportNudged?: string | null;
+  /** B3.1: trwająca próba szczelności (z szkicu wpisu na tym urządzeniu) — powiadomienie na koniec czasu. */
+  pressure?: { startedAt: number; endsAt: number } | null;
   /** Wyłączone kategorie (`PUSH_CATEGORIES`) — ich terminów nie planujemy wcale, więc nie zajmują limitu. */
   off?: readonly string[];
 }
@@ -292,6 +295,11 @@ function reportItems(input: PushInput, now: number): PushItem[] {
 /** Problemy otwarte i materiał zamówiony bez dostawy — w chwili, gdy minie próg z `reminders.ts`. */
 function studyItems(input: PushInput, now: number, end: number): PushItem[] {
   const out: PushItem[] = [];
+  const run = input.pressure;
+  if (run && run.endsAt > now && run.endsAt <= end) {
+    // Bez godzin ciszy: koniec próby to umówiony moment, nie przypomnienie.
+    out.push({ key: pushKey.pressure(run.startedAt), at: run.endsAt, title: "Próba szczelności: czas minął", body: "Odczytaj manometr i wpisz ciśnienie końcowe.", url: "/praca" });
+  }
   for (const e of input.journal ?? []) {
     if (e.kind !== "problem" || e.resolved !== undefined) continue;
     const at = outsideQuietHours(e.at + REMINDER_PROBLEM_DAYS * DAY_MS);

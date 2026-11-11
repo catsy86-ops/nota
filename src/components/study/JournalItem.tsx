@@ -6,7 +6,7 @@ import { freshEntry } from "@/lib/study/entrySheet";
 import { requestCustomPrefill } from "@/lib/study/customPrefill";
 import { CHIP_ACCENT } from "@/components/ui/chip";
 import { cn } from "@/lib/utils";
-import { testLine } from "@/lib/study/pressureTest";
+import { readingsLine, testLine } from "@/lib/study/pressureTest";
 import { mapsUrl } from "@/lib/study/geo";
 import { Button } from "@/components/ui/button";
 import { NoteImage } from "@/components/NoteImage";
@@ -82,6 +82,9 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
             <p className={cn("mt-1 inline-flex items-start gap-1.5 text-xs font-medium", e.test.ok ? "text-success-ink" : "text-destructive-ink")} data-testid="journal-test">
               <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(e.test)}
             </p>
+          )}
+          {e.test && readingsLine(e.test) && (
+            <p className="ui-hint mt-0.5 pl-5" data-testid="journal-test-readings">Odczyty: {readingsLine(e.test)}</p>
           )}
           {(e.level !== undefined || e.barcode || dimensionCount > 0) && (
             <p className="ui-hint mt-1 flex items-start gap-1.5" data-testid="journal-sensors">
