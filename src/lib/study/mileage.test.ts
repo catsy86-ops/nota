@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateLinearDistance, suggestMileage, mileageCost, exportMileageCSV } from "./mileage";
+import { calculateLinearDistance, suggestMileage, mileageCost, exportMileageCSV, cleanMileage, monthEntries, mileageTotals, EMPTY_MILEAGE, type MileageEntry } from "./mileage";
 
 describe("mileage", () => {
   it("calculateLinearDistance: oblicza odległość między dwoma punktami", () => {
@@ -68,9 +68,50 @@ describe("mileage", () => {
       payments: [],
     });
 
-    expect(csv).toContain("Data,Liczba budów,Dystans (km)");
-    expect(csv).toContain("2026-11-01,2,50,0.65,32.50");
-    expect(csv).toContain("2026-11-02,1,30,0.65,19.50");
-    expect(csv.split("\n").pop()).toMatch(/^Razem,,[\d.]+,,52\.00$/);
+    const lines = csv.replace("\uFEFF", "").trim().split("\r\n");
+    expect(csv.startsWith("\uFEFF")).toBe(true);
+    expect(lines[0]).toBe("Data;Trasa;Liczba budów;Dystans (km);Stawka (zł/km);Koszt (zł)");
+    expect(lines[1]).toMatch(/^2026-11-0[12];s1 → s2;2;50;0,65;32,50$/);
+    expect(lines[2]).toMatch(/^2026-11-0[123];s3;1;30;0,65;19,50$/);
+    expect(lines[lines.length - 1]).toBe("Razem;;;80;;52,00");
+    expect(exportMileageCSV({ year: 2026, month: 11, entries: [{ id: "x", date: 1_793_000_000_000, siteIds: ["a"], distance: 1, rate: 1 }] }, () => "=HYPERLINK(1)")).toContain("'=HYPERLINK(1)");
+  });
+
+  it("calculateLinearDistance: długość geograficzna liczona z cos(szerokości), nie jak szerokość", () => {
+    // 0,1° długości na 52°N to ~6,8 km (nie ~11 km)
+    const dist = calculateLinearDistance([52.0, 21.0], [52.0, 21.1]);
+    expect(dist).toBeGreaterThan(6);
+    expect(dist).toBeLessThan(7.5);
+  });
+
+  describe("magazyn", () => {
+    const e = (id: string, date: number, distance = 10, rate = 0.5): MileageEntry => ({ id, date, siteIds: ["a"], distance, rate });
+
+    it("cleanMileage: śmieci dają pusty magazyn, zepsute wpisy odpadają", () => {
+      expect(cleanMileage(null)).toEqual(EMPTY_MILEAGE);
+      expect(cleanMileage("x")).toEqual(EMPTY_MILEAGE);
+      const out = cleanMileage({
+        rate: 0.9,
+        entries: [e("ok", 1_700_000_000_000), { id: "", date: 1, siteIds: [], distance: 1, rate: 1 }, e("bad-km", 1_700_000_000_000, -5), e("bad-rate", 1_700_000_000_000, 5, 99), "x", { ...e("nan", NaN) }],
+      });
+      expect(out.rate).toBe(0.9);
+      expect(out.entries.map((x) => x.id)).toEqual(["ok"]);
+    });
+
+    it("cleanMileage: zła stawka wraca do domyślnej", () => {
+      expect(cleanMileage({ rate: -1, entries: [] }).rate).toBe(0.65);
+    });
+
+    it("monthEntries: tylko wybrany miesiąc, od najstarszego", () => {
+      const nov5 = new Date(2026, 10, 5, 12).getTime();
+      const nov2 = new Date(2026, 10, 2, 12).getTime();
+      const oct = new Date(2026, 9, 31, 12).getTime();
+      expect(monthEntries([e("b", nov5), e("c", oct), e("a", nov2)], 2026, 11).map((x) => x.id)).toEqual(["a", "b"]);
+    });
+
+    it("mileageTotals: suma km i kosztu", () => {
+      expect(mileageTotals([e("a", 1, 50, 0.65), e("b", 2, 30, 0.65)])).toEqual({ km: 80, cost: 52 });
+      expect(mileageTotals([])).toEqual({ km: 0, cost: 0 });
+    });
   });
 });

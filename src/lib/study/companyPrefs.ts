@@ -1,6 +1,7 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { safeLine } from "@/lib/safeText";
 import type { CompanyPricing } from "@/lib/pricing";
+import { cleanMileage, EMPTY_MILEAGE, type MileageEntry, type MileageStore } from "./mileage";
 import { EMPTY_PRICING, cleanPricing } from "@/lib/pricing";
 
 /**
@@ -40,6 +41,34 @@ export const pricingStore = createPersistedStore<CompanyPricing>(PRICING_KEY, EM
 
 export const setPricing = (pricing: CompanyPricing) => pricingStore.set(pricing);
 export const usePricing = () => pricingStore.use();
+
+/**
+ * B4.3 Kilometrówka: przejazdy i ostatnia stawka. Na urządzeniu (jak cennik) — to rozliczenie osoby, nie budowy,
+ * więc nie idzie do wspólnego dokumentu ani do synchronizacji.
+ */
+export const MILEAGE_KEY = "kaczy.study.mileage.v1";
+
+export const mileageStore = createPersistedStore<MileageStore>(MILEAGE_KEY, EMPTY_MILEAGE, {
+  merge: (_def, stored) => cleanMileage(stored),
+});
+
+export const useMileage = () => mileageStore.use();
+
+/** Dopisuje przejazd i zapamiętuje jego stawkę jako domyślną. Zwraca `false`, gdy magazyn odrzucił dane (np. limit wpisów). */
+export function addMileageEntry(entry: MileageEntry): boolean {
+  const cur = mileageStore.get();
+  const next = cleanMileage({ rate: entry.rate, entries: [...cur.entries, entry] });
+  if (!next.entries.some((e) => e.id === entry.id)) return false;
+  mileageStore.set(next);
+  return true;
+}
+
+export function removeMileageEntry(id: string): MileageEntry | undefined {
+  const cur = mileageStore.get();
+  const gone = cur.entries.find((e) => e.id === id);
+  if (gone) mileageStore.set({ ...cur, entries: cur.entries.filter((e) => e.id !== id) });
+  return gone;
+}
 
 /**
  * H5.1 Autor: imię osoby na tym urządzeniu („Marek”) dopisywane do nowych wpisów, braków i kroków punktów

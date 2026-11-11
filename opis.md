@@ -5207,13 +5207,13 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 
 **Co robi.** Finanse budowy: cennik robocizny do fuch, przypomnienia o należności, kilometrówka z zestawieniem, odcisk dokumentu (SHA-256), zestawienie miesiąca godzin/punktów/fuch/wpłat.
 
-**Stan integracji (2026-11-11).** Podpięte w UI: B4.1 (cennik i numer konta w Ustawienia → Ogólne → Praca, `GeneralSettings.tsx`, `PricingManager`, `bankAccountStore` w `companyPrefs.ts`) i B4.2 (przyciski SMS/WhatsApp w „Należnościach” karty budowy, `SiteBillingDues.tsx`; kwota to „Zostało do zapłaty” z rozliczenia, telefon z pola „Telefon inwestora”, czekanie liczone od ostatniej wpłaty albo założenia karty; bez telefonu lub przy saldzie ≤ 0 przycisków nie ma). NIEPODPIĘTE (tylko biblioteki z testami, bez ekranu): B4.3 kilometrówka, B4.4 odcisk, B4.5 zestawienie miesiąca. Widoku „Moje” w B4.5 nie podpinać, dopóki `summaryForDisplay` nie filtruje linii (dziś zwraca wszystko). Cennik (B4.1) nie jest jeszcze używany do wyceny fuch — jest tylko lista pozycji.
+**Stan integracji (2026-11-11).** Podpięte w UI: B4.1 (cennik i numer konta w Ustawienia → Ogólne → Praca, `GeneralSettings.tsx`, `PricingManager`, `bankAccountStore` w `companyPrefs.ts`) i B4.2 (przyciski SMS/WhatsApp w „Należnościach” karty budowy, `SiteBillingDues.tsx`; kwota to „Zostało do zapłaty” z rozliczenia, telefon z pola „Telefon inwestora”, czekanie liczone od ostatniej wpłaty albo założenia karty; bez telefonu lub przy saldzie ≤ 0 przycisków nie ma). B4.3 kilometrówka podpięta (okno „Kilometrówka” w Dzienniku, patrz niżej). NIEPODPIĘTE (tylko biblioteki z testami, bez ekranu): B4.4 odcisk, B4.5 zestawienie miesiąca. Widoku „Moje” w B4.5 nie podpinać, dopóki `summaryForDisplay` nie filtruje linii (dziś zwraca wszystko). Cennik (B4.1) nie jest jeszcze używany do wyceny fuch — jest tylko lista pozycji.
 
 **Gdzie jest.**
 
 - **B4.1 Cennik robocizny:** `src/lib/pricing.ts` (model `PricingItem`, funkcje `addPricingItem`, `removePricingItem`). `src/components/settings/PricingManager.tsx` (UI do dodawania pozycji). Store w `companyPrefs.ts`: `pricingStore`, `usePricing()`.
 - **B4.2 Przypomnienie o należności:** `src/lib/study/paymentReminder.ts` (model `PaymentReminder`, `daysWaiting()`, `formatPaymentMessage()`, linki `generateSMSLink()`, `generateWhatsAppLink()`). `src/components/study/PaymentReminderButton.tsx` (przyciski SMS/WhatsApp do wysłania wiadomości).
-- **B4.3 Kilometrówka:** `src/lib/study/mileage.ts` (model `MileageEntry`, `suggestMileage()` z kalkulacją linii prostej × 1,3, `mileageCost()`, eksport CSV). Stawka domyślna 0,65 zł/km.
+- **B4.3 Kilometrówka (okno w Dzienniku, przycisk „Kilometrówka” obok „Zakończ dzień”):** `src/components/study/MileageDialog.tsx` (ładowane leniwie z `StudyJournal.tsx`). Logika: `src/lib/study/mileage.ts` (`MileageEntry`, `cleanMileage`, `monthEntries`, `mileageTotals`, `suggestMileage`, `exportMileageCSV`); magazyn `mileageStore` / `addMileageEntry` / `removeMileageEntry` w `companyPrefs.ts` (klucz `kaczy.study.mileage.v1`). Stawka domyślna 0,65 zł/km, zapamiętywana z ostatniego przejazdu.
 - **B4.4 Odcisk dokumentu:** `src/lib/study/documentFingerprint.ts` (SHA-256 z Web Crypto API, funkcje `computeDocumentHash()`, `generateDocumentFingerprint()`, `verifyDocumentFingerprint()`). Format: data + skrót (16 znaków).
 - **B4.5 Zestawienie miesiąca:** `src/lib/study/monthlySummary.ts` (model `MonthlySummary`, `MonthlyView` z "Dla szefa" i "Moje", eksport CSV). Linie: godziny, punkty, ryczałty, fuchy, materiał. Saldo = zarobek - wpłaty.
 
@@ -5221,7 +5221,7 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 
 - **Cennik (B4.1):** pozycje przypisane do typu punktu (H-4, E-4, itd). Wycena fuchy w 30 sekund: wybierz pozycje z listy.
 - **Należności (B4.2):** model z datą, kwotą, statusem wysłania. Helper liczy dni czekania. SMS/WhatsApp z linkami (`sms:`, `https://wa.me/`).
-- **Kilometrówka (B4.3):** geo-koordynaty z kart budów → podpowiedź dystansu (prosta × 1,3). Ręczny wpis z licznika. Eksport CSV do księgowej.
+- **Kilometrówka (B4.3):** wybierasz dzień, budowy po kolei (numerowane przystanki) i kilometry z licznika; gdy co najmniej dwie budowy mają zapisaną lokalizację, okno podpowiada dystans (haversine w linii prostej × 1,3) z przyciskiem „Wpisz”. Lista przejazdów wybranego miesiąca z „Cofnij” po usunięciu i sumą „km · zł”. CSV w formacie jak reszta eksportów (BOM, średnik, przecinek dziesiętny, CRLF; kolumna „Trasa” z nazwami budów, `cell()` chroni przed formułami).
 - **Odcisk (B4.4):** SHA-256 na zawartości dokumentu. To suma kontrolna wykrywająca przypadkowe zmiany; NIE uwierzytelnia dokumentu (kto zmieni PDF, przeliczy skrót). Bez `crypto.subtle` funkcje odmawiają (`computeDocumentHash` rzuca, `verifyDocumentFingerprint` zwraca `false`).
 - **Zestawienie (B4.5):** agregacja: godzin, punktów, fuch (z cennikiem), wpłat. Osobne widoki "Dla szefa" (wszystko) i "Moje".
 
@@ -5229,14 +5229,14 @@ Plan: `docs/plan-wyglad-2026-11-01.md` (decyzje D-W1…D-W5 przyjęte z rekomend
 
 - **B4.1:** Pozycje są na urządzeniu (`localStorage`), nie synchronizują się między telefonami. Każde urządzenie ma swój cennik.
 - **B4.2:** SMS/WhatsApp to linki — nie wysyłamy sami. Użytkownik zatwierdza wiadomość przed wysłaniem.
-- **B4.3:** Dystans w linii prostej to przybliżenie (Ziemia płaska). Mnożymy × 1,3, ale rzeczywista droga może być inna. Ręczny wpis z licznika jest zawsze dokładny.
+- **B4.3:** Dystans w linii prostej × 1,3 to przybliżenie (wcześniej liczony jak na płaskiej mapie bez cos(szerokości) i zawyżał wschód–zachód ~1,6 razy; teraz haversine z `geo.ts`). Wpis z licznika jest zawsze dokładny. Przejazdy są tylko na tym urządzeniu (nie synchronizują się i nie wchodzą do kopii zapasowej). Limity: 2000 przejazdów, 3000 km i 20 zł/km na wpis, 20 przystanków. Trasa nie obejmuje dojazdu z domu — liczy się tylko między budowami.
 - **B4.4:** SHA-256 bez klucza to suma kontrolna, nie podpis ani dowód autentyczności. Wyświetlany skrót ma 16 znaków (64 bity) — do porównań służy pełny hash.
 - **B4.5:** Wymagane powiązanie z Grafikiem (godziny, punkty) i Zarządzaniem (wpłaty). Integracja w pełni w następnej sesji.
 
 **Testy.**
 
-- **Unit:** `mileage.ts` (eksport CSV), `monthlySummary.ts` (kalkulacja), `documentFingerprint.ts` (SHA-256) mają testy do napisania.
-- **E2E:** `e2e/payment-reminder.spec.ts` (przyciski przypomnienia pojawiają się dopiero z telefonem i kwotą; konto i cennik w Ustawieniach zostają po odświeżeniu). Linki: `paymentReminder.test.ts` (numer czyszczony do cyfr i opcjonalnego „+”).
+- **Unit:** `mileage.test.ts` (odległość, CSV, czyszczenie magazynu, sumy), `monthlySummary.test.ts`, `documentFingerprint.test.ts`.
+- **E2E:** `e2e/mileage.spec.ts` (podpowiedź z lokalizacji, zapis, CSV, „Cofnij”, axe, telefon 390 px). `e2e/payment-reminder.spec.ts` (przyciski przypomnienia pojawiają się dopiero z telefonem i kwotą; konto i cennik w Ustawieniach zostają po odświeżeniu). Linki: `paymentReminder.test.ts` (numer czyszczony do cyfr i opcjonalnego „+”).
 - **Typu:** `npx tsc --noEmit` przechodzi (wszystkie typy).
 
 **Commit.** B4.1–B4.5 zacommitowane:

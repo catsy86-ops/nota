@@ -1,6 +1,6 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { weekSeparators } from "@/lib/study/journalWeeks";
-import { Archive, Clock, ChevronRight, FileText, Flag, Images, MapPin, PackageCheck, Plus, Search, Truck, Wrench, X } from "lucide-react";
+import { Archive, Car, Clock, ChevronRight, FileText, Flag, Images, MapPin, PackageCheck, Plus, Search, Truck, Wrench, X } from "lucide-react";
 import { studyReminders } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,8 @@ import { useTrackUse } from "@/lib/study/usage";
 import type { SitePackage } from "@/lib/study/sitePackage";
 import { JobsDialog } from "./JobsDialog";
 import { WholesaleOrderDialog } from "./WholesaleOrderDialog";
+
+const MileageDialog = lazy(() => import("./MileageDialog").then((m) => ({ default: m.MileageDialog })));
 import { EndDaySheet } from "./EndDaySheet";
 import { VanDialog } from "./VanDialog";
 import { useVan } from "@/lib/study/vanStore";
@@ -153,6 +155,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const unpaid = useMemo(() => unpaidTotal(jobs.values()), [jobs]);
   // H1.4: wspólna lista do hurtowni ze wszystkich budów w toku.
   const [wholesaleOpen, setWholesaleOpen] = useState(false);
+  const [mileageOpen, setMileageOpen] = useState(false);
   const wholesale = useMemo(() => wholesaleGroups(study.journal, dir), [study.journal, dir]);
   // H1.3: materiał w aucie — poniżej minimum idzie do listy hurtowni jako „Do auta”.
   const van = useVan();
@@ -357,6 +360,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   >
                     <Flag className="h-3.5 w-3.5 shrink-0" aria-hidden />Zakończ dzień
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setMileageOpen(true)}
+                    data-testid="mileage-open"
+                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                  >
+                    <Car className="h-3.5 w-3.5 shrink-0" aria-hidden />Kilometrówka
+                  </button>
                   {wholesaleCount > 0 && (
                     <button
                       type="button"
@@ -526,6 +537,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
       <JournalPhotoButton siteName={photoSite} onNoSite={() => openJournalSheet()} />
       <NewSiteDialog key={newSiteJob ? "job" : "site"} open={newSiteOpen} onOpenChange={setNewSiteOpen} dir={dir} initialJob={newSiteJob} onCreated={(id) => setCard(id)} onPackage={setSitePackage} />
       <SitePackageImportDialog pkg={sitePackage} onClose={() => setSitePackage(null)} onDone={(id) => { setSitePackage(null); setCard(id); }} />
+      {mileageOpen && (
+        <Suspense fallback={null}>
+          <MileageDialog open={mileageOpen} onOpenChange={setMileageOpen} dir={dir} />
+        </Suspense>
+      )}
       <WholesaleOrderDialog open={wholesaleOpen} onOpenChange={setWholesaleOpen} groups={wholesale} van={vanBuy} dir={dir} />
       <VanDialog open={vanOpen} onOpenChange={setVanOpen} journal={study.journal} />
       <PhotoDayDialog open={photoDayOpen} onOpenChange={setPhotoDayOpen} />
