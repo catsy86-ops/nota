@@ -45,16 +45,26 @@ interface SyncPrefs {
   legacyRoom: boolean;
   /** Zapisany kod był krótki (8 znaków) i został usunięty — trzeba sparować ponownie. */
   shortCodeDropped: boolean;
+  /**
+   * Do kiedy (ms) urządzenie dołącza też do pokoju v2 (SHA-256), żeby grupa ze starszymi wersjami aplikacji nie zniknęła
+   * po przejściu na pokój v3 (S3). `null` = nie dołącza (nowa grupa); `undefined` = zapis sprzed tej zmiany
+   * (`initSync` zamienia go na 30 dni od pierwszego uruchomienia).
+   */
+  v2Until?: number | null;
 }
 
-const DEFAULT_PREFS: SyncPrefs = { enabled: false, code: null, signaling: [], legacyRoom: DEFAULT_LEGACY_ROOM, shortCodeDropped: false };
+const DEFAULT_PREFS: SyncPrefs = { enabled: false, code: null, signaling: [], legacyRoom: DEFAULT_LEGACY_ROOM, shortCodeDropped: false, v2Until: null };
+
+/** Czas zgodności z pokojem v2 po przejściu na v3 (S3). */
+export const V2_COMPAT_MS = 30 * 24 * 60 * 60 * 1000;
 
 function readPrefs(): SyncPrefs {
   if (typeof window === "undefined") return DEFAULT_PREFS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PREFS;
-    const parsed = { ...DEFAULT_PREFS, ...JSON.parse(raw) };
+    const stored = JSON.parse(raw) as Partial<SyncPrefs>;
+    const parsed = { ...DEFAULT_PREFS, ...stored };
     // localStorage bywa uszkodzony albo podmieniony — każde pole sprawdzamy z osobna.
     const signaling = Array.isArray(parsed.signaling)
       ? parseSignalingList(parsed.signaling.filter((s: unknown) => typeof s === "string").join(" ")).valid
@@ -66,6 +76,7 @@ function readPrefs(): SyncPrefs {
     return {
       enabled: parsed.enabled === true && code !== null, code, signaling, legacyRoom: parsed.legacyRoom === true,
       shortCodeDropped: short || parsed.shortCodeDropped === true,
+      v2Until: typeof stored.v2Until === "number" ? stored.v2Until : stored.v2Until === null ? null : undefined,
     };
   } catch (err) {
     logDiag("warn", "yjsSync", "unreadable sync prefs, using defaults", err);
@@ -201,6 +212,24 @@ export async function roomNameV2For(code: string): Promise<string> {
 }
 
 /**
+ * Pokój v3: nazwa z PBKDF2 (200 tys. iteracji), nie z samego SHA-256. Nazwa trafia do publicznych serwerów
+ * sygnalizacyjnych, a kod (~59 bitów) jest hasłem ruchu — przy szybkim skrócie operator serwera mógłby odgadnąć kod
+ * offline (rzędu godzin–dni na farmie GPU); wolny KDF przesuwa to poza zasięg (S3 audytu 2026-11-11).
+ */
+const ROOM_V3_ITERATIONS = 200_000;
+const roomV3Cache = new Map<string, string>();
+export async function roomNameV3For(code: string): Promise<string> {
+  const cached = roomV3Cache.get(code);
+  if (cached) return cached;
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", enc.encode(code), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: enc.encode("kaczy-room-v3"), iterations: ROOM_V3_ITERATIONS }, key, 128);
+  const name = `kaczy3-${Array.from(new Uint8Array(bits), (b) => b.toString(16).padStart(2, "0")).join("")}`;
+  roomV3Cache.set(code, name);
+  return name;
+}
+
+/**
  * Lista serwerów z pola tekstowego: po jednym w linii (albo po przecinku),
  * tylko `ws://`/`wss://`, bez duplikatów. Zwraca też odrzucone wpisy do pokazania.
  */
@@ -241,10 +270,21 @@ export function setSignalingServers(servers: string[]): void {
   if (prefs.enabled && prefs.code) connect(prefs.code);
 }
 
-/** Pokoje, do których dołącza urządzenie: nowy zawsze, stary tylko po jawnym włączeniu zgodności. */
+/** Czy okno zgodności z pokojem v2 jeszcze trwa. */
+export function v2CompatActive(now: number = Date.now()): boolean {
+  const until = readPrefs().v2Until;
+  return typeof until === "number" && now < until;
+}
+
+/**
+ * Pokoje, do których dołącza urządzenie: v3 zawsze; v2 w oknie zgodności (30 dni od aktualizacji albo od dołączenia
+ * po kodzie — grupa mogła zostać na starszych wersjach); stary FNV tylko po jawnym włączeniu zgodności.
+ */
 export async function roomNamesFor(code: string): Promise<string[]> {
-  const v2 = await roomNameV2For(code);
-  return readPrefs().legacyRoom ? [v2, roomNameFor(code)] : [v2];
+  const rooms = [await roomNameV3For(code)];
+  if (v2CompatActive()) rooms.push(await roomNameV2For(code));
+  if (readPrefs().legacyRoom) rooms.push(roomNameFor(code));
+  return rooms;
 }
 
 export function getLegacyRoom(): boolean {
@@ -355,10 +395,10 @@ function connect(code: string) {
       });
       p.on("peers", ({ webrtcPeers, bcPeers }: { webrtcPeers: string[]; bcPeers: string[] }) => {
         peers[i] = webrtcPeers.length + bcPeers.length;
-        // U-3: pokój nr 1 to stary pokój FNV (`roomNamesFor`); widziane urządzenie przesuwa termin wygaszenia.
-        if (i === 1 && peers[i] > 0) markLegacySeen();
-        // Nowe urządzenia są w obu pokojach, stare tylko w starym — suma liczyłaby
-        // nowe podwójnie, a maksimum daje liczbę urządzeń.
+        // U-3: widziane urządzenie w starym pokoju FNV przesuwa termin wygaszenia zgodności.
+        if (room === roomNameFor(code) && peers[i] > 0) markLegacySeen();
+        // Nowe urządzenia są we wszystkich pokojach, stare tylko w starszych — suma liczyłaby
+        // nowe wielokrotnie, a maksimum daje liczbę urządzeń.
         const peerCount = Math.max(...peers);
         if (peerCount !== state.peerCount) logDiag("info", "yjsSync", `peers: ${peerCount}`);
         setState({ peerCount });
@@ -426,7 +466,8 @@ function disconnectProvider() {
 /** Generates a fresh pairing code, enables sync and connects. Returns the code. */
 export function startPairing(): string {
   const code = generateCode();
-  writePrefs({ ...readPrefs(), enabled: true, code, shortCodeDropped: false });
+  // Nowa grupa: wszystkie jej urządzenia dołączą po tej wersji, więc pokój v2 nie jest potrzebny.
+  writePrefs({ ...readPrefs(), enabled: true, code, shortCodeDropped: false, v2Until: null });
   connect(code);
   return code;
 }
@@ -438,7 +479,8 @@ export function startPairing(): string {
 export function joinWithCode(rawCode: string): string | null {
   const code = normalizeCode(rawCode);
   if (code.length !== CODE_LENGTH) return null;
-  writePrefs({ ...readPrefs(), enabled: true, code, shortCodeDropped: false });
+  // Grupa mogła powstać na starszej wersji (pokój v2) — przez 30 dni dołączamy do obu pokoi.
+  writePrefs({ ...readPrefs(), enabled: true, code, shortCodeDropped: false, v2Until: Date.now() + V2_COMPAT_MS });
   connect(code);
   return code;
 }
@@ -486,6 +528,12 @@ function reconnectIfNeeded() {
 
 export function initSync(): void {
   const prefs = readPrefs();
+  // Zapis sprzed pokoju v3: istniejąca grupa dostaje 30 dni na aktualizację pozostałych urządzeń.
+  if (prefs.code && prefs.v2Until === undefined) {
+    prefs.v2Until = Date.now() + V2_COMPAT_MS;
+    writePrefs(prefs);
+    logDiag("info", "yjsSync", "room v3: v2 compatibility window started");
+  }
   if (prefs.enabled && prefs.code) connect(prefs.code);
   if (!returnListenersBound && typeof window !== "undefined") {
     returnListenersBound = true;

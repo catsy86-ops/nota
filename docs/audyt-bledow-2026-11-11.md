@@ -81,7 +81,7 @@
 |---|---|---|
 | S1 | przekaźnik: brak `ws.on("error")` — jedna zła ramka zabija proces | naprawione: `ws.on("error")`, `relay-server/server.test.js` |
 | S2 | przekaźnik: `new URL` w `upgrade` bez `try/catch` — crash bez uwierzytelnienia | naprawione: `try/catch` w `upgrade`, `relay-server/server.test.js` |
-| S3 | pokój WebRTC = szybki SHA-256 z kodu ~59 bitów | otwarte (decyzja projektowa) |
+| S3 | pokój WebRTC = szybki SHA-256 z kodu ~59 bitów | naprawione (decyzja właściciela: nowy pokój + 30 dni zgodności): pokój v3 z PBKDF2 200 tys. iteracji (`roomNameV3For`); istniejące grupy i dołączanie po kodzie łączą się z v3 i v2 przez 30 dni (`v2Until`), nowa grupa tylko z v3; `yjsSync.test.ts` |
 | S4 | przekaźnik: tworzenie pokojów bez uwierzytelnienia, wyczerpanie zasobów | naprawione częściowo: dobowy limit nowych pokoi na adres (`ROOMS_PER_IP_PER_DAY`, domyślnie 20) obok limitu 5000 pokoi i zapytań na minutę; `relay-server/server.test.js`. Pełne uwierzytelnianie tworzenia (klucz serwera) nie dodane |
 | S5 | przekaźnik: `TRUST_PROXY=1` domyślnie w Dockerfile; mapa `hits` rośnie | naprawione w partii 1 (Dockerfile bez domyślnego `TRUST_PROXY`, sprzątanie mapy, ostatni wpis `X-Forwarded-For`) |
 | S6 | Share Target: `Origin: null` przechodzi, zapis bez zgody | naprawione (decyzja właściciela): „Zapisać udostępnione w NOTKACH?” przed zapisem (`useLaunchIntents.ts`); `e2e/share-files.spec.ts`, `share-to-entry.spec.ts` |
@@ -158,3 +158,7 @@ W11. Zostają W14/D10, W15 i S3–S5 (decyzje).
 ## Zrobione 2026-11-11 (szesnasta partia)
 
 W14/D10 (klucze kopii; wybrane domyślnie, jeśli ma być inaczej — do zmiany w `SETTINGS_KEYS`), W15 (scalanie zostaje, wyjaśnienie w oknie). Zostają tylko S3–S5 (decyzje projektowe o pokojach WebRTC i przekaźniku).
+
+## Zrobione 2026-11-11 (siedemnasta i osiemnasta partia)
+
+S3 (pokój v3), S4 (limit nowych pokoi), S5. Z audytu zostają wyłącznie pozycje świadomie bez zmian.

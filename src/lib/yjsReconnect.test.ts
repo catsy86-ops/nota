@@ -28,11 +28,11 @@ const CODE = "ABCDEFGHJKMN";
 
 describe("ponowne łączenie po powrocie do karty", () => {
   it("łączy od nowa po powrocie do karty, ale nie częściej niż co 10 s", async () => {
-    localStorage.setItem("kaczy.sync.v1", JSON.stringify({ enabled: true, code: CODE, signaling: [], legacyRoom: false }));
+    localStorage.setItem("kaczy.sync.v1", JSON.stringify({ enabled: true, code: CODE, signaling: [], legacyRoom: false, v2Until: null }));
     const { initSync } = await import("./yjsSync");
     initSync();
     // Jeden pokój tekstu i jeden obrazów.
-    await vi.waitFor(() => { if (providerInstances.length !== 2) throw new Error("not connected"); });
+    await vi.waitFor(() => { if (providerInstances.length !== 2) throw new Error("not connected"); }, { timeout: 8000 });
     const settled = providerInstances.length;
 
     // Zaraz po połączeniu powrót do karty nie restartuje połączenia.

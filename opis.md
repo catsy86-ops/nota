@@ -5399,3 +5399,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 
 `relay-server/server.js` — `creationLimited`: jeden adres może założyć najwyżej `ROOMS_PER_IP_PER_DAY` (domyślnie 20) nowych pokoi na dobę (429 powyżej); zapis do istniejącego pokoju nie jest liczony; liczniki sprząta `sweepHits`. Test: `relay-server/server.test.js`.
 
+## Audyt, osiemnasta partia: pokój WebRTC v3 (S3, 2026-11-11)
+
+- **Co robi:** nazwa pokoju synchronizacji liczona jest wolnym PBKDF2 (200 tys. iteracji) zamiast szybkiego SHA-256. Operator publicznego serwera sygnalizacyjnego widzi nazwę pokoju, więc przy szybkim skrócie mógłby offline odgadnąć kod parowania (~59 bitów), który jest też hasłem ruchu.
+- **Gdzie:** `src/lib/yjsSync.ts` — `roomNameV3For` (`kaczy3-…`, cache na kod), `roomNamesFor` (v3 zawsze; v2 w oknie zgodności; stary FNV tylko po jawnym włączeniu), `v2CompatActive`, pole `v2Until` w `kaczy.sync.v1`, `V2_COMPAT_MS` (30 dni). Obrazy (`imageSync.ts`) korzystają z tej samej listy pokoi.
+- **Migracja:** zapis sprzed zmiany (istniejąca grupa) dostaje w `initSync` okno 30 dni z pokojem v2; `joinWithCode` otwiera takie okno (grupa mogła zostać na starszych wersjach); `startPairing` (nowa grupa) tylko v3. W oknie nazwa v2 nadal jest widoczna dla serwera sygnalizacyjnego. Lista urządzeń (`refreshDevices`) pochodzi z pokoju v3, więc urządzenia na starszych wersjach, będące tylko w v2, na niej nie widnieją.
+- **Testy:** `yjsSync.test.ts` (nazwa v3, okno zgodności, nowa grupa), `yjsReconnect.test.ts`, `imageSync.test.ts`; e2e `sync-code`, `legacy-room-idle`, `relay-sync`.
+

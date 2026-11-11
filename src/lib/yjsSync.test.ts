@@ -81,8 +81,11 @@ function mainProviders(): MockProvider[] {
 // connect()/startImageSync() now load y-webrtc via dynamic import() so it's
 // out of the eager main bundle — even mocked, that's still a real Promise
 // tick before the provider exists. Wait for it instead of asserting synchronously.
+// Pokój v3 liczy PBKDF2 (200 tys. iteracji), więc połączenie pod obciążeniem trwa dłużej niż domyślna sekunda.
+const waitFor = (fn: () => void) => vi.waitFor(fn, { timeout: 8000 });
+
 async function waitForMainProvider(countAtLeast = ROOMS_PER_CONNECT): Promise<void> {
-  await vi.waitFor(() => {
+  await waitFor(() => {
     if (mainProviders().length < countAtLeast) throw new Error("provider not connected yet");
   });
 }
@@ -134,13 +137,13 @@ describe("yjsSync", () => {
   });
 
   it("startPairing connects to the new room and, during the transition, the legacy one", async () => {
-    const { startPairing, getSyncState, roomNameFor, roomNameV2For } = await import("./yjsSync");
+    const { startPairing, getSyncState, roomNameFor, roomNameV3For } = await import("./yjsSync");
     const code = startPairing();
     expect(getSyncState().code).toBe(code);
     expect(getSyncState().status).toBe("connecting");
 
     await waitForMainProvider();
-    expect(mainProviders().map((p) => p.roomName)).toEqual([await roomNameV2For(code), roomNameFor(code)]);
+    expect(mainProviders().map((p) => p.roomName)).toEqual([await roomNameV3For(code), roomNameFor(code)]);
     for (const p of mainProviders()) expect(p.opts).toEqual({ password: code });
   });
 
@@ -148,12 +151,12 @@ describe("yjsSync", () => {
     const { startPairing } = await import("./yjsSync");
     const code = startPairing();
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       if (providerInstances.filter((p) => p.roomName.endsWith("-img2")).length === 0) {
         throw new Error("image provider not connected yet");
       }
     });
-    await vi.waitFor(() => {
+    await waitFor(() => {
       if (providerInstances.filter((p) => p.roomName.endsWith("-img2")).length < ROOMS_PER_CONNECT) {
         throw new Error("image providers not connected yet");
       }
@@ -200,7 +203,7 @@ describe("yjsSync", () => {
     // (po vi.resetModules) może jeszcze dołożyć providery z innego kodu, których ten test nie kontroluje.
     const rooms = (await roomNamesFor(code)).flatMap((r) => [r, `${r}-img2`]);
     const mine = () => providerInstances.filter((p) => rooms.includes(p.roomName));
-    await vi.waitFor(() => { if (mine().length < 2 * ROOMS_PER_CONNECT) throw new Error("not all up"); });
+    await waitFor(() => { if (mine().length < 2 * ROOMS_PER_CONNECT) throw new Error("not all up"); });
     const firstRound = mine();
 
     pauseSync();
@@ -209,7 +212,7 @@ describe("yjsSync", () => {
     expect(getSyncState().code).toBe(code); // remembered
 
     resumeSync();
-    await vi.waitFor(() => { if (mine().filter((p) => !p.destroyed).length < 2 * ROOMS_PER_CONNECT) throw new Error("not resumed yet"); });
+    await waitFor(() => { if (mine().filter((p) => !p.destroyed).length < 2 * ROOMS_PER_CONNECT) throw new Error("not resumed yet"); });
     const resumed = mine().filter((p) => !p.destroyed && !firstRound.includes(p));
     expect(resumed.filter((p) => !p.roomName.endsWith("-img2"))).toHaveLength(ROOMS_PER_CONNECT);
     for (const p of resumed.filter((p) => !p.roomName.endsWith("-img2"))) expect(p.opts).toEqual({ password: code });
@@ -270,7 +273,7 @@ describe("yjsSync", () => {
     const before = [...providerInstances];
     setSignalingServers(["wss://sig.example.com", "not a url"]);
     expect(getSignalingServers()).toEqual(["wss://sig.example.com"]);
-    await vi.waitFor(() => {
+    await waitFor(() => {
       const fresh = providerInstances.filter((p) => !before.includes(p));
       if (fresh.filter((p) => p.roomName.endsWith("-img2")).length < ROOMS_PER_CONNECT) throw new Error("image providers not yet");
       if (fresh.filter((p) => !p.roomName.endsWith("-img2")).length < ROOMS_PER_CONNECT) throw new Error("main providers not yet");
@@ -344,12 +347,12 @@ describe("yjsSync - bezpieczne domyślne (A02)", () => {
     vi.resetModules();
   });
 
-  it("domyślnie dołącza tylko do pokoju SHA-256 (stary pokój FNV ujawnia kod serwerowi sygnalizacyjnemu)", async () => {
-    const { startPairing, roomNameV2For, getLegacyRoom } = await import("./yjsSync");
+  it("domyślnie dołącza tylko do pokoju PBKDF2 (stare pokoje FNV i SHA-256 ujawniają kod serwerowi sygnalizacyjnemu)", async () => {
+    const { startPairing, roomNameV3For, getLegacyRoom } = await import("./yjsSync");
     expect(getLegacyRoom()).toBe(false);
     const code = startPairing();
     await waitForMainProvider(1);
-    expect(mainProviders().map((p) => p.roomName)).toEqual([await roomNameV2For(code)]);
+    expect(mainProviders().map((p) => p.roomName)).toEqual([await roomNameV3For(code)]);
     expect(mainProviders().every((p) => !/^kaczy-[0-9a-f]{16}$/.test(p.roomName))).toBe(true);
   });
 
@@ -388,5 +391,40 @@ describe("yjsSync - bezpieczne domyślne (A02)", () => {
     const { wasShortCodeDropped, getSyncState } = await import("./yjsSync");
     expect(wasShortCodeDropped()).toBe(true);
     expect(getSyncState().code).toBeNull();
+  });
+});
+
+describe("pokój v3 (S3)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    providerInstances.length = 0;
+    vi.resetModules();
+  });
+
+  it("nazwa v3: deterministyczna, 128 bitów, bez kodu i inna niż v2", async () => {
+    const { roomNameV3For, roomNameV2For } = await import("./yjsSync");
+    const a = await roomNameV3For("ABCDEFGHJKMN");
+    expect(a).toBe(await roomNameV3For("ABCDEFGHJKMN"));
+    expect(a).not.toBe(await roomNameV3For("ABCDEFGHJKMP"));
+    expect(a).toMatch(/^kaczy3-[0-9a-f]{32}$/);
+    expect(a).not.toContain("ABCDEFGHJKMN");
+    expect(a).not.toBe(await roomNameV2For("ABCDEFGHJKMN"));
+  });
+
+  it("istniejąca grupa (zapis bez v2Until) dostaje po initSync 30 dni na pokój v2", async () => {
+    localStorage.setItem("kaczy.sync.v1", JSON.stringify({ enabled: true, code: "ABCDEFGHJKMN", signaling: [], legacyRoom: false }));
+    const { initSync, v2CompatActive, roomNamesFor, roomNameV3For, roomNameV2For } = await import("./yjsSync");
+    initSync();
+    expect(v2CompatActive()).toBe(true);
+    expect(await roomNamesFor("ABCDEFGHJKMN")).toEqual([await roomNameV3For("ABCDEFGHJKMN"), await roomNameV2For("ABCDEFGHJKMN")]);
+    expect(v2CompatActive(Date.now() + 31 * 24 * 60 * 60 * 1000)).toBe(false);
+  });
+
+  it("nowa grupa nie dołącza do v2, a dołączenie po kodzie otwiera okno zgodności", async () => {
+    const { startPairing, joinWithCode, v2CompatActive } = await import("./yjsSync");
+    startPairing();
+    expect(v2CompatActive()).toBe(false);
+    joinWithCode("ABCDEFGHJKMN");
+    expect(v2CompatActive()).toBe(true);
   });
 });
