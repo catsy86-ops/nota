@@ -1,6 +1,7 @@
 import { imageStore, isImageRef, sha256Hex } from "@/lib/imageStore";
 import { yjsStore } from "@/lib/yjsStore";
 import { sniffImage } from "@/lib/plans/imageSniff";
+import { canCompress, compressBudowa, COMPRESS_MIN_BYTES, decompressBudowa } from "./budowaCompression";
 import { currentAuthor } from "./companyPrefs";
 import { entrySiteId, findSiteByName, siteKey, type SiteInfo } from "./sites";
 import { getStudy, restoreJournalEntry, saveSiteCard, setSitePlan, setSiteShortages, setSiteStages, siteDirectoryOf } from "./store";
@@ -46,7 +47,7 @@ const blobToDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => {
  * Plik `.budowa` dla budowy `siteId`. `images` dokłada zdjęcia wpisów (bez EXIF); po ponownym kodowaniu
  * zdjęcie ma nowy klucz, więc wpisy w paczce wskazują na nowe klucze. `access` — kod do bramy, klucze.
  */
-export async function exportSitePackage(siteId: string, opts: { images: boolean; access: boolean }): Promise<{ file: File; entries: number; images: number; missingImages: number }> {
+export async function exportSitePackage(siteId: string, opts: { images: boolean; access: boolean }): Promise<{ file: File; entries: number; images: number; missingImages: number; compressed: boolean }> {
   const s = getStudy();
   const card = siteDirectoryOf(s).find((x) => x.id === siteId);
   if (!card) throw new Error("Nie ma takiej budowy");
@@ -78,14 +79,27 @@ export async function exportSitePackage(siteId: string, opts: { images: boolean;
     // Bez zdjęć: klucze zdjęć nie wychodzą z urządzenia (nic by nie wskazywały u odbiorcy).
     pkg.entries = pkg.entries.map((e) => { const { captions: _c, after: _a, ...rest } = e; return { ...rest, images: [] }; });
   }
-  const file = new File([JSON.stringify(pkg)], sitePackageName(card.name), { type: "application/json" });
-  return { file, entries: entries.length, images, missingImages };
+  const json = JSON.stringify(pkg);
+  // Duża paczka (zdjęcia) idzie skompresowana; mała zostaje JSON-em, który czyta też starsza wersja aplikacji (B5.2).
+  if (json.length > COMPRESS_MIN_BYTES && canCompress()) {
+    try {
+      const blob = await compressBudowa(json);
+      return { file: new File([blob], sitePackageName(card.name), { type: "application/octet-stream" }), entries: entries.length, images, missingImages, compressed: true };
+    } catch { /* bez kompresji: wysyłamy zwykły JSON */ }
+  }
+  const file = new File([json], sitePackageName(card.name), { type: "application/json" });
+  return { file, entries: entries.length, images, missingImages, compressed: false };
 }
 
-/** Czyta plik `.budowa` z dysku: rozmiar przed odczytem, potem czyszczenie (`parseSitePackage`). */
+/**
+ * Czyta plik `.budowa` z dysku: rozmiar przed odczytem, rozpakowanie (jeśli plik jest skompresowany, z limitem
+ * rozmiaru po rozpakowaniu), potem czyszczenie (`parseSitePackage`) — jedyna droga do danych z pliku.
+ */
 export async function readSitePackageFile(file: File): Promise<ParseResult> {
   if (file.size > SITE_PACKAGE_MAX_BYTES) return { ok: false, error: "Plik jest za duży (limit 40 MB)." };
-  return parseSitePackage(await file.text(), Date.now());
+  const text = await decompressBudowa(file);
+  if (text === null) return { ok: false, error: "Nie udało się rozpakować pliku — jest uszkodzony albo po rozpakowaniu za duży." };
+  return parseSitePackage(text, Date.now());
 }
 
 export interface ImportTarget { id: string; name: string; exists: boolean }

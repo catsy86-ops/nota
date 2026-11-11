@@ -11,6 +11,14 @@ const COMPRESSION_VERSION = 2;
 export const DECOMPRESSED_MAX_BYTES = Math.floor(SITE_PACKAGE_MAX_BYTES * 1.4);
 const COMPRESSION_MAGIC = new Uint8Array([0x42, 0x44, 0x57]); // "BDW" (Budowa compressed)
 
+/**
+ * Paczki mniejsze niż to zostają zwykłym JSON-em: czyta je każda wersja aplikacji, a zysk z gzip-a jest
+ * tam pomijalny. Kompresja ma sens przy zdjęciach (base64), które robią z paczki megabajty.
+ */
+export const COMPRESS_MIN_BYTES = 1_000_000;
+
+export const canCompress = () => typeof CompressionStream !== "undefined" && typeof DecompressionStream !== "undefined";
+
 export interface CompressionMetadata {
   version: number;
   timestamp: number;

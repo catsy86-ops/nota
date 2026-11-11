@@ -80,3 +80,27 @@ test("paczka budowy: obcy plik daje komunikat, nie okno", async ({ page }) => {
   await expect(page.getByText("To nie jest plik budowy.")).toBeVisible();
   await expect(page.getByTestId("site-package-import")).toHaveCount(0);
 });
+
+test("paczka skompresowana (v2) wczytuje się w przeglądarce, a bomba gzip jest odrzucona", async ({ page }) => {
+  const { gzipSync } = await import("node:zlib");
+  const pack = (json: string, declared = Buffer.byteLength(json)) => {
+    const meta = Buffer.from(JSON.stringify({ version: 2, timestamp: Date.now(), originalSize: declared }));
+    const len = Buffer.alloc(2);
+    len.writeUInt16LE(meta.length, 0);
+    return Buffer.concat([Buffer.from("BDW"), len, meta, gzipSync(json)]);
+  };
+  const pkg = JSON.stringify({
+    format: "notki-budowa", version: 1, exportedAt: new Date(2026, 9, 13).getTime(), by: "Marek",
+    site: { id: "n-1", name: "Kwiatowa 2", address: "", investor: "" },
+    stages: [], shortages: [{ id: "s1", text: "Zawór kulowy 1/2", qty: "4", status: "missing", at: new Date(2026, 9, 13).getTime() }], plan: [], entries: [], rooms: [], points: [],
+  });
+  await setup(page, false);
+  await page.getByRole("button", { name: /Nowa budowa/ }).click();
+  await page.getByTestId("site-package-file").setInputFiles({ name: "Kwiatowa 2.budowa", mimeType: "application/octet-stream", buffer: pack(pkg) });
+  const imp = page.getByTestId("site-package-import");
+  await expect(imp.getByTestId("site-package-summary")).toHaveText("Dojdzie: braki: 1.");
+
+  // Nagłówek kłamie o rozmiarze (1 kB, a w środku 5 MB zer): plik odrzucony, nic nie wczytane.
+  await page.getByTestId("site-package-file").setInputFiles({ name: "bomba.budowa", mimeType: "application/octet-stream", buffer: pack("0".repeat(5_000_000), 1000) });
+  await expect(page.getByText(/Nie udało się rozpakować pliku/)).toBeVisible();
+});
