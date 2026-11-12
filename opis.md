@@ -5495,5 +5495,12 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 
 - **Co robi:** w „Ustawieniach treningu” można wybrać czas przerwy po zapisie serii: 1 min, 90 s, 2 min albo 3 min. Wybór jest zapamiętany; po „Zapisz serie” startuje licznik na ten czas.
 - **Gdzie:** `src/lib/training/restPrefs.ts` (`restStore`, klucz `kaczy.training.restSeconds.v1`, na urządzeniu, poza kopią), `TrainingSection.tsx` (`RestControl`, `RestTimer`).
-- **Ograniczenia:** przerwa startuje po zapisie całego wpisu, nie po każdej serii („✓ Zrobiona” przy serii nie powstało); licznik nadal tekstowy, bez pierścienia (4.4).
+- **Ograniczenia:** przerwa startuje po zapisie całego wpisu, nie po każdej serii („✓ Zrobiona” przy serii nie powstało).
 - **Testy:** `restPrefs.test.ts`, `TrainingSection.test.tsx`.
+
+## Ćwiczenia — przerwa jako pierścień (4.4, 2026-11-12)
+
+- **Co robi:** po zapisie serii przerwa to pierścień SVG z dużym licznikiem (JetBrains Mono, cyfry tabelaryczne), przyciskami „+30 s” (wydłuża o 30 s) i „Pomiń” (44 px). Przy redukcji ruchu pierścień nie płynie, tylko skacze co pół sekundy.
+- **Gdzie:** `TrainingSection.tsx` (`RestTimer` z `until`, `total`, `onExtend`, `onStop`; stan `rest` w `TrainingSection`).
+- **Ograniczenia:** czytnik ekranu ogłasza tylko koniec przerwy; „+30 s” można stukać wielokrotnie bez górnego limitu.
+- **Testy:** `TrainingSection.test.tsx`.

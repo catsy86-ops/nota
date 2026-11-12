@@ -83,6 +83,18 @@ describe("TrainingSection", () => {
     setRestSeconds(90);
   });
 
+  it("przerwa (4.4): „+30 s” wydłuża licznik, „Pomiń” go zamyka", () => {
+    addEntryMock.mockReturnValue({ id: "t1" });
+    render(<TrainingSection />);
+    fireEvent.change(screen.getByLabelText("Powtórki, seria 1"), { target: { value: "10" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz serie" }));
+    expect(screen.getByTestId("rest-timer").textContent).toMatch(/1:30|1:29/);
+    fireEvent.click(screen.getByRole("button", { name: "+30 s" }));
+    expect(screen.getByTestId("rest-timer").textContent).toMatch(/2:00|1:59/);
+    fireEvent.click(screen.getByRole("button", { name: "Pomiń" }));
+    expect(screen.queryByTestId("rest-timer")).toBeNull();
+  });
+
   it("zapis serii wysyła ćwiczenie i wartości; pusty wiersz jest pomijany", () => {
     addEntryMock.mockReturnValue({ id: "t1" });
     render(<TrainingSection />);

@@ -26,15 +26,15 @@ export function TrainingSection() {
   const todays = useMemo(() => entries.filter((e) => e.day === today).sort(byTrainingTime), [entries, today]);
   const progress = useMemo(() => progressByExercise(entries), [entries]);
   const week = useMemo(() => trainingWeek(entries, today, (id) => exerciseById(id)?.group), [entries, today]);
-  const [restUntil, setRestUntil] = useState<number | null>(null);
+  const [rest, setRest] = useState<{ until: number; total: number } | null>(null);
   const restSeconds = useRestSeconds();
 
   return (
     <SectionCard icon={Dumbbell} title="Trening" bodyClassName="space-y-5">
 
       <PlanList plans={plans} />
-      <LogForm entries={entries} plans={plans} onSaved={() => setRestUntil(Date.now() + restSeconds * 1000)} />
-      {restUntil !== null && <RestTimer until={restUntil} onStop={() => setRestUntil(null)} />}
+      <LogForm entries={entries} plans={plans} onSaved={() => setRest({ until: Date.now() + restSeconds * 1000, total: restSeconds })} />
+      {rest !== null && <RestTimer until={rest.until} total={rest.total} onExtend={() => setRest({ until: rest.until + 30_000, total: rest.total + 30 })} onStop={() => setRest(null)} />}
 
       {todays.length > 0 && (
         <div>
@@ -535,7 +535,8 @@ function TrainingReminderControl() {
 }
 
 /** Licznik przerwy po zapisie serii; sam się kończy, „Pomiń” kończy wcześniej. */
-function RestTimer({ until, onStop }: { until: number; onStop: () => void }) {
+/** 4.4: przerwa jako pierścień (SVG) z dużym licznikiem, „+30 s” i „Pomiń”. Przy redukcji ruchu pierścień skacze co pół sekundy. */
+function RestTimer({ until, total, onExtend, onStop }: { until: number; total: number; onExtend: () => void; onStop: () => void }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 500);
@@ -549,12 +550,31 @@ function RestTimer({ until, onStop }: { until: number; onStop: () => void }) {
     onStop();
   }, [left, onStop]);
 
+  const R = 34;
+  const C = 2 * Math.PI * R;
+  const fraction = Math.min(1, Math.max(0, (until - now) / 1000 / total));
+
   return (
-    <div className="flex items-center justify-between gap-3 rounded-field border border-primary/40 px-3 py-2 text-sm" data-testid="rest-timer">
-      {/* Licznik co sekundę tylko dla oka; czytnik ogłasza wyłącznie koniec przerwy. */}
-      <span>Przerwa: <span className="font-mono tabular-nums" aria-hidden>{Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</span></span>
+    <div className="flex items-center gap-4 rounded-card border border-primary/40 px-3 py-2" data-testid="rest-timer">
+      <div className="relative size-20 shrink-0">
+        <svg viewBox="0 0 80 80" className="size-full -rotate-90" aria-hidden>
+          <circle cx="40" cy="40" r={R} fill="none" strokeWidth="6" className="stroke-border" />
+          <circle cx="40" cy="40" r={R} fill="none" strokeWidth="6" strokeLinecap="round" className="stroke-primary transition-[stroke-dashoffset] duration-500 ease-linear motion-reduce:transition-none"
+            strokeDasharray={C} strokeDashoffset={C * (1 - fraction)} />
+        </svg>
+        {/* Licznik co sekundę tylko dla oka; czytnik ogłasza wyłącznie koniec przerwy. */}
+        <span className="absolute inset-0 flex items-center justify-center font-mono text-xl font-semibold tabular-nums" aria-hidden>
+          {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
+        </span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium">Przerwa</p>
+        <div className="mt-1 flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" className="min-h-11" onClick={onExtend}>+30 s</Button>
+          <Button variant="ghost" size="sm" className="min-h-11" onClick={onStop}>Pomiń</Button>
+        </div>
+      </div>
       <span role="status" className="sr-only">{left <= 0 ? "Przerwa skończona" : ""}</span>
-      <Button variant="ghost" size="sm" className="coarse:h-11" onClick={onStop}>Pomiń</Button>
     </div>
   );
 }
