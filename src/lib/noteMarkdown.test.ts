@@ -50,3 +50,11 @@ describe("copyNoteToClipboard", () => {
     expect(toast.error).toHaveBeenCalled();
   });
 });
+
+describe("wikiLinkOf (Notatki 2.5)", () => {
+  it("link [[tytuł]] bez spacji z brzegów; bez tytułu — null", async () => {
+    const { wikiLinkOf } = await import("./noteMarkdown");
+    expect(wikiLinkOf({ title: "  Zakupy  " })).toBe("[[Zakupy]]");
+    expect(wikiLinkOf({ title: "   " })).toBeNull();
+  });
+});

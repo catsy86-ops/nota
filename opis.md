@@ -5587,3 +5587,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `src/lib/checklistTree.ts` (`childIds`, `toggleChecklistItem`), `ChecklistEditor.tsx`, `NoteCard.tsx` (`handleChecklistToggle`), `Index.tsx` (odhaczanie w czytniku).
 - **Ograniczenia:** bez zwijania podzadań i bez przeciągania rodzica razem z dziećmi (reszta punktu 2.2); dymek z „Cofnij” tylko w edytorze.
 - **Testy:** `src/lib/checklistTree.test.ts`.
+
+## Notatki — link [[…]] z palety (plan 2.5, część, 2026-11-12)
+
+- **Co robi:** przy otwartej notatce z tytułem paleta poleceń ma w „Ta notatka” pozycję „Kopiuj link [[tytuł]]” — kopiuje link do wklejenia w innej notatce.
+- **Gdzie:** `src/lib/noteMarkdown.ts` (`wikiLinkOf`, `copyWikiLink`), `CommandPalette.tsx`.
+- **Ograniczenia:** z punktu 2.5 nadal brak w palecie: przeniesienia do folderu, eksportu, historii wersji i wyodrębnienia; trafienia w nagłówkach jako osobna sekcja — bez zmian. Notatki prywatne (zablokowane) nie mają tej pozycji.
+- **Testy:** `src/lib/noteMarkdown.test.ts`.

@@ -2,10 +2,11 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
-import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette, Camera, PackageSearch, FileText } from "lucide-react";
+import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette, Camera, PackageSearch, FileText, Link2 } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
+import { copyWikiLink } from "@/lib/noteMarkdown";
 import { sectionHits } from "@/lib/sectionHits";
 import { requestHeading } from "@/lib/wikiHeading";
 import type { PeriodKind } from "@/lib/periodNote";
@@ -228,6 +229,11 @@ export function CommandPalette({
               {onToggleFavorite && !currentNote.trashed && (
                 <CommandItem value={currentNote.favorite ? "ta notatka usun z ulubionych" : "ta notatka do ulubionych"} onSelect={() => run(() => onToggleFavorite(currentNote.id, !currentNote.favorite))}>
                   <Star className="w-4 h-4 mr-2" /> {currentNote.favorite ? "Usuń z ulubionych" : "Do ulubionych"}
+                </CommandItem>
+              )}
+              {currentNote.title.trim() && !currentNote.locked && (
+                <CommandItem value="ta notatka kopiuj link wiki" onSelect={() => run(() => { void copyWikiLink(currentNote); })}>
+                  <Link2 className="w-4 h-4 mr-2" /> Kopiuj link [[{currentNote.title.trim()}]]
                 </CommandItem>
               )}
               {onDuplicate && !currentNote.trashed && (

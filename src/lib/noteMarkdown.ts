@@ -47,3 +47,20 @@ export async function copyNoteToClipboard(note: Note, as: CopyFormat = "markdown
     return false;
   }
 }
+
+/** Link do notatki w składni `[[tytuł]]` (plan Notatek 2.5) — do wklejenia w innej notatce; `null` bez tytułu. */
+export const wikiLinkOf = (note: Pick<Note, "title">): string | null => (note.title.trim() ? `[[${note.title.trim()}]]` : null);
+
+/** Kopiuje `[[tytuł]]` notatki do schowka i potwierdza toastem. */
+export async function copyWikiLink(note: Pick<Note, "title">): Promise<boolean> {
+  const link = wikiLinkOf(note);
+  if (!link) { toast.info("Notatka bez tytułu nie ma linku"); return false; }
+  try {
+    await navigator.clipboard.writeText(link);
+    toast.success(`Skopiowano link ${link}`);
+    return true;
+  } catch {
+    toast.error("Nie udało się skopiować — schowek jest niedostępny");
+    return false;
+  }
+}
