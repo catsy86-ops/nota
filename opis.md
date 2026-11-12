@@ -5461,3 +5461,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `src/lib/diet/model.ts` (`cleanDecimal`, `summarizeDay` zaokrągla sumę do 0,1), `DietSection.tsx` (`parseAmountField` z parametrem `decimals`), `src/lib/exerciseLabel.ts` (`EXERCISE_LABEL`), `CwiczeniaView.tsx`, `TrainingSection.tsx`.
 - **Ograniczenia:** istniejące notatki-przypomnienia bez etykiety zmienią się dopiero przy następnej zmianie godziny.
 - **Testy:** `src/lib/diet/model.test.ts`, `CwiczeniaView.test.tsx`, `TrainingSection.test.tsx`.
+
+## Kalendarz — czytelniejsze kropki i komórki (2026-11-12)
+
+- **Co robi:** w wąskiej komórce dnia (telefon) terminy to do 3 kropek (7 px) i pigułka `+N` z liczbą pozostałych zamiast luźnego „+3” obok kropek; na szerokiej komórce „+N więcej” to ta sama pigułka. Komórki miesiąca reagują na najechanie (ramka marki, lekki cień), „dziś” ma delikatne tło marki oprócz kółka przy numerze, a nagłówki dni tygodnia są pogrubione.
+- **Gdzie:** `src/components/calendar/DayCell.tsx` (`MAX_DOTS = 3`, `MorePill`), `dayCellStyles.ts` (`dayCellClass`, `weekdayHeadClass`; wspólne z Grafikiem, więc zmiana obejmuje też jego siatkę).
+- **Ograniczenia:** wygląd pigułki sprawdzony tylko testami i przeglądem kodu, bez zrzutu z prawdziwymi terminami.
+- **Testy:** `src/components/calendar/*.test.*`, `dayDots.test.ts`.

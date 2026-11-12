@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 /** Nagłówek dnia tygodnia („Pon”, zdaniem — nowy plan 2.6); sobota i niedziela (indeks 5 i 6) w kolorze marki. */
 export const weekdayHeadClass = (i: number) =>
-  cn("text-xs capitalize text-center py-1", i >= 5 ? "text-primary-ink" : "text-muted-foreground");
+  cn("text-xs font-medium capitalize text-center py-1.5", i >= 5 ? "text-primary-ink" : "text-muted-foreground");
 
 /**
  * Komórka dnia bez rozmiaru — wysokość zależy od tego, co komórka pokazuje. Pełne tło: kratka tła nie prześwituje.
@@ -20,7 +20,9 @@ export const dayCellClass = (inMonth: boolean, today = false, empty = false) => 
   today && inMonth && "today-breath",
   "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
   // Dzień spoza miesiąca: szary tekst, nie przezroczystość — przy opacity czerwone święto znikało w ciemnym motywie.
-  inMonth ? "border-border/50 bg-card dark:border-transparent" : "border-transparent text-muted-foreground",
+  inMonth ? "border-border/50 bg-card hover:border-primary/40 hover:shadow-sm dark:border-transparent dark:hover:border-primary/40" : "border-transparent text-muted-foreground",
+  // Dzisiejszy dzień ma delikatne tło marki, nie tylko kółko przy numerze.
+  today && inMonth && "bg-[color-mix(in_srgb,var(--primary)_5%,var(--card))]",
   inMonth && empty && !today && "border-dashed bg-transparent dark:border-border/40",
 );
 

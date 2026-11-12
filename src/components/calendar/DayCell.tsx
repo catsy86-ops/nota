@@ -18,9 +18,18 @@ import { studySummary, type StudyDayMarks } from "@/lib/study/calendarMarks";
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
 const MAX_CHIPS = 3;
 /** Kropka zajmuje ułamek szerokości chipa, więc na telefonie zmieści się ich więcej. Jedna kropka = jedna notatka. */
-const MAX_DOTS = 4;
+const MAX_DOTS = 3;
 
 const terminy = (n: number) => `${n} ${pluralPl(n, ["termin", "terminy", "terminów"])}`;
+
+/** Licznik ukrytych terminów: mała pigułka zamiast luźnego „+3” obok kropek. */
+function MorePill({ n, label }: { n: number; label?: string }) {
+  return (
+    <span className="inline-flex w-fit items-center rounded-full bg-primary/10 px-1.5 text-2xs font-medium leading-4 tabular-nums text-primary-ink">
+      +{n}{label ? ` ${label}` : ""}
+    </span>
+  );
+}
 
 /**
  * Chip, który da się przeciągnąć na inny dzień. Tylko termin zapisany
@@ -189,12 +198,12 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
           te same dane nie powtarzają się drugi raz. */}
       <div aria-hidden className="flex flex-col gap-0.5 overflow-hidden">
         {/* Wąska komórka (poniżej 7,5 rem, zapytanie kontenerowe): same kropki — chipy z tekstem się nie mieszczą. */}
-        <div className="flex items-center gap-1 flex-wrap @[6rem]:hidden pl-0.5">
+        <div className="flex items-center gap-[3px] flex-wrap @[6rem]:hidden pl-0.5">
           {dots.map((dot) => (
             <span
               key={dot.noteId}
               className={cn(
-                "w-1.5 h-1.5 rounded-full",
+                "size-[7px] rounded-full",
                 // Prognoza serii to pusty krąg, a zapisany termin pełny — różni się kształtem, nie tylko odcieniem.
                 // Zaległy: czerwony kwadrat — święto (czerwona kropka) ma kształt koła, więc się nie myli (K1.1).
                 dot.kind === "forecast" ? "bg-transparent ring-1 ring-primary"
@@ -203,18 +212,14 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
               )}
             />
           ))}
-          {hiddenDots > 0 && (
-            <span className="text-2xs leading-none text-muted-foreground">+{hiddenDots}</span>
-          )}
+          {hiddenDots > 0 && <MorePill n={hiddenDots} />}
         </div>
 
         <div className="hidden @[6rem]:flex @[6rem]:flex-col gap-0.5">
           {shown.map((occ) => (
             <DraggableChip key={`${occ.noteId}-${occ.at}`} occurrence={occ} title={titleOf(occ.noteId)} preview={previewOf?.(occ.noteId)} />
           ))}
-          {hidden > 0 && (
-            <span className="text-2xs text-muted-foreground pl-1">+{hidden} więcej</span>
-          )}
+          {hidden > 0 && <MorePill n={hidden} label="więcej" />}
         </div>
       </div>
     </div>
