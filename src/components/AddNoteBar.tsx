@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, useSyncExternalStore, lazy, Suspense, type ReactNode } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, useSyncExternalStore, lazy, Suspense, type ReactNode, useDeferredValue } from "react";
 import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useDictation } from "@/hooks/useDictation";
@@ -77,6 +77,9 @@ interface AddNoteBarProps {
   destination?: string | null;
   /** Szablony pokazywane w rozwiniętym, pustym szkicu. `done` zwija composer po wyborze. */
   templates?: (done: () => void) => ReactNode;
+  /** Plan Notatek 3.5: istniejąca notatka o tym samym tytule (podpowiedź „Otwórz istniejącą”). */
+  findDuplicate?: (title: string) => { id: string; title: string } | null;
+  onOpenDuplicate?: (id: string) => void;
 }
 
 const DRAFT_KEY = "kaczy.draft.v1";
@@ -172,7 +175,7 @@ function isTextEmpty(f: { title: string; content: string; checklist: readonly un
 /** Migawka pustego szkicu (patrz blokada podwójnego zapisu w `commit`). */
 const EMPTY_DRAFT_KEY = JSON.stringify({ title: "", content: "", images: [], attachments: [], checklist: [] });
 
-export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill?: string) => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates, wikiTitles, parentOptions }, ref) {
+export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill?: string) => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates, wikiTitles, parentOptions, findDuplicate, onOpenDuplicate }, ref) {
   // Szkic przeżywa przeładowanie i zamknięcie karty: tytuł, treść i pozycje listy wracają po powrocie.
   const [draft0] = useState(readDraft);
   const [expanded, setExpanded] = useState(draft0 !== null);
@@ -180,6 +183,9 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   const [openedAt, setOpenedAt] = useState(Date.now);
   useEffect(() => { if (expanded) setOpenedAt(Date.now()); }, [expanded]);
   const [title, setTitle] = useState(draft0?.title ?? "");
+  // 3.5: podpowiedź duplikatu liczona odroczonym tytułem — pisanie nie czeka na przejrzenie wszystkich tytułów.
+  const deferredTitle = useDeferredValue(title);
+  const duplicate = useMemo(() => findDuplicate?.(deferredTitle) ?? null, [findDuplicate, deferredTitle]);
   const [content, setContent] = useState(draft0?.content ?? "");
   const [color, setColor] = useState<NoteColor>(draft0?.color ?? "default");
   const [labels, setLabels] = useState<string[]>(draft0?.labels ?? []);
@@ -695,6 +701,17 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                 else textareaRef.current?.focus();
               }}
               className="w-full bg-transparent text-lg font-display font-semibold text-foreground placeholder:text-muted-foreground outline-hidden" />
+            {duplicate && (
+              <p className="ui-hint flex flex-wrap items-center gap-x-2" role="status" data-testid="composer-duplicate">
+                Masz już notatkę „{duplicate.title}”.
+                {onOpenDuplicate && (
+                  <button type="button" onClick={() => onOpenDuplicate(duplicate.id)} className="font-medium text-primary-ink underline-offset-2 hover:underline coarse:min-h-11">
+                    Otwórz istniejącą
+                  </button>
+                )}
+                <span>Albo zapisz tę jako nową.</span>
+              </p>
+            )}
             <FormatToolbar onInsert={(before, after) => {
               const ta = textareaRef.current;
               if (!ta) return;

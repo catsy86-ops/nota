@@ -5609,3 +5609,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `src/lib/labelTree.ts` (`planLabelRename`), `AppSidebar.tsx` (`renameLabelWithUndo`); sama zmiana jak dotąd w `yjsStore.renameLabelEverywhere`.
 - **Ograniczenia:** liczba notatek jest w dymku po zmianie, nie w podglądzie przed nią; notatki prywatne (zablokowane) mogą nie dać się przywrócić przez „Cofnij”.
 - **Testy:** `src/lib/labelTree.test.ts`; e2e `label-tree.spec.ts`, `saved-filters.spec.ts`.
+
+## Notatki — podpowiedź duplikatu przy tworzeniu (plan 3.5, 2026-11-12)
+
+- **Co robi:** gdy tytuł nowej notatki w pasku dodawania pokrywa się z tytułem istniejącej (bez ogonków, wielkości liter i interpunkcji), pod polem tytułu pojawia się „Masz już notatkę „X”.” z przyciskiem „Otwórz istniejącą”. Zapis działa dalej normalnie — to tylko podpowiedź.
+- **Gdzie:** `src/lib/noteDuplicate.ts` (`titleKey`, `findTitleDuplicate`), `AddNoteBar.tsx` (propsy `findDuplicate`, `onOpenDuplicate`, liczone odroczonym tytułem), `Index.tsx` (notatki aktywne i z archiwum).
+- **Ograniczenia:** dopasowanie dokładne po normalizacji, bez literówek (MiniSearch z planu pominięty, żeby nie było fałszywych podpowiedzi); tytuły krótsze niż 3 znaki i kosz się nie liczą.
+- **Testy:** `src/lib/noteDuplicate.test.ts`; e2e `notes.spec.ts`, `quick-capture.spec.ts`, `editing.spec.ts` bez zmian.

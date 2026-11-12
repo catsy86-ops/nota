@@ -75,6 +75,7 @@ import { useInboxCapture } from "@/hooks/useInboxCapture";
 import { useNoteNavigation } from "@/hooks/useNoteNavigation";
 import { useAppDialogs } from "@/hooks/useAppDialogs";
 import { toggleChecklistItem } from "@/lib/checklistTree";
+import { findTitleDuplicate } from "@/lib/noteDuplicate";
 import { IndexDialogs } from "@/components/IndexDialogs";
 import { useNoteGlowActions } from "@/hooks/useNoteGlowActions";
 import { useViewShell } from "@/hooks/useViewShell";
@@ -353,6 +354,7 @@ const Index = () => {
   const visibleNotesRef = useLatestRef(visibleNotes);
 
   const { allNotesForLinks, knownTitles, wikiIndex } = useWikiLinkIndex(notes, archivedNotes);
+  const findDuplicate = useCallback((title: string) => findTitleDuplicate(title, allNotesForLinks), [allNotesForLinks]);
   const allNotesForLinksRef = useLatestRef(allNotesForLinks);
   const { openSavedView, goFilter, openNote, openDailyNote, openPeriodNote } = useNoteNavigation({
     route, folders, notes, archivedNotes, notesRef, archivedRef, trashedRef, openNoteRef,
@@ -617,7 +619,7 @@ const Index = () => {
               // Zwinięty pasek jest pod `md` schowany — pusty pojemnik dokładał drugi odstęp `gap` nad notatkami (~50 px).
               className="space-y-3 max-md:[&:not(:has([data-composer-open]))]:hidden">
               <div data-add-note-bar>
-                <AddNoteBar ref={addNoteRef} onAdd={handleComposerAdd} wikiTitles={wikiIndex.titles} parentOptions={composerParents} folders={folders} allLabels={allLabels} onCreateLabel={addLabel} destination={composeDestination}
+                <AddNoteBar ref={addNoteRef} onAdd={handleComposerAdd} findDuplicate={findDuplicate} onOpenDuplicate={openNote} wikiTitles={wikiIndex.titles} parentOptions={composerParents} folders={folders} allLabels={allLabels} onCreateLabel={addLabel} destination={composeDestination}
                   templates={(done) => (
                     <QuickTemplates
                       onPick={(...args) => { done(); handleAddNoteGlow(...args); }}
