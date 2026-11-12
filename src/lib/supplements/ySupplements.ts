@@ -67,6 +67,15 @@ export function createYSupplements(doc: Y.Doc) {
     doc.transact(() => list.set(s.id, s), SUPPLEMENTS_ORIGIN);
   }
 
+  /** Podmienia dane odżywki (to samo id, odhaczenia zostają). `false` = nie ma jej albo dane są niepoprawne. */
+  function replace(next: Supplement): boolean {
+    if (!list.has(next.id)) return false;
+    const clean = cleanSupplement(next);
+    if (!clean) return false;
+    doc.transact(() => list.set(clean.id, clean), SUPPLEMENTS_ORIGIN);
+    return true;
+  }
+
   function setTaken(day: string, supplementId: string, on: boolean): void {
     const key = logKey(day, supplementId);
     doc.transact(() => {
@@ -93,7 +102,7 @@ export function createYSupplements(doc: Y.Doc) {
     }, SUPPLEMENTS_ORIGIN);
   }
 
-  return { get, getTaken, subscribe, add, remove, restore, setTaken, dump, mergeDump };
+  return { get, getTaken, subscribe, add, remove, restore, replace, setTaken, dump, mergeDump };
 }
 
 export interface SupplementDump {

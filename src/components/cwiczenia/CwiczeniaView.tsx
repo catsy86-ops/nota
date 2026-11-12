@@ -4,14 +4,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SectionCard } from "@/components/ui/section-card";
 import { MissingHint } from "@/components/ui/missing-hint";
 import { StatusPanel } from "@/components/StatusPanel";
-import { Pill, Plus, Trash } from "lucide-react";
+import { Pencil, Pill, Plus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { nextReminderAt } from "@/lib/timeOfDay";
 import { logKey, weekAdherence, SUPPLEMENT_DOSE_MAX, SUPPLEMENT_NAME_MAX, SUPPLEMENT_WHEN, SUPPLEMENT_WHEN_LABEL, type Supplement, type SupplementWhen } from "@/lib/supplements/model";
-import { addSupplement, removeSupplement, restoreSupplement, setSupplementTaken, useSupplements, useSupplementsTaken } from "@/lib/supplements/store";
+import { addSupplement, removeSupplement, restoreSupplement, setSupplementTaken, updateSupplement, useSupplements, useSupplementsTaken } from "@/lib/supplements/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { DietSection } from "./DietSection";
@@ -40,6 +40,36 @@ function createSupplement(notes: NotesActions, input: { name: string; dose: stri
   // Zapis odrzucony (np. pełna lista): przypomnienie nie może zostać osierocone.
   if (!s && reminderNoteId) notes.trashNote(reminderNoteId);
   return s;
+}
+
+const reminderTitle = (name: string, dose: string) => (dose.trim() ? `${name.trim()} — ${dose.trim()}` : name.trim());
+
+/**
+ * 2.6: zmiana nazwy, dawki, pory i godziny przypomnienia. Gdy godzina się nie zmienia, notatka-przypomnienie dostaje
+ * tylko nowy tytuł; gdy się zmienia (albo przypomnienie jest włączane/wyłączane), stara notatka idzie do kosza,
+ * a nowa powstaje z nową godziną — tak samo jak przy treningu.
+ */
+function editSupplement(notes: NotesActions, s: Supplement, input: { name: string; dose: string; when: SupplementWhen; remindAt?: string }): boolean {
+  if (!input.name.trim()) return false;
+  const remindAt = input.remindAt || undefined;
+  let reminderNoteId = s.reminderNoteId;
+  let created: string | undefined;
+  if (remindAt !== s.remindAt) {
+    if (remindAt) {
+      created = notes.addNote(reminderTitle(input.name, input.dose), "Odżywka — przypomnienie codzienne. Odhacz ją w dziale Ćwiczenia.", "default", [EXERCISE_LABEL], nextReminderAt(remindAt, Date.now()));
+      notes.updateNote(created, { reminderRepeat: "daily" });
+    }
+    reminderNoteId = created;
+  } else if (reminderNoteId) {
+    notes.updateNote(reminderNoteId, { title: reminderTitle(input.name, input.dose) });
+  }
+  const next = updateSupplement(s.id, { ...input, remindAt, reminderNoteId });
+  if (!next) {
+    if (created) notes.trashNote(created);
+    return false;
+  }
+  if (remindAt !== s.remindAt && s.reminderNoteId) notes.trashNote(s.reminderNoteId);
+  return true;
 }
 
 /** Usuwa odżywkę i jej przypomnienie (trafia do kosza, skąd da się je przywrócić). */
@@ -144,6 +174,7 @@ function EmptyList({ notes, onAdd }: { notes: NotesActions; onAdd: () => void })
 }
 
 function SupplementList({ supplements, taken, day, notes }: { supplements: Supplement[]; taken: Set<string>; day: string; notes: NotesActions }) {
+  const [editingId, setEditingId] = useState<string | null>(null);
   // Grupy w kolejności pory dnia; pusta grupa się nie pokazuje.
   const groups = SUPPLEMENT_WHEN
     .map((when) => ({ when, items: supplements.filter((s) => s.when === when) }))
@@ -157,6 +188,9 @@ function SupplementList({ supplements, taken, day, notes }: { supplements: Suppl
           <ul className="mt-1 divide-y divide-border/50">
             {g.items.map((s) => {
               const done = taken.has(logKey(day, s.id));
+              if (editingId === s.id) {
+                return <li key={s.id} className="py-2"><EditSupplementForm supplement={s} notes={notes} onClose={() => setEditingId(null)} /></li>;
+              }
               return (
                 <li key={s.id} className="flex items-center gap-3 py-2">
                   <Checkbox
@@ -171,6 +205,9 @@ function SupplementList({ supplements, taken, day, notes }: { supplements: Suppl
                     {s.dose && <span className="ml-2 text-xs text-muted-foreground">{s.dose}</span>}
                   </label>
                   <WeekDots days={weekAdherence(s.id, taken, day)} />
+                  <Button variant="ghost" size="sm" className="coarse:h-11" aria-label={`Edytuj ${s.name}`} onClick={() => setEditingId(s.id)}>
+                    <Pencil className="h-4 w-4" aria-hidden />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -211,6 +248,49 @@ function removeWithUndo(notes: NotesActions, s: Supplement) {
     restoreSupplement(prev);
     if (prev.reminderNoteId) notes.restoreFromTrash(prev.reminderNoteId);
   }, { description: prev.name });
+}
+
+/** Edycja odżywki w miejscu wiersza (2.6). */
+function EditSupplementForm({ supplement: s, notes, onClose }: { supplement: Supplement; notes: NotesActions; onClose: () => void }) {
+  const [name, setName] = useState(s.name);
+  const [dose, setDose] = useState(s.dose);
+  const [when, setWhen] = useState<SupplementWhen>(s.when);
+  const [remind, setRemind] = useState(!!s.remindAt);
+  const [time, setTime] = useState(s.remindAt ?? DEFAULT_TIME[s.when]);
+  const canSave = name.trim().length > 0 && (!remind || /^([01]\d|2[0-3]):[0-5]\d$/.test(time));
+
+  const save = () => {
+    if (!canSave) return;
+    if (editSupplement(notes, s, { name, dose, when, remindAt: remind ? time : undefined })) onClose();
+  };
+
+  return (
+    <form className="space-y-2 rounded-field border border-border p-2" onSubmit={(e) => { e.preventDefault(); save(); }} data-testid="supplement-edit">
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Input aria-label="Nazwa odżywki" maxLength={SUPPLEMENT_NAME_MAX} value={name} onChange={(e) => setName(e.target.value)} />
+        <Input aria-label="Dawka" maxLength={SUPPLEMENT_DOSE_MAX} value={dose} onChange={(e) => setDose(e.target.value)} />
+      </div>
+      <div role="radiogroup" aria-label="Pora dnia" className="flex flex-wrap gap-2">
+        {SUPPLEMENT_WHEN.map((w) => (
+          <Button key={w} type="button" role="radio" aria-checked={when === w} variant={when === w ? "default" : "outline"} size="sm" className="coarse:h-11"
+            onClick={() => { setWhen(w); if (!s.remindAt) setTime(DEFAULT_TIME[w]); }}>
+            {SUPPLEMENT_WHEN_LABEL[w]}
+          </Button>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+          <Checkbox checked={remind} onCheckedChange={(v) => setRemind(v === true)} className="coarse:h-6 coarse:w-6" />
+          Przypominaj codziennie o
+        </label>
+        <Input type="time" aria-label="Godzina przypomnienia" value={time} disabled={!remind} onChange={(e) => setTime(e.target.value)} className="w-auto coarse:h-11" />
+      </div>
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" disabled={!canSave} className="coarse:h-11">Zapisz zmiany</Button>
+        <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={onClose}>Anuluj</Button>
+      </div>
+    </form>
+  );
 }
 
 function AddSupplementForm({ notes }: { notes: NotesActions }) {

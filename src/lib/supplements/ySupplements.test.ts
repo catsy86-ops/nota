@@ -59,3 +59,17 @@ describe("createYSupplements", () => {
     off();
   });
 });
+
+describe("replace (edycja odżywki)", () => {
+  it("zmienia dane, zostawia id i odhaczenia; nieistniejące id i złe dane są odrzucane", () => {
+    const y = createYSupplements(new Y.Doc());
+    y.add(sup("s1", "Kreatyna"));
+    y.setTaken("2026-11-12", "s1", true);
+    expect(y.replace({ ...sup("s1", "Magnez"), when: "wieczorem", remindAt: "20:00" })).toBe(true);
+    expect(y.get()[0]).toMatchObject({ id: "s1", name: "Magnez", when: "wieczorem", remindAt: "20:00" });
+    expect(y.getTaken().has(logKey("2026-11-12", "s1"))).toBe(true);
+    expect(y.replace(sup("nie-ma"))).toBe(false);
+    expect(y.replace({ ...sup("s1"), name: "" })).toBe(false);
+    expect(y.get()[0].name).toBe("Magnez");
+  });
+});

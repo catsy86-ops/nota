@@ -5,9 +5,10 @@ import type { Supplement } from "@/lib/supplements/model";
 // Magazyn odżywek i notatki podmieniamy atrapami: test sprawdza widok, nie Yjs ani Przypomnienia.
 const fixture: { list: Supplement[]; taken: Set<string> } = { list: [], taken: new Set() };
 const setTaken = vi.fn();
-const { notesMock, addSupplementMock, removeSupplementMock } = vi.hoisted(() => ({
+const { notesMock, addSupplementMock, removeSupplementMock, updateSupplementMock } = vi.hoisted(() => ({
   notesMock: { addNote: vi.fn(() => "note-1"), updateNote: vi.fn(), trashNote: vi.fn(), restoreFromTrash: vi.fn() },
   addSupplementMock: vi.fn(),
+  updateSupplementMock: vi.fn((_id?: unknown, _edit?: unknown) => ({ id: "s1" })),
   removeSupplementMock: vi.fn((_id?: unknown) => null),
 }));
 vi.mock("@/hooks/NotesProvider", () => ({ useNotesContext: () => notesMock }));
@@ -24,6 +25,7 @@ vi.mock("@/lib/supplements/store", () => ({
   useSupplementsTaken: () => fixture.taken,
   addSupplement: (input: unknown) => addSupplementMock(input),
   removeSupplement: (id: unknown) => removeSupplementMock(id),
+  updateSupplement: (id: unknown, edit: unknown) => updateSupplementMock(id, edit),
   restoreSupplement: vi.fn(),
   setSupplementTaken: (...args: unknown[]) => setTaken(...args),
 }));
@@ -39,6 +41,7 @@ afterEach(() => {
   setTaken.mockClear();
   addSupplementMock.mockReset();
   removeSupplementMock.mockReset();
+  updateSupplementMock.mockClear();
   removeSupplementMock.mockReturnValue(null);
   notesMock.addNote.mockClear();
   notesMock.updateNote.mockClear();
@@ -87,6 +90,42 @@ describe("CwiczeniaView — odżywki", () => {
     expect(notesMock.addNote).toHaveBeenCalledWith("Kreatyna — 1 łyżka", expect.any(String), "default", ["ćwiczenia"], expect.any(Number));
     expect(notesMock.updateNote).toHaveBeenCalledWith("note-1", { reminderRepeat: "daily" });
     expect(addSupplementMock).toHaveBeenCalledWith(expect.objectContaining({ name: "Kreatyna", reminderNoteId: "note-1", remindAt: "07:30" }));
+  });
+
+  describe("edycja odżywki (2.6)", () => {
+    const sup = { id: "s1", name: "Kreatyna", dose: "1 łyżka", when: "rano" as const, created: 1, remindAt: "07:30", reminderNoteId: "old-note" };
+    const openEdit = () => {
+      fixture.list = [sup];
+      render(<CwiczeniaView />);
+      fireEvent.click(screen.getByRole("button", { name: "Edytuj Kreatyna" }));
+    };
+
+    it("zmiana samej nazwy i dawki aktualizuje tytuł istniejącej notatki, bez nowej", () => {
+      openEdit();
+      fireEvent.change(screen.getByRole("textbox", { name: "Nazwa odżywki" }), { target: { value: "Magnez" } });
+      fireEvent.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
+      expect(notesMock.updateNote).toHaveBeenCalledWith("old-note", { title: "Magnez — 1 łyżka" });
+      expect(notesMock.addNote).not.toHaveBeenCalled();
+      expect(updateSupplementMock).toHaveBeenCalledWith("s1", expect.objectContaining({ name: "Magnez", remindAt: "07:30", reminderNoteId: "old-note" }));
+    });
+
+    it("zmiana godziny przenosi przypomnienie: nowa notatka, stara do kosza", () => {
+      openEdit();
+      fireEvent.change(screen.getByLabelText("Godzina przypomnienia"), { target: { value: "09:15" } });
+      fireEvent.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
+      expect(notesMock.addNote).toHaveBeenCalledWith("Kreatyna — 1 łyżka", expect.any(String), "default", ["ćwiczenia"], expect.any(Number));
+      expect(notesMock.trashNote).toHaveBeenCalledWith("old-note");
+      expect(updateSupplementMock).toHaveBeenCalledWith("s1", expect.objectContaining({ remindAt: "09:15", reminderNoteId: "note-1" }));
+    });
+
+    it("wyłączenie przypomnienia wyrzuca notatkę i czyści pole", () => {
+      openEdit();
+      fireEvent.click(screen.getByRole("checkbox", { name: /Przypominaj codziennie/ }));
+      fireEvent.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
+      expect(notesMock.trashNote).toHaveBeenCalledWith("old-note");
+      expect(notesMock.addNote).not.toHaveBeenCalled();
+      expect(updateSupplementMock).toHaveBeenCalledWith("s1", expect.objectContaining({ remindAt: undefined, reminderNoteId: undefined }));
+    });
   });
 
   it("odrzucony zapis sprząta świeżo utworzone przypomnienie", () => {

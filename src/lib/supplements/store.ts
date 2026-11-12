@@ -48,6 +48,34 @@ export function addSupplement(input: NewSupplementInput): Supplement | null {
   return ySupplements.add(clean) ? clean : null;
 }
 
+export interface SupplementEdit {
+  name: string;
+  dose: string;
+  when: SupplementWhen;
+  /** Pusta wartość = bez przypomnienia. */
+  remindAt?: string;
+  /** Id notatki-przypomnienia po zmianie (puste = brak). */
+  reminderNoteId?: string;
+}
+
+/** Zmienia dane odżywki zachowując id, datę dodania i odhaczenia. `null` = nie ma jej albo dane są niepoprawne. */
+export function updateSupplement(id: string, edit: SupplementEdit): Supplement | null {
+  const prev = ySupplements.get().find((s) => s.id === id);
+  if (!prev) return null;
+  const name = edit.name.trim().slice(0, SUPPLEMENT_NAME_MAX);
+  if (!name || !SUPPLEMENT_WHEN.includes(edit.when)) return null;
+  const next: Supplement = {
+    id: prev.id,
+    name,
+    dose: edit.dose.trim().slice(0, SUPPLEMENT_DOSE_MAX),
+    when: edit.when,
+    created: prev.created,
+    ...(edit.remindAt ? { remindAt: edit.remindAt } : {}),
+    ...(edit.reminderNoteId ? { reminderNoteId: edit.reminderNoteId } : {}),
+  };
+  return ySupplements.replace(next) ? next : null;
+}
+
 export function removeSupplement(id: string): Supplement | null {
   return ySupplements.remove(id);
 }

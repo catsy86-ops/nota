@@ -5475,3 +5475,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `DietSection.tsx` (`AddMealForm`), `TrainingSection.tsx` (formularz zapisu); magazyny (`addMeal`, `addTrainingEntry`) już przyjmowały pole `day`.
 - **Ograniczenia:** tylko dziś i wczoraj, bez wyboru dowolnej daty; posiłek z wczoraj widać w podsumowaniu 7 dni, a nie na liście „Dziś”.
 - **Testy:** `DietSection.test.tsx`, `TrainingSection.test.tsx`.
+
+## Ćwiczenia — ustawienia treningu niżej i edycja odżywki (2.2, 2.6, 2026-11-12)
+
+- **Co robi:** w karcie Trening przypomnienie i limit hantli są w zwijanym bloku „Ustawienia treningu” na dole, więc na górze zostają plan i zapis. Przy każdej odżywce jest ołówek „Edytuj”: zmiana nazwy, dawki, pory dnia i godziny przypomnienia w miejscu wiersza.
+- **Gdzie:** `TrainingSection.tsx` (`<details data-testid="training-settings">`), `CwiczeniaView.tsx` (`EditSupplementForm`, `editSupplement`), `src/lib/supplements/store.ts` (`updateSupplement`), `ySupplements.ts` (`replace`).
+- **Jak działa:** edycja zachowuje id, datę dodania i odhaczenia. Gdy zmienia się tylko nazwa lub dawka, notatka-przypomnienie dostaje nowy tytuł. Gdy zmienia się godzina albo przypomnienie jest włączane lub wyłączane, stara notatka idzie do kosza, a nowa powstaje (etykieta `ćwiczenia`, codzienne powtarzanie). Odrzucony zapis sprząta świeżo utworzoną notatkę.
+- **Ograniczenia:** edycji nie da się cofnąć dymkiem „Cofnij”; stara notatka-przypomnienie zostaje w koszu.
+- **Testy:** `CwiczeniaView.test.tsx`, `ySupplements.test.ts`.

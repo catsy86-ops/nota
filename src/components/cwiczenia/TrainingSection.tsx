@@ -33,8 +33,6 @@ export function TrainingSection() {
   return (
     <SectionCard icon={Dumbbell} title="Trening" bodyClassName="space-y-5">
 
-      <TrainingReminderControl />
-      <EquipmentForm />
       <PlanList plans={plans} />
       <LogForm entries={entries} plans={plans} onSaved={() => setRestUntil(Date.now() + REST_SECONDS * 1000)} />
       {restUntil !== null && <RestTimer until={restUntil} onStop={() => setRestUntil(null)} />}
@@ -51,6 +49,16 @@ export function TrainingSection() {
       <WeekSummary week={week} />
       <ProgressList progress={progress} entries={entries} />
       <AddPlanForm />
+      {/* 2.2: ustawienia rzadko zmieniane są na dole, żeby na górze karty były plan i zapis. */}
+      <details className="group border-t border-dashed border-border pt-3" data-testid="training-settings">
+        <summary className="pressable cursor-pointer list-none text-sm font-medium text-muted-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11 coarse:py-2">
+          <span aria-hidden className="mr-1 inline-block transition-transform group-open:rotate-90">›</span>Ustawienia treningu
+        </summary>
+        <div className="mt-3 space-y-4">
+          <TrainingReminderControl />
+          <EquipmentForm />
+        </div>
+      </details>
     </SectionCard>
   );
 }
