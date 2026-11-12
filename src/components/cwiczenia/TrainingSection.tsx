@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
+import { afterLogged, afterSkipped, currentExerciseId, isFinished, sessionMinutes, startSession, type TrainingSession } from "@/lib/training/session";
 import { REST_OPTIONS, restLabel, setRestSeconds, useRestSeconds } from "@/lib/training/restPrefs";
 import { addDaysToKey } from "@/lib/week";
 import { cn } from "@/lib/utils";
@@ -202,6 +203,31 @@ function NewExerciseForm({ onCreated }: { onCreated: (id: string) => void }) {
 
 const EQUIPMENT_OPTIONS: Equipment[] = EQUIPMENT_LIST;
 
+/** 2.1: pasek prowadzonego treningu: „Klatka i triceps · 2/4” z pominięciem, a na końcu podsumowanie. */
+function SessionBanner({ session, onSkip, onClose }: { session: TrainingSession; onSkip: () => void; onClose: () => void }) {
+  const total = session.exerciseIds.length;
+  if (isFinished(session)) {
+    return (
+      <div role="status" className="space-y-1 rounded-field border border-primary/40 bg-primary/5 px-3 py-2 text-sm" data-testid="session-summary">
+        <p className="font-medium">Zrobione: {session.planName}</p>
+        <p className="text-xs text-muted-foreground">
+          {session.logged} z {total} ćwiczeń · objętość {Math.round(session.volume)} kg · {sessionMinutes(session, Date.now())} min
+          {session.records > 0 && ` · rekordów: ${session.records}`}
+        </p>
+        <Button type="button" variant="outline" size="sm" className="coarse:h-11" onClick={onClose}>Zamknij</Button>
+      </div>
+    );
+  }
+  const name = exerciseById(currentExerciseId(session) ?? "")?.name ?? "ćwiczenie";
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-field border border-primary/40 px-3 py-2 text-sm" data-testid="session-banner">
+      <span className="min-w-0 flex-1"><span className="font-medium">{session.planName}</span> · ćwiczenie <span className="font-mono tabular-nums">{session.index + 1}/{total}</span>: {name}</span>
+      <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={onSkip}>Pomiń ćwiczenie</Button>
+      <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={onClose}>Zakończ plan</Button>
+    </div>
+  );
+}
+
 function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans: PlanDay[]; onSaved: () => void }) {
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
   const [rows, setRows] = useState<SetRow[]>([emptyRow(), emptyRow(), emptyRow()]);
@@ -211,6 +237,18 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
   const custom = useCustomExercises();
   const all = useMemo(() => [...EXERCISES, ...custom], [custom]);
   const [newOpen, setNewOpen] = useState(false);
+  /** 2.1: prowadzony trening — wybór dnia planu go rozpoczyna. */
+  const [session, setSession] = useState<TrainingSession | null>(null);
+
+  const rowsFor = (sess: TrainingSession): SetRow[] => Array.from({ length: sess.targetSets }, () => ({ reps: String(sess.targetReps), kg: "" }));
+  /** Ustawia formularz na bieżące ćwiczenie sesji (albo zostawia, gdy plan skończony). */
+  const showCurrent = (sess: TrainingSession) => {
+    const id = currentExerciseId(sess);
+    if (id === undefined) return;
+    setExerciseId(id);
+    setRows(rowsFor(sess));
+    setNote("");
+  };
 
   /** Usuwa własne ćwiczenie bez wpisów i planów; z wpisami zostaje, a komunikat mówi dlaczego. */
   const deleteCustom = (id: string) => {
@@ -226,8 +264,9 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
   const pickPlan = (planId: string) => {
     const plan = plans.find((p) => p.id === planId);
     if (!plan) return;
-    setExerciseId(plan.exerciseIds[0]);
-    setRows(Array.from({ length: plan.targetSets }, () => ({ reps: String(plan.targetReps), kg: "" })));
+    const sess = startSession(plan, Date.now());
+    setSession(sess);
+    if (sess) showCurrent(sess);
   };
 
   const last = useMemo(() => {
@@ -263,9 +302,25 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
       haptic("success");
       toast.success(`Nowy rekord: ${exerciseById(exerciseId)?.name ?? "ćwiczenie"} — ${newBest} kg`);
     }
+    const record = newBest !== undefined && prevBest !== undefined && newBest > prevBest;
+    if (session && !isFinished(session) && exerciseId === currentExerciseId(session)) {
+      const next = afterLogged(session, volumeOf(sets), record);
+      setSession(next);
+      if (isFinished(next)) { setRows([emptyRow(), emptyRow(), emptyRow()]); setNote(""); } else showCurrent(next);
+      // Przerwa tylko wtedy, gdy jest jeszcze ćwiczenie do zrobienia.
+      if (!isFinished(next)) onSaved();
+      return;
+    }
     setRows([emptyRow(), emptyRow(), emptyRow()]);
     setNote("");
     onSaved();
+  };
+
+  const skip = () => {
+    if (!session) return;
+    const next = afterSkipped(session);
+    setSession(next);
+    if (!isFinished(next)) showCurrent(next);
   };
 
   return (
@@ -284,6 +339,7 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
           </select>
         </label>
       )}
+      {session && <SessionBanner session={session} onSkip={skip} onClose={() => setSession(null)} />}
       <label className="block text-sm">
         <span className="sr-only">Ćwiczenie</span>
         <select

@@ -5533,3 +5533,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** 1RM = kg × (1 + powtórki / 30) z najlepszej serii, zaokrąglone do 0,5 kg; serie bez ciężaru i powyżej 12 powtórzeń są pomijane (wzór zawyża). Przy 1 powtórzeniu wynik to sam ciężar.
 - **Ograniczenia:** historia to lista, bez wykresu z osią dat (zostaje mały wykres rekordów 4.3); rozwinięte jest jedno ćwiczenie naraz.
 - **Testy:** `src/lib/training/model.test.ts`, `TrainingSection.test.tsx`.
+
+## Ćwiczenia — prowadzony trening (2.1, 2026-11-12)
+
+- **Co robi:** wybór dnia planu w „Zapisz trening” rozpoczyna prowadzony trening: pasek „Ramiona · ćwiczenie 2/4: Uginanie młotkowe” z przyciskami „Pomiń ćwiczenie” i „Zakończ plan”. Po „Zapisz serie” formularz przechodzi na następne ćwiczenie planu z zaplanowaną liczbą serii i powtórzeń (przerwa startuje, jeśli jest jeszcze ćwiczenie). Na końcu podsumowanie: ile ćwiczeń zapisano z ilu, objętość, minuty i liczba rekordów.
+- **Gdzie:** `src/lib/training/session.ts` (`startSession`, `afterLogged`, `afterSkipped`, `sessionMinutes`), `TrainingSection.tsx` (`LogForm`, `SessionBanner`).
+- **Jak działa:** stan sesji żyje tylko w widoku (nie jest zapisywany); wpisy powstają jak zwykle. Sesja przesuwa się tylko po zapisie bieżącego ćwiczenia z planu — ręczna zmiana ćwiczenia w liście nie zalicza kroku.
+- **Ograniczenia:** odświeżenie strony kończy sesję; brak przycisku „wróć do poprzedniego ćwiczenia”.
+- **Testy:** `src/lib/training/session.test.ts`, `TrainingSection.test.tsx`.

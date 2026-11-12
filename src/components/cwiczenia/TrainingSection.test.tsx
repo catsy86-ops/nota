@@ -260,6 +260,25 @@ describe("TrainingSection", () => {
     expect(screen.queryByLabelText("Powtórki, seria 3")).toBeNull();
   });
 
+  it("prowadzony trening (2.1): zapis przesuwa na następne ćwiczenie, pominięcie kończy plan podsumowaniem", () => {
+    addEntryMock.mockReturnValue({ id: "t1" });
+    fixture.plans = [{ id: "p1", name: "Ramiona", exerciseIds: ["biceps-mlotkowe", "klatka-hantle-plasko"], targetSets: 2, targetReps: 10, created: 1 }];
+    render(<TrainingSection />);
+    fireEvent.change(screen.getByRole("combobox", { name: "Dzień planu" }), { target: { value: "p1" } });
+    expect(screen.getByTestId("session-banner").textContent).toContain("1/2");
+    fireEvent.change(screen.getByLabelText("Ciężar kg, seria 1"), { target: { value: "12" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz serie" }));
+    expect(addEntryMock).toHaveBeenCalledWith(expect.objectContaining({ exerciseId: "biceps-mlotkowe" }));
+    expect(screen.getByTestId("session-banner").textContent).toContain("2/2");
+    expect((screen.getByRole("combobox", { name: "Ćwiczenie" }) as HTMLSelectElement).value).toBe("klatka-hantle-plasko");
+    fireEvent.click(screen.getByRole("button", { name: "Pomiń ćwiczenie" }));
+    const sum = screen.getByTestId("session-summary").textContent ?? "";
+    expect(sum).toContain("1 z 2 ćwiczeń");
+    expect(sum).toContain("objętość 120 kg");
+    fireEvent.click(screen.getByRole("button", { name: "Zamknij" }));
+    expect(screen.queryByTestId("session-summary")).toBeNull();
+  });
+
   it("dzisiejsze wpisy są na liście, a progres pokazuje rekord", () => {
     fixture.entries = [{
       id: "today", day: localDayKey(), exerciseId: "biceps-mlotkowe", note: "", created: 1, time: "19:00",
