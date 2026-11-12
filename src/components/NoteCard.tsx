@@ -81,7 +81,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const deleteMounted = useLatch(showDeleteConfirm);
   const drawingMounted = useLatch(showDrawing);
   const sheetMounted = useLatch(sheetOpen);
-  const { fileInputRef, handleImageUpload, handleEditPaste, addDrawing, removeImage } = useNoteImages({ note, onUpdate });
+  const { fileInputRef, handleImageUpload, handleEditPaste, handleEditDragOver, handleEditDrop, addDrawing, removeImage } = useNoteImages({ note, onUpdate });
   const cardRef = useRef<HTMLDivElement>(null);
 
   const wordCount = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
@@ -132,7 +132,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   // autosave i sesja Yjs — rozwinięcie nie zmienia ścieżki zapisu.
   function renderEditor(full: boolean) {
     return (
-      <NoteEditor full={full} note={note} session={session} spellcheck={prefs.spellcheck} editorScrolled={editorScrolled} knownTitles={knownTitles} onWikiClick={onWikiClick} onUpdate={onUpdate} onPaste={handleEditPaste} />
+      <NoteEditor full={full} note={note} session={session} spellcheck={prefs.spellcheck} editorScrolled={editorScrolled} knownTitles={knownTitles} onWikiClick={onWikiClick} onUpdate={onUpdate} onPaste={handleEditPaste} onFileDragOver={handleEditDragOver} onFileDrop={handleEditDrop} />
     );
   }
 

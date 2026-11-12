@@ -35,6 +35,8 @@ export function NoteEditor({
   onWikiClick,
   onUpdate,
   onPaste,
+  onFileDragOver,
+  onFileDrop,
 }: {
   full: boolean;
   note: Note;
@@ -46,6 +48,9 @@ export function NoteEditor({
   onWikiClick: ((title: string) => void) | undefined;
   onUpdate: ((id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => void) | undefined;
   onPaste: (e: React.ClipboardEvent<Element>) => void;
+  /** Pliki przeciągnięte na edytor (plan 2.6) — przechwytywane, zanim dojdą do pola tekstu. */
+  onFileDragOver?: (e: React.DragEvent<Element>) => void;
+  onFileDrop?: (e: React.DragEvent<Element>) => void;
 }) {
   const {
     editTitle, setEditTitle,
@@ -126,6 +131,8 @@ export function NoteEditor({
     <div
       className={full ? "flex flex-col gap-3 h-full min-h-0" : "space-y-2"}
       onClick={(e) => e.stopPropagation()}
+      onDragOverCapture={note.locked ? undefined : onFileDragOver}
+      onDropCapture={note.locked ? undefined : onFileDrop}
       // Wyjście fokusem poza edytor zapisuje, ale go nie zamyka —
       // zamknięcie przy kliknięciu w paletę kolorów byłoby zaskoczeniem.
       onBlur={(e) => {

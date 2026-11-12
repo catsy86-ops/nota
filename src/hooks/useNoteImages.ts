@@ -21,12 +21,52 @@ export function useNoteImages({ note, onUpdate }: { note: Note } & Pick<ReturnTy
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  /** Wklejony zrzut ekranu albo skopiowany obraz trafia do notatki zamiast do pola tekstu. */
+  /** Wklejony zrzut ekranu albo skopiowany obraz trafia do notatki zamiast do pola tekstu; wklejony PDF — do załączników. */
   function handleEditPaste(e: React.ClipboardEvent<Element>) {
-    const pasted = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith("image/"));
+    const files = Array.from(e.clipboardData.files);
+    if (files.some((f) => f.type === "application/pdf")) {
+      e.preventDefault();
+      void addFiles(files);
+      return;
+    }
+    const pasted = files.filter((f) => f.type.startsWith("image/"));
     if (pasted.length === 0) return;
     e.preventDefault();
     void addImages(pasted);
+  }
+
+  /**
+   * Plan Notatek 2.6: pliki przeciągnięte na otwarty edytor — obrazy do zdjęć notatki, PDF do załączników. Łapane
+   * w fazie przechwytywania, zanim CodeMirror wstawi zawartość pliku jako tekst. Przeciągany tekst idzie dalej bez zmian.
+   */
+  function handleEditDragOver(e: React.DragEvent<Element>) {
+    if (Array.from(e.dataTransfer.types).includes("Files")) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }
+  }
+  function handleEditDrop(e: React.DragEvent<Element>) {
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    void addFiles(files);
+  }
+
+  /** Obrazy i PDF tą samą drogą co udostępnianie i Skrzynka (limity, zmniejszanie, komunikaty o odrzuconych). */
+  async function addFiles(files: File[]) {
+    try {
+      const { importNoteFiles, warnImportedFiles } = await import("@/lib/inboxFiles");
+      const imported = await importNoteFiles(files);
+      warnImportedFiles(imported);
+      const patch: Partial<Note> = {};
+      if (imported.images.length) patch.images = [...(note.images || []), ...imported.images];
+      if (imported.attachments.length) patch.attachments = [...(note.attachments ?? []), ...imported.attachments];
+      if (patch.images || patch.attachments) {
+        onUpdate?.(note.id, patch);
+        const n = imported.images.length + imported.attachments.length;
+        toast.success(n === 1 ? "Dodano plik do notatki" : `Dodano pliki do notatki: ${n}`);
+      }
+    } catch {
+      toast.error("Nie udało się dodać plików", { description: "Sprawdź połączenie i spróbuj jeszcze raz." });
+    }
   }
 
   /** Obrazy większe niż limit są skalowane; dopiero gdy się nie da, trafiają na listę pominiętych. */
@@ -66,5 +106,5 @@ export function useNoteImages({ note, onUpdate }: { note: Note } & Pick<ReturnTy
     toast("Usunięto obrazek", { action: { label: "Cofnij", onClick: () => onUpdate?.(note.id, { images: before }) } });
   }
 
-  return { fileInputRef, handleImageUpload, handleEditPaste, addDrawing, removeImage };
+  return { fileInputRef, handleImageUpload, handleEditPaste, handleEditDragOver, handleEditDrop, addDrawing, removeImage };
 }

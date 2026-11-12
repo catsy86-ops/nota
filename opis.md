@@ -5594,3 +5594,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `src/lib/noteMarkdown.ts` (`wikiLinkOf`, `copyWikiLink`), `CommandPalette.tsx`.
 - **Ograniczenia:** z punktu 2.5 nadal brak w palecie: przeniesienia do folderu, eksportu, historii wersji i wyodrębnienia; trafienia w nagłówkach jako osobna sekcja — bez zmian. Notatki prywatne (zablokowane) nie mają tej pozycji.
 - **Testy:** `src/lib/noteMarkdown.test.ts`.
+
+## Notatki — pliki przeciągnięte na edytor (plan 2.6, 2026-11-12)
+
+- **Co robi:** obraz albo PDF przeciągnięty na otwartą notatkę trafia do niej — obraz do zdjęć notatki, PDF do załączników — z dymkiem „Dodano plik do notatki”. Wklejony PDF też idzie do załączników (wklejony obraz jak dotąd do zdjęć). Przeciągany tekst działa jak wcześniej.
+- **Gdzie:** `src/hooks/useNoteImages.ts` (`handleEditDragOver`, `handleEditDrop`, `addFiles`), `NoteEditor.tsx` (`onDragOverCapture`/`onDropCapture` na całym edytorze, poza notatkami zablokowanymi), `NoteCard.tsx`.
+- **Jak działa:** pliki idą przez `importNoteFiles` (ta sama droga co udostępnianie i Skrzynka: zmniejszanie obrazów do 2 MB, limit łączny załączników, komunikaty o odrzuconych). Zdarzenie jest łapane w fazie przechwytywania, zanim CodeMirror wstawiłby zawartość pliku jako tekst.
+- **Ograniczenia:** obraz nie jest wstawiany w treść jako `![[…]]` — trafia do galerii zdjęć notatki, jak przy „Dodaj obraz”; brak paska postępu przy dużych plikach.
+- **Testy:** `src/hooks/useNoteImages.test.ts`.
