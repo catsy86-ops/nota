@@ -5,7 +5,7 @@ import { Repeat, Trash, StickyNote, Plus, Bell, SkipForward, X } from "lucide-re
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
-import { searchNotes } from "@/lib/searchNotes";
+import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
 import { parseNaturalDate } from "@/lib/parseNaturalDate";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, dayInputValue, isPastReminder, toTimeInputValue, formatReminderShort, defaultReminderTimeFor, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
@@ -138,6 +138,7 @@ export function ReminderQuickAddDialog({
   const until = repeat.kind !== "none" && untilText ? endOfDay(new Date(uy, um - 1, ud)) : undefined;
   const untilTooEarly = until !== undefined && timestamp !== null && until < timestamp;
 
+  const searchVersion = useSearchVersion();
   const suggestions = useMemo(() => {
     if (isEdit) return [];
     const pool = notes.filter((n) => !n.trashed && !n.archived);
@@ -146,7 +147,8 @@ export function ReminderQuickAddDialog({
     return [...found]
       .sort((a, b) => Number(!!a.reminder) - Number(!!b.reminder) || b.updatedAt - a.updatedAt)
       .slice(0, MAX_SUGGESTIONS);
-  }, [isEdit, notes, query, title]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `searchVersion`: przeliczenie po odpowiedzi Workera wyszukiwania
+  }, [isEdit, notes, query, title, searchVersion]);
 
   function reset() {
     setQuery("");

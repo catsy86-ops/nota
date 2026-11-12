@@ -7,7 +7,7 @@ let client: RpcClient<WorkSearchHandlers> | null = null;
 
 function getClient(): RpcClient<WorkSearchHandlers> {
   client ??= createRpcClient<WorkSearchHandlers>(
-    () => workerTransport(new Worker(new URL("./workSearch.worker.ts", import.meta.url), { type: "module" })),
+    () => workerTransport(new Worker(new URL("./search.worker.ts", import.meta.url), { type: "module" })),
     // Bezczynny Worker zwalniamy (indeks znika z pamięci); następne zapytanie zbuduje go od nowa.
     { idleMs: 60_000 },
   );

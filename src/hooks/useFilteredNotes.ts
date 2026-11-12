@@ -3,7 +3,7 @@ import { isAppView } from "@/lib/viewMeta";
 import type { Note, Folder } from "@/hooks/useNotes";
 import { getDescendantFolderIds } from "@/hooks/useNotes";
 import type { ViewPrefs } from "@/lib/viewPrefs";
-import { searchNotes, useSearchReady, loadSearchIndex } from "@/lib/searchNotes";
+import { searchNotes, useSearchReady, useSearchVersion, loadSearchIndex } from "@/lib/searchNotes";
 import { getTodayRange, getWeekRange, inRange } from "@/lib/dateRanges";
 import { PRIORITY_ORDER } from "@/lib/notePriority";
 import { useLastOpened, type LastOpenedMap } from "@/lib/lastOpened";
@@ -111,6 +111,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   const dayTick = useDayClock();
   // MiniSearch poza główną paczką: wczytujemy w wolnej chwili, a po dojściu wyniki się przeliczają.
   const searchReady = useSearchReady();
+  const searchVersion = useSearchVersion();
   useEffect(() => {
     if (searchReady) return;
     const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
@@ -162,5 +163,5 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     return { displayNotes, pinned, others, elsewhere };
     // `dayTick` i `searchReady` nie są czytane w środku — wymuszają przeliczenie granic „Dziś” i wyników po wczytaniu silnika.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, opened, dayTick, searchReady]);
+  }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, opened, dayTick, searchReady, searchVersion]);
 }

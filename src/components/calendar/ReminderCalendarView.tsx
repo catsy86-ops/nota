@@ -34,7 +34,7 @@ import type { Note } from "@/hooks/useNotes";
 import { calendarDayFromSearch, viewPath } from "@/lib/viewRoute";
 import { cn } from "@/lib/utils";
 import { notePreview } from "@/lib/notePreview";
-import { searchNotes } from "@/lib/searchNotes";
+import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
 import { CALENDAR_LAYERS, countMonth, readLayers, writeLayers, type CalendarLayer, type CalendarLayerState } from "@/lib/calendarLayers";
 import { holidayName } from "@/lib/shifts/holidays";
 import { studySummary } from "@/lib/study/calendarMarks";
@@ -163,11 +163,13 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
 
   // Szukanie terminów (K3.5): zostają wystąpienia notatek pasujących do zapytania (`searchNotes`).
   const [termQuery, setTermQuery] = useState("");
+  const searchVersion = useSearchVersion();
   const termMatches = useMemo(() => {
     const q = termQuery.trim();
     if (!q) return null;
     return new Set(searchNotes(notes.filter((n) => !n.trashed), q).map((n) => n.id));
-  }, [notes, termQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `searchVersion`: przeliczenie po odpowiedzi Workera wyszukiwania
+  }, [notes, termQuery, searchVersion]);
   const filteredByDay = useMemo(() => {
     if (!termMatches) return byDay;
     const out = new Map<string, Occurrence[]>();

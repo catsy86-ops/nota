@@ -1,5 +1,6 @@
 import { propDisplayText, propValueFor, type NoteProps, type PropDef } from "@/lib/noteProps";
 import { extractWikiLinks } from "@/lib/wikiLinks";
+import { fold } from "@/lib/fold";
 
 /**
  * Parser zapytania wyszukiwarki — czysty, bez zależności od React ani silnika tekstowego.
@@ -58,10 +59,7 @@ export interface ParsedQuery {
 }
 
 /** Małe litery bez ogonków — porównania operatorów i wartości. */
-export function fold(s: string): string {
-  // Najpierw małe litery, potem „ł” — inaczej wielkie „Ł” zostawało bez zmiany i nie trafiało w „lodz”.
-  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/ł/g, "l");
-}
+export { fold };
 
 /** Dzieli po spacjach, ale spacje w cudzysłowie zostają w tokenie. */
 export function tokenize(q: string): string[] {

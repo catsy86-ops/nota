@@ -28,7 +28,7 @@ import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
 import { countDueToday, groupReminders, sortArchivedByReminder } from "@/lib/reminderAgenda";
 import { useStudyOverdueCount } from "@/lib/studyOverdueCount";
-import { searchNotes } from "@/lib/searchNotes";
+import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
 import { resolveWikiTarget, splitWikiTarget } from "@/lib/wikiLinks";
 import { requestHeading } from "@/lib/wikiHeading";
 import { useLatestRef } from "@/hooks/useLatestRef";
@@ -384,10 +384,12 @@ const Index = () => {
   };
   const attachReminder = (id: string, reminder: number, repeat: RepeatInput, allDay: boolean, base: number | undefined, until?: number) =>
     updateNote(id, { reminder, ...repeatUpdate(repeat), reminderRepeatUntil: toRule(repeat).kind === "none" ? undefined : until, reminderBase: base, reminderAllDay: allDay ? true : undefined });
+  const searchVersion = useSearchVersion();
   const archivedRows = useMemo(
     // T 1.6: archiwum po terminie jak grupy — z terminem rosnąco, bez terminu na końcu.
     () => (view === "reminders" ? (deferredSearch ? searchNotes(archivedNotes, deferredSearch) : sortArchivedByReminder(archivedNotes)) : []),
-    [view, deferredSearch, archivedNotes],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `searchVersion`: przeliczenie po odpowiedzi Workera wyszukiwania
+    [view, deferredSearch, archivedNotes, searchVersion],
   );
   // Na „Dziś” liczą się zaległe i dzisiejsze przypomnienia, żeby „Brak notatek z dzisiaj” nie stał obok ich listy.
   // Bez `useMemo`: Index i tak renderuje się po północy (useOverdueBadge → useDayClock).

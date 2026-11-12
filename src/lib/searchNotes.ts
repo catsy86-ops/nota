@@ -3,6 +3,9 @@ import type MiniSearch from "minisearch";
 import type { Note } from "@/hooks/useNotes";
 import { parseSearchQuery, matchesClauses, fold, type MatchFolder } from "@/lib/searchQuery";
 import type { PropDef } from "@/lib/noteProps";
+import { createNoteIndex, sameDoc, toDoc, type IndexDoc } from "@/lib/noteSearchCore";
+import { createNoteSearchEngine, type NoteSearchEngine } from "@/lib/noteSearchEngine";
+import { workerTransport } from "@/workers/rpc";
 
 export interface SearchContext {
   /** Potrzebne operatorowi `folder:` (nazwa → id, z podfolderami). */
@@ -13,18 +16,50 @@ export interface SearchContext {
 }
 
 /**
- * MiniSearch ładuje się osobno (poza główną paczką): w wolnej chwili po starcie albo przy pierwszym
- * wyszukiwaniu. Do tego czasu tekst jest dopasowywany dokładnie (bez ogonków i wielkości liter),
- * a `useSearchReady` przelicza wyniki, gdy biblioteka dojdzie.
+ * Silnik wyszukiwania (plan 3.2). W przeglądarce indeks MiniSearch żyje w Workerze (`noteSearchEngine.ts`): główny
+ * wątek wysyła tylko zmienione dokumenty i odbiera id trafień, więc budowa indeksu i zapytania nie blokują
+ * pisania. Do czasu odpowiedzi tekst jest dopasowywany dokładnie (bez ogonków i wielkości liter), a `useSearchVersion`
+ * przelicza wyniki, gdy odpowiedź dojdzie. Bez Workerów (testy, jsdom) albo po jego błędzie działa ten sam indeks
+ * w głównym wątku, ładowany osobno od głównej paczki (w wolnej chwili po starcie albo przy pierwszym wyszukiwaniu).
  */
 let Engine: typeof MiniSearch | null = null;
 let engineLoading: Promise<void> | null = null;
 const readyListeners = new Set<() => void>();
+let localVersion = 0;
+
+const notifyReady = () => { localVersion++; readyListeners.forEach((l) => l()); };
+
+/** `undefined` = jeszcze nie sprawdzono, `null` = brak Workerów. */
+let workerEngine: NoteSearchEngine | null | undefined;
+let workerUnsub: (() => void) | null = null;
+
+function attachWorker(e: NoteSearchEngine | null): void {
+  workerUnsub?.();
+  workerEngine = e;
+  workerUnsub = e ? e.subscribe(notifyReady) : null;
+}
+
+/** Silnik w Workerze, gdy da się go użyć; inaczej `null` (indeks w głównym wątku). */
+function activeWorker(): NoteSearchEngine | null {
+  if (workerEngine === undefined) {
+    attachWorker(typeof Worker === "undefined"
+      ? null
+      : createNoteSearchEngine(() => workerTransport(new Worker(new URL("../workers/search.worker.ts", import.meta.url), { type: "module" }))));
+  }
+  return workerEngine && !workerEngine.failed() ? workerEngine : null;
+}
+
+/** Podmiana silnika w testach (`null` = główny wątek). */
+export function setNoteSearchEngine(e: NoteSearchEngine | null): void {
+  attachWorker(e);
+  notifyReady();
+}
 
 export function loadSearchIndex(): Promise<void> {
+  if (activeWorker()) return Promise.resolve();
   engineLoading ??= import("minisearch").then((m) => {
     Engine = m.default;
-    readyListeners.forEach((l) => l());
+    notifyReady();
   });
   return engineLoading;
 }
@@ -36,7 +71,15 @@ function subscribeReady(cb: () => void) {
 
 /** `true`, gdy wyszukiwanie rozmyte jest gotowe — w zależnościach `useMemo` z `searchNotes`. */
 export function useSearchReady(): boolean {
-  return useSyncExternalStore(subscribeReady, () => Engine !== null, () => false);
+  return useSyncExternalStore(subscribeReady, () => Engine !== null || activeWorker() !== null, () => false);
+}
+
+/**
+ * Numer, który zmienia się, gdy dojdą nowe wyniki (silnik wczytany, odpowiedź Workera). Wstawiany do zależności
+ * `useMemo` obok `searchNotes`, żeby widok przeliczył wyniki po odpowiedzi.
+ */
+export function useSearchVersion(): number {
+  return useSyncExternalStore(subscribeReady, () => localVersion + (workerEngine ? workerEngine.version() : 0), () => 0);
 }
 
 /** Przed załadowaniem silnika: każde słowo musi wystąpić w tytule, treści, etykietach albo liście. */
@@ -46,47 +89,6 @@ function exactHits(source: Note[], words: string[]): Note[] {
     const hay = fold([n.title, n.content, ...n.labels, ...(n.checklist ?? []).map((c) => c.text)].join("\n"));
     return words.every((w) => hay.includes(w));
   });
-}
-
-/**
- * Dokument indeksu: każde pole osobno, żeby MiniSearch liczył trafność per pole (tytuł waży więcej
- * niż treść). Aliasy, etykiety i pozycje listy to teksty złączone znakiem nowej linii.
- */
-interface IndexDoc {
-  id: string;
-  title: string;
-  aliases: string;
-  labels: string;
-  checklist: string;
-  content: string;
-}
-
-const FIELDS: (keyof Omit<IndexDoc, "id">)[] = ["title", "aliases", "labels", "checklist", "content"];
-
-/** Waga pól przy trafności (BM25 per pole, sumowane). */
-const BOOST: Record<(typeof FIELDS)[number], number> = { title: 4, aliases: 3, labels: 2, checklist: 1.5, content: 1 };
-
-/**
- * Podział na słowa po zdjęciu ogonków: „Żółta, kartka” → `zolta`, `kartka`. Ten sam podział
- * dotyczy zapytania, więc „zolta” trafia w „żółta”, a „kupić” w „kupic”.
- */
-function tokenize(text: string): string[] {
-  return fold(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-}
-
-function toDoc(n: Note): IndexDoc {
-  return {
-    id: n.id,
-    title: n.title,
-    aliases: (n.aliases ?? []).join("\n"),
-    labels: n.labels.join("\n"),
-    checklist: (n.checklist ?? []).map((c) => c.text).join("\n"),
-    content: n.content,
-  };
-}
-
-function sameDoc(a: IndexDoc, b: IndexDoc): boolean {
-  return FIELDS.every((f) => a[f] === b[f]);
 }
 
 /**
@@ -126,13 +128,7 @@ function syncIndex(source: Note[]): IndexState {
   if (!state) {
     const Ctor = Engine!;
     state = {
-      engine: new Ctor<IndexDoc>({
-        fields: FIELDS,
-        storeFields: [],
-        idField: "id",
-        tokenize,
-        searchOptions: { prefix: true, fuzzy: 0.2, combineWith: "AND", boost: BOOST },
-      }),
+      engine: createNoteIndex(Ctor),
       docs: new Map(),
       byId: new Map(),
       source: null,
@@ -176,7 +172,11 @@ export function searchNotes(notes: Note[], query: string, ctx: SearchContext = {
   if (!free) return pool;
 
   let hits: Note[];
-  if (!Engine) {
+  const worker = activeWorker();
+  if (worker) {
+    // Wynik z Workera, gdy już jest; do tego czasu dokładne trafienia (widok przeliczy się po odpowiedzi).
+    hits = worker.lookup(source, free) ?? exactHits(source, fold(free).split(/\s+/).filter(Boolean));
+  } else if (!Engine) {
     void loadSearchIndex();
     hits = exactHits(source, fold(free).split(/\s+/).filter(Boolean));
   } else {

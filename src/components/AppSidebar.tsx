@@ -26,7 +26,7 @@ import { modShortcut } from "@/lib/platform";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { dur, ease, tween } from "@/lib/motion";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
-import { searchNotes, useSearchReady } from "@/lib/searchNotes";
+import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
 import { preloadView } from "@/lib/viewPreload";
 import { groupSidebarItems, type SidebarItem } from "@/components/sidebar/sidebarItems";
 import { NEUROKLIK_URL } from "@/lib/neuroklik";
@@ -196,11 +196,11 @@ export function AppSidebar({
   const progressByFolder = useMemo(() => folderProgress(notes, folders), [notes, folders]);
   const { filters, rename: renameFilter, remove: removeFilter } = useSavedFilters();
   // Liczniki od startu — po wczytaniu silnika (wyszukiwanie rozmyte) liczone jeszcze raz.
-  const searchReady = useSearchReady();
+  const searchVersion = useSearchVersion();
   const counts = useMemo(
     () => filters.map((f) => searchNotes(notes, f.query, { folders }).length),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filters, notes, folders, searchReady],
+    [filters, notes, folders, searchVersion],
   );
   const favoriteTotal = useMemo(() => notes.filter((n) => n.favorite).length, [notes]);
   const favorites = useMemo(() => notes.filter((n) => n.favorite).slice(0, MAX_FAVORITES), [notes]);

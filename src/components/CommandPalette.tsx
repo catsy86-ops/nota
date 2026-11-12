@@ -5,7 +5,7 @@ import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
 import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette, Camera, PackageSearch, FileText } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
-import { searchNotes, useSearchReady } from "@/lib/searchNotes";
+import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
 import { sectionHits } from "@/lib/sectionHits";
 import { requestHeading } from "@/lib/wikiHeading";
 import type { PeriodKind } from "@/lib/periodNote";
@@ -131,9 +131,9 @@ export function CommandPalette({
   const [recent, setRecent] = useState<string[]>(loadRecentSearches);
   // Notatki prywatne nie pojawiają się w palecie (ani tytułem, ani treścią) — także po odblokowaniu.
   const publicNotes = useMemo(() => notes.filter((n) => !n.locked), [notes]);
-  const searchReady = useSearchReady();
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- `searchReady`: przeliczenie po wczytaniu silnika
-  const matched = useMemo(() => searchNotes(publicNotes, search, { folders }), [publicNotes, search, folders, searchReady]);
+  const searchVersion = useSearchVersion();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `searchVersion`: przeliczenie po wczytaniu silnika i odpowiedzi Workera
+  const matched = useMemo(() => searchNotes(publicNotes, search, { folders }), [publicNotes, search, folders, searchVersion]);
   // Nagłówki i bloki pasujące do tekstu (bez operatorów): skok prosto do sekcji.
   const sections = useMemo(() => sectionHits(publicNotes, search, { folders }), [publicNotes, search, folders]);
   // 5.3: wyniki według rodzaju — notatki z terminem idą do grupy „Terminy” (z datą), reszta do „Notatki”.
