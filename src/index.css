@@ -217,6 +217,28 @@ html[data-skin="zeszyt"] .app-header {
   box-shadow: 0 1px 0 var(--border);
 }
 
+/* Powłoka 4.3: cień pod nagłówkiem po zjechaniu ze szczytu — przez pierwsze 80 px przewijania (animacja sterowana
+   przewijaniem, bez JS). Pseudo-element, żeby nie nadpisać `box-shadow` stylów (Zeszyt ma tam linię). Bez wsparcia
+   `animation-timeline` cienia nie ma — jak dotąd. */
+@supports (animation-timeline: scroll()) {
+  .app-header::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: 12px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--foreground) 9%, transparent), transparent);
+    opacity: 0;
+    animation: header-shade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 80px;
+  }
+  @keyframes header-shade {
+    to { opacity: 1; }
+  }
+}
+
 @utility stats-card {
   @apply rounded-card border border-border/50 p-4;
   background: linear-gradient(

@@ -5638,3 +5638,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `CommandPalette.tsx` (`SETTINGS_SHORTCUTS`, `requestSettingsTab` z `settingsDeepLink.ts`).
 - **Ograniczenia:** „Zrób kopię” otwiera kartę kopii, nie zapisuje pliku od razu — zapis od razu pominąłby pytanie o pominięte załączniki (D3). „Zablokuj prywatne notatki” i „Do skrzynki” były już w palecie; „Styl”, „Krój”, „Jasność” jako osobne polecenia — bez zmian (styl jest).
 - **Testy:** e2e `palette-settings-tabs.spec.ts`.
+
+## Powłoka — cień nagłówka przy przewijaniu (plan 4.3, 2026-11-12)
+
+- **Co robi:** po zjechaniu ze szczytu strony pod nagłówkiem pojawia się delikatny cień (narasta przez pierwsze 80 px przewijania).
+- **Gdzie:** `src/index.css` (`.app-header::after`, `@keyframes header-shade`, `animation-timeline: scroll(root)`).
+- **Ograniczenia:** bez wsparcia `animation-timeline` (Safari, Firefox) cienia nie ma — jak dotąd; zwężenie nagłówka i wjazd tytułu działu (reszta 4.3) — nie zrobione. Powłoka 4.1 (88 × `uppercase tracking-wider`) i 4.4 (arkusz „Więcej” jako siatka kafli z licznikami) okazały się zrobione wcześniej.
+- **Testy:** sprawdzone w przeglądarce (krycie cienia 0 na szczycie, 1 po przewinięciu 400 px).
