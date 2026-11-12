@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { formatNoteDate } from "@/lib/noteDate";
-import { CornerLeftUp, Hourglass, Link2, Lock, RotateCcw, Trash } from "lucide-react";
+import { CornerLeftUp, ExternalLink, Hourglass, Link2, Lock, RotateCcw, Trash } from "lucide-react";
 import { inboxAgeDays, inboxAgeLabel, INBOX_STALE_DAYS } from "@/lib/inbox";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -11,6 +11,7 @@ import { backlinksOf } from "@/lib/wikiLinks";
 import { celebrate } from "@/lib/celebrate";
 import { repeatUpdate } from "@/lib/reminderRepeat";
 import { pluralPl } from "@/lib/plural";
+import { parsePastedUrl } from "@/lib/urlTitle";
 import { cn } from "@/lib/utils";
 import { firstSnippet } from "@/lib/searchHighlight";
 import { Marked } from "@/components/SearchMarks";
@@ -84,6 +85,7 @@ export function NoteCardBody({
                 // Prawy margines: tytuł nie wchodzi pod pole zaznaczenia (right-2 + w-6 = 32 px od krawędzi).
                 <h3 className={cn("font-display font-semibold text-base leading-snug tracking-[-0.01em] text-foreground mb-1 line-clamp-2 wrap-anywhere", selectable && "pr-5")}>
                   {note.icon && <span className="mr-1.5" aria-hidden>{note.icon}</span>}
+                  {parsePastedUrl(note.content) && <ExternalLink className="inline-block w-3.5 h-3.5 mr-1.5 -mt-0.5 text-muted-foreground" aria-label="Zapisany link" />}
                   <Marked text={note.title} terms={searchTerms} />
                   {note.readOnly && <Lock className="inline-block w-3 h-3 ml-1.5 -mt-0.5 text-muted-foreground" aria-label="Zablokowana do edycji" />}
                   <ChecklistCount items={note.checklist || []} />

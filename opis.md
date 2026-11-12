@@ -5549,3 +5549,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** dane to dopisane pole `seconds`; seria na czas jest zapisywana jako `{reps: 1, seconds, kg?}`. Dzięki `reps: 1` starsza wersja aplikacji (zna tylko `reps`) widzi poprawną serię z 1 powtórzeniem i nie odrzuca wpisu. Objętość i szacowany 1RM pomijają serie na czas; obciążenie dodatkowe liczy się do rekordu ciężaru.
 - **Ograniczenia:** starsza wersja pokaże taką serię jako „1” (bez sekund); własne ćwiczenia nie mają znacznika „na czas” (tryb wybiera się przełącznikiem); cały wpis jest albo na czas, albo na powtórzenia.
 - **Testy:** `src/lib/training/model.test.ts`, `TrainingSection.test.tsx`.
+
+## Skrzynka — błysk nowej notatki i ikona linku (1.2, 2.4, 2026-11-12)
+
+- **Co robi:** błysk przy dodaniu notatki startuje teraz także z pola przechwytywania Skrzynki (wcześniej tylko z paska dodawania, którego w Skrzynce nie ma). Notatka z samym adresem http(s) w treści (np. wklejony link) ma na kaflu ikonę linku przed tytułem.
+- **Gdzie:** `src/pages/Index.tsx` (`handleAddNoteGlow` szuka `[data-add-note-bar], [data-inbox-capture]`), `src/components/NoteCardBody.tsx` (`ExternalLink` + `parsePastedUrl` z `urlTitle.ts`).
+- **Ograniczenia:** ikona pojawia się tylko, gdy cała treść to jeden adres; bez testu komponentu kafla (brak testów jednostkowych `NoteCard`), sprawdzone tylko typami.
+- **Testy:** `src/lib/urlTitle` (rozpoznanie adresu).

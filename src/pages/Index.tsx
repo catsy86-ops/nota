@@ -603,7 +603,7 @@ const Index = () => {
   // użytkownik patrzy — inaczej znika mu z oczu i wymaga przeciągnięcia.
   const activeFolderObj = view === "folder" && activeFolder ? folders.find((f) => f.id === activeFolder) ?? null : null;
   const handleAddNoteGlow = useCallback((...args: Parameters<typeof addNote>) => {
-    const p = centerOf(document.querySelector("[data-add-note-bar]"));
+    const p = centerOf(document.querySelector("[data-add-note-bar], [data-inbox-capture]"));
     if (p) glowPulse(p, "create", 260);
     const [title, content, color, labels = [], reminder, images, checklist, priority, folderId, attachments] = args;
     const withLabel = activeLabel && !labels.includes(activeLabel) ? [...labels, activeLabel] : labels;

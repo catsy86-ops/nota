@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Skrzynka” (2026-10-25)
 
+> **Status (2026-11-12):** zrobione 1.2 (błysk startuje też z `[data-inbox-capture]`) i ikona linku na kaflu (2.4). Plan Skrzynki bez otwartych punktów poza QA na telefonie.
+
 > **Status (2026-11-03):** zrobione 1.1, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.4, 4.1, 4.2, 4.3, 4.4, 4.6, 3.2, 3.3, 3.5, 4.5, 5.1–5.3; częściowo 2.4 (brak ikony linku na kaflu); otwarte 1.2 (błysk liczony tylko z `[data-add-note-bar]`); czeka QA. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
 
 > **Status (2026-11-03):** zrobione 2.1, 2.4 (bez ikony linku na kaflu), 2.5 (2026-11-03), 1.1, 1.3, 2.2, 3.2, 4.5, 5.2, 5.3 (2026-11-02) oraz wcześniej 3.3 (S-1, „Odłóż”) i 3.5 (gesty w trybie porządkowania). Nie sprawdzone w tej rundzie: 1.2, 1.4 (część testów jest w `e2e/inbox-triage.spec.ts`), 5.1 (`e2e/inbox-today.spec.ts`). Zrobione 2.3 (2026-11-03: `Alt+K`, paleta, skrót PWA `?skrzynka=1`), 3.1, 3.4, 4.1–4.4 i 4.6 (2026-11-03). Otwarte: 1.2, ikona linku na kaflu (2.4).
