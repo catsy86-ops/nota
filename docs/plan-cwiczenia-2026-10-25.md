@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Ćwiczenia” (2026-10-25)
 
+> **Status (2026-11-12):** zrobione 1.2 (wybór czasu przerwy; przerwa nadal po całym wpisie, nie po każdej serii), 1.3, 1.4, 2.1, 2.2, 2.3 (tylko w jedną stronę), 2.5, 2.6, 3.4 (lista sesji i 1RM, bez wykresu z osią dat), 4.1, 4.2, 4.3, 4.4, 4.5 (podsekcje). Otwarte: 2.7 (czeka na C-1). Opis: `opis.md`.
+
 > **Status (2026-11-06):** 2.4 zrobione (pigułki ostatnich posiłków, „Powtórz wczoraj” z „Cofnij”). Reszta jak niżej.
 
 > **Status (2026-11-03):** zrobione 1.1, 3.1, 3.2, 3.3, 3.5; częściowo 4.5 (`h3 text-xs` zostały); otwarte 1.2 (stałe `REST_SECONDS = 90`, przerwa po całym wpisie), 1.3 (`cleanAmount` zaokrągla białko), 1.4 (`addNote(…, [], …)` bez etykiety), 2.1–2.6, 3.4, 4.1–4.4; czeka wydanie 1.1 i 2.7 (C-1), C-4. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
