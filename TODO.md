@@ -19,6 +19,7 @@ Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs/
 - **Miejsce na dysku C.** Zostało ok. 1,6 GB z 465 GB. Mogą padać testy (awaria workera vitest). Sprawdzić cache npm i `node_modules`.
 - **`aria-live` w Grafiku.** Scalony w jeden region. Do sprawdzenia w czytniku ekranu.
 - **Test wydajności wyszukiwania** (`searchNotes.test.ts`, 50 ms) bywa niestabilny pod obciążeniem zestawu.
+- **Test `reminders-agenda.spec.ts` (@smoke)** pada przy równoległym uruchamianiu (2–4 workery): po zapisie z paska nowej notatki zostają dwa przyciski „Zapisz” (strict mode) albo `page.goto` przekracza czas. Sprawdzone 2026-11-12 także na commicie sprzed zmian siatki (fa58e35b) — to nie regresja; w izolacji przechodzi.
 - **Test `a11y` „kalendarz — hydraulika”** nie przechodzi (kontrast przy „dziś”, znany problem).
 
 ## Plan rozwoju i dopracowania (2026-11-03) — szczegóły w `Plan-nowy.md`
