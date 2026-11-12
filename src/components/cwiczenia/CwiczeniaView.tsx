@@ -201,7 +201,7 @@ function SupplementList({ supplements, taken, day, notes }: { supplements: Suppl
     <div className="space-y-4">
       {groups.map((g) => (
         <div key={g.when} data-supplement-group={g.when}>
-          <h3 className="text-xs font-medium text-muted-foreground">{SUPPLEMENT_WHEN_LABEL[g.when]}</h3>
+          <h3 className="section-caps">{SUPPLEMENT_WHEN_LABEL[g.when]}</h3>
           <ul className="mt-1 divide-y divide-border/50">
             {g.items.map((s) => {
               const done = taken.has(logKey(day, s.id));

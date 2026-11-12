@@ -41,7 +41,7 @@ export function DietSection() {
 
       <AddMealForm recent={recent} yesterdayCount={yesterdayCount} onRepeatYesterday={() => repeatYesterday(meals, yesterday, today)} />
       <GoalsForm goals={goals} />
-      <WeekList days={week} today={today} />
+      <WeekList days={week} today={today} goals={goals} />
     </SectionCard>
   );
 }
@@ -50,17 +50,28 @@ function TodaySummary({ summary, goals }: { summary: DaySummary; goals: DietGoal
   const unknownKcal = summary.meals - summary.kcalKnown;
   return (
     <div className="grid gap-2 sm:grid-cols-2" data-testid="diet-summary">
-      <Stat label="Kalorie" value={`${summary.kcal} kcal`} goal={goals.kcal ? `z ${goals.kcal} kcal` : undefined} note={unknownKcal > 0 ? `${unknownKcal} ${pluralPl(unknownKcal, MEAL_FORMS)} bez kalorii` : undefined} />
-      <Stat label="Białko" value={`${summary.protein} g`} goal={goals.protein ? `z ${goals.protein} g` : undefined} note={summary.meals - summary.proteinKnown > 0 ? `${summary.meals - summary.proteinKnown} ${pluralPl(summary.meals - summary.proteinKnown, MEAL_FORMS)} bez białka` : undefined} />
+      <Stat label="Kalorie" value={`${summary.kcal} kcal`} goal={goals.kcal ? `z ${goals.kcal} kcal` : undefined} ratio={goals.kcal ? summary.kcal / goals.kcal : undefined} note={unknownKcal > 0 ? `${unknownKcal} ${pluralPl(unknownKcal, MEAL_FORMS)} bez kalorii` : undefined} />
+      <Stat label="Białko" value={`${summary.protein} g`} goal={goals.protein ? `z ${goals.protein} g` : undefined} ratio={goals.protein ? summary.protein / goals.protein : undefined} note={summary.meals - summary.proteinKnown > 0 ? `${summary.meals - summary.proteinKnown} ${pluralPl(summary.meals - summary.proteinKnown, MEAL_FORMS)} bez białka` : undefined} />
     </div>
   );
 }
 
-function Stat({ label, value, goal, note }: { label: string; value: string; goal?: string; note?: string }) {
+/** Pasek postępu (4.2): ozdoba przy liczbach, które i tak są w tekście; wypełnienie do 100% celu. */
+function Bar({ ratio, className }: { ratio: number; className?: string }) {
+  const pct = Math.round(Math.min(1, Math.max(0, ratio)) * 100);
+  return (
+    <div aria-hidden className={cn("h-1.5 overflow-hidden rounded-full bg-muted", className)}>
+      <div className="h-full rounded-full bg-primary transition-[width] duration-[320ms] ease-out motion-reduce:transition-none" style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
+function Stat({ label, value, goal, note, ratio }: { label: string; value: string; goal?: string; note?: string; ratio?: number }) {
   return (
     <div className="rounded-field border border-border/60 px-3 py-2">
       <p className="ui-hint">{label}</p>
       <p className="font-mono text-lg tabular-nums">{value} {goal && <span className="text-xs text-muted-foreground">{goal}</span>}</p>
+      {ratio !== undefined && <Bar ratio={ratio} className="mt-1" />}
       {note && <p className="text-2xs text-muted-foreground">{note}</p>}
     </div>
   );
@@ -213,17 +224,22 @@ function GoalsForm({ goals }: { goals: DietGoals }) {
   );
 }
 
-function WeekList({ days, today }: { days: DaySummary[]; today: string }) {
+function WeekList({ days, today, goals }: { days: DaySummary[]; today: string; goals: DietGoals }) {
   const hasAny = days.some((d) => d.meals > 0);
   if (!hasAny) return null;
+  // Słupki względem celu kalorii; bez celu — względem najwyższego dnia tygodnia.
+  const scale = goals.kcal ?? Math.max(1, ...days.map((d) => d.kcal));
   return (
     <div className="border-t border-dashed border-border pt-4">
       <p className="ui-hint font-medium">Ostatnie 7 dni</p>
       <ul className="mt-2 space-y-1 text-sm" data-testid="diet-week">
         {[...days].reverse().map((d) => (
-          <li key={d.day} className="flex justify-between gap-3">
-            <span className={d.day === today ? "font-medium" : "text-muted-foreground"}>{shortDay(d.day)}</span>
-            <span className="font-mono tabular-nums">{d.meals > 0 ? `${d.kcal} kcal · ${d.protein} g białka` : "—"}</span>
+          <li key={d.day} className="space-y-0.5">
+            <div className="flex justify-between gap-3">
+              <span className={d.day === today ? "font-medium" : "text-muted-foreground"}>{shortDay(d.day)}</span>
+              <span className="font-mono tabular-nums">{d.meals > 0 ? `${d.kcal} kcal · ${d.protein} g białka` : "—"}</span>
+            </div>
+            <Bar ratio={d.kcal / scale} className={d.day === today ? "" : "opacity-60"} />
           </li>
         ))}
       </ul>

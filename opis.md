@@ -5504,3 +5504,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `TrainingSection.tsx` (`RestTimer` z `until`, `total`, `onExtend`, `onStop`; stan `rest` w `TrainingSection`).
 - **Ograniczenia:** czytnik ekranu ogłasza tylko koniec przerwy; „+30 s” można stukać wielokrotnie bez górnego limitu.
 - **Testy:** `TrainingSection.test.tsx`.
+
+## Ćwiczenia — paski postępu diety i nagłówki (4.2, 4.5, 2026-11-12)
+
+- **Co robi:** pod kaflami „Kalorie” i „Białko” jest pasek postępu do celu dziennego (tylko gdy cel jest ustawiony; wypełnienie do 100%). „Ostatnie 7 dni” ma pod każdym dniem pasek względem celu kalorii albo, bez celu, względem najwyższego dnia tygodnia; dzisiejszy wyróżniony, pozostałe przygaszone. Podsekcje (Plan dni, Dziś, Progres, Ten tydzień, pory odżywek) mają wspólny styl `section-caps` zamiast `h3 text-xs`.
+- **Gdzie:** `DietSection.tsx` (`Bar`, `Stat`, `WeekList`), `TrainingSection.tsx`, `CwiczeniaView.tsx`.
+- **Ograniczenia:** paski są ozdobą (`aria-hidden`) — liczby są w tekście; przekroczenie celu nie zmienia koloru; puste stany bez rysunku kreską (czeka na N-3).
+- **Testy:** `DietSection.test.tsx` (teksty bez zmian), `designTokens.test.ts`, `sentenceCase.test.ts`.

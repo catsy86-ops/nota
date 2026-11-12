@@ -38,7 +38,7 @@ export function TrainingSection() {
 
       {todays.length > 0 && (
         <div>
-          <h3 className="text-xs font-medium text-muted-foreground">Dziś</h3>
+          <h3 className="section-caps">Dziś</h3>
           <ul className="mt-1 divide-y divide-border/50" data-testid="training-today">
             {todays.map((e) => <EntryRow key={e.id} entry={e} />)}
           </ul>
@@ -71,7 +71,7 @@ function WeekSummary({ week }: { week: ReturnType<typeof trainingWeek> }) {
   if (week.days === 0) return null;
   return (
     <div data-testid="training-week">
-      <h3 className="text-xs font-medium text-muted-foreground">Ten tydzień</h3>
+      <h3 className="section-caps">Ten tydzień</h3>
       <p className="mt-1 text-sm">
         <span className="font-semibold">{week.days} {week.days === 1 ? "trening" : week.days < 5 ? "treningi" : "treningów"}</span>
         {week.setsByGroup.length > 0 && (
@@ -114,7 +114,7 @@ function PlanList({ plans }: { plans: PlanDay[] }) {
   if (plans.length === 0) return <p className="text-sm text-muted-foreground">Nie masz jeszcze planu dni. Dodaj go poniżej.</p>;
   return (
     <div className="space-y-2" data-testid="training-plans">
-      <h3 className="text-xs font-medium text-muted-foreground">Plan dni</h3>
+      <h3 className="section-caps">Plan dni</h3>
       <ul className="divide-y divide-border/50">
         {plans.map((p) => (
           <li key={p.id} className="flex items-start gap-3 py-2">
@@ -357,7 +357,7 @@ function ProgressList({ progress, entries }: { progress: ReturnType<typeof progr
   if (rows.length === 0) return null;
   return (
     <div className="border-t border-dashed border-border pt-4">
-      <h3 className="text-xs font-medium text-muted-foreground">Progres</h3>
+      <h3 className="section-caps">Progres</h3>
       <ul className="mt-2 space-y-2 text-sm" data-testid="training-progress">
         {rows.map((p) => {
           const series = bestKgSeries(entries, p.exerciseId);
