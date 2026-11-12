@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { setViewPref } from "@/lib/viewPrefs";
 import type { View } from "@/hooks/useFilteredNotes";
 import { setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { requestNoteRender } from "@/lib/gridReveal";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
 import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, findDailyNote } from "@/lib/dailyNote";
 import { PERIOD_LABEL, PERIOD_TEMPLATE, findPeriodNote, periodKey, periodTitle, type PeriodKind } from "@/lib/periodNote";
@@ -46,9 +47,7 @@ export function useNoteNavigation({ route, folders, notes, archivedNotes, notesR
   const revealNote = useCallback((id: string, target: View, viaLink: boolean, edit: boolean) => {
     setSearch("");
     if (viaLink) replaceWith(target); else go(target, { search: "" });
-    setTimeout(() => {
-      const el = document.querySelector<HTMLElement>(`[data-note-id="${id}"]`);
-      if (!el) return;
+    const show = (el: HTMLElement) => {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
       // Pierścień fokusu idzie za notatką — inaczej zostaje na kaflu z linkiem i świecą dwa naraz.
       setGridNavFocus(id);
@@ -56,6 +55,20 @@ export function useNoteNavigation({ route, folders, notes, archivedNotes, notesR
       setTimeout(() => el.classList.remove("note-flash"), 1600);
       // Ta sama ścieżka co klik w kartę (patrz `NoteGrid` → `openNote`).
       if (edit) document.querySelector<HTMLElement>(`[data-note-id-wrap="${id}"] .cursor-pointer`)?.click();
+    };
+    setTimeout(() => {
+      const find = () => document.querySelector<HTMLElement>(`[data-note-id="${id}"]`);
+      const el = find();
+      if (el) { show(el); return; }
+      // Karta daleko na liście może być jeszcze niezamontowana (siatka rysuje przy przewijaniu) — prosimy o nią.
+      requestNoteRender(id);
+      let tries = 0;
+      const retry = () => {
+        const later = find();
+        if (later) show(later);
+        else if (++tries < 20) requestAnimationFrame(retry);
+      };
+      requestAnimationFrame(retry);
     }, 150);
   }, [go, replaceWith, setSearch]);
   /** Zapisany widok (6.1): ustawienia widoku, potem źródło z zapytaniem. Folder, którego nie ma, = komunikat. */

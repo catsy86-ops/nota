@@ -58,7 +58,6 @@ async function session(useWorker) {
 
   const box = page.getByRole("searchbox").first();
   await box.click();
-  const expected = Math.ceil(COUNT / 100);
   // Zapytanie wklejone naraz (bez prefiksów „z”, „zx”…, które pasują do prawie wszystkiego i mierzyłyby rysowanie kart).
   // Czas w stronie: od wpisania do chwili, gdy lista ma oczekiwaną liczbę kart, plus dwie klatki.
   const until = (n) => page.evaluate(async (want) => {
@@ -82,7 +81,8 @@ async function session(useWorker) {
   }, n);
   const fillAndWait = async (q, n) => { const p = until(n); await box.fill(q); return p; };
   await page.evaluate(() => { window.__long.length = 0; window.__events.length = 0; });
-  const first = await fillAndWait("zxqvbn", expected);
+  // Siatka montuje karty przy przewijaniu, więc liczby trafień nie widać w DOM — czekamy na ustabilizowanie listy.
+  const first = await fillAndWait("zxqvbn", null);
   // Kolejne zapytania (indeks już jest): zawężenie i powrót; lista zostaje mała, więc mierzymy wyszukiwanie, nie rysowanie.
   const followUp = [];
   for (const q of ["zxqvbn rura", "zxqvbn", "zxqvbn kocioł", "zxqvbn"]) { await page.waitForTimeout(300); followUp.push(await fillAndWait(q, null)); }

@@ -62,5 +62,12 @@ z Workerem i z usuniętym `window.Worker` (indeks w głównym wątku). „Najgor
 | 2026-11-12 | Worker | 26 177 ms | 121 ms | 8 930 ms | 30 807 ms |
 | 2026-11-12 | główny wątek | 19 670 ms | 76 ms | 5 544 ms | 22 317 ms |
 
-Wniosek: pierwsze zapytanie to głównie zdjęcie 3000 kart z siatki (ekran startowy pokazuje wszystkie notatki) — w obu trybach. Worker nie
+| 2026-11-12, po renderze przy przewijaniu | Worker | — | 107 ms | 269–707 ms | 3 168–3 355 ms |
+| 2026-11-12, po renderze przy przewijaniu | główny wątek | — | 73 ms | 2 128–2 155 ms | 4 695–4 956 ms |
+
+Po zmianie siatki (karty montowane przy przewijaniu) „pierwsze zapytanie” w ms przestało być miarodajne: lista ma od początku tyle samo
+zamontowanych kart (24), więc nie ma czego czekać — o koszcie mówią długie zadania. Bez Workera budowa indeksu blokuje wątek na ok. 2 s,
+z Workerem najdłuższe zadanie to 0,3–0,7 s.
+
+Wniosek sprzed zmiany siatki: pierwsze zapytanie to głównie zdjęcie 3000 kart z siatki (ekran startowy pokazuje wszystkie notatki) — w obu trybach. Worker nie
 skraca interakcji; realny zysk dałaby wirtualizacja lub stronicowanie siatki (ADR-7). Liczby z dwóch sesji, rozrzut duży — do porównań przed/po.

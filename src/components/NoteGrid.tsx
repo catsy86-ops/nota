@@ -19,6 +19,7 @@ const DENSITY_GAPS: Record<string, { gap: string; listGap: string; columnGap: st
   comfy: { gap: "gap-5", listGap: "space-y-5", columnGap: "gap-x-5", rowGap: "mb-5" },
 };
 import { getPendingAnchorId } from "@/lib/viewChange";
+import { onNoteRenderRequest } from "@/lib/gridReveal";
 
 
 interface SortableNoteCardProps {
@@ -63,28 +64,40 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, s
 });
 
 /**
- * Render progresywny: pierwszy ekran od razu, reszta paczkami w wolnych chwilach.
- * 300 kafli w jednym zadaniu blokowało telefon na 2–3 s (pomiar CPU 4×) — teraz lista
- * jest widoczna po pierwszej paczce, a dociąganie nie zabiera dotyku.
+ * Render na żądanie (Cykl 3): pierwszy ekran od razu, kolejne paczki dopiero, gdy strażnik pod listą zbliża się
+ * do ekranu (zapas `REVEAL_MARGIN`). Wcześniej reszta dociągała się w tle, aż w DOM były wszystkie karty — przy 3000
+ * notatkach przebudowa siatki po wpisaniu zapytania trwała kilkanaście sekund na telefonie (pomiar CPU ×4,
+ * `docs/PERFORMANCE.md`). Teraz w DOM jest tyle kart, ile użytkownik przewinął. Bez `IntersectionObserver` (jsdom,
+ * stare przeglądarki) zostaje dociąganie w wolnych chwilach.
  */
 const FIRST_BATCH = 24;
 const NEXT_BATCH = 48;
+const REVEAL_MARGIN = "0px 0px 1200px 0px";
 type IdleWindow = Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
 
-function useProgressiveCount(total: number, initial = FIRST_BATCH): number {
+function useRenderedCount(total: number, initial: number, sentinel: React.RefObject<HTMLElement | null>): [number, (n: number) => void] {
   const [count, setCount] = useState(() => Math.min(total, Math.max(FIRST_BATCH, initial)));
   useEffect(() => {
     if (count >= total) return;
-    const w = window as IdleWindow;
     const grow = () => setCount((c) => Math.min(total, c + NEXT_BATCH));
+    const el = sentinel.current;
+    if (el && typeof IntersectionObserver !== "undefined") {
+      // Nowy obserwator po każdej paczce: jego pierwsze wywołanie mówi, czy strażnik wciąż jest blisko (krótka lista
+      // na wysokim ekranie dociągnie się od razu, bez przewijania).
+      const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) grow(); }, { rootMargin: REVEAL_MARGIN });
+      io.observe(el);
+      return () => io.disconnect();
+    }
+    const w = window as IdleWindow;
     if (w.requestIdleCallback) {
       const id = w.requestIdleCallback(grow, { timeout: 200 });
       return () => w.cancelIdleCallback?.(id);
     }
     const id = window.setTimeout(grow, 16);
     return () => window.clearTimeout(id);
-  }, [count, total]);
-  return Math.min(count, total);
+  }, [count, total, sentinel]);
+  const ensure = useCallback((n: number) => setCount((c) => (n > c ? Math.min(total, n) : c)), [total]);
+  return [Math.min(count, total), ensure];
 }
 
 /** Powyżej tylu kart siatka nie animuje przesunięć — pomiar każdej karty kosztuje więcej, niż daje płynność. */
@@ -142,7 +155,16 @@ export function NoteGrid({
     const idx = id ? notes.findIndex((n) => n.id === id) : -1;
     return idx < 0 ? 0 : idx + 1 + FIRST_BATCH;
   });
-  const renderedCount = useProgressiveCount(notes.length, anchorCount);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [renderedCount, ensureRendered] = useRenderedCount(notes.length, anchorCount, sentinelRef);
+  /** Dorysowuje karty aż do tej notatki (i paczkę za nią); `true`, gdy notatka jest w tej siatce. */
+  const renderUpTo = useCallback((id: string) => {
+    const idx = notes.findIndex((n) => n.id === id);
+    if (idx < 0) return false;
+    ensureRendered(idx + 1 + FIRST_BATCH);
+    return true;
+  }, [notes, ensureRendered]);
+  useEffect(() => onNoteRenderRequest(renderUpTo), [renderUpTo]);
   const renderedNotes = renderedCount >= notes.length ? notes : notes.slice(0, renderedCount);
   const renderedIds = renderedCount >= notes.length ? noteIds : noteIds.slice(0, renderedCount);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -177,6 +199,19 @@ export function NoteGrid({
     };
     requestAnimationFrame(retry);
   };
+  const whenRendered = (id: string, run: (el: HTMLElement) => void) => {
+    const find = () => gridRef.current?.querySelector<HTMLElement>(`[data-note-id-wrap="${window.CSS.escape(id)}"]`) ?? null;
+    const now = find();
+    if (now) { run(now); return; }
+    if (!renderUpTo(id)) return;
+    let tries = 0;
+    const retry = () => {
+      const el = find();
+      if (el) run(el);
+      else if (++tries < 10) requestAnimationFrame(retry);
+    };
+    requestAnimationFrame(retry);
+  };
   useLayoutEffect(() => {
   navHandlers.current = {
     onDelete,
@@ -196,14 +231,9 @@ export function NoteGrid({
       const note = notes.find((n) => n.id === id);
       if (note) onUpdate?.(id, { favorite: !note.favorite });
     },
-    openNote: (id) => {
-      const target = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"] .cursor-pointer`) as HTMLElement | null;
-      target?.click();
-    },
-    scrollToNote: (id) => {
-      const el = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"]`) as HTMLElement | null;
-      el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    },
+    // Karta może być jeszcze niezamontowana (render przy przewijaniu): najpierw dorysowanie, potem DOM w następnej klatce.
+    openNote: (id) => whenRendered(id, (el) => (el.querySelector(".cursor-pointer") as HTMLElement | null)?.click()),
+    scrollToNote: (id) => whenRendered(id, (el) => el.scrollIntoView({ block: "nearest", behavior: "smooth" })),
     colsCount,
   };
   });
@@ -251,6 +281,8 @@ export function NoteGrid({
           ))}
         </AnimatePresence>
       </div>
+      {/* Strażnik renderu na żądanie: gdy zbliża się do ekranu, siatka dorysowuje kolejną paczkę kart. */}
+      {renderedCount < notes.length && <div ref={sentinelRef} aria-hidden className="h-px w-full" data-grid-sentinel />}
 
     </SortableContext>
     </NoteViewActionsProvider>
