@@ -5419,7 +5419,7 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Co robi:** wystawiona faktura zapisuje się jako niezmienny rekord (numer, dane faktury, zapisany XML FA(3) i jego SHA-256) w dokumencie Yjs; numer nadaje seria tego telefonu.
 - **Gdzie:** `src/lib/ksef/numbering.ts` (`nextInvoiceNumber`, `findDuplicateNumbers`, `findGaps`), `yInvoices.ts` (mapa `studyInvoices`, `cleanRecord`, `verifyRecord`, `mergeDump`), `invoicesStore.ts` (`issueInvoice`, `useInvoices`), `sellerPrefs.ts` (dane sprzedawcy i seria). Kopia pełna niesie sekcję `invoices` (scalanie bez nadpisywania) i dane sprzedawcy; seria `kaczy.ksef.series.v1` zostaje poza kopią.
 - **Jak działa:** numer to `FV/{seria}/{rok}/{kolejny}` — kolejny wynika z faktur już zapisanych (największy numer serii w roku + 1), więc przeżywa przywrócenie kopii; telefony z różnymi seriami nie kolidują, a ta sama seria na dwóch telefonach da duplikat, który wykrywa `findDuplicateNumbers`. Rekord nie jest edytowany ani nadpisywany (`add` odmawia istniejącego id, kopia dokłada tylko brakujące); `verifyRecord` wykrywa zmianę XML po wystawieniu. Niepoprawna faktura nie zużywa numeru.
-- **Ograniczenia:** brak interfejsu (okno wystawiania, lista, PDF) — następny krok; brak wysyłki do KSeF (Etap 2). Faktury w kopii pełnej są jawne jak reszta kopii JSON — szyfrowany eksport faktur do dopisania.
+- **Ograniczenia:** brak interfejsu (okno wystawiania, lista, PDF) — następny krok; brak wysyłki do KSeF (Etap 2). Faktury w kopii pełnej są jawne jak reszta kopii JSON.
 - **Testy:** `src/lib/ksef/invoices.test.ts`, `fullBackup.test.ts`.
 
 ## Faktury KSeF, Etap 1 — okno wystawiania (2026-11-11)
@@ -5446,3 +5446,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Ograniczenia:** typ skutku 3 (w dacie innej faktury) nie jest obsługiwany; jedna korygowana faktura na korektę (bez korekty zbiorczej); strony i tryb cen są kopiowane z oryginału; korekta nie unieważnia oryginału w aplikacji, ona tylko dopisuje rekord. Brak wysyłki do KSeF (Etap 2).
 - **Testy:** `src/lib/ksef/invoices.test.ts` (numeracja FK, różnice, XML, numer KSeF, rekord uszkodzony); ręcznie: 3 warianty XML korekty przeszły `ValidateFa3.java` względem XSD MF.
 - **Commit:** zob. `git log` (KSeF: korekty faktur, 2026-11-12).
+
+## Faktury KSeF — zaszyfrowany eksport (2026-11-12)
+
+- **Co robi:** w Ustawieniach → sekcja „Faktury (KSeF): zaszyfrowany plik” można zapisać wszystkie faktury z tego telefonu do pliku chronionego hasłem i wczytać taki plik na innym telefonie. Kopia pełna zostaje jawna, a ten plik jest dla danych nabywców.
+- **Gdzie:** `src/lib/ksef/invoiceExport.ts` (`encryptInvoices`, `decryptInvoices`, `exportInvoicesEncrypted`, `importInvoicesEncrypted`), `src/components/settings/InvoiceExportSettings.tsx` (ładuje moduł szyfrowania dopiero przy użyciu).
+- **Jak działa:** PBKDF2-SHA-256 (sól 16 B, 600 000 iteracji) → AES-256-GCM, funkcje z `vault.ts`; AAD `notki:invoices:v1`. Plik JSON ma jawne `format`, `salt`, `iter` i jeden szyfrogram zrzutu. Hasło musi przejść `passwordStrength` (min. 12 znaków). Import odrzuca zbyt małą liczbę iteracji, odszyfrowane rekordy przechodzą `cleanRecord`, a `mergeDump` dokłada tylko brakujące faktury (nie nadpisuje).
+- **Ograniczenia:** hasła nie da się odzyskać; plik nie niesie ustawień sprzedawcy ani serii.
+- **Testy:** `src/lib/ksef/invoices.test.ts` (round-trip, złe hasło, zmieniony plik, obcy format, słabe parametry i hasło).

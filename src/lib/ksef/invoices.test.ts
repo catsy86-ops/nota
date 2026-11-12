@@ -189,3 +189,24 @@ describe("faktura korygująca", () => {
     expect(cleanRecord({ ...k.record, invoice: { ...k.record.invoice, correction: null } })).toBeNull();
   });
 });
+
+describe("szyfrowany eksport faktur", () => {
+  it("round-trip hasłem; złe hasło, zmieniony plik i obcy format są odrzucane", async () => {
+    const { encryptInvoices, decryptInvoices } = await import("./invoiceExport");
+    const rec = await record("e1", "FV/A/2026/501");
+    const file = await encryptInvoices({ invoices: [rec] }, "kuchenny-zlew-2026", 1000);
+    expect(JSON.stringify(file)).not.toContain("Anna Nowak");
+    const back = await decryptInvoices(JSON.parse(JSON.stringify(file)), "kuchenny-zlew-2026", 1000);
+    expect(back.invoices.map((r) => r.id)).toEqual(["e1"]);
+    await expect(decryptInvoices(file, "inne-haslo-123456", 1000)).rejects.toMatchObject({ code: "decrypt-failed" });
+    const tampered = { ...file, data: file.data.slice(0, -2) + (file.data.endsWith("AA") ? "BB" : "AA") };
+    await expect(decryptInvoices(tampered, "kuchenny-zlew-2026", 1000)).rejects.toMatchObject({ code: "decrypt-failed" });
+    await expect(decryptInvoices({ format: "x" }, "kuchenny-zlew-2026", 1000)).rejects.toMatchObject({ code: "bad-format" });
+    await expect(decryptInvoices({ ...file, iter: 10 }, "kuchenny-zlew-2026", 1000)).rejects.toMatchObject({ code: "weak-params" });
+  });
+
+  it("słabe hasło przy pełnej liczbie iteracji jest odrzucone", async () => {
+    const { encryptInvoices } = await import("./invoiceExport");
+    await expect(encryptInvoices({ invoices: [] }, "krotkie")).rejects.toThrow("weak-password");
+  });
+});

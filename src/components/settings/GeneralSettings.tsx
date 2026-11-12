@@ -27,6 +27,7 @@ import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
 import { SERIES_MAX } from "@/lib/ksef/numbering";
 import { setSeries, useSeries } from "@/lib/ksef/sellerPrefs";
 import { AUTHOR_MAX, BANK_ACCOUNT_MAX, COMPANY_NAME_MAX, setAuthor, setBankAccount, setCompanyName, setPricing, useAuthor, useBankAccount, useCompanyName, usePricing } from "@/lib/study/companyPrefs";
+import { InvoiceExportSettings } from "./InvoiceExportSettings";
 import { PricingManager } from "./PricingManager";
 import { FingerprintCheck } from "./FingerprintCheck";
 import { Input } from "@/components/ui/input";
@@ -261,10 +262,14 @@ export function GeneralSettings() {
 
         <Section title="Faktury (KSeF): seria numeracji">
           <Label htmlFor="invoice-series" className="text-xs text-muted-foreground">
-            Numer faktury to FV/seria/rok/kolejny. Jeśli faktury wystawiasz z kilku telefonów, każdy powinien mieć inną serię (np. A i B) — wtedy numery się nie powtórzą. Zostaje na tym urządzeniu.
+            Numer faktury to FV/seria/rok/kolejny, a korekty FK/seria/rok/kolejny. Jeśli faktury wystawiasz z kilku telefonów, każdy powinien mieć inną serię (np. A i B) — wtedy numery się nie powtórzą. Zostaje na tym urządzeniu.
           </Label>
           <Input id="invoice-series" key={invoiceSeries} defaultValue={invoiceSeries} maxLength={SERIES_MAX} placeholder="A" className="w-28 font-mono"
             onBlur={(e) => { if (e.target.value.trim().toUpperCase() !== invoiceSeries) setSeries(e.target.value); }} />
+        </Section>
+
+        <Section title="Faktury (KSeF): zaszyfrowany plik">
+          <InvoiceExportSettings />
         </Section>
 
         <Section title="Cennik robocizny (fuchy)">
