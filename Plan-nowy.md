@@ -83,8 +83,8 @@
 
 | # | Co | W | N |
 |---|----|---|---|
-| 3.1 | **`src/pages/Index.tsx` na mniejsze części:** hooki widoków (Skrzynka, Terminy, Dziś), hosty okien i akcje zapisu w osobnych modułach. Bez zmiany zachowania; siatką bezpieczeństwa są e2e. | 3 | L |
-| 3.2 | **Wyszukiwanie w Workerze** i zrzut indeksu do IndexedDB (odłożone z planu rozbudowy 3.x). Najpierw przejście wywołań na asynchroniczne. | 2 | L |
+| 3.1 | 🟡 (2026-11-12: wydzielone `useInboxCapture`, `useNoteExport`, `useNoteNavigation`, `useNoteGlowActions`, `useViewShell`; `Index.tsx` 1270 → 1025 linii; zostają hosty okien i część stanu okien) **`src/pages/Index.tsx` na mniejsze części:** hooki widoków (Skrzynka, Terminy, Dziś), hosty okien i akcje zapisu w osobnych modułach. Bez zmiany zachowania; siatką bezpieczeństwa są e2e. | 3 | L |
+| 3.2 | ✅ (2026-11-12: `noteSearchEngine.ts`, Worker wspólny z Pracą; bez zrzutu indeksu do IndexedDB) **Wyszukiwanie w Workerze** i zrzut indeksu do IndexedDB (odłożone z planu rozbudowy 3.x). Najpierw przejście wywołań na asynchroniczne. | 2 | L |
 | 3.3 | ✅ **Pomiar reakcji:** `e2e/web-vitals-phone.spec.ts` na `pixel-7` mierzy LCP i najdłuższą interakcję jako medianę z 5 przebiegów; progi 2500 ms i 300 ms (mediana interakcji 256 ms, LCP 344 ms). Opis w `opis.md`. | 2 | M |
 | 3.4 | ✅ **ADR** (`docs/adr.md`, ADR-1…5): krótko spisane decyzje — `reminderSpec` jako jedna wartość LWW, CSP `connect-src` szerokie, Web Push lokalnie, brak hostingu, model stylów i motywów. | 2 | S |
 | 3.6 | ✅ **Drobne z pomiaru renderu (§10.4)** (także paleta dostaje zapamiętaną listę zamiast nowej tablicy): `ShiftsView` dostaje memoizowane `reminderNotes` zamiast `[...notes, ...archivedNotes]` (`Index.tsx:974`); jedno liczenie `inboxBadge`/`inboxCount` (`Index.tsx:589,657`). | 2 | S |
