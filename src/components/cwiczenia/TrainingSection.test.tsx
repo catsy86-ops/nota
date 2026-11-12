@@ -204,6 +204,25 @@ describe("TrainingSection", () => {
     expect(screen.getByTestId("training-progress").textContent).toContain("22 kg · rekord");
   });
 
+  it("3.4: stuknięcie w ćwiczenie w Progresie pokazuje sesje od najnowszej i szacowany 1RM", () => {
+    fixture.entries = [
+      { id: "a", day: "2026-10-10", exerciseId: "klatka-hantle-plasko", note: "", created: 1, sets: [{ reps: 10, kg: 20 }] },
+      { id: "b", day: "2026-10-15", exerciseId: "klatka-hantle-plasko", note: "", created: 2, sets: [{ reps: 5, kg: 24 }, { reps: 5, kg: 24 }] },
+    ];
+    render(<TrainingSection />);
+    expect(screen.queryByTestId("exercise-history")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /^Historia:/ }));
+    const h = screen.getByTestId("exercise-history");
+    const rows = h.querySelectorAll("li");
+    expect(rows).toHaveLength(2);
+    expect(rows[0].textContent).toContain("15.10");
+    expect(rows[0].textContent).toContain("240 kg");
+    // 24 kg × 5 → 24 × (1 + 5/30) = 28 kg; 20 × 10 → 26,7 — wygrywa 28.
+    expect(h.textContent).toContain("28 kg");
+    fireEvent.click(screen.getByRole("button", { name: /^Historia:/ }));
+    expect(screen.queryByTestId("exercise-history")).toBeNull();
+  });
+
   it("4.3: gdy rekord był wcześniej, podpis ostatniej wartości nie mówi „rekord”", () => {
     fixture.entries = [
       { id: "a", day: "2026-10-10", exerciseId: "klatka-hantle-plasko", note: "", created: 1, sets: [{ reps: 10, kg: 24 }] },

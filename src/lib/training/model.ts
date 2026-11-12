@@ -156,6 +156,21 @@ export function bestKg(sets: readonly TrainingSet[]): number | undefined {
   return best;
 }
 
+/**
+ * Szacowany jednopowtórzeniowy maksimum (wzór Epleya: kg × (1 + powtórki / 30)) z najlepszej serii; zaokrąglony do
+ * 0,5 kg. To informacja, nie cel — przy dużej liczbie powtórek (> 12) wzór zawyża, więc takie serie pomijamy.
+ * Brak serii z ciężarem i do 12 powtórek = `undefined`.
+ */
+export function estimateOneRepMax(sets: readonly TrainingSet[]): number | undefined {
+  let best: number | undefined;
+  for (const s of sets) {
+    if (s.kg === undefined || s.kg <= 0 || s.reps < 1 || s.reps > 12) continue;
+    const est = s.reps === 1 ? s.kg : s.kg * (1 + s.reps / 30);
+    if (best === undefined || est > best) best = est;
+  }
+  return best === undefined ? undefined : Math.round(best * 2) / 2;
+}
+
 /** Objętość treningu: suma powtórek × ciężar (serie bez ciężaru się nie liczą). */
 export function volumeOf(sets: readonly TrainingSet[]): number {
   return sets.reduce((sum, s) => sum + (s.kg !== undefined ? s.reps * s.kg : 0), 0);

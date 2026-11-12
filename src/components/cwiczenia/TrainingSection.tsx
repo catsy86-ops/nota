@@ -11,7 +11,7 @@ import { addDaysToKey } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { nextReminderAt } from "@/lib/timeOfDay";
 import { CUSTOM_HINT_MAX, CUSTOM_NAME_MAX, CUSTOM_PREFIX, EQUIPMENT_LIST, EXERCISES, exerciseById, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS, type Equipment, type MuscleGroup } from "@/lib/training/catalog";
-import { bestKg, bestKgSeries, byTrainingTime, trainingWeek, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
+import { bestKg, bestKgSeries, estimateOneRepMax, byTrainingTime, trainingWeek, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
 import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingEquipment, setTrainingReminder, useTrainingEntries, useTrainingEquipment, useTrainingPlans, useTrainingReminder, useCustomExercises, addCustomExercise, removeCustomExercise } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { toast } from "sonner";
@@ -352,7 +352,31 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
   );
 }
 
+/** 3.4: sesje jednego ćwiczenia od najnowszej: dzień, serie, objętość i szacowany 1RM (Epley) jako informacja. */
+function ExerciseHistory({ entries }: { entries: TrainingEntry[] }) {
+  const sessions = [...entries].sort(byTrainingTime).reverse();
+  const best = estimateOneRepMax(sessions.flatMap((e) => e.sets));
+  return (
+    <div className="mt-2 space-y-1 rounded-field bg-muted/40 px-3 py-2" data-testid="exercise-history">
+      {best !== undefined && <p className="text-xs text-muted-foreground">Szacowane maksimum na 1 powtórzenie: <span className="font-mono tabular-nums text-foreground">{best} kg</span> (wzór Epleya, orientacyjnie)</p>}
+      <ul className="divide-y divide-border/50 text-xs">
+        {sessions.map((e) => {
+          const volume = volumeOf(e.sets);
+          return (
+            <li key={e.id} className="flex flex-wrap justify-between gap-x-3 py-1">
+              <span className="font-mono tabular-nums text-muted-foreground">{shortDay(e.day)}</span>
+              <span className="min-w-0 flex-1">{setsLine(e.sets)}</span>
+              {volume > 0 && <span className="font-mono tabular-nums text-muted-foreground">{Math.round(volume)} kg</span>}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 function ProgressList({ progress, entries }: { progress: ReturnType<typeof progressByExercise>; entries: TrainingEntry[] }) {
+  const [openId, setOpenId] = useState<string | null>(null);
   const rows = [...progress.values()];
   if (rows.length === 0) return null;
   return (
@@ -363,13 +387,16 @@ function ProgressList({ progress, entries }: { progress: ReturnType<typeof progr
           const series = bestKgSeries(entries, p.exerciseId);
           return (
             <li key={p.exerciseId}>
-              <div className="flex justify-between gap-3">
+              <button type="button" aria-expanded={openId === p.exerciseId} aria-label={`Historia: ${exerciseById(p.exerciseId)?.name ?? p.exerciseId}`}
+                onClick={() => setOpenId(openId === p.exerciseId ? null : p.exerciseId)}
+                className="pressable flex w-full justify-between gap-3 rounded-field text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11 coarse:items-center">
                 <span className="min-w-0 truncate">{exerciseById(p.exerciseId)?.name ?? p.exerciseId}</span>
                 <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
                   {p.bestKg !== undefined ? `rekord ${p.bestKg} kg (${shortDay(p.bestDay ?? "")})` : "bez ciężaru"} · {p.sessions}×
                 </span>
-              </div>
+              </button>
               {series.length >= 2 && <Sparkline values={series} label={`Rekordy kolejnych sesji: ${series.join(", ")} kg`} />}
+              {openId === p.exerciseId && <ExerciseHistory entries={entries.filter((e) => e.exerciseId === p.exerciseId)} />}
             </li>
           );
         })}

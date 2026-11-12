@@ -105,3 +105,13 @@ describe("trainingWeek (plan Ćwiczeń 3.5)", () => {
     expect(trainingWeek([], "2026-11-05", groupOf)).toEqual({ days: 0, setsByGroup: [] });
   });
 });
+
+describe("estimateOneRepMax (Epley)", () => {
+  it("liczy z najlepszej serii, zaokrągla do 0,5 kg i pomija serie bez ciężaru oraz powyżej 12 powtórzeń", async () => {
+    const { estimateOneRepMax } = await import("./model");
+    expect(estimateOneRepMax([{ reps: 5, kg: 24 }])).toBe(28);
+    expect(estimateOneRepMax([{ reps: 1, kg: 100 }, { reps: 10, kg: 60 }])).toBe(100);
+    expect(estimateOneRepMax([{ reps: 15, kg: 40 }, { reps: 10 }])).toBeUndefined();
+    expect(estimateOneRepMax([])).toBeUndefined();
+  });
+});
