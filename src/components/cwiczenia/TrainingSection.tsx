@@ -210,7 +210,7 @@ function SessionBanner({ session, onSkip, onClose }: { session: TrainingSession;
     return (
       <div role="status" className="space-y-1 rounded-field border border-primary/40 bg-primary/5 px-3 py-2 text-sm" data-testid="session-summary">
         <p className="font-medium">Zrobione: {session.planName}</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="ui-hint">
           {session.logged} z {total} ćwiczeń · objętość {Math.round(session.volume)} kg · {sessionMinutes(session, Date.now())} min
           {session.records > 0 && ` · rekordów: ${session.records}`}
         </p>
@@ -414,7 +414,7 @@ function ExerciseHistory({ entries }: { entries: TrainingEntry[] }) {
   const best = estimateOneRepMax(sessions.flatMap((e) => e.sets));
   return (
     <div className="mt-2 space-y-1 rounded-field bg-muted/40 px-3 py-2" data-testid="exercise-history">
-      {best !== undefined && <p className="text-xs text-muted-foreground">Szacowane maksimum na 1 powtórzenie: <span className="font-mono tabular-nums text-foreground">{best} kg</span> (wzór Epleya, orientacyjnie)</p>}
+      {best !== undefined && <p className="ui-hint">Szacowane maksimum na 1 powtórzenie: <span className="font-mono tabular-nums text-foreground">{best} kg</span> (wzór Epleya, orientacyjnie)</p>}
       <ul className="divide-y divide-border/50 text-xs">
         {sessions.map((e) => {
           const volume = volumeOf(e.sets);
