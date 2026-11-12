@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Download, FileCode2, FileText } from "lucide-react";
+import { Download, FileCode2, FilePen, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ import { computeInvoice, validateInvoice, VAT_RATES, type Invoice, type InvoiceL
 import { issueInvoice, useInvoices } from "@/lib/ksef/invoicesStore";
 import { findDuplicateNumbers } from "@/lib/ksef/numbering";
 import { sellerStore, setSeller, useSeries } from "@/lib/ksef/sellerPrefs";
+import { CorrectionDialog } from "./CorrectionDialog";
 import { verifyRecord, type InvoiceRecord } from "@/lib/ksef/yInvoices";
 
 const fieldCls = "h-9 w-full rounded-field border border-input bg-background px-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
@@ -88,6 +89,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
   const [saleDate, setSaleDate] = useState(() => localDayKey(new Date(job.statusAt)));
   const [busy, setBusy] = useState(false);
   const [problems, setProblems] = useState<string[]>([]);
+  const [correcting, setCorrecting] = useState<InvoiceRecord | null>(null);
   const [okMap, setOkMap] = useState<Record<string, boolean>>({});
 
   const lines = useMemo(() => linesFromJob(job, rate).map((l, i) => (overrides[i] === undefined ? l : { ...l, rate: overrides[i] })), [job, rate, overrides]);
@@ -129,7 +131,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
         <DialogHeader>
           <DialogTitle className="font-display">Faktura dla „{site.name}”</DialogTitle>
           <DialogDescription>
-            Pozycje z wyceny. Po wystawieniu faktury nie da się zmienić — poprawia ją tylko korekta. Aplikacja zapisuje plik XML (FA(3)),
+            Pozycje z wyceny. Po wystawieniu faktury nie da się zmienić — poprawia ją tylko korekta (przycisk „Koryguj” przy fakturze). Aplikacja zapisuje plik XML (FA(3)),
             który wgrasz do KSeF albo przekażesz księgowej; niczego sama nie wysyła.
           </DialogDescription>
         </DialogHeader>
@@ -223,11 +225,15 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
                 <li key={r.id} className="flex items-center gap-2" data-testid="invoice-item">
                   <span className="min-w-0 flex-1">
                     <span className="font-mono">{r.number}</span>
+                    {r.invoice.correction && <span className="ml-1 text-xs text-muted-foreground">korekta do {r.invoice.correction.originalNumber}</span>}
                     {duplicates.has(r.number) && <span className="ml-1 text-xs text-warning-ink">powtórzony numer</span>}
                     {okMap[r.id] === true && <span className="ml-1 text-xs text-success-ink">skrót zgodny</span>}
                   </span>
                   <span className="shrink-0 font-mono tabular-nums">{fromGrosze(computeInvoice(r.invoice).gross)}</span>
                   <Button type="button" variant="ghost" size="sm" onClick={() => void check(r)} className="coarse:h-11">Sprawdź</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setCorrecting(r)} className="coarse:h-11" aria-label={`Koryguj fakturę ${r.number}`} data-testid="invoice-correct">
+                    <FilePen className="h-4 w-4" aria-hidden />Koryguj
+                  </Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => void downloadPdf(r)} className="coarse:h-11" aria-label={`Pobierz PDF faktury ${r.number}`}>
                     <FileText className="h-4 w-4" aria-hidden />PDF
                   </Button>
@@ -240,6 +246,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
           </section>
         )}
       </DialogContent>
+      <CorrectionDialog record={correcting} onClose={() => setCorrecting(null)} />
     </Dialog>
   );
 }

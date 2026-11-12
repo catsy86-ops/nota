@@ -1,10 +1,10 @@
-import { computeInvoice, qtyToDecimal, toDecimal, type Invoice, type Party } from "./invoice";
+import { computeInvoice, computeLines, qtyToDecimal, toDecimal, type Invoice, type Party } from "./invoice";
 import { normalizeNip } from "./nip";
 import { escapeXml, tag } from "./xml";
 
 /**
  * Generator XML faktury w schemacie FA(3) (KSeF, ADR-6) dla czynnego podatnika VAT wystawiającego zwykłą fakturę
- * (`RodzajFaktury` = VAT) klientowi krajowemu — firmie albo konsumentowi. Bez odwrotnego obciążenia, zaliczek, korekt
+ * (`RodzajFaktury` = VAT) klientowi krajowemu — firmie albo konsumentowi. Korekta (`RodzajFaktury` = KOR) pokazuje stan przed i po jako osobne wiersze. Bez odwrotnego obciążenia, zaliczek
  * i walut obcych (kolejne etapy). XML składamy ręcznie z typowanych struktur (`xml.ts`), kolejność elementów jest
  * dokładnie taka jak w XSD `crd.gov.pl/wzor/2025/06/25/13775/`; zgodność sprawdza `scripts/ksef/ValidateFa3.java`.
  */
@@ -47,13 +47,15 @@ function summaries(totals: ReturnType<typeof computeInvoice>): string {
 
 const rateLabel = (rate: number): string => (rate === 0 ? "0 KR" : String(rate));
 
-function lines(inv: Invoice, totals: ReturnType<typeof computeInvoice>): string {
-  return inv.lines
-    .map((l, i) => {
-      const a = totals.lines[i];
+/** Wiersze jednego stanu faktury; `before` oznacza stan przed korektą (`StanPrzed`), numeracja ciągła od `from`. */
+function lines(inv: Invoice, list: Invoice["lines"], amounts: ReturnType<typeof computeInvoice>["lines"], from = 0, before = false): string {
+  return list
+    .map((l, k) => {
+      const i = from + k;
+      const a = amounts[k];
       const price = inv.priceMode === "net" ? tag("P_9A", toDecimal(l.unitPrice)) : tag("P_9B", toDecimal(l.unitPrice));
       const value = inv.priceMode === "net" ? tag("P_11", toDecimal(a.net)) : tag("P_11A", toDecimal(a.gross));
-      return `<FaWiersz>${tag("NrWierszaFa", i + 1)}${tag("P_7", l.name)}${tag("P_8A", l.unit)}${tag("P_8B", qtyToDecimal(l.qtyMilli))}${price}${value}${tag("P_12", rateLabel(l.rate))}</FaWiersz>`;
+      return `<FaWiersz>${tag("NrWierszaFa", i + 1)}${tag("P_7", l.name)}${tag("P_8A", l.unit)}${tag("P_8B", qtyToDecimal(l.qtyMilli))}${price}${value}${tag("P_12", rateLabel(l.rate))}${before ? tag("StanPrzed", 1) : ""}</FaWiersz>`;
     })
     .join("");
 }
@@ -64,6 +66,13 @@ function payment(inv: Invoice): string {
   const due = p.dueDate ? `<TerminPlatnosci>${tag("Termin", p.dueDate)}</TerminPlatnosci>` : "";
   const account = p.form === 6 && p.account?.replace(/\s/g, "") ? `<RachunekBankowy>${tag("NrRB", p.account.replace(/\s/g, ""))}</RachunekBankowy>` : "";
   return `<Platnosc>${due}${tag("FormaPlatnosci", p.form)}${account}</Platnosc>`;
+}
+
+/** Dane korekty: przyczyna, typ skutku i faktura korygowana (w KSeF albo poza nim). */
+function correctionData(c: NonNullable<Invoice["correction"]>): string {
+  const ref = c.ksefNumber ? tag("NrKSeF", 1) + tag("NrKSeFFaKorygowanej", c.ksefNumber) : tag("NrKSeFN", 1);
+  return tag("PrzyczynaKorekty", c.reason) + tag("TypKorekty", c.type)
+    + `<DaneFaKorygowanej>${tag("DataWystFaKorygowanej", c.originalIssueDate)}${tag("NrFaKorygowanej", c.originalNumber)}${ref}</DaneFaKorygowanej>`;
 }
 
 /** Adnotacje obowiązkowe: zwykła faktura bez żadnej z procedur szczególnych. */
@@ -80,6 +89,11 @@ const ADNOTACJE = "<Adnotacje>" + tag("P_16", 2) + tag("P_17", 2) + tag("P_18", 
  */
 export function buildFa3Xml(inv: Invoice, createdAt: number): string {
   const totals = computeInvoice(inv);
+  const c = inv.correction;
+  // Korekta: stan przed (StanPrzed=1) i po jako osobne wiersze; sumy P_13/P_14/P_15 to różnice.
+  const rows = c
+    ? lines(inv, c.linesBefore, computeLines({ lines: c.linesBefore, priceMode: inv.priceMode }).lines, 0, true) + lines(inv, inv.lines, totals.lines, c.linesBefore.length)
+    : lines(inv, inv.lines, totals.lines);
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     `<Faktura xmlns="${FA3_NAMESPACE}">`,
@@ -91,8 +105,9 @@ export function buildFa3Xml(inv: Invoice, createdAt: number): string {
     summaries(totals),
     tag("P_15", toDecimal(totals.gross)),
     ADNOTACJE,
-    tag("RodzajFaktury", "VAT"),
-    lines(inv, totals),
+    tag("RodzajFaktury", c ? "KOR" : "VAT"),
+    c ? correctionData(c) : "",
+    rows,
     payment(inv),
     "</Fa>",
     "</Faktura>",

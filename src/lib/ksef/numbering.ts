@@ -10,26 +10,29 @@ export const SERIES_MAX = 6;
 /** Seria: litery i cyfry bez polskich znaków, wielkie, do 6 znaków; pusta → „A”. */
 export const cleanSeries = (raw: string): string => raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, SERIES_MAX) || "A";
 
-export function formatInvoiceNumber(series: string, year: number, seq: number): string {
-  return `FV/${cleanSeries(series)}/${year}/${String(seq).padStart(3, "0")}`;
+/** Przedrostek numeru: `FV` faktura, `FK` korekta (osobny licznik, ta sama seria urządzenia). */
+export type NumberKind = "FV" | "FK";
+
+export function formatInvoiceNumber(series: string, year: number, seq: number, kind: NumberKind = "FV"): string {
+  return `${kind}/${cleanSeries(series)}/${year}/${String(seq).padStart(3, "0")}`;
 }
 
-const NUMBER_RE = /^FV\/([A-Z0-9]{1,6})\/(\d{4})\/(\d+)$/;
+const NUMBER_RE = /^(FV|FK)\/([A-Z0-9]{1,6})\/(\d{4})\/(\d+)$/;
 
-export function parseInvoiceNumber(n: string): { series: string; year: number; seq: number } | null {
+export function parseInvoiceNumber(n: string): { kind: NumberKind; series: string; year: number; seq: number } | null {
   const m = NUMBER_RE.exec(n);
-  return m ? { series: m[1], year: Number(m[2]), seq: Number(m[3]) } : null;
+  return m ? { kind: m[1] as NumberKind, series: m[2], year: Number(m[3]), seq: Number(m[4]) } : null;
 }
 
 /** Następny numer serii w roku, na podstawie numerów istniejących faktur. */
-export function nextInvoiceNumber(series: string, year: number, existing: readonly string[]): string {
+export function nextInvoiceNumber(series: string, year: number, existing: readonly string[], kind: NumberKind = "FV"): string {
   const s = cleanSeries(series);
   let max = 0;
   for (const n of existing) {
     const p = parseInvoiceNumber(n);
-    if (p && p.series === s && p.year === year && p.seq > max) max = p.seq;
+    if (p && p.kind === kind && p.series === s && p.year === year && p.seq > max) max = p.seq;
   }
-  return formatInvoiceNumber(s, year, max + 1);
+  return formatInvoiceNumber(s, year, max + 1, kind);
 }
 
 /** Numery występujące więcej niż raz (np. dwa telefony z tą samą serią). */
@@ -41,12 +44,12 @@ export function findDuplicateNumbers(numbers: readonly string[]): string[] {
 }
 
 /** Luki w ciągu numerów serii w roku (np. 1, 2, 4 → [3]); do ostrzeżenia w rejestrze. */
-export function findGaps(series: string, year: number, existing: readonly string[]): number[] {
+export function findGaps(series: string, year: number, existing: readonly string[], kind: NumberKind = "FV"): number[] {
   const s = cleanSeries(series);
   const seqs = new Set<number>();
   for (const n of existing) {
     const p = parseInvoiceNumber(n);
-    if (p && p.series === s && p.year === year) seqs.add(p.seq);
+    if (p && p.kind === kind && p.series === s && p.year === year) seqs.add(p.seq);
   }
   const max = Math.max(0, ...seqs);
   const gaps: number[] = [];

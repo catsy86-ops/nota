@@ -1,6 +1,6 @@
 import { PdfWriter, pdfFileName } from "@/lib/study/pdfWriter";
 import { money } from "@/lib/study/billing";
-import { computeInvoice } from "./invoice";
+import { computeInvoice, computeLines, type Invoice } from "./invoice";
 import { invoiceQrUrl, qrPngDataUrl } from "./qr";
 import type { InvoiceRecord } from "./yInvoices";
 
@@ -21,8 +21,13 @@ export async function buildInvoicePdf(r: InvoiceRecord): Promise<Blob> {
   const t = computeInvoice(inv);
   const w = await PdfWriter.create();
 
-  w.line("Faktura VAT", 16, "bold");
+  const c = inv.correction;
+  w.line(c ? "Faktura korygująca" : "Faktura VAT", 16, "bold");
   w.line(`Nr ${r.number}`, 12, "bold");
+  if (c) {
+    w.line(`Dotyczy faktury ${c.originalNumber} z dnia ${dmy(c.originalIssueDate)}${c.ksefNumber ? ` (KSeF: ${c.ksefNumber})` : ""}`);
+    w.line(`Przyczyna korekty: ${c.reason}`);
+  }
   w.line(`Data wystawienia: ${dmy(inv.issueDate)}   ·   Data wykonania usługi: ${dmy(inv.saleDate)}`);
 
   w.heading("Sprzedawca");
@@ -35,16 +40,23 @@ export async function buildInvoicePdf(r: InvoiceRecord): Promise<Blob> {
   if (inv.buyer.address1) w.line([inv.buyer.address1, inv.buyer.address2].filter(Boolean).join(", "));
   if (inv.buyer.nip) w.line(`NIP: ${inv.buyer.nip}`);
 
-  w.heading(inv.priceMode === "gross" ? "Pozycje (ceny brutto)" : "Pozycje (ceny netto)");
-  inv.lines.forEach((l, i) => {
-    const a = t.lines[i];
+  const unit = inv.priceMode === "gross" ? "brutto" : "netto";
+  const lineText = (l: Invoice["lines"][number], i: number, a: { net: number; gross: number }) => {
     const qty = l.qtyMilli / 1000;
-    w.line(`${i + 1}. ${l.name} — ${qty} ${l.unit} × ${zl(l.unitPrice)} = ${zl(inv.priceMode === "gross" ? a.gross : a.net)} (VAT ${l.rate === 0 ? "0%" : `${l.rate}%`})`, 10, "normal", 2);
-  });
+    return `${i + 1}. ${l.name} — ${qty} ${l.unit} × ${zl(l.unitPrice)} = ${zl(inv.priceMode === "gross" ? a.gross : a.net)} (VAT ${l.rate === 0 ? "0%" : `${l.rate}%`})`;
+  };
+  if (c) {
+    w.heading(`Przed korektą (ceny ${unit})`);
+    const before = computeLines({ lines: c.linesBefore, priceMode: inv.priceMode });
+    c.linesBefore.forEach((l, i) => w.line(lineText(l, i, before.lines[i]), 10, "normal", 2));
+  }
+  w.heading(c ? `Po korekcie (ceny ${unit})` : `Pozycje (ceny ${unit})`);
+  if (inv.lines.length === 0) w.line("Brak pozycji (faktura anulowana w całości)", 10, "normal", 2);
+  inv.lines.forEach((l, i) => w.line(lineText(l, i, t.lines[i]), 10, "normal", 2));
 
-  w.heading("Podsumowanie");
+  w.heading(c ? "Różnica (po korekcie − przed)" : "Podsumowanie");
   for (const g of t.byRate) w.line(`Stawka ${g.rate}%: netto ${zl(g.net)}, VAT ${zl(g.vat)}, brutto ${zl(g.gross)}`, 10, "normal", 2);
-  w.line(`Razem do zapłaty: ${zl(t.gross)}`, 13, "bold");
+  w.line(c ? `Razem różnica: ${zl(t.gross)}` : `Razem do zapłaty: ${zl(t.gross)}`, 13, "bold");
 
   if (inv.payment) {
     w.heading("Płatność");

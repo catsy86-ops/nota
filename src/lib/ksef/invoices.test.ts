@@ -4,7 +4,8 @@ import { cleanSeries, findDuplicateNumbers, findGaps, formatInvoiceNumber, nextI
 import { cleanRecord, createYInvoices, sha256Hex, verifyRecord, type InvoiceRecord } from "./yInvoices";
 import { buildFa3Xml } from "./fa3";
 import type { Invoice } from "./invoice";
-import { getInvoices, issueInvoice } from "./invoicesStore";
+import { getInvoices, issueCorrection, issueInvoice } from "./invoicesStore";
+import { computeInvoice } from "./invoice";
 import { seriesStore, setSeries } from "./sellerPrefs";
 
 const draft = (): Omit<Invoice, "number"> => ({
@@ -27,7 +28,7 @@ describe("numeracja", () => {
     expect(cleanSeries("ąę-12 ab!cdefghij")).toBe("12ABCD");
     expect(cleanSeries("")).toBe("A");
     expect(formatInvoiceNumber("A", 2026, 7)).toBe("FV/A/2026/007");
-    expect(parseInvoiceNumber("FV/B/2026/1042")).toEqual({ series: "B", year: 2026, seq: 1042 });
+    expect(parseInvoiceNumber("FV/B/2026/1042")).toEqual({ kind: "FV", series: "B", year: 2026, seq: 1042 });
     expect(parseInvoiceNumber("coś/innego")).toBeNull();
   });
 
@@ -115,5 +116,76 @@ describe("wystawianie faktury", () => {
     const bad = await issueInvoice("lipowa-5", { ...draft(), seller: { name: "X", nip: "123", address1: "a" } });
     expect(bad.ok).toBe(false);
     expect(getInvoices().length).toBe(before);
+  });
+});
+
+describe("faktura korygująca", () => {
+  beforeEach(() => { localStorage.clear(); setSeries("A"); });
+  const now = new Date(2026, 10, 12, 12).getTime();
+
+  async function original() {
+    const r = await issueInvoice("lipowa-5", draft(), now);
+    if (!r.ok) throw new Error("brak faktury");
+    return r.record; // 1 × 123,00 zł brutto, VAT 8%
+  }
+
+  it("numer FK ma własny licznik, nie rusza numeracji FV", async () => {
+    const o = await original();
+    const k1 = await issueCorrection(o, { lines: [{ ...o.invoice.lines[0], unitPrice: 10000 }], reason: "Rabat", type: 2, issueDate: "2026-11-12" }, now + 1000);
+    const k2 = await issueCorrection(o, { lines: [], reason: "Anulowanie", type: 1, issueDate: "2026-11-12" }, now + 2000);
+    if (!k1.ok || !k2.ok) throw new Error("korekty");
+    const seq = (n: string) => Number(n.split("/")[3]);
+    expect(k1.record.number).toMatch(/^FK\/A\/2026\/\d{3}$/);
+    expect(seq(k2.record.number)).toBe(seq(k1.record.number) + 1);
+    const nextFv = seq(o.number) + 1;
+    const v = await issueInvoice("lipowa-5", draft(), now + 3000);
+    expect(v.ok && seq(v.record.number)).toBeGreaterThanOrEqual(nextFv);
+    expect(v.ok && v.record.number.startsWith("FV/")).toBe(true);
+    expect(findGaps("A", 2026, getInvoices().map((r) => r.number), "FK")).toEqual([]);
+  });
+
+  it("sumy korekty to różnica po − przed, także ujemna; zmiana stawki daje wiersze obu stawek", async () => {
+    const o = await original();
+    const down = await issueCorrection(o, { lines: [{ ...o.invoice.lines[0], unitPrice: 10800 }], reason: "Rabat", type: 2, issueDate: "2026-11-12" }, now + 1);
+    if (!down.ok) throw new Error("korekta");
+    expect(computeInvoice(down.record.invoice).gross).toBe(-1500);
+    const moved = computeInvoice({ priceMode: "gross", lines: [{ ...o.invoice.lines[0], rate: 23 }], correction: { ...down.record.invoice.correction!, linesBefore: o.invoice.lines } });
+    expect(moved.byRate.map((r) => r.rate)).toEqual([23, 8]);
+    expect(moved.byRate[1].gross).toBe(-12300);
+    expect(moved.gross).toBe(0);
+  });
+
+  it("XML: KOR, dane korygowanej, stan przed i po jako osobne wiersze, różnice w P_15", async () => {
+    const o = await original();
+    const k = await issueCorrection(o, { lines: [{ ...o.invoice.lines[0], unitPrice: 10800 }], reason: "Rabat <10%>", type: 2, issueDate: "2026-11-12" }, now + 1);
+    if (!k.ok) throw new Error("korekta");
+    const x = k.record.xml;
+    expect(x).toContain("<RodzajFaktury>KOR</RodzajFaktury>");
+    expect(x).toContain("<PrzyczynaKorekty>Rabat &lt;10%&gt;</PrzyczynaKorekty><TypKorekty>2</TypKorekty>");
+    expect(x).toContain(`<NrFaKorygowanej>${o.number}</NrFaKorygowanej><NrKSeFN>1</NrKSeFN>`);
+    expect(x).toContain("<NrWierszaFa>1</NrWierszaFa>");
+    expect(x).toContain("<NrWierszaFa>2</NrWierszaFa>");
+    expect(x.match(/<StanPrzed>1<\/StanPrzed>/g)).toHaveLength(1);
+    expect(x).toContain("<P_15>-15.00</P_15>");
+    expect(await verifyRecord(k.record)).toBe(true);
+    expect(cleanRecord(k.record)).not.toBeNull();
+  });
+
+  it("numer KSeF korygowanej trafia do XML; zły numer i brak przyczyny blokują wystawienie", async () => {
+    const o = await original();
+    const ksef = "5260250274-20261112-ABCDEF-123456-AB";
+    const ok = await issueCorrection(o, { lines: [], reason: "Anulowanie", type: 1, issueDate: "2026-11-12", ksefNumber: ksef }, now + 1);
+    expect(ok.ok && ok.record.xml).toContain(`<NrKSeF>1</NrKSeF><NrKSeFFaKorygowanej>${ksef}</NrKSeFFaKorygowanej>`);
+    const bad = await issueCorrection(o, { lines: [], reason: " ", type: 1, issueDate: "2026-11-12", ksefNumber: "zły" }, now + 2);
+    expect(bad.ok).toBe(false);
+    if (!bad.ok) expect(bad.problems.map((p) => p.field)).toEqual(expect.arrayContaining(["correction.reason", "correction.ksef"]));
+  });
+
+  it("rekord z uszkodzoną korektą jest odrzucany", async () => {
+    const o = await original();
+    const k = await issueCorrection(o, { lines: [], reason: "x", type: 1, issueDate: "2026-11-12" }, now + 1);
+    if (!k.ok) throw new Error("korekta");
+    expect(cleanRecord({ ...k.record, invoice: { ...k.record.invoice, correction: { reason: "x" } } })).toBeNull();
+    expect(cleanRecord({ ...k.record, invoice: { ...k.record.invoice, correction: null } })).toBeNull();
   });
 });

@@ -41,6 +41,23 @@ export interface InvoicePayment {
   account?: string;
 }
 
+/**
+ * Dane faktury korygującej (RodzajFaktury = KOR). `Invoice.lines` to wtedy stan PO korekcie, a `linesBefore` — stan
+ * przed (tak jak na fakturze korygowanej). Sumy na korekcie to różnice „po − przed”, więc mogą być ujemne.
+ */
+export interface InvoiceCorrection {
+  /** Faktura korygowana: numer i data wystawienia (P_2 i P_1 oryginału). */
+  originalNumber: string;
+  originalIssueDate: string;
+  /** Numer KSeF faktury korygowanej, jeśli została wgrana (puste = „poza KSeF”). */
+  ksefNumber?: string;
+  /** Przyczyna korekty (PrzyczynaKorekty). */
+  reason: string;
+  /** 1 = skutek w dacie ujęcia faktury pierwotnej (np. błąd), 2 = w dacie wystawienia korekty (np. rabat po sprzedaży). */
+  type: 1 | 2;
+  linesBefore: InvoiceLine[];
+}
+
 export interface Invoice {
   /** Numer faktury nadany przy wystawieniu (P_2), np. „FV/A/2026/11/001”. */
   number: string;
@@ -52,6 +69,8 @@ export interface Invoice {
   priceMode: PriceMode;
   lines: InvoiceLine[];
   payment?: InvoicePayment;
+  /** Tylko faktura korygująca. */
+  correction?: InvoiceCorrection;
 }
 
 export interface RateTotals {
@@ -86,7 +105,7 @@ const rateFactor = (rate: VatRate) => 1 + rate / 100;
  * - ceny brutto: brutto = Σ pozycji, netto = brutto / (1 + stawka), VAT = brutto − netto.
  * Dzięki temu wartość brutto z cennika (np. 1 230 zł) pozostaje dokładnie taka na fakturze.
  */
-export function computeInvoice(inv: Pick<Invoice, "lines" | "priceMode">): InvoiceTotals {
+export function computeLines(inv: Pick<Invoice, "lines" | "priceMode">): InvoiceTotals {
   const lines: LineAmounts[] = inv.lines.map((l) => {
     const value = roundHalfUp((l.qtyMilli * l.unitPrice) / 1000);
     return inv.priceMode === "net"
@@ -112,6 +131,27 @@ export function computeInvoice(inv: Pick<Invoice, "lines" | "priceMode">): Invoi
     net: byRate.reduce((s, r) => s + r.net, 0),
     vat: byRate.reduce((s, r) => s + r.vat, 0),
     gross: byRate.reduce((s, r) => s + r.gross, 0),
+  };
+}
+
+/**
+ * Sumy faktury do wyświetlenia i XML. Zwykła faktura: `computeLines`. Korekta: sumy per stawka to różnica „po − przed”
+ * (wszystkie stawki z obu stanów), a `lines` opisują pozycje po korekcie.
+ */
+export function computeInvoice(inv: Pick<Invoice, "lines" | "priceMode" | "correction">): InvoiceTotals {
+  const after = computeLines(inv);
+  if (!inv.correction) return after;
+  const before = computeLines({ lines: inv.correction.linesBefore, priceMode: inv.priceMode });
+  const byRate: RateTotals[] = [];
+  for (const rate of VAT_RATES) {
+    const a = after.byRate.find((r) => r.rate === rate);
+    const b = before.byRate.find((r) => r.rate === rate);
+    if (!a && !b) continue;
+    byRate.push({ rate, net: (a?.net ?? 0) - (b?.net ?? 0), vat: (a?.vat ?? 0) - (b?.vat ?? 0), gross: (a?.gross ?? 0) - (b?.gross ?? 0) });
+  }
+  return {
+    byRate, lines: after.lines,
+    net: after.net - before.net, vat: after.vat - before.vat, gross: after.gross - before.gross,
   };
 }
 
@@ -146,6 +186,20 @@ export interface InvoiceProblem {
   message: string;
 }
 
+const KSEF_NUMBER_RE = /^([1-9]((\d[1-9])|([1-9]\d))\d{7}|M\d{9}|[A-Z]{3}\d{7})-(20[2-9][0-9]|2[1-9][0-9]{2}|[3-9][0-9]{3})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])-([0-9A-F]{6})-?([0-9A-F]{6})-([0-9A-F]{2})$/;
+
+function checkLines(list: InvoiceLine[], prefix: string, add: (field: string, message: string) => void): void {
+  if (list.length > INVOICE_LINES_MAX) add("lines", `Najwyżej ${INVOICE_LINES_MAX} pozycji.`);
+  list.forEach((l, i) => {
+    const at = `${prefix}pozycja ${i + 1}`.replace(/^./, (ch) => ch.toUpperCase());
+    if (!l.name.trim() || l.name.length > LINE_NAME_MAX) add(`lines.${i}.name`, `${at}: nazwa (do ${LINE_NAME_MAX} znaków).`);
+    if (!l.unit.trim()) add(`lines.${i}.unit`, `${at}: jednostka.`);
+    if (!Number.isInteger(l.qtyMilli) || l.qtyMilli <= 0 || l.qtyMilli > 1e12) add(`lines.${i}.qty`, `${at}: ilość większa od zera.`);
+    if (!Number.isInteger(l.unitPrice) || l.unitPrice < 0 || l.unitPrice > 1e13) add(`lines.${i}.price`, `${at}: cena nieujemna.`);
+    if (!VAT_RATES.includes(l.rate)) add(`lines.${i}.rate`, `${at}: nieobsługiwana stawka VAT.`);
+  });
+}
+
 /** Lista problemów blokujących wystawienie; pusta = faktura jest poprawna formalnie. */
 export function validateInvoice(inv: Invoice): InvoiceProblem[] {
   const p: InvoiceProblem[] = [];
@@ -158,15 +212,18 @@ export function validateInvoice(inv: Invoice): InvoiceProblem[] {
   if (!inv.seller.address1.trim()) add("seller.address", "Podaj adres sprzedawcy.");
   if (!inv.buyer.name.trim()) add("buyer.name", "Podaj nazwę nabywcy.");
   if (inv.buyer.nip.trim() && !isValidNip(inv.buyer.nip)) add("buyer.nip", "NIP nabywcy jest niepoprawny. Zostaw puste dla konsumenta.");
-  if (inv.lines.length === 0) add("lines", "Dodaj co najmniej jedną pozycję.");
-  if (inv.lines.length > INVOICE_LINES_MAX) add("lines", `Najwyżej ${INVOICE_LINES_MAX} pozycji.`);
-  inv.lines.forEach((l, i) => {
-    if (!l.name.trim() || l.name.length > LINE_NAME_MAX) add(`lines.${i}.name`, `Pozycja ${i + 1}: nazwa (do ${LINE_NAME_MAX} znaków).`);
-    if (!l.unit.trim()) add(`lines.${i}.unit`, `Pozycja ${i + 1}: jednostka.`);
-    if (!Number.isInteger(l.qtyMilli) || l.qtyMilli <= 0 || l.qtyMilli > 1e12) add(`lines.${i}.qty`, `Pozycja ${i + 1}: ilość większa od zera.`);
-    if (!Number.isInteger(l.unitPrice) || l.unitPrice < 0 || l.unitPrice > 1e13) add(`lines.${i}.price`, `Pozycja ${i + 1}: cena nieujemna.`);
-    if (!VAT_RATES.includes(l.rate)) add(`lines.${i}.rate`, `Pozycja ${i + 1}: nieobsługiwana stawka VAT.`);
-  });
+  const c = inv.correction;
+  if (inv.lines.length === 0 && !c) add("lines", "Dodaj co najmniej jedną pozycję.");
+  checkLines(inv.lines, "", add);
+  if (c) {
+    if (!c.originalNumber.trim() || c.originalNumber.length > 256) add("correction.number", "Podaj numer faktury korygowanej.");
+    if (!validDate(c.originalIssueDate)) add("correction.date", "Data faktury korygowanej: RRRR-MM-DD.");
+    if (c.ksefNumber && !KSEF_NUMBER_RE.test(c.ksefNumber)) add("correction.ksef", "Numer KSeF faktury korygowanej jest niepoprawny.");
+    if (!c.reason.trim() || c.reason.length > 256) add("correction.reason", "Podaj przyczynę korekty (do 256 znaków).");
+    if (c.type !== 1 && c.type !== 2) add("correction.type", "Nieznany typ korekty.");
+    if (c.linesBefore.length === 0) add("correction.lines", "Brak pozycji faktury korygowanej.");
+    checkLines(c.linesBefore, "Przed korektą, ", add);
+  }
   if (inv.payment?.form === 6 && inv.payment.account) {
     const acc = inv.payment.account.replace(/\s/g, "");
     if (acc.length < 10 || acc.length > 34) add("payment.account", "Numer rachunku: 10–34 znaki.");
