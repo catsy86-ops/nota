@@ -260,6 +260,20 @@ describe("TrainingSection", () => {
     expect(screen.queryByLabelText("Powtórki, seria 3")).toBeNull();
   });
 
+  it("seria na czas (2.7): deska domyślnie liczy sekundy, zapis ma reps 1 i seconds; przełącznik wraca do powtórzeń", () => {
+    addEntryMock.mockReturnValue({ id: "t1" });
+    render(<TrainingSection />);
+    expect(screen.getByLabelText("Powtórki, seria 1")).toBeTruthy();
+    fireEvent.change(screen.getByRole("combobox", { name: "Ćwiczenie" }), { target: { value: "brzuch-deska" } });
+    expect(screen.getByRole("radio", { name: "Na czas" }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.change(screen.getByLabelText("Sekundy, seria 1"), { target: { value: "45" } });
+    fireEvent.change(screen.getByLabelText("Ciężar kg, seria 1"), { target: { value: "5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz serie" }));
+    expect(addEntryMock).toHaveBeenCalledWith(expect.objectContaining({ exerciseId: "brzuch-deska", sets: [{ reps: 1, seconds: 45, kg: 5 }] }));
+    fireEvent.click(screen.getByRole("radio", { name: "Powtórzenia" }));
+    expect(screen.getByLabelText("Powtórki, seria 1")).toBeTruthy();
+  });
+
   it("prowadzony trening (2.1): zapis przesuwa na następne ćwiczenie, pominięcie kończy plan podsumowaniem", () => {
     addEntryMock.mockReturnValue({ id: "t1" });
     fixture.plans = [{ id: "p1", name: "Ramiona", exerciseIds: ["biceps-mlotkowe", "klatka-hantle-plasko"], targetSets: 2, targetReps: 10, created: 1 }];

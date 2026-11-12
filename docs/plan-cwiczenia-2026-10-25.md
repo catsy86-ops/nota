@@ -1,6 +1,6 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Ćwiczenia” (2026-10-25)
 
-> **Status (2026-11-12):** zrobione 1.2 (wybór czasu przerwy; przerwa nadal po całym wpisie, nie po każdej serii), 1.3, 1.4, 2.1, 2.2, 2.3 (tylko w jedną stronę), 2.5, 2.6, 3.4 (lista sesji i 1RM, bez wykresu z osią dat), 4.1, 4.2, 4.3, 4.4, 4.5 (podsekcje). Otwarte: 2.7 (czeka na C-1). Opis: `opis.md`.
+> **Status (2026-11-12):** zrobione 1.2 (wybór czasu przerwy; przerwa nadal po całym wpisie, nie po każdej serii), 1.3, 1.4, 2.1, 2.2, 2.3 (tylko w jedną stronę), 2.5, 2.6, 3.4 (lista sesji i 1RM, bez wykresu z osią dat), 4.1, 4.2, 4.3, 4.4, 4.5 (podsekcje). Wszystkie punkty zrobione (2.7: 2026-11-12). Opis: `opis.md`.
 
 > **Status (2026-11-06):** 2.4 zrobione (pigułki ostatnich posiłków, „Powtórz wczoraj” z „Cofnij”). Reszta jak niżej.
 

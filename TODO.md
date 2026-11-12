@@ -28,4 +28,5 @@ Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs/
 - [ ] Cykl 2 — działy bez decyzji: Skrzynka 2.3, 3.1, 3.4, 4.1–4.4, 4.6; Dziś 2.1–2.5, 4.2, Etap 3; Terminy 4.5, 3.4; Kalendarz/Grafik/Praca z planu 27.10; Skarbiec 2.2, 3.3, Etap 4; cele dotyku 44 px; paleta w kontekście notatki
 - [ ] Cykl 3 — architektura i wydajność: podział `Index.tsx`, wyszukiwanie w Workerze, pomiar INP/LCP, ADR, `<Activity>` po pomiarze
 - [ ] Cykl 4 — telefon: jedna sesja QA (H4.2, H6.1, H6.2, Długi Etap 5, Wygląd Faza 8, motywy, udostępnianie 5.3, DWG, Terminy 3.2, Skrzynka 2.5); wdrożenie push po decyzji o hostingu
+- [ ] **KSeF Etap 2 (odłożone 2026-11-12 decyzją właściciela):** osobny `ksef-server/` (token KSeF tylko po stronie serwera, kolejka dosłania, status po hashu). Wymaga decyzji o hostingu i tokenu testowego KSeF; przed startem sprawdzić w Dz.U., czy kary KSeF odroczono do 2028. Szczegóły: `docs/ksef-integracja-2026-11-11.md`. Etap 1 (wystawianie, PDF z QR, korekty, zaszyfrowany eksport) zrobiony.
 - [ ] Decyzje właściciela: H-1, H-6, D-3, P0.2, Skarbiec 1.2 cz. 2, C-1, K-4, „Gotowe kończy serię”, hosting, zapis „Mój N”

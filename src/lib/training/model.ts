@@ -9,6 +9,7 @@ import { isKnownExercise } from "./catalog";
 export const TRAINING_MAX_SETS = 30;
 export const TRAINING_REPS_MAX = 100;
 export const TRAINING_KG_MAX = 500;
+export const TRAINING_SECONDS_MAX = 3600;
 export const TRAINING_NOTE_MAX = 200;
 export const TRAINING_MAX_ENTRIES = 5_000;
 export const PLAN_NAME_MAX = 40;
@@ -19,7 +20,10 @@ const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export interface TrainingSet {
+  /** Powtórki. Seria na czas ma tu 1 (zgodność: starsza wersja aplikacji zna tylko `reps`, a wpis bez poprawnej serii by odrzuciła). */
   reps: number;
+  /** Seria na czas w sekundach (deska, zwis) — zamiast powtórek (2.7). */
+  seconds?: number;
   /** Ciężar w kg (co 0,5 kg); brak = bez ciężaru (ćwiczenie z masą ciała albo nieznany). */
   kg?: number;
 }
@@ -99,10 +103,23 @@ export function cleanKg(v: unknown): number | undefined {
   return Math.round(v * 2) / 2;
 }
 
-/** Seria: powtórki całkowite 1–100, ciężar opcjonalny. Zła seria = `null`. */
+/** Czas serii: całkowite sekundy 1–3600; inaczej `undefined`. */
+export function cleanSeconds(v: unknown): number | undefined {
+  return typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= TRAINING_SECONDS_MAX ? v : undefined;
+}
+
+/**
+ * Seria: powtórki całkowite 1–100 albo czas 1–3600 s (wtedy `reps` = 1), ciężar opcjonalny (przy masie ciała to
+ * obciążenie dodatkowe). Zła seria = `null`.
+ */
 export function cleanSet(raw: unknown): TrainingSet | null {
   const s = raw as Partial<TrainingSet> | null;
   if (!s || typeof s !== "object") return null;
+  const seconds = cleanSeconds(s.seconds);
+  if (seconds !== undefined) {
+    const kgT = cleanKg(s.kg);
+    return kgT !== undefined ? { reps: 1, seconds, kg: kgT } : { reps: 1, seconds };
+  }
   if (typeof s.reps !== "number" || !Number.isInteger(s.reps) || s.reps < 1 || s.reps > TRAINING_REPS_MAX) return null;
   const kg = cleanKg(s.kg);
   return kg !== undefined ? { reps: s.reps, kg } : { reps: s.reps };
@@ -164,7 +181,7 @@ export function bestKg(sets: readonly TrainingSet[]): number | undefined {
 export function estimateOneRepMax(sets: readonly TrainingSet[]): number | undefined {
   let best: number | undefined;
   for (const s of sets) {
-    if (s.kg === undefined || s.kg <= 0 || s.reps < 1 || s.reps > 12) continue;
+    if (s.seconds !== undefined || s.kg === undefined || s.kg <= 0 || s.reps < 1 || s.reps > 12) continue;
     const est = s.reps === 1 ? s.kg : s.kg * (1 + s.reps / 30);
     if (best === undefined || est > best) best = est;
   }
@@ -173,7 +190,7 @@ export function estimateOneRepMax(sets: readonly TrainingSet[]): number | undefi
 
 /** Objętość treningu: suma powtórek × ciężar (serie bez ciężaru się nie liczą). */
 export function volumeOf(sets: readonly TrainingSet[]): number {
-  return sets.reduce((sum, s) => sum + (s.kg !== undefined ? s.reps * s.kg : 0), 0);
+  return sets.reduce((sum, s) => sum + (s.kg !== undefined && s.seconds === undefined ? s.reps * s.kg : 0), 0);
 }
 
 /** Kolejność chronologiczna: dzień, potem godzina, potem czas dodania. */

@@ -115,3 +115,33 @@ describe("estimateOneRepMax (Epley)", () => {
     expect(estimateOneRepMax([])).toBeUndefined();
   });
 });
+
+describe("serie na czas (2.7)", () => {
+  it("cleanSet: czas zapisuje się z reps = 1 (zgodność ze starszą wersją), ciężar to obciążenie dodatkowe", async () => {
+    const { cleanSet, cleanEntry } = await import("./model");
+    expect(cleanSet({ seconds: 45 })).toEqual({ reps: 1, seconds: 45 });
+    expect(cleanSet({ reps: 9, seconds: 60, kg: 10.3 })).toEqual({ reps: 1, seconds: 60, kg: 10.5 });
+    expect(cleanSet({ seconds: 0 })).toBeNull();
+    expect(cleanSet({ seconds: 3601 })).toBeNull();
+    expect(cleanSet({ seconds: 1.5 })).toBeNull();
+    // Zwykła seria działa jak dawniej.
+    expect(cleanSet({ reps: 10, kg: 20 })).toEqual({ reps: 10, kg: 20 });
+    const e = cleanEntry({ id: "t1", day: "2026-11-12", exerciseId: "brzuch-deska", sets: [{ reps: 1, seconds: 40 }], note: "", created: 1 });
+    expect(e?.sets).toEqual([{ reps: 1, seconds: 40 }]);
+  });
+
+  it("starsza wersja zna tylko reps: seria na czas jest dla niej poprawną serią z 1 powtórzeniem", async () => {
+    const { cleanSet } = await import("./model");
+    const stored = cleanSet({ seconds: 45 })!;
+    // To, co zobaczy stary kod: obowiązkowe `reps` jest całkowite i w zakresie 1–100.
+    expect(Number.isInteger(stored.reps) && stored.reps >= 1 && stored.reps <= 100).toBe(true);
+  });
+
+  it("objętość i 1RM pomijają serie na czas, ciężar dodatkowy nadal liczy się do rekordu", async () => {
+    const { volumeOf, estimateOneRepMax, bestKg } = await import("./model");
+    const sets = [{ reps: 1, seconds: 60, kg: 10 }, { reps: 5, kg: 20 }];
+    expect(volumeOf(sets)).toBe(100);
+    expect(estimateOneRepMax([{ reps: 1, seconds: 60, kg: 50 }])).toBeUndefined();
+    expect(bestKg(sets)).toBe(20);
+  });
+});

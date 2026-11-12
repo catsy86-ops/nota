@@ -5541,3 +5541,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** stan sesji żyje tylko w widoku (nie jest zapisywany); wpisy powstają jak zwykle. Sesja przesuwa się tylko po zapisie bieżącego ćwiczenia z planu — ręczna zmiana ćwiczenia w liście nie zalicza kroku.
 - **Ograniczenia:** odświeżenie strony kończy sesję; brak przycisku „wróć do poprzedniego ćwiczenia”.
 - **Testy:** `src/lib/training/session.test.ts`, `TrainingSection.test.tsx`.
+
+## Ćwiczenia — serie na czas i z obciążeniem przy masie ciała (2.7, 2026-11-12)
+
+- **Co robi:** w „Zapisz trening” jest przełącznik „Powtórzenia / Na czas”. Seria na czas ma sekundy zamiast powtórzeń (deska, zwis); pole ciężaru to wtedy obciążenie dodatkowe („kg dodatkowo”). Deska otwiera się domyślnie w trybie „Na czas”, inne ćwiczenia w „Powtórzenia”. Na listach seria na czas wygląda jak „45 s” albo „45 s +5 kg”; „Użyj ostatnich” przełącza tryb zgodnie z poprzednim wpisem.
+- **Gdzie:** `src/lib/training/model.ts` (`TrainingSet.seconds`, `cleanSeconds`, `cleanSet`, `TRAINING_SECONDS_MAX` = 3600), `catalog.ts` (`Exercise.timed`), `TrainingSection.tsx` (`LogForm`, `setsLine`).
+- **Jak działa:** dane to dopisane pole `seconds`; seria na czas jest zapisywana jako `{reps: 1, seconds, kg?}`. Dzięki `reps: 1` starsza wersja aplikacji (zna tylko `reps`) widzi poprawną serię z 1 powtórzeniem i nie odrzuca wpisu. Objętość i szacowany 1RM pomijają serie na czas; obciążenie dodatkowe liczy się do rekordu ciężaru.
+- **Ograniczenia:** starsza wersja pokaże taką serię jako „1” (bez sekund); własne ćwiczenia nie mają znacznika „na czas” (tryb wybiera się przełącznikiem); cały wpis jest albo na czas, albo na powtórzenia.
+- **Testy:** `src/lib/training/model.test.ts`, `TrainingSection.test.tsx`.

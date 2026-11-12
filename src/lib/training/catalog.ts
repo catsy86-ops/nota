@@ -15,6 +15,8 @@ export interface Exercise {
   equipment: Equipment[];
   /** Krótka wskazówka wykonania — treść, którą sprawdza właściciel. */
   hint: string;
+  /** Serie liczone w sekundach, nie w powtórzeniach (deska) — domyślny tryb pola serii (2.7). */
+  timed?: boolean;
 }
 
 export const MUSCLE_GROUPS: MuscleGroup[] = ["klatka", "biceps", "triceps", "plecy", "barki", "nogi", "posladki", "brzuch", "przedramiona", "cale-cialo"];
@@ -56,7 +58,7 @@ export const EXERCISES: Exercise[] = [
   { id: "posladki-most", name: "Unoszenie bioder (most)", group: "posladki", equipment: ["masa ciała"], hint: "Napnij pośladki w górze, nie przeciążaj lędźwi." },
   { id: "posladki-hip-thrust", name: "Hip thrust na ławce", group: "posladki", equipment: ["ławka", "sztanga"], hint: "Plecy oparte o ławkę, stopy płasko na podłodze." },
   { id: "posladki-swing", name: "Wymach kettlebell", group: "posladki", equipment: ["kettlebell"], hint: "Ruch z bioder, nie z ramion." },
-  { id: "brzuch-deska", name: "Deska", group: "brzuch", equipment: ["masa ciała"], hint: "Ciało w linii, brzuch napięty." },
+  { id: "brzuch-deska", name: "Deska", group: "brzuch", equipment: ["masa ciała"], hint: "Ciało w linii, brzuch napięty.", timed: true },
   { id: "brzuch-spiecia", name: "Spięcia brzucha", group: "brzuch", equipment: ["masa ciała"], hint: "Unoś łopatki, nie ciągnij szyi." },
   { id: "brzuch-skrety", name: "Skręty tułowia z gumą", group: "brzuch", equipment: ["gumy"], hint: "Ruch z tułowia, biodra spokojne." },
   { id: "przedramiona-zginanie", name: "Zginanie nadgarstka z hantlem", group: "przedramiona", equipment: ["hantle"], hint: "Ruch tylko w nadgarstku, przedramię oparte o kolano." },

@@ -12,7 +12,7 @@ import { addDaysToKey } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { nextReminderAt } from "@/lib/timeOfDay";
 import { CUSTOM_HINT_MAX, CUSTOM_NAME_MAX, CUSTOM_PREFIX, EQUIPMENT_LIST, EXERCISES, exerciseById, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS, type Equipment, type MuscleGroup } from "@/lib/training/catalog";
-import { bestKg, bestKgSeries, estimateOneRepMax, byTrainingTime, trainingWeek, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
+import { bestKg, bestKgSeries, estimateOneRepMax, byTrainingTime, trainingWeek, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_SECONDS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
 import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingEquipment, setTrainingReminder, useTrainingEntries, useTrainingEquipment, useTrainingPlans, useTrainingReminder, useCustomExercises, addCustomExercise, removeCustomExercise } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { toast } from "sonner";
@@ -84,7 +84,10 @@ function WeekSummary({ week }: { week: ReturnType<typeof trainingWeek> }) {
 }
 
 function setsLine(sets: TrainingSet[]): string {
-  return sets.map((s) => (s.kg !== undefined ? `${s.reps}×${s.kg} kg` : `${s.reps}`)).join(", ");
+  return sets.map((s) => {
+    if (s.seconds !== undefined) return s.kg !== undefined ? `${s.seconds} s +${s.kg} kg` : `${s.seconds} s`;
+    return s.kg !== undefined ? `${s.reps}×${s.kg} kg` : `${s.reps}`;
+  }).join(", ");
 }
 
 function EntryRow({ entry }: { entry: TrainingEntry }) {
@@ -239,6 +242,9 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
   const [newOpen, setNewOpen] = useState(false);
   /** 2.1: prowadzony trening — wybór dnia planu go rozpoczyna. */
   const [session, setSession] = useState<TrainingSession | null>(null);
+  /** 2.7: serie liczone w sekundach (deska, zwis) zamiast powtórzeń; domyślnie wg ćwiczenia, do zmiany przełącznikiem. */
+  const [timed, setTimed] = useState(() => !!exerciseById(EXERCISES[0].id)?.timed);
+  useEffect(() => { setTimed(!!exerciseById(exerciseId)?.timed); }, [exerciseId]);
 
   const rowsFor = (sess: TrainingSession): SetRow[] => Array.from({ length: sess.targetSets }, () => ({ reps: String(sess.targetReps), kg: "" }));
   /** Ustawia formularz na bieżące ćwiczenie sesji (albo zostawia, gdy plan skończony). */
@@ -274,7 +280,7 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
     return own[own.length - 1];
   }, [entries, exerciseId]);
 
-  const parsed = rows.map((r) => ({ reps: parseNum(r.reps, TRAINING_REPS_MAX, true), kg: parseKg(r.kg) }));
+  const parsed = rows.map((r) => ({ reps: parseNum(r.reps, timed ? TRAINING_SECONDS_MAX : TRAINING_REPS_MAX, true), kg: parseKg(r.kg) }));
   const badKg = rows.some((r, i) => parsed[i].kg === null && r.kg.trim() !== "");
   const filled = parsed.filter((p) => p.reps !== undefined);
   const invalid = parsed.some((p) => p.reps === null || p.kg === null || (p.reps === undefined && p.kg !== undefined));
@@ -286,7 +292,7 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
 
   const save = () => {
     if (!valid) return;
-    const sets: TrainingSet[] = filled.map((p) => ({ reps: p.reps as number, ...(p.kg !== undefined && p.kg !== null ? { kg: p.kg } : {}) }));
+    const sets: TrainingSet[] = filled.map((p) => ({ ...(timed ? { reps: 1, seconds: p.reps as number } : { reps: p.reps as number }), ...(p.kg !== undefined && p.kg !== null ? { kg: p.kg } : {}) }));
     // 3.3: nowy rekord — cięższa seria niż dotychczasowy najcięższy ciężar tego ćwiczenia (pierwszy zapis
     // rekordem nie jest, bo nie ma czego pobić).
     const prevBest = entries.filter((e) => e.exerciseId === exerciseId).reduce<number | undefined>((best, e) => {
@@ -365,7 +371,7 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
       {last ? (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>Ostatnio ({shortDay(last.day)}): {setsLine(last.sets)}</span>
-          <Button type="button" variant="outline" size="sm" className="coarse:h-11" onClick={() => setRows(last.sets.map((s) => ({ reps: String(s.reps), kg: s.kg !== undefined ? String(s.kg) : "" })))}>
+          <Button type="button" variant="outline" size="sm" className="coarse:h-11" onClick={() => { setTimed(last.sets.some((s) => s.seconds !== undefined)); setRows(last.sets.map((s) => ({ reps: String(s.seconds ?? s.reps), kg: s.kg !== undefined ? String(s.kg) : "" }))); }}>
             Użyj ostatnich
           </Button>
         </div>
@@ -373,12 +379,21 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
         <p className="ui-hint">To pierwszy zapis tego ćwiczenia.</p>
       )}
 
+      <div role="radiogroup" aria-label="Rodzaj serii" className="flex gap-1.5">
+        {([false, true] as const).map((t) => (
+          <button key={String(t)} type="button" role="radio" aria-checked={timed === t} onClick={() => setTimed(t)}
+            className={cn("pressable rounded-full border px-3 py-1 text-xs outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11",
+              timed === t ? "border-primary bg-primary/10 font-medium" : "border-border text-muted-foreground")}>
+            {t ? "Na czas" : "Powtórzenia"}
+          </button>
+        ))}
+      </div>
       <div className="space-y-2">
         {rows.map((r, i) => (
           <div key={i} className="grid grid-cols-[auto_1fr_1fr] items-center gap-2">
             <span className="w-14 text-xs text-muted-foreground">Seria {i + 1}</span>
-            <Input inputMode="numeric" aria-label={`Powtórki, seria ${i + 1}`} aria-invalid={parsed[i].reps === null} placeholder="powt." value={r.reps} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, reps: e.target.value } : x)))} />
-            <Input inputMode="decimal" aria-label={`Ciężar kg, seria ${i + 1}`} aria-invalid={parsed[i].kg === null} placeholder="kg" value={r.kg} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, kg: e.target.value } : x)))} />
+            <Input inputMode="numeric" aria-label={`${timed ? "Sekundy" : "Powtórki"}, seria ${i + 1}`} aria-invalid={parsed[i].reps === null} placeholder={timed ? "sek." : "powt."} value={r.reps} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, reps: e.target.value } : x)))} />
+            <Input inputMode="decimal" aria-label={`Ciężar kg, seria ${i + 1}`} aria-invalid={parsed[i].kg === null} placeholder={timed ? "kg dodatkowo" : "kg"} value={r.kg} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, kg: e.target.value } : x)))} />
           </div>
         ))}
         <div className="flex gap-2">
