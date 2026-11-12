@@ -1,5 +1,7 @@
 # Plan: dopracowanie, ulepszenie, rozbudowa i upiększenie działu „Terminy” (przypomnienia) (2026-10-25)
 
+> **Status (2026-11-12):** sprawdzone w kodzie: 3.4 (`dateInText.ts`, podpowiedź w `NoteEditor.tsx`, commit 1ec710a0) i 4.5 (ptaszek, zwinięcie wiersza, licznik w `ReminderQuickActions.tsx`) są zrobione; plan Terminów nie ma otwartych punktów poza 3.5 (na życzenie) i QA.
+
 > **Status (2026-11-03):** zrobione 1.1–1.6, 2.1–2.6, 3.1–3.3, 4.1–4.4; otwarte 3.4 i 4.5; czeka 3.5 (tylko na życzenie) i QA. Ta linia zastępuje starsze linie „Status” niżej. Każdy punkt sprawdzony w `src/` i `git log` przy HEAD 083bb5f (Plan-nowy §10).
 
 > **Uzupełnienie (2026-11-05):** zrobione 3.4 (podpowiedź terminu z treści w edytorze) i 4.5 (odhaczenie z ruchem, nowy plan 4.2). Opis: `opis.md`.
