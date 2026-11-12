@@ -200,6 +200,19 @@ describe("TrainingSection", () => {
     ];
     render(<TrainingSection />);
     expect(screen.getByRole("img", { name: "Rekordy kolejnych sesji: 20, 22 kg" })).toBeTruthy();
+    // 4.3: ostatnia wartość jest podpisana, a gdy jest też rekordem — dopisek „rekord”.
+    expect(screen.getByTestId("training-progress").textContent).toContain("22 kg · rekord");
+  });
+
+  it("4.3: gdy rekord był wcześniej, podpis ostatniej wartości nie mówi „rekord”", () => {
+    fixture.entries = [
+      { id: "a", day: "2026-10-10", exerciseId: "klatka-hantle-plasko", note: "", created: 1, sets: [{ reps: 10, kg: 24 }] },
+      { id: "b", day: "2026-10-15", exerciseId: "klatka-hantle-plasko", note: "", created: 2, sets: [{ reps: 10, kg: 20 }] },
+    ];
+    render(<TrainingSection />);
+    const text = screen.getByTestId("training-progress").textContent ?? "";
+    expect(text).toContain("20 kg");
+    expect(text).not.toContain("20 kg · rekord");
   });
 
   it("koniec przerwy wibruje i zamyka licznik", () => {

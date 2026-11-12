@@ -378,19 +378,31 @@ function ProgressList({ progress, entries }: { progress: ReturnType<typeof progr
   );
 }
 
-/** Wykres kreskowy rekordów (SVG, bez biblioteki). Czytnik dostaje listę wartości w etykiecie. */
+/**
+ * Wykres kreskowy rekordów kolejnych sesji (SVG, bez biblioteki) z wyróżnionym punktem rekordu (4.3) i podpisaną
+ * ostatnią wartością. Czytnik dostaje listę wartości w etykiecie.
+ */
 function Sparkline({ values, label }: { values: number[]; label: string }) {
   const w = 160;
   const h = 28;
+  const pad = 4;
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min || 1;
-  const step = values.length > 1 ? w / (values.length - 1) : w;
-  const points = values.map((v, i) => `${(i * step).toFixed(1)},${(h - 2 - ((v - min) / span) * (h - 4)).toFixed(1)}`).join(" ");
+  const step = values.length > 1 ? (w - 2 * pad) / (values.length - 1) : 0;
+  const pt = (v: number, i: number) => ({ x: pad + i * step, y: h - pad - ((v - min) / span) * (h - 2 * pad) });
+  const pts = values.map(pt);
+  const recordAt = values.lastIndexOf(max);
+  const last = pts[pts.length - 1];
   return (
-    <svg role="img" aria-label={label} viewBox={`0 0 ${w} ${h}`} className="mt-1 h-7 w-40 text-primary-ink" preserveAspectRatio="none">
-      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-    </svg>
+    <div className="mt-1 flex items-center gap-2 text-primary-ink">
+      <svg role="img" aria-label={label} viewBox={`0 0 ${w} ${h}`} className="h-7 w-40 shrink-0">
+        <polyline points={pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={last.x} cy={last.y} r="2.5" fill="currentColor" />
+        {recordAt !== values.length - 1 && <circle cx={pts[recordAt].x} cy={pts[recordAt].y} r="3.5" fill="none" stroke="currentColor" strokeWidth="1.5" />}
+      </svg>
+      <span aria-hidden className="font-mono text-xs tabular-nums text-muted-foreground">{values[values.length - 1]} kg{recordAt === values.length - 1 ? " · rekord" : ""}</span>
+    </div>
   );
 }
 

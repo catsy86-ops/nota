@@ -5511,3 +5511,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `DietSection.tsx` (`Bar`, `Stat`, `WeekList`), `TrainingSection.tsx`, `CwiczeniaView.tsx`.
 - **Ograniczenia:** paski są ozdobą (`aria-hidden`) — liczby są w tekście; przekroczenie celu nie zmienia koloru; puste stany bez rysunku kreską (czeka na N-3).
 - **Testy:** `DietSection.test.tsx` (teksty bez zmian), `designTokens.test.ts`, `sentenceCase.test.ts`.
+
+## Ćwiczenia — wykres progresu z rekordem (4.3, 2026-11-12)
+
+- **Co robi:** wykres rekordów kolejnych sesji przy ćwiczeniu pokazuje ostatnią sesję jako pełną kropkę z podpisem („22 kg”, a gdy to rekord — „22 kg · rekord”). Gdy najlepszy wynik był wcześniej, jest zaznaczony pustym kółkiem.
+- **Gdzie:** `TrainingSection.tsx` (`Sparkline`).
+- **Ograniczenia:** nadal tylko ostatnie rekordy bez osi dat (pełny wykres z historią to 3.4); wykres nie jest już rozciągany (stały rozmiar 160×28), żeby kropki były okrągłe.
+- **Testy:** `TrainingSection.test.tsx`.
