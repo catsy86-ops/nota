@@ -92,6 +92,22 @@ describe("CwiczeniaView — odżywki", () => {
     expect(addSupplementMock).toHaveBeenCalledWith(expect.objectContaining({ name: "Kreatyna", reminderNoteId: "note-1", remindAt: "07:30" }));
   });
 
+  it("pasek „dziś” (4.1) pokazuje odżywki i prowadzi do sekcji", () => {
+    const sups = [
+      { id: "s1", name: "Kreatyna", dose: "", when: "rano" as const, created: 1 },
+      { id: "s2", name: "Magnez", dose: "", when: "wieczorem" as const, created: 2 },
+    ];
+    fixture.list = sups;
+    fixture.taken = new Set([logKey(localDayKey(), "s1")]);
+    render(<CwiczeniaView />);
+    const strip = screen.getByTestId("cwiczenia-today");
+    expect(strip.textContent).toContain("1/2");
+    expect(strip.textContent).toContain("brak");
+    expect(strip.textContent).toContain("0 kcal");
+    fireEvent.click(screen.getByRole("button", { name: /Dieta/ }));
+    expect(document.getElementById("cwiczenia-dieta")).toBeTruthy();
+  });
+
   describe("„Wziąłem” zamyka przypomnienie (2.3)", () => {
     const sup = { id: "s1", name: "Kreatyna", dose: "", when: "rano" as const, created: 1, remindAt: "07:30", reminderNoteId: "n1" };
     const tick = () => {

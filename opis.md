@@ -5518,3 +5518,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `TrainingSection.tsx` (`Sparkline`).
 - **Ograniczenia:** nadal tylko ostatnie rekordy bez osi dat (pełny wykres z historią to 3.4); wykres nie jest już rozciągany (stały rozmiar 160×28), żeby kropki były okrągłe.
 - **Testy:** `TrainingSection.test.tsx`.
+
+## Ćwiczenia — pasek „dziś” (4.1, 2026-11-12)
+
+- **Co robi:** nad zakładkami działu Ćwiczenia jest pasek z trzema kaflami: „Odżywki 2/5”, „Trening: 1 wpis” (albo „brak”), „Dieta: 1450 / 2200 kcal”. Stuknięcie kafla przełącza zakładkę (telefon) i przewija do tej sekcji (komputer).
+- **Gdzie:** `CwiczeniaView.tsx` (`TodayStrip`, panele mają `id="cwiczenia-…"`); liczby z `useSupplementsTaken`, `useTrainingEntries`, `useMeals`/`useDietGoals`.
+- **Ograniczenia:** bez nazwy zaplanowanego dnia treningowego i licznika „2/4” (to część 2.1); kalorie bez pasków postępu.
+- **Testy:** `CwiczeniaView.test.tsx`.

@@ -16,6 +16,10 @@ import { logKey, weekAdherence, SUPPLEMENT_DOSE_MAX, SUPPLEMENT_NAME_MAX, SUPPLE
 import { addSupplement, removeSupplement, restoreSupplement, setSupplementTaken, updateSupplement, useSupplements, useSupplementsTaken } from "@/lib/supplements/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { useNotesContext } from "@/hooks/NotesProvider";
+import { useMeals, useDietGoals } from "@/lib/diet/store";
+import { summarizeDay } from "@/lib/diet/model";
+import { useTrainingEntries } from "@/lib/training/store";
+import { pluralPl } from "@/lib/plural";
 import { DietSection } from "./DietSection";
 import { WeightSection } from "./WeightSection";
 import { TrainingSection } from "./TrainingSection";
@@ -108,6 +112,35 @@ const CWICZENIA_TABS: { id: CwiczeniaTab; label: string }[] = [
   { id: "waga", label: "Waga" },
 ];
 
+/**
+ * 4.1: pasek „dziś” nad zakładkami — odżywki, trening i kalorie w jednej linii; stuknięcie przenosi do sekcji.
+ * Liczby z tych samych magazynów co sekcje, więc nic nie liczymy drugi raz.
+ */
+function TodayStrip({ doneSupplements, totalSupplements, day, onGo }: { doneSupplements: number; totalSupplements: number; day: string; onGo: (t: CwiczeniaTab) => void }) {
+  const entries = useTrainingEntries();
+  const meals = useMeals();
+  const goals = useDietGoals();
+  const trained = entries.filter((e) => e.day === day).length;
+  const kcal = summarizeDay(meals, day).kcal;
+  const item = "pressable flex min-h-11 flex-1 flex-col items-start rounded-field border border-border/60 px-3 py-1.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
+  return (
+    <nav aria-label="Dziś w skrócie" className="mb-4 flex gap-2" data-testid="cwiczenia-today">
+      <button type="button" className={item} onClick={() => onGo("odzywki")}>
+        <span className="ui-hint">Odżywki</span>
+        <span className="font-mono text-sm tabular-nums">{totalSupplements > 0 ? `${doneSupplements}/${totalSupplements}` : "—"}</span>
+      </button>
+      <button type="button" className={item} onClick={() => onGo("trening")}>
+        <span className="ui-hint">Trening</span>
+        <span className="font-mono text-sm tabular-nums">{trained > 0 ? `${trained} ${pluralPl(trained, ["wpis", "wpisy", "wpisów"])}` : "brak"}</span>
+      </button>
+      <button type="button" className={item} onClick={() => onGo("dieta")}>
+        <span className="ui-hint">Dieta</span>
+        <span className="font-mono text-sm tabular-nums">{kcal}{goals.kcal ? ` / ${goals.kcal}` : ""} kcal</span>
+      </button>
+    </nav>
+  );
+}
+
 export function CwiczeniaView() {
   const supplements = useSupplements();
   const taken = useSupplementsTaken();
@@ -125,6 +158,9 @@ export function CwiczeniaView() {
     // Tytuł i grupa są w główce kartki (`ViewTitle`).
     <section aria-label="Ćwiczenia" className="w-full max-w-(--page-form) pb-32">
 
+      <TodayStrip doneSupplements={doneToday} totalSupplements={supplements.length} day={today}
+        onGo={(t) => { setTab(t); document.getElementById(`cwiczenia-${t}`)?.scrollIntoView?.({ block: "start", behavior: "smooth" }); }} />
+
       <Tabs value={tab} onValueChange={(v) => setTab(v as CwiczeniaTab)}>
       <TabsList aria-label="Dział Ćwiczeń" className="mb-4 flex h-auto w-full sm:hidden">
         {CWICZENIA_TABS.map((t) => (
@@ -132,7 +168,7 @@ export function CwiczeniaView() {
         ))}
       </TabsList>
 
-      <TabsContent value="odzywki" forceMount className={panel}>
+      <TabsContent value="odzywki" id="cwiczenia-odzywki" forceMount className={panel}>
       <SectionCard icon={Pill} title="Odżywki" bodyClassName="space-y-4"
         meta={supplements.length > 0 ? <span data-testid="supplements-count">dziś {doneToday} z {supplements.length}</span> : undefined}>
 
@@ -157,9 +193,9 @@ export function CwiczeniaView() {
       </TabsContent>
 
       <div className="mt-6 space-y-6 max-sm:mt-0">
-        <TabsContent value="trening" forceMount className={panel}><TrainingSection /></TabsContent>
-        <TabsContent value="dieta" forceMount className={panel}><DietSection /></TabsContent>
-        <TabsContent value="waga" forceMount className={panel}><WeightSection /></TabsContent>
+        <TabsContent value="trening" id="cwiczenia-trening" forceMount className={panel}><TrainingSection /></TabsContent>
+        <TabsContent value="dieta" id="cwiczenia-dieta" forceMount className={panel}><DietSection /></TabsContent>
+        <TabsContent value="waga" id="cwiczenia-waga" forceMount className={panel}><WeightSection /></TabsContent>
       </div>
       </Tabs>
     </section>
