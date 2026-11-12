@@ -40,7 +40,7 @@ describe("cleanAmount / cleanGoals", () => {
   });
 
   it("suma białka z ułamkami nie gubi się w zaokrągleniach", () => {
-    const meal = (id: string, protein: number): Meal => ({ id, day: "2026-11-12", text: id, protein, createdAt: 1 } as Meal);
+    const meal = (id: string, protein: number): Meal => ({ id, day: "2026-11-12", text: id, protein, created: 1 });
     expect(summarizeDay([meal("a", 0.1), meal("b", 0.2)], "2026-11-12").protein).toBe(0.3);
   });
 

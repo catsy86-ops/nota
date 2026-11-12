@@ -75,6 +75,9 @@ export default tseslint.config(
       "src/lib/supplements/ySupplements.test.ts",
       // Dieta: warstwa Yjs w dokumencie notatek (ten sam wzorzec), testy na własnym Y.Doc.
       "src/lib/diet/yDiet.ts",
+      // Faktury KSeF: niezmienne rekordy w mapie Yjs i test scalania dwóch dokumentów.
+      "src/lib/ksef/yInvoices.ts",
+      "src/lib/ksef/invoices.test.ts",
       "src/lib/diet/yDiet.test.ts",
       // Trening: warstwa Yjs w dokumencie notatek (ten sam wzorzec), testy na własnym Y.Doc.
       "src/lib/training/yTraining.ts",

@@ -1,8 +1,7 @@
 import { canViewTransition } from "@/lib/viewTransition";
 import { loadShiftPresets } from "@/hooks/useShiftPresets";
-import { pulseSkinSignal } from "@/lib/skinSignal";
 import { isAppView } from "@/lib/viewMeta";
-import { Activity, useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, Suspense } from "react";
+import { Activity, useState, useCallback, useDeferredValue, useEffect, useMemo, useRef, Suspense } from "react";
 import { flushSync } from "react-dom";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -23,9 +22,8 @@ import { useReminderNotifications } from "@/hooks/useReminderNotifications";
 import { useOverdueBadge } from "@/hooks/useOverdueBadge";
 import { useTheme } from "@/hooks/useTheme";
 import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
-import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
+import { useFilteredNotes } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
-import { parseViewRoute } from "@/lib/viewRoute";
 import { countDueToday, groupReminders, sortArchivedByReminder } from "@/lib/reminderAgenda";
 import { useStudyOverdueCount } from "@/lib/studyOverdueCount";
 import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
@@ -37,8 +35,7 @@ import { useLaunchIntents } from "@/hooks/useLaunchIntents";
 import { useBulkNoteOps } from "@/hooks/useBulkNoteOps";
 import { setGridNavPreview } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
-import { playEnter, tween } from "@/lib/motion";
-import { useNavigate, useNavigationType } from "react-router-dom";
+import { tween } from "@/lib/motion";
 import { useNoteActions } from "@/hooks/useNoteActions";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
 import { useImportExport, useExternalImport } from "@/hooks/useImportExport";
@@ -49,7 +46,7 @@ import { useBackupReminders } from "@/hooks/useBackupReminders";
 import { pushPrefs } from "@/lib/push/prefs";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
-import { AddNoteBar, type ComposerAction, type ComposerExtras } from "@/components/AddNoteBar";
+import { AddNoteBar, type ComposerAction } from "@/components/AddNoteBar";
 import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
@@ -74,14 +71,14 @@ import { useTodayCards } from "@/lib/todayCards";
 import { useNextBoundary } from "@/hooks/useNextBoundary";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
-import { formatReminderShort } from "@/lib/reminderTime";
 import { useInboxCapture } from "@/hooks/useInboxCapture";
 import { useNoteNavigation } from "@/hooks/useNoteNavigation";
+import { useNoteGlowActions } from "@/hooks/useNoteGlowActions";
+import { useViewShell } from "@/hooks/useViewShell";
 import { useNoteExport } from "@/hooks/useNoteExport";
 import { pluralPl } from "@/lib/plural";
 import { DndContext, pointerWithin } from "@dnd-kit/core";
 import { fireworks, megaCelebrate } from "@/lib/celebrate";
-import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
 import { useViewScroll } from "@/hooks/useViewScroll";
 import { useDayDoneReward } from "@/hooks/useDayDoneReward";
@@ -99,7 +96,7 @@ import { OlderDeviceBanner } from "@/components/sync/OlderDeviceBanner";
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
-import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, QuickInboxDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
+import { SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, QuickInboxDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -129,62 +126,8 @@ const Index = () => {
   // Widok, folder, etykieta i zapytanie żyją w adresie (patrz `lib/viewRoute.ts`).
   const route = useViewRoute();
   const { view, label: activeLabel, folder: activeFolder, go } = route;
-  // Zmiana widoku przenika się ze starym (View Transitions); bez wsparcia albo przy ograniczonym ruchu — od razu.
-  const setView = useCallback((v: View) => {
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
-    if (canViewTransition() && !isMotionReduced()) {
-      // Kierunek przesunięcia (plan 2.2): w prawo do działów dalej w kolejności, w lewo do wcześniejszych.
-      const dir = VIEW_ORDER.indexOf(v) >= VIEW_ORDER.indexOf(view) ? "fwd" : "back";
-      document.documentElement.dataset.vtDir = dir;
-      const t = doc.startViewTransition(() => flushSync(() => go(v)));
-      void t.finished.finally(() => { delete document.documentElement.dataset.vtDir; });
-    } else {
-      go(v);
-    }
-  }, [go, view]);
-  // Tabliczka rysunkowa w tle zmienia napis według widoku (CSS: `html[data-view]`).
-  // Zmiana widoku odpala sygnał stylu (Zeszyt przewraca kartkę, Matryca spływa kaskadą); pierwsze wejście bez sygnału.
-  const firstViewRef = useRef(true);
-  useEffect(() => {
-    document.documentElement.dataset.view = view;
-    if (firstViewRef.current) { firstViewRef.current = false; return; }
-    pulseSkinSignal("view");
-  }, [view]);
-  // Pole wyszukiwania ma własny stan (karetka nie może czekać na router);
-  // adres dostaje go z opóźnieniem zerowym, a „wstecz/dalej” wlewa z powrotem.
-  const [search, setSearch] = useState(route.search);
-  const navigationType = useNavigationType();
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (navigationType === "POP") setSearch(route.search);
-  }, [route.search, navigationType]);
-  // Pole dostaje każdy znak od razu; filtrowanie kart i adres idą odroczonym
-  // renderem, który React przerywa przy kolejnym znaku — pisanie nie czeka na 150 kart.
-  const deferredSearch = useDeferredValue(search);
-  // Plan 3.5: Grafik i Praca zostają zamontowane po wyjściu (`Activity` hidden), więc powrót
-  // zachowuje ich stan i nie przerysowuje. Tylko te dwa działy — pamięć na telefonie.
-  const [keptViews, setKeptViews] = useState<View[]>([]);
-  useEffect(() => {
-    if (view !== "shifts" && view !== "study") return;
-    setKeptViews((prev) => (prev.includes(view) ? prev : [...prev, view]));
-  }, [view]);
-  const setRouteSearch = route.setSearch;
-  useEffect(() => {
-    if (deferredSearch !== parseViewRoute(window.location.pathname, window.location.search).search) setRouteSearch(deferredSearch);
-  }, [deferredSearch, setRouteSearch]);
-  // Zmiana widoku (także folderu i etykiety): treść osiada fade'em z 6 px,
-  // zamiast podmienić się skokiem. Bez przemontowania — szkic w pasku nowej
-  // notatki i stan siatek przetrwają; pole wyszukiwania (data-view-static) stoi.
-  const mainRef = useRef<HTMLElement>(null);
-  const viewKey = `${view}|${activeFolder ?? ""}|${activeLabel ?? ""}`;
-  const prevViewKey = useRef(viewKey);
-  useLayoutEffect(() => {
-    if (prevViewKey.current === viewKey) return;
-    prevViewKey.current = viewKey;
-    for (const el of mainRef.current?.children ?? []) {
-      if (!el.hasAttribute("data-view-static")) playEnter(el, { opacity: 0, transform: "translateY(6px)" });
-    }
-  }, [viewKey]);
+  const { setView, search, setSearch, deferredSearch, navigate, keptViews, mainRef } = useViewShell(route);
+
   // Start zgodny z efektem poniżej (desktop: otwarty), żeby pasek nie wjeżdżał od zera po montażu
   // i nie przesuwał całej treści przy każdym wczytaniu strony.
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
@@ -497,53 +440,7 @@ const Index = () => {
   // Notatka tworzona w folderze albo w widoku etykiety ląduje tam, gdzie
   // użytkownik patrzy — inaczej znika mu z oczu i wymaga przeciągnięcia.
   const activeFolderObj = view === "folder" && activeFolder ? folders.find((f) => f.id === activeFolder) ?? null : null;
-  const handleAddNoteGlow = useCallback((...args: Parameters<typeof addNote>) => {
-    const p = centerOf(document.querySelector("[data-add-note-bar], [data-inbox-capture]"));
-    if (p) glowPulse(p, "create", 260);
-    const [title, content, color, labels = [], reminder, images, checklist, priority, folderId, attachments] = args;
-    const withLabel = activeLabel && !labels.includes(activeLabel) ? [...labels, activeLabel] : labels;
-    const inFolder = folderId ?? (view === "folder" ? activeFolder : null);
-    return addNote(title, content, color, withLabel, reminder, images, checklist, priority, inFolder, attachments);
-  }, [addNote, activeLabel, activeFolder, view]);
-
-  /** Dodanie z paska: potwierdzenie z „Cofnij” (tylko tu — szablony i udostępnianie mają swoje komunikaty). */
-  const handleComposerAdd = useCallback((...args: [...Parameters<typeof addNote>, extras?: ComposerExtras]) => {
-    const extras = args.length > 10 ? (args[10] as ComposerExtras | undefined) : undefined;
-    const id = handleAddNoteGlow(...(args.slice(0, 10) as Parameters<typeof addNote>));
-    // Seria przypomnienia i rodzic nie mieszczą się w `addNote` — dopisujemy je zaraz po utworzeniu.
-    if (extras?.reminderRepeat || extras?.parentId || extras?.reminderAllDay || extras?.reminderLead) {
-      updateNote(id, {
-        ...(extras.reminderRepeat ? { reminderRepeat: extras.reminderRepeat } : {}),
-        ...(extras.reminderRule ? { reminderRule: extras.reminderRule } : {}),
-        ...(extras.reminderRepeatUntil !== undefined ? { reminderRepeatUntil: extras.reminderRepeatUntil } : {}),
-        ...(extras.parentId ? { parentId: extras.parentId } : {}),
-        ...(extras.reminderAllDay ? { reminderAllDay: true } : {}),
-        ...(extras.reminderLead ? { reminderLead: extras.reminderLead } : {}),
-      });
-    }
-    // Q1: z terminem toast mówi, kiedy zadzwoni; „Cofnij” działa tak samo jak przy zwykłej notatce.
-    const reminderAt = args[4] as number | null;
-    const added = reminderAt !== null && reminderAt !== undefined ? `Dodano z terminem: ${formatReminderShort(reminderAt)}` : "Dodano notatkę";
-    toastWithUndo(added, () => deleteNote(id), { icon: "📝", duration: 4000, id: "composer-added" });
-    return id;
-  }, [handleAddNoteGlow, updateNote, deleteNote]);
-
-  /** Kandydaci na rodzica w pasku nowej notatki: jawne, żywe notatki, od ostatnio edytowanych. */
-  const composerParents = useMemo(
-    () => [...notes].filter((n) => !n.locked && !n.archived && !n.trashed).sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 200).map((n) => ({ id: n.id, title: n.title })),
-    [notes],
-  );
-
-  const handleMoveToFolderGlow = useCallback((id: string, folderId: string | null) => {
-    const from = pointOfNote(id);
-    const target = folderId
-      ? document.querySelector(`[data-folder-drop="${folderId}"]`)
-      : document.querySelector("[data-folder-drop-root]");
-    const to = centerOf(target);
-    if (from && to) glowStreak(from, to, "move");
-    else if (from) glowPulse(from, "move");
-    moveNoteToFolder(id, folderId);
-  }, [moveNoteToFolder]);
+  const { handleAddNoteGlow, handleComposerAdd, composerParents, handleMoveToFolderGlow } = useNoteGlowActions({ notes, view, activeLabel, activeFolder, addNote, updateNote, deleteNote, moveNoteToFolder });
 
   useLaunchIntents({ navigate, addNote: handleAddNoteGlow, openNote, expandComposer: expandAddNote, openQuickInbox: () => setQuickInboxOpen(true) });
 

@@ -9,7 +9,7 @@ import type { SavedView } from "@/lib/savedViews";
 import { toast } from "sonner";
 import type { MutableRefObject } from "react";
 import type { Note, useNotes } from "@/hooks/useNotes";
-import type { useViewRoute } from "@/lib/viewRoute";
+import type { useViewRoute } from "@/hooks/useViewRoute";
 
 type Notes = ReturnType<typeof useNotes>;
 type Route = ReturnType<typeof useViewRoute>;
