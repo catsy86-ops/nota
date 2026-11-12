@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { nextReminderAt } from "@/lib/timeOfDay";
+import { doneReminderUpdate } from "@/lib/reminderActions";
+import { endOfDay } from "@/lib/reminderRepeat";
 import { logKey, weekAdherence, SUPPLEMENT_DOSE_MAX, SUPPLEMENT_NAME_MAX, SUPPLEMENT_WHEN, SUPPLEMENT_WHEN_LABEL, type Supplement, type SupplementWhen } from "@/lib/supplements/model";
 import { addSupplement, removeSupplement, restoreSupplement, setSupplementTaken, updateSupplement, useSupplements, useSupplementsTaken } from "@/lib/supplements/store";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -21,7 +23,10 @@ import { TrainingSection } from "./TrainingSection";
 /** Domyślna godzina przypomnienia dla pory dnia (edytowalna w formularzu). */
 const DEFAULT_TIME: Record<SupplementWhen, string> = { rano: "07:30", w_ciagu_dnia: "12:00", wieczorem: "20:00" };
 
-type NotesActions = Pick<ReturnType<typeof useNotesContext>, "addNote" | "updateNote" | "trashNote" | "restoreFromTrash">;
+type NotesActions = Pick<ReturnType<typeof useNotesContext>, "addNote" | "updateNote" | "trashNote" | "restoreFromTrash"> & {
+  /** Lista notatek (do 2.3); w testach może jej nie być. */
+  notes?: ReturnType<typeof useNotesContext>["notes"];
+};
 
 /**
  * Dodaje odżywkę. Z przypomnieniem tworzy notatkę z dziennym powtarzaniem (system Przypomnień),
@@ -40,6 +45,18 @@ function createSupplement(notes: NotesActions, input: { name: string; dose: stri
   // Zapis odrzucony (np. pełna lista): przypomnienie nie może zostać osierocone.
   if (!s && reminderNoteId) notes.trashNote(reminderNoteId);
   return s;
+}
+
+/**
+ * 2.3: „Wziąłem” na dziś zamyka dzisiejsze wystąpienie przypomnienia odżywki — notatka przechodzi do następnego dnia
+ * (jak „Gotowe” w Terminach), więc przypomnienie nie dzwoni po wzięciu. Nic nie robi, gdy termin jest już na jutro.
+ */
+function takeSupplement(notes: NotesActions, s: Supplement, on: boolean, day: string) {
+  setSupplementTaken(s.id, on, day);
+  if (!on || day !== localDayKey() || !s.reminderNoteId) return;
+  const note = notes.notes?.find((n) => n.id === s.reminderNoteId);
+  if (!note || note.reminder === null || note.reminder === undefined || note.reminder > endOfDay(new Date())) return;
+  notes.updateNote(note.id, doneReminderUpdate(note, Date.now()).patch);
 }
 
 const reminderTitle = (name: string, dose: string) => (dose.trim() ? `${name.trim()} — ${dose.trim()}` : name.trim());
@@ -196,7 +213,7 @@ function SupplementList({ supplements, taken, day, notes }: { supplements: Suppl
                   <Checkbox
                     id={`sup-${s.id}`}
                     checked={done}
-                    onCheckedChange={(v) => setSupplementTaken(s.id, v === true, day)}
+                    onCheckedChange={(v) => takeSupplement(notes, s, v === true, day)}
                     className="coarse:h-6 coarse:w-6"
                     aria-label={`Wzięte: ${s.name}`}
                   />

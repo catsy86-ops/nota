@@ -5483,3 +5483,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** edycja zachowuje id, datę dodania i odhaczenia. Gdy zmienia się tylko nazwa lub dawka, notatka-przypomnienie dostaje nowy tytuł. Gdy zmienia się godzina albo przypomnienie jest włączane lub wyłączane, stara notatka idzie do kosza, a nowa powstaje (etykieta `ćwiczenia`, codzienne powtarzanie). Odrzucony zapis sprząta świeżo utworzoną notatkę.
 - **Ograniczenia:** edycji nie da się cofnąć dymkiem „Cofnij”; stara notatka-przypomnienie zostaje w koszu.
 - **Testy:** `CwiczeniaView.test.tsx`, `ySupplements.test.ts`.
+
+## Ćwiczenia — „Wziąłem” zamyka przypomnienie (2.3, 2026-11-12)
+
+- **Co robi:** odhaczenie odżywki na dziś przestawia jej notatkę-przypomnienie na następne wystąpienie (jak „Gotowe” w Terminach), więc po wzięciu przypomnienie nie dzwoni.
+- **Gdzie:** `CwiczeniaView.tsx` (`takeSupplement`), logika zmiany z `doneReminderUpdate` (`reminderActions.ts`); powiązanie przez `Supplement.reminderNoteId`.
+- **Ograniczenia:** działa tylko w jedną stronę — „Gotowe” w Terminach przy takiej notatce nie odhacza odżywki. Odznaczenie nie cofa przesunięcia terminu. Nic się nie dzieje, gdy termin notatki jest już na jutro albo notatki nie ma.
+- **Testy:** `CwiczeniaView.test.tsx`.

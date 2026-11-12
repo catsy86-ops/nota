@@ -92,6 +92,32 @@ describe("CwiczeniaView — odżywki", () => {
     expect(addSupplementMock).toHaveBeenCalledWith(expect.objectContaining({ name: "Kreatyna", reminderNoteId: "note-1", remindAt: "07:30" }));
   });
 
+  describe("„Wziąłem” zamyka przypomnienie (2.3)", () => {
+    const sup = { id: "s1", name: "Kreatyna", dose: "", when: "rano" as const, created: 1, remindAt: "07:30", reminderNoteId: "n1" };
+    const tick = () => {
+      fixture.list = [sup];
+      render(<CwiczeniaView />);
+      fireEvent.click(screen.getByRole("checkbox", { name: "Wzięte: Kreatyna" }));
+    };
+    afterEach(() => { delete (notesMock as { notes?: unknown }).notes; });
+
+    it("dzisiejsze przypomnienie serii przechodzi na następny dzień", () => {
+      const today730 = new Date(); today730.setHours(7, 30, 0, 0);
+      (notesMock as { notes?: unknown }).notes = [{ id: "n1", reminder: today730.getTime(), reminderRepeat: "daily", reminderDay: undefined, updatedAt: 1 }];
+      tick();
+      const call = notesMock.updateNote.mock.calls.find((c) => (c as unknown[])[0] === "n1") as unknown as [string, { reminder: number }] | undefined;
+      expect(call).toBeTruthy();
+      expect(call![1].reminder).toBeGreaterThan(Date.now());
+      expect(new Date(call![1].reminder).getDate()).not.toBe(new Date().getDate());
+    });
+
+    it("termin już na jutro zostaje bez zmian", () => {
+      (notesMock as { notes?: unknown }).notes = [{ id: "n1", reminder: Date.now() + 36 * 3_600_000, reminderRepeat: "daily" }];
+      tick();
+      expect(notesMock.updateNote).not.toHaveBeenCalled();
+    });
+  });
+
   describe("edycja odżywki (2.6)", () => {
     const sup = { id: "s1", name: "Kreatyna", dose: "1 łyżka", when: "rano" as const, created: 1, remindAt: "07:30", reminderNoteId: "old-note" };
     const openEdit = () => {
