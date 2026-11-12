@@ -5616,3 +5616,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `src/lib/noteDuplicate.ts` (`titleKey`, `findTitleDuplicate`), `AddNoteBar.tsx` (propsy `findDuplicate`, `onOpenDuplicate`, liczone odroczonym tytułem), `Index.tsx` (notatki aktywne i z archiwum).
 - **Ograniczenia:** dopasowanie dokładne po normalizacji, bez literówek (MiniSearch z planu pominięty, żeby nie było fałszywych podpowiedzi); tytuły krótsze niż 3 znaki i kosz się nie liczą.
 - **Testy:** `src/lib/noteDuplicate.test.ts`; e2e `notes.spec.ts`, `quick-capture.spec.ts`, `editing.spec.ts` bez zmian.
+
+## Notatki — fragment treści na kaflu gaśnie zamiast urywać się (plan 4.2, 2026-11-12)
+
+- **Co robi:** fragment treści na kaflu (4 linie, na telefonie 3) przy dłuższej notatce kończy się wygaszoną ostatnią linią, jak tekst schodzący pod krawędź kartki, zamiast wielokropka w pół zdania. Treść, która się mieści, zostaje w pełni czytelna.
+- **Gdzie:** `src/index.css` (`.tile-fade`, `.tile-fade[data-clipped]`), `src/lib/clipObserver.ts` (`observeClip` — jeden wspólny `ResizeObserver` ustawia `data-clipped`), `NoteCardBody.tsx`.
+- **Jak działa:** pole ma wysokość 6em (telefon 4,5em) przy interlinii 1,5; maska `linear-gradient` działa tylko z `data-clipped`, ustawianym, gdy `scrollHeight` > `clientHeight`. Zastępuje `line-clamp`, który przy kilku akapitach Markdownu ucinał w pół linii.
+- **Ograniczenia:** atrybut odświeża się przy zmianie rozmiaru pola — gdy treść skróci się z długiej do dokładnie mieszczącej się, ostatnia linia może zostać wygaszona do najbliższej zmiany rozmiaru; bez `ResizeObserver` brak wygaszenia. Obwódka akcentu przy najechaniu (reszta punktu 4.2) — bez zmian.
+- **Testy:** sprawdzone zrzutem (komputer 1280 px, telefon 390 px: kafle ucięte gasną, mieszczące się nie); `designTokens.test.ts`.

@@ -715,6 +715,27 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
 /* Etykieta sekcji: zdanie, nie wersaliki. Licznik dopisuje komponent w `font-mono`.
    Na papierze Zeszytu cienka kreska marginesu pod etykietą (bez wersalików i kresek z dashboardów). */
 @layer components {
+  /* Plan Notatek 4.2: fragment treści na kaflu — 4 linie (telefon: 3) przy interlinii 1,5, ostatnia gaśnie jak tekst
+     schodzący pod krawędź kartki. Zamiast `line-clamp`, który przy kilku akapitach Markdownu ucinał w pół linii
+     wielokropkiem. Treść, która się mieści, zostaje w pełni kryjąca. */
+  .tile-fade {
+    max-height: 6em;
+    overflow: hidden;
+  }
+  /* Maska tylko przy rzeczywistym ucięciu — `data-clipped` ustawia `src/lib/clipObserver.ts`. */
+  .tile-fade[data-clipped] {
+    -webkit-mask-image: linear-gradient(to bottom, #000 4.5em, transparent 6em);
+    mask-image: linear-gradient(to bottom, #000 4.5em, transparent 6em);
+  }
+  @media (max-width: 639.98px) {
+    .tile-fade {
+      max-height: 4.5em;
+    }
+    .tile-fade[data-clipped] {
+      -webkit-mask-image: linear-gradient(to bottom, #000 3em, transparent 4.5em);
+      mask-image: linear-gradient(to bottom, #000 3em, transparent 4.5em);
+    }
+  }
   .section-label {
     @apply flex items-center gap-1.5 text-sm font-semibold text-foreground;
   }

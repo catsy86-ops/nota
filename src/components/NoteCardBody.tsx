@@ -12,6 +12,7 @@ import { celebrate } from "@/lib/celebrate";
 import { repeatUpdate } from "@/lib/reminderRepeat";
 import { pluralPl } from "@/lib/plural";
 import { parsePastedUrl } from "@/lib/urlTitle";
+import { observeClip } from "@/lib/clipObserver";
 import { cn } from "@/lib/utils";
 import { firstSnippet } from "@/lib/searchHighlight";
 import { Marked } from "@/components/SearchMarks";
@@ -97,8 +98,9 @@ export function NoteCardBody({
               )}
               {note.content && (
                 // Kafel to zapowiedź, nie lektura: 4 linie (na telefonie 3) i zwykła interlinia — pełny tekst jest w czytniku.
+                // Plan Notatek 4.2: ostatnia linia gaśnie (`tile-fade`, index.css) zamiast urywać się wielokropkiem w pół zdania.
                 // Nagłówki z treści w rozmiarze treści — duże i pogrubione konkurowały z tytułem kafla.
-                <div className="line-clamp-4 max-sm:line-clamp-3 text-foreground/85 [&_p]:leading-normal [&_li]:leading-normal [&_p]:mb-0.5 [&_:is(h1,h2,h3,h4,h5,h6)]:text-[1em]! [&_:is(h1,h2,h3,h4,h5,h6)]:leading-normal! [&_:is(h1,h2,h3,h4,h5,h6)]:m-0! [&_:is(h1,h2,h3,h4,h5,h6)]:font-semibold!">
+                <div ref={observeClip} className="tile-fade text-foreground/85 [&_p]:leading-normal [&_li]:leading-normal [&_p]:mb-0.5 [&_:is(h1,h2,h3,h4,h5,h6)]:text-[1em]! [&_:is(h1,h2,h3,h4,h5,h6)]:leading-normal! [&_:is(h1,h2,h3,h4,h5,h6)]:m-0! [&_:is(h1,h2,h3,h4,h5,h6)]:font-semibold!">
                   {snippet ? (
                     // Szukasz: zamiast początku treści pokazujemy fragment z trafieniem.
                     <p className="text-sm leading-normal">{snippet.before}<mark className="rounded bg-primary/25 px-0.5 text-foreground">{snippet.match}</mark>{snippet.after}</p>
