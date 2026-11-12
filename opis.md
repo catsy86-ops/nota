@@ -5624,3 +5624,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** pole ma wysokość 6em (telefon 4,5em) przy interlinii 1,5; maska `linear-gradient` działa tylko z `data-clipped`, ustawianym, gdy `scrollHeight` > `clientHeight`. Zastępuje `line-clamp`, który przy kilku akapitach Markdownu ucinał w pół linii.
 - **Ograniczenia:** atrybut odświeża się przy zmianie rozmiaru pola — gdy treść skróci się z długiej do dokładnie mieszczącej się, ostatnia linia może zostać wygaszona do najbliższej zmiany rozmiaru; bez `ResizeObserver` brak wygaszenia. Obwódka akcentu przy najechaniu (reszta punktu 4.2) — bez zmian.
 - **Testy:** sprawdzone zrzutem (komputer 1280 px, telefon 390 px: kafle ucięte gasną, mieszczące się nie); `designTokens.test.ts`.
+
+## Notatki — oś czasu wersji (plan 4.8, 2026-11-12)
+
+- **Co robi:** okno „Historia wersji” pokazuje wersje na pionowej osi (kropka przy każdej, najnowsza w kolorze akcentu) z datą względną („około 2 godziny temu”, pełna data w podpowiedzi) i liczbą słów, które potem dopisano i usunięto („+4 −1 sł.” względem wersji nowszej albo bieżącej treści).
+- **Gdzie:** `VersionHistoryDialog.tsx` (`data-testid="version-timeline"`), `src/lib/wordDiff.ts` (`wordChanges` na bazie `diffWords`).
+- **Ograniczenia:** bez autora urządzenia — wersje go nie zapisują (wymagałoby zmiany modelu `versionsStore`); bardzo długie teksty liczone diffem linii (jak porównanie wersji), więc liczba słów jest wtedy przybliżona.
+- **Testy:** `src/lib/wordDiff.test.ts`; sprawdzone zrzutem okna z trzema wersjami.

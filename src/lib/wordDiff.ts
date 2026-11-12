@@ -70,6 +70,17 @@ export function diffWords(before: string, after: string): DiffOp[] {
   return lcsOps(a, b);
 }
 
+/** Plan Notatek 4.8: ile słów dopisano i usunięto między `before` a `after` (na osi wersji). */
+export function wordChanges(before: string, after: string): { added: number; removed: number } {
+  const words = (t: string) => t.split(/\s+/).filter(Boolean).length;
+  let added = 0, removed = 0;
+  for (const op of diffWords(before, after)) {
+    if (op.type === "ins") added += words(op.text);
+    else if (op.type === "del") removed += words(op.text);
+  }
+  return { added, removed };
+}
+
 /** Akapity: bloki rozdzielone pustą linią. */
 export function splitParagraphs(text: string): string[] {
   return text.split(/\n\s*\n/).map((p) => p.replace(/^\n+|\n+$/g, ""));

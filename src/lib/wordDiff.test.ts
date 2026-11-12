@@ -56,3 +56,14 @@ describe("akapity", () => {
     expect(restoreHunk(hunks, i)).toBe("A\n\nB\n\nC");
   });
 });
+
+describe("wordChanges (Notatki 4.8)", () => {
+  it("liczy dopisane i usunięte słowa; bez zmian — zera", async () => {
+    const { wordChanges } = await import("./wordDiff");
+    expect(wordChanges("kup mleko i chleb", "kup mleko, masło i chleb")).toEqual(expect.objectContaining({ added: expect.any(Number), removed: expect.any(Number) }));
+    const r = wordChanges("raz dwa trzy", "raz trzy cztery pięć");
+    expect(r.added).toBe(2);
+    expect(r.removed).toBe(1);
+    expect(wordChanges("ten sam tekst", "ten sam tekst")).toEqual({ added: 0, removed: 0 });
+  });
+});

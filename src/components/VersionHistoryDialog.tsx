@@ -4,11 +4,11 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { MarkdownRenderer } from "./MarkdownRenderer";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { diffWords, paragraphHunks, restoreHunk } from "@/lib/wordDiff";
+import { diffWords, paragraphHunks, restoreHunk, wordChanges } from "@/lib/wordDiff";
 import { cn } from "@/lib/utils";
 
 type Look = "content" | "inline" | "side";
@@ -68,6 +68,11 @@ interface VersionHistoryDialogProps {
 export default function VersionHistoryDialog({ versions, open, onOpenChange, onRestore, current, onRestoreContent }: VersionHistoryDialogProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [look, setLook] = useState<Look>("content");
+  // 4.8: zmiana każdej wersji względem stanu nowszego (wersji wyżej na osi albo bieżącej treści). Lista jest od najnowszej.
+  const changes = useMemo(() => (open ? versions.map((v, i) => {
+    const newer = i === 0 ? current : versions[i - 1].content;
+    return newer === undefined ? null : wordChanges(v.content, newer);
+  }) : []), [open, versions, current]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -78,15 +83,18 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
             Historia wersji
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-2 pt-2">
+        {/* Oś czasu (4.8): pionowa linia jak margines zeszytu, kropka przy każdej wersji. */}
+        <div className="relative space-y-2 pt-2 pl-5" data-testid="version-timeline">
+          <span aria-hidden className="absolute left-[7px] top-4 bottom-4 w-px bg-border" />
           {versions.map((v, i) => (
             <motion.div
               key={v.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="border border-border/50 rounded-card overflow-hidden"
+              className="relative border border-border/50 rounded-card"
             >
+              <span aria-hidden className={cn("absolute -left-[17px] top-4 size-2.5 rounded-full border-2 bg-card", i === 0 ? "border-primary" : "border-muted-foreground/50")} />
               <button
                 type="button"
                 aria-expanded={expandedId === v.id}
@@ -98,7 +106,14 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
                     {v.title || <span className="text-muted-foreground italic">Bez tytułu</span>}
                   </p>
                   <p className="text-2xs text-muted-foreground">
-                    {format(new Date(v.timestamp), "d MMM yyyy, HH:mm", { locale: pl })}
+                    <time dateTime={new Date(v.timestamp).toISOString()} title={format(new Date(v.timestamp), "d MMM yyyy, HH:mm", { locale: pl })}>
+                      {formatDistanceToNow(new Date(v.timestamp), { addSuffix: true, locale: pl })}
+                    </time>
+                    {changes[i] && (changes[i]!.added > 0 || changes[i]!.removed > 0) && (
+                      <span className="ml-2 font-mono tabular-nums" aria-label={`Później dopisano ${changes[i]!.added}, usunięto ${changes[i]!.removed} słów`}>
+                        <span className="text-success-ink">+{changes[i]!.added}</span> <span className="text-destructive-ink">−{changes[i]!.removed}</span> sł.
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
