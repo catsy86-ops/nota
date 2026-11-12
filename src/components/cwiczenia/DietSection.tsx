@@ -99,12 +99,13 @@ function repeatYesterday(meals: readonly Meal[], yesterday: string, today: strin
 }
 
 /** Liczba z pola: pusta = brak wartości; poza zakresem lub nie-liczba = `null` (pole pokazuje błąd). */
-function parseAmountField(text: string, max: number): number | undefined | null {
+function parseAmountField(text: string, max: number, decimals = 0): number | undefined | null {
   const t = text.trim();
   if (!t) return undefined;
   const n = Number(t.replace(",", "."));
   if (!Number.isFinite(n) || n < 0 || n > max) return null;
-  return Math.round(n);
+  const f = 10 ** decimals;
+  return Math.round(n * f) / f;
 }
 
 function nowHHMM(): string {
@@ -118,7 +119,7 @@ function AddMealForm({ recent, yesterdayCount, onRepeatYesterday }: { recent: Me
   const [kcal, setKcal] = useState("");
   const [protein, setProtein] = useState("");
   const kcalValue = parseAmountField(kcal, DIET_KCAL_MAX);
-  const proteinValue = parseAmountField(protein, DIET_PROTEIN_MAX);
+  const proteinValue = parseAmountField(protein, DIET_PROTEIN_MAX, 1);
   const valid = text.trim().length > 0 && kcalValue !== null && proteinValue !== null;
 
   const save = () => {
@@ -175,7 +176,7 @@ function GoalsForm({ goals }: { goals: DietGoals }) {
   const [kcal, setKcal] = useState(goals.kcal ? String(goals.kcal) : "");
   const [protein, setProtein] = useState(goals.protein ? String(goals.protein) : "");
   const kcalValue = parseAmountField(kcal, DIET_KCAL_MAX);
-  const proteinValue = parseAmountField(protein, DIET_PROTEIN_MAX);
+  const proteinValue = parseAmountField(protein, DIET_PROTEIN_MAX, 1);
   const valid = kcalValue !== null && proteinValue !== null;
 
   return (

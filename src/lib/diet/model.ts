@@ -40,6 +40,12 @@ export function cleanAmount(v: unknown, max: number): number | undefined {
   return Math.round(v);
 }
 
+/** Jak `cleanAmount`, ale z jednym miejscem po przecinku (białko: 12,5 g). */
+export function cleanDecimal(v: unknown, max: number): number | undefined {
+  if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > max) return undefined;
+  return Math.round(v * 10) / 10;
+}
+
 /** Wejście → posiłek; `null` gdy brakuje id, poprawnego dnia albo opisu. */
 export function cleanMeal(raw: unknown): Meal | null {
   const m = raw as Partial<Meal> | null;
@@ -49,7 +55,7 @@ export function cleanMeal(raw: unknown): Meal | null {
   if (typeof m.text !== "string" || !m.text.trim()) return null;
   const time = typeof m.time === "string" && TIME_RE.test(m.time) ? m.time : undefined;
   const kcal = cleanAmount(m.kcal, DIET_KCAL_MAX);
-  const protein = cleanAmount(m.protein, DIET_PROTEIN_MAX);
+  const protein = cleanDecimal(m.protein, DIET_PROTEIN_MAX);
   return {
     id: m.id,
     day: m.day,
@@ -66,7 +72,7 @@ export function cleanGoals(raw: unknown): DietGoals {
   const g = raw as Partial<DietGoals> | null;
   if (!g || typeof g !== "object") return {};
   const kcal = cleanAmount(g.kcal, DIET_KCAL_MAX);
-  const protein = cleanAmount(g.protein, DIET_PROTEIN_MAX);
+  const protein = cleanDecimal(g.protein, DIET_PROTEIN_MAX);
   return { ...(kcal !== undefined && kcal > 0 ? { kcal } : {}), ...(protein !== undefined && protein > 0 ? { protein } : {}) };
 }
 
@@ -96,7 +102,7 @@ export function summarizeDay(meals: readonly Meal[], day: string): DaySummary {
     if (m.day !== day) continue;
     s.meals++;
     if (m.kcal !== undefined) { s.kcal += m.kcal; s.kcalKnown++; }
-    if (m.protein !== undefined) { s.protein += m.protein; s.proteinKnown++; }
+    if (m.protein !== undefined) { s.protein = Math.round((s.protein + m.protein) * 10) / 10; s.proteinKnown++; }
   }
   return s;
 }

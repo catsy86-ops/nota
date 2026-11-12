@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { addDaysToKey } from "@/lib/week";
-import { byMealOrder, cleanAmount, cleanGoals, cleanMeal, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type Meal } from "./model";
+import { byMealOrder, cleanAmount, cleanDecimal, cleanGoals, cleanMeal, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type Meal } from "./model";
 
 const meal = (id: string, day: string, over: Partial<Meal> = {}): Meal => ({ id, day, text: id, created: 1, ...over });
 
@@ -30,6 +30,18 @@ describe("cleanAmount / cleanGoals", () => {
     expect(cleanAmount(10_001, 10_000)).toBeUndefined();
     expect(cleanAmount(Number.NaN, 10)).toBeUndefined();
     expect(cleanAmount(0, 10)).toBe(0);
+  });
+
+  it("białko zachowuje jedno miejsce po przecinku, kcal jest całkowite", () => {
+    expect(cleanDecimal(12.54, 1000)).toBe(12.5);
+    expect(cleanDecimal(1001, 1000)).toBeUndefined();
+    expect(cleanMeal({ id: "m", day: "2026-11-12", text: "jajka", kcal: 150.6, protein: 12.5 })).toMatchObject({ kcal: 151, protein: 12.5 });
+    expect(cleanGoals({ protein: 150.25 })).toEqual({ protein: 150.3 });
+  });
+
+  it("suma białka z ułamkami nie gubi się w zaokrągleniach", () => {
+    const meal = (id: string, protein: number): Meal => ({ id, day: "2026-11-12", text: id, protein, createdAt: 1 } as Meal);
+    expect(summarizeDay([meal("a", 0.1), meal("b", 0.2)], "2026-11-12").protein).toBe(0.3);
   });
 
   it("cele: zero i brak dają brak celu", () => {

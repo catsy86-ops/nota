@@ -1,3 +1,4 @@
+import { EXERCISE_LABEL } from "@/lib/exerciseLabel";
 import { useEffect, useMemo, useState } from "react";
 import { SectionCard } from "@/components/ui/section-card";
 import { Dumbbell, Trash } from "lucide-react";
@@ -477,7 +478,7 @@ function TrainingReminderControl() {
       `Trening — ${next.time}–${TRAINING_WINDOW_END}`,
       `Trening po pracy. Okno: ${next.time}–${TRAINING_WINDOW_END}.`,
       "default",
-      [],
+      [EXERCISE_LABEL],
       nextReminderAt(next.time, Date.now()),
     );
     notes.updateNote(noteId, { reminderRepeat: "daily" });

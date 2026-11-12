@@ -5454,3 +5454,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** PBKDF2-SHA-256 (sól 16 B, 600 000 iteracji) → AES-256-GCM, funkcje z `vault.ts`; AAD `notki:invoices:v1`. Plik JSON ma jawne `format`, `salt`, `iter` i jeden szyfrogram zrzutu. Hasło musi przejść `passwordStrength` (min. 12 znaków). Import odrzuca zbyt małą liczbę iteracji, odszyfrowane rekordy przechodzą `cleanRecord`, a `mergeDump` dokłada tylko brakujące faktury (nie nadpisuje).
 - **Ograniczenia:** hasła nie da się odzyskać; plik nie niesie ustawień sprzedawcy ani serii.
 - **Testy:** `src/lib/ksef/invoices.test.ts` (round-trip, złe hasło, zmieniony plik, obcy format, słabe parametry i hasło).
+
+## Ćwiczenia — białko z ułamkiem i etykieta przypomnień (2026-11-12)
+
+- **Co robi:** białko w posiłkach i celach diety zachowuje jedno miejsce po przecinku (12,5 g), kcal nadal jest całkowite. Notatki-przypomnienia odżywek i treningu dostają etykietę `ćwiczenia`, więc nie lądują w Skrzynce.
+- **Gdzie:** `src/lib/diet/model.ts` (`cleanDecimal`, `summarizeDay` zaokrągla sumę do 0,1), `DietSection.tsx` (`parseAmountField` z parametrem `decimals`), `src/lib/exerciseLabel.ts` (`EXERCISE_LABEL`), `CwiczeniaView.tsx`, `TrainingSection.tsx`.
+- **Ograniczenia:** istniejące notatki-przypomnienia bez etykiety zmienią się dopiero przy następnej zmianie godziny.
+- **Testy:** `src/lib/diet/model.test.ts`, `CwiczeniaView.test.tsx`, `TrainingSection.test.tsx`.

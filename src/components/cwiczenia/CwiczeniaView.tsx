@@ -1,3 +1,4 @@
+import { EXERCISE_LABEL } from "@/lib/exerciseLabel";
 import { useId, useMemo, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SectionCard } from "@/components/ui/section-card";
@@ -32,7 +33,7 @@ function createSupplement(notes: NotesActions, input: { name: string; dose: stri
   let reminderNoteId: string | undefined;
   if (input.remindAt) {
     const title = input.dose.trim() ? `${name} — ${input.dose.trim()}` : name;
-    reminderNoteId = notes.addNote(title, "Odżywka — przypomnienie codzienne. Odhacz ją w dziale Ćwiczenia.", "default", [], nextReminderAt(input.remindAt, Date.now()));
+    reminderNoteId = notes.addNote(title, "Odżywka — przypomnienie codzienne. Odhacz ją w dziale Ćwiczenia.", "default", [EXERCISE_LABEL], nextReminderAt(input.remindAt, Date.now()));
     notes.updateNote(reminderNoteId, { reminderRepeat: "daily" });
   }
   const s = addSupplement({ name, dose: input.dose, when: input.when, remindAt: input.remindAt, reminderNoteId });

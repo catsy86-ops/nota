@@ -84,7 +84,7 @@ describe("CwiczeniaView — odżywki", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Nazwa odżywki" }), { target: { value: "Kreatyna" } });
     fireEvent.change(screen.getByRole("textbox", { name: "Dawka" }), { target: { value: "1 łyżka" } });
     fireEvent.click(screen.getByRole("button", { name: "Dodaj" }));
-    expect(notesMock.addNote).toHaveBeenCalledWith("Kreatyna — 1 łyżka", expect.any(String), "default", [], expect.any(Number));
+    expect(notesMock.addNote).toHaveBeenCalledWith("Kreatyna — 1 łyżka", expect.any(String), "default", ["ćwiczenia"], expect.any(Number));
     expect(notesMock.updateNote).toHaveBeenCalledWith("note-1", { reminderRepeat: "daily" });
     expect(addSupplementMock).toHaveBeenCalledWith(expect.objectContaining({ name: "Kreatyna", reminderNoteId: "note-1", remindAt: "07:30" }));
   });

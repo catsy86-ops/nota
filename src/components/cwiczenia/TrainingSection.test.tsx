@@ -116,7 +116,7 @@ describe("TrainingSection", () => {
   it("przypomnienie o 18:00 tworzy notatkę z dziennym powtarzaniem i zapisuje jej id", () => {
     render(<TrainingSection />);
     fireEvent.click(screen.getByRole("checkbox", { name: /Przypominaj o treningu/ }));
-    expect(notesMock.addNote).toHaveBeenCalledWith("Trening — 18:00–20:00", expect.any(String), "default", [], expect.any(Number));
+    expect(notesMock.addNote).toHaveBeenCalledWith("Trening — 18:00–20:00", expect.any(String), "default", ["ćwiczenia"], expect.any(Number));
     expect(notesMock.updateNote).toHaveBeenCalledWith("note-1", { reminderRepeat: "daily" });
     expect(setReminderMock).toHaveBeenCalledWith({ time: "18:00", noteId: "note-1" });
   });
