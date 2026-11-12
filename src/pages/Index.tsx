@@ -10,19 +10,19 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { effectiveRemindersLayout, useRemindersLayoutChoice } from "@/lib/remindersLayout";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
-import { InboxCapture, type InboxCaptureExtras } from "@/components/InboxCapture";
+import { InboxCapture } from "@/components/InboxCapture";
 import { InboxBar } from "@/components/InboxBar";
 import { useReaderNav } from "@/hooks/useReaderNav";
 import { setSearchTerms } from "@/lib/searchTerms";
 import { highlightTokens } from "@/lib/searchQuery";
-import { captureParts, isInboxNote } from "@/lib/inbox";
+import { isInboxNote } from "@/lib/inbox";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
 import { useOverdueBadge } from "@/hooks/useOverdueBadge";
 import { useTheme } from "@/hooks/useTheme";
-import { useViewPrefs, toggleGroupCollapsed, setViewPref } from "@/lib/viewPrefs";
+import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
@@ -35,13 +35,10 @@ import { useLatestRef } from "@/hooks/useLatestRef";
 import { useWikiLinkIndex } from "@/hooks/useWikiLinkIndex";
 import { useLaunchIntents } from "@/hooks/useLaunchIntents";
 import { useBulkNoteOps } from "@/hooks/useBulkNoteOps";
-import { setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { setGridNavPreview } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { playEnter, tween } from "@/lib/motion";
 import { useNavigate, useNavigationType } from "react-router-dom";
-import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
-import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, findDailyNote } from "@/lib/dailyNote";
-import { PERIOD_LABEL, PERIOD_TEMPLATE, findPeriodNote, periodKey, periodTitle, type PeriodKind } from "@/lib/periodNote";
 import { useNoteActions } from "@/hooks/useNoteActions";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
 import { useImportExport, useExternalImport } from "@/hooks/useImportExport";
@@ -69,7 +66,6 @@ import { markNoteOpened } from "@/lib/lastOpened";
 import { noteHistory } from "@/lib/noteHistory";
 import { folderCrumbs, labelCrumbs } from "@/lib/breadcrumbs";
 import { FolderTemplateActions } from "@/components/FolderTemplateActions";
-import type { SavedView } from "@/lib/savedViews";
 import { EmptyState } from "@/components/EmptyState";
 import { DeleteForeverDialog, EmptyTrashDialog } from "@/components/TrashConfirmDialogs";
 import { sidebarItems } from "@/components/sidebar/sidebarItems";
@@ -79,8 +75,9 @@ import { useNextBoundary } from "@/hooks/useNextBoundary";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { formatReminderShort } from "@/lib/reminderTime";
-import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
-import { downloadNotesZip } from "@/lib/exportZip";
+import { useInboxCapture } from "@/hooks/useInboxCapture";
+import { useNoteNavigation } from "@/hooks/useNoteNavigation";
+import { useNoteExport } from "@/hooks/useNoteExport";
 import { pluralPl } from "@/lib/plural";
 import { DndContext, pointerWithin } from "@dnd-kit/core";
 import { fireworks, megaCelebrate } from "@/lib/celebrate";
@@ -131,7 +128,7 @@ const Index = () => {
   const prefs = useViewPrefs();
   // Widok, folder, etykieta i zapytanie żyją w adresie (patrz `lib/viewRoute.ts`).
   const route = useViewRoute();
-  const { view, label: activeLabel, folder: activeFolder, go, replaceWith } = route;
+  const { view, label: activeLabel, folder: activeFolder, go } = route;
   // Zmiana widoku przenika się ze starym (View Transitions); bez wsparcia albo przy ograniczonym ruchu — od razu.
   const setView = useCallback((v: View) => {
     const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
@@ -425,114 +422,10 @@ const Index = () => {
 
   const { allNotesForLinks, knownTitles, wikiIndex } = useWikiLinkIndex(notes, archivedNotes);
   const allNotesForLinksRef = useLatestRef(allNotesForLinks);
-  /**
-   * Jedno miejsce „pokaż tę notatkę”: przełącza na widok, w którym notatka
-   * faktycznie jest (Notatki / Archiwum / Kosz), zdejmuje filtry, które mogłyby
-   * ją ukryć, przewija do karty i na chwilę ją podświetla.
-   */
-  const revealNote = useCallback((id: string, target: View, viaLink: boolean, edit: boolean) => {
-    setSearch("");
-    if (viaLink) replaceWith(target); else go(target, { search: "" });
-    setTimeout(() => {
-      const el = document.querySelector<HTMLElement>(`[data-note-id="${id}"]`);
-      if (!el) return;
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Pierścień fokusu idzie za notatką — inaczej zostaje na kaflu z linkiem i świecą dwa naraz.
-      setGridNavFocus(id);
-      el.classList.add("note-flash");
-      setTimeout(() => el.classList.remove("note-flash"), 1600);
-      // Ta sama ścieżka co klik w kartę (patrz `NoteGrid` → `openNote`).
-      if (edit) document.querySelector<HTMLElement>(`[data-note-id-wrap="${id}"] .cursor-pointer`)?.click();
-    }, 150);
-  }, [go, replaceWith]);
-  /** Zapisany widok (6.1): ustawienia widoku, potem źródło z zapytaniem. Folder, którego nie ma, = komunikat. */
-  const openSavedView = useCallback((v: SavedView) => {
-    const src = v.source;
-    if (src.kind === "folder" && !folders.some((f) => f.id === src.id)) {
-      toast.info(`Folderu z widoku „${v.name}” już nie ma`);
-      return;
-    }
-    setViewPref("layout", v.layout);
-    setViewPref("sortKey", v.sortKey);
-    setViewPref("sortDir", v.sortDir);
-    setViewPref("groupBy", v.groupBy);
-    setViewPref("filterColor", v.filterColor);
-    setViewPref("filterLabel", v.filterLabel);
-    setViewPref("filterHasReminder", v.filterHasReminder);
-    setViewPref("filterPriority", v.filterPriority);
-    setViewPref("tableHidden", v.tableHidden);
-    setSearch(v.query);
-    if (src.kind === "folder") go("folder", { folder: src.id, search: v.query });
-    else if (src.kind === "label") go("label", { label: src.label, search: v.query });
-    else go("notes", { search: v.query });
-    if (isMobile) setSidebarOpen(false);
-  }, [folders, go, isMobile]);
-  /** Zapisany filtr: widok Notatki z jego zapytaniem w polu wyszukiwania. */
-  const goFilter = useCallback((query: string) => {
-    setSearch(query);
-    go("notes", { search: query });
-    if (isMobile) setSidebarOpen(false);
-  }, [go, isMobile]);
-  const openNote = useCallback((id: string, viaLink = false, edit = false) => {
-    const note = [...notesRef.current, ...archivedRef.current, ...trashedRef.current].find((n) => n.id === id);
-    if (!note) {
-      toast.info("Tej notatki już nie ma");
-      if (viaLink) replaceWith("notes");
-      return;
-    }
-    const target: View = note.trashed ? "trash" : note.archived ? "archive" : "notes";
-    if (target !== "notes") toast.info(target === "trash" ? "Notatka jest w Koszu" : "Notatka jest w Archiwum");
-    revealNote(id, target, viaLink, edit && target !== "trash");
-  }, [notesRef, archivedRef, trashedRef, replaceWith, revealNote]);
-  // Hooki wołane wyżej w komponencie (powiadomienia) sięgają po najnowsze `openNote` przez ref.
-  openNoteRef.current = openNote;
-
-  /**
-   * Notatka dnia: jest → otwórz ją w edytorze ze znacznikiem godziny na końcu;
-   * nie ma → utwórz z szablonem dziennika. Rozpoznanie po `dailyDate`, nie tytule.
-   */
-  const openDailyNote = useCallback(() => {
-    const now = Date.now();
-    const key = dailyKey(now);
-    const existing = findDailyNote([...notes, ...archivedNotes], key);
-    if (existing) {
-      // Przy otwartym edytorze szkic ma pierwszeństwo — nie dopisujemy mu pod ręką.
-      // Notatka dnia zablokowana: nie dopisujemy do niej z jawnej (pustej) projekcji.
-      if (!existing.locked && !isNoteTextEditOpen(existing.id)) updateNote(existing.id, { content: appendTimestamp(existing.content, now) });
-      openNote(existing.id, false, true);
-      return;
-    }
-    addLabel(DAILY_LABEL);
-    const id = addNote(dailyTitle(now), DAILY_TEMPLATE, "lavender", [DAILY_LABEL]);
-    updateNote(id, { dailyDate: key });
-    revealNote(id, "notes", false, true);
-  }, [notes, archivedNotes, updateNote, openNote, addLabel, addNote, revealNote]);
-
-  /**
-   * Notatka tygodnia / miesiąca: jest → otwórz; nie ma → utwórz z szablonem.
-   * Rozpoznanie po `periodKey`, nie tytule (patrz `lib/periodNote.ts`).
-   */
-  const openPeriodNote = useCallback((kind: PeriodKind) => {
-    const now = Date.now();
-    const key = periodKey(kind, now);
-    const existing = findPeriodNote([...notes, ...archivedNotes], key);
-    if (existing) {
-      openNote(existing.id, false, true);
-      return;
-    }
-    addLabel(PERIOD_LABEL[kind]);
-    const id = addNote(periodTitle(kind, now), PERIOD_TEMPLATE[kind], "lavender", [PERIOD_LABEL[kind]]);
-    updateNote(id, { periodKey: key });
-    revealNote(id, "notes", false, true);
-  }, [notes, archivedNotes, updateNote, openNote, addLabel, addNote, revealNote]);
-
-  // `/notatka/:id` (link, klik w powiadomienie): otwieramy dopiero po
-  // wczytaniu bazy — wcześniej każda notatka wyglądałaby na usuniętą.
-  const [notesLoaded, setNotesLoaded] = useState(false);
-  useEffect(() => { whenNotesReady().then(() => setNotesLoaded(true)); }, []);
-  useEffect(() => {
-    if (route.noteId && notesLoaded) openNote(route.noteId, true);
-  }, [route.noteId, notesLoaded, openNote]);
+  const { openSavedView, goFilter, openNote, openDailyNote, openPeriodNote } = useNoteNavigation({
+    route, folders, notes, archivedNotes, notesRef, archivedRef, trashedRef, openNoteRef,
+    addNote, updateNote, addLabel, isMobile, setSearch, setSidebarOpen,
+  });
 
   const handleWikiClick = useCallback((raw: string) => {
     const { title, heading } = splitWikiTarget(raw);
@@ -665,13 +558,7 @@ const Index = () => {
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
   const handleDelete = view === "trash" ? deleteNoteForever : handleTrashSingle;
 
-  /** Eksport zaznaczonych do HTML albo PDF. Prywatne pomijamy (ich treść jest zaszyfrowana). Biblioteki ładujemy leniwie. */
-  async function exportSelectedAs(kind: "html" | "pdf") {
-    const chosen = [...notes, ...archivedNotes, ...trashedNotes].filter((n) => selectedIds.has(n.id) && !n.locked);
-    if (chosen.length === 0) { toast.info("Nic do eksportu", { description: "Zaznaczone notatki są prywatne." }); return; }
-    if (kind === "html") (await import("@/lib/exportNotes")).exportToHTML(chosen);
-    else (await import("@/lib/exportPdf")).exportToPDF(chosen);
-  }
+  const { exportSelectedAs, exportSelectedZip } = useNoteExport({ notes, archivedNotes, trashedNotes, selectedIds, folders, propDefs });
 
   const { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn, mergeSelected, favoriteSelected, prioritySelected } = useBulkNoteOps({
     view, groupBy, folders, notesRef, selectedIds, clearSelection, togglePin, updateNote, addLabel,
@@ -729,31 +616,7 @@ const Index = () => {
   // Skrzynka: notatki do posortowania (bez folderu i etykiet); licznik w pasku bocznym.
   // Plan-nowy 3.6: jedno liczenie Skrzynki (wcześniej osobno `inboxBadge` i `inboxCount` z tym samym wzorem).
   const inboxCount = inboxBadge;
-  // Pole Skrzynki: Enter zapisuje od razu, bez pytań; „Cofnij” w dymku kasuje świeżą notatkę.
-  const captureToInbox = useCallback((title: string, content: string, extras?: InboxCaptureExtras) => {
-    extras?.newLabels.forEach((l) => addLabel(l));
-    const id = handleAddNoteGlow(title, content, undefined, extras?.labels, extras?.reminder ?? null, undefined, undefined, extras?.priority ?? undefined, extras?.folderId ?? null);
-    if (extras?.reminder) requestNotificationPermissionOnIntent();
-    // 2.1: dymek mówi, dokąd trafiła notatka — z etykietą albo folderem nie ma jej już w Skrzynce.
-    const folderName = extras?.folderId ? folders.find((f) => f.id === extras.folderId)?.name : undefined;
-    const where = [...(extras?.labels ?? []).map((l) => `#${l}`), ...(folderName ? [folderName] : []), ...(extras?.reminder ? [formatReminderShort(extras.reminder)] : [])];
-    const filed = (extras?.labels.length ?? 0) > 0 || !!folderName;
-    const msg = where.length === 0 ? "Zapisano w skrzynce" : filed ? `Zapisano w ${where.join(" · ")}` : `Zapisano w skrzynce · ${where.join(" · ")}`;
-    toastWithUndo(msg, () => deleteNote(id), { icon: "📥", duration: 4000, id: "inbox-capture" });
-  }, [handleAddNoteGlow, deleteNote, addLabel, folders]);
-
-  // Skrzynka 2.5: wklejony obraz albo upuszczony plik — zdjęcia i PDF jak przy udostępnianiu, tekst z pola to tytuł.
-  const captureFilesToInbox = useCallback((files: File[], text: string) => {
-    void import("@/lib/inboxFiles").then(async ({ importNoteFiles, warnImportedFiles }) => {
-      const imported = await importNoteFiles(files);
-      warnImportedFiles(imported);
-      const count = imported.images.length + imported.attachments.length;
-      if (count === 0) return;
-      const parts = captureParts(text) ?? { title: "", content: "" };
-      const id = handleAddNoteGlow(parts.title, parts.content, undefined, [], null, imported.images, [], undefined, null, imported.attachments);
-      toastWithUndo(count === 1 ? "Zapisano w skrzynce z plikiem" : `Zapisano w skrzynce z ${count} plikami`, () => deleteNote(id), { icon: "📥", duration: 4000, id: "inbox-capture" });
-    }, () => toast.error("Nie udało się wczytać plików", { description: "Sprawdź połączenie i spróbuj jeszcze raz." }));
-  }, [handleAddNoteGlow, deleteNote]);
+  const { captureToInbox, captureFilesToInbox } = useInboxCapture({ addNote: handleAddNoteGlow, deleteNote, addLabel, folders });
 
   const hiddenViews = useHiddenViews();
   const todayCards = useTodayCards();
@@ -1237,14 +1100,7 @@ const Index = () => {
       view={view === "trash" ? "trash" : view === "archive" ? "archive" : "other"}
       onRestore={restoreSelected}
       onDeleteForever={() => setConfirmDeleteIds(Array.from(selectedIds))}
-      onExport={() => {
-        const ids = selectedIds;
-        const chosen = [...notes, ...archivedNotes, ...trashedNotes].filter((n) => ids.has(n.id));
-        const zip = downloadNotesZip(chosen, folders, `notatki-${new Date().toISOString().slice(0, 10)}.zip`, propDefs);
-        toast.success(`Pobrano ${zip.count} ${zip.count === 1 ? "notatkę" : "notatek"} (ZIP z plikami .md)`, {
-          description: zip.skippedPrivate ? `Pominięto ${zip.skippedPrivate} prywatnych — ich treść jest zaszyfrowana.` : "Bez obrazów i załączników. Da się je wczytać z powrotem przez Importuj → Markdown.",
-        });
-      }}
+      onExport={exportSelectedZip}
     />
     <Suspense fallback={null}>
       <OnboardingTour />
