@@ -60,6 +60,18 @@ describe("DietSection", () => {
     expect(addMealMock).toHaveBeenCalledWith(expect.objectContaining({ text: "Kurczak z ryżem", kcal: 600, protein: 45 }));
   });
 
+  it("pole „Dzień”: domyślnie dziś, „Wczoraj” zapisuje na wczorajszy dzień i wraca do „Dziś” (2.5)", () => {
+    addMealMock.mockReturnValue({ id: "m1" });
+    render(<DietSection />);
+    const dayGroup = screen.getByRole("group", { name: "Dzień posiłku" });
+    expect(within(dayGroup).getByRole("button", { name: "Dziś" }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.change(screen.getByRole("textbox", { name: "Co zjedzono" }), { target: { value: "Kolacja" } });
+    fireEvent.click(within(dayGroup).getByRole("button", { name: "Wczoraj" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dodaj posiłek" }));
+    expect(addMealMock).toHaveBeenCalledWith(expect.objectContaining({ text: "Kolacja", day: addDaysToKey(today(), -1) }));
+    expect(within(dayGroup).getByRole("button", { name: "Dziś" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
   it("nie-liczba w polu kalorii blokuje zapis", () => {
     render(<DietSection />);
     fireEvent.change(screen.getByRole("textbox", { name: "Co zjedzono" }), { target: { value: "Coś" } });

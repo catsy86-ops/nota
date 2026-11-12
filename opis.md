@@ -5468,3 +5468,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `src/components/calendar/DayCell.tsx` (`MAX_DOTS = 3`, `MorePill`), `dayCellStyles.ts` (`dayCellClass`, `weekdayHeadClass`; wspólne z Grafikiem, więc zmiana obejmuje też jego siatkę).
 - **Ograniczenia:** wygląd pigułki sprawdzony tylko testami i przeglądem kodu, bez zrzutu z prawdziwymi terminami.
 - **Testy:** `src/components/calendar/*.test.*`, `dayDots.test.ts`.
+
+## Ćwiczenia — zapis z innym dniem (2.5, 2026-11-12)
+
+- **Co robi:** formularze „Dodaj posiłek” i „Zapisz trening” mają przełącznik „Dziś / Wczoraj”. „Wczoraj” zapisuje wpis na wczorajszy dzień (przydatne, gdy zapomniałeś zapisać); po zapisie przełącznik wraca na „Dziś”, a dymek potwierdza dzień. Wpis treningu na wczoraj nie dostaje godziny.
+- **Gdzie:** `DietSection.tsx` (`AddMealForm`), `TrainingSection.tsx` (formularz zapisu); magazyny (`addMeal`, `addTrainingEntry`) już przyjmowały pole `day`.
+- **Ograniczenia:** tylko dziś i wczoraj, bez wyboru dowolnej daty; posiłek z wczoraj widać w podsumowaniu 7 dni, a nie na liście „Dziś”.
+- **Testy:** `DietSection.test.tsx`, `TrainingSection.test.tsx`.

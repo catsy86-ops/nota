@@ -7,6 +7,7 @@ import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { byMealOrder, DIET_KCAL_MAX, DIET_PROTEIN_MAX, DIET_TEXT_MAX, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type DaySummary, type DietGoals, type Meal, type MealTemplate } from "@/lib/diet/model";
 import { addMeal, removeMeal, restoreMeal, setDietGoals, useDietGoals, useMeals } from "@/lib/diet/store";
+import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 
 const MEAL_FORMS: [string, string, string] = ["posiłek", "posiłki", "posiłków"];
@@ -118,14 +119,19 @@ function AddMealForm({ recent, yesterdayCount, onRepeatYesterday }: { recent: Me
   const [time, setTime] = useState(nowHHMM);
   const [kcal, setKcal] = useState("");
   const [protein, setProtein] = useState("");
+  /** Dzień zapisu: dziś albo wczoraj (zapomniany posiłek). */
+  const [forYesterday, setForYesterday] = useState(false);
   const kcalValue = parseAmountField(kcal, DIET_KCAL_MAX);
   const proteinValue = parseAmountField(protein, DIET_PROTEIN_MAX, 1);
   const valid = text.trim().length > 0 && kcalValue !== null && proteinValue !== null;
 
   const save = () => {
     if (!valid) return;
-    const meal = addMeal({ text, time: time || undefined, kcal: kcalValue ?? undefined, protein: proteinValue ?? undefined });
+    const day = forYesterday ? addDaysToKey(localDayKey(), -1) : undefined;
+    const meal = addMeal({ text, day, time: time || undefined, kcal: kcalValue ?? undefined, protein: proteinValue ?? undefined });
     if (!meal) return;
+    if (forYesterday) toast.success("Dodano posiłek do wczoraj");
+    setForYesterday(false);
     setText("");
     setKcal("");
     setProtein("");
@@ -152,6 +158,15 @@ function AddMealForm({ recent, yesterdayCount, onRepeatYesterday }: { recent: Me
       <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
         <Input aria-label="Co zjedzono" placeholder="np. Owsianka z bananem" maxLength={DIET_TEXT_MAX} value={text} onChange={(e) => setText(e.target.value)} />
         <Input type="time" aria-label="Godzina posiłku" value={time} onChange={(e) => setTime(e.target.value)} className="w-auto coarse:h-11" />
+      </div>
+      <div role="group" aria-label="Dzień posiłku" className="flex gap-1.5">
+        {([false, true] as const).map((y) => (
+          <button key={String(y)} type="button" aria-pressed={forYesterday === y} onClick={() => setForYesterday(y)}
+            className={cn("pressable rounded-full border px-3 py-1 text-xs outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11",
+              forYesterday === y ? "border-primary bg-primary/10 font-medium" : "border-border text-muted-foreground")}>
+            {y ? "Wczoraj" : "Dziś"}
+          </button>
+        ))}
       </div>
       {recent.length > 0 && (
         <div role="group" aria-label="Ostatnie posiłki" className="flex flex-wrap gap-1.5" data-testid="diet-recent">

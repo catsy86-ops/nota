@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { PlanDay, TrainingEntry } from "@/lib/training/model";
 import { localDayKey } from "@/lib/dayDone";
+import { addDaysToKey } from "@/lib/week";
 
 const { fixture, addEntryMock, setReminderMock, setEquipmentMock, notesMock } = vi.hoisted(() => ({
   fixture: { entries: [] as TrainingEntry[], plans: [] as PlanDay[], reminder: null as { time: string; noteId?: string } | null, equipment: {} as { dumbbellMaxKg?: number } },
@@ -56,6 +57,18 @@ describe("TrainingSection", () => {
   it("bez planu mówi to wprost", () => {
     render(<TrainingSection />);
     expect(screen.getByText("Nie masz jeszcze planu dni. Dodaj go poniżej.")).toBeTruthy();
+  });
+
+  it("pole „Dzień”: „Wczoraj” zapisuje trening na wczorajszy dzień bez godziny i wraca do „Dziś” (2.5)", () => {
+    addEntryMock.mockReturnValue({ id: "t1" });
+    render(<TrainingSection />);
+    fireEvent.change(screen.getByLabelText("Powtórki, seria 1"), { target: { value: "10" } });
+    fireEvent.click(screen.getByRole("button", { name: "Wczoraj" }));
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz serie" }));
+    const arg = addEntryMock.mock.calls[0][0] as { day?: string; time?: string };
+    expect(arg.day).toBe(addDaysToKey(localDayKey(), -1));
+    expect(arg.time).toBeUndefined();
+    expect(screen.getByRole("button", { name: "Dziś" }).getAttribute("aria-pressed")).toBe("true");
   });
 
   it("zapis serii wysyła ćwiczenie i wartości; pusty wiersz jest pomijany", () => {

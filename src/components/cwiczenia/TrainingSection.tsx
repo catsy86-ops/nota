@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
+import { addDaysToKey } from "@/lib/week";
+import { cn } from "@/lib/utils";
 import { nextReminderAt } from "@/lib/timeOfDay";
 import { CUSTOM_HINT_MAX, CUSTOM_NAME_MAX, CUSTOM_PREFIX, EQUIPMENT_LIST, EXERCISES, exerciseById, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS, type Equipment, type MuscleGroup } from "@/lib/training/catalog";
 import { bestKg, bestKgSeries, byTrainingTime, trainingWeek, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
@@ -196,6 +198,8 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
   const [rows, setRows] = useState<SetRow[]>([emptyRow(), emptyRow(), emptyRow()]);
   const [note, setNote] = useState("");
+  /** Dzień zapisu: dziś albo wczoraj (zapomniany trening). */
+  const [forYesterday, setForYesterday] = useState(false);
   const custom = useCustomExercises();
   const all = useMemo(() => [...EXERCISES, ...custom], [custom]);
   const [newOpen, setNewOpen] = useState(false);
@@ -243,7 +247,10 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
       return b !== undefined && (best === undefined || b > best) ? b : best;
     }, undefined);
     const newBest = bestKg(sets);
-    if (!addTrainingEntry({ exerciseId, sets, note, time: nowHHMM() })) return;
+    // Wczoraj: bez godziny — teraźniejsza godzina nic by nie znaczyła.
+    if (!addTrainingEntry(forYesterday ? { exerciseId, sets, note, day: addDaysToKey(localDayKey(), -1) } : { exerciseId, sets, note, time: nowHHMM() })) return;
+    if (forYesterday) toast.success("Zapisano trening do wczoraj");
+    setForYesterday(false);
     if (newBest !== undefined && prevBest !== undefined && newBest > prevBest) {
       haptic("success");
       toast.success(`Nowy rekord: ${exerciseById(exerciseId)?.name ?? "ćwiczenie"} — ${newBest} kg`);
@@ -321,6 +328,15 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
           Ciężar powyżej Twoich hantli ({equipment.dumbbellMaxKg} kg) — sprawdź wpis albo zmień ustawienie sprzętu.
         </p>
       )}
+      <div role="group" aria-label="Dzień treningu" className="flex gap-1.5">
+        {([false, true] as const).map((y) => (
+          <button key={String(y)} type="button" aria-pressed={forYesterday === y} onClick={() => setForYesterday(y)}
+            className={cn("pressable rounded-full border px-3 py-1 text-xs outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11",
+              forYesterday === y ? "border-primary bg-primary/10 font-medium" : "border-border text-muted-foreground")}>
+            {y ? "Wczoraj" : "Dziś"}
+          </button>
+        ))}
+      </div>
       <Input aria-label="Uwagi do treningu" placeholder="Uwagi (opcjonalnie)" maxLength={TRAINING_NOTE_MAX} value={note} onChange={(e) => setNote(e.target.value)} />
       {badKg && <p role="alert" className="w-full text-xs text-destructive-ink">Ciężar wpisz co pół kilo, np. 22 albo 22,5.</p>}
       <Button type="submit" size="sm" disabled={!valid} className="coarse:h-11">Zapisz serie</Button>
