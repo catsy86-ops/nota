@@ -5580,3 +5580,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** pod listą stoi strażnik obserwowany przez `IntersectionObserver` z zapasem 1200 px; po każdej paczce powstaje nowy obserwator, którego pierwsze wywołanie dociąga kolejną paczkę, jeśli strażnik wciąż jest blisko (krótka lista na wysokim ekranie wypełnia się bez przewijania). „Pokaż tę notatkę”, strzałki, Enter i skróty klawiatury proszą siatkę o zamontowanie zakresu do wskazanej karty i czekają na nią do kilkunastu klatek. Przeciąganie i mozaika działają na zamontowanych kartach. Bez `IntersectionObserver` (jsdom, stare przeglądarki) — dociąganie w wolnych chwilach jak dawniej.
 - **Ograniczenia:** „Znajdź na stronie” przeglądarki nie widzi kart, do których jeszcze nie przewinięto; przeciągnięcie karty na miejsce poniżej zamontowanej części wymaga najpierw przewinięcia; karty raz zamontowane zostają w DOM (to nie pełna wirtualizacja — przy przewinięciu przez tysiące notatek DOM rośnie jak dawniej).
 - **Testy:** `src/components/NoteGrid.test.tsx` (paczki przy strażniku, prośba o dorysowanie, krótka lista bez strażnika); pomiar `scripts/measure-notatki.mjs` w `docs/PERFORMANCE.md`.
+
+## Notatki — podzadania: rodzic odhacza dzieci (plan 2.2, 2026-11-12)
+
+- **Co robi:** odhaczenie pozycji głównej listy odhacza też jej nieukończone podzadania (wcięte pozycje zaraz pod nią); w edytorze dymek „Odhaczono też podzadania: N” z „Cofnij”. Cofnięcie odhaczenia rodzica zostawia podzadania bez zmian. Tak samo na kaflu i w czytniku.
+- **Gdzie:** `src/lib/checklistTree.ts` (`childIds`, `toggleChecklistItem`), `ChecklistEditor.tsx`, `NoteCard.tsx` (`handleChecklistToggle`), `Index.tsx` (odhaczanie w czytniku).
+- **Ograniczenia:** bez zwijania podzadań i bez przeciągania rodzica razem z dziećmi (reszta punktu 2.2); dymek z „Cofnij” tylko w edytorze.
+- **Testy:** `src/lib/checklistTree.test.ts`.

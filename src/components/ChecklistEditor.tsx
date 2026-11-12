@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, GripVertical, Plus, X } from "lucide-react";
 import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { moveOpenItem } from "@/lib/checklistOrder";
+import { toggleChecklistItem } from "@/lib/checklistTree";
 import { cn } from "@/lib/utils";
 import { CheckMark, StrikeText } from "@/components/ui/check-mark";
 import { emojiShower } from "@/lib/celebrate";
@@ -63,7 +64,12 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
   }
 
   function toggleItem(id: string) {
-    const next = items.map((i) => (i.id === id ? { ...i, checked: !i.checked } : i));
+    // 2.2: odhaczenie rodzica odhacza też podzadania — z „Cofnij”, bo zmienia więcej niż jeden wiersz.
+    const { items: next, cascaded } = toggleChecklistItem(items, id);
+    if (cascaded > 0) {
+      const before = items;
+      toastWithUndo(cascaded === 1 ? "Odhaczono też 1 podzadanie" : `Odhaczono też podzadania: ${cascaded}`, () => onChange(before), { id: "checklist-cascade" });
+    }
     setJustChecked(next.find((i) => i.id === id)?.checked ? id : null);
     haptic(next.every((i) => i.checked) && items.some((i) => !i.checked) ? "success" : "selection");
     onChange(next);

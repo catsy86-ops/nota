@@ -30,6 +30,7 @@ import { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { useLatch } from "@/hooks/useLatch";
 import { useOriginFromTile } from "@/hooks/useOriginFromTile";
 import { backlinksOf } from "@/lib/wikiLinks";
+import { toggleChecklistItem } from "@/lib/checklistTree";
 import { toast } from "sonner";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
@@ -91,7 +92,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const subpage = wikiIndex?.tree.get(note.id);
 
   function handleChecklistToggle(itemId: string) {
-    const updated = (note.checklist || []).map((i) => (i.id === itemId ? { ...i, checked: !i.checked } : i));
+    // 2.2: rodzic odhacza też swoje podzadania (jak w edytorze).
+    const updated = toggleChecklistItem(note.checklist || [], itemId).items;
     haptic(updated.every((i) => i.checked) ? "success" : "selection");
     onUpdate?.(note.id, { checklist: updated });
   }

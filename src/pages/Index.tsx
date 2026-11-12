@@ -74,6 +74,7 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { useInboxCapture } from "@/hooks/useInboxCapture";
 import { useNoteNavigation } from "@/hooks/useNoteNavigation";
 import { useAppDialogs } from "@/hooks/useAppDialogs";
+import { toggleChecklistItem } from "@/lib/checklistTree";
 import { IndexDialogs } from "@/components/IndexDialogs";
 import { useNoteGlowActions } from "@/hooks/useNoteGlowActions";
 import { useViewShell } from "@/hooks/useViewShell";
@@ -885,7 +886,7 @@ const Index = () => {
           onToggleChecklist={(noteId, itemId) => {
             const n = [...notes, ...archivedNotes].find((x) => x.id === noteId);
             if (!n) return;
-            updateNote(noteId, { checklist: n.checklist.map((c) => (c.id === itemId ? { ...c, checked: !c.checked } : c)) });
+            updateNote(noteId, { checklist: toggleChecklistItem(n.checklist, itemId).items });
           }}
         />
         </Suspense>
