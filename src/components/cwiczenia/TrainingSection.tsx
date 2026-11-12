@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
+import { REST_OPTIONS, restLabel, setRestSeconds, useRestSeconds } from "@/lib/training/restPrefs";
 import { addDaysToKey } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { nextReminderAt } from "@/lib/timeOfDay";
@@ -17,9 +18,6 @@ import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { useNotesContext } from "@/hooks/NotesProvider";
 
-/** Czas przerwy między seriami w sekundach. */
-const REST_SECONDS = 90;
-
 /** Trening w dziale Ćwiczenia: przypomnienie, plany dni, dziennik serii z przerwą, dziś i progres. */
 export function TrainingSection() {
   const entries = useTrainingEntries();
@@ -29,12 +27,13 @@ export function TrainingSection() {
   const progress = useMemo(() => progressByExercise(entries), [entries]);
   const week = useMemo(() => trainingWeek(entries, today, (id) => exerciseById(id)?.group), [entries, today]);
   const [restUntil, setRestUntil] = useState<number | null>(null);
+  const restSeconds = useRestSeconds();
 
   return (
     <SectionCard icon={Dumbbell} title="Trening" bodyClassName="space-y-5">
 
       <PlanList plans={plans} />
-      <LogForm entries={entries} plans={plans} onSaved={() => setRestUntil(Date.now() + REST_SECONDS * 1000)} />
+      <LogForm entries={entries} plans={plans} onSaved={() => setRestUntil(Date.now() + restSeconds * 1000)} />
       {restUntil !== null && <RestTimer until={restUntil} onStop={() => setRestUntil(null)} />}
 
       {todays.length > 0 && (
@@ -55,6 +54,7 @@ export function TrainingSection() {
           <span aria-hidden className="mr-1 inline-block transition-transform group-open:rotate-90">›</span>Ustawienia treningu
         </summary>
         <div className="mt-3 space-y-4">
+          <RestControl />
           <TrainingReminderControl />
           <EquipmentForm />
         </div>
@@ -555,6 +555,23 @@ function RestTimer({ until, onStop }: { until: number; onStop: () => void }) {
       <span>Przerwa: <span className="font-mono tabular-nums" aria-hidden>{Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</span></span>
       <span role="status" className="sr-only">{left <= 0 ? "Przerwa skończona" : ""}</span>
       <Button variant="ghost" size="sm" className="coarse:h-11" onClick={onStop}>Pomiń</Button>
+    </div>
+  );
+}
+
+/** 1.2: długość przerwy po zapisie serii. */
+function RestControl() {
+  const rest = useRestSeconds();
+  return (
+    <div className="space-y-1.5" data-testid="rest-control">
+      <p className="text-sm font-medium">Przerwa po zapisie serii</p>
+      <div role="radiogroup" aria-label="Czas przerwy" className="flex flex-wrap gap-2">
+        {REST_OPTIONS.map((s) => (
+          <Button key={s} type="button" role="radio" aria-checked={rest === s} variant={rest === s ? "default" : "outline"} size="sm" className="coarse:h-11" onClick={() => setRestSeconds(s)}>
+            {restLabel(s)}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 }

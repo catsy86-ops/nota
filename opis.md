@@ -5490,3 +5490,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `CwiczeniaView.tsx` (`takeSupplement`), logika zmiany z `doneReminderUpdate` (`reminderActions.ts`); powiązanie przez `Supplement.reminderNoteId`.
 - **Ograniczenia:** działa tylko w jedną stronę — „Gotowe” w Terminach przy takiej notatce nie odhacza odżywki. Odznaczenie nie cofa przesunięcia terminu. Nic się nie dzieje, gdy termin notatki jest już na jutro albo notatki nie ma.
 - **Testy:** `CwiczeniaView.test.tsx`.
+
+## Ćwiczenia — czas przerwy do wyboru (1.2, 2026-11-12)
+
+- **Co robi:** w „Ustawieniach treningu” można wybrać czas przerwy po zapisie serii: 1 min, 90 s, 2 min albo 3 min. Wybór jest zapamiętany; po „Zapisz serie” startuje licznik na ten czas.
+- **Gdzie:** `src/lib/training/restPrefs.ts` (`restStore`, klucz `kaczy.training.restSeconds.v1`, na urządzeniu, poza kopią), `TrainingSection.tsx` (`RestControl`, `RestTimer`).
+- **Ograniczenia:** przerwa startuje po zapisie całego wpisu, nie po każdej serii („✓ Zrobiona” przy serii nie powstało); licznik nadal tekstowy, bez pierścienia (4.4).
+- **Testy:** `restPrefs.test.ts`, `TrainingSection.test.tsx`.

@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { PlanDay, TrainingEntry } from "@/lib/training/model";
 import { localDayKey } from "@/lib/dayDone";
+import { setRestSeconds } from "@/lib/training/restPrefs";
 import { addDaysToKey } from "@/lib/week";
 
 const { fixture, addEntryMock, setReminderMock, setEquipmentMock, notesMock } = vi.hoisted(() => ({
@@ -69,6 +70,17 @@ describe("TrainingSection", () => {
     expect(arg.day).toBe(addDaysToKey(localDayKey(), -1));
     expect(arg.time).toBeUndefined();
     expect(screen.getByRole("button", { name: "Dziś" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("czas przerwy (1.2): wybór z listy jest zapamiętany, a po zapisie serii startuje licznik na wybrany czas", () => {
+    addEntryMock.mockReturnValue({ id: "t1" });
+    render(<TrainingSection />);
+    fireEvent.click(screen.getByRole("radio", { name: "3 min" }));
+    expect(screen.getByRole("radio", { name: "3 min" }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.change(screen.getByLabelText("Powtórki, seria 1"), { target: { value: "10" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz serie" }));
+    expect(screen.getByTestId("rest-timer").textContent).toMatch(/3:00|2:5\d/);
+    setRestSeconds(90);
   });
 
   it("zapis serii wysyła ćwiczenie i wartości; pusty wiersz jest pomijany", () => {
