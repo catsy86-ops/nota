@@ -174,8 +174,9 @@ export function searchNotes(notes: Note[], query: string, ctx: SearchContext = {
   let hits: Note[];
   const worker = activeWorker();
   if (worker) {
-    // Wynik z Workera, gdy już jest; do tego czasu dokładne trafienia (widok przeliczy się po odpowiedzi).
-    hits = worker.lookup(source, free) ?? exactHits(source, fold(free).split(/\s+/).filter(Boolean));
+    // Wynik z Workera, gdy już jest; do tego czasu poprzedni wynik (pisanie dalej / kasowanie) albo dokładne trafienia
+    // — widok przeliczy się po odpowiedzi.
+    hits = worker.lookup(source, free) ?? worker.stale(source, free) ?? exactHits(source, fold(free).split(/\s+/).filter(Boolean));
   } else if (!Engine) {
     void loadSearchIndex();
     hits = exactHits(source, fold(free).split(/\s+/).filter(Boolean));

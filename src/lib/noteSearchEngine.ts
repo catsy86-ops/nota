@@ -16,6 +16,12 @@ import { sameDoc, toDoc, type IndexDoc } from "@/lib/noteSearchCore";
  */
 export interface NoteSearchEngine {
   lookup(source: Note[], free: string): Note[] | null;
+  /**
+   * Poprzedni wynik, gdy nowe zapytanie jest jego rozwinięciem albo skróceniem (pisanie i kasowanie znaków), a odpowiedź
+   * Workera jeszcze nie przyszła. Pozwala nie rysować listy dwa razy: widok zostaje przy poprzedniej, a po odpowiedzi
+   * się poprawia. Inne zapytanie (np. licznik zapisanego filtru) → `null`.
+   */
+  stale(source: Note[], free: string): Note[] | null;
   /** Rośnie przy każdej odpowiedzi Workera i zmianie indeksu; do zależności `useMemo`. */
   version(): number;
   subscribe(cb: () => void): () => void;
@@ -41,6 +47,7 @@ export function createNoteSearchEngine(open: () => RpcTransport, { idleMs = 120_
   let chain: Promise<unknown> = Promise.resolve();
   let knownEpoch: string | null = null;
   let broken = false;
+  let last: { free: string; ids: string[] } | null = null;
 
   const bump = () => { uiVersion++; listeners.forEach((l) => l()); };
   const fail = () => { broken = true; bump(); };
@@ -94,6 +101,7 @@ export function createNoteSearchEngine(open: () => RpcTransport, { idleMs = 120_
       let r = await client.call("noteSearch", free);
       if (await noteEpoch(r.epoch)) r = await client.call("noteSearch", free);
       cache.set(key, r.ids);
+      last = { free, ids: r.ids };
       if (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value as string);
     } catch {
       broken = true;
@@ -115,6 +123,11 @@ export function createNoteSearchEngine(open: () => RpcTransport, { idleMs = 120_
       }
       if (!pending.has(key)) { pending.add(key); void run(free, key); }
       return null;
+    },
+    stale(source, free) {
+      if (broken || !last || !(free.startsWith(last.free) || last.free.startsWith(free))) return null;
+      const byId = byIdOf(source);
+      return last.ids.map((id) => byId.get(id)).filter((n): n is Note => n !== undefined);
     },
     version: () => uiVersion,
     subscribe(cb) { listeners.add(cb); return () => { listeners.delete(cb); }; },

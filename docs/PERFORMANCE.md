@@ -50,3 +50,17 @@ wpisami, bez zmiany); oś ma w DOM 120 wpisów (ostatnie 30 dni), cały DOM ok. 
 - **B5.4 (React Compiler) odrzucone (2026-11-11):** próba na świeżej gałęzi z bieżącego kodu, kompilator tylko dla `src/components/study` i `src/lib/study` (`@vitejs/plugin-react` 6 + `@rolldown/plugin-babel` + `babel-plugin-react-compiler`). Wejściowy JS +0,1 KB gzip (próg ≤ 2 KB — ok), ale build 10 → 14 s (+40%, próg +20%), precache +86 KB (4 405 709 → 4 491 807 B, ponad próg 4,25 MiB), a Dziennik z danymi z 3000 wpisów kończy się `TypeError: Cannot read properties of undefined (reading 'length')` w ErrorBoundary — porównania INP nie dało się wykonać. Wcześniejszy eksperyment z 27.10 (całość, bez filtra) dawał INP −54% w wyszukiwaniu notatek, lecz paczka +39 KB. Wniosek: nie wdrażać; wrócić, gdy kompilator dojrzeje lub gdy da się go włączyć per plik (dyrektywa `"use memo"`) tam, gdzie jest realny zysk.
 - **B5.5 (2026-11-11):** `node scripts/measure-photos.mjs` — 1200 × 400 KB: zapis 4,5 s, siatka 60 miniatur 147 ms, quota bez błędów; 300 × 3 MB: siatka 979 ms. OPFS nie wnosi nic ponad IndexedDB dla odczytu (pełne pliki), więc wdrożona została miniatura obok oryginału (siatka czyta ~kilkanaście KB zamiast MB). OPFS zostaje niepotrzebne, dopóki nie pojawią się błędy quoty.
 
+
+# Wyszukiwanie notatek — pomiar (Cykl 3, 2026-11-12)
+
+`npm run build && npx vite preview --port 4174`, potem `node scripts/measure-notatki.mjs 3000 http://127.0.0.1:4174 2 4`. Skrypt generuje
+3000 notatek (co setna ma rzadkie słowo `zxqvbn`), przywraca je z kopii, dławi CPU ×4 i wkleja zapytanie naraz. Ten sam build mierzy dwa tryby:
+z Workerem i z usuniętym `window.Worker` (indeks w głównym wątku). „Najgorsza interakcja” wychodzi 0, bo `fill` nie jest zdarzeniem użytkownika.
+
+| Data | Tryb | Pierwsze zapytanie | Kolejne zapytanie | Najdłuższe zadanie | Suma długich zadań |
+|---|---|---|---|---|---|
+| 2026-11-12 | Worker | 26 177 ms | 121 ms | 8 930 ms | 30 807 ms |
+| 2026-11-12 | główny wątek | 19 670 ms | 76 ms | 5 544 ms | 22 317 ms |
+
+Wniosek: pierwsze zapytanie to głównie zdjęcie 3000 kart z siatki (ekran startowy pokazuje wszystkie notatki) — w obu trybach. Worker nie
+skraca interakcji; realny zysk dałaby wirtualizacja lub stronicowanie siatki (ADR-7). Liczby z dwóch sesji, rozrzut duży — do porównań przed/po.

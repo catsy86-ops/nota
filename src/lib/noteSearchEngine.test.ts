@@ -116,6 +116,19 @@ describe("silnik wyszukiwania w Workerze", () => {
   });
 });
 
+describe("poprzedni wynik na czas oczekiwania", () => {
+  it("dla rozwinięcia lub skrócenia zapytania zwraca poprzedni wynik, dla innego zapytania null", async () => {
+    const { engine } = await makeEngine();
+    const notes = [note("a", "Zawór kulowy"), note("b", "Zawór zwrotny"), note("c", "Pralka")];
+    expect(engine.stale(notes, "zawor")).toBeNull(); // nic jeszcze nie wróciło
+    await lookupSettled(engine, notes, "zaw");
+    expect(engine.stale(notes, "zawor")?.map((n) => n.id).sort()).toEqual(["a", "b"]); // pisanie dalej
+    expect(engine.stale(notes, "za")?.map((n) => n.id).sort()).toEqual(["a", "b"]); // kasowanie
+    expect(engine.stale(notes, "pralka")).toBeNull(); // inne zapytanie (np. licznik filtru)
+    engine.dispose();
+  });
+});
+
 describe("searchNotes z silnikiem w Workerze", () => {
   it("do czasu odpowiedzi daje dokładne trafienia, potem wynik rozmyty z Workera; operatory działają jak dawniej", async () => {
     const { engine } = await makeEngine();

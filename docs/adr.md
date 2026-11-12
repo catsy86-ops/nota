@@ -71,3 +71,10 @@ Krótki zapis decyzji, które łatwo podważyć przy następnej zmianie (Plan-no
   - numeracja bez kolizji między urządzeniami (jedno urządzenie wystawiające albo serie per urządzenie) — licznik w Yjs odrzucony, bo offline daje duplikaty;
   - dane osobowe nabywców tylko na urządzeniu i w Yjs w obrębie grupy; faktury poza share inbox; eksport faktur szyfrowany.
 - **Kod:** `src/lib/ksef/` (`nip.ts`, `xml.ts`, `invoice.ts`, `fa3.ts`), testy `src/lib/ksef/ksef.test.ts`, rozpoznanie w `docs/ksef-integracja-2026-11-11.md`.
+
+## ADR-7. Wyszukiwanie notatek w Workerze (Cykl 3, punkt 3.2) — wdrożone na prośbę, bez zmierzonego zysku
+
+- **Decyzja (2026-11-12, właściciel):** indeks MiniSearch notatek żyje w Workerze (`src/lib/noteSearchEngine.ts`, `src/workers/noteSearchHandlers.ts`, wspólny `search.worker.ts` z wyszukiwaniem Pracy). `searchNotes` zostaje synchroniczne: wynik z pamięci podręcznej Workera, a do odpowiedzi poprzedni wynik (rozwinięcie lub skrócenie zapytania) albo dokładne trafienia.
+- **Pomiar (emulacja Pixel 7, CPU ×4, 3000 notatek, zapytanie trafiające w 1%, `scripts/measure-notatki.mjs`, mediana z 2 sesji):** pierwsze zapytanie Worker 26,2 s / główny wątek 19,7 s; kolejne zapytanie 121 / 76 ms; najdłuższe zadanie 8,9 / 5,5 s. Prawie cały czas pierwszego zapytania to przebudowa siatki notatek z 3000 kart do 30 — w obu trybach — a nie budowa indeksu (na komputerze bez dławienia 0,5 s przy 5000 notatkach).
+- **Wniosek:** wąskim gardłem jest rysowanie i zdejmowanie kart w siatce, nie wyszukiwanie. Worker nie poprawia mierzalnie interakcji przy tym rozmiarze danych, a dodaje opóźnienie rundy do Workera (kilkadziesiąt ms na zapytanie). Do rozważenia: wirtualizacja albo stronicowanie siatki notatek (roadmap, Faza 10) — to da realny zysk; Worker zostawić albo wycofać po tym kroku, gdy pomiar wyszukiwania nie będzie zasłonięty kosztem siatki.
+- **Ścieżka awaryjna:** bez Workerów (testy) i po błędzie Workera działa dotychczasowy indeks w głównym wątku.
