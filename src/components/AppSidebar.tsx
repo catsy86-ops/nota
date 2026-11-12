@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 import { sectionIconClass } from "@/lib/sections";
 import { shortcutFor } from "@/lib/shortcuts";
 import { useNotesContext } from "@/hooks/NotesProvider";
-import { buildLabelRows } from "@/lib/labelTree";
+import { buildLabelRows, isUnderLabel, planLabelRename } from "@/lib/labelTree";
+import { pluralPl } from "@/lib/plural";
 import { SidebarLabelItem } from "@/components/sidebar/SidebarLabelItem";
 import { SidebarFolderItem } from "@/components/sidebar/SidebarFolderItem";
 import { SidebarFilterItem } from "@/components/sidebar/SidebarFilterItem";
@@ -192,7 +193,27 @@ export function AppSidebar({
       opener?.focus?.();
     };
   }, [open, isMobile, onClose]);
-  const { notes, allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
+  const { notes, archivedNotes, trashedNotes, allLabels, folders, renameLabel, removeLabel, addLabel, updateNote, addFolder, updateFolder, deleteFolder } = useNotesContext();
+  /**
+   * Plan Notatek 3.4: zmiana nazwy etykiety (też scalenie z istniejącą) mówi, ile notatek zmieniła, i ma „Cofnij”,
+   * które przywraca dokładne etykiety każdej notatki — przy scaleniu samo przemianowanie z powrotem zabrałoby też
+   * notatki, które miały docelową etykietę wcześniej.
+   */
+  const renameLabelWithUndo = (from: string, to: string) => {
+    const plan = planLabelRename([...notes, ...archivedNotes, ...trashedNotes], allLabels, from, to);
+    const target = plan.target;
+    if (!target) return;
+    const branchBefore = allLabels.filter((l) => isUnderLabel(l, from));
+    renameLabel(from, target);
+    const n = plan.affected.length;
+    const count = `${n} ${pluralPl(n, ["notatka", "notatki", "notatek"])}`;
+    toastWithUndo(plan.merge ? `Scalono #${from} z #${target} · ${count}` : `Zmieniono #${from} na #${target} · ${count}`, () => {
+      for (const a of plan.affected) updateNote(a.id, { labels: a.labels });
+      branchBefore.forEach((l) => addLabel(l));
+      // Nowa etykieta bez notatek po cofnięciu — znika z listy; przy scaleniu istniała wcześniej, więc zostaje.
+      if (!plan.merge) removeLabel(target);
+    }, { id: "label-rename" });
+  };
   const progressByFolder = useMemo(() => folderProgress(notes, folders), [notes, folders]);
   const { filters, rename: renameFilter, remove: removeFilter } = useSavedFilters();
   // Liczniki od startu — po wczytaniu silnika (wyszukiwanie rozmyte) liczone jeszcze raz.
@@ -408,7 +429,7 @@ export function AppSidebar({
                         depth={row.depth}
                         isActive={view === "label" && activeLabel === row.label}
                         onSelect={() => onGoLabel(row.label)}
-                        onRename={(newName) => renameLabel(row.label, newName)}
+                        onRename={(newName) => renameLabelWithUndo(row.label, newName)}
                         onDelete={() => removeLabel(row.label)}
                       />
                     ))}

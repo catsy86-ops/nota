@@ -64,3 +64,17 @@ describe("buildLabelRows", () => {
     ]);
   });
 });
+
+describe("planLabelRename (Notatki 3.4)", () => {
+  it("liczy notatki z gałęzi, rozpoznaje scalenie i zachowuje etykiety do cofnięcia", async () => {
+    const { planLabelRename } = await import("./labelTree");
+    const notes = [{ id: "a", labels: ["dom/kuchnia"] }, { id: "b", labels: ["dom"] }, { id: "c", labels: ["praca"] }];
+    const all = ["dom", "dom/kuchnia", "praca"];
+    const rename = planLabelRename(notes, all, "dom", "mieszkanie");
+    expect(rename).toMatchObject({ target: "mieszkanie", merge: false });
+    expect(rename.affected.map((n) => n.id)).toEqual(["a", "b"]);
+    expect(planLabelRename(notes, all, "dom", "praca").merge).toBe(true);
+    expect(planLabelRename(notes, all, "dom", "  dom ").target).toBeNull();
+    expect(planLabelRename(notes, all, "dom", "").target).toBeNull();
+  });
+});

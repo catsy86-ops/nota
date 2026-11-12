@@ -5602,3 +5602,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** pliki idą przez `importNoteFiles` (ta sama droga co udostępnianie i Skrzynka: zmniejszanie obrazów do 2 MB, limit łączny załączników, komunikaty o odrzuconych). Zdarzenie jest łapane w fazie przechwytywania, zanim CodeMirror wstawiłby zawartość pliku jako tekst.
 - **Ograniczenia:** obraz nie jest wstawiany w treść jako `![[…]]` — trafia do galerii zdjęć notatki, jak przy „Dodaj obraz”; brak paska postępu przy dużych plikach.
 - **Testy:** `src/hooks/useNoteImages.test.ts`.
+
+## Notatki — zmiana nazwy i scalanie etykiet z „Cofnij” (plan 3.4, 2026-11-12)
+
+- **Co robi:** po zmianie nazwy etykiety w pasku bocznym dymek mówi, ile notatek się zmieniło („Zmieniono #dom na #mieszkanie · 5 notatek”), a gdy nowa nazwa już istnieje — że to scalenie („Scalono #a z #b · 3 notatki”). „Cofnij” przywraca dokładne etykiety każdej zmienionej notatki (także w archiwum i koszu) i dawną gałąź etykiet; nowa etykieta bez notatek znika.
+- **Gdzie:** `src/lib/labelTree.ts` (`planLabelRename`), `AppSidebar.tsx` (`renameLabelWithUndo`); sama zmiana jak dotąd w `yjsStore.renameLabelEverywhere`.
+- **Ograniczenia:** liczba notatek jest w dymku po zmianie, nie w podglądzie przed nią; notatki prywatne (zablokowane) mogą nie dać się przywrócić przez „Cofnij”.
+- **Testy:** `src/lib/labelTree.test.ts`; e2e `label-tree.spec.ts`, `saved-filters.spec.ts`.

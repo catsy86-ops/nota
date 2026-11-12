@@ -99,3 +99,26 @@ function treeOrder(a: string, b: string): number {
   }
   return pa.length - pb.length;
 }
+
+export interface LabelRenamePlan {
+  /** Docelowa nazwa po oczyszczeniu; `null` = nic do zrobienia (pusta albo ta sama). */
+  target: string | null;
+  /** Docelowa etykieta już istnieje — zmiana nazwy scali obie gałęzie. */
+  merge: boolean;
+  /** Notatki, których etykiety się zmienią, z etykietami sprzed zmiany (do „Cofnij”). */
+  affected: { id: string; labels: string[] }[];
+}
+
+/**
+ * Plan zmiany nazwy etykiety (plan Notatek 3.4): ile notatek się zmieni i czy to scalenie z istniejącą etykietą.
+ * Liczony przed zmianą, żeby dymek podał liczbę, a „Cofnij” przywrócił dokładne etykiety każdej notatki.
+ */
+export function planLabelRename(notes: readonly { id: string; labels: readonly string[] }[], allLabels: readonly string[], from: string, to: string): LabelRenamePlan {
+  const target = cleanLabelPath(to);
+  if (!target || target === from) return { target: null, merge: false, affected: [] };
+  return {
+    target,
+    merge: allLabels.some((l) => l === target || isUnderLabel(l, target)) && !isUnderLabel(target, from),
+    affected: notes.filter((n) => n.labels.some((l) => isUnderLabel(l, from))).map((n) => ({ id: n.id, labels: [...n.labels] })),
+  };
+}
