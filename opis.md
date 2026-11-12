@@ -5567,9 +5567,9 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 
 ## Podział Index.tsx (Cykl 3, punkt 3.1, 2026-11-12)
 
-- **Co robi:** bez zmiany zachowania. `src/pages/Index.tsx` ma 1025 linii zamiast 1270; logika wyszła do hooków w `src/hooks/`.
-- **Gdzie:** `useInboxCapture` (zapis ze Skrzynki: pole i pliki), `useNoteExport` (HTML, PDF, ZIP zaznaczonych), `useNoteNavigation` (`revealNote`, otwieranie notatki i adresu `/notatka/:id`, zapisane widoki i filtry, notatka dnia i okresu), `useNoteGlowActions` (dodawanie z paska i przenoszenie do folderu z błyskiem, kandydaci na rodzica), `useViewShell` (przejścia widoków, `data-view`, pole wyszukiwania zsynchronizowane z adresem, działy trzymane w pamięci, wejście treści).
-- **Ograniczenia:** hosty okien (paleta, ustawienia, statystyki, skróty, tryb skupienia) zostały w `Index.tsx`, bo ich stan jest ustawiany z wielu miejsc; ich wydzielenie wymagałoby wspólnego magazynu stanu okien.
+- **Co robi:** bez zmiany zachowania. `src/pages/Index.tsx` ma 943 linie zamiast 1270; logika wyszła do hooków w `src/hooks/`, a okna do `IndexDialogs`.
+- **Gdzie:** `useInboxCapture` (zapis ze Skrzynki: pole i pliki), `useNoteExport` (HTML, PDF, ZIP zaznaczonych), `useNoteNavigation` (`revealNote`, otwieranie notatki i adresu `/notatka/:id`, zapisane widoki i filtry, notatka dnia i okresu), `useNoteGlowActions` (dodawanie z paska i przenoszenie do folderu z błyskiem, kandydaci na rodzica), `useViewShell` (przejścia widoków, `data-view`, pole wyszukiwania zsynchronizowane z adresem, działy trzymane w pamięci, wejście treści), `useAppDialogs` (stan „otwarte” okien, też z linków `?pair=` i `?settings=`), `src/components/IndexDialogs.tsx` (Do skrzynki, Statystyki, Ustawienia, import z innych aplikacji, Skróty, Pola notatek, Tryb skupienia, Ostatnie działania).
+- **Ograniczenia:** paleta poleceń i czytnik notatek zostały w `Index.tsx` — biorą kilkanaście akcji strony, a przeniesienie oznaczałoby tylko przekazywanie ich dalej.
 - **Testy:** brak testów komponentu `Index`; sprawdzone typami (`npm run typecheck`), lintem i budową. E2E nie uruchamiane (wymaga zgody).
 - **Uwaga o narzędziach:** `tsc --noEmit -p .` nie sprawdza niczego (`tsconfig.json` ma `"files": []`); typy sprawdza `npm run typecheck` (`tsconfig.app.json`).
 

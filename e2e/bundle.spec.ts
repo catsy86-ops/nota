@@ -157,8 +157,14 @@ for (const [name, opts, limit] of [
       localStorage.setItem("kaczy-notes-data", JSON.stringify(notes));
     }, NOTES_300);
     await page.goto("/");
-    // Render progresywny — liczymy po dojściu wszystkich kafli.
-    await expect(page.locator("[data-note-id-wrap]")).toHaveCount(300, { timeout: 30_000 });
+    // Siatka montuje karty przy przewijaniu (Cykl 3): na starcie tylko pierwsze paczki, nie wszystkie 300.
+    await expect(page.locator("[data-note-id-wrap]").first()).toBeVisible();
+    expect(await page.locator("[data-note-id-wrap]").count()).toBeLessThan(300);
+    // Najgorszy przypadek budżetu: przewinięcie do końca, aż w DOM są wszystkie kafle.
+    await expect(async () => {
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      expect(await page.locator("[data-note-id-wrap]").count()).toBe(300);
+    }).toPass({ timeout: 60_000 });
     const nodes = await page.evaluate(() => document.getElementsByTagName("*").length);
     expect(nodes, `${nodes} węzłów DOM`).toBeLessThanOrEqual(limit);
     await context.close();

@@ -73,6 +73,8 @@ import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { useInboxCapture } from "@/hooks/useInboxCapture";
 import { useNoteNavigation } from "@/hooks/useNoteNavigation";
+import { useAppDialogs } from "@/hooks/useAppDialogs";
+import { IndexDialogs } from "@/components/IndexDialogs";
 import { useNoteGlowActions } from "@/hooks/useNoteGlowActions";
 import { useViewShell } from "@/hooks/useViewShell";
 import { useNoteExport } from "@/hooks/useNoteExport";
@@ -96,7 +98,7 @@ import { OlderDeviceBanner } from "@/components/sync/OlderDeviceBanner";
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
-import { SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, QuickInboxDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
+import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, CommandPalette, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -104,10 +106,9 @@ import { SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, Recent
 import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
 import { Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { requestSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
+import { requestSettingsTab } from "@/lib/settingsDeepLink";
 import type { DebtReminderApi } from "@/components/debts/DebtsView";
 import { repeatUpdate, toRule, type RepeatInput } from "@/lib/reminderRepeat";
-import { pairCodeFromLocation } from "@/lib/pairLink";
 
 const Index = () => {
   const {
@@ -137,22 +138,9 @@ const Index = () => {
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
   const addNoteRef = useRef<{ expand: (action?: ComposerAction, prefill?: string) => void }>(null);
   const logoClicksRef = useRef<{ count: number; lastTs: number }>({ count: 0, lastTs: 0 });
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
-  // Link z kodu QR (`?pair=…`) otwiera Ustawienia → Sync; kod odczytuje i usuwa z adresu
-  // `SettingsDialog`, który montuje się dopiero po otwarciu.
-  // Link `?settings=<karta>` (faza 3c) otwiera Ustawienia od razu na tej karcie.
-  const [settingsOpen, setSettingsOpen] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return pairCodeFromLocation(window.location.search, window.location.hash) !== null || settingsTabFromParam(params.get(SETTINGS_PARAM)) !== null;
-  });
-  const [statsOpen, setStatsOpen] = useState(false);
-  /** Skrzynka 2.3: małe okno „Do skrzynki” (Alt+K, paleta, skrót PWA) — widok pod spodem zostaje. */
-  const [quickInboxOpen, setQuickInboxOpen] = useState(false);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [propDefsOpen, setPropDefsOpen] = useState(false);
+  const dialogs = useAppDialogs();
+  const { paletteOpen, setPaletteOpen, setActionsOpen, setSettingsOpen, setStatsOpen, setQuickInboxOpen, setShortcutsOpen, setPropDefsOpen, setFocusModeOpen } = dialogs;
   const [presentingNoteId, setPresentingNoteId] = useState<string | null>(null);
-  const [focusModeOpen, setFocusModeOpen] = useState(false);
   const { selectedIds, setSelectedIds, selectionMode, lastSelectedRef, clearSelection } = useSelection({ view, activeLabel, activeFolder });
 
   function handleLogoClick() {
@@ -868,61 +856,12 @@ const Index = () => {
       </Suspense>
     )}
     <AchievementStamp />
-    {quickInboxOpen && (
-      <Suspense fallback={null}>
-        <QuickInboxDialog open={quickInboxOpen} onOpenChange={setQuickInboxOpen} onCapture={captureToInbox} onFiles={captureFilesToInbox} labels={allLabels} folders={folders} />
-      </Suspense>
-    )}
-    {statsOpen && (
-      <Suspense fallback={null}>
-        <StatsDialog
-          open={statsOpen}
-          onOpenChange={setStatsOpen}
-          notes={notes}
-          archivedNotes={archivedNotes}
-          allLabels={allLabels}
-          folders={folders}
-        />
-      </Suspense>
-    )}
-    {/* Tu, nie w pasku bocznym: pasek istnieje tylko gdy jest otwarty (na telefonie
-        domyślnie zamknięty), a Ustawienia otwiera też „Więcej” i paleta poleceń. */}
-    {settingsOpen && (
-      <Suspense fallback={null}>
-        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      </Suspense>
-    )}
-    {externalImport.open && (
-      <Suspense fallback={null}>
-        <ImportExternalDialog
-          open={externalImport.open}
-          stage={externalImport.stage}
-          plan={externalImport.plan}
-          error={externalImport.error}
-          onPickFiles={externalImport.pickFiles}
-          onConfirm={externalImport.confirm}
-          onBack={externalImport.backToPick}
-          onClose={externalImport.close}
-        />
-      </Suspense>
-    )}
-    {shortcutsOpen && (
-      <Suspense fallback={null}>
-        <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-      </Suspense>
-    )}
-    {propDefsOpen && (
-      <Suspense fallback={null}>
-        <PropDefsDialog
-          open={propDefsOpen}
-          onOpenChange={setPropDefsOpen}
-          defs={propDefs}
-          onAdd={addPropDef}
-          onUpdate={updatePropDef}
-          onDelete={deletePropDef}
-        />
-      </Suspense>
-    )}
+    <IndexDialogs
+      dialogs={dialogs}
+      notes={notes} archivedNotes={archivedNotes} trashedNotes={trashedNotes} allLabels={allLabels} folders={folders}
+      propDefs={propDefs} addPropDef={addPropDef} updatePropDef={updatePropDef} deletePropDef={deletePropDef}
+      addNote={addNote} externalImport={externalImport} captureToInbox={captureToInbox} captureFilesToInbox={captureFilesToInbox} openNote={openNote}
+    />
     <AnimatePresence>
       {readerNote && (
         <Suspense key="reader" fallback={null}>
@@ -952,15 +891,6 @@ const Index = () => {
         </Suspense>
       )}
     </AnimatePresence>
-    {focusModeOpen && (
-      <Suspense fallback={null}>
-        <FocusMode
-          open={focusModeOpen}
-          onOpenChange={setFocusModeOpen}
-          onSave={(title, content) => { addNote(title, content); toast.success("Zapisano notatkę 🧠"); }}
-        />
-      </Suspense>
-    )}
     <BottomNav
       view={view}
       onGo={(v) => go(v)}
@@ -1004,18 +934,6 @@ const Index = () => {
       <AppearanceLinkImport />
       <QuickPresetsHost />
     </Suspense>
-    {actionsOpen && (
-      <Suspense fallback={null}>
-        <RecentActionsPanel
-          open={actionsOpen}
-          onOpenChange={setActionsOpen}
-          onOpenNote={(ids) => {
-            const existing = [...notes, ...archivedNotes, ...trashedNotes].find((n) => ids.includes(n.id));
-            openNote(existing?.id ?? ids[0]);
-          }}
-        />
-      </Suspense>
-    )}
     {confirmDialog}
     <VaultHost />
     </DndContext>
