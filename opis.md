@@ -5631,3 +5631,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `VersionHistoryDialog.tsx` (`data-testid="version-timeline"`), `src/lib/wordDiff.ts` (`wordChanges` na bazie `diffWords`).
 - **Ograniczenia:** bez autora urządzenia — wersje go nie zapisują (wymagałoby zmiany modelu `versionsStore`); bardzo długie teksty liczone diffem linii (jak porównanie wersji), więc liczba słów jest wtedy przybliżona.
 - **Testy:** `src/lib/wordDiff.test.ts`; sprawdzone zrzutem okna z trzema wersjami.
+
+## Powłoka — karty Ustawień w palecie (plan 2.5, 2026-11-12)
+
+- **Co robi:** paleta poleceń ma skróty prosto na kartę Ustawień: „Ustawienia: Wygląd”, „Ustawienia: Ogólne”, „Zrób kopię zapasową (Kopia i dane)”, „Połącz urządzenie (Sync)”. Znajdują się też po słowach kluczowych (np. „backup”, „parowanie”, „motyw”).
+- **Gdzie:** `CommandPalette.tsx` (`SETTINGS_SHORTCUTS`, `requestSettingsTab` z `settingsDeepLink.ts`).
+- **Ograniczenia:** „Zrób kopię” otwiera kartę kopii, nie zapisuje pliku od razu — zapis od razu pominąłby pytanie o pominięte załączniki (D3). „Zablokuj prywatne notatki” i „Do skrzynki” były już w palecie; „Styl”, „Krój”, „Jasność” jako osobne polecenia — bez zmian (styl jest).
+- **Testy:** e2e `palette-settings-tabs.spec.ts`.

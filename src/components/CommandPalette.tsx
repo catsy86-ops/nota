@@ -39,7 +39,7 @@ import { trySkin } from "@/lib/skinTry";
 import { recentOpenedIds, useLastOpened } from "@/lib/lastOpened";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { searchSettings } from "@/lib/settingsIndex";
-import { requestSettingsSection } from "@/lib/settingsDeepLink";
+import { requestSettingsSection, requestSettingsTab, type SettingsTab } from "@/lib/settingsDeepLink";
 
 const NOTE_LIMIT = 30;
 /** 5.1: tyle ostatnio otwieranych notatek pokazuje pusta paleta. */
@@ -98,6 +98,14 @@ const NAV_ITEMS: NavItem[] = [
   { id: "plans", label: viewLabel("plans"), Icon: Ruler },
   { id: "archive", label: viewLabel("archive"), Icon: Archive },
   { id: "trash", label: viewLabel("trash"), Icon: Trash },
+];
+
+/** Skróty do kart Ustawień w palecie (Powłoka 2.5). `keywords` — słowa, po których da się je znaleźć. */
+const SETTINGS_SHORTCUTS: { tab: SettingsTab; label: string; keywords: string; icon: typeof Settings }[] = [
+  { tab: "appearance", label: "Ustawienia: Wygląd", keywords: "styl motyw krój jasność kolor", icon: Palette },
+  { tab: "general", label: "Ustawienia: Ogólne", keywords: "przypomnienia praca seria faktury", icon: Settings },
+  { tab: "backup", label: "Zrób kopię zapasową (Kopia i dane)", keywords: "backup kopia eksport przywróć dane", icon: Copy },
+  { tab: "sync", label: "Połącz urządzenie (Sync)", keywords: "synchronizacja telefon komputer parowanie kod qr", icon: Network },
 ];
 
 export function CommandPalette({
@@ -434,6 +442,12 @@ export function CommandPalette({
           <CommandItem onSelect={() => run(onOpenSettings)}>
             <Settings className="w-4 h-4 mr-2" /> Ustawienia
           </CommandItem>
+          {/* Powłoka 2.5: od razu na karcie Ustawień (te same karty co link `?settings=`). */}
+          {SETTINGS_SHORTCUTS.map((t) => (
+            <CommandItem key={`tab-${t.tab}`} value={`ustawienia ${t.label} ${t.keywords}`} onSelect={() => run(() => { requestSettingsTab(t.tab); onOpenSettings(); })}>
+              <t.icon className="w-4 h-4 mr-2" /> {t.label}
+            </CommandItem>
+          ))}
           <CommandItem onSelect={() => run(onOpenStats)}>
             <Trophy className="w-4 h-4 mr-2" /> Statystyki i osiągnięcia
           </CommandItem>
