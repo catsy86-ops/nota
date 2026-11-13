@@ -854,6 +854,7 @@ const Index = () => {
           onTrash={handleTrashSingle}
           onDuplicate={duplicateNote}
           onToggleFavorite={(id, favorite) => updateNote(id, { favorite })}
+          onMoveToFolder={handleMoveToFolderGlow}
           view={view}
         />
       </Suspense>

@@ -2,11 +2,12 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
-import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette, Camera, PackageSearch, FileText, Link2 } from "lucide-react";
+import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette, Camera, PackageSearch, FileText, Link2, FolderInput, Download, ArrowLeft, Folder as FolderIcon } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
 import { copyWikiLink } from "@/lib/noteMarkdown";
+import { folderCrumbs } from "@/lib/breadcrumbs";
 import { sectionHits } from "@/lib/sectionHits";
 import { requestHeading } from "@/lib/wikiHeading";
 import type { PeriodKind } from "@/lib/periodNote";
@@ -80,6 +81,8 @@ interface Props {
   onTrash?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onToggleFavorite?: (id: string, favorite: boolean) => void;
+  /** Plan Notatek 2.5: przeniesienie bieżącej notatki do folderu (`null` = bez folderu). */
+  onMoveToFolder?: (id: string, folderId: string | null) => void;
   /** Widok z adresu: w Grafiku paleta pokazuje akcje zmiany. */
   view?: string;
 }
@@ -108,6 +111,12 @@ const SETTINGS_SHORTCUTS: { tab: SettingsTab; label: string; keywords: string; i
   { tab: "sync", label: "Połącz urządzenie (Sync)", keywords: "synchronizacja telefon komputer parowanie kod qr", icon: Network },
 ];
 
+async function exportCurrent(note: Note, kind: "html" | "pdf" | "md") {
+  if (kind === "html") (await import("@/lib/exportNotes")).exportToHTML([note]);
+  else if (kind === "pdf") (await import("@/lib/exportPdf")).exportToPDF([note]);
+  else (await import("@/lib/exportNotes")).exportToMarkdown([note]);
+}
+
 export function CommandPalette({
   open,
   onOpenChange,
@@ -131,11 +140,14 @@ export function CommandPalette({
   onTrash,
   onDuplicate,
   onToggleFavorite,
+  onMoveToFolder,
   view,
 }: Props) {
   const { folders } = useNotesContext();
   const { filters } = useSavedFilters();
   const [search, setSearch] = useState("");
+  // Plan Notatek 2.5: drugi „ekran” palety — wybór folderu dla bieżącej notatki.
+  const [pickFolder, setPickFolder] = useState(false);
   // Ostatnie zapytania, które zakończyły się otwarciem notatki (max 5, localStorage).
   const [recent, setRecent] = useState<string[]>(loadRecentSearches);
   // Notatki prywatne nie pojawiają się w palecie (ani tytułem, ani treścią) — także po odblokowaniu.
@@ -223,7 +235,27 @@ export function CommandPalette({
             )}
           </div>
         </CommandEmpty>}
-        {currentNote && !search.trim() && (
+        {currentNote && pickFolder && onMoveToFolder && (
+          <CommandGroup heading="Przenieś do folderu">
+            <CommandItem value="wróć" onSelect={() => setPickFolder(false)}>
+              <ArrowLeft className="w-4 h-4 mr-2" /> Wróć
+            </CommandItem>
+            {currentNote.folderId && (
+              <CommandItem value="bez folderu" onSelect={() => run(() => onMoveToFolder(currentNote.id, null))}>
+                <StickyNote className="w-4 h-4 mr-2" /> Bez folderu
+              </CommandItem>
+            )}
+            {folders.filter((f) => f.id !== currentNote.folderId).map((f) => {
+              const path = [...folderCrumbs(folders, f.id).map((c) => c.label), f.name || "Folder"].join(" / ");
+              return (
+                <CommandItem key={f.id} value={`folder ${path}`} onSelect={() => run(() => onMoveToFolder(currentNote.id, f.id))}>
+                  <FolderIcon className="w-4 h-4 mr-2" /> {f.emoji ? `${f.emoji} ` : ""}{path}
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
+        )}
+        {currentNote && !search.trim() && !pickFolder && (
           <>
             <CommandGroup heading="Ta notatka">
               <CommandItem value="ta notatka otwórz" onSelect={() => run(() => onOpenNote(currentNote.id))}>
@@ -244,6 +276,16 @@ export function CommandPalette({
                   <Link2 className="w-4 h-4 mr-2" /> Kopiuj link [[{currentNote.title.trim()}]]
                 </CommandItem>
               )}
+              {onMoveToFolder && !currentNote.trashed && folders.length > 0 && (
+                <CommandItem value="ta notatka przenies do folderu" onSelect={() => { setSearch(""); setPickFolder(true); }}>
+                  <FolderInput className="w-4 h-4 mr-2" /> Przenieś do folderu…
+                </CommandItem>
+              )}
+              {!currentNote.locked && (["html", "pdf", "md"] as const).map((kind) => (
+                <CommandItem key={kind} value={`ta notatka eksport ${kind}`} onSelect={() => run(() => { void exportCurrent(currentNote, kind); })}>
+                  <Download className="w-4 h-4 mr-2" /> Eksportuj jako {kind === "md" ? "Markdown" : kind.toUpperCase()}
+                </CommandItem>
+              ))}
               {onDuplicate && !currentNote.trashed && (
                 <CommandItem value="ta notatka duplikuj" onSelect={() => run(() => onDuplicate(currentNote.id))}>
                   <Copy className="w-4 h-4 mr-2" /> Duplikuj

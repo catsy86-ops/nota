@@ -5592,7 +5592,8 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 
 - **Co robi:** przy otwartej notatce z tytułem paleta poleceń ma w „Ta notatka” pozycję „Kopiuj link [[tytuł]]” — kopiuje link do wklejenia w innej notatce.
 - **Gdzie:** `src/lib/noteMarkdown.ts` (`wikiLinkOf`, `copyWikiLink`), `CommandPalette.tsx`.
-- **Ograniczenia:** z punktu 2.5 nadal brak w palecie: przeniesienia do folderu, eksportu, historii wersji i wyodrębnienia; trafienia w nagłówkach jako osobna sekcja — bez zmian. Notatki prywatne (zablokowane) nie mają tej pozycji.
+- **Przenieś i eksportuj:** w „Ta notatka” doszły „Przenieś do folderu…” (drugi ekran palety z listą folderów ze ścieżką „A / B”, „Bez folderu” i „Wróć”; ta sama funkcja co na kaflu, z błyskiem) oraz „Eksportuj jako HTML / PDF / Markdown” (biblioteki ładowane leniwie; bez notatek prywatnych). Stan ekranu: `pickFolder` w `CommandPalette.tsx`, prop `onMoveToFolder` z `Index.tsx`.
+- **Ograniczenia:** z punktu 2.5 nadal brak w palecie: historii wersji i wyodrębnienia (działają na sesji edytora i zaznaczeniu, nie na samej notatce); trafienia w nagłówkach i blokach już są jako osobna sekcja (`sectionHits.ts`). Notatki prywatne (zablokowane) nie mają „Kopiuj link” ani eksportu. Bez testu e2e (pełne e2e na końcu).
 - **Testy:** `src/lib/noteMarkdown.test.ts`.
 
 ## Notatki — pliki przeciągnięte na edytor (plan 2.6, 2026-11-12)
