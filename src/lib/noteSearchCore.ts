@@ -51,13 +51,41 @@ export function sameDoc(a: IndexDoc, b: IndexDoc): boolean {
   return FIELDS.every((f) => a[f] === b[f]);
 }
 
+const INDEX_OPTIONS = {
+  fields: FIELDS,
+  storeFields: [] as string[],
+  idField: "id",
+  tokenize,
+  searchOptions: { prefix: true, fuzzy: 0.2, combineWith: "AND" as const, boost: BOOST },
+};
+
 /** Pusty indeks z ustawieniami wyszukiwania notatek (prefiksy, literówki, wszystkie słowa naraz). */
 export function createNoteIndex(Ctor: typeof MiniSearch): MiniSearch<IndexDoc> {
-  return new Ctor<IndexDoc>({
-    fields: FIELDS,
-    storeFields: [],
-    idField: "id",
-    tokenize,
-    searchOptions: { prefix: true, fuzzy: 0.2, combineWith: "AND", boost: BOOST },
-  });
+  return new Ctor<IndexDoc>(INDEX_OPTIONS);
+}
+
+/** Indeks odtworzony ze zrzutu `MiniSearch#toJSON` (te same ustawienia co w `createNoteIndex`). */
+export function loadNoteIndex(Ctor: typeof MiniSearch, json: unknown): MiniSearch<IndexDoc> {
+  return Ctor.loadJS<IndexDoc>(json as Parameters<typeof MiniSearch.loadJS>[0], INDEX_OPTIONS);
+}
+
+/**
+ * Wersja formatu zrzutu indeksu: zmiana pól, wag albo podziału na słowa unieważnia zapisany zrzut
+ * (Worker buduje wtedy indeks od nowa). Podniesiona ręcznie przy zmianie samego `tokenize`.
+ */
+export const INDEX_FORMAT = `1|${FIELDS.join(",")}|${Object.values(BOOST).join(",")}`;
+
+/** Odcisk dokumentu (cyrb53, 53 bity): po nim Worker poznaje, że zapisany indeks jest aktualny dla danej notatki. */
+export function docFingerprint(d: IndexDoc): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  const text = FIELDS.map((f) => d[f]).join("\u0001");
+  for (let i = 0; i < text.length; i++) {
+    const ch = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return `${(h2 >>> 0).toString(36)}${(h1 >>> 0).toString(36)}.${text.length.toString(36)}`;
 }

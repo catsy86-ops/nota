@@ -50,7 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
         req.onerror = () => resolve();
         req.onblocked = () => resolve();
       });
-    Promise.all([deleteDb("kaczy-yjs-v1"), deleteDb("keyval-store"), deleteDb("kaczy-images-v1")])
+    Promise.all([deleteDb("kaczy-yjs-v1"), deleteDb("keyval-store"), deleteDb("kaczy-images-v1"), deleteDb("kaczy-note-index-v1")])
       .catch(() => { /* ignore */ })
       .finally(() => window.location.reload());
   };

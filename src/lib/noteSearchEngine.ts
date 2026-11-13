@@ -47,6 +47,8 @@ export function createNoteSearchEngine(open: () => RpcTransport, { idleMs = 120_
   let chain: Promise<unknown> = Promise.resolve();
   let knownEpoch: string | null = null;
   let broken = false;
+  /** Pierwsza wysyłka w tym Workerze jest pełna (`full`): Worker z zrzutem usuwa dokumenty, których już nie ma. */
+  let firstSync = true;
   let last: { free: string; ids: string[] } | null = null;
 
   const bump = () => { uiVersion++; listeners.forEach((l) => l()); };
@@ -63,7 +65,7 @@ export function createNoteSearchEngine(open: () => RpcTransport, { idleMs = 120_
     if (knownEpoch === epoch) return false;
     const restarted = knownEpoch !== null;
     knownEpoch = epoch;
-    if (restarted) await client.call("noteSync", [...sent.values()], []);
+    if (restarted) await client.call("noteSync", [...sent.values()], [], true);
     return restarted;
   }
 
@@ -86,7 +88,9 @@ export function createNoteSearchEngine(open: () => RpcTransport, { idleMs = 120_
     }
     if (upserts.length === 0 && removes.length === 0) return;
     indexVersion++;
-    chain = chain.then(async () => { await noteEpoch((await client.call("noteSync", upserts, removes)).epoch); }).catch(fail);
+    const full = firstSync;
+    firstSync = false;
+    chain = chain.then(async () => { await noteEpoch((await client.call("noteSync", upserts, removes, full)).epoch); }).catch(fail);
   }
 
   function byIdOf(source: Note[]): Map<string, Note> {
