@@ -7,6 +7,8 @@ import type { PluggableList } from "unified";
 import { hasMath } from "@/lib/mathHint";
 import { WikiLink } from "@/components/WikiLinkPreview";
 import { HighlightedCode } from "@/components/HighlightedCode";
+import { QueryBlock } from "@/components/QueryBlock";
+import { isQueryBlockLanguage } from "@/lib/queryBlock";
 import { isSafeHref, safeHref } from "@/lib/safeUrl";
 import { calloutKind, remarkCallouts, type CalloutKind } from "@/lib/markdownCallouts";
 
@@ -171,6 +173,8 @@ function MarkdownBlocks({ content, className, onWikiClick, knownTitles }: Markdo
           // Blok z językiem (` ```ts `) dostaje kolory składni; bez znanego języka zostaje zwykły tekst.
           const language = /(?:^|\s)language-(\S+)/.exec(className ?? "")?.[1];
           const text = typeof children === "string" ? children : Array.isArray(children) && children.every((c) => typeof c === "string") ? children.join("") : null;
+          // Blok ` ```zapytanie ` to osadzony widok notatek (plan Notatek 6.4), nie kod.
+          if (isQueryBlockLanguage(language) && text !== null) return <QueryBlock source={text} onWikiClick={onWikiClick} />;
           if (language && text !== null) return <HighlightedCode code={text.replace(/\n$/, "")} language={language} />;
           return <pre className="text-xs bg-muted/60 text-foreground p-2 rounded-field overflow-x-auto mb-1"><code>{children}</code></pre>;
         },

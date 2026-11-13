@@ -2,6 +2,8 @@ import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
 import { EditorState, StateField, type Extension, type Range } from "@codemirror/state";
 import { Decoration, type DecorationSet, EditorView, WidgetType, ViewPlugin, type ViewUpdate } from "@codemirror/view";
 import { splitWikiTarget } from "@/lib/wikiLinks";
+import { getQueryBlockData, parseQueryBlock, runQueryBlock } from "@/lib/queryBlock";
+import { propDisplayText, propValueFor } from "@/lib/noteProps";
 
 /**
  * Podgląd na żywo w CodeMirror (plan rozbudowy, Faza 1, krok 1c).
@@ -17,6 +19,7 @@ import { splitWikiTarget } from "@/lib/wikiLinks";
  *
  * Obraz `![alt](…)` poza kursorem to etykieta „obraz: opis” (nic nie ładujemy z sieci, jak w czytniku).
  * Tabela GFM poza kursorem to prawdziwa tabela (blok, liczy ją `tableField`).
+ * Blok ` ```zapytanie ` poza kursorem to tabela wyników (plan Notatek 6.4), tylko do odczytu — pola edytuje się w czytniku.
  * Świadomie bez widżetu: podgląd wzoru (KaTeX, Faza 6 — wymaga nowej zależności).
  */
 
@@ -168,6 +171,67 @@ class TableWidget extends WidgetType {
 }
 
 /**
+ * Wynik bloku ` ```zapytanie ` w edytorze: nazwy notatek i wartości pól jako zwykły tekst. Dane idą z magazynu
+ * `queryBlock` (odświeżanego przez `NotesProvider`), a `version` w `eq` odświeża widżet po zmianie notatek —
+ * przy następnej zmianie dokumentu albo ruchu kursora, bo wcześniej pole dekoracji się nie przelicza.
+ */
+class QueryWidget extends WidgetType {
+  constructor(readonly source: string, readonly version: number) {
+    super();
+  }
+
+  eq(other: QueryWidget) {
+    return other.source === this.source && other.version === this.version;
+  }
+
+  toDOM(view: EditorView) {
+    const wrap = document.createElement("div");
+    wrap.className = "cm-lp-table-wrap cm-lp-query";
+    const { data } = getQueryBlockData();
+    const result = runQueryBlock(parseQueryBlock(this.source), data.notes, { folders: data.folders, propDefs: data.propDefs });
+    const caption = document.createElement("div");
+    caption.className = "cm-lp-query-caption";
+    caption.textContent = `Zapytanie: ${parseQueryBlock(this.source).query || "wszystkie notatki"} — ${result.rows.length < result.total ? `${result.rows.length} z ${result.total}` : result.total}`;
+    wrap.appendChild(caption);
+    if (result.rows.length > 0) {
+      const table = document.createElement("table");
+      table.className = "cm-lp-table";
+      const headRow = table.createTHead().insertRow();
+      for (const name of ["Notatka", ...result.columns.map((d) => d.name)]) {
+        const th = document.createElement("th");
+        th.textContent = name;
+        headRow.appendChild(th);
+      }
+      const tbody = table.createTBody();
+      for (const n of result.rows) {
+        const tr = tbody.insertRow();
+        tr.insertCell().textContent = n.title.trim() || "Bez tytułu";
+        for (const d of result.columns) tr.insertCell().textContent = propDisplayText(d, propValueFor(d, n.props, n));
+      }
+      wrap.appendChild(table);
+    }
+    wrap.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      view.dispatch({ selection: { anchor: view.posAtDOM(wrap) } });
+    });
+    return wrap;
+  }
+}
+
+/** Blok ` ```zapytanie … ``` ` zajmujący całe linie i domknięty; zwraca treść zapytania albo `null`. */
+function queryBlockSource(state: EditorState, node: { from: number; to: number }): string | null {
+  const doc = state.doc;
+  const first = doc.lineAt(node.from);
+  const last = doc.lineAt(node.to);
+  if (first.from !== node.from || last.to !== node.to || last.number - first.number < 1) return null;
+  if (!/^```\s*(zapytanie|query)\s*$/i.test(first.text)) return null;
+  if (!/^```\s*$/.test(last.text)) return null;
+  const body: string[] = [];
+  for (let n = first.number + 1; n < last.number; n++) body.push(doc.line(n).text);
+  return body.join("\n");
+}
+
+/**
  * Tabela jest blokiem (kilka linii), a ViewPlugin nie może dawać dekoracji blokowych,
  * więc widżety tabel liczy osobne pole (`tableField`). Tabela z kursorem w którejkolwiek linii zostaje tekstem.
  */
@@ -188,6 +252,12 @@ function buildTables(state: EditorState): DecorationSet {
   const ranges: Range<Decoration>[] = [];
   tree.iterate({
     enter: (node) => {
+      if (node.name === "FencedCode") {
+        const source = queryBlockSource(state, node);
+        if (source === null || !tableIsRendered(state, node, active)) return false;
+        ranges.push(Decoration.replace({ widget: new QueryWidget(source, getQueryBlockData().version), block: true }).range(node.from, node.to));
+        return false;
+      }
       if (node.name !== "Table") return;
       if (!tableIsRendered(state, node, active)) return false;
       const rows: string[][] = [];
@@ -451,6 +521,7 @@ const livePreviewTheme = EditorView.baseTheme({
     cursor: "pointer",
   },
   ".cm-lp-table-wrap": { overflowX: "auto", margin: "0.4em 0", cursor: "text" },
+  ".cm-lp-query-caption": { fontSize: "0.75em", color: "var(--muted-foreground)", marginBottom: "0.2em" },
   ".cm-lp-table": { borderCollapse: "collapse", fontSize: "0.9em" },
   ".cm-lp-table th, .cm-lp-table td": {
     border: "1px solid var(--border)",

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, type ReactNode } from "r
 import { useNotes } from "@/hooks/useNotes";
 import { yjsStore } from "@/lib/yjsStore";
 import { initSync } from "@/lib/yjsSync";
+import { setQueryBlockData } from "@/lib/queryBlock";
 
 type NotesContextValue = ReturnType<typeof useNotes>;
 
@@ -21,7 +22,9 @@ export function NotesProvider({ children }: { children: ReactNode }) {
     yjsStore.ready().then(initSync);
   }, []);
 
-  const { folders, allLabels, addLabel } = value;
+  const { folders, allLabels, addLabel, notes, propDefs } = value;
+  // Podgląd bloków ` ```zapytanie ` w edytorze (CodeMirror) czyta dane z tego magazynu, nie z Reacta (plan Notatek 6.4).
+  useEffect(() => { setQueryBlockData({ notes, folders, propDefs }); }, [notes, folders, propDefs]);
   const meta = useMemo(() => ({ folders, allLabels, addLabel }), [folders, allLabels, addLabel]);
 
   return (
@@ -29,6 +32,11 @@ export function NotesProvider({ children }: { children: ReactNode }) {
       <NotesMetaContext.Provider value={meta}>{children}</NotesMetaContext.Provider>
     </NotesContext.Provider>
   );
+}
+
+/** Jak `useNotesContext`, ale poza `NotesProvider` zwraca `null` zamiast rzucać (komponenty używane w izolowanych testach). */
+export function useNotesContextOptional(): NotesContextValue | null {
+  return useContext(NotesContext);
 }
 
 /** Access the notes domain (notes/folders/labels + mutators) without prop-drilling. */
