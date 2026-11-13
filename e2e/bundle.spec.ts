@@ -187,3 +187,13 @@ test("Analizator planów: OCR i widok Planów poza precache, silnik z własnego 
   expect(chunksMatching(client, /\/ocr\//), "ocrClient wskazuje /ocr/<wersja>").toEqual(client);
   expect(chunksMatching(eagerChunks(), /workerBlobURL|tesseract/), "OCR poza paczką startową").toEqual([]);
 });
+
+test("Mermaid (diagramy w notatkach): poza precache, z własnego adresu, z regułą CacheFirst @smoke", () => {
+  const sw = readFileSync(path.join(distDir, "sw.js"), "utf8");
+  const precached = [...sw.matchAll(/url:"([^"]+)"/g)].map((m) => m[1]);
+  expect(precached.filter((u) => u.startsWith("mermaid/")), "plan Notatek 5.5: biblioteka Mermaid pobierana na żądanie").toEqual([]);
+  expect(sw, "reguła CacheFirst dla Mermaida").toContain("mermaid-engine");
+  const version = JSON.parse(readFileSync(path.join(distDir, "..", "package.json"), "utf8")).dependencies.mermaid as string;
+  expect(statSync(path.join(distDir, "mermaid", version, "mermaid.esm.min.mjs")).size, "dist/mermaid (scripts/copy-mermaid.mjs)").toBeGreaterThan(0);
+  expect(chunksMatching(eagerChunks(), /mermaid\.esm\.min|\/mermaid\//), "Mermaid poza paczką startową").toEqual([]);
+});

@@ -33,6 +33,8 @@ shots/
 
 # Silnik OCR kopiowany z node_modules przez scripts/copy-ocr.mjs (predev/prebuild)
 public/ocr/
+# Mermaid (diagramy w notatkach) kopiowany z node_modules przez scripts/copy-mermaid.mjs (predev/prebuild)
+public/mermaid/
 
 # Pamięć kompilatora TypeScript (tsc -b)
 *.tsbuildinfo

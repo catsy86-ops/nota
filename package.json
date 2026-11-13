@@ -7,9 +7,9 @@
     "node": ">=18.18.0"
   },
   "scripts": {
-    "predev": "node scripts/copy-ocr.mjs",
+    "predev": "node scripts/copy-ocr.mjs && node scripts/copy-mermaid.mjs",
     "dev": "vite",
-    "prebuild": "node scripts/copy-ocr.mjs",
+    "prebuild": "node scripts/copy-ocr.mjs && node scripts/copy-mermaid.mjs",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
@@ -82,6 +82,7 @@
     "jsqr": "1.4.0",
     "katex": "^0.16.47",
     "lucide-react": "^1.57.0",
+    "mermaid": "12.3.0",
     "minisearch": "^7.2.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.3.1",

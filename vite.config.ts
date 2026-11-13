@@ -100,6 +100,8 @@ export default defineConfig(() => ({
           "**/PlansView-*.js",
           // Silnik OCR (tesseract, ~9 MB w public/ocr/<wersja>/) i jego klient: tylko po „Pobierz silnik OCR”.
           "**/ocr/**",
+          // Mermaid (diagramy w notatkach, plan Notatek 5.5): ~24 MB w public/mermaid/<wersja>/, ładowany przy pierwszym diagramie.
+          "**/mermaid/**",
           // Rolldown nazywa chunk tesseract.js „src-*” (od tesseract.js/src), a wasm-feature-detect „esm-*”;
           // `bundle.spec` sprawdza po zawartości, że żaden plik OCR nie wszedł do precache pod inną nazwą.
           "**/{ocrClient,src,esm}-*.js",
@@ -123,6 +125,17 @@ export default defineConfig(() => ({
               expiration: { maxEntries: 10 },
               cacheableResponse: { statuses: [200] },
               // Strona aplikacji (fallback SPA) zamiast pliku silnika nie trafia do cache „immutable”.
+              plugins: [{ cacheWillUpdate: async ({ response }) => (response && !(response.headers.get("content-type") ?? "").includes("text/html") ? response : null) }],
+            },
+          },
+          // Mermaid: ścieżka z wersją, więc CacheFirst; po pierwszym diagramie (z dowolnym typem) działa offline.
+          {
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/mermaid/"),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "mermaid-engine",
+              expiration: { maxEntries: 260 },
+              cacheableResponse: { statuses: [200] },
               plugins: [{ cacheWillUpdate: async ({ response }) => (response && !(response.headers.get("content-type") ?? "").includes("text/html") ? response : null) }],
             },
           },

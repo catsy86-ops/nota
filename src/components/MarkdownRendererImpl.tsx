@@ -8,6 +8,7 @@ import { hasMath } from "@/lib/mathHint";
 import { WikiLink } from "@/components/WikiLinkPreview";
 import { HighlightedCode } from "@/components/HighlightedCode";
 import { QueryBlock } from "@/components/QueryBlock";
+import { MermaidBlock } from "@/components/MermaidBlock";
 import { isQueryBlockLanguage } from "@/lib/queryBlock";
 import { isSafeHref, safeHref } from "@/lib/safeUrl";
 import { calloutKind, remarkCallouts, type CalloutKind } from "@/lib/markdownCallouts";
@@ -175,6 +176,8 @@ function MarkdownBlocks({ content, className, onWikiClick, knownTitles }: Markdo
           const text = typeof children === "string" ? children : Array.isArray(children) && children.every((c) => typeof c === "string") ? children.join("") : null;
           // Blok ` ```zapytanie ` to osadzony widok notatek (plan Notatek 6.4), nie kod.
           if (isQueryBlockLanguage(language) && text !== null) return <QueryBlock source={text} onWikiClick={onWikiClick} />;
+          // Diagram (plan Notatek 5.5): biblioteka ładuje się dopiero przy pierwszym takim bloku.
+          if (language?.toLowerCase() === "mermaid" && text !== null) return <MermaidBlock source={text.replace(/\n$/, "")} />;
           if (language && text !== null) return <HighlightedCode code={text.replace(/\n$/, "")} language={language} />;
           return <pre className="text-xs bg-muted/60 text-foreground p-2 rounded-field overflow-x-auto mb-1"><code>{children}</code></pre>;
         },
