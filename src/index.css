@@ -1603,3 +1603,29 @@ html[data-motion="reduced"] .debt-sketch path, html[data-motion="reduced"] .debt
 @media (prefers-reduced-motion: reduce) {
   .debt-sketch path, .debt-sketch circle { animation: none; stroke-dashoffset: 0; }
 }
+
+/* Kolorowanie bloków kodu (plan Notatek 5.3): klasy `tok-*` z Lezer `classHighlighter`. Kolory to tokeny motywu
+   zmieszane z kolorem tekstu, żeby kontrast zostawał wysoki w jasnym i ciemnym schemacie każdego stylu. */
+.code-hl .tok-keyword,
+.code-hl .tok-operatorKeyword,
+.code-hl .tok-modifier,
+.code-hl .tok-controlKeyword,
+.code-hl .tok-definitionKeyword { color: color-mix(in oklab, var(--accent) 70%, var(--foreground)); font-weight: 600; }
+.code-hl .tok-string,
+.code-hl .tok-string2,
+.code-hl .tok-regexp { color: color-mix(in oklab, var(--success) 45%, var(--foreground)); }
+.code-hl .tok-number,
+.code-hl .tok-bool,
+.code-hl .tok-atom,
+.code-hl .tok-null { color: color-mix(in oklab, var(--warning) 40%, var(--foreground)); }
+.code-hl .tok-comment,
+.code-hl .tok-lineComment,
+.code-hl .tok-blockComment { color: var(--muted-foreground); font-style: italic; }
+.code-hl .tok-typeName,
+.code-hl .tok-className,
+.code-hl .tok-tagName,
+.code-hl .tok-namespace { color: color-mix(in oklab, var(--accent) 45%, var(--foreground)); }
+.code-hl .tok-propertyName,
+.code-hl .tok-attributeName,
+.code-hl .tok-labelName { color: color-mix(in oklab, var(--success) 30%, var(--foreground)); }
+.code-hl .tok-invalid { color: var(--destructive-ink, var(--destructive)); text-decoration: underline wavy; }

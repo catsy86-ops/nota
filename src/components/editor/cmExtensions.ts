@@ -2,6 +2,7 @@ import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView, drawSelection, keymap, placeholder } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { CODE_LANGUAGES } from "@/lib/codeLanguages";
 import { GFM } from "@lezer/markdown";
 import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
@@ -36,7 +37,8 @@ export function buildCmExtensions(opts: CmExtensionOptions = {}): Extension[] {
     drawSelection(),
     EditorView.lineWrapping,
     // GFM daje tabele (i przekreślenie); bez tego `| a |` to zwykły tekst.
-    markdown({ base: markdownLanguage, extensions: [GFM] }),
+    // `codeLanguages`: bloki ` ```ts ` itp. są kolorowane gramatyką pobieraną przy pierwszym użyciu (plan Notatek 5.3).
+    markdown({ base: markdownLanguage, extensions: [GFM], codeLanguages: CODE_LANGUAGES }),
     livePreview({ onWikiClick: opts.onWikiClick }),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     keymap.of(opts.yText ? defaultKeymap : [...defaultKeymap, ...historyKeymap]),

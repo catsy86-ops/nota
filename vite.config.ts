@@ -93,6 +93,8 @@ export default defineConfig(() => ({
           "**/CmEditor-*.js",
           // Wzory (KaTeX: moduł, arkusz i kroje ~0,7 MB) tylko przy `$…$` w treści; potem w `static-assets` (plan Notatek 5.4).
           "**/{markdownMath,KaTeX_*}*",
+          // Gramatyki kodu (kolorowanie bloków): pobierane przy pierwszym bloku w danym języku.
+          "**/codelang-*.js",
           // Analizator planów (D2, 2026-11-01): widok poza precache, pobierany w tle przy pierwszej sesji online
           // (`prefetchViewsWhenIdle`) i trzymany w `static-assets`. `plansStore` zostaje — kopia danych go potrzebuje offline.
           "**/PlansView-*.js",
@@ -190,6 +192,8 @@ export default defineConfig(() => ({
           minSize: 20_000,
           groups: [
             { name: "vendor-react", test: /[/\\]node_modules[/\\](react|react-dom|scheduler|react-router|react-router-dom)[/\\]/ },
+            // Gramatyki bloków kodu (plan Notatek 5.3): osobna grupa, żeby dało się ją wyłączyć z precache.
+            { name: "codelang", test: /[/\\]node_modules[/\\](@codemirror[/\\]lang-(javascript|css|html|json|sql|python|yaml|xml)|@lezer[/\\](javascript|css|html|json|python|yaml|xml))[/\\]/ },
             { name: "vendor-dnd", test: /[/\\]node_modules[/\\]@dnd-kit[/\\]/ },
             // Bez suwaka, przełącznika, zakładek i paska postępu: są tylko w Ustawieniach, Pracy i Statystykach,
             // więc nie muszą jechać w starcie (Plan-nowy 1.5). Wspólne części Radix zostają w grupie.
