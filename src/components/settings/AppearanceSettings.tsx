@@ -362,7 +362,7 @@ export function AppearanceSettings() {
         </Section>
         <Section title="Domyślny układ siatki">
           <div className="grid grid-cols-3 gap-2">
-            {(["masonry", "grid", "list", "board", "table"] as Layout[]).map((l) => (
+            {(["masonry", "grid", "list", "board", "table", "gallery"] as Layout[]).map((l) => (
               <button
                 key={l}
                 onClick={() => changeView(() => setViewPref("layout", l))}
@@ -371,7 +371,7 @@ export function AppearanceSettings() {
                   "p-3 rounded-card border text-xs font-medium transition-all capitalize",
                   prefs.layout === l ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
                 )}
-              >{l === "masonry" ? "Mozaika" : l === "grid" ? "Siatka" : l === "list" ? "Lista" : l === "board" ? "Tablica" : "Tabela"}</button>
+              >{l === "masonry" ? "Mozaika" : l === "grid" ? "Siatka" : l === "list" ? "Lista" : l === "board" ? "Tablica" : l === "table" ? "Tabela" : "Galeria"}</button>
             ))}
           </div>
         </Section>

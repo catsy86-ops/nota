@@ -1,6 +1,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowDownAZ, ArrowUpAZ, Funnel, LayoutGrid, List, Columns2, SlidersHorizontal, Flag, Kanban, Table2 } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Funnel, LayoutGrid, List, Columns2, SlidersHorizontal, Flag, Kanban, Table2, GalleryHorizontal } from "lucide-react";
 import { type Layout, type SortKey, type SortDir, type Density, useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { changeView } from "@/lib/viewChange";
 import { colorClasses } from "@/components/ColorPicker";
@@ -27,6 +27,7 @@ const LAYOUTS: { v: Layout; label: string; icon: typeof LayoutGrid }[] = [
   { v: "list", label: "Lista", icon: List },
   { v: "board", label: "Tablica", icon: Kanban },
   { v: "table", label: "Tabela", icon: Table2 },
+  { v: "gallery", label: "Galeria", icon: GalleryHorizontal },
 ];
 
 const GROUPS: { v: GroupBy; label: string }[] = [

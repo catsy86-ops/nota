@@ -5695,3 +5695,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Eksport i import:** pola tylko do odczytu nie trafiają do eksportu `.md`/ZIP (są w metadanych notatki). Tak/nie jest eksportowane jako „Tak”, a import rozpoznaje pole, w którym wszystkie wartości to „Tak” (tak/nie) albo adresy `http(s)://` (odnośnik); wiele wyborów wraca jako tekst, chyba że istnieje pole o tej samej nazwie (wartości po przecinku są wtedy dopasowywane do opcji).
 - **Ograniczenia:** zmiana typu istniejącego pola nadal niemożliwa (typ jest stały). Wartość wielu wyborów z opcją usuniętą z pola pokazuje tylko pozostałe opcje. Wpis wielu wyborów z jedną nieznaną opcją jest odrzucany w całości (nie zapisuje się po cichu bez literówki).
 - **Testy:** `src/lib/noteProps.types6.test.ts`, `src/lib/noteProps.test.ts`, `e2e/note-props.spec.ts`.
+
+## Notatki — układ „Galeria” (plan 6.3, 2026-11-13)
+
+- **Co robi:** nowy układ widoku obok Mozaiki, Siatki, Listy, Tablicy i Tabeli: kafle z okładką (pierwszy obraz notatki), tytułem i do trzech wypełnionych pól pod nim. Wybór w menu „Widok i kolumny” albo w arkuszu widoku na telefonie, w Ustawieniach (domyślny układ) i w zapisanych widokach.
+- **Gdzie:** `src/components/NoteGallery.tsx`, `src/lib/viewPrefs.ts` (`Layout`), `src/lib/savedViews.ts`, `ViewControls.tsx`, `ViewSheet.tsx`, `settings/AppearanceSettings.tsx`, `NoteGrid.tsx`, `src/pages/Index.tsx` (`galleryMode`).
+- **Jak działa:** CSS grid `auto-fill` z kolumnami od 11 rem (telefon: dwie kolumny). Okładka to miniatura z `useImageUrl(images[0], true)`; bez obrazu jest pole z ikoną notatki albo ikoną zastępczą. Pola to `formatPropValue` pierwszych trzech definicji z wartością (w tym „Utworzono”/„Zmieniono”). Przypięte idą na początku (jak w tabeli), grupowanie jest wyłączone. Jak tabela: kliknięcie albo Enter/Spacja otwiera czytnik, bez edycji pól na karcie. Zapisany układ `gallery` w kopii zapasowej wczytuje się w starszych wersjach jako Mozaika (nieznany układ wraca do domyślnego).
+- **Ograniczenia:** brak wyboru, które pola i jaka okładka (zawsze pierwszy obraz i pierwsze trzy pola z wartością); brak przeciągania, zaznaczania zbiorczego myszą ani klawiszy siatki (A, P, M, L) w tym układzie — tak samo jak w tabeli. Notatki prywatne nie pokazują okładki ani pól.
+- **Testy:** `e2e/note-gallery.spec.ts`.

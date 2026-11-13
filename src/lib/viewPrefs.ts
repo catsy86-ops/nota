@@ -4,7 +4,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import type { GroupBy } from "@/lib/groupNotes";
 
 export type Density = "compact" | "cozy" | "comfy";
-export type Layout = "masonry" | "grid" | "list" | "board" | "table";
+export type Layout = "masonry" | "grid" | "list" | "board" | "table" | "gallery";
 /** `prop:<id>` = sortowanie po własnym polu notatki (id z `propDefs`). */
 export type SortKey = "updated" | "created" | "opened" | "title" | "color" | "priority" | "manual" | `prop:${string}`;
 export type SortDir = "desc" | "asc";

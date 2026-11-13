@@ -56,6 +56,7 @@ import { NoteGrid } from "@/components/NoteGrid";
 import { BoardColumn } from "@/components/BoardColumn";
 import { NoteBoard } from "@/components/NoteBoard";
 import { NoteTable } from "@/components/NoteTable";
+import { NoteGallery } from "@/components/NoteGallery";
 import { columnOfNote, NONE_COLUMN, PINNED_COLUMN } from "@/lib/boardColumns";
 import { NoteGroupSection } from "@/components/NoteGroupSection";
 import { groupNotes, type GroupBy } from "@/lib/groupNotes";
@@ -333,6 +334,7 @@ const Index = () => {
   const listView = view !== "reminders" && view !== "trash" && !isAppView(view) && view !== "widget";
   const boardMode = prefs.layout === "board" && listView;
   const tableMode = prefs.layout === "table" && listView;
+  const galleryMode = prefs.layout === "gallery" && listView;
   // Kolumny tablicy potrzebują podziału: bez wybranego domyślnie idą po etykiecie.
   const groupBy: GroupBy = view === "reminders" || view === "trash" ? "none" : boardMode && prefs.groupBy === "none" ? "label" : prefs.groupBy;
   const showPinned = pinned.length > 0 && view !== "archive" && view !== "trash";
@@ -661,7 +663,7 @@ const Index = () => {
             onConfirm={() => { deleteVersions(trashedNotes.map((n) => n.id)); emptyTrash(); toast.success("Kosz opróżniony"); setConfirmEmptyTrash(false); }}
           />
 
-          {showPinned && !boardMode && !tableMode && (
+          {showPinned && !boardMode && !tableMode && !galleryMode && (
             <NoteGroupSection
               groupKey="pinned"
               label="Przypięte"
@@ -679,7 +681,7 @@ const Index = () => {
             <RemindersView go={go} reminderNotes={reminderNotes} reminderGroups={reminderGroups} archivedRows={archivedRows} remindersLayout={remindersLayout}
               openNote={openNote} updateNote={updateNote} createReminderNote={createReminderNote} attachReminder={attachReminder} renderGrid={renderGrid} />
           )}
-          {view !== "reminders" && !boardMode && !tableMode && groups.map((group, gi) => {
+          {view !== "reminders" && !boardMode && !tableMode && !galleryMode && groups.map((group, gi) => {
             const grid = (navOrder: number) => renderGrid(group.notes, navOrder);
             // Bez podziału: jedna sekcja jak dotąd („Inne” tylko pod przypiętymi).
             if (groupBy === "none") {
@@ -725,6 +727,22 @@ const Index = () => {
                 </BoardColumn>
               ))}
             </NoteBoard>
+          )}
+
+          {galleryMode && (
+            <>
+              <div className="mb-2 flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => setPropDefsOpen(true)}>
+                  Pola{propDefs.length ? ` (${propDefs.length})` : ""}
+                </Button>
+              </div>
+              <NoteGallery
+                notes={[...(showPinned ? pinned : []), ...others]}
+                selectedIds={selectedIds}
+                onOpen={(id) => openPreviewFromCard(id)}
+                propDefs={propDefs}
+              />
+            </>
           )}
 
           {tableMode && (

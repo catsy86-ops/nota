@@ -142,9 +142,9 @@ export function NoteGrid({
   }), [onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
     getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout, reminderActions, inboxAge]);
   const storedPrefs = useViewPrefs();
-  // Tablica renderuje każdą kolumnę jako jednokolumnową listę; tabela nie używa siatki.
+  // Tablica renderuje każdą kolumnę jako jednokolumnową listę; tabela i galeria nie używają siatki.
   const prefs = useMemo(
-    () => (storedPrefs.layout === "board" || storedPrefs.layout === "table" ? { ...storedPrefs, layout: "list" as const } : storedPrefs),
+    () => (storedPrefs.layout === "board" || storedPrefs.layout === "table" || storedPrefs.layout === "gallery" ? { ...storedPrefs, layout: "list" as const } : storedPrefs),
     [storedPrefs],
   );
   const boardColumn = storedPrefs.layout === "board";

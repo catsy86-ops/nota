@@ -1,4 +1,4 @@
-import { Check, Columns2, Kanban, LayoutGrid, List, Table2 } from "lucide-react";
+import { Check, Columns2, GalleryHorizontal, Kanban, LayoutGrid, List, Table2 } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ const LAYOUTS: { v: Layout; label: string; hint: string; icon: typeof LayoutGrid
   { v: "list", label: "Lista", hint: "Kafle jeden pod drugim, na całą szerokość", icon: List },
   { v: "board", label: "Tablica", hint: "Kolumny wg etykiet — przesuwasz w bok", icon: Kanban },
   { v: "table", label: "Tabela", hint: "Same tytuły i daty, najwięcej na ekranie", icon: Table2 },
+  { v: "gallery", label: "Galeria", hint: "Okładki ze zdjęć notatek i kilka pól", icon: GalleryHorizontal },
 ];
 
 const DENSITIES: { v: Density; label: string }[] = [
@@ -164,7 +165,7 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
           </Section>
         )}
 
-        {groupable && prefs.layout !== "board" && prefs.layout !== "table" && (
+        {groupable && prefs.layout !== "board" && prefs.layout !== "table" && prefs.layout !== "gallery" && (
           <Section title="Grupuj">
             <Segmented label="Grupuj" options={GROUPS} value={prefs.groupBy} onChange={(v) => changeView(() => setViewPref("groupBy", v))} />
           </Section>

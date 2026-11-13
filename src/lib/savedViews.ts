@@ -34,7 +34,7 @@ export interface SavedView {
 export const MAX_VIEWS = 30;
 export const MAX_VIEW_NAME = 40;
 
-const LAYOUTS: readonly Layout[] = ["masonry", "grid", "list", "board", "table"];
+const LAYOUTS: readonly Layout[] = ["masonry", "grid", "list", "board", "table", "gallery"];
 const SORTS = ["updated", "created", "opened", "title", "color", "priority", "manual"] as const;
 const GROUPS: readonly GroupBy[] = ["none", "date", "label", "folder"];
 const COLORS = ["all", "default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"] as const;
@@ -101,7 +101,7 @@ export function sameSource(a: ViewSource, b: ViewSource): boolean {
 
 /** Krótki opis widoku do podpowiedzi w pasku („Tabela · #budowa · beton”). */
 export function viewSummary(v: SavedView, folderName?: (id: string) => string | undefined): string {
-  const layout: Record<Layout, string> = { masonry: "Kafle", grid: "Siatka", list: "Lista", board: "Tablica", table: "Tabela" };
+  const layout: Record<Layout, string> = { masonry: "Kafle", grid: "Siatka", list: "Lista", board: "Tablica", table: "Tabela", gallery: "Galeria" };
   const src = v.source.kind === "folder" ? folderName?.(v.source.id) ?? "folder" : v.source.kind === "label" ? `#${v.source.label}` : "";
   return [layout[v.layout], src, v.query].filter(Boolean).join(" · ");
 }
