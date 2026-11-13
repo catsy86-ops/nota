@@ -1,8 +1,17 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { readStudyTab, STUDY_TAB_KEY, studyTabGroup, writeStudyTab } from "./tab";
+import { clientUrl, CLIENT_PARAM, CLIENTS_TAB_VALUE, readStudyTab, STUDY_TAB_KEY, STUDY_TAB_PARAM, studyTabGroup, writeStudyTab } from "./tab";
 
 describe("zakładka działu Praca", () => {
   beforeEach(() => localStorage.removeItem(STUDY_TAB_KEY));
+
+  it("adres klienta niesie zakładkę i id (kodowane), a zakładka Klienci się zapamiętuje", () => {
+    const url = new URL(clientUrl("cl-a b/1"), "http://x");
+    expect(url.pathname).toBe("/praca");
+    expect(url.searchParams.get(STUDY_TAB_PARAM)).toBe(CLIENTS_TAB_VALUE);
+    expect(url.searchParams.get(CLIENT_PARAM)).toBe("cl-a b/1");
+    writeStudyTab("clients");
+    expect(readStudyTab(false)).toBe("clients");
+  });
 
   it("bez zapisu: telefon — Budowa, komputer — Quiz", () => {
     expect(readStudyTab(true)).toBe("site");
@@ -27,6 +36,6 @@ describe("zakładka działu Praca", () => {
     writeStudyTab("site");
     expect(readStudyTab(false)).toBe("site");
     expect(["quiz", "board", "list"].map(studyTabGroup)).toEqual(["learn", "learn", "learn"]);
-    expect(["site", "journal", "plans"].map(studyTabGroup)).toEqual(["site", "journal", "plans"]);
+    expect(["site", "journal", "plans", "clients"].map(studyTabGroup)).toEqual(["site", "journal", "plans", "clients"]);
   });
 });

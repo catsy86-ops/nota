@@ -144,6 +144,10 @@ export interface FullBackup {
   jobs?: string;
   /** Wystawione faktury KSeF (lib/ksef/yInvoices.ts, JSON `{ invoices }`); scalane bez nadpisywania, istniejące są niezmienne (ADR-6). */
   invoices?: string;
+  /** Kartoteka klientów (lib/clients/yClients.ts, JSON `{ clients, sites }`); scalana bez nadpisywania. Dane osobowe — tylko w pełnej kopii. */
+  clients?: string;
+  /** Cenniki: robocizna i ceny kształtek (lib/study/yPricing.ts, JSON `{ labor, materials }`); scalane bez nadpisywania. Starsze kopie mają je wśród ustawień. */
+  pricing?: string;
   /** Materiał w aucie (lib/study/yVan.ts, JSON `{ items, events }`); scalany bez nadpisywania (H1.3). */
   van?: string;
   /** Analizy planów (lib/plans/yPlans.ts, JSON `{ entries }`); scalane bez nadpisywania. */
@@ -206,6 +210,8 @@ export const fullBackupSchema = z.object({
   billing: z.catch(z.optional(z.string()), undefined),
   jobs: z.catch(z.optional(z.string()), undefined),
   invoices: z.catch(z.optional(z.string()), undefined),
+  clients: z.catch(z.optional(z.string()), undefined),
+  pricing: z.catch(z.optional(z.string()), undefined),
   van: z.catch(z.optional(z.string()), undefined),
   shiftSchedules: z.catch(z.optional(z.string()), undefined),
   attachmentBlobs: z.catch(z.optional(z.record(z.string(), z.string())), undefined),

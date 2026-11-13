@@ -1,8 +1,7 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { safeLine } from "@/lib/safeText";
-import type { CompanyPricing } from "@/lib/pricing";
 import { cleanMileage, EMPTY_MILEAGE, type MileageEntry, type MileageStore } from "./mileage";
-import { EMPTY_PRICING, cleanPricing } from "@/lib/pricing";
+import { cleanNotes, QUOTE_NOTES_MAX } from "./quoteNotes";
 
 /**
  * Nazwa firmy na nagłówku protokołu PDF (P2.5, Ustawienia → Praca). Pusta = bez nagłówka.
@@ -30,17 +29,21 @@ export const setBankAccount = (v: string) => bankAccountStore.set(safeLine(v).sl
 export const useBankAccount = () => bankAccountStore.use();
 
 /**
- * B4.1 Cennik robocizny dla fuch (własne pozycje typu „WC: 350 zł").
- * Trzymany na urządzeniu — dane firmy, nie budowy.
+ * Domyślne uwagi i warunki wyceny (plan wycen i klientów, 3.3): termin realizacji, zaliczka, gwarancja. Wstawiane do wyceny
+ * przyciskiem „Wstaw domyślne warunki”, a nie dopisywane samo — zmiana domyślnego tekstu nie zmienia wycen już wysłanych.
+ * Na urządzeniu, jak nazwa firmy; wchodzi do kopii zapasowej wśród ustawień.
  */
-export const PRICING_KEY = "kaczy.study.pricing.v1";
-
-export const pricingStore = createPersistedStore<CompanyPricing>(PRICING_KEY, EMPTY_PRICING, {
-  merge: (def, stored) => cleanPricing(stored) || def,
+export const QUOTE_TERMS_KEY = "kaczy.study.quoteTerms.v1";
+export const quoteTermsStore = createPersistedStore<string>(QUOTE_TERMS_KEY, "", {
+  merge: (def, stored) => (typeof stored === "string" ? cleanNotes(stored) : def),
 });
+export const setQuoteTerms = (v: string) => quoteTermsStore.set(cleanNotes(v).slice(0, QUOTE_NOTES_MAX));
+export const useQuoteTerms = () => quoteTermsStore.use();
 
-export const setPricing = (pricing: CompanyPricing) => pricingStore.set(pricing);
-export const usePricing = () => pricingStore.use();
+/**
+ * B4.1 Cennik robocizny dla fuch (własne pozycje typu „WC: 350 zł"). Od planu wycen i klientów (4.1) w dokumencie Yjs
+ * (`pricingStore.ts`, `yPricing.ts`), razem z cenami kształtek — synchronizuje się między urządzeniami.
+ */
 
 /**
  * B4.3 Kilometrówka: przejazdy i ostatnia stawka. Na urządzeniu (jak cennik) — to rozliczenie osoby, nie budowy,

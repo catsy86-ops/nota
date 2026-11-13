@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
-import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette, Camera, PackageSearch, FileText, Link2, FolderInput, Download, ArrowLeft, Folder as FolderIcon } from "lucide-react";
+import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette, Camera, PackageSearch, FileText, Link2, FolderInput, Download, ArrowLeft, Folder as FolderIcon, UserRound } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
@@ -26,6 +26,9 @@ import { useSiteDirectory, useStudy, useStudyLists } from "@/lib/study/store";
 import { searchQuestions, STUDY_TOPIC_PARAM } from "@/lib/study/questionSearch";
 import { topicTitle } from "@/lib/study/content";
 import { siteCardUrl } from "@/lib/study/siteLink";
+import { clientUrl } from "@/lib/study/tab";
+import { searchClients } from "@/lib/clients/model";
+import { useClients } from "@/lib/clients/store";
 import { useWorkSearch, type WorkHit } from "@/lib/study/workSearch";
 import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId, foldName } from "@/lib/study/siteKey";
@@ -180,6 +183,9 @@ export function CommandPalette({
     const entries = [...studyState.journal].reverse().filter((e) => foldName(`${e.text} ${e.site}`).includes(q)).slice(0, 6);
     return { sites, entries };
   }, [search, siteDir, studyState.journal]);
+  // Klienci (plan wycen i klientów, 2.5): aktywni, po nazwie, telefonie, NIP-ie i adresie; wynik otwiera kartę klienta.
+  const clients = useClients();
+  const clientHits = useMemo(() => (search.trim() ? searchClients(clients.filter((c) => !c.archived), search).slice(0, 6) : []), [clients, search]);
   // B2.5: wpisy, braki i dokumenty z kart budów — MiniSearch (literówki, bez ogonków, „zawór Lipowa”).
   // Do czasu załadowania biblioteki działa dokładne dopasowanie z `studyHits.entries`.
   const workHits = useWorkSearch(search, siteDir, studyState.journal);
@@ -375,6 +381,17 @@ export function CommandPalette({
                 <HardHat className="w-4 h-4 mr-2 text-muted-foreground" />
                 <span className="truncate">{q.question}</span>
                 <span className="ml-auto shrink-0 pl-2 text-xs text-muted-foreground">{topicTitle(q.topic)}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+        {clientHits.length > 0 && (
+          <CommandGroup heading="Klienci">
+            {clientHits.map((c) => (
+              <CommandItem key={`client-${c.id}`} value={`klient ${c.name} ${c.phone} ${c.nip} ${c.address1}`} onSelect={() => run(() => navigate(clientUrl(c.id)))}>
+                <UserRound className="w-4 h-4 mr-2 text-muted-foreground" />
+                <span className="truncate">Klient: {c.name}</span>
+                {c.phone && <span className="ml-auto shrink-0 pl-2 text-xs text-muted-foreground">{c.phone}</span>}
               </CommandItem>
             ))}
           </CommandGroup>

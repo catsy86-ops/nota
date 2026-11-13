@@ -3,11 +3,14 @@ import { dueServiceCalls, serviceDayKey, warrantyDaysLeft } from "./service";
 import { entrySiteId, type SiteCard } from "./sites";
 import { ORDER_LATE_DAYS, dueDayValue, orderLateFrom } from "./shortages";
 import type { JournalEntry } from "./journalEntry";
+import type { Job } from "./jobs";
 
 /** Problem otwarty dłużej niż tyle dni dostaje przypomnienie (plan Nauki i Dziennika, 2026-10-15). */
 export const REMINDER_PROBLEM_DAYS = 3;
 /** Materiał „zamówiony” dłużej niż tyle dni, a wciąż nie „dostarczony” — przypomnienie przy budowie. */
 export const REMINDER_ORDER_DAYS = ORDER_LATE_DAYS;
+/** Wycena wysłana klientowi dłużej niż tyle dni temu, a bez przyjęcia i odrzucenia — przypomnienie o telefonie (plan wycen 5.1). */
+export const REMINDER_QUOTE_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Etapy karty budowy (`stages.ts`): instalacja pod posadzką / w ścianie, próba i zakrycie. */
@@ -22,7 +25,8 @@ export type StudyReminder =
   | { kind: "delivery-today"; siteId: string; site: string; items: string[] }
   | { kind: "service-due"; siteId: string; site: string; items: string[] }
   | { kind: "pre-cover-test"; siteId: string; site: string }
-  | { kind: "warranty-expiring"; siteId: string; site: string; daysLeft: number };
+  | { kind: "warranty-expiring"; siteId: string; site: string; daysLeft: number }
+  | { kind: "quote-silent"; siteId: string; site: string; days: number };
 
 /**
  * Przypomnienia do dziennika:
@@ -32,7 +36,9 @@ export type StudyReminder =
  *   karcie „Próby” albo „Zakrycia”),
  * - braki materiału budowy (`SiteCard.shortages`) „zamówione” ponad `REMINDER_ORDER_DAYS` dni temu
  *   i wciąż niedostarczone — pora zadzwonić do hurtowni (budowy w archiwum pomijamy),
- * - zgłoszenia serwisowe (`service.ts`) z terminem dziś albo zaległym — także na budowie w archiwum.
+ * - zgłoszenia serwisowe (`service.ts`) z terminem dziś albo zaległym — także na budowie w archiwum,
+ * - wyceny zleceń (`jobs`) wysłane klientowi ponad `REMINDER_QUOTE_DAYS` dni temu, wciąż w stanie „Wycena” i bez
+ *   przyjęcia ani odrzucenia (znacznik późniejszy niż wysłanie zamyka sprawę; budowy w archiwum pomijamy).
  *
  * Czysta funkcja: przypomnienie znika samo, gdy warunek przestaje być prawdziwy (problem rozwiązany,
  * protokół dopisany). Bez wpisów z budowy — brak przypomnień.
@@ -41,6 +47,7 @@ export function studyReminders(
   journal: readonly JournalEntry[],
   now: number = Date.now(),
   siteCards: Readonly<Record<string, Pick<SiteCard, "id" | "name" | "archived" | "shortages" | "service" | "stages" | "warranty">>> = {},
+  jobs: ReadonlyMap<string, Pick<Job, "status" | "doc">> = new Map(),
 ): StudyReminder[] {
   const out: StudyReminder[] = [];
 
@@ -100,6 +107,15 @@ export function studyReminders(
   for (const card of Object.values(siteCards)) {
     const due = dueServiceCalls(card.service ?? [], today);
     if (due.length > 0) out.push({ kind: "service-due", siteId: card.id, site: card.name, items: due.map((c) => c.text) });
+  }
+
+  // Wycena wysłana, a klient milczy (5.1): wiersz w Dziś i Terminach, dopóki nie zostanie przyjęta ani odrzucona.
+  for (const [siteId, job] of jobs) {
+    const card = siteCards[siteId];
+    const sent = job.doc?.sentAt ?? 0;
+    const decided = Math.max(job.doc?.acceptedAt ?? 0, job.doc?.rejectedAt ?? 0);
+    if (!card || card.archived !== undefined || job.status !== "quote" || sent <= 0 || decided >= sent) continue;
+    if (now - sent > REMINDER_QUOTE_DAYS * DAY_MS) out.push({ kind: "quote-silent", siteId, site: card.name, days: Math.floor((now - sent) / DAY_MS) });
   }
 
   // B3.10: przypomnienie 30 dni przed końcem gwarancji.

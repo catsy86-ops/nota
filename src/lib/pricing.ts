@@ -16,7 +16,7 @@ export interface CompanyPricing {
 
 export const EMPTY_PRICING: CompanyPricing = { items: [] };
 
-export const PRICING_ITEMS_MAX = 100;
+export const PRICING_ITEMS_MAX = 300;
 export const PRICING_NAME_MAX = 80;
 export const PRICING_PRICE_MAX = 10_000_000;
 const POINT_TYPE_MAX = 20;

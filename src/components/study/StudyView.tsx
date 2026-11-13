@@ -32,7 +32,7 @@ import { loadPlansView, preloadView } from "@/lib/viewPreload";
 import { PLAN_PARAM } from "@/lib/plans/planParam";
 import { useDayClock } from "@/lib/dayClock";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
-import { LEARN_TABS, PLANS_TAB_VALUE, readStudyTab, STUDY_TAB_PARAM, studyTabGroup, writeStudyTab } from "@/lib/study/tab";
+import { CLIENT_PARAM, CLIENTS_TAB_VALUE, LEARN_TABS, PLANS_TAB_VALUE, readStudyTab, STUDY_TAB_PARAM, studyTabGroup, writeStudyTab } from "@/lib/study/tab";
 import { QuizPanel, type QuizScope } from "./QuizPanel";
 import { StudyBoard } from "./StudyBoard";
 import { StudyChecklist } from "./StudyChecklist";
@@ -118,6 +118,8 @@ function StudySkeleton() {
 
 // Plany (Analizator planów) poza precache (D2) — zakładka ładuje je dopiero przy wejściu.
 const PlansView = lazy(loadPlansView);
+// Kartoteka klientów (plan wycen i klientów, 1.4) — leniwie, poza paczką startową.
+const ClientsView = lazy(() => import("@/components/clients/ClientsView"));
 
 const TOOL_PILL = "pressable inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11";
 
@@ -189,6 +191,20 @@ function StudyScreen() {
     const rest = params.toString();
     navigate({ pathname: "/praca", search: rest ? `?${rest}` : "" }, { replace: true, state: location.state });
   }, [location.pathname, location.search, location.state, plansShown, navigate]);
+  // Klient z adresu (`?zakladka=klienci&klient=<id>`, paleta poleceń): zakładka Klienci i otwarta karta; parametry znikają z adresu.
+  const [clientRequest, setClientRequest] = useState<string | null>(null);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get(STUDY_TAB_PARAM) !== CLIENTS_TAB_VALUE) return;
+    const id = params.get(CLIENT_PARAM);
+    setTabState("clients");
+    writeStudyTab("clients");
+    if (id) setClientRequest(id);
+    params.delete(STUDY_TAB_PARAM);
+    params.delete(CLIENT_PARAM);
+    const rest = params.toString();
+    navigate({ pathname: "/praca", search: rest ? `?${rest}` : "" }, { replace: true, state: location.state });
+  }, [location.search, location.state, navigate]);
   const [scope, setScope] = useState<QuizScope>({ kind: "all" });
   const [statsOpen, setStatsOpen] = useState(false);
   const study = useStudy();
@@ -287,7 +303,7 @@ function StudyScreen() {
           Bez własnego tytułu: „Praca” jest w główce kartki, „Dziennik” w zakładce (plan wyglądu, Faza 1). */}
       {/* Plany nie mają nic wspólnego z nauką: bez paska opanowania nad nimi, edytor planu dostaje całą wysokość. */}
       {/* Budowa i Plany bez paska nauki: na Budowie od razu bieżąca budowa, narzędzia są pod nią. */}
-      {tab === "plans" || tab === "site" ? null : tab === "journal" ? (
+      {tab === "plans" || tab === "site" || tab === "clients" ? null : tab === "journal" ? (
         <header className="flex flex-wrap items-center gap-x-3 gap-y-2" data-study-header="compact">
           <button
             type="button"
@@ -322,6 +338,7 @@ function StudyScreen() {
         <TabsList ref={tabsRef} className="h-auto w-full justify-start overflow-x-auto [scrollbar-width:none] sm:w-auto">
           <TabsTrigger value="site" className={TAB}>Budowa</TabsTrigger>
           <TabsTrigger value="journal" className={TAB}>Dziennik</TabsTrigger>
+          <TabsTrigger value="clients" className={TAB}>Klienci</TabsTrigger>
           {plansShown && (
             <TabsTrigger value="plans" onPointerDown={() => preloadView("plans")} onFocus={() => preloadView("plans")} className={TAB}>Plany</TabsTrigger>
           )}
@@ -341,6 +358,13 @@ function StudyScreen() {
           <Activity mode={group === "journal" ? "visible" : "hidden"}>
             <StudyJournal onPractice={practice} />
           </Activity>
+        </TabsContent>
+        <TabsContent value="clients" className="mt-4">
+          <ViewErrorBoundary name="Klienci">
+            <Suspense fallback={<CardSkeleton />}>
+              <ClientsView onOpenSite={openCard} onOpenDebts={() => navigate("/dlugi")} requestedId={clientRequest} onRequestHandled={() => setClientRequest(null)} />
+            </Suspense>
+          </ViewErrorBoundary>
         </TabsContent>
         {plansShown && (
           <TabsContent value="plans" className="mt-4">

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { downloadBlob } from "@/lib/downloadBlob";
 import { materialCsv, materialText, materialUsage, priceOf } from "@/lib/study/materialUsage";
-import { setFittingPrice, usePrices } from "@/lib/study/materialPrices";
+import { setFittingPrice, usePrices } from "@/lib/study/pricingStore";
 import type { SiteInfo } from "@/lib/study/sites";
 import type { JournalEntry } from "@/lib/study/journalEntry";
 

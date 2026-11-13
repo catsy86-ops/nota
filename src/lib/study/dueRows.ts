@@ -1,16 +1,16 @@
 import { pluralPl } from "@/lib/plural";
-import { REMINDER_ORDER_DAYS, REMINDER_PROBLEM_DAYS, type StudyReminder } from "./reminders";
+import { REMINDER_ORDER_DAYS, REMINDER_PROBLEM_DAYS, REMINDER_QUOTE_DAYS, type StudyReminder } from "./reminders";
 
 /**
  * Terminy z Praca na Dziś i w Terminach — tylko do odczytu, z odnośnikiem do Pracy.
  * Bierze gotowe przypomnienia z `studyReminders` i zostawia to, co ma termin:
- * serwis, zamówienia bez dostawy, otwarte problemy. Protokół próby (`no-test`)
+ * serwis, zamówienia bez dostawy, otwarte problemy, wyceny bez odpowiedzi klienta. Protokół próby (`no-test`)
  * to przypomnienie do dziennika, nie termin, więc tu go nie ma.
  */
 
 export interface StudyDueRow {
   key: string;
-  kind: "service" | "delivery" | "order" | "problems" | "test";
+  kind: "service" | "delivery" | "order" | "problems" | "test" | "quote";
   title: string;
   /** Pozycje (np. nazwy kształtek) albo krótki opis; pusty, gdy nie ma czego podać. */
   detail: string;
@@ -31,6 +31,14 @@ export function studyDueRows(reminders: readonly StudyReminder[]): StudyDueRow[]
         kind: "order",
         title: `Zamówienie bez dostawy: ${r.site}`,
         detail: `${r.items.join(", ")} — zamówione ponad ${REMINDER_ORDER_DAYS} dni temu`,
+        siteId: r.siteId,
+      });
+    } else if (r.kind === "quote-silent") {
+      rows.push({
+        key: `quote:${r.siteId}`,
+        kind: "quote",
+        title: `Wycena bez odpowiedzi: ${r.site}`,
+        detail: `wysłana ${r.days} ${pluralPl(r.days, ["dzień", "dni", "dni"])} temu (ponad ${REMINDER_QUOTE_DAYS}) — zadzwoń do klienta`,
         siteId: r.siteId,
       });
     } else if (r.kind === "pre-cover-test") {

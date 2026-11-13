@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useStudyReady } from "@/lib/study/data";
 import { useDayClock } from "@/lib/dayClock";
 import { useStudy } from "@/lib/study/store";
+import { useJobs } from "@/lib/study/jobsStore";
 import { studyReminders } from "@/lib/study/reminders";
 import { studyDueRows } from "@/lib/study/dueRows";
 import { cardClass } from "@/components/ui/card";
@@ -21,10 +22,11 @@ export function StudyDueRows({ onOpenStudy }: { onOpenStudy: (siteId?: string) =
 
 function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: (siteId?: string) => void }) {
   const study = useStudy();
+  const jobs = useJobs();
   // Subskrypcja zmiany doby: po północy serwis i zamówienia z terminem „na dziś” mają przejść do listy,
   // a `Date.now()` poniżej jest wtedy świeże.
   useDayClock();
-  const rows = studyDueRows(studyReminders(study.journal, Date.now(), study.sites));
+  const rows = studyDueRows(studyReminders(study.journal, Date.now(), study.sites, jobs));
   if (rows.length === 0) return null;
   return (
     <section aria-label="Terminy z Praca" data-testid="study-due" className={`${cardClass} p-4 sm:p-5 space-y-3`}>

@@ -87,6 +87,9 @@ export default tseslint.config(
       "src/lib/yjsStore.reminder.test.ts",
       // Długi: warstwa Yjs (ten sam wzorzec co pozostałe działy), testy na własnym Y.Doc.
       "src/lib/debts/yDebts.ts",
+      // Kartoteka klientów: warstwa Yjs w dokumencie notatek (wzorem yDebts), test na własnym Y.Doc.
+      "src/lib/clients/yClients.ts",
+      "src/lib/clients/clients.test.ts",
       "src/lib/debts/yDebts.test.ts",
       "src/lib/debts/yDebts.edit.test.ts",
       // Lista przed wejściem na budowę: warstwa Yjs poza paczką startową (wzorem yDebts).
@@ -96,6 +99,10 @@ export default tseslint.config(
       "src/lib/study/yPoints.ts",
       "src/lib/study/yBilling.ts",
       "src/lib/study/yJobs.ts",
+      "src/lib/study/yPricing.ts",
+      "src/lib/study/pricingStore.test.ts",
+      "src/lib/study/quoteTemplates.test.ts",
+      "src/lib/study/quoteDoc.test.ts",
       "src/lib/study/yVan.ts",
       "src/lib/study/van.test.ts",
       "src/lib/study/jobs.test.ts",

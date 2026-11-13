@@ -1,5 +1,6 @@
-import { cleanAmount } from "./billing";
+import { cleanAmount, round2 } from "./billing";
 import { safeLine } from "@/lib/safeText";
+import { applyQuoteDoc, type DocTotals, type QuoteDoc } from "./quoteDoc";
 
 /**
  * Zlecenia własne — fuchy (H3.4, plan 2026-10-29). Fucha to zwykła karta budowy (wpisy, zdjęcia,
@@ -23,6 +24,9 @@ export const JOB_SCOPE_MAX = 500;
 export const QUOTE_NAME_MAX = 80;
 export const QUOTE_UNIT_MAX = 8;
 export const QUOTE_ITEMS_MAX = 60;
+
+/** Id pozycji wyceny (i szablonu: prefiks `qt`) — jeden format w całej aplikacji. */
+export const newQuoteItemId = (prefix = "q"): string => `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 export const QTY_MAX = 100_000;
 export const MARGIN_MAX = 300;
 
@@ -55,6 +59,8 @@ export interface QuoteItem {
 export interface Job extends JobMeta {
   /** Pozycje wyceny w kolejności `order`. */
   items: QuoteItem[];
+  /** Wycena jako dokument: numer, daty, VAT, rabat, uwagi, stan (`quoteDoc.ts`); brak = nic z tego nie ustawiono. */
+  doc?: QuoteDoc;
 }
 
 const isStatus = (v: unknown): v is JobStatus => typeof v === "string" && (JOB_STATUSES as readonly string[]).includes(v);
@@ -106,7 +112,6 @@ export function cleanQuoteItem(raw: unknown, id: string): QuoteItem | null {
   return { id, kind, name, qty, unit: text(q.unit, QUOTE_UNIT_MAX) || DEFAULT_UNIT[kind], price, order };
 }
 
-const grosze = (n: number) => Math.round(n * 100) / 100;
 
 export interface QuoteTotals {
   labor: number;
@@ -127,28 +132,48 @@ export function quoteTotals(job: Pick<Job, "items" | "margin">): QuoteTotals {
     else material += i.qty * i.price;
     client += itemClientTotal(i, job.margin);
   }
-  labor = grosze(labor);
-  material = grosze(material);
-  const total = grosze(client);
-  return { labor, material, marginAmount: grosze(total - labor - material), total };
+  labor = round2(labor);
+  material = round2(material);
+  const total = round2(client);
+  return { labor, material, marginAmount: round2(total - labor - material), total };
+}
+
+export interface QuoteSummary extends DocTotals {
+  /** Suma pozycji dla klienta przed rabatem i VAT (`quoteTotals(...).total`). */
+  subtotal: number;
+  /** Zaliczka, która już wpłynęła (zł), nie więcej niż kwota do zapłaty. */
+  paid: number;
+  /** Pozostało do zapłaty po wpłaconej zaliczce (`payable − paid`). */
+  due: number;
+}
+
+/**
+ * Sumy dla klienta z dokumentem wyceny: pozycje (z marżą) → rabat → VAT. `payable` to kwota do zapłaty i ta sama liczba
+ * trafia do panelu, PDF-u, listy zleceń i „Niezapłacone”; bez dokumentu równa się `quoteTotals(job).total`.
+ */
+export function quoteSummary(job: Pick<Job, "items" | "margin" | "doc">): QuoteSummary {
+  const subtotal = quoteTotals(job).total;
+  const totals = applyQuoteDoc(subtotal, job.doc);
+  const paid = round2(Math.min(job.doc?.depositPaid ?? 0, totals.payable));
+  return { subtotal, ...totals, paid, due: round2(totals.payable - paid) };
 }
 
 /** Kwota pozycji dla klienta (z marżą przy materiale) — w PDF klient nie widzi marży osobno. */
 export function itemClientTotal(item: QuoteItem, margin: number | undefined): number {
   const base = item.qty * item.price;
-  return grosze(item.kind === "material" ? base * (1 + (margin ?? 0) / 100) : base);
+  return round2(item.kind === "material" ? base * (1 + (margin ?? 0) / 100) : base);
 }
 
 /** Cena jednostkowa dla klienta (z marżą przy materiale). */
 export function itemClientPrice(item: QuoteItem, margin: number | undefined): number {
-  return grosze(item.kind === "material" ? item.price * (1 + (margin ?? 0) / 100) : item.price);
+  return round2(item.kind === "material" ? item.price * (1 + (margin ?? 0) / 100) : item.price);
 }
 
-/** „Niezapłacone”: suma wycen zleceń zrobionych, a jeszcze niezapłaconych. */
+/** „Niezapłacone”: suma wycen zleceń zrobionych, a jeszcze niezapłaconych (po odjęciu wpłaconej zaliczki). */
 export function unpaidTotal(jobs: Iterable<Job>): number {
   let sum = 0;
-  for (const j of jobs) if (j.status === "done") sum += quoteTotals(j).total;
-  return grosze(sum);
+  for (const j of jobs) if (j.status === "done") sum += quoteSummary(j).due;
+  return round2(sum);
 }
 
 /** Kolejność listy „Zlecenia”: najpierw do zrobienia (umówione po terminie), potem wyceny, zrobione, zapłacone. */

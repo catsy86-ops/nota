@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useStudyReady } from "@/lib/study/data";
 import { useStudy } from "@/lib/study/store";
+import { useJobs } from "@/lib/study/jobsStore";
 import { studyReminders } from "@/lib/study/reminders";
 import { studyDueRows } from "@/lib/study/dueRows";
 import { setStudyOverdueCount } from "@/lib/studyOverdueCount";
@@ -17,8 +18,9 @@ export default function StudyOverdueSync() {
 
 function StudyOverdueCounter() {
   const study = useStudy();
+  const jobs = useJobs();
   // Godzina z renderu, jak w `StudyDueRows` — terminy zmieniają się wraz z dziennikiem.
-  const count = useMemo(() => studyDueRows(studyReminders(study.journal, Date.now(), study.sites)).length, [study.journal, study.sites]);
+  const count = useMemo(() => studyDueRows(studyReminders(study.journal, Date.now(), study.sites, jobs)).length, [study.journal, study.sites, jobs]);
   useEffect(() => { setStudyOverdueCount(count); }, [count]);
   useEffect(() => () => setStudyOverdueCount(0), []);
   return null;

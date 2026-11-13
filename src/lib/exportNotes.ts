@@ -175,6 +175,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   const { billingDump } = await import("@/lib/study/billingStore");
   const { jobsDump } = await import("@/lib/study/jobsStore");
   const { invoicesDump } = await import("@/lib/ksef/invoicesStore");
+  const { clientsDump } = await import("@/lib/clients/store");
+  const { pricingDump } = await import("@/lib/study/pricingStore");
   const { vanDump } = await import("@/lib/study/vanStore");
   const { plansDump } = await import("@/lib/plans/plansStore");
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES, opts.planImages ?? getViewPrefs().backupPlanImages);
@@ -221,6 +223,10 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     // Zlecenia własne — fuchy (H3.4): status, wycena; osobna mapa, scalana bez nadpisywania.
     jobs: JSON.stringify(jobsDump()),
     invoices: JSON.stringify(invoicesDump()),
+    // Kartoteka klientów (Etap 1 planu wycen): klienci i powiązania z budowami, scalane bez nadpisywania.
+    clients: JSON.stringify(clientsDump()),
+    // Cenniki (4.1): robocizna i ceny kształtek są w dokumencie Yjs, scalane przy przywracaniu bez nadpisywania.
+    pricing: JSON.stringify(pricingDump()),
     // Materiał w aucie (H1.3): pozycje i zdarzenia (inwentaryzacje, przyjęcia), scalane bez nadpisywania.
     van: JSON.stringify(vanDump()),
     // Analizy planów (mapa `plans`) — scalane bez nadpisywania.
@@ -288,7 +294,7 @@ export const SETTINGS_KEYS = [
   // Dane firmy wykonawcy (Praca, W14/D10 audytu): nazwa na PDF-ach, kilometrówka dla księgowej, cennik usług i cennik
   // kształtek, imię autora wpisów. Bez wpływu na sekrety; czyszczone przy odczycie przez swoje magazyny. Numer konta
   // (`kaczy.study.bankAccount.v1`) i odciski dokumentów (`…fingerprints.v1`) zostają poza kopią — to dane tego urządzenia.
-  "kaczy.study.companyName.v1", "kaczy.study.seller.v1", "kaczy.study.mileage.v1", "kaczy.study.pricing.v1", "kaczy.study.prices.v1", "kaczy.study.author.v1",
+  "kaczy.study.companyName.v1", "kaczy.study.seller.v1", "kaczy.study.mileage.v1", "kaczy.study.pricing.v1", "kaczy.study.quoteTerms.v1", "kaczy.study.prices.v1", "kaczy.study.author.v1",
   // Flagi funkcji w przygotowaniu (src/lib/featureFlags.ts) — zwykłe przełączniki.
   "kaczy.features.v1",
   // Push: wpis jest, ale przy przywracaniu push wyłączamy (patrz `PUSH_RESTORE_KEY`) — subskrypcja jest na urządzeniu.
@@ -397,6 +403,8 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   if (backup.billing) await import("@/lib/study/billingStore").then((m) => m.mergeBillingDump(JSON.parse(backup.billing!))).catch((err) => fail("Rozliczenia", err));
   if (backup.van) await import("@/lib/study/vanStore").then((m) => m.mergeVanDump(JSON.parse(backup.van!))).catch((err) => fail("Auto", err));
   if (backup.invoices) await import("@/lib/ksef/invoicesStore").then((m) => m.mergeInvoicesDump(JSON.parse(backup.invoices!))).catch((err) => fail("Faktury", err));
+  if (backup.pricing) await import("@/lib/study/pricingStore").then((m) => m.mergePricingDump(JSON.parse(backup.pricing!))).catch((err) => fail("Cenniki", err));
+  if (backup.clients) await import("@/lib/clients/store").then((m) => m.mergeClientsDump(JSON.parse(backup.clients!))).catch((err) => fail("Klienci", err));
   if (backup.jobs) await import("@/lib/study/jobsStore").then((m) => m.mergeJobsDump(JSON.parse(backup.jobs!))).catch((err) => fail("Fuchy", err));
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
@@ -453,6 +461,10 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   }
   for (const [k, v] of Object.entries(writes)) {
     try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }
+  }
+  // Kopia sprzed 4.1 niesie cenniki wśród ustawień (stare klucze): wchodzą do dokumentu i znikają z localStorage.
+  if (opts.settings && backup.settings && ("kaczy.study.pricing.v1" in backup.settings || "kaczy.study.prices.v1" in backup.settings)) {
+    await import("@/lib/study/pricingStore").then((m) => m.importLegacyPricing()).catch((err) => fail("Cenniki", err));
   }
   return { studyDropped, schedulesSkipped, failed };
 }

@@ -26,7 +26,8 @@ import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
 import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
 import { SERIES_MAX } from "@/lib/ksef/numbering";
 import { setSeries, useSeries } from "@/lib/ksef/sellerPrefs";
-import { AUTHOR_MAX, BANK_ACCOUNT_MAX, COMPANY_NAME_MAX, setAuthor, setBankAccount, setCompanyName, setPricing, useAuthor, useBankAccount, useCompanyName, usePricing } from "@/lib/study/companyPrefs";
+import { AUTHOR_MAX, BANK_ACCOUNT_MAX, COMPANY_NAME_MAX, setAuthor, setBankAccount, setCompanyName, setQuoteTerms, useAuthor, useBankAccount, useCompanyName, useQuoteTerms } from "@/lib/study/companyPrefs";
+import { setPricing, usePricing } from "@/lib/study/pricingStore";
 import { InvoiceExportSettings } from "./InvoiceExportSettings";
 import { PricingManager } from "./PricingManager";
 import { FingerprintCheck } from "./FingerprintCheck";
@@ -137,6 +138,7 @@ export function GeneralSettings() {
   const reportNudges = useReportNudges();
   const siteArrival = useSiteArrival();
   const companyName = useCompanyName();
+  const quoteTerms = useQuoteTerms();
   const bankAccount = useBankAccount();
   const pricing = usePricing();
   const author = useAuthor();
@@ -252,6 +254,13 @@ export function GeneralSettings() {
           <Label htmlFor="company-name" className="text-xs text-muted-foreground">Pojawi się na nagłówku protokołu odbioru (zostaje na tym urządzeniu)</Label>
           <Input id="company-name" key={companyName} defaultValue={companyName} maxLength={COMPANY_NAME_MAX} placeholder="np. Instalacje Kowalski"
             onBlur={(e) => { if (e.target.value.trim() !== companyName) setCompanyName(e.target.value.trim()); }} />
+        </Section>
+
+        <Section title="Domyślne warunki wyceny">
+          <Label htmlFor="quote-terms" className="text-xs text-muted-foreground">Np. termin realizacji, zaliczka, gwarancja. W wycenie wstawisz je przyciskiem „Wstaw domyślne warunki” (zostaje na tym urządzeniu)</Label>
+          <textarea id="quote-terms" key={quoteTerms} defaultValue={quoteTerms} maxLength={500} rows={3} placeholder="np. Termin realizacji: 5 dni roboczych. Zaliczka 30% przed rozpoczęciem prac."
+            onBlur={(e) => { if (e.target.value.trim() !== quoteTerms) setQuoteTerms(e.target.value); }}
+            className="w-full rounded-field border border-input bg-background px-2.5 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm" />
         </Section>
 
         <Section title="Konto do przypomnień o należności">

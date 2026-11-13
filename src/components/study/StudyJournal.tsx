@@ -210,7 +210,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
     return { all: recent.length, problems: recent.filter((e) => e.kind === "problem").length };
   }, [study.journal, dayTick]);
   const open = useMemo(() => openProblems(study.journal), [study.journal]);
-  const reminders = useMemo(() => { void dayTick; return studyReminders(study.journal, Date.now(), study.sites); }, [study.journal, study.sites, dayTick]);
+  const reminders = useMemo(() => { void dayTick; return studyReminders(study.journal, Date.now(), study.sites, jobs); }, [study.journal, study.sites, jobs, dayTick]);
 
   return (
     <div className="space-y-6" data-testid="study-journal">

@@ -8,6 +8,9 @@ import { cn } from "@/lib/utils";
 import { findSiteByName, siteKey, SITE_FIELD_MAX, SITE_NAME_MAX, type SiteInfo } from "@/lib/study/sites";
 import { SITE_PHONE_MAX, hasContactPicker, pickContact } from "@/lib/study/contact";
 import { toast } from "sonner";
+import { ClientDatalist } from "@/components/clients/ClientDatalist";
+import { fillFromClient, findClientByName, proposeClient } from "@/lib/clients/siteClient";
+import { getClients } from "@/lib/clients/store";
 import { saveSiteCard } from "@/lib/study/store";
 import { JOB_SCOPE_MAX } from "@/lib/study/jobs";
 import { setJobMeta } from "@/lib/study/jobsStore";
@@ -73,6 +76,7 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
       : base;
     if (!saveSiteCard(id, card)) return;
     if (job) setJobMeta(id, { scope: form.scope.trim() || undefined });
+    if (job) proposeClient(id, { investor: base.investor, phone: form.phone.trim(), address: form.address.trim() });
     reset();
     onCreated(id);
     onOpenChange(false);
@@ -117,7 +121,10 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="new-job-client">Klient</Label>
-                  <Input id="new-job-client" value={form.client} maxLength={SITE_FIELD_MAX} onChange={field("client")} autoComplete="off" />
+                  <Input id="new-job-client" value={form.client} maxLength={SITE_FIELD_MAX} list="new-job-client-list" autoComplete="off" onChange={field("client")}
+                    // Telefon i adres klienta wchodzą dopiero po wyjściu z pola (nie przy każdym znaku).
+                    onBlur={() => { const known = findClientByName(getClients(), form.client); if (known) setForm((f) => ({ ...f, ...fillFromClient(known, f) })); }} />
+                  <ClientDatalist id="new-job-client-list" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="new-job-phone">Telefon</Label>

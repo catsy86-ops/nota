@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cleanPricing, addPricingItem, removePricingItem, EMPTY_PRICING } from "./pricing";
+import { cleanPricing, addPricingItem, removePricingItem, EMPTY_PRICING, PRICING_ITEMS_MAX } from "./pricing";
 
 describe("pricing", () => {
   it("cleanPricing: zwraca pusty pricing dla undefined", () => {
@@ -26,18 +26,18 @@ describe("pricing", () => {
     expect(cleanPricing(data).items.map((i) => i.id)).toEqual(["p1"]);
   });
 
-  it("cleanPricing: limity — nazwa 80 znaków, najwyżej 100 pozycji", () => {
-    const many = Array.from({ length: 150 }, (_, i) => ({ id: `p${i}`, name: "x".repeat(200), price: 1, pointType: "H-4", createdAt: 1 }));
+  it("cleanPricing: limity — nazwa 80 znaków, najwyżej 300 pozycji", () => {
+    const many = Array.from({ length: PRICING_ITEMS_MAX + 50 }, (_, i) => ({ id: `p${i}`, name: "x".repeat(200), price: 1, pointType: "H-4", createdAt: 1 }));
     const out = cleanPricing({ items: many });
-    expect(out.items).toHaveLength(100);
+    expect(out.items).toHaveLength(PRICING_ITEMS_MAX);
     expect(out.items[0].name).toHaveLength(80);
   });
 
   it("addPricingItem: zaokrągla cenę do groszy i nie przekracza limitu pozycji", () => {
     expect(addPricingItem(EMPTY_PRICING, "Kran", 12.345, "H-4").items[0].price).toBe(12.35);
     let p = EMPTY_PRICING;
-    for (let i = 0; i < 100; i++) p = addPricingItem(p, `Poz ${i}`, 1, "H-4");
-    expect(addPricingItem(p, "ponad limit", 1, "H-4").items).toHaveLength(100);
+    for (let i = 0; i < PRICING_ITEMS_MAX; i++) p = addPricingItem(p, `Poz ${i}`, 1, "H-4");
+    expect(addPricingItem(p, "ponad limit", 1, "H-4").items).toHaveLength(PRICING_ITEMS_MAX);
   });
 
   it("cleanPricing: zachowuje prawidłowe pozycje", () => {

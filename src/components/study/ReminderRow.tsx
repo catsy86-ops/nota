@@ -2,7 +2,7 @@
  * Wiersz przypomnienia nad dziennikiem budowy (§5.5): ikona per rodzaj i tekst z kontekstem budowy.
  * Wydzielony z `StudyJournal.tsx`.
  */
-import { ClipboardCheck, Gauge, Package, TriangleAlert, Truck, Wrench } from "lucide-react";
+import { ClipboardCheck, FileText, Gauge, Package, TriangleAlert, Truck, Wrench } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { type StudyReminder } from "@/lib/study/reminders";
 import { CoverPhotoButton } from "./CoverPhotoButton";
@@ -13,6 +13,7 @@ const REMINDER_ICON: Partial<Record<StudyReminder["kind"], typeof TriangleAlert>
   "late-order": Package,
   "delivery-today": Truck,
   "service-due": Wrench,
+  "quote-silent": FileText,
   "pre-cover-test": Gauge,
   "no-test": ClipboardCheck,
 };
@@ -28,6 +29,8 @@ export function ReminderRow({ reminder: r, onShow, coverPhotos = 0 }: { reminder
           ? `Serwis „${r.site}” na dziś: ${r.items.slice(0, 3).join(", ")}${r.items.length > 3 ? ` i ${r.items.length - 3} więcej` : ""}.`
           : r.kind === "delivery-today"
             ? `Dostawa dziś na „${r.site}”: ${r.items.slice(0, 3).join(", ")}${r.items.length > 3 ? ` i ${r.items.length - 3} więcej` : ""}.`
+            : r.kind === "quote-silent"
+            ? `Wycena „${r.site}” wysłana ${r.days} ${pluralPl(r.days, ["dzień", "dni", "dni"])} temu i bez odpowiedzi klienta. Zadzwoń albo oznacz ją jako przyjętą lub odrzuconą.`
             : r.kind === "pre-cover-test"
             ? `Budowa „${r.site}”: instalacja odhaczona, a protokołu próby nie ma. Zrób próbę przed zakryciem.`
             : `Budowa „${r.site}”: montaż bez protokołu próby. Zapisz próbę przed zakryciem.`;
@@ -50,7 +53,7 @@ export function ReminderRow({ reminder: r, onShow, coverPhotos = 0 }: { reminder
         onClick={onShow}
         className="pressable shrink-0 self-center rounded-full border border-warning/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-warning/20 coarse:min-h-11 coarse:px-3.5 coarse:text-sm"
       >
-        {r.kind === "stale-problems" ? "Pokaż otwarte" : r.kind === "late-order" || r.kind === "service-due" || r.kind === "pre-cover-test" ? "Karta budowy" : r.kind === "no-test" ? "Dodaj próbę" : "Pokaż wpisy budowy"}
+        {r.kind === "stale-problems" ? "Pokaż otwarte" : r.kind === "late-order" || r.kind === "service-due" || r.kind === "pre-cover-test" || r.kind === "quote-silent" ? "Karta budowy" : r.kind === "no-test" ? "Dodaj próbę" : "Pokaż wpisy budowy"}
       </button>
     </li>
   );

@@ -171,6 +171,19 @@ export function findSiteByName(dir: readonly SiteInfo[], name: string): SiteInfo
 }
 
 /**
+ * Pierwsza wolna nazwa budowy: `base` + sufiks z numerem próby (`suffix(1)`, `suffix(2)`, …), przycięta tak, by całość mieściła
+ * się w limicie nazwy. Porównanie jak w `findSiteByName` (bez ogonków i wielkości liter); po 999 próbach sufiks dostaje znacznik czasu.
+ */
+export function freeSiteName(base: string, suffix: (attempt: number) => string, taken: readonly SiteInfo[]): string {
+  const fit = (tail: string) => `${base.slice(0, SITE_NAME_MAX - tail.length).trimEnd()}${tail}`;
+  for (let i = 1; i < 1000; i++) {
+    const candidate = fit(suffix(i));
+    if (!findSiteByName(taken, candidate)) return candidate;
+  }
+  return fit(suffix(Date.now()));
+}
+
+/**
  * Nazwa z arkusza → budowa wpisu. Nowa nazwa zakłada kartę (`card`); id ze starej nazwy,
  * chyba że zajęła je karta, której nazwę potem zmieniono.
  */

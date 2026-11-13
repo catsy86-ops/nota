@@ -1,25 +1,34 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ChevronDown, FileCheck, FileCode2, FileText, PenLine, Plus, Wrench, X } from "lucide-react";
+import { ChevronDown, Copy, FileCheck, FileCode2, FileText, PenLine, Plus, Wrench, X } from "lucide-react";
 import { InvoiceDialog } from "./InvoiceDialog";
+import { QuoteDocPanel } from "./QuoteDocPanel";
+import { QuoteTemplates } from "./QuoteTemplates";
+import { QuoteFromSite } from "./QuoteFromSite";
+import { QuoteVsActualPanel } from "./QuoteVsActualPanel";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
 import { localDayKey } from "@/lib/dayDone";
 import { toastWithUndo } from "@/lib/undoToast";
 import { amountInput, money, parseAmount } from "@/lib/study/billing";
-import { companyNameStore, usePricing } from "@/lib/study/companyPrefs";
+import { companyNameStore } from "@/lib/study/companyPrefs";
+import { usePrices, usePricing } from "@/lib/study/pricingStore";
+import { materialChips, suggestPrice } from "@/lib/study/quoteSuggest";
 import type { PricingItem } from "@/lib/pricing";
 import {
-  itemClientTotal, JOB_SCOPE_MAX, JOB_STATUS_LABEL, JOB_STATUSES, parseMargin, parseQty, QUOTE_KIND_LABEL, QUOTE_KINDS,
-  QUOTE_NAME_MAX, QUOTE_UNIT_MAX, quoteTotals, signatureValidFor, type Job, type QuoteKind,
+  itemClientTotal, JOB_SCOPE_MAX, newQuoteItemId, JOB_STATUS_LABEL, JOB_STATUSES, parseMargin, parseQty, QUOTE_KIND_LABEL, QUOTE_KINDS,
+  QUOTE_NAME_MAX, QUOTE_UNIT_MAX, quoteSummary, quoteTotals, signatureValidFor, type Job, type QuoteKind,
 } from "@/lib/study/jobs";
-import { removeJob, removeQuoteItem, restoreJob, saveQuoteItem, setJobMeta } from "@/lib/study/jobsStore";
+import { ensureQuoteNumber, getJobs, markQuoteSent, removeJob, removeQuoteItem, restoreJob, saveQuoteItem, setJobMeta } from "@/lib/study/jobsStore";
+import { duplicateJob } from "@/lib/study/duplicateJob";
+import { getStudy, siteDirectoryOf } from "@/lib/study/studyProjection";
+import { clientAddress } from "@/lib/clients/model";
+import { getClient, getClientLinks } from "@/lib/clients/store";
 import type { SiteInfo } from "@/lib/study/sites";
 
 const fieldCls = "h-9 rounded-field border border-input bg-background px-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
 const qtyText = (n: number) => n.toLocaleString("pl-PL", { maximumFractionDigits: 2 });
-const newItemId = () => `q-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 /**
  * Klucz pola nieskontrolowanego: zmiana wartości z drugiego telefonu przemontowuje pole, ale nie w trakcie pisania —
@@ -52,7 +61,10 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
   const [unit, setUnit] = useState("");
   const [price, setPrice] = useState("");
   const pricing = usePricing();
+  const prices = usePrices();
+  const chips = useMemo(() => materialChips(prices), [prices]);
   const totals = quoteTotals(job);
+  const sum = quoteSummary(job);
   /** Podpis z karty złożony po ostatniej zmianie wyceny (H3.5). */
   const signed = signatureValidFor(job, site.signature);
 
@@ -71,7 +83,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
     if (n === undefined) { toast.error("Ilość: wpisz liczbę, np. 1 albo 2,5"); return; }
     if (p === undefined) { toast.error("Cena: wpisz kwotę, np. 150 albo 49,90"); return; }
     const order = job.items.reduce((m, i) => Math.max(m, i.order + 1), 0);
-    if (!saveQuoteItem(site.id, { id: newItemId(), kind, name, qty: n, unit, price: p ?? 0, order })) {
+    if (!saveQuoteItem(site.id, { id: newQuoteItemId(), kind, name, qty: n, unit, price: p ?? 0, order })) {
       toast.error("Nie dodano pozycji — sprawdź nazwę i kwoty");
       return;
     }
@@ -91,6 +103,24 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
     haptic("selection");
   }
 
+  /** Pozycja z cennika kształtek (4.2): nazwa z katalogu i cena za sztukę; ilość i cenę można jeszcze poprawić przed „Dodaj”. */
+  function fromMaterial(chip: { name: string; price: number }) {
+    setKind("material");
+    setName(chip.name);
+    setPrice(amountInput(chip.price));
+    setUnit("");
+    setQty("1");
+    haptic("selection");
+  }
+
+  /** Nazwa znana z cennika (robocizny albo kształtek) podstawia cenę, o ile pole ceny jest jeszcze puste. */
+  function changeName(value: string) {
+    setName(value);
+    if (price.trim() !== "") return;
+    const p = suggestPrice(kind, value, pricing, prices);
+    if (p !== undefined) setPrice(amountInput(p));
+  }
+
   function dropItem(id: string) {
     const removed = removeQuoteItem(site.id, id);
     if (removed) toastWithUndo(`Usunięto „${removed.name}”`, () => saveQuoteItem(site.id, removed));
@@ -108,9 +138,22 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
 
   async function sendPdf() {
     try {
-      const [{ buildJobPdf, jobPdfName }, { sharePdf }] = await Promise.all([import("@/lib/study/jobPdf"), import("@/lib/study/pdfWriter")]);
-      const blob = await buildJobPdf(job, site, { company: companyNameStore.get(), today: localDayKey() });
-      if ((await sharePdf(blob, jobPdfName(site.name))) === "downloaded") toast.success("Pobrano PDF wyceny");
+      const today = localDayKey();
+      // Numer i data wystawienia powstają przy pierwszym PDF-ie; dokument czytamy po nadaniu, żeby PDF je miał.
+      ensureQuoteNumber(site.id);
+      const fresh = getJobs().get(site.id) ?? job;
+      const [{ buildJobPdf, jobPdfName }, { sharePdf, signatureDataUrl }] = await Promise.all([import("@/lib/study/jobPdf"), import("@/lib/study/pdfWriter")]);
+      const validSig = signatureValidFor(fresh, site.signature);
+      const dataUrl = validSig ? await signatureDataUrl(site.signature) : undefined;
+      // Dane klienta z kartoteki (2.1) mają pierwszeństwo przed polami karty budowy.
+      const linked = getClientLinks().get(site.id);
+      const c = linked ? getClient(linked) : undefined;
+      const client = c ? { name: c.name, nip: c.nip, address: clientAddress(c), phone: c.phone } : undefined;
+      const blob = await buildJobPdf(fresh, site, { company: companyNameStore.get(), today, client, signatureDataUrl: dataUrl });
+      const result = await sharePdf(blob, jobPdfName(site.name));
+      if (result === "downloaded") toast.success("Pobrano PDF wyceny");
+      // Wysłana = PDF poszedł do klienta (udostępniony albo pobrany); anulowanie arkusza niczego nie zmienia.
+      if (result !== "cancelled") markQuoteSent(site.id);
     } catch {
       toast.error("Nie udało się zrobić PDF-u wyceny");
     }
@@ -130,6 +173,14 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
     }
   }
 
+  /** 4.5: kopia wyceny jako nowe zlecenie („Zlecenia” → kopia); bez numeru, dat i stanu. */
+  function duplicate() {
+    const copy = duplicateJob(site, job, siteDirectoryOf(getStudy()), newQuoteItemId);
+    if (!copy) { toast.error("Nie udało się zduplikować wyceny"); return; }
+    haptic("success");
+    toast.success(`Utworzono zlecenie „${copy.name}”`, { description: "Znajdziesz je w „Zlecenia”. Zmień klienta na jego karcie." });
+  }
+
   function unmark() {
     const removed = removeJob(site.id);
     if (removed) toastWithUndo(`„${site.name}” to znowu zwykła budowa`, () => restoreJob(site.id, removed));
@@ -142,7 +193,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
         <Wrench className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
         <span className="text-sm font-semibold">Zlecenie własne</span>
         <span className="min-w-0 flex-1 truncate text-right text-xs text-muted-foreground" data-testid="site-job-summary">
-          {JOB_STATUS_LABEL[job.status]}{totals.total > 0 && ` · ${money(totals.total)}`}
+          {JOB_STATUS_LABEL[job.status]}{sum.payable > 0 && ` · ${money(sum.payable)}`}
         </span>
         <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", !open && "-rotate-90")} aria-hidden />
       </button>
@@ -206,6 +257,9 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
             </ul>
           )}
 
+          <QuoteTemplates siteId={site.id} job={job} />
+          <QuoteFromSite site={site} job={job} />
+
           <form className="space-y-1.5 rounded-field border border-dashed border-border p-2" onSubmit={(e) => { e.preventDefault(); addItem(); }} aria-label="Nowa pozycja wyceny">
             <div className="flex gap-1" role="group" aria-label="Rodzaj pozycji">
               {QUOTE_KINDS.map((k) => (
@@ -228,7 +282,20 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
             ) : (
               <p className="ui-hint">Własne pozycje robocizny (np. „WC podwieszane: 350 zł”) dodasz w Ustawieniach → Ogólne → Praca.</p>
             ))}
-            <input value={name} onChange={(e) => setName(e.target.value)} maxLength={QUOTE_NAME_MAX} aria-label="Nazwa pozycji"
+            {kind === "material" && chips.length > 0 && (
+              <div className="flex flex-wrap gap-1" role="group" aria-label="Z cennika kształtek" data-testid="job-material-pricing">
+                {chips.map((c) => (
+                  <button key={c.name} type="button" onClick={() => fromMaterial(c)}
+                    className="pressable max-w-full truncate rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm">
+                    {c.name} · {money(c.price)}
+                  </button>
+                ))}
+              </div>
+            )}
+            {kind === "material" && chips.length === 0 && (
+              <p className="ui-hint">Ceny kształtek wpiszesz w „Zużycie materiału” na karcie budowy — podpowiedzą się tutaj.</p>
+            )}
+            <input value={name} onChange={(e) => changeName(e.target.value)} maxLength={QUOTE_NAME_MAX} aria-label="Nazwa pozycji"
               placeholder={kind === "labor" ? "np. Wymiana baterii" : "np. Bateria zlewozmywakowa"} className={cn(fieldCls, "w-full")} />
             <div className="flex items-center gap-1.5">
               <input value={qty} onChange={(e) => setQty(e.target.value)} inputMode="decimal" aria-label="Ilość" className={cn(fieldCls, "w-16 text-right font-mono tabular-nums")} />
@@ -266,8 +333,27 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
               <dt className="text-muted-foreground">Materiał{totals.marginAmount > 0 && ` (+ marża ${money(totals.marginAmount)})`}</dt>
               <dd className="font-mono tabular-nums">{money(Math.round((totals.material + totals.marginAmount) * 100) / 100)}</dd>
             </div>
-            <div className="flex justify-between text-base font-semibold"><dt>Razem dla klienta</dt><dd className="font-mono tabular-nums" data-testid="job-total">{money(totals.total)}</dd></div>
+            {sum.discount > 0 && (
+              <div className="flex justify-between" data-testid="job-discount"><dt className="text-muted-foreground">Rabat {job.doc?.discount}%</dt><dd className="font-mono tabular-nums">−{money(sum.discount)}</dd></div>
+            )}
+            {sum.net !== undefined && sum.vat !== undefined && (
+              <>
+                <div className="flex justify-between"><dt className="text-muted-foreground">{job.doc?.vatMode === "gross" ? "w tym netto" : "Netto"}</dt><dd className="font-mono tabular-nums" data-testid="job-net">{money(sum.net)}</dd></div>
+                <div className="flex justify-between"><dt className="text-muted-foreground">{job.doc?.vatMode === "gross" ? "w tym " : ""}VAT {sum.vatRate}%</dt><dd className="font-mono tabular-nums" data-testid="job-vat">{money(sum.vat)}</dd></div>
+              </>
+            )}
+            <div className="flex justify-between text-base font-semibold"><dt>{sum.net !== undefined ? "Razem brutto" : "Razem dla klienta"}</dt><dd className="font-mono tabular-nums" data-testid="job-total">{money(sum.payable)}</dd></div>
+            {sum.paid > 0 && (
+              <>
+                <div className="flex justify-between"><dt className="text-muted-foreground">Wpłacono (zaliczka)</dt><dd className="font-mono tabular-nums" data-testid="job-paid">−{money(sum.paid)}</dd></div>
+                <div className="flex justify-between font-semibold"><dt>Do zapłaty</dt><dd className="font-mono tabular-nums" data-testid="job-due">{money(sum.due)}</dd></div>
+              </>
+            )}
           </dl>
+
+          <QuoteVsActualPanel site={site} job={job} />
+
+          <QuoteDocPanel siteId={site.id} job={job} signed={signed} onSign={onSign} />
 
           {(job.status === "done" || job.status === "paid") && (
             <div className="flex flex-wrap items-center gap-2 rounded-field bg-muted/40 p-2" data-testid="job-done">
@@ -285,7 +371,10 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
           {invoiceOpen && <InvoiceDialog open={invoiceOpen} onOpenChange={setInvoiceOpen} site={site} job={job} />}
 
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={sendPdf} className="coarse:h-11"><FileText className="h-4 w-4" aria-hidden />PDF wyceny</Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={sendPdf} className="coarse:h-11"><FileText className="h-4 w-4" aria-hidden />PDF wyceny</Button>
+              <Button type="button" variant="outline" size="sm" onClick={duplicate} className="coarse:h-11" data-testid="job-duplicate"><Copy className="h-4 w-4" aria-hidden />Duplikuj</Button>
+            </div>
             <button type="button" onClick={unmark} className="pressable text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline coarse:min-h-11">
               To nie jest fucha
             </button>

@@ -10,7 +10,7 @@ import { getSitePoints, subscribePoints } from "@/lib/study/pointsStore";
 import { money, monthSiteEarnings } from "@/lib/study/billing";
 import { siteStages } from "@/lib/study/stages";
 import { useJobs } from "@/lib/study/jobsStore";
-import { quoteTotals } from "@/lib/study/jobs";
+import { quoteSummary } from "@/lib/study/jobs";
 import { createMonthlySummary, exportMonthlySummaryCSV, type MonthlySummaryLine } from "@/lib/study/monthlySummary";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -62,7 +62,9 @@ export function SiteMonthEarnings({ monthKey, base }: {
     let sum = 0, count = 0;
     for (const j of jobs.values()) {
       if (j.status !== "paid" || j.statusAt < from || j.statusAt >= to) continue;
-      sum += quoteTotals(j).total;
+      // Przy włączonym VAT przychodem wykonawcy jest netto, a nie kwota z VAT.
+      const s = quoteSummary(j);
+      sum += s.net ?? s.payable;
       count++;
     }
     return { sum: Math.round(sum * 100) / 100, count };

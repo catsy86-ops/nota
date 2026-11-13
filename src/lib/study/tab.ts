@@ -3,10 +3,10 @@
  * służą do czego innego). Bez zapisu: telefon zaczyna od „Budowy” (bieżąca budowa i trzy duże
  * przyciski, plan B2.1), komputer od Quizu.
  *
- * Pasek zakładek ma cztery pozycje: Budowa, Dziennik, Plany i Nauka. „Nauka” grupuje Quiz, Tablicę
+ * Pasek zakładek ma pięć pozycji: Budowa, Dziennik, Klienci, Plany i Nauka. „Nauka” grupuje Quiz, Tablicę
  * i Listę kontrolną (podzakładki); zapamiętana jest zawsze zakładka najniższego poziomu.
  */
-export const STUDY_TABS = ["site", "quiz", "board", "list", "journal", "plans"] as const;
+export const STUDY_TABS = ["site", "quiz", "board", "list", "journal", "plans", "clients"] as const;
 export type StudyTab = (typeof STUDY_TABS)[number];
 
 /** Zakładki zgrupowane pod „Nauką”. */
@@ -21,6 +21,11 @@ export const STUDY_TAB_KEY = "kaczy.study.tab.v1";
  */
 export const STUDY_TAB_PARAM = "zakladka";
 export const PLANS_TAB_VALUE = "plany";
+
+/** Kartoteka klientów: `/praca?zakladka=klienci&klient=<id>` otwiera zakładkę i kartę klienta (paleta poleceń, plan wycen 2.5). */
+export const CLIENTS_TAB_VALUE = "klienci";
+export const CLIENT_PARAM = "klient";
+export const clientUrl = (clientId: string): string => `/praca?${STUDY_TAB_PARAM}=${CLIENTS_TAB_VALUE}&${CLIENT_PARAM}=${encodeURIComponent(clientId)}`;
 
 export function readStudyTab(phone: boolean): StudyTab {
   try {

@@ -12,6 +12,9 @@ import { haptic } from "@/lib/haptics";
 import { useShifts } from "@/lib/shifts";
 import { pluralPl } from "@/lib/plural";
 import { saveSiteCard, useSiteDirectory, useStudy } from "@/lib/study/store";
+import { ClientDatalist } from "@/components/clients/ClientDatalist";
+import { fillFromClient, findClientByName, proposeClient } from "@/lib/clients/siteClient";
+import { getClients } from "@/lib/clients/store";
 import { addPhotoEntry as saveSitePhoto } from "@/lib/study/photoEntry";
 import { photoSaveFailed } from "@/components/study/useJournalPhotoEdits";
 import { findSiteByName, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
@@ -153,6 +156,7 @@ export function SiteCardDialog({
   function save() {
     if (!site || error) return;
     if (saveSiteCard(site.id, form)) {
+      proposeClient(site.id, { investor: form.investor, phone: form.phone, address: form.address }, form.investor.trim() !== saved.investor);
       haptic("success");
       toast.success("Zapisano kartę budowy");
     }
@@ -166,7 +170,7 @@ export function SiteCardDialog({
   /** Niezapisana zmiana idzie do karty przed każdym wyjściem z okna — nie gubimy wpisanych danych po cichu. */
   function persistDirty(): boolean {
     if (!site || !dirty || error) return false;
-    saveSiteCard(site.id, form);
+    if (saveSiteCard(site.id, form)) proposeClient(site.id, { investor: form.investor, phone: form.phone, address: form.address }, form.investor.trim() !== saved.investor, false);
     return true;
   }
 
@@ -443,13 +447,17 @@ export function SiteCardDialog({
                   Inwestor
                   <input
                     value={form.investor}
+                    list="site-card-client-list"
                     onChange={setField("investor")}
+                    // Telefon i adres klienta wchodzą dopiero po wyjściu z pola: przy pisaniu „Jan” nie wolno ich brać od krótszego „Jan”.
+                    onBlur={() => { const known = findClientByName(getClients(), form.investor); if (known) setForm((f) => ({ ...f, ...fillFromClient(known, f) })); }}
                     maxLength={SITE_FIELD_MAX}
                     placeholder="np. Jan Kowalski"
                     autoComplete="off"
                     className={fieldClass}
                   />
                 </label>
+                <ClientDatalist id="site-card-client-list" />
                 <div className="block space-y-1 text-xs text-muted-foreground">
                   <label>Telefon inwestora</label>
                   <div className="flex gap-1">

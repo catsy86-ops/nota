@@ -1,10 +1,13 @@
 import * as Y from "yjs";
 import { cleanJobMeta, cleanQuoteItem, QUOTE_ITEMS_MAX, type Job, type JobMeta, type QuoteItem } from "./jobs";
+import { CONTENT_FIELDS, cleanQuoteDoc, QUOTE_DOC_FIELDS, type QuoteDoc } from "./quoteDoc";
 
 /**
  * Zlecenia własne (H3.4) w Y.Doc notatek — synchronizacja i kopia jak reszta danych. Mapa `studyJobs`:
  * `j␁budowa` wpis zlecenia (status, zakres, termin, marża), `i␁budowa␁id` pozycja wyceny, `c␁budowa` znacznik zmiany
- * treści wyceny (osobny klucz, żeby zmiana pozycji nie przepisywała statusu zmienionego na drugim telefonie). Dwa telefony
+ * treści wyceny (osobny klucz, żeby zmiana pozycji nie przepisywała statusu zmienionego na drugim telefonie),
+ * `q␁budowa␁pole` pole dokumentu wyceny (numer, daty, VAT, rabat, uwagi, stan — `quoteDoc.ts`; osobne klucze, bo starsza wersja
+ * przepisuje wpis `j` i zgubiłaby nieznane pola, a edycje różnych pól na dwóch telefonach mają się scalać, nie nadpisywać). Dwa telefony
  * dopisujące różne pozycje scalają się bez strat. Osobno od karty budowy (pieniądze — zasada 4 planu)
  * i od `yStudy.ts` (paczka startowa).
  */
@@ -33,10 +36,12 @@ export function createYJobs(doc: Y.Doc) {
     const metas = new Map<string, JobMeta>();
     const items = new Map<string, QuoteItem[]>();
     const changed = new Map<string, number>();
+    const rawDocs = new Map<string, Record<string, unknown>>();
     for (const [k, v] of map.entries()) {
       const [kind, site, id] = k.split(SEP);
       if (!site || !isId(site)) continue;
       if (kind === "j") { const m = cleanJobMeta(v); if (m) metas.set(site, m); continue; }
+      if (kind === "q") { if (id) rawDocs.set(site, { ...rawDocs.get(site), [id]: v }); continue; }
       if (kind === "c") { if (typeof v === "number" && Number.isFinite(v) && v > 0) changed.set(site, v); continue; }
       if (kind === "i" && id && isId(id)) {
         const it = cleanQuoteItem(v, id);
@@ -48,7 +53,8 @@ export function createYJobs(doc: Y.Doc) {
     for (const [site, meta] of metas) {
       const list = (items.get(site) ?? []).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
       const changedAt = Math.max(meta.changedAt ?? 0, changed.get(site) ?? 0);
-      out.set(site, { ...meta, ...(changedAt > 0 ? { changedAt } : {}), items: list });
+      const doc = cleanQuoteDoc(rawDocs.get(site)) ?? undefined;
+      out.set(site, { ...meta, ...(changedAt > 0 ? { changedAt } : {}), items: list, ...(doc ? { doc } : {}) });
     }
     snapshot = out;
     return out;
@@ -92,6 +98,34 @@ export function createYJobs(doc: Y.Doc) {
     return true;
   }
 
+  /**
+   * Zmiana dokumentu wyceny (numer, daty, VAT, rabat, uwagi, stan): `patch` scalany z obecnym, pole `undefined` je zdejmuje.
+   * Zmiana treści widocznej dla klienta (`CONTENT_FIELDS`) unieważnia wcześniejszy podpis, jak zmiana pozycji.
+   * `false` = brak zlecenia albo dokument po zmianie jest nieprawidłowy.
+   */
+  function setDoc(site: string, patch: Partial<QuoteDoc>, now = Date.now()): boolean {
+    const prev = get(site);
+    if (!prev) return false;
+    const next: Record<string, unknown> = { ...prev.doc, ...patch };
+    for (const [k, v] of Object.entries(patch)) if (v === undefined) delete next[k];
+    const clean = cleanQuoteDoc(next);
+    // Walidacja przed jakimkolwiek zapisem: pole z patcha, które czyszczenie odrzuciło (np. rabat 150), unieważnia całą zmianę —
+    // błędna zmiana nie może skasować poprzedniej, poprawnej wartości.
+    for (const [k, v] of Object.entries(patch)) if (v !== undefined && clean?.[k as keyof QuoteDoc] === undefined) return false;
+    // Zapisujemy tylko pola, które się zmieniły: edycje różnych pól na dwóch telefonach scalają się, a nie nadpisują całości.
+    const changed = QUOTE_DOC_FIELDS.filter((f) => JSON.stringify(prev.doc?.[f]) !== JSON.stringify(clean?.[f]));
+    if (changed.length === 0) return true;
+    doc.transact(() => {
+      for (const f of changed) {
+        const v = clean?.[f];
+        if (v === undefined) map.delete(key("q", site, f));
+        else map.set(key("q", site, f), v);
+      }
+      if (changed.some((f) => CONTENT_FIELDS.includes(f))) touch(site, now);
+    }, JOBS_ORIGIN);
+    return true;
+  }
+
   /** Znacznik zmiany treści wyceny (H3.5) — w tej samej transakcji co zmiana pozycji. */
   function touch(site: string, now = Date.now()): void {
     if (!get(site)) return;
@@ -114,6 +148,7 @@ export function createYJobs(doc: Y.Doc) {
     doc.transact(() => {
       map.delete(key("j", site));
       map.delete(key("c", site));
+      for (const k of [...map.keys()]) if (k.startsWith(key("q", site, ""))) map.delete(k);
       for (const i of prev.items) map.delete(key("i", site, i.id));
     }, JOBS_ORIGIN);
     return prev;
@@ -125,6 +160,7 @@ export function createYJobs(doc: Y.Doc) {
     if (!meta) return;
     doc.transact(() => {
       map.set(key("j", site), meta);
+      for (const [f, v] of Object.entries(cleanQuoteDoc(job.doc) ?? {})) map.set(key("q", site, f), v);
       for (const i of job.items) {
         const it = isId(i.id) ? cleanQuoteItem(i, i.id) : null;
         if (it) { const { id, ...value } = it; map.set(key("i", site, id), value); }
@@ -146,6 +182,7 @@ export function createYJobs(doc: Y.Doc) {
         const meta = cleanJobMeta(data);
         if (!meta) continue;
         if (!map.has(key("j", site))) map.set(key("j", site), meta);
+        for (const [f, v] of Object.entries(cleanQuoteDoc((data as Partial<Job>).doc) ?? {})) if (!map.has(key("q", site, f))) map.set(key("q", site, f), v);
         const list = (data as Partial<Job>).items;
         for (const v of Array.isArray(list) ? list.slice(0, QUOTE_ITEMS_MAX) : []) {
           const id = (v as Partial<QuoteItem> | null)?.id;
@@ -156,5 +193,5 @@ export function createYJobs(doc: Y.Doc) {
     }, JOBS_ORIGIN);
   }
 
-  return { all, get, subscribe, setMeta, saveItem, removeItem, remove, restore, dump, mergeDump };
+  return { all, get, subscribe, setMeta, setDoc, saveItem, removeItem, remove, restore, dump, mergeDump };
 }

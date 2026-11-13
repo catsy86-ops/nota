@@ -16,6 +16,13 @@ const FONT_ID = "Protokol";
 /** Zdjęcia na stronie: 2 w rzędzie, 3 rzędy. */
 export const PDF_PHOTOS_PER_PAGE = 6;
 
+export interface PdfColumn {
+  header: string;
+  /** Szerokość względna kolumny (skalowana do szerokości treści). */
+  width: number;
+  align?: "left" | "right";
+}
+
 export interface PdfPhoto {
   dataUrl: string;
   caption: string;
@@ -112,6 +119,53 @@ export class PdfWriter {
     this.ensure(10);
     this.line(text, 11, "bold");
     this.gap(1);
+  }
+
+  /**
+   * Tabela (wycena, plan wycen i klientów 3.4): kolumny o szerokościach względnych (rozciągane na całą szerokość treści),
+   * nagłówek pogrubiony z linią, długie komórki łamane na kilka wierszy, cienka linia pod każdym wierszem. Po przejściu
+   * na nową stronę nagłówek jest powtarzany; wiersz nigdy nie jest dzielony między strony.
+   */
+  table(cols: PdfColumn[], rows: string[][], size = 9) {
+    const { doc } = this;
+    const sum = cols.reduce((a, c) => a + c.width, 0) || 1;
+    const widths = cols.map((c) => (c.width / sum) * CONTENT_W);
+    const lh = size * 0.45;
+    const draw = (cells: string[], bold: boolean) => {
+      doc.setFont(FONT_ID, bold ? "bold" : "normal");
+      doc.setFontSize(size);
+      const wrapped = cells.map((t, i) => doc.splitTextToSize(t, widths[i] - 2) as string[]);
+      const height = Math.max(1, ...wrapped.map((l) => l.length)) * lh;
+      if (this.y + height + 2 > BOTTOM) {
+        doc.addPage();
+        this.y = MARGIN;
+        if (!bold) { draw(cols.map((c) => c.header), true); doc.setFont(FONT_ID, "normal"); doc.setFontSize(size); }
+      }
+      let x = MARGIN;
+      wrapped.forEach((lines, i) => {
+        const right = cols[i].align === "right";
+        lines.forEach((l, k) => doc.text(l, right ? x + widths[i] - 1 : x + 1, this.y + k * lh, right ? { align: "right" } : undefined));
+        x += widths[i];
+      });
+      this.y += height + 1;
+      doc.setDrawColor(bold ? 60 : 200);
+      doc.setLineWidth(bold ? 0.3 : 0.1);
+      doc.line(MARGIN, this.y, MARGIN + CONTENT_W, this.y);
+      this.y += 1.5;
+    };
+    draw(cols.map((c) => c.header), true);
+    for (const r of rows) draw(r, false);
+  }
+
+  /** Wiersz „etykieta ... kwota”: etykieta przy lewym marginesie, wartość wyrównana do prawego (podsumowanie wyceny). */
+  keyValue(label: string, value: string, size = 10, style: "normal" | "bold" = "normal") {
+    const { doc } = this;
+    this.ensure(size * 0.45 + 1);
+    doc.setFont(FONT_ID, style);
+    doc.setFontSize(size);
+    doc.text(label, MARGIN, this.y);
+    doc.text(value, PAGE_W - MARGIN, this.y, { align: "right" });
+    this.y += size * 0.45 + 0.8;
   }
 
   /** Zdjęcia 2×3 z podpisami; kolejna strona co `PDF_PHOTOS_PER_PAGE`. */

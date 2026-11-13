@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Plus, Wrench } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { money } from "@/lib/study/billing";
-import { JOB_STATUS_LABEL, quoteTotals, sortJobs, termLabel, unpaidTotal, type Job } from "@/lib/study/jobs";
+import { JOB_STATUS_LABEL, quoteSummary, sortJobs, termLabel, unpaidTotal, type Job } from "@/lib/study/jobs";
+import { QUOTE_STATE_LABEL, quoteStamp, quoteState, sinceLabel } from "@/lib/study/quoteDoc";
+import { matchesQuoteFilter, monthKeyOf, QUOTE_FILTERS, quoteReview, type QuoteFilter } from "@/lib/study/quoteReview";
 import type { SiteInfo } from "@/lib/study/sites";
 
 /**
@@ -24,6 +26,11 @@ export function JobsDialog({ open, onOpenChange, jobs, dir, onOpen, onNew }: {
     return sortJobs([...jobs].map(([id, j]) => ({ ...j, id, site: names.get(id) }))).filter((r) => r.site);
   }, [jobs, dir]);
   const unpaid = unpaidTotal(jobs.values());
+  // Przegląd wycen (5.4): filtr stanu i sumy bieżącego miesiąca; chowa się, dopóki żadna wycena nie została wysłana.
+  const [filter, setFilter] = useState<QuoteFilter>("all");
+  const anySent = useMemo(() => [...jobs.values()].some((j) => quoteState(j.doc) !== "draft"), [jobs]);
+  const review = useMemo(() => quoteReview(jobs.values(), monthKeyOf(Date.now())), [jobs]);
+  const shown = anySent && filter !== "all" ? rows.filter((r) => matchesQuoteFilter(r, filter)) : rows;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -37,12 +44,30 @@ export function JobsDialog({ open, onOpenChange, jobs, dir, onOpen, onNew }: {
             Niezapłacone: <span className="font-mono font-semibold tabular-nums">{money(unpaid)}</span>
           </p>
         )}
+        {(review.sent.count > 0 || review.accepted.count > 0 || review.rejected.count > 0) && (
+          <p className="ui-meta rounded-field bg-muted/50 px-3 py-2" data-testid="jobs-review">
+            W tym miesiącu: wysłane {review.sent.count} ({money(review.sent.total)}) · przyjęte {review.accepted.count} · odrzucone {review.rejected.count}
+            {review.rate !== null && <> · skuteczność <span className="font-semibold text-foreground">{review.rate}%</span></>}
+          </p>
+        )}
+        {anySent && (
+          <div className="flex flex-wrap gap-1" role="group" aria-label="Filtr stanu wyceny" data-testid="jobs-filter">
+            {QUOTE_FILTERS.map((f) => (
+              <button key={f} type="button" onClick={() => setFilter(f)} aria-pressed={filter === f}
+                className={cn("pressable rounded-full border px-2.5 py-0.5 text-xs coarse:min-h-11 coarse:px-3 coarse:text-sm",
+                  filter === f ? "border-primary bg-primary/10 font-medium text-foreground" : "border-border text-muted-foreground hover:text-foreground")}>
+                {f === "all" ? "Wszystkie" : QUOTE_STATE_LABEL[f]}
+              </button>
+            ))}
+          </div>
+        )}
+        {rows.length > 0 && shown.length === 0 && <p className="ui-hint" data-testid="jobs-filter-empty">Żadne zlecenie nie ma stanu „{filter === "all" ? "" : QUOTE_STATE_LABEL[filter]}”.</p>}
         {rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nie masz jeszcze zleceń własnych. Załóż pierwsze — klient, adres i co zrobić.</p>
         ) : (
           <ul className="-mx-1 max-h-[60dvh] space-y-1 overflow-y-auto px-1" aria-label="Lista zleceń">
-            {rows.map((r) => {
-              const total = quoteTotals(r).total;
+            {shown.map((r) => {
+              const total = quoteSummary(r).payable;
               return (
                 <li key={r.id}>
                   <button type="button" onClick={() => onOpen(r.id)}
@@ -51,7 +76,9 @@ export function JobsDialog({ open, onOpenChange, jobs, dir, onOpen, onNew }: {
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">{r.site!.name}</span>
                       <span className="block truncate text-xs text-muted-foreground">
-                        {r.status === "booked" && r.term ? termLabel(r.term) : r.site!.investor || r.scope || "—"}
+                        {r.status === "booked" && r.term ? termLabel(r.term) : r.status === "quote" && quoteState(r.doc) !== "draft"
+                          ? `${QUOTE_STATE_LABEL[quoteState(r.doc)]} ${sinceLabel(quoteStamp(r.doc))}${r.site!.investor ? ` · ${r.site!.investor}` : ""}`
+                          : r.site!.investor || r.scope || "—"}
                       </span>
                     </span>
                     <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-2xs",

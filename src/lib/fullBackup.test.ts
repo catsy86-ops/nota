@@ -10,6 +10,8 @@ import { yStudy } from "./study/data";
 import { addSupplement, removeSupplement, setSupplementTaken, supplementDump } from "./supplements/store";
 import { addMeal, dietDump, removeMeal, setDietGoals } from "./diet/store";
 import { addDebt, debtsDump, removeDebt } from "./debts/store";
+import { addClient, clientsDump, linkSiteToClient, removeClient } from "./clients/store";
+import { getPricing, getPrices, setFittingPrice, setPricing } from "./study/pricingStore";
 import { entryCheckDump, saveEntryCheckItems, resetEntryCheckItems, toggleEntryCheck } from "./study/entryCheckStore";
 import { getKits, removeKit, saveKit } from "./study/kitsStore";
 import { addRoom, getSitePoints, removeRoom } from "./study/pointsStore";
@@ -434,6 +436,54 @@ describe("Nauka w pełnej kopii", () => {
     addDebt({ person: "Marek", kind: "borrowed", amount: 500, at: "2026-10-20" });
     await restoreFullBackup(backup, ALL);
     expect(debtsDump().map((x) => x.person).sort()).toEqual(["Ania", "Marek"]);
+  });
+
+  it("klienci i ich budowy wracają z kopii; przywracanie scala i nie nadpisuje", async () => {
+    const ania = addClient({ name: "Ania Test", phone: "600 100 200", nip: "5260250274", kind: "company" });
+    expect(ania).not.toBeNull();
+    linkSiteToClient("budowa-ania", ania!.id);
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect(JSON.parse(backup.clients!).clients.map((x: { name: string }) => x.name)).toEqual(["Ania Test"]);
+
+    removeClient(ania!.id);
+    expect(clientsDump().clients).toEqual([]);
+    await restoreFullBackup(backup, ALL);
+    expect(clientsDump().clients.map((x) => x.name)).toEqual(["Ania Test"]);
+    expect(clientsDump().sites).toEqual({ "budowa-ania": ania!.id });
+
+    addClient({ name: "Marek Test" });
+    await restoreFullBackup(backup, ALL);
+    expect(clientsDump().clients.map((x) => x.name).sort()).toEqual(["Ania Test", "Marek Test"]);
+  });
+
+  it("cenniki (robocizna i kształtki) wracają z kopii; przywracanie scala, a stara kopia z kluczami localStorage ich importuje", async () => {
+    setPricing({ items: [{ id: "p1", name: "WC podwieszane", price: 350, pointType: "H-4", createdAt: 1 }] });
+    setFittingPrice("Kolano 16", 4.5);
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect(JSON.parse(backup.pricing!).labor.map((x: { name: string }) => x.name)).toEqual(["WC podwieszane"]);
+
+    setPricing({ items: [] });
+    setFittingPrice("Kolano 16", null);
+    await restoreFullBackup(backup, ALL);
+    expect(getPricing().items.map((i) => i.name)).toEqual(["WC podwieszane"]);
+    expect(getPrices()).toEqual({ "kolano 16": 4.5 });
+
+    // Kopia sprzed synchronizacji cenników: ceny siedzą wśród ustawień pod starymi kluczami.
+    const old = { version: 3, exportedAt: 1, notes: [], labels: [], folders: [], settings: {
+      "kaczy.study.pricing.v1": JSON.stringify({ items: [{ id: "x", name: "Wymiana baterii", price: 120, pointType: "H-4", createdAt: 2 }] }),
+      "kaczy.study.prices.v1": JSON.stringify({ trojnik: 6 }),
+    } };
+    await restoreFullBackup(await parseFullBackup(JSON.stringify(old)), ALL);
+    expect(getPricing().items.map((i) => i.name).sort()).toEqual(["WC podwieszane", "Wymiana baterii"]);
+    expect(getPrices()).toEqual({ "kolano 16": 4.5, trojnik: 6 });
+    expect(localStorage.getItem("kaczy.study.pricing.v1")).toBeNull();
+  });
+
+  it("stara kopia bez sekcji klientów nie rusza kartoteki", async () => {
+    const klient = addClient({ name: "Zostaje" });
+    const old = { version: 3, exportedAt: 1, notes: [], labels: [], folders: [] };
+    await restoreFullBackup(await parseFullBackup(JSON.stringify(old)), ALL);
+    expect(clientsDump().clients.map((x) => x.id)).toContain(klient!.id);
   });
 
   it("czyta starą kopię, w której Nauka była tylko wśród ustawień", async () => {

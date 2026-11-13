@@ -17,6 +17,8 @@ import { issueInvoice, useInvoices } from "@/lib/ksef/invoicesStore";
 import { findDuplicateNumbers } from "@/lib/ksef/numbering";
 import { sellerStore, setSeller, useSeries } from "@/lib/ksef/sellerPrefs";
 import { CorrectionDialog } from "./CorrectionDialog";
+import { useSiteClient } from "@/lib/clients/store";
+import { buyerDiffers, buyerFromClient, createClientFromBuyer, saveBuyerToClient } from "@/lib/clients/siteClient";
 import { verifyRecord, type InvoiceRecord } from "@/lib/ksef/yInvoices";
 
 const fieldCls = "h-9 w-full rounded-field border border-input bg-background px-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
@@ -27,13 +29,18 @@ const PAYMENT_FORMS: ReadonlyArray<{ id: 1 | 2 | 6 | 7; label: string }> = [
   { id: 6, label: "Przelew" }, { id: 1, label: "Gotówka" }, { id: 2, label: "Karta" }, { id: 7, label: "Płatność mobilna" },
 ];
 
-/** Pozycje wyceny jako pozycje faktury: cena dla klienta (z marżą przy materiale), ilość w tysięcznych. */
-export function linesFromJob(job: Pick<Job, "items" | "margin">, rate: VatRate): InvoiceLine[] {
+/**
+ * Pozycje wyceny jako pozycje faktury: cena dla klienta (z marżą przy materiale), ilość w tysięcznych. Rabat z wyceny
+ * (`doc.discount`) obniża ceny jednostkowe wszystkich pozycji o ten sam procent, bo faktura (`InvoiceLine`) nie ma osobnej
+ * linii rabatu; cena jest zaokrąglana do grosza, więc suma faktury może różnić się od kwoty z wyceny o grosze na pozycję.
+ */
+export function linesFromJob(job: Pick<Job, "items" | "margin" | "doc">, rate: VatRate): InvoiceLine[] {
+  const factor = 1 - (job.doc?.discount ?? 0) / 100;
   return job.items.map((i) => ({
     name: i.name,
     unit: i.unit.trim() || (i.kind === "labor" ? "usł." : "szt."),
     qtyMilli: Math.round(i.qty * 1000),
-    unitPrice: gr(itemClientPrice(i, job.margin)),
+    unitPrice: gr(itemClientPrice(i, job.margin) * factor),
     rate,
   }));
 }
@@ -79,9 +86,12 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
     const s = sellerStore.get();
     return { ...s, name: s.name || companyNameStore.get() };
   });
-  const [buyer, setBuyer] = useState(() => ({ name: site.investor || site.name, nip: "", address1: site.address, address2: "" }));
-  const [priceMode, setPriceMode] = useState<PriceMode>("gross");
-  const [rate, setRate] = useState<VatRate>(23);
+  // Nabywca z kartoteki klientów (plan wycen i klientów, 2.2); bez klienta — jak dawniej z karty budowy, NIP do wpisania.
+  const client = useSiteClient(site.id);
+  const [buyer, setBuyer] = useState(() => (client ? buyerFromClient(client) : { name: site.investor || site.name, nip: "", address1: site.address, address2: "" }));
+  // Tryb cen i stawka z wyceny (3.2): „Ceny netto + VAT” → netto, „brutto” albo bez VAT → brutto jak dotąd.
+  const [priceMode, setPriceMode] = useState<PriceMode>(job.doc?.vatMode === "net" ? "net" : "gross");
+  const [rate, setRate] = useState<VatRate>(job.doc?.vatRate ?? 23);
   /** Stawki ustawione osobno dla pozycji (indeks → stawka); zmiana stawki ogólnej je zeruje. */
   const [overrides, setOverrides] = useState<Record<number, VatRate>>({});
   const [form, setForm] = useState<1 | 2 | 6 | 7>(6);
@@ -123,6 +133,18 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
 
   const set = (k: "name" | "nip" | "address1" | "address2") => (e: React.ChangeEvent<HTMLInputElement>) => setSellerState((s) => ({ ...s, [k]: e.target.value }));
   const setB = (k: "name" | "nip" | "address1" | "address2") => (e: React.ChangeEvent<HTMLInputElement>) => setBuyer((s) => ({ ...s, [k]: e.target.value }));
+  const FIELD_NAME = { name: "nazwę", nip: "NIP", address: "adres" } as const;
+  function saveBuyer() {
+    if (!client) return;
+    const r = saveBuyerToClient(client.id, buyer);
+    if (r.ok) toast.success(`Zapisano dane nabywcy u klienta: ${client.name}`);
+    else toast.error(`Nie zapisano u klienta: sprawdź ${FIELD_NAME[r.field]}`);
+  }
+  function addBuyerToClients() {
+    const c = createClientFromBuyer(site.id, buyer);
+    if (c) toast.success(`Dodano klienta: ${c.name}`);
+    else toast.error("Nie dodano klienta: sprawdź nazwę i NIP", { description: "Nazwa nie może być pusta, a NIP musi mieć poprawną sumę kontrolną." });
+  }
   const quickProblems = validateInvoice({ ...draft, number: "FV/A/2026/001" }).length;
 
   return (
@@ -153,10 +175,27 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
             <input aria-label="NIP nabywcy" placeholder="NIP (puste = konsument)" inputMode="numeric" value={buyer.nip} onChange={setB("nip")} className={cn(fieldCls, "font-mono")} />
             <input aria-label="Adres nabywcy" placeholder="Adres" value={buyer.address1} onChange={setB("address1")} className={fieldCls} />
           </div>
+          <input aria-label="Kod i miejscowość nabywcy" placeholder="Kod pocztowy i miejscowość" value={buyer.address2} onChange={setB("address2")} className={fieldCls} />
+          {client ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" data-testid="buyer-client">
+              <span>Z kartoteki: {client.name}</span>
+              {buyerDiffers(buyer, client) && (
+                <>
+                  <button type="button" onClick={() => setBuyer(buyerFromClient(client))} className="pressable underline underline-offset-2 hover:text-foreground coarse:min-h-11">Przywróć dane klienta</button>
+                  <button type="button" onClick={saveBuyer} className="pressable underline underline-offset-2 hover:text-foreground coarse:min-h-11" data-testid="buyer-save">Zapisz u klienta</button>
+                </>
+              )}
+            </div>
+          ) : buyer.name.trim() ? (
+            <button type="button" onClick={addBuyerToClients} className="pressable text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground coarse:min-h-11" data-testid="buyer-add">Dodaj nabywcę do klientów</button>
+          ) : null}
         </fieldset>
 
         <fieldset className="space-y-2">
           <legend className="text-xs font-semibold text-muted-foreground">Ceny i VAT</legend>
+          {job.doc?.discount !== undefined && (
+            <p className="ui-hint" data-testid="invoice-discount">Rabat z wyceny ({job.doc.discount}%) jest wliczony w ceny pozycji.</p>
+          )}
           <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Ceny w wycenie są">
             {(["gross", "net"] as const).map((m) => (
               <button key={m} type="button" aria-pressed={priceMode === m} onClick={() => setPriceMode(m)}

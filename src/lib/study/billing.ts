@@ -143,7 +143,11 @@ export interface BillingStatement {
   warnings: string[];
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
+/** Zaokrąglenie kwoty do groszy. */
+export const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** „2026-11-13” → „13.11.2026”. */
+export const dmyKey = (key: string) => key.split("-").reverse().join(".");
 const hoursNum = (min: number) => round2(min / 60).toLocaleString("pl-PL", { maximumFractionDigits: 2 });
 const dmy = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
 
