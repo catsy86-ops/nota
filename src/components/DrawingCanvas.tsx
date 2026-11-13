@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
-import { Pen, Eraser, Undo2, Trash, Save, Minus, Plus } from "lucide-react";
+import { Pen, Pencil, Highlighter, Grid3x3, Eraser, Undo2, Trash, Save, Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -16,14 +16,25 @@ const COLOR_NAMES = ["granatowy", "czerwony", "pomarańczowy", "żółty", "ziel
 interface Point {
   x: number;
   y: number;
+  /** Nacisk rysika 0–1 (dla myszy i palca stałe 0,5 — wtedy grubość się nie zmienia). */
+  p: number;
 }
+
+type Tool = "pen" | "pencil" | "marker" | "eraser";
 
 interface Stroke {
   points: Point[];
   color: string;
   width: number;
-  tool: "pen" | "eraser";
+  tool: Tool;
+  /** Tylko rysik niesie prawdziwy nacisk; mysz i palec rysują stałą grubością. */
+  pressure: boolean;
 }
+
+/** Plan Notatek 4.4: zakreślacz jest szeroki i półprzezroczysty, ołówek cieńszy i lekko kryjący. */
+const MARKER_FACTOR = 4;
+const PENCIL_FACTOR = 0.7;
+const GRID_STEP = 24;
 
 interface DrawingCanvasProps {
   open: boolean;
@@ -32,39 +43,76 @@ interface DrawingCanvasProps {
   initialImage?: string | null;
 }
 
+/** Grubość odcinka pióra: przy rysiku zależy od nacisku (0,35–1,65 × ustawiona), inaczej stała. */
+function penWidth(stroke: Stroke, p: number) {
+  return stroke.pressure ? stroke.width * (0.35 + 1.3 * p) : stroke.width;
+}
+
 /** Kreski (z gumką) na jednym kontekście — gumka wycina tylko kreski, bo rysujemy je na osobnej warstwie. */
 function paintStrokes(ctx: CanvasRenderingContext2D, strokes: Stroke[]) {
   for (const stroke of strokes) {
-    if (stroke.points.length < 2) continue;
-    ctx.beginPath();
-    ctx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
-    ctx.lineWidth = stroke.tool === "eraser" ? stroke.width * 3 : stroke.width;
-    ctx.lineCap = "round";
+    const pts = stroke.points;
+    if (pts.length < 2) continue;
+    ctx.lineCap = stroke.tool === "marker" ? "butt" : "round";
     ctx.lineJoin = "round";
+    ctx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
     ctx.globalCompositeOperation = stroke.tool === "eraser" ? "destination-out" : "source-over";
 
-    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-    for (let i = 1; i < stroke.points.length; i++) {
-      const prev = stroke.points[i - 1];
-      const curr = stroke.points[i];
-      const midX = (prev.x + curr.x) / 2;
-      const midY = (prev.y + curr.y) / 2;
-      ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
+    if (stroke.tool === "pen" && stroke.pressure) {
+      // Zmienna grubość: odcinek po odcinku, każdy ze średnią nacisku końców.
+      for (let i = 1; i < pts.length; i++) {
+        const prev = pts[i - 1];
+        const curr = pts[i];
+        ctx.beginPath();
+        ctx.lineWidth = penWidth(stroke, (prev.p + curr.p) / 2);
+        ctx.moveTo(prev.x, prev.y);
+        ctx.lineTo(curr.x, curr.y);
+        ctx.stroke();
+      }
+    } else {
+      // Jedna ścieżka, żeby półprzezroczysta kreska nie ciemniała w miejscach przecięcia ze sobą.
+      ctx.globalAlpha = stroke.tool === "marker" ? 0.35 : stroke.tool === "pencil" ? 0.75 : 1;
+      ctx.lineWidth = stroke.tool === "eraser" ? stroke.width * 3
+        : stroke.tool === "marker" ? stroke.width * MARKER_FACTOR
+        : stroke.tool === "pencil" ? stroke.width * PENCIL_FACTOR
+        : stroke.width;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        const prev = pts[i - 1];
+        const curr = pts[i];
+        ctx.quadraticCurveTo(prev.x, prev.y, (prev.x + curr.x) / 2, (prev.y + curr.y) / 2);
+      }
+      ctx.stroke();
+      ctx.globalAlpha = 1;
     }
-    ctx.stroke();
     ctx.globalCompositeOperation = "source-over";
   }
+}
+
+/** Kratka zeszytu pod rysunkiem (tylko na białym tle, nie na zdjęciu). */
+function paintGrid(ctx: CanvasRenderingContext2D, width: number, height: number, scale: number) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(90, 120, 170, 0.28)";
+  ctx.lineWidth = Math.max(1, scale);
+  ctx.beginPath();
+  const step = GRID_STEP * scale;
+  for (let x = step; x < width; x += step) { ctx.moveTo(Math.round(x) + 0.5, 0); ctx.lineTo(Math.round(x) + 0.5, height); }
+  for (let y = step; y < height; y += step) { ctx.moveTo(0, Math.round(y) + 0.5); ctx.lineTo(width, Math.round(y) + 0.5); }
+  ctx.stroke();
+  ctx.restore();
 }
 
 /**
  * Tło (białe albo zdjęcie) i warstwa kresek w skali `scale` (eksport w większej rozdzielczości).
  * Warstwa jest osobnym płótnem, więc gumka nie ściera zdjęcia pod spodem.
  */
-function compose(ctx: CanvasRenderingContext2D, width: number, height: number, bg: HTMLImageElement | null, strokes: Stroke[], scale = 1) {
+function compose(ctx: CanvasRenderingContext2D, width: number, height: number, bg: HTMLImageElement | null, strokes: Stroke[], scale = 1, grid = false) {
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, width, height);
   if (bg) ctx.drawImage(bg, 0, 0, width, height);
+  else if (grid) paintGrid(ctx, width, height, scale);
   const layer = document.createElement("canvas");
   layer.width = width;
   layer.height = height;
@@ -81,8 +129,10 @@ const PHOTO_EXPORT_MAX = 1600;
 export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [tool, setTool] = useState<"pen" | "eraser">("pen");
+  const [tool, setTool] = useState<Tool>("pen");
+  const [grid, setGrid] = useState(false);
+  /** Aktualna kreska poza stanem Reacta: kilka zdarzeń w jednej klatce nie gubi punktów. */
+  const liveRef = useRef<Stroke | null>(null);
   const [color, setColor] = useState(COLORS[0]);
   const [strokeWidth, setStrokeWidth] = useState(3);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
@@ -133,11 +183,11 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    compose(ctx, canvas.width, canvas.height, bg, currentStroke ? [...strokes, currentStroke] : strokes);
+    compose(ctx, canvas.width, canvas.height, bg, currentStroke ? [...strokes, currentStroke] : strokes, 1, grid);
     // canvasSize isn't read directly above, but changing the canvas width/height JSX attrs
     // clears its pixel buffer, so a resize must still trigger a redraw.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasSize, bg, strokes, currentStroke]);
+  }, [canvasSize, bg, strokes, currentStroke, grid]);
 
   useEffect(() => {
     if (open) redraw();
@@ -154,42 +204,48 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
     }
   }, [open]);
 
-  function getPos(e: React.MouseEvent | React.TouchEvent): Point | null {
+  function toPoint(e: { clientX: number; clientY: number; pressure: number }): Point | null {
     const canvas = canvasRef.current;
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    if ("touches" in e) {
-      const touch = e.touches[0] || e.changedTouches[0];
-      return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
-    }
-    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
+      p: e.pressure > 0 ? e.pressure : 0.5,
+    };
   }
 
-  function startDrawing(e: React.MouseEvent | React.TouchEvent) {
+  function startDrawing(e: React.PointerEvent<HTMLCanvasElement>) {
+    // Tylko główny wskaźnik: drugi palec (np. dłoń) nie zaczyna drugiej kreski. Lewy przycisk myszy.
+    if (!e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return;
     e.preventDefault();
-    const pos = getPos(e);
+    const pos = toPoint(e);
     if (!pos) return;
-    setIsDrawing(true);
-    setCurrentStroke({ points: [pos], color, width: strokeWidth, tool });
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const stroke: Stroke = { points: [pos], color, width: strokeWidth, tool, pressure: e.pointerType === "pen" };
+    liveRef.current = stroke;
+    setCurrentStroke(stroke);
   }
 
-  function draw(e: React.MouseEvent | React.TouchEvent) {
+  function draw(e: React.PointerEvent<HTMLCanvasElement>) {
+    const live = liveRef.current;
+    if (!live || !e.isPrimary) return;
     e.preventDefault();
-    if (!isDrawing || !currentStroke) return;
-    const pos = getPos(e);
-    if (!pos) return;
-    setCurrentStroke((prev) => prev ? { ...prev, points: [...prev.points, pos] } : null);
+    // `getCoalescedEvents` oddaje wszystkie próbki rysika między klatkami — gładsza linia przy szybkim ruchu.
+    const events = e.nativeEvent.getCoalescedEvents?.();
+    const samples = events && events.length > 0 ? events : [e.nativeEvent];
+    const added = samples.map((smp) => toPoint(smp)).filter((pt): pt is Point => pt !== null);
+    if (added.length === 0) return;
+    const next = { ...live, points: [...live.points, ...added] };
+    liveRef.current = next;
+    setCurrentStroke(next);
   }
 
   function stopDrawing() {
-    if (currentStroke && currentStroke.points.length > 1) {
-      setStrokes((prev) => [...prev, currentStroke]);
-    }
+    const live = liveRef.current;
+    liveRef.current = null;
+    if (live && live.points.length > 1) setStrokes((prev) => [...prev, live]);
     setCurrentStroke(null);
-    setIsDrawing(false);
   }
 
   function undo() {
@@ -227,7 +283,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
     exportCanvas.height = Math.round(canvas.height * scale);
     const exportCtx = exportCanvas.getContext("2d");
     if (!exportCtx) return;
-    compose(exportCtx, exportCanvas.width, exportCanvas.height, bg, strokes, scale);
+    compose(exportCtx, exportCanvas.width, exportCanvas.height, bg, strokes, scale, grid);
     const dataUrl = exportCanvas.toDataURL(bg ? "image/jpeg" : "image/png", 0.9);
     onSave(dataUrl);
     onOpenChange(false);
@@ -246,13 +302,25 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
           </div>
         )}
         {/* Toolbar */}
-        <div className="flex items-center gap-2 p-3 border-b border-border flex-wrap bg-card">
+        <div className="flex items-center gap-2 p-3 border-b border-border flex-nowrap overflow-x-auto bg-card [&>*]:shrink-0">
           <div className="flex items-center gap-1">
             <ToolBtn
               active={tool === "pen"}
               onClick={() => setTool("pen")}
               icon={<Pen className="w-4 h-4" />}
+              title="Długopis"
+            />
+            <ToolBtn
+              active={tool === "pencil"}
+              onClick={() => setTool("pencil")}
+              icon={<Pencil className="w-4 h-4" />}
               title="Ołówek"
+            />
+            <ToolBtn
+              active={tool === "marker"}
+              onClick={() => setTool("marker")}
+              icon={<Highlighter className="w-4 h-4" />}
+              title="Zakreślacz"
             />
             <ToolBtn
               active={tool === "eraser"}
@@ -271,11 +339,11 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
                 key={c}
                 type="button"
                 aria-label={`Kolor: ${COLOR_NAMES[COLORS.indexOf(c)]}`}
-                aria-pressed={color === c && tool === "pen"}
-                onClick={() => { setColor(c); setTool("pen"); }}
+                aria-pressed={color === c && tool !== "eraser"}
+                onClick={() => { setColor(c); if (tool === "eraser") setTool("pen"); }}
                 className={cn(
                   "pressable w-6 h-6 rounded-full border-2 transition-all",
-                  color === c && tool === "pen" ? "border-primary ring-2 ring-primary/30 scale-110" : "border-border hover:border-muted-foreground/40"
+                  color === c && tool !== "eraser" ? "border-primary ring-2 ring-primary/30 scale-110" : "border-border hover:border-muted-foreground/40"
                 )}
                 style={{ backgroundColor: c }}
               />
@@ -303,6 +371,13 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
 
           {/* Actions */}
           <div className="flex items-center gap-1">
+            <ToolBtn
+              active={grid}
+              onClick={() => setGrid((g) => !g)}
+              icon={<Grid3x3 className="w-4 h-4" />}
+              title="Kratka"
+              disabled={!!bg}
+            />
             <ToolBtn
               onClick={undo}
               icon={<Undo2 className="w-4 h-4" />}
@@ -334,13 +409,10 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
             height={canvasSize.height}
             className="rounded-card shadow-sm bg-white cursor-crosshair touch-none max-w-full max-h-full"
             style={{ imageRendering: "auto" }}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
+            onPointerDown={startDrawing}
+            onPointerMove={draw}
+            onPointerUp={stopDrawing}
+            onPointerCancel={stopDrawing}
           />
         </div>
       </DialogContent>

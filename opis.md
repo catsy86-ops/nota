@@ -5646,3 +5646,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Gdzie:** `src/index.css` (`.app-header::after`, `@keyframes header-shade`, `animation-timeline: scroll(root)`).
 - **Ograniczenia:** bez wsparcia `animation-timeline` (Safari, Firefox) cienia nie ma — jak dotąd; zwężenie nagłówka i wjazd tytułu działu (reszta 4.3) — nie zrobione. Powłoka 4.1 (88 × `uppercase tracking-wider`) i 4.4 (arkusz „Więcej” jako siatka kafli z licznikami) okazały się zrobione wcześniej.
 - **Testy:** sprawdzone w przeglądarce (krycie cienia 0 na szczycie, 1 po przewinięciu 400 px).
+
+## Notatki — płótno w stylu zeszytu (plan 4.4, 2026-11-13)
+
+- **Co robi:** płótno rysowania ma długopis, ołówek, zakreślacz i gumkę, przełącznik „Kratka” oraz jeden przewijany poziomo pasek narzędzi (bez zawijania w kilka rzędów). Rysik reaguje na nacisk, a szybki ruch jest gładszy.
+- **Gdzie:** `src/components/DrawingCanvas.tsx` (`paintStrokes`, `paintGrid`, `compose`, `toPoint`, `startDrawing`/`draw`/`stopDrawing`).
+- **Jak działa:** zamiast zdarzeń myszy i dotyku są Pointer Events z `setPointerCapture` (kreska nie urywa się na krawędzi) i tylko głównym wskaźnikiem (druga ręka nie zaczyna drugiej kreski). Punkt niesie `p` (nacisk); tylko dla `pointerType === "pen"` długopis rysuje odcinkami o grubości 0,35–1,65 × ustawiona, dla myszy i palca grubość jest stała. `getCoalescedEvents()` dokłada pośrednie próbki. Ołówek to 0,7 × grubość i 75 % krycia, zakreślacz 4 × grubość, 35 % krycia i zakończenie proste; oba rysowane jedną ścieżką, żeby kreska nie ciemniała na przecięciach. Kreska w toku jest też w `liveRef`, więc kilka zdarzeń w klatce nie gubi punktów. Kratka (24 px, jasnoniebieska) jest rysowana w `compose`, także w eksporcie.
+- **Ograniczenia:** paleta kolorów nadal stała (8 kolorów, białe tło), bez kolorów z motywu i bez kratki dla ciemnego motywu — rysunek jest zapisywany jako obraz na białym tle. Kratka jest niedostępna przy rysowaniu po zdjęciu. Nazwa narzędzia „Ołówek” dotyczy teraz nowego, cieńszego narzędzia; dawny „Ołówek” nazywa się „Długopis”.
+- **Testy:** brak nowych; istniejące e2e płótna to `photo-drawing`, `card-images`, `qol-etap5`, `etap6`, `site-plan-mark` (niepuszczane po tej zmianie).
