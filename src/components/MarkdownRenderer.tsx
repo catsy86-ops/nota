@@ -1,5 +1,6 @@
 import { lazy, memo, Suspense } from "react";
 import { cn } from "@/lib/utils";
+import { hasMath } from "@/lib/mathHint";
 import type { EmbedContext } from "@/lib/embeds";
 import { Bold, Code, Heading2, Italic, Link2, List, Quote } from "lucide-react";
 
@@ -26,7 +27,7 @@ const MARKDOWN_HINT = /[*_`#>[\]|~<&\\]|https?:|www\.|@|^\s*(?:[-+]|\d+[.)])\s|^
 const BLOCK_ID_HINT = /(?:^|\s)\^[\p{L}\p{N}-]{1,32}[ \t]*$/mu;
 
 export function needsMarkdown(content: string): boolean {
-  return MARKDOWN_HINT.test(content) || BLOCK_ID_HINT.test(content);
+  return MARKDOWN_HINT.test(content) || BLOCK_ID_HINT.test(content) || hasMath(content);
 }
 
 /**

@@ -2,7 +2,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { TriangleAlert, ChevronRight, Info, Lightbulb, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Fragment, memo, type ReactNode } from "react";
+import { Fragment, memo, useEffect, useState, type ReactNode } from "react";
+import type { PluggableList } from "unified";
+import { hasMath } from "@/lib/mathHint";
 import { WikiLink } from "@/components/WikiLinkPreview";
 import { isSafeHref, safeHref } from "@/lib/safeUrl";
 import { calloutKind, remarkCallouts, type CalloutKind } from "@/lib/markdownCallouts";
@@ -92,8 +94,26 @@ function splitParagraphId(children: ReactNode): { children: ReactNode; id: strin
   return { children: [...children.slice(0, -1), stripBlockId(last)], id };
 }
 
+type MathPlugins = { remark: PluggableList; rehype: PluggableList };
+
+/** Plan Notatek 5.4: wtyczki wzorów pobierane dopiero dla treści z `$…$` (do czasu pobrania wzór jest tekstem). */
+function useMathPlugins(content: string): MathPlugins | null {
+  const needed = hasMath(content);
+  const [plugins, setPlugins] = useState<MathPlugins | null>(null);
+  useEffect(() => {
+    if (!needed || plugins) return;
+    let alive = true;
+    import("@/lib/markdownMath")
+      .then((m) => { if (alive) setPlugins({ remark: m.mathRemarkPlugins, rehype: m.mathRehypePlugins as unknown as PluggableList }); })
+      .catch(() => { /* offline bez zapisanego chunku: wzór zostaje tekstem */ });
+    return () => { alive = false; };
+  }, [needed, plugins]);
+  return needed ? plugins : null;
+}
+
 /** Zwykły Markdown z linkami wiki; bez osadzeń (te wycina `MarkdownRendererImpl`). */
 function MarkdownBlocks({ content, className, onWikiClick, knownTitles }: MarkdownRendererProps) {
+  const math = useMathPlugins(content);
   const renderText = (children: ReactNode) => {
     if (typeof children === "string") return renderWithWiki(children, onWikiClick, knownTitles);
     if (Array.isArray(children)) {
@@ -107,7 +127,8 @@ function MarkdownBlocks({ content, className, onWikiClick, knownTitles }: Markdo
   return (
     <ReactMarkdown
       className={cn("prose-note leading-relaxed", className)}
-      remarkPlugins={[remarkGfm, remarkCallouts]}
+      remarkPlugins={[remarkGfm, remarkCallouts, ...(math?.remark ?? [])]}
+      rehypePlugins={math?.rehype}
       // Treść notatki bywa od peera/z importu: tylko http(s), mailto, tel i odnośniki względne.
       urlTransform={(url) => (isSafeHref(url) ? url : "")}
       components={{

@@ -91,6 +91,8 @@ export default defineConfig(() => ({
           "**/jobPdf-*.js",
           // Edytor CodeMirror (~500 KB) za flagą `cmEditor`: tylko na żądanie, poza precache (plan rozbudowy, Faza 1a).
           "**/CmEditor-*.js",
+          // Wzory (KaTeX: moduł, arkusz i kroje ~0,7 MB) tylko przy `$…$` w treści; potem w `static-assets` (plan Notatek 5.4).
+          "**/{markdownMath,KaTeX_*}*",
           // Analizator planów (D2, 2026-11-01): widok poza precache, pobierany w tle przy pierwszej sesji online
           // (`prefetchViewsWhenIdle`) i trzymany w `static-assets`. `plansStore` zostaje — kopia danych go potrzebuje offline.
           "**/PlansView-*.js",
