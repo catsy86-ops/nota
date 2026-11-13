@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Archive, Download, ExternalLink, File as FileIcon, FileImage, Mic, FileSpreadsheet, FileText, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 import { IconButton } from "@/components/ui/icon-button";
@@ -8,6 +8,7 @@ import {
   readAttachment, textPreview, type Attachment, type AttachmentKind,
 } from "@/lib/attachments";
 import { cn } from "@/lib/utils";
+import { isApplePlatform } from "@/lib/platform";
 
 const ICONS: Record<AttachmentKind, typeof FileIcon> = {
   pdf: FileText,
@@ -154,6 +155,41 @@ function TextPreview({ attachment }: { attachment: Attachment }) {
   );
 }
 
+/**
+ * Podgląd PDF w czytniku (plan Notatek 5.6): `<iframe>` z adresem `blob:` o stałym typie `application/pdf`
+ * (zawsze wbudowana przeglądarka PDF, nigdy HTML). Adres żyje tylko, póki podgląd jest otwarty. Na iOS iframe z PDF
+ * pokazuje tylko pierwszą stronę bez przewijania, więc tam zostaje „Otwórz w nowej karcie” z wiersza.
+ */
+function PdfPreview({ attachment }: { attachment: Attachment }) {
+  const [state, setState] = useState<{ url: string } | "closed" | "error">("closed");
+  const url = typeof state === "object" ? state.url : null;
+  useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
+  async function toggle() {
+    if (state !== "closed") { setState("closed"); return; }
+    try {
+      const bytes = await readAttachment(attachment.hash);
+      if (!bytes) { setState("error"); return; }
+      setState({ url: URL.createObjectURL(new Blob([bytes], { type: "application/pdf" })) });
+    } catch { setState("error"); }
+  }
+  return (
+    <div className="mt-1">
+      <button type="button" onClick={toggle} aria-expanded={state !== "closed" && state !== "error"} className="text-2xs text-primary-ink hover:underline">
+        {state === "closed" || state === "error" ? "Pokaż podgląd" : "Ukryj podgląd"}
+      </button>
+      {state === "error" && <p className="text-2xs text-muted-foreground">Nie udało się wczytać podglądu.</p>}
+      {url && (
+        <iframe
+          data-testid="attachment-pdf-preview"
+          src={url}
+          title={`Podgląd: ${attachment.name}`}
+          className="mt-1 block h-[70dvh] max-h-[40rem] w-full rounded-field border border-border/60 bg-muted/30"
+        />
+      )}
+    </div>
+  );
+}
+
 /** Lista w czytniku: te same wiersze bez usuwania, plus podgląd plików tekstowych. */
 export function AttachmentsReadOnlyList({ attachments, className }: { attachments?: Attachment[]; className?: string }) {
   if (!attachments?.length) return null;
@@ -166,6 +202,7 @@ export function AttachmentsReadOnlyList({ attachments, className }: { attachment
         {attachments.map((a) => (
           <AttachmentRow key={a.hash} attachment={a}>
             {isTextPreviewable(a) && <TextPreview attachment={a} />}
+            {attachmentKind(a) === "pdf" && !isApplePlatform() && <PdfPreview attachment={a} />}
           </AttachmentRow>
         ))}
       </ul>

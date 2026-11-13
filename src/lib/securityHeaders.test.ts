@@ -33,6 +33,8 @@ describe("nagłówki bezpieczeństwa", () => {
     expect(csp).not.toContain("'unsafe-eval'");
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("frame-ancestors 'none'");
+    // Podgląd PDF w czytniku (5.6): ramka tylko z własnym adresem i `blob:`.
+    expect(csp).toContain("frame-src 'self' blob:");
   });
 
   it("HSTS na rok, bez includeSubDomains (S17)", () => {

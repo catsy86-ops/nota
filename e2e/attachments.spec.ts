@@ -77,3 +77,21 @@ test("załącznik: w czytniku jest lista i podgląd tekstu", async ({ page }) =>
   await reader.getByRole("button", { name: "Pokaż podgląd" }).click();
   await expect(reader.getByTestId("attachment-preview")).toContainText("Pierwsza linia");
 });
+
+test("załącznik: w czytniku PDF ma podgląd w ramce z adresem blob, a ukrycie go usuwa (5.6)", async ({ page }) => {
+  const title = `Umowa ${Date.now()}`;
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByTestId("attachment-input").setInputFiles({ name: "umowa.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 test") });
+  await expect(page.getByTestId("attachment-row").filter({ hasText: "umowa.pdf" })).toBeVisible();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press("Home");
+  await page.keyboard.press(" ");
+  const reader = page.getByRole("dialog", { name: title });
+  await reader.getByRole("button", { name: "Pokaż podgląd" }).click();
+  await expect(reader.getByTestId("attachment-pdf-preview")).toHaveAttribute("src", /^blob:/);
+  await reader.getByRole("button", { name: "Ukryj podgląd" }).click();
+  await expect(reader.getByTestId("attachment-pdf-preview")).toHaveCount(0);
+});

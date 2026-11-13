@@ -5670,3 +5670,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** osobna baza `kaczy-note-index-v1` (`idb-keyval`, klucz `snapshot`) trzyma `MiniSearch#toJSON` i odciski dokumentów (cyrb53 z pól). Zapis idzie 3 s po ostatniej zmianie. Po starcie Worker wczytuje zrzut, a pierwsza synchronizacja `full` pomija notatki o tym samym odcisku, podmienia zmienione i usuwa te, których strona już nie ma. Do czasu pierwszej synchronizacji `noteSearch` zwraca pustą listę, żeby nie pokazać notatek ze starego zrzutu (np. usuniętych albo zablokowanych w międzyczasie). Zrzut z innym `INDEX_FORMAT` (pola, wagi) albo uszkodzony jest odrzucany.
 - **Ograniczenia:** zrzut zawiera tekst notatek jawnych (prywatne są z indeksu usuwane, jak wcześniej) i leży obok danych w IndexedDB. Po zmianie samego `tokenize` trzeba ręcznie podnieść numer w `INDEX_FORMAT`. Zmiany z ostatnich 3 s przed zamknięciem karty nie trafiają do zrzutu, ale następny start je nadrabia po odcisku. Przy `full` notatki spoza pierwszego źródła są dopisywane później, gdy widok ich użyje.
 - **Testy:** `src/workers/noteSearchHandlers.test.ts`, `src/lib/noteSearchEngine.test.ts` (restart Workera).
+
+## Notatki — podgląd PDF w czytniku (plan 5.6, 2026-11-13)
+
+- **Co robi:** przy załączniku PDF w czytniku jest „Pokaż podgląd”, który rozwija plik w ramce pod wierszem załącznika („Ukryj podgląd” zwija). Na iPhonie i iPadzie podglądu nie ma — zostaje „Otwórz w nowej karcie”.
+- **Gdzie:** `src/components/AttachmentsList.tsx` (`PdfPreview`, użyty w `AttachmentsReadOnlyList`), `netlify.toml` i `vercel.json` (CSP `frame-src 'self' blob:`).
+- **Jak działa:** bajty z `readAttachment` trafiają do `Blob` o stałym typie `application/pdf`, a ramka dostaje `URL.createObjectURL`. Adres jest zwalniany przy zwinięciu i zamknięciu czytnika. Typ jest narzucony, więc plik nigdy nie jest renderowany jako HTML. Nie używamy `<object>` ani `<embed>` (`object-src 'none'`).
+- **Ograniczenia:** podgląd wymaga wbudowanej przeglądarki PDF (na części telefonów z Androidem ramka pokaże tylko przycisk pobrania — wtedy działa „Otwórz”). Tylko w czytniku, nie w edytorze i na kaflu. Nie ma podglądu pliku, którego nie ma jeszcze na tym urządzeniu (pokazuje błąd wczytania).
+- **Testy:** `e2e/attachments.spec.ts`, `src/lib/securityHeaders.test.ts`.
