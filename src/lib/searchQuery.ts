@@ -195,6 +195,8 @@ export interface MatchNote {
   priority?: string;
   pinned: boolean;
   updatedAt: number;
+  /** Pole „Utworzono” (plan Notatek 6.1); bez niego pole jest puste. */
+  createdAt?: number;
   props?: NoteProps;
   /** Notatka prywatna (skarbiec) — operator `ma:prywatne`. */
   locked?: boolean;
@@ -222,10 +224,12 @@ function folderIdsByName(name: string, folders: MatchFolder[]): Set<string> {
 function matchesProp(note: MatchNote, name: string, want: string | undefined, defs: PropDef[]): boolean {
   const def = defs.find((d) => fold(d.name) === fold(name));
   if (!def) return false;
-  const text = propDisplayText(def, propValueFor(def, note.props));
+  const text = propDisplayText(def, propValueFor(def, note.props, note));
   if (text === "") return false;
   if (want === undefined) return true;
   const norm = (s: string) => fold(s).replace(/\./g, ",");
+  // Wiele wyborów: wystarczy, że jedna z wybranych opcji jest szukana (`pole:Tagi=pilne`).
+  if (def.type === "multi") return text.split(", ").some((part) => norm(part) === norm(want));
   return norm(text) === norm(want);
 }
 
@@ -233,10 +237,16 @@ function matchesProp(note: MatchNote, name: string, want: string | undefined, de
 function matchesPropCompare(note: MatchNote, name: string, op: CompareOp, want: string, defs: PropDef[]): boolean {
   const def = defs.find((d) => fold(d.name) === fold(name));
   if (!def) return false;
-  const raw = propValueFor(def, note.props);
+  const raw = propValueFor(def, note.props, note);
   if (raw === undefined || raw === "") return false;
   let order: number;
-  if (def.type === "number") {
+  if (def.type === "created" || def.type === "updated") {
+    // Daty notatki porównujemy jako dzień `YYYY-MM-DD` (czas lokalny), jak pole daty: `pole:Utworzono>2026-01-01`.
+    const d = new Date(Number(raw));
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const want2 = want.trim();
+    order = day < want2 ? -1 : day > want2 ? 1 : 0;
+  } else if (def.type === "number") {
     const x = Number(raw);
     const y = Number(want.replace(",", "."));
     if (!Number.isFinite(x) || !Number.isFinite(y)) return false;

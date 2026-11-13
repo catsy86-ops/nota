@@ -1,22 +1,43 @@
 /**
- * Właściwości notatek (4b): własne pola typu Notion — tekst, liczba, data, wybór.
+ * Właściwości notatek (4b, plan Notatek 6.1): własne pola typu Notion — tekst, liczba, data, wybór, tak/nie,
+ * odnośnik, wiele wyborów oraz „Utworzono” i „Zmieniono” (tylko do odczytu, liczone z notatki, nie zapisywane).
  * Definicje (nazwa, typ, opcje) żyją wspólnie w dokumencie; wartości — per notatka.
  * Moduł jest czysty: walidacja działa tak samo dla Y.Doc, kopii zapasowej i wpisu z formularza.
  */
 
-export const PROP_TYPES = ["text", "number", "date", "select"] as const;
+export const PROP_TYPES = ["text", "number", "date", "select", "checkbox", "url", "multi", "created", "updated"] as const;
 export type PropType = (typeof PROP_TYPES)[number];
+
+/** Pola z wartością liczoną z notatki (daty utworzenia i zmiany): bez edycji, bez zapisu w `props`. */
+export function isReadOnlyPropType(type: PropType): boolean {
+  return type === "created" || type === "updated";
+}
+
+/** Typy, które mają listę opcji. */
+export function hasPropOptions(type: PropType): boolean {
+  return type === "select" || type === "multi";
+}
+
+/** Daty notatki potrzebne polom „Utworzono” i „Zmieniono”. */
+export interface NoteTimes {
+  createdAt?: number;
+  updatedAt?: number;
+}
 
 export interface PropDef {
   id: string;
   name: string;
   type: PropType;
-  /** Tylko dla `select`: dozwolone wartości, w kolejności pokazywania. */
+  /** Tylko dla `select` i `multi`: dozwolone wartości, w kolejności pokazywania. */
   options?: string[];
   order: number;
 }
 
-/** Wartość właściwości: tekst, liczba albo data `YYYY-MM-DD` (też tekst). Brak klucza = puste pole. */
+/**
+ * Wartość właściwości: tekst, liczba albo data `YYYY-MM-DD` (też tekst). Brak klucza = puste pole.
+ * `checkbox` to `1` (zaznaczone; odznaczone = brak klucza), `multi` to wybrane opcje złączone znakiem nowej linii
+ * w kolejności opcji pola, `created`/`updated` nie mają wartości w `props`.
+ */
 export type PropValue = string | number;
 export type NoteProps = Record<string, PropValue>;
 
@@ -28,6 +49,8 @@ export const PROP_LIMITS = {
   option: 40,
   id: 200,
   numberAbs: 1e12,
+  /** Zapisany tekst wartości (wiele wyborów: do 20 opcji po 40 znaków). Pole tekstowe nadal do `text`. */
+  stored: 1000,
 } as const;
 
 export const PROP_TYPE_LABELS: Record<PropType, string> = {
@@ -35,7 +58,36 @@ export const PROP_TYPE_LABELS: Record<PropType, string> = {
   number: "Liczba",
   date: "Data",
   select: "Wybór",
+  checkbox: "Tak/nie",
+  url: "Odnośnik",
+  multi: "Wiele wyborów",
+  created: "Utworzono (tylko odczyt)",
+  updated: "Zmieniono (tylko odczyt)",
 };
+
+const CHECKBOX_YES = new Set(["1", "tak", "true", "yes", "x", "✓"]);
+const CHECKBOX_NO = new Set(["0", "nie", "false", "no"]);
+const DOMAIN_LIKE = /^[\p{L}\p{N}-]+(\.[\p{L}\p{N}-]+)+(\/\S*)?$/u;
+
+/** Adres z pola: `http(s)://…` albo goła domena (dostaje `https://`); inne schematy (`javascript:`, `data:`) odpadają. */
+function normalizeUrl(s: string): string | undefined {
+  const candidate = /^https?:\/\//i.test(s) ? s : DOMAIN_LIKE.test(s) ? `https://${s}` : null;
+  if (!candidate || candidate.length > PROP_LIMITS.text) return undefined;
+  try {
+    const u = new URL(candidate);
+    return u.hostname.includes(".") || u.hostname === "localhost" ? candidate : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Wybrane opcje z tekstu (po przecinku lub nowej linii) w kolejności opcji pola; `unknown` — ile nie pasuje do listy. */
+function pickOptions(def: PropDef, text: string): { picked: string[]; unknown: number } {
+  const parts = [...new Set(text.split(/[\n,]/).map((p) => p.trim()).filter(Boolean))];
+  const options = def.options ?? [];
+  const picked = options.filter((o) => parts.includes(o));
+  return { picked, unknown: parts.length - picked.length };
+}
 
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const NUMBER_TEXT = /^-?\d+(\.\d+)?$/;
@@ -51,6 +103,11 @@ function isValidIsoDate(s: string): boolean {
 
 /** Wartość z dowolnego wejścia (liczba z dokumentu, tekst z formularza). `undefined` = niepoprawna albo pusta. */
 function coerce(def: PropDef, raw: unknown): PropValue | undefined {
+  if (isReadOnlyPropType(def.type)) return undefined;
+  if (def.type === "checkbox") {
+    if (raw === 1) return 1;
+    return typeof raw === "string" && CHECKBOX_YES.has(raw.trim().toLocaleLowerCase("pl")) ? 1 : undefined;
+  }
   if (def.type === "number") {
     if (typeof raw === "number") {
       return Number.isFinite(raw) && Math.abs(raw) <= PROP_LIMITS.numberAbs ? raw : undefined;
@@ -66,6 +123,11 @@ function coerce(def: PropDef, raw: unknown): PropValue | undefined {
   if (!s) return undefined;
   if (def.type === "date") return isValidIsoDate(s) ? s : undefined;
   if (def.type === "select") return def.options?.includes(s) ? s : undefined;
+  if (def.type === "url") return normalizeUrl(s);
+  if (def.type === "multi") {
+    const { picked } = pickOptions(def, s);
+    return picked.length > 0 ? picked.join("\n") : undefined;
+  }
   return s.length <= PROP_LIMITS.text ? s : undefined;
 }
 
@@ -74,7 +136,11 @@ function coerce(def: PropDef, raw: unknown): PropValue | undefined {
  * (wołający zostawia poprzednią wartość), wartość = zapisz.
  */
 export function parsePropInput(def: PropDef, text: string): PropValue | null | undefined {
+  if (isReadOnlyPropType(def.type)) return undefined;
   if (!text.trim()) return null;
+  if (def.type === "checkbox" && CHECKBOX_NO.has(text.trim().toLocaleLowerCase("pl"))) return null;
+  // Wiele wyborów: jedna nieznana opcja unieważnia wpis (literówka nie ma po cichu znikać z reszty).
+  if (def.type === "multi" && pickOptions(def, text).unknown > 0) return undefined;
   return coerce(def, text);
 }
 
@@ -88,7 +154,7 @@ export function cleanNoteProps(raw: unknown): NoteProps {
     if (!key || key.length > PROP_LIMITS.id) continue;
     if (typeof value === "number") {
       if (Number.isFinite(value) && Math.abs(value) <= PROP_LIMITS.numberAbs) { out[key] = value; count++; }
-    } else if (typeof value === "string" && value.length <= PROP_LIMITS.text) {
+    } else if (typeof value === "string" && value.length <= PROP_LIMITS.stored) {
       out[key] = value; count++;
     }
   }
@@ -96,7 +162,9 @@ export function cleanNoteProps(raw: unknown): NoteProps {
 }
 
 /** Wartość notatki dla danej definicji, zgodna z jej typem; inaczej `undefined` (traktowane jak puste). */
-export function propValueFor(def: PropDef, props: NoteProps | undefined): PropValue | undefined {
+export function propValueFor(def: PropDef, props: NoteProps | undefined, times?: NoteTimes): PropValue | undefined {
+  if (def.type === "created") return times?.createdAt;
+  if (def.type === "updated") return times?.updatedAt;
   const raw = props?.[def.id];
   return raw === undefined ? undefined : coerce(def, raw);
 }
@@ -112,11 +180,17 @@ export function withPropValue(props: NoteProps | undefined, propId: string, valu
 /** Tekst w polu: liczby z polskim przecinkiem, tak jak się je wpisuje. */
 export function propDisplayText(def: PropDef, value: PropValue | undefined): string {
   if (value === undefined) return "";
-  return def.type === "number" ? String(value).replace(".", ",") : String(value);
+  if (def.type === "number") return String(value).replace(".", ",");
+  if (def.type === "checkbox") return "Tak";
+  if (def.type === "multi") return String(value).split("\n").join(", ");
+  if (isReadOnlyPropType(def.type)) {
+    return typeof value === "number" ? new Date(value).toLocaleString("pl-PL", { dateStyle: "medium", timeStyle: "short" }) : "";
+  }
+  return String(value);
 }
 
-export function formatPropValue(def: PropDef, props: NoteProps | undefined): string {
-  return propDisplayText(def, propValueFor(def, props));
+export function formatPropValue(def: PropDef, props: NoteProps | undefined, times?: NoteTimes): string {
+  return propDisplayText(def, propValueFor(def, props, times));
 }
 
 /** Definicja z dowolnego wejścia; `null`, gdy brakuje id, nazwy albo typ jest nieznany. */
@@ -130,13 +204,14 @@ export function cleanPropDef(raw: unknown): PropDef | null {
   const type = PROP_TYPES.find((t) => t === r.type);
   if (!type) return null;
   const order = typeof r.order === "number" && Number.isFinite(r.order) ? r.order : 0;
-  if (type !== "select") return { id, name, type, order };
+  if (!hasPropOptions(type)) return { id, name, type, order };
   const options: string[] = [];
   if (Array.isArray(r.options)) {
     for (const o of r.options) {
       if (options.length >= PROP_LIMITS.options) break;
       if (typeof o !== "string") continue;
-      const t = o.trim().slice(0, PROP_LIMITS.option);
+      // Opcje są jedną linią; przy wielu wyborach także bez przecinka, bo ten rozdziela wartości we wpisie.
+      const t = o.replace(type === "multi" ? /[\r\n,]+/g : /[\r\n]+/g, " ").replace(/\s+/g, " ").trim().slice(0, PROP_LIMITS.option);
       if (t && !options.includes(t)) options.push(t);
     }
   }
@@ -177,7 +252,7 @@ export function findPropDefByName(defs: PropDef[], name: string): PropDef | unde
 /** Nowa definicja z formularza. `options` liczy się tylko dla wyboru. */
 export function makePropDef(defs: PropDef[], name: string, type: PropType, options: string[] = [], id: string = crypto.randomUUID()): PropDef | null {
   const order = defs.reduce((max, d) => Math.max(max, d.order), -1) + 1;
-  return cleanPropDef({ id, name, type, options: type === "select" ? options : undefined, order });
+  return cleanPropDef({ id, name, type, options: hasPropOptions(type) ? options : undefined, order });
 }
 
 /**
@@ -185,9 +260,9 @@ export function makePropDef(defs: PropDef[], name: string, type: PropType, optio
  * (inaczej przy malejącym sortowaniu wszystkie notatki bez liczby wpadałyby na górę).
  * Liczby porównywane jak liczby, reszta jak tekst z polskim porządkiem (`10` po `9`).
  */
-export function comparePropsForSort(def: PropDef, a: NoteProps | undefined, b: NoteProps | undefined, dir: 1 | -1): number {
-  const va = propValueFor(def, a);
-  const vb = propValueFor(def, b);
+export function comparePropsForSort(def: PropDef, a: NoteProps | undefined, b: NoteProps | undefined, dir: 1 | -1, ta?: NoteTimes, tb?: NoteTimes): number {
+  const va = propValueFor(def, a, ta);
+  const vb = propValueFor(def, b, tb);
   if (va === undefined || vb === undefined) return va === vb ? 0 : va === undefined ? 1 : -1;
   if (typeof va === "number" && typeof vb === "number") return (va - vb) * dir;
   return String(va).localeCompare(String(vb), "pl", { numeric: true, sensitivity: "base" }) * dir;
@@ -195,7 +270,9 @@ export function comparePropsForSort(def: PropDef, a: NoteProps | undefined, b: N
 
 /** Pola z wartością, w kolejności pokazywania, jako pary `[nazwa, tekst]` — do eksportu tekstowego. */
 export function filledPropEntries(defs: PropDef[], props: NoteProps | undefined): [string, string][] {
+  // Pola tylko do odczytu (daty notatki) są już w metadanych notatki — w eksporcie wróciłyby jako zwykły tekst.
   return [...defs]
+    .filter((def) => !isReadOnlyPropType(def.type))
     .sort((a, b) => a.order - b.order)
     .map((def): [string, string] => [def.name, formatPropValue(def, props)])
     .filter(([, text]) => text !== "");

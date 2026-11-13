@@ -13,7 +13,7 @@ import { imageStore as defaultImageStore, isDataUrl, type ImageStore } from "@/l
 import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 import { logDiag } from "@/lib/diagnostics";
 import { NOTE_COVERS } from "@/lib/noteLook";
-import { cleanNoteProps, cleanPropDef, cleanPropDefs, type NoteProps, type PropDef } from "@/lib/noteProps";
+import { cleanNoteProps, cleanPropDef, cleanPropDefs, hasPropOptions, type NoteProps, type PropDef } from "@/lib/noteProps";
 import { mergeSpec, projectReminder, readSpec, REMINDER_FIELDS, specOf, type ReminderState } from "@/lib/reminderSpec";
 import { fallbackRepeat } from "@/lib/reminderRepeat";
 import { journalRefsIn } from "@/lib/study/journalRefs";
@@ -221,7 +221,7 @@ function yPropDefFromPlain(def: PropDef): YPropDef {
   const y: YPropDef = new Y.Map();
   y.set("name", def.name);
   y.set("type", def.type);
-  if (def.type === "select") y.set("options", def.options ?? []);
+  if (hasPropOptions(def.type)) y.set("options", def.options ?? []);
   y.set("order", def.order);
   return y;
 }

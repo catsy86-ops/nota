@@ -90,3 +90,41 @@ test("właściwości: usunięcie pola wymaga potwierdzenia i znika z tabeli", as
   await page.keyboard.press("Escape");
   await expect(page.locator("[data-note-table] thead th", { hasText: "Adres" })).toHaveCount(0);
 });
+
+test("właściwości: tak/nie, wiele wyborów i „Utworzono” w tabeli (6.1)", async ({ page }) => {
+  await seed(page);
+
+  const addField = async (name: string, type: string, options?: string) => {
+    await page.getByRole("button", { name: /^Pola/ }).click();
+    await page.getByLabel("Nazwa nowego pola").fill(name);
+    await page.getByLabel("Typ nowego pola").selectOption(type);
+    if (options) await page.getByLabel("Opcje nowego pola").fill(options);
+    await page.getByRole("button", { name: "Dodaj pole" }).click();
+    await page.keyboard.press("Escape");
+  };
+  await addField("Zapłacone", "checkbox");
+  await addField("Tagi", "multi", "pilne, dom, praca");
+  await addField("Dodano", "created");
+
+  // Tak/nie: zaznaczenie zostaje po odświeżeniu.
+  await page.getByLabel("Zapłacone: Alfa").check();
+  await expect(page.getByLabel("Zapłacone: Alfa")).toBeChecked();
+
+  // Wiele wyborów: dwie opcje, pokazane po przecinku.
+  await page.getByLabel("Tagi: Alfa").click();
+  await page.getByRole("menuitemcheckbox", { name: "pilne" }).click();
+  await page.getByRole("menuitemcheckbox", { name: "praca" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByLabel("Tagi: Alfa")).toContainText("pilne, praca");
+
+  // „Utworzono”: tylko odczyt, z datą notatki.
+  const row = page.locator("[data-note-table] tbody tr", { hasText: "Alfa" });
+  await expect(row).toContainText("2026");
+  await expect(page.getByLabel("Dodano: Alfa")).toHaveCount(0);
+
+  await page.reload();
+  await expect(page.locator("[data-note-table]")).toBeVisible();
+  await expect(page.getByLabel("Zapłacone: Alfa")).toBeChecked();
+  await expect(page.getByLabel("Zapłacone: Beta")).not.toBeChecked();
+  await expect(page.getByLabel("Tagi: Alfa")).toContainText("pilne, praca");
+});

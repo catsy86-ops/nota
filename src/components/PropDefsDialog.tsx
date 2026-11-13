@@ -3,7 +3,7 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { PROP_LIMITS, PROP_TYPE_LABELS, PROP_TYPES, type PropDef, type PropType } from "@/lib/noteProps";
+import { hasPropOptions, PROP_LIMITS, PROP_TYPE_LABELS, PROP_TYPES, type PropDef, type PropType } from "@/lib/noteProps";
 
 interface PropDefsDialogProps {
   open: boolean;
@@ -81,11 +81,11 @@ export function PropDefsDialog({ open, onOpenChange, defs, onAdd, onUpdate, onDe
                 {confirmId === def.id && (
                   <p className="ui-hint">Usunąć pole „{def.name}” i jego wartości we wszystkich notatkach?</p>
                 )}
-                {def.type === "select" && (
+                {hasPropOptions(def.type) && (
                   <Input
                     aria-label={`Opcje pola ${def.name}`}
                     defaultValue={(def.options ?? []).join(", ")}
-                    placeholder="Opcje po przecinku"
+                    placeholder={def.type === "multi" ? "Opcje po przecinku (wiele można zaznaczyć)" : "Opcje po przecinku"}
                     onBlur={(e) => onUpdate(def.id, { options: parseOptions(e.currentTarget.value) })}
                     className="h-9"
                   />
@@ -118,7 +118,7 @@ export function PropDefsDialog({ open, onOpenChange, defs, onAdd, onUpdate, onDe
               {PROP_TYPES.map((t) => <option key={t} value={t}>{PROP_TYPE_LABELS[t]}</option>)}
             </select>
           </div>
-          {type === "select" && (
+          {hasPropOptions(type) && (
             <Input
               aria-label="Opcje nowego pola"
               value={options}

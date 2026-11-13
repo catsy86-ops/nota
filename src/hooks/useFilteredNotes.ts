@@ -79,7 +79,7 @@ function sortNotes(list: Note[], prefs: ViewPrefs, opened: LastOpenedMap, propDe
   if (prefs.sortKey.startsWith("prop:")) {
     // Brak pola (usunięte po wybraniu sortowania) = zwykłe sortowanie po dacie zmiany.
     const def = propDefs.find((d) => `prop:${d.id}` === prefs.sortKey);
-    if (def) return [...list].sort((a, b) => comparePropsForSort(def, a.props, b.props, dir) || b.updatedAt - a.updatedAt);
+    if (def) return [...list].sort((a, b) => comparePropsForSort(def, a.props, b.props, dir, a, b) || b.updatedAt - a.updatedAt);
   }
   function sortFn(a: Note, b: Note) {
     switch (prefs.sortKey) {

@@ -29,6 +29,9 @@ function inferPropType(values: string[]): PropType {
   };
   if (fits("number")) return "number";
   if (fits("date")) return "date";
+  // Eksport zapisuje zaznaczone „tak/nie” jako „Tak”, a odnośniki z adresem w całości.
+  if (values.length > 0 && values.every((v) => /^tak$/i.test(v.trim())) && fits("checkbox")) return "checkbox";
+  if (values.length > 0 && values.every((v) => /^https?:\/\//i.test(v.trim())) && fits("url")) return "url";
   return "text";
 }
 

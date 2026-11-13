@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Bell, Columns3, Flag, Pin } from "lucide-react";
+import { ArrowDown, ArrowUp, Bell, ChevronDown, Columns3, Flag, Pin } from "lucide-react";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -10,8 +10,10 @@ import { dur, ease } from "@/lib/motion";
 import type { Folder, Note } from "@/hooks/useNotes";
 import { PRIORITY_COLOR_CLASS, PRIORITY_LABELS } from "@/lib/notePriority";
 import { getViewPrefs, setViewPref, useViewPrefs, type SortDir, type SortKey } from "@/lib/viewPrefs";
+import { safeHref } from "@/lib/safeUrl";
 import {
   filledPropEntries,
+  isReadOnlyPropType,
   parsePropInput,
   propDisplayText,
   propValueFor,
@@ -56,15 +58,72 @@ const CELL_INPUT = "h-8 w-full min-w-0 rounded-control border border-input bg-ba
  * Zdarzenia zatrzymane tu, żeby klawisz w komórce nie otwierał notatki wiersza.
  */
 export function PropCell({ def, note, onUpdate }: { def: PropDef; note: Note; onUpdate?: NoteTableProps["onUpdate"] }) {
-  const value = propValueFor(def, note.props);
+  const value = propValueFor(def, note.props, note);
   const current = propDisplayText(def, value);
   const editable = !!onUpdate && !note.locked && !note.readOnly;
   const label = `${def.name}: ${noteLabel(note)}`;
   const save = (next: PropValue | null) => onUpdate?.(note.id, { props: withPropValue(note.props, def.id, next) });
 
-  if (!editable) return <span className={cn("text-sm", !current && "text-muted-foreground")}>{current || "—"}</span>;
+  // „Utworzono” i „Zmieniono” liczą się z notatki — nie ma czego edytować.
+  const readOnly = isReadOnlyPropType(def.type);
+  if (!editable || readOnly) {
+    if (def.type === "url" && current) {
+      return (
+        <a href={safeHref(current)} target="_blank" rel="noopener noreferrer nofollow" referrerPolicy="no-referrer"
+          onClick={(e) => e.stopPropagation()} className="break-all text-sm text-accent underline underline-offset-2">{current}</a>
+      );
+    }
+    return <span className={cn("text-sm", !current && "text-muted-foreground")}>{current || "—"}</span>;
+  }
 
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
+
+  if (def.type === "checkbox") {
+    return (
+      <input
+        type="checkbox"
+        aria-label={label}
+        checked={value === 1}
+        onClick={stop}
+        onKeyDown={stop}
+        onChange={(e) => save(e.target.checked ? 1 : null)}
+        className="h-5 w-5 accent-primary coarse:h-6 coarse:w-6"
+      />
+    );
+  }
+
+  if (def.type === "multi") {
+    const chosen = new Set(typeof value === "string" ? value.split("\n") : []);
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button type="button" aria-label={label} onClick={stop} onKeyDown={stop} className={cn(CELL_INPUT, "flex items-center justify-between gap-1 text-left", !current && "text-muted-foreground")}>
+            <span className="truncate">{current || "—"}</span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" onClick={stop}>
+          {(def.options ?? []).map((o) => (
+            <DropdownMenuCheckboxItem
+              key={o}
+              checked={chosen.has(o)}
+              onSelect={(e) => e.preventDefault()}
+              onCheckedChange={(on) => {
+                const next = new Set(chosen);
+                if (on === true) next.add(o); else next.delete(o);
+                // Zapis w kolejności opcji pola — taka sama postać, jaką daje wpis z formularza i import.
+                const ordered = (def.options ?? []).filter((x) => next.has(x));
+                save(ordered.length ? ordered.join("\n") : null);
+              }}
+            >
+              {o}
+            </DropdownMenuCheckboxItem>
+          ))}
+          {(def.options ?? []).length === 0 && <p className="px-2 py-1.5 text-xs text-muted-foreground">Dodaj opcje w „Pola”.</p>}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
 
   if (def.type === "select") {
     return (
@@ -89,7 +148,8 @@ export function PropCell({ def, note, onUpdate }: { def: PropDef; note: Note; on
       key={current}
       aria-label={label}
       type={def.type === "date" ? "date" : "text"}
-      inputMode={def.type === "number" ? "decimal" : undefined}
+      inputMode={def.type === "number" ? "decimal" : def.type === "url" ? "url" : undefined}
+      placeholder={def.type === "url" ? "https://…" : undefined}
       defaultValue={current}
       onClick={stop}
       onKeyDown={(e) => {

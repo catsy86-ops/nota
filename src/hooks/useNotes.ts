@@ -15,7 +15,7 @@ import type { Attachment } from "@/lib/attachments";
 import type { NoteCover } from "@/lib/noteLook";
 import { cleanLabelPath } from "@/lib/labelTree";
 import { isDstShiftedOccurrence, minutesOfDay, type RepeatRule } from "@/lib/reminderRepeat";
-import { cleanPropDef, makePropDef, propNameTaken, type NoteProps, type PropDef, type PropType } from "@/lib/noteProps";
+import { cleanPropDef, hasPropOptions, makePropDef, propNameTaken, type NoteProps, type PropDef, type PropType } from "@/lib/noteProps";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
 
@@ -462,7 +462,7 @@ export function useNotes() {
     if (!current) return false;
     const name = (updates.name ?? current.name).trim();
     if (!name || propNameTaken(propDefsRef.current, name, id)) return false;
-    const next = cleanPropDef({ ...current, name, options: current.type === "select" ? (updates.options ?? current.options) : undefined });
+    const next = cleanPropDef({ ...current, name, options: hasPropOptions(current.type) ? (updates.options ?? current.options) : undefined });
     if (!next) return false;
     yjsStore.upsertPropDef(next);
     return true;

@@ -97,7 +97,7 @@ describe("cleanPropDef / cleanPropDefs", () => {
   it("odrzuca definicję bez nazwy, id lub z nieznanym typem", () => {
     expect(cleanPropDef({ id: "x", name: "  ", type: "text", order: 0 })).toBeNull();
     expect(cleanPropDef({ id: "", name: "A", type: "text", order: 0 })).toBeNull();
-    expect(cleanPropDef({ id: "x", name: "A", type: "checkbox", order: 0 })).toBeNull();
+    expect(cleanPropDef({ id: "x", name: "A", type: "relation", order: 0 })).toBeNull();
   });
 
   it("czyści opcje wyboru: bez pustych, duplikatów i nadmiaru", () => {
