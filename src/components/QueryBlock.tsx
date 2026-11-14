@@ -43,7 +43,7 @@ export function QueryBlock({ source, onWikiClick }: { source: string; onWikiClic
       </div>
       {warnings.length > 0 && <p role="status" className="px-2.5 py-1 text-2xs text-warning-ink">{warnings.join(" ")}</p>}
       {rows.length === 0 ? (
-        <p className="px-2.5 py-2 text-xs text-muted-foreground">Brak notatek pasujących do zapytania.</p>
+        <p className="px-2.5 py-2 ui-hint">Brak notatek pasujących do zapytania.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

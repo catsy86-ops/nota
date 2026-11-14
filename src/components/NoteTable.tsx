@@ -119,7 +119,7 @@ export function PropCell({ def, note, onUpdate }: { def: PropDef; note: Note; on
               {o}
             </DropdownMenuCheckboxItem>
           ))}
-          {(def.options ?? []).length === 0 && <p className="px-2 py-1.5 text-xs text-muted-foreground">Dodaj opcje w „Pola”.</p>}
+          {(def.options ?? []).length === 0 && <p className="px-2 py-1.5 ui-hint">Dodaj opcje w „Pola”.</p>}
         </DropdownMenuContent>
       </DropdownMenu>
     );
