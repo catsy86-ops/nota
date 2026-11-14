@@ -38,3 +38,5 @@ public/mermaid/
 
 # Pamięć kompilatora TypeScript (tsc -b)
 *.tsbuildinfo
+
+.playwright-mcp/
