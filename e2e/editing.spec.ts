@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { askBeforeTrashAndArchive } from "./helpers";
-import { editorBody, expectEditorText } from "./helpers/editor";
+import { editorBody } from "./helpers/editor";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));

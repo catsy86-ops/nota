@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X, Maximize2, QrCode, Sparkles, Aperture, Radio } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X, Maximize2, QrCode, Sparkles, Radio } from "lucide-react";
 import { formatFileSize } from "@/lib/attachments";
 import { addRecording } from "@/lib/study/recordings";
 import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/journalEntry";

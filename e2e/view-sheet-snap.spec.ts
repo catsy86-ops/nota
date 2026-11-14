@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 // Plan UI/UX 3.10: „Widok” na telefonie ma punkty „pół” i „pełny”; przeciągnięcie uchwytu zmienia wysokość.
 // Gest dotykowy przez CDP, jak w mobile.spec.ts — mysz na emulowanym telefonie nie daje tych zdarzeń.

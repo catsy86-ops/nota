@@ -306,6 +306,8 @@ const Index = () => {
   // Archiwum nie wchodzi do grup „Zaległe”/„Nadchodzące” (D4): ma własną sekcję na dole, z wyszukiwaniem.
   // T 1.1: grupy przeliczają się na granicy terminu i o północy, nie tylko przy zmianie notatek.
   const boundaryTick = useNextBoundary(others);
+  // `boundaryTick` wymusza przeliczenie na granicy terminu (groupReminders czyta bieżący czas).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const reminderGroups = useMemo(() => (view === "reminders" ? groupReminders(others) : []), [view, others, boundaryTick]);
   // Zapis terminu z dialogu „Nowy termin” (Terminy). Kalendarz ma własne, równoważne wywołania w `ReminderCalendarView`.
   const createReminderNote = (title: string, reminder: number, repeat: RepeatInput, allDay: boolean, until?: number) => {

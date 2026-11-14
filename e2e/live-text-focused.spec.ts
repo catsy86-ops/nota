@@ -1,7 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { editorBody, expectEditorText } from "./helpers/editor";
 
-const CONTENT = "Treść notatki...";
 
 async function open(page: Page) {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));

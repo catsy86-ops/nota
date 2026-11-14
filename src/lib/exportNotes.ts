@@ -20,7 +20,7 @@ import { extraSchedulesDump, mainShiftData, restoreExtraSchedule, restoreShifts,
 import { migrate } from "@/lib/shifts/model";
 import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
 import { PUSH_PREFS_KEY, type PushPrefs } from "@/lib/push/prefs";
-import { download, downloadBlob } from "@/lib/downloadBlob";
+import { download } from "@/lib/downloadBlob";
 
 export { download };
 import { getViewPrefs } from "@/lib/viewPrefs";

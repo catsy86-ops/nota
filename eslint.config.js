@@ -43,6 +43,8 @@ export default tseslint.config(
       "src/lib/yjsStore.props.test.ts",
       "src/lib/yTextEdit.ts",
       "src/lib/yTextEdit.test.ts",
+      // Test limitów scalania: dwa dokumenty Yjs i Y.applyUpdate.
+      "src/lib/study/mergeLimits.test.ts",
       "src/lib/yjsSync.ts",
       "src/lib/yjsSync.test.ts",
       "src/lib/imageSync.ts",
