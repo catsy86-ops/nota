@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Folder, Note } from "@/hooks/useNotes";
+import type { Folder, Note } from "@/lib/types/note";
 import { folderProgress, noteProgress } from "@/lib/folderProgress";
 
 const note = (p: Partial<Note>): Note => ({

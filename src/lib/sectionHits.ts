@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { fold, matchesClauses, parseSearchQuery, type MatchContext } from "@/lib/searchQuery";
 import { blockIdOfLine, stripBlockId } from "@/lib/blockRefs";
 

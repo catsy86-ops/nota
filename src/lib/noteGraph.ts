@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { extractWikiLinks } from "@/lib/wikiLinks";
 import { noteMatchesLabel } from "@/lib/labelTree";
 

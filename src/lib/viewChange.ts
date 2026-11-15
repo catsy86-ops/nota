@@ -1,6 +1,6 @@
 import { canViewTransition } from "@/lib/viewTransition";
 import { flushSync } from "react-dom";
-import { isMotionReduced } from "@/hooks/useMotionPref";
+import { isMotionReduced } from "@/lib/motionPref";
 
 /**
  * Zmiana układu, kolumn albo gęstości bez skoku: kafel u góry ekranu zostaje

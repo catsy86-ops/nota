@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 /**
  * Notatki okresowe: jedna notatka na tydzień (ISO) i jedna na miesiąc.

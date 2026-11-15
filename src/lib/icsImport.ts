@@ -1,5 +1,5 @@
 import { readTextFile } from "./readTextFile";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { yjsStore } from "@/lib/yjsStore";
 import { DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 

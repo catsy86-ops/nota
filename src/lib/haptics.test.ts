@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { haptic } from "./haptics";
 import { setEffectEnabled } from "./effectsSettings";
-import { setMotionMode } from "@/hooks/useMotionPref";
+import { setMotionMode } from "@/lib/motionPref";
 
 function mockMatchMedia(matches: (q: string) => boolean) {
   Object.defineProperty(window, "matchMedia", {

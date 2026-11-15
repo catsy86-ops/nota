@@ -1,4 +1,4 @@
-import type { Folder, Note } from "@/hooks/useNotes";
+import type { Folder, Note } from "@/lib/types/note";
 import { logDiag } from "@/lib/diagnostics";
 import { imageStore } from "@/lib/imageStore";
 import { cleanPropDef, findPropDefByName, makePropDef, parsePropInput, PROP_LIMITS, propNameKey, type NoteProps, type PropDef, type PropType } from "@/lib/noteProps";

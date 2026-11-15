@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { formatDuration, setDayEntry, type ShiftOccurrence } from "@/lib/shifts";
 import { toastWithUndo } from "@/lib/undoToast";
 import { haptic } from "@/lib/haptics";

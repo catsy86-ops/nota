@@ -1,4 +1,4 @@
-import type { View } from "@/hooks/useFilteredNotes";
+import type { View } from "@/lib/types/view";
 
 /** Szkice pustych widoków (ścieżki SVG w viewBox 120x84), rysowane „długopisem”. */
 export const EMPTY_GLYPHS: Partial<Record<View, string[]>> = {

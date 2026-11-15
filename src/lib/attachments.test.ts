@@ -6,7 +6,7 @@ import {
 } from "./attachments";
 import { createImageStore, GC_GRACE_MS } from "./imageStore";
 import { createYjsStore } from "./yjsStore";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {

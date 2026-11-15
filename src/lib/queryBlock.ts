@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { comparePropsForSort, type PropDef } from "@/lib/noteProps";
 import { fold, parseSearchQuery, tokenize } from "@/lib/searchQuery";
 import { searchNotes, type SearchContext } from "@/lib/searchNotes";

@@ -1,5 +1,5 @@
 import { z } from "zod/mini";
-import type { Note, Folder, NoteColor, FolderColor, ChecklistItem } from "@/hooks/useNotes";
+import type { Note, Folder, NoteColor, FolderColor, ChecklistItem } from "@/lib/types/note";
 import type { NoteVersion } from "@/lib/versionsStore";
 import { normalizeAttachments } from "@/lib/attachments";
 import { NOTE_COVERS } from "@/lib/noteLook";

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 export interface Achievement {
   id: string;

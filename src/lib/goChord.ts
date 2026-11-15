@@ -1,4 +1,4 @@
-import type { View } from "@/hooks/useFilteredNotes";
+import type { View } from "@/lib/types/view";
 
 /** Okno (ms) na wciśnięcie drugiego klawisza po „g”. */
 export const GO_CHORD_WINDOW_MS = 1200;

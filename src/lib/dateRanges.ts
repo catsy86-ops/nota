@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 export function getTodayRange(): { start: number; end: number } {
   const start = new Date();

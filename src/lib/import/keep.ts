@@ -1,4 +1,4 @@
-import type { NoteColor } from "@/hooks/useNotes";
+import type { NoteColor } from "@/lib/types/note";
 import type { AttachmentRef, ParsedNote } from "./types";
 
 /** Kolory Keep → kolory aplikacji (najbliższy odcień; szary i domyślny = bez koloru). */

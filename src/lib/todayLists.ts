@@ -1,4 +1,4 @@
-import type { ChecklistItem, Note } from "@/hooks/useNotes";
+import type { ChecklistItem, Note } from "@/lib/types/note";
 
 /** Jedna nieodhaczona pozycja listy do odhaczenia prosto z Dziś (Dziś 4.2). */
 export interface TodayListRow {

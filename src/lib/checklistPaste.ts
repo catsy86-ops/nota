@@ -1,4 +1,4 @@
-import type { ChecklistItem } from "@/hooks/useNotes";
+import type { ChecklistItem } from "@/lib/types/note";
 
 /** Znaczniki list z Markdown/Keepa/Worda zdejmowane z początku linii. */
 const TASK_RE = /^[-*+•]?\s*\[([ xX])\]\s+/;

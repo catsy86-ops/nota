@@ -15,7 +15,8 @@ import { noteMatchesLabel } from "@/lib/labelTree";
 
 const NO_OPENED: LastOpenedMap = {};
 
-export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "shifts" | "study" | "debts" | "cwiczenia" | "plans" | "folder" | "widget" | "trash" | "inbox";
+export type { View } from "@/lib/types/view";
+import type { View } from "@/lib/types/view";
 
 /** Liczba trafień wyszukiwania poza bieżącym widokiem. */
 export interface Elsewhere { notes: number; archive: number; trash: number }

@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { SKIN_META } from "@/lib/skinGallery";
 import { setSkin, skinStore, type Skin } from "@/lib/skins";
 import { isSiteModeActive, setSiteMode } from "@/lib/siteMode";

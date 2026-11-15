@@ -1,4 +1,4 @@
-import type { NoteColor } from "@/hooks/useNotes";
+import type { NoteColor } from "@/lib/types/note";
 import type { NotePriority } from "@/lib/notePriority";
 import { createPersistedStore } from "@/lib/persistedStore";
 import type { GroupBy } from "@/lib/groupNotes";

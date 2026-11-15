@@ -1,18 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { CONSENT_KEY, hasDictationConsent } from "@/lib/dictationConsent";
 import { localSpeechReady, setLocalSpeechReady, speechRecognitionCtor as getCtor, type SpeechRecognitionLike } from "@/lib/localSpeech";
 
-const CONSENT_KEY = "kaczy.dictation.consent";
-
-/** Czy użytkownik zgodził się na dyktowanie (usługa przeglądarki). */
-export function hasDictationConsent(): boolean {
-  try { return localStorage.getItem(CONSENT_KEY) === "1"; } catch { return false; }
-}
-
-/** Cofa zgodę: następne dyktowanie znowu zapyta. Nie rusza uprawnienia mikrofonu w przeglądarce. */
-export function withdrawDictationConsent(): void {
-  try { localStorage.removeItem(CONSENT_KEY); } catch { /* bez localStorage nie ma czego cofać */ }
-}
+export { hasDictationConsent, withdrawDictationConsent } from "@/lib/dictationConsent";
 
 const ERRORS: Record<string, string> = {
   "not-allowed": "Brak zgody na mikrofon. Zezwól na nią w ustawieniach przeglądarki.",

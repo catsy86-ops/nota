@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { noteToMarkdown, noteToPlainText, copyNoteToClipboard } from "./noteMarkdown";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { toast } from "sonner";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));

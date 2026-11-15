@@ -1,4 +1,4 @@
-import type { Note, ChecklistItem } from "@/hooks/useNotes";
+import type { Note, ChecklistItem } from "@/lib/types/note";
 import type { YjsStore } from "@/lib/yjsStore";
 import { yjsStore as defaultStore } from "@/lib/yjsStore";
 import { versionsStore as defaultVersions, type VersionsStore } from "@/lib/versionsStore";
@@ -8,7 +8,7 @@ import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatS
 import { comparePin, readVaultPin, writeVaultPin } from "@/lib/vaultPin";
 import { assertPasskey, registerPasskey } from "@/lib/passkey";
 import { MAX_PASSKEYS, unlockWithPasskey as unlockKeyWithPasskey, unwrapRawWithPassword, wrapDataKeyForPasskey, fromB64u, toB64u } from "@/lib/vault";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, encryptString, isValidMeta, noteAad,
   unlockWithPassword, unlockWithRecovery, type VaultMeta,

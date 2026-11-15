@@ -1,4 +1,4 @@
-import type { View } from "@/hooks/useFilteredNotes";
+import type { View } from "@/lib/types/view";
 import { createPersistedStore } from "@/lib/persistedStore";
 
 /**

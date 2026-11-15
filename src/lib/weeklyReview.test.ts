@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { buildWeeklyReview, reviewCycleKey, dueCycleKey, snoozeUntilTomorrow, reviewQueue } from "./weeklyReview";
 
 const DAY = 24 * 60 * 60 * 1000;

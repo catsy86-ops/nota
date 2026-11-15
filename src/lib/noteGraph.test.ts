@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { buildGraph, forceLayout, GRAPH_NODE_LIMIT } from "./noteGraph";
 
 function note(id: string, title: string, content = "", extra: Partial<Note> = {}): Note {

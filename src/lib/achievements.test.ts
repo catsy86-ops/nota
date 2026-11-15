@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeDailyActivityCounts, computeStreak, activityLastNDays, parseDayKey } from "./achievements";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 const DAY = 24 * 60 * 60 * 1000;
 

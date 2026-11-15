@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { loadFired, saveFired, reconcileFired, FIRED_KEY } from "./firedReminders";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {

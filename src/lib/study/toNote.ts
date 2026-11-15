@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { CHECKLIST, MODULES, QUESTIONS, TOPICS, type StudyTopic } from "./content";
 import { reportBody, type JournalReport } from "./report";
 

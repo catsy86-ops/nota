@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import type { PropDef } from "@/lib/noteProps";
 import { isQueryBlockLanguage, parseQueryBlock, runQueryBlock } from "./queryBlock";
 

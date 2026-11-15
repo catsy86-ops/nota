@@ -1,4 +1,4 @@
-import type { NoteColor } from "@/hooks/useNotes";
+import type { NoteColor } from "@/lib/types/note";
 import type { PropValue } from "@/lib/noteProps";
 
 /** Plik wejściowy importu — z wybranych plików, folderu albo z wnętrza archiwum ZIP. */

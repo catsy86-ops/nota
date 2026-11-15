@@ -3,7 +3,7 @@ import { mayLeaveDevice, sizeCappedRefsIn } from "@/lib/plans/planRefs";
 import { createStore, get as idbGet, set as idbSet, del as idbDel, type UseStore } from "idb-keyval";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { deriveRelayKeys } from "@/lib/sync/relayKeys";
 import { RelayProvider, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
 import { RelayBlobs } from "@/lib/sync/relayBlobs";

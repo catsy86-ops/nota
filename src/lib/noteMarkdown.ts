@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { toast } from "sonner";
-import type { Note } from "@/hooks/useNotes";
+import { toast } from "@/lib/notify";
+import type { Note } from "@/lib/types/note";
 
 /**
  * Jedna notatka jako tekst do schowka. Układ zgodny z `exportToMarkdown`

@@ -1,4 +1,4 @@
-import { hasDictationConsent } from "@/hooks/useDictation";
+import { hasDictationConsent } from "@/lib/dictationConsent";
 import { DICTATION_LANG, localSpeechReady, speechRecognitionCtor as ctor, type SpeechRecognitionLike as Rec } from "./localSpeech";
 
 /**

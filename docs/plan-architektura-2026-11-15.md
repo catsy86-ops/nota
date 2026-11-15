@@ -21,12 +21,12 @@
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
-| A1.1 | **Typy domeny do `src/lib/types/note.ts`:** `Note`, `ChecklistItem`, `Folder`, `NoteColor`, `FolderColor`. `useNotes.ts` reeksportuje je (zero zmian w komponentach). Potem mechaniczna zamiana 92 importów w `lib`. Uwaga z pamięci: zamiana importów regexem zgubiła kiedyś `...fn()` — robić przez `ts-morph` albo plik po pliku, z typecheck po każdej paczce. | M |
-| A1.2 | **`View` do `src/lib/types/view.ts`**; `isMotionReduced`/`setMotionMode` do `src/lib/motionPref.ts`; `resolveDark` do `src/lib/theme.ts`; `hasDictationConsent` do `src/lib/dictationConsent.ts`. Hooki reeksportują. | S |
-| A1.3 | **Dwa importy komponentów z `lib`** (`InvoiceDialog`, `ClientsView`): sprawdzić, co jest brane (zwykle typ albo stała) i przenieść to do `lib`. | S |
-| A1.4 | **`sonner` poza `lib`:** port `src/lib/notify.ts` — `notify.info/success/error/undo(...)` z wstrzykiwanym ujściem (`setNotifySink`), domyślnie puste; `App.tsx` podpina `toast`. 14 plików przechodzi na `notify`. Testy `lib` przestają potrzebować atrapy `sonner`. | M |
+| A1.1 ✅ | **Typy domeny do `src/lib/types/note.ts`:** `Note`, `ChecklistItem`, `Folder`, `NoteColor`, `FolderColor`. `useNotes.ts` reeksportuje je (zero zmian w komponentach). Potem mechaniczna zamiana 92 importów w `lib`. Uwaga z pamięci: zamiana importów regexem zgubiła kiedyś `...fn()` — robić przez `ts-morph` albo plik po pliku, z typecheck po każdej paczce. | M |
+| A1.2 ✅ | **`View` do `src/lib/types/view.ts`**; `isMotionReduced`/`setMotionMode` do `src/lib/motionPref.ts`; `resolveDark` do `src/lib/theme.ts`; `hasDictationConsent` do `src/lib/dictationConsent.ts`. Hooki reeksportują. | S |
+| A1.3 ✅ | **Dwa importy komponentów z `lib`** (`InvoiceDialog`, `ClientsView`): sprawdzić, co jest brane (zwykle typ albo stała) i przenieść to do `lib`. | S |
+| A1.4 ◐ (jeden plik `notify.ts`, bez wstrzykiwania) | **`sonner` poza `lib`:** port `src/lib/notify.ts` — `notify.info/success/error/undo(...)` z wstrzykiwanym ujściem (`setNotifySink`), domyślnie puste; `App.tsx` podpina `toast`. 14 plików przechodzi na `notify`. Testy `lib` przestają potrzebować atrapy `sonner`. | M |
 | A1.5 | **Hooki bez komponentów:** 9 importów — hook zwraca dane i akcje, a komponent (dialog, toast) renderuje wołający; tam, gdzie to niepraktyczne, przenieść plik do `components/` jako komponent-kontroler. | M |
-| A1.6 | **Reguła ESLint** `no-restricted-imports` dla `src/lib/**`: zakaz `@/hooks/*`, `@/components/*`, `sonner`, `react` (poza jawną listą plików `*.tsx` w `lib`). Dla `src/hooks/**`: zakaz `@/components/*`. Lista wyjątków w konfiguracji, malejąca do zera. | S |
+| A1.6 ✅ | **Reguła ESLint** `no-restricted-imports` dla `src/lib/**`: zakaz `@/hooks/*`, `@/components/*`, `sonner`, `react` (poza jawną listą plików `*.tsx` w `lib`). Dla `src/hooks/**`: zakaz `@/components/*`. Lista wyjątków w konfiguracji, malejąca do zera. | S |
 
 Odbiór: `grep -r "@/hooks\|@/components" src/lib` = 0 poza listą wyjątków; lint 0 błędów.
 

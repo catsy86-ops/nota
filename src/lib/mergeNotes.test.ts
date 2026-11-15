@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { MERGE_SEPARATOR, planMerge } from "./mergeNotes";
 
 function note(over: Partial<Note> & { id: string }): Note {

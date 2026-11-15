@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { loadAll, saveNotesIDB, saveLabelsIDB, saveFoldersIDB, clearAllStorage } from "./notesStore";
-import type { Note, Folder } from "@/hooks/useNotes";
+import type { Note, Folder } from "@/lib/types/note";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {

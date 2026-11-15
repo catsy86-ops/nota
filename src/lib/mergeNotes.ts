@@ -1,4 +1,4 @@
-import type { ChecklistItem, Note } from "@/hooks/useNotes";
+import type { ChecklistItem, Note } from "@/lib/types/note";
 import type { Attachment } from "@/lib/attachments";
 import { PRIORITY_ORDER, type NotePriority } from "@/lib/notePriority";
 

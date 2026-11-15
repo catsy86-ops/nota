@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { yjsStore } from "@/lib/yjsStore";
 import { clearAllStorage } from "@/lib/notesStore";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { logDiag, getDiagEntries, clearDiagForTests } from "@/lib/diagnostics";
 
 const PAIRING_CODE = "QWERTY23";

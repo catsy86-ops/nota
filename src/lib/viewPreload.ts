@@ -1,4 +1,4 @@
-import type { View } from "@/hooks/useFilteredNotes";
+import type { View } from "@/lib/types/view";
 
 // Widoki ładowane leniwie (osobne paczki). Te same obietnice służą `lazy()`
 // w Index.tsx i wstępnemu ładowaniu z nawigacji — import modułu jest

@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { foldName } from "@/lib/study/siteKey";
 import { normalizeNip } from "@/lib/ksef/nip";
 import { safeLine } from "@/lib/safeText";

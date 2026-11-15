@@ -1,5 +1,5 @@
 import { nextOccurrence, ruleOf, type RepeatRule } from "@/lib/reminderRepeat";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 /**
  * Rozwijanie przypomnień w wystąpienia na osi czasu — rdzeń widoku kalendarza.

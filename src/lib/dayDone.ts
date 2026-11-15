@@ -1,4 +1,4 @@
-import type { ChecklistItem } from "@/hooks/useNotes";
+import type { ChecklistItem } from "@/lib/types/note";
 
 const STORAGE_KEY = "kaczy.dayDone.v1";
 

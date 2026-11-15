@@ -5810,4 +5810,13 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** `navigator.locks.request("notatnik-migracja", exclusive)`; bez Web Locks kolejka obietnic w obrębie jednej karty. Druga karta zastaje flagi migracji w `localStorage`, więc nic nie dubluje. Stan błędu zapisu (`saveStatus.ts`, faza `error`) istniał wcześniej i blokuje zamknięcie karty.
 - **Ograniczenia:** nie ma komunikatu „trwa w innej karcie” — druga karta po prostu czeka. Ostrzeżenia „magazyn nietrwały po 7 dniach” nie dodano (jest tylko status trwałości).
 - **Testy:** `src/lib/tabLock.test.ts`, `src/lib/storagePersistence.test.ts`, istniejące `saveStatus.test.ts`.
-- **Commit:** patrz `git log` (2026-11-15).
+- **Commit:** zob. `git log` (2026-11-15).
+
+## Architektura — warstwy `lib ← hooks ← components` (A1.1–A1.4, A1.6 planu architektury, 2026-11-15)
+
+- **Co robi:** nic widocznego dla użytkownika. Kod w `src/lib` nie zna już hooków ani komponentów, a reguła ESLint pilnuje, żeby tak zostało.
+- **Gdzie jest:** typy `Note`, `Folder`, `ChecklistItem`, `NoteColor`, `FolderColor` w `src/lib/types/note.ts` (hook `useNotes.ts` reeksportuje je, więc komponenty bez zmian); `View` w `src/lib/types/view.ts` (reeksport z `useFilteredNotes.ts`); `src/lib/motionPref.ts` (preferencja ruchu: `isMotionReduced`, `setMotionMode`, `motionStore`; hook `useMotionPref` zostaje cienką nakładką); `src/lib/dictationConsent.ts`; `src/lib/notify.ts` (jedyny moduł `lib` importujący `sonner`: `export { toast }`). Reguły: `eslint.config.js` (`no-restricted-syntax` dla `src/lib/**` i `src/hooks/**`).
+- **Jak działa:** zmiana to przeniesienie definicji i reeksporty — zachowanie bez zmian. Importy dynamiczne `import()` (leniwe widoki w `viewPreload.ts`) są dozwolone, bo to nie zależność statyczna. Testy są poza regułą.
+- **Ograniczenia:** A1.4 zrobione w wersji pośredniej — jeden plik `notify.ts` zamiast wstrzykiwanego ujścia (`setNotifySink`), bo 17 testów mockuje `sonner` i wymagałyby przepisania. A1.5 niezrobione: 8 hooków dalej importuje komponenty (lista wyjątków w `eslint.config.js`, ma malejąć do zera). `resolveDark`/`useToday` z planu występowały tylko w testach.
+- **Testy:** typecheck, lint i całe Vitest. Dwa testy (`searchNotes` limit 50 ms, `yjsSync` liczba transportów) bywają niestabilne w przebiegu równoległym, a osobno przechodzą.
+- **Commit:** zob. `git log` (2026-11-15).

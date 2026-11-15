@@ -20,7 +20,7 @@ import { getJobs, removeJob, saveQuoteItem, setJobMeta } from "./study/jobsStore
 import { addVanEvent, getVan, removeVanItem, saveVanItem } from "./study/vanStore";
 import { addTrainingEntry, addPlanDay, removeTrainingEntry, trainingDump } from "./training/store";
 import { cleanDump } from "./study/yStudy";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {

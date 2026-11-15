@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { EXTRACT_TITLE_FALLBACK, EXTRACT_TITLE_MAX, replaceSelectionWithLink, titleFromSelection, uniqueNoteTitle } from "./extractNote";
 import { extractWikiLinks, resolveWikiTarget } from "./wikiLinks";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 describe("titleFromSelection", () => {
   it("bierze pierwszą niepustą linię", () => {

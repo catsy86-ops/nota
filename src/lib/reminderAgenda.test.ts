@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { groupReminders, snoozeTimes, countOverdue, countDueToday, eveningTime, sortArchivedByReminder } from "./reminderAgenda";
 import { weekSeriesForecasts } from "@/lib/reminderForecast";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 const at = (y: number, m: number, d: number, h = 12, min = 0) => new Date(y, m - 1, d, h, min).getTime();
 const note = (id: string, reminder: number | null, updatedAt = 0): Note => ({

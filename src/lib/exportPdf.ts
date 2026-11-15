@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import jsPDF from "jspdf";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { embeddableImages } from "@/lib/exportNotes";
 
 // Split out from exportNotes.ts: jsPDF (+ the html2canvas it dynamically

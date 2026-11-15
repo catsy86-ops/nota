@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 export type GroupBy = "none" | "date" | "label" | "folder";
 

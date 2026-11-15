@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { expandOccurrences, groupByDay, dayKey } from "./reminderOccurrences";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {

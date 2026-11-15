@@ -1,4 +1,4 @@
-import type { ChecklistItem } from "@/hooks/useNotes";
+import type { ChecklistItem } from "@/lib/types/note";
 
 /**
  * Przeciągnięcie pozycji listy (nowy plan 5.2): `activeId` ląduje na miejscu `overId`

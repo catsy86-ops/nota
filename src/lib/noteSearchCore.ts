@@ -1,5 +1,5 @@
 import type MiniSearch from "minisearch";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { fold } from "@/lib/fold";
 
 /**

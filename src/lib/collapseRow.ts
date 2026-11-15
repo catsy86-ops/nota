@@ -1,4 +1,4 @@
-import { isMotionReduced } from "@/hooks/useMotionPref";
+import { isMotionReduced } from "@/lib/motionPref";
 
 /** Ptaszek rysuje się 60 ms + `--dur-base` (motion.css); wiersz zwija się zaraz po nim. */
 const TICK_MS = 280;

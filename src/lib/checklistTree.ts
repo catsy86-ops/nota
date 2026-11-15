@@ -1,4 +1,4 @@
-import type { ChecklistItem } from "@/hooks/useNotes";
+import type { ChecklistItem } from "@/lib/types/note";
 
 /**
  * Podzadania listy (plan Notatek 2.2): podzadanie to pozycja z `indent: 1` stojąca zaraz pod pozycją główną.

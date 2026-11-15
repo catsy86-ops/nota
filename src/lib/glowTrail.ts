@@ -1,4 +1,4 @@
-import { isMotionReduced } from "@/hooks/useMotionPref";
+import { isMotionReduced } from "@/lib/motionPref";
 
 /**
  * Ultra-light "glow & streak" micro-interactions.

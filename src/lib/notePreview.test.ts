@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { notePreview, PREVIEW_CHARS } from "./notePreview";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 const note = (over: Partial<Note>): Note => ({ id: "n", title: "", content: "", locked: false, ...over }) as unknown as Note;
 

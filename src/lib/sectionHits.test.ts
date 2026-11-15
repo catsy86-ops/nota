@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { sectionHits } from "@/lib/sectionHits";
 
 function note(id: string, title: string, content: string, extra: Partial<Note> = {}): Note {

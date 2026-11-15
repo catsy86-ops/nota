@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type MiniSearch from "minisearch";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { parseSearchQuery, matchesClauses, fold, type MatchFolder } from "@/lib/searchQuery";
 import type { PropDef } from "@/lib/noteProps";
 import { createNoteIndex, sameDoc, toDoc, type IndexDoc } from "@/lib/noteSearchCore";

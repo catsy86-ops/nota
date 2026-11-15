@@ -1,4 +1,4 @@
-import type { View } from "@/hooks/useFilteredNotes";
+import type { View } from "@/lib/types/view";
 
 /** Widoki bez pola szukania notatek: tam lupa otwiera paletę poleceń (nagłówek i dolny pasek). */
 const VIEWS_WITHOUT_SEARCH: ReadonlySet<View> = new Set<View>(["shifts", "calendar", "study", "debts", "cwiczenia", "plans"]);

@@ -4,7 +4,7 @@ import { buildSyncFile, parseSyncFile, mergeSyncFile, bytesToBase64, base64ToByt
 import { clearAllStorage } from "@/lib/notesStore";
 import { createImageStore } from "@/lib/imageStore";
 import { hashImage } from "@/lib/imageHash";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {

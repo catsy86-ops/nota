@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
 import { createYjsStore } from "./yjsStore";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 const note = (over: Partial<Note>): Note =>
   ({

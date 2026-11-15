@@ -1,4 +1,4 @@
-import type { View } from "@/hooks/useFilteredNotes";
+import type { View } from "@/lib/types/view";
 
 /**
  * Jedna tabela nazw widoków (Powłoka 1.3, decyzja PW-1: „Grafik”, „Terminy”). Pasek boczny, paleta, skróty „g”

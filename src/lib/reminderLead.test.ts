@@ -3,7 +3,7 @@ import { buildIcs } from "./icsExport";
 import { buildPushSchedule } from "./push/schedule";
 import { isLeadMinutes, leadAt, leadKey, leadPhrase, leadShort, loadFiredLeads, planLeadReminders, saveFiredLeads } from "./reminderLead";
 import { mergeSpec, readSpec } from "./reminderSpec";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 const at = (day: number, h: number, m = 0) => new Date(2026, 10, day, h, m).getTime();
 const HOUR = 60 * 60_000;

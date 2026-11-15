@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { createNoteSearchEngine, type NoteSearchEngine } from "./noteSearchEngine";
 import { searchNotes, setNoteSearchEngine } from "./searchNotes";
 import { serveRpc, type RpcTransport } from "@/workers/rpc";

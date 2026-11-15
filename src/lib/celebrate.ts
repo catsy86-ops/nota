@@ -1,6 +1,6 @@
 import type confettiFn from "canvas-confetti";
 import { isEffectEnabled, type EffectKey } from "./effectsSettings";
-import { isMotionReduced } from "@/hooks/useMotionPref";
+import { isMotionReduced } from "@/lib/motionPref";
 
 type Confetti = typeof confettiFn;
 let confettiLib: Confetti | null = null;

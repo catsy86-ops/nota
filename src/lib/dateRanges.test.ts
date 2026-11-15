@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { getTodayRange, getWeekRange, isToday, isThisWeek } from "./dateRanges";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 function makeNote(overrides: Partial<Pick<Note, "createdAt" | "updatedAt">> = {}) {
   return { createdAt: 0, updatedAt: 0, ...overrides };

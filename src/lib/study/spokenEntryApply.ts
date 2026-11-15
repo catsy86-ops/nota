@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { KIND_LABEL } from "@/lib/study/journalView";
 import { findSiteByName } from "@/lib/study/sites";
 import { fittingsLine } from "@/lib/study/fittings";

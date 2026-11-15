@@ -4,7 +4,7 @@
  * rodzic, którego nie ma (usunięty na stałe), jest traktowany jak brak rodzica —
  * notatka wraca na poziom główny, zamiast znikać z widoku.
  */
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 type Tree = Pick<Note, "id" | "parentId"> & { trashed?: boolean };
 

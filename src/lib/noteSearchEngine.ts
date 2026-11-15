@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { createRpcClient, type RpcTransport } from "@/workers/rpc";
 import type { NoteSearchHandlers } from "@/workers/noteSearchHandlers";
 import { sameDoc, toDoc, type IndexDoc } from "@/lib/noteSearchCore";

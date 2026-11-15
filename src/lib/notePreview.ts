@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 /** Ile znaków treści pokazuje podgląd terminu po najechaniu (K3.5). */
 export const PREVIEW_CHARS = 160;

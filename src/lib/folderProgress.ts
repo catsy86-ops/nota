@@ -1,4 +1,4 @@
-import type { Folder, Note } from "@/hooks/useNotes";
+import type { Folder, Note } from "@/lib/types/note";
 
 export interface Progress { done: number; total: number }
 

@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { eveningTime, snoozeTimes } from "@/lib/reminderAgenda";
 import { doneTarget, endOfDay, seriesDay, snoozeTarget } from "@/lib/reminderRepeat";
 

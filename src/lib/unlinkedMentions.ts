@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { extractWikiLinks } from "@/lib/wikiLinks";
 
 /** Najkrótszy tytuł, który ma sens jako wzmianka („do”, „a” trafiałyby wszędzie). */

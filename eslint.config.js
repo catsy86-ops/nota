@@ -128,6 +128,49 @@ export default tseslint.config(
     },
   },
   {
+    // Warstwy (plan A1.6): lib ← hooks ← components. `lib` nie zna interfejsu; `sonner` tylko przez `lib/notify.ts`.
+    // Importy dynamiczne (`import()`) są dozwolone — tak ładuje się widoki w `viewPreload.ts`.
+    files: ["src/lib/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.{ts,tsx}", "src/lib/notify.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportDeclaration[source.value=/^@.(hooks|components).+/], ExportNamedDeclaration[source.value=/^@.(hooks|components).+/]",
+          message: "`src/lib` nie importuje z hooks ani components (warstwy lib ← hooks ← components). Przenieś typ lub funkcję do `lib`.",
+        },
+        {
+          selector: "ImportDeclaration[source.value='sonner']",
+          message: "Importuj `toast` z `@/lib/notify`, nie z `sonner`.",
+        },
+      ],
+    },
+  },
+  {
+    // Hooki nie importują komponentów. Lista wyjątków ma malejąć do zera (plan A1.5).
+    files: ["src/hooks/**/*.{ts,tsx}"],
+    ignores: [
+      "**/*.test.{ts,tsx}",
+      "src/hooks/useCardGestures.ts",
+      "src/hooks/useDailyWeeklyNudges.tsx",
+      "src/hooks/useInboxCapture.ts",
+      "src/hooks/useLaunchIntents.ts",
+      "src/hooks/useNoteActions.ts",
+      "src/hooks/useNoteGlowActions.ts",
+      "src/hooks/useReaderNav.ts",
+      "src/hooks/useReminderNotifications.ts",
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportDeclaration[source.value=/^@.components.+/]",
+          message: "Hooki nie importują komponentów (warstwy lib ← hooks ← components).",
+        },
+      ],
+    },
+  },
+  {
     // Praca (B1.5): części fasady `store.ts` nie importują fasady z powrotem — to cykl modułów.
     files: [
       "src/lib/study/learnActions.ts",

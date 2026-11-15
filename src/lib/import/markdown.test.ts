@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { noteToMarkdownFile } from "@/lib/exportZip";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import type { PropDef } from "@/lib/noteProps";
 import { cleanTags, countImageEmbeds, extractTrailingTasks, parseFrontmatter, parseFrontmatterDate, parseMarkdownNote, parsePropsFrontmatter } from "./markdown";
 import { MD_INLINE_TAGS_NOTE, MD_PLAIN_NOTE, OBSIDIAN_NOTE } from "./__fixtures__/samples";

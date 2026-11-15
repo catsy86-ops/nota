@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { looksLikeVaultToken } from "@/lib/vault";
 import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
 import { applyTextEdit, captureTextBase, mapOffset, type TextBase } from "./yTextEdit";
@@ -10,7 +10,7 @@ import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
 import { hashImage } from "@/lib/imageHash";
 import { normalizeAttachments, isAttachmentSyncable, type Attachment } from "@/lib/attachments";
 import { imageStore as defaultImageStore, isDataUrl, type ImageStore } from "@/lib/imageStore";
-import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
+import type { Note, Folder, ChecklistItem } from "@/lib/types/note";
 import { logDiag } from "@/lib/diagnostics";
 import { NOTE_COVERS } from "@/lib/noteLook";
 import { cleanNoteProps, cleanPropDef, cleanPropDefs, hasPropOptions, type NoteProps, type PropDef } from "@/lib/noteProps";

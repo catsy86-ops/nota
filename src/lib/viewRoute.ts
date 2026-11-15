@@ -1,4 +1,4 @@
-import type { View } from "@/hooks/useFilteredNotes";
+import type { View } from "@/lib/types/view";
 
 /**
  * Stan widoku w adresie: odświeżenie zostawia w tym samym folderze,

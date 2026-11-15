@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { haptic } from "@/lib/haptics";
 import { amountText, getHideAmounts } from "./hideAmounts";
 import { balances, personKey } from "./model";

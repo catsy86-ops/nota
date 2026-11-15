@@ -5,7 +5,7 @@ import { clearAllStorage } from "@/lib/notesStore";
 import { fallbackRepeat } from "@/lib/reminderRepeat";
 import { REMINDER_FIELDS } from "@/lib/reminderSpec";
 import { createYStudy, type JournalEntry } from "@/lib/study/yStudy";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 /**
  * Zgodność danych ze starszą wersją (Plan-nowy 1.4). Dokument pisze bieżący kod, a „starsza wersja”

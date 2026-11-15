@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { ancestorsOf, buildSubpageIndex, canSetParent, childrenOf, descendantIds, parentIdOf } from "./subpages";
 
 function n(id: string, parentId?: string, extra: Partial<Note> = {}): Note {

@@ -4,7 +4,7 @@ import { createYjsStore } from "./yjsStore";
 import { clearAllStorage, saveNotesIDB } from "@/lib/notesStore";
 import { createImageStore, imageStore as defaultImageStore, isImageRef } from "@/lib/imageStore";
 import { hashImage } from "@/lib/imageHash";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {

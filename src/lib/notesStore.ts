@@ -1,5 +1,5 @@
 import { get, set, del } from "idb-keyval";
-import type { Note, Folder } from "@/hooks/useNotes";
+import type { Note, Folder } from "@/lib/types/note";
 
 /**
  * IndexedDB-backed storage for notes/labels/folders.

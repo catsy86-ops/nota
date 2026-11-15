@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import type { Folder, Note } from "@/hooks/useNotes";
+import type { Folder, Note } from "@/lib/types/note";
 import { filledPropEntries, type PropDef } from "@/lib/noteProps";
 import { downloadBlob } from "@/lib/downloadBlob";
 

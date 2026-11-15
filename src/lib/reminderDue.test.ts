@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { planDueReminders } from "./reminderDue";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 const DAY = 24 * 60 * 60 * 1000;
 const at = (y: number, m: number, d: number, h = 9) => new Date(y, m, d, h, 0, 0, 0).getTime();

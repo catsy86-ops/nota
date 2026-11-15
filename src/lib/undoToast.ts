@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { undoToastDuration } from "@/lib/siteMode";
 
 export interface UndoToastOptions {

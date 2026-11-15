@@ -3,7 +3,7 @@ import {
   extractWikiLinks, resolveWikiTarget,
   renameLinkTargets, buildWikiIndex, backlinksOf, wikiQueryAt, suggestWikiTitles, completeWikiLink, splitWikiTarget, cleanAliases,
 } from "./wikiLinks";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {

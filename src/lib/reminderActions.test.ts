@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { doneReminderUpdate, reminderFields, snoozeReminderUpdate } from "./reminderActions";
 import { snoozeTimes } from "./reminderAgenda";
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { buildIcs, escapeText, exportableReminders, foldLine, formatLocal } from "./icsExport";
 import { parseIcs } from "./icsImport";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 function note(overrides: Partial<Note> = {}): Note {
   return {

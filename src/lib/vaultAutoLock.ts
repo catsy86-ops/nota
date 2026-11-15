@@ -1,5 +1,5 @@
 ﻿import { createPersistedStore } from "@/lib/persistedStore";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import type { PrivateNotes } from "@/lib/privateNotes";
 
 /** Minuty bezczynności do automatycznej blokady; 0 = nigdy (do zamknięcia karty). */

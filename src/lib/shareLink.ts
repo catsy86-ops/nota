@@ -1,4 +1,4 @@
-import type { ChecklistItem, NoteColor } from "@/hooks/useNotes";
+import type { ChecklistItem, NoteColor } from "@/lib/types/note";
 import { NOTE_COLORS, safeBool, safeEnum, safeString, safeStringArray } from "@/lib/safeProjection";
 
 /**

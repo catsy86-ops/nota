@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { exportToJSON, exportToMarkdown, exportToHTML } from "./exportNotes";
 import { noteSchema, looksLikeNoteArray } from "./noteSchema";
 import { imageStore } from "./imageStore";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseViewRoute, viewPath, withSearch, notePath, calendarDayFromSearch } from "./viewRoute";
-import type { View } from "@/hooks/useFilteredNotes";
+import type { View } from "@/lib/types/view";
 
 describe("viewRoute", () => {
   it("round-trips every simple view", () => {

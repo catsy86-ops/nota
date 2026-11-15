@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { termStatus } from "@/lib/dueTerms";
 
 /** Porządek agendy: po terminie rosnąco (wspólny dla listy Terminów i grup). */

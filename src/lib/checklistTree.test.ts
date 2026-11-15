@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ChecklistItem } from "@/hooks/useNotes";
+import type { ChecklistItem } from "@/lib/types/note";
 import { childIds, toggleChecklistItem } from "./checklistTree";
 
 const it_ = (id: string, checked = false, indent?: 1): ChecklistItem => ({ id, text: id, checked, ...(indent ? { indent } : {}) });

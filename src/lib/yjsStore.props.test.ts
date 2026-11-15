@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import * as Y from "yjs";
 import { createYjsStore } from "./yjsStore";
 import { clearAllStorage } from "@/lib/notesStore";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import type { PropDef } from "@/lib/noteProps";
 
 function makeNote(overrides: Partial<Note> = {}): Note {

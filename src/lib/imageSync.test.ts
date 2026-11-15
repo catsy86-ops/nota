@@ -3,7 +3,7 @@ import * as Y from "yjs";
 import { yjsStore } from "@/lib/yjsStore";
 import { clearAllStorage } from "@/lib/notesStore";
 import { dataUrlToBytes, sha256Hex } from "@/lib/imageStore";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 // NOTE: no vi.resetModules() in this file — imageSync.ts imports the yjsStore
 // singleton, and resetting the module registry between tests would make

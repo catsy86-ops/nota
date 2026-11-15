@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 /**
  * Rejestr już odpalonych, jednorazowych przypomnień — żeby to samo nie

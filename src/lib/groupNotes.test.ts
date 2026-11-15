@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { groupNotes, dateBucket, startOfWeek } from "@/lib/groupNotes";
 
 function note(id: string, over: Partial<Note> = {}): Note {

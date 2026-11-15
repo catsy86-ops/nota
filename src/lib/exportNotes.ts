@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { APPEARANCE_KEYS } from "./appearanceCode";
 import { pl } from "date-fns/locale";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { yjsStore } from "@/lib/yjsStore";
 import { filledPropEntries, type PropDef } from "@/lib/noteProps";
 import { isValidMeta } from "@/lib/vault";

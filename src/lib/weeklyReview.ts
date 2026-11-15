@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { localDayKey } from "@/lib/dayDone";
 import { termStatus } from "@/lib/dueTerms";

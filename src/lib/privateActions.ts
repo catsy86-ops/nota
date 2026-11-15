@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { privateNotes } from "@/lib/privateNotes";
 import { vaultUi } from "@/lib/vaultUi";
 import { getSyncState } from "@/lib/yjsSync";

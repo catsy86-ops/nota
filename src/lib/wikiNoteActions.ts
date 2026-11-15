@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { yjsStore } from "@/lib/yjsStore";
 import { resolveWikiTarget } from "@/lib/wikiLinks";
 import { titleFromSelection, uniqueNoteTitle } from "@/lib/extractNote";

@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { endOfDayOffset } from "@/lib/dueTerms";
 import { expandOccurrences } from "@/lib/reminderOccurrences";
 

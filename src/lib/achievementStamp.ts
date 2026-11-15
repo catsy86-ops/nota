@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { isEffectEnabled } from "./effectsSettings";
-import { isMotionReduced } from "@/hooks/useMotionPref";
+import { isMotionReduced } from "@/lib/motionPref";
 
 export interface StampData {
   id: string;

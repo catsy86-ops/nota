@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { describeRejections } from "@/lib/attachments";
 import { importSharedFiles, type ImportedFiles } from "@/lib/shareInbox";
 import { yjsStore } from "@/lib/yjsStore";

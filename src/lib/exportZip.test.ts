@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildNotesZip, buildZip, noteToMarkdownFile, safeFileName } from "./exportZip";
 import { listZip } from "./import/zip";
-import type { Folder, Note } from "@/hooks/useNotes";
+import type { Folder, Note } from "@/lib/types/note";
 import type { PropDef } from "@/lib/noteProps";
 
 const note = (o: Partial<Note>): Note => ({

@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 import { ruleOf, seriesDay, weekdaysOf, type RepeatRule } from "@/lib/reminderRepeat";
 import { isLeadMinutes, leadPhrase } from "@/lib/reminderLead";
 

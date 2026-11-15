@@ -9,7 +9,7 @@ import { buildWeeklyReview } from "@/lib/weeklyReview";
 import { buildFullBackup, exportToHTML, exportToJSON, exportToMarkdown } from "@/lib/exportNotes";
 import { noteSchema } from "@/lib/noteSchema";
 import { VaultError, looksLikeVaultToken } from "@/lib/vault";
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 // MiniSearch ładuje się osobno — wyszukiwanie w testach ma być rozmyte jak w aplikacji.
 beforeAll(() => loadSearchIndex());

@@ -7,7 +7,7 @@ import { yjsStore } from "@/lib/yjsStore";
 import { startImageSync, stopImageSync } from "@/lib/imageSync";
 import { startRelay, stopRelay } from "@/lib/sync/relayRuntime";
 import { logDiag } from "@/lib/diagnostics";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 /**
  * Peer-to-peer transport for the Yjs doc (Phase 2 of the multi-device sync

@@ -1,4 +1,4 @@
-import type { Note } from "@/hooks/useNotes";
+import type { Note } from "@/lib/types/note";
 
 /**
  * Notatka dnia: jedna notatka na lokalną datę, rozpoznawana po polu
