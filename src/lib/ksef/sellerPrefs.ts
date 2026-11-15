@@ -31,3 +31,18 @@ export const seriesStore = createPersistedStore<string>(SERIES_KEY, "A", {
 });
 export const useSeries = () => seriesStore.use();
 export const setSeries = (s: string) => seriesStore.set(cleanSeries(s));
+
+export const DEVICE_ID_KEY = "kaczy.ksef.deviceId.v1";
+
+/** Losowy identyfikator tego urządzenia (nie wchodzi do kopii); służy do wykrycia, że dwie osoby użyły tej samej serii. */
+export function getDeviceId(): string {
+  try {
+    const stored = localStorage.getItem(DEVICE_ID_KEY);
+    if (stored && /^[a-z0-9]{6,32}$/.test(stored)) return stored;
+    const id = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(36).padStart(2, "0")).join("").slice(0, 12);
+    localStorage.setItem(DEVICE_ID_KEY, id);
+    return id;
+  } catch {
+    return "anon";
+  }
+}

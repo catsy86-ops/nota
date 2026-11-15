@@ -13,9 +13,9 @@ import { itemClientPrice, type Job } from "@/lib/study/jobs";
 import type { SiteInfo } from "@/lib/study/sites";
 import { invoiceFileName } from "@/lib/ksef/fa3";
 import { computeInvoice, validateInvoice, VAT_RATES, type Invoice, type InvoiceLine, type PriceMode, type VatRate } from "@/lib/ksef/invoice";
-import { issueInvoice, useInvoices } from "@/lib/ksef/invoicesStore";
+import { issueInvoice, seriesUsedElsewhere, useInvoices } from "@/lib/ksef/invoicesStore";
 import { findDuplicateNumbers } from "@/lib/ksef/numbering";
-import { sellerStore, setSeller, useSeries } from "@/lib/ksef/sellerPrefs";
+import { getDeviceId, sellerStore, setSeller, useSeries } from "@/lib/ksef/sellerPrefs";
 import { CorrectionDialog } from "./CorrectionDialog";
 import { useSiteClient } from "@/lib/clients/store";
 import { buyerDiffers, buyerFromClient, createClientFromBuyer, saveBuyerToClient } from "@/lib/clients/siteClient";
@@ -81,6 +81,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
   const mine = useMemo(() => all.filter((r) => r.siteId === site.id), [all, site.id]);
   const duplicates = useMemo(() => new Set(findDuplicateNumbers(all.map((r) => r.number))), [all]);
   const today = localDayKey();
+  const seriesShared = useMemo(() => seriesUsedElsewhere(all, series, getDeviceId()), [all, series]);
 
   const [seller, setSellerState] = useState(() => {
     const s = sellerStore.get();
@@ -160,7 +161,12 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
 
         <fieldset className="space-y-2">
           <legend className="text-xs font-semibold text-muted-foreground">Sprzedawca (seria numeracji tego telefonu: {series})</legend>
-          <input aria-label="Nazwa sprzedawcy" placeholder="Nazwa firmy" value={seller.name} onChange={set("name")} className={fieldCls} />
+          {seriesShared && (
+            <p role="alert" className="rounded-md bg-warning/15 px-2 py-1.5 text-xs text-warning-ink">
+              W serii {series} są faktury z innego urządzenia. Ustaw w Ustawieniach inną serię na tym telefonie, inaczej numery mogą się powtórzyć.
+            </p>
+          )}
+          <input aria-label="Nazwa sprzedawcy"placeholder="Nazwa firmy" value={seller.name} onChange={set("name")} className={fieldCls} />
           <div className="grid grid-cols-2 gap-2">
             <input aria-label="NIP sprzedawcy" placeholder="NIP" inputMode="numeric" value={seller.nip} onChange={set("nip")} className={cn(fieldCls, "font-mono")} />
             <input aria-label="Adres sprzedawcy" placeholder="Ulica i numer" value={seller.address1} onChange={set("address1")} className={fieldCls} />

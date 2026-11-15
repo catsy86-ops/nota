@@ -3,7 +3,7 @@ import { yjsStore } from "@/lib/yjsStore";
 import { buildFa3Xml } from "./fa3";
 import { validateInvoice, type Invoice, type InvoiceLine, type InvoiceProblem } from "./invoice";
 import { nextInvoiceNumber } from "./numbering";
-import { seriesStore } from "./sellerPrefs";
+import { getDeviceId, seriesStore } from "./sellerPrefs";
 import { createYInvoices, sha256Hex, type InvoiceRecord } from "./yInvoices";
 
 /** Wystawione faktury żyją w dokumencie Yjs notatek (`yInvoices.ts`); widoki dopisują je tylko przez `issueInvoice`. */
@@ -56,7 +56,7 @@ async function issueLocked(siteId: string, draft: Omit<Invoice, "number">, now: 
     ({ invoice, xml } = build(nextInvoiceNumber(series, year, yInvoices.numbers(), kind)));
     hash = await sha256Hex(xml);
   }
-  const record: InvoiceRecord = { id: newId(), number: invoice.number, issuedAt: now, siteId, invoice, xml, hash, device: series };
+  const record: InvoiceRecord = { id: newId(), number: invoice.number, issuedAt: now, siteId, invoice, xml, hash, device: series, deviceId: getDeviceId() };
   if (!yInvoices.add(record)) return { ok: false, problems: [{ field: "store", message: "Nie udało się zapisać faktury (limit, zajęty numer albo uszkodzone dane)." }] };
   return { ok: true, record };
 }
@@ -92,4 +92,9 @@ export function issueCorrection(original: InvoiceRecord, input: CorrectionInput,
       linesBefore: o.lines,
     },
   }, now);
+}
+
+/** Czy w serii tego telefonu są faktury z innego urządzenia (ryzyko duplikatów numerów po synchronizacji). */
+export function seriesUsedElsewhere(records: readonly InvoiceRecord[], series: string, deviceId: string): boolean {
+  return records.some((r) => r.device === series && r.deviceId !== undefined && r.deviceId !== deviceId);
 }

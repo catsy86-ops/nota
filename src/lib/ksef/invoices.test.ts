@@ -258,3 +258,13 @@ describe("issueInvoice — współbieżność i rok numeru", () => {
     expect(r.ok).toBe(false);
   });
 });
+
+describe("seria urządzenia (Z-2.6)", () => {
+  it("wykrywa fakturę z tej serii wystawioną na innym urządzeniu", async () => {
+    const { seriesUsedElsewhere } = await import("./invoicesStore");
+    const rec = { device: "A", deviceId: "inne" } as never;
+    expect(seriesUsedElsewhere([rec], "A", "moje")).toBe(true);
+    expect(seriesUsedElsewhere([rec], "B", "moje")).toBe(false);
+    expect(seriesUsedElsewhere([{ device: "A" } as never], "A", "moje")).toBe(false);
+  });
+});

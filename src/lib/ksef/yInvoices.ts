@@ -26,6 +26,8 @@ export interface InvoiceRecord {
   hash: string;
   /** Seria urządzenia, które wystawiło fakturę. */
   device?: string;
+  /** Losowy identyfikator urządzenia (wykrywanie tej samej serii na dwóch telefonach). */
+  deviceId?: string;
 }
 
 const isId = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v.length <= 64;
@@ -89,7 +91,7 @@ export function cleanRecord(raw: unknown): InvoiceRecord | null {
     if (!isId(r.siteId) || !isStr(r.xml, XML_MAX_CHARS) || !r.xml || typeof r.hash !== "string" || !/^[0-9a-f]{64}$/.test(r.hash)) return null;
     const invoice = cleanInvoice(r.invoice, r.number);
     if (!invoice) return null;
-    return { id: r.id, number: r.number, issuedAt: r.issuedAt, siteId: r.siteId, invoice, xml: r.xml, hash: r.hash, ...(typeof r.device === "string" ? { device: r.device.slice(0, 6) } : {}) };
+    return { id: r.id, number: r.number, issuedAt: r.issuedAt, siteId: r.siteId, invoice, xml: r.xml, hash: r.hash, ...(typeof r.device === "string" ? { device: r.device.slice(0, 6) } : {}), ...(typeof r.deviceId === "string" ? { deviceId: r.deviceId.slice(0, 32) } : {}) };
   } catch {
     return null;
   }
