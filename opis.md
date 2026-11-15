@@ -5791,4 +5791,4 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa / decyzje:** wersja kopii jest czytana z surowego JSON-a, bo schemat Zod zamieniał nieznaną wersję na 1. Dane Pracy ładują się dopiero przy odśmiecaniu obrazów, intencji udostępnienia i budowie kopii.
 - **Ograniczenia i pułapki:** rozmiary `Button` (`default`, `sm`, `lg`) na dotyku nie zostały zmienione (wpłynęłyby na układ i zrzuty). Przerwanie pobierania przy limicie stron zostawia resztę na następny przebieg (kursor jest zapisany).
 - **Testy:** `src/lib/fullBackup.test.ts` (wersja kopii), `src/lib/safeUrl.test.ts` (`//host`), `src/lib/import/*.test.ts`, `src/lib/sync/*.test.ts`, `e2e/bundle.spec.ts`.
-- **Commit:** uzupełnić po zatwierdzeniu.
+- **Commit:** cb771dd4, 2026-11-15.
