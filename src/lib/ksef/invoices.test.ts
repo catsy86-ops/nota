@@ -245,3 +245,16 @@ describe("szyfrowany eksport faktur", () => {
     await expect(encryptInvoices({ invoices: [] }, "krotkie")).rejects.toThrow("weak-password");
   });
 });
+
+describe("issueInvoice — współbieżność i rok numeru", () => {
+  it("dwa wystawienia bez await między nimi dają różne numery", async () => {
+    const now = Date.parse("2026-03-05T10:00:00Z");
+    const [a, b] = await Promise.all([issueInvoice("lipowa-5", draft(), now), issueInvoice("lipowa-5", draft(), now)]);
+    expect(a.ok && b.ok).toBe(true);
+    if (a.ok && b.ok) expect(a.record.number).not.toBe(b.record.number);
+  });
+  it("odrzuca datę, której kalendarz nie ma (2026-02-31)", async () => {
+    const r = await issueInvoice("lipowa-5", { ...draft(), issueDate: "2026-02-31" });
+    expect(r.ok).toBe(false);
+  });
+});

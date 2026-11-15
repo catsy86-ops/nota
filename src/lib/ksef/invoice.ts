@@ -179,7 +179,11 @@ export const INVOICE_LINES_MAX = 200;
 export const LINE_NAME_MAX = 256;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-const validDate = (s: string) => DATE_RE.test(s) && !Number.isNaN(new Date(`${s}T12:00:00Z`).getTime()) && s >= "2025-09-01" && s <= "2049-12-31";
+const validDate = (s: string) => {
+  if (!DATE_RE.test(s) || s < "2025-09-01" || s > "2049-12-31") return false;
+  const d = new Date(`${s}T12:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+};
 
 export interface InvoiceProblem {
   field: string;
@@ -224,6 +228,7 @@ export function validateInvoice(inv: Invoice): InvoiceProblem[] {
     if (c.linesBefore.length === 0) add("correction.lines", "Brak pozycji faktury korygowanej.");
     checkLines(c.linesBefore, "Przed korektą, ", add);
   }
+  if (inv.payment?.dueDate && !validDate(inv.payment.dueDate)) add("payment.dueDate", "Termin płatności: RRRR-MM-DD.");
   if (inv.payment?.form === 6 && inv.payment.account) {
     const acc = inv.payment.account.replace(/\s/g, "");
     if (acc.length < 10 || acc.length > 34) add("payment.account", "Numer rachunku: 10–34 znaki.");
