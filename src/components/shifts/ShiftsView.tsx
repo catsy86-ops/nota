@@ -523,7 +523,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
         </div>
         <div className="order-10 @container short:col-span-full">
-          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} nightRate={nightRateFor(shownMonth.getFullYear(), data.nightRate)} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} onOpenDay={setOpenDay} onOpenMonth={(key) => { const [y, mo] = key.split("-").map(Number); setMonth(new Date(y, mo - 1, 1)); }} toDate={toDate} estimate={estimate} timeOff={timeOff} />
+          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} nightRate={nightRateFor(shownMonth.getFullYear(), shownMonth.getMonth(), data.nightRate)} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} onOpenDay={setOpenDay} onOpenMonth={(key) => { const [y, mo] = key.split("-").map(Number); setMonth(new Date(y, mo - 1, 1)); }} toDate={toDate} estimate={estimate} timeOff={timeOff} />
         </div>
       </aside>
 

@@ -284,8 +284,10 @@ function monthCore(data: ShiftData, year: number, month: number, otSpans: Overti
     c.totals.set(base.id, t);
     if (isAbsence(type)) {
       c.absenceDays += 1;
-      // L4 czy urlop w sobotę, niedzielę albo święto nie zmniejsza normy — tego dnia jej nie ma.
-      if (isNormDay(key)) absenceMinutes += m;
+      // Art. 130 § 3 KP: norma maleje o godziny, które przypadały do przepracowania według rozkładu.
+      // Gdy nieobecność zastąpiła zmianę z grafiku (`plannedMin`), to jej godziny — także w sobotę,
+      // niedzielę i święto. Bez zmiany pod spodem: godziny rodzaju w dzień roboczy, w pozostałe nic.
+      absenceMinutes += entry.plannedMin ?? (isNormDay(key) ? m : 0);
       continue;
     }
     c.daysWorked += 1;
@@ -487,7 +489,7 @@ export function monthSummaryToDate(data: ShiftData, year: number, month: number,
 const WEEK_REST_MINUTES = 35 * 60;
 
 export interface ShortWeekRest {
-  /** Poniedziałek tygodnia, `RRRR-MM-DD`. */
+  /** Pierwszy dzień tygodnia (liczonego od początku okresu rozliczeniowego), `RRRR-MM-DD`. */
   weekStart: string;
   /** Najdłuższy ciągły odpoczynek w tym tygodniu (minuty). */
   restMinutes: number;
@@ -495,27 +497,22 @@ export interface ShortWeekRest {
 
 /**
  * Tygodnie z co najmniej jedną zmianą w miesiącu `prefix` (`RRRR-MM-`), w których najdłuższy
- * ciągły odpoczynek jest krótszy niż 35 h. Tydzień liczy się od poniedziałku do niedzieli;
- * przerwa może zaczynać się w poprzednim tygodniu.
+ * ciągły odpoczynek jest krótszy niż 35 h. Tydzień to 7 kolejnych dni od pierwszego dnia okresu
+ * rozliczeniowego (art. 128 § 3 pkt 2 KP), nie od poniedziałku; niepełny tydzień na końcu okresu
+ * nie jest sprawdzany. Odpoczynek musi mieścić się w tygodniu — wolne sprzed jego początku się nie liczy.
  */
 export function weeklyRestShort(data: ShiftData, prefix: string): ShortWeekRest[] {
   const spans = shiftSpansMs(data);
-  const mondayOf = (ms: number) => {
-    const d = new Date(ms);
-    const dow = (d.getDay() + 6) % 7;
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow).getTime();
-  };
-  const keyOf = (ms: number) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
-  const weeks = new Map<number, string>();
-  for (const s of spans) if (s.key.startsWith(prefix)) weeks.set(mondayOf(s.start), s.key);
+  const [py, pm] = prefix.split("-").map(Number);
+  const p = settlementPeriod(py, pm - 1, data.settlementMonths, data.settlementStart);
+  const periodEnd = new Date(p.year, p.startMonth + p.months, 1).getTime();
   const out: ShortWeekRest[] = [];
-  for (const ws of [...weeks.keys()].sort((a, b) => a - b)) {
-    const w = new Date(ws);
-    const we = new Date(w.getFullYear(), w.getMonth(), w.getDate() + 7).getTime();
-    // Przerwa zaczyna się od końca ostatniej zmiany przed tygodniem albo od jego początku.
-    let prevEnd = ws;
-    for (const s of spans) if (s.end <= ws) prevEnd = Math.max(prevEnd, s.end);
-    let cursor = prevEnd;
+  for (let i = 0; ; i++) {
+    const ws = new Date(p.year, p.startMonth, 1 + 7 * i).getTime();
+    const we = new Date(p.year, p.startMonth, 8 + 7 * i).getTime();
+    if (we > periodEnd) break;
+    if (!spans.some((s) => s.key.startsWith(prefix) && s.start >= ws && s.start < we)) continue;
+    let cursor = ws;
     let longest = 0;
     for (const s of spans) {
       if (s.start >= we || s.end <= ws) continue;
@@ -524,7 +521,7 @@ export function weeklyRestShort(data: ShiftData, prefix: string): ShortWeekRest[
     }
     longest = Math.max(longest, we - cursor);
     const restMinutes = Math.round(longest / 60_000);
-    if (restMinutes < WEEK_REST_MINUTES) out.push({ weekStart: keyOf(ws), restMinutes });
+    if (restMinutes < WEEK_REST_MINUTES) out.push({ weekStart: localKey(new Date(ws)), restMinutes });
   }
   return out;
 }

@@ -141,6 +141,15 @@ describe("podsumowanie miesiąca", () => {
     expect(xmas.normMinutes).toBe(workNormMinutes(2026, 11));
   });
 
+  it("nieobecność nad zmianą z grafiku obniża normę o godziny tej zmiany, także w sobotę (art. 130 § 3 KP)", () => {
+    // Sobota 10.10.2026: L4 zamiast zaplanowanej zmiany 12 h.
+    const sat = monthSummary(data({ types: [leave], days: { "2026-10-10": { type: "u", plannedMin: 720 } } }), 2026, 9);
+    expect(sat.normMinutes).toBe(176 * 60 - 720);
+    // Poniedziałek 12.10: zmiana 12 h, nie 8 h rodzaju „urlop”.
+    const mon = monthSummary(data({ types: [leave], days: { "2026-10-12": { type: "u", plannedMin: 720 } } }), 2026, 9);
+    expect(mon.normMinutes).toBe(176 * 60 - 720);
+  });
+
   it("liczy nadgodziny dobowe w dobie pracowniczej", () => {
     // P pon. 14–22, D wt. 6–14: wtorkowe 8 h mieszczą się w dobie poniedziałkowej.
     const s = monthSummary(data({ days: { "2026-10-05": { type: "p" }, "2026-10-06": { type: "d" } } }), 2026, 9);

@@ -31,6 +31,8 @@ const RATE_PER_MIN = Number(process.env.RATE_PER_MIN) || 300;
 /** Ile NOWYCH pokoi może założyć jeden adres na dobę (S4 audytu: jedno urządzenie nie zapełni serwera). */
 const ROOMS_PER_IP_PER_DAY = Number(process.env.ROOMS_PER_IP_PER_DAY) || 20;
 const MAX_BODY = 1024 * 1024;
+// Wpis i migawka mają własny, większy limit treści (dane + koperta JSON).
+const MAX_ENTRY_BODY = LIMITS.MAX_ENTRY_CHARS + 4096;
 const MAX_SOCKETS_PER_ROOM = 20;
 const SWEEP_MS = 60 * 60 * 1000;
 
@@ -118,13 +120,13 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-function readJson(req) {
+function readJson(req, max = MAX_BODY) {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
     req.on("data", (c) => {
       size += c.length;
-      if (size > MAX_BODY) {
+      if (size > max) {
         reject(Object.assign(new Error("Za duże"), { status: 413 }));
         req.destroy();
         return;
@@ -295,7 +297,7 @@ async function handle(req, res) {
   }
 
   if (req.method === "POST" && action === "updates") {
-    const body = await readJson(req);
+    const body = await readJson(req, MAX_ENTRY_BODY);
     if (creationLimited(req, roomId, Date.now())) return send(res, 429, { error: "Za dużo nowych pokoi z tego adresu" });
     const r = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
     if (r.error) return send(res, r.error, { error: r.message });
@@ -307,7 +309,7 @@ async function handle(req, res) {
   }
 
   if (req.method === "PUT" && action === "snapshot") {
-    const body = await readJson(req);
+    const body = await readJson(req, MAX_ENTRY_BODY);
     if (creationLimited(req, roomId, Date.now())) return send(res, 429, { error: "Za dużo nowych pokoi z tego adresu" });
     const r = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
     if (r.error) return send(res, r.error, { error: r.message });

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Clock, FileText, HardDrive, PackageCheck, type LucideIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Clock, FileText, HardDrive, PackageCheck, Square, Volume2, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -10,6 +10,7 @@ import { getLastBackup, markBackup } from "@/lib/backupReminder";
 import { formatDuration } from "@/lib/shifts/time";
 import { haptic } from "@/lib/haptics";
 import { pluralPl } from "@/lib/plural";
+import { speak, speechAvailable, stopSpeaking } from "@/lib/speak";
 import type { JournalEntry } from "@/lib/study/journalEntry";
 
 const clock = (at: number) => new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
@@ -52,6 +53,10 @@ function EndDayBody({ onOpenChange, journal, wholesaleCount, onHours, onReport, 
   const lastBackup = getLastBackup();
   const stale = !backedUp && backupStale(lastBackup);
   const Icon = step.icon;
+  const [reading, setReading] = useState(false);
+  // Zmiana kroku i zamknięcie arkusza ucinają czytanie.
+  useEffect(() => { setReading(false); stopSpeaking(); }, [index]);
+  useEffect(() => stopSpeaking, []);
 
   async function backup() {
     try {
@@ -94,6 +99,11 @@ function EndDayBody({ onOpenChange, journal, wholesaleCount, onHours, onReport, 
   };
   const cur = body[step.id];
 
+  function toggleReading() {
+    if (reading) { stopSpeaking(); setReading(false); return; }
+    setReading(speak(`${step.title}. ${cur.text}`, () => setReading(false)));
+  }
+
   return (
     <Dialog open onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-sm" data-testid="end-day">
@@ -107,6 +117,12 @@ function EndDayBody({ onOpenChange, journal, wholesaleCount, onHours, onReport, 
         </div>
         <div className="space-y-3 px-5 py-4">
           <p className="text-sm" data-testid="end-day-text">{cur.text}</p>
+          {speechAvailable() && (
+            <Button type="button" variant="ghost" size="sm" onClick={toggleReading} aria-pressed={reading} data-testid="end-day-read" className="pressable coarse:h-11">
+              {reading ? <Square className="mr-1.5 h-4 w-4" aria-hidden /> : <Volume2 className="mr-1.5 h-4 w-4" aria-hidden />}
+              {reading ? "Przerwij czytanie" : "Przeczytaj na głos"}
+            </Button>
+          )}
           {cur.action && (
             <Button type="button" variant="outline" onClick={cur.action.run} className="pressable w-full coarse:h-11">{cur.action.label}</Button>
           )}

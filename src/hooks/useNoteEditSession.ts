@@ -14,6 +14,7 @@ import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste"
 import { applyEdit, handleEditorKey } from "@/lib/editorKeysDom";
 import { useFeatureFlags } from "@/lib/featureFlags";
 import type { TextControl } from "@/lib/textControl";
+import { rebaseSplice } from "@/lib/yTextEdit";
 
 /**
  * Sesja edycji tekstu w kaflu: tytuł, treść, lista, tryb pełnego edytora i podgląd.
@@ -110,6 +111,15 @@ export function useNoteEditSession({
     setDraft: setEditContent,
   });
 
+  // W trybie wiązania szkic nadąża za dokumentem także wtedy, gdy edytor CM nie jest zamontowany
+  // (podgląd, wczytywanie paczki) — inaczej podgląd i `writeContent` pracowałyby na starej treści.
+  useEffect(() => {
+    if (!collabText) return;
+    const sync = () => setEditContent(collabText.toString());
+    collabText.observe(sync);
+    return () => collabText.unobserve(sync);
+  }, [collabText]);
+
   const wiki = useWikiAutocomplete({
     textareaRef,
     value: editContent,
@@ -175,10 +185,22 @@ export function useNoteEditSession({
       return;
     }
     if (collabText) {
-      // Edytor CM jeszcze się nie zamontował (lazy chunk): piszemy do dokumentu, a on wejdzie przy montażu.
-      const apply = () => { collabText.delete(0, collabText.length); collabText.insert(0, next); };
+      // Edytor CM nie jest zamontowany (lazy chunk, podgląd): do dokumentu idzie tylko zmieniony zakres.
+      // Podmiana całej treści skasowałaby tekst dopisany w tym czasie na innym urządzeniu.
+      const splice = rebaseSplice(editContent, next, collabText.toString());
+      if (!splice) {
+        setEditContent(collabText.toString());
+        toast("Treść zmieniła się na innym urządzeniu. Powtórz zmianę.");
+        return;
+      }
+      const apply = () => {
+        if (splice.remove > 0) collabText.delete(splice.at, splice.remove);
+        if (splice.insert) collabText.insert(splice.at, splice.insert);
+      };
       if (collabText.doc) collabText.doc.transact(apply);
       else apply();
+      setEditContent(collabText.toString());
+      return;
     }
     setEditContent(next);
   }

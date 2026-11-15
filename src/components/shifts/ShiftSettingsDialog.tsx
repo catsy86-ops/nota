@@ -42,7 +42,7 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
         <div className="space-y-4">
           <RateField value={s.hourlyRate} />
           <RateField value={s.nightRate} label="Dodatek nocny" onSave={setNightRate}
-            hint={`Puste — 20% minimalnej stawki za ${new Date().getFullYear()} rok (${formatMoney(nightRateFor(new Date().getFullYear(), 0))}/h, art. 151⁸ KP).`} />
+            hint={`Puste — 20% stawki z minimalnego wynagrodzenia; liczona osobno dla każdego miesiąca (w tym: ${formatMoney(nightRateFor(new Date().getFullYear(), new Date().getMonth(), 0))}/h, art. 151⁸ KP).`} />
           <Field label="System czasu pracy">
             <select value={s.workSystem} onChange={(e) => setWorkSystem(e.target.value as WorkSystem)} className={CONTROL}>
               {(Object.keys(WORK_SYSTEM_LABELS) as WorkSystem[]).map((k) => <option key={k} value={k}>{WORK_SYSTEM_LABELS[k]}</option>)}

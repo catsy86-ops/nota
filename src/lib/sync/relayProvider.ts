@@ -58,6 +58,7 @@ const RETRY_MIN_MS = 2000;
 /** Górny limit stron w jednym pobraniu; reszta idzie przy następnym (kursor jest zapisany). */
 const MAX_PULL_PAGES = 1000;
 const RETRY_MAX_MS = 60_000;
+const PERSIST_MS = 500;
 
 /** Kształt odpowiedzi `GET updates` (patrz relay-server/README.md). */
 interface Page {
@@ -84,6 +85,8 @@ export class RelayProvider {
   private state: RelayState = { cursor: 0, compactedAt: 0 };
   private chain: Promise<void> = Promise.resolve();
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
+  private persistTimer: ReturnType<typeof setTimeout> | null = null;
+  private persistChain: Promise<void> = Promise.resolve();
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private keepAliveTimer: ReturnType<typeof setInterval> | null = null;
   private socket: WebSocket | null = null;
@@ -109,6 +112,7 @@ export class RelayProvider {
     if (this.started) return;
     this.started = true;
     const [pending, state] = await Promise.all([this.opts.store.loadPending(), this.opts.store.loadState()]);
+    if (!this.started) return; // stop() w trakcie wczytywania: nie podłączamy niczego
     if (pending) this.pending = [pending];
     this.state = state;
     // Zmiany sprzed startu nie przeszły przez nasłuch `update`: dokładamy różnicę względem `sv`.
@@ -152,6 +156,7 @@ export class RelayProvider {
     this.opts.doc.off("update", this.onLocalUpdate);
     if (this.flushTimer) clearTimeout(this.flushTimer);
     if (this.retryTimer) clearTimeout(this.retryTimer);
+    if (this.persistTimer) void this.persistPending(); // zaległy zapis nie może zginąć ze stopem
     this.flushTimer = null;
     this.retryTimer = null;
     this.socket?.close();
@@ -169,13 +174,14 @@ export class RelayProvider {
   flushNow(): void {
     if (this.flushTimer) clearTimeout(this.flushTimer);
     this.flushTimer = null;
+    void this.persistPending();
     this.run(() => this.flushTask());
   }
 
   private readonly onLocalUpdate = (update: Uint8Array, origin: unknown) => {
     if (origin === this.origin) return;
     this.pending.push(update);
-    void this.persistPending();
+    this.schedulePersist();
     if (this.flushTimer) return;
     this.flushTimer = setTimeout(() => {
       this.flushTimer = null;
@@ -197,6 +203,10 @@ export class RelayProvider {
     }
     if (err instanceof RelayHttpError && (err.status === 401 || err.status === 403)) {
       this.setStatus("error", "Serwer nie przyjął kodu synchronizacji");
+      return;
+    }
+    if (err instanceof RelayHttpError && err.status === 413) {
+      this.setStatus("error", "Dane są za duże dla przekaźnika (limit 16 MB na wpis)");
       return;
     }
     // Sieć, 5xx, 429: ponawiamy z rosnącą przerwą.
@@ -231,9 +241,26 @@ export class RelayProvider {
     return `/rooms/${this.opts.keys.roomId}`;
   }
 
-  private async persistPending(): Promise<void> {
-    const merged = this.pending.length ? Y.mergeUpdates(this.pending) : null;
-    await this.opts.store.savePending(merged);
+  /** Zapis zaległości z opóźnieniem: seria szybkich zmian to jeden zapis, nie jeden na każdy znak. */
+  private schedulePersist(): void {
+    if (this.persistTimer) return;
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null;
+      void this.persistPending();
+    }, PERSIST_MS);
+  }
+
+  /** Zapis natychmiast, jedną kolejką (zapisy nie wyprzedzają się); `pending` zwija się do jednego elementu. */
+  private persistPending(): Promise<void> {
+    if (this.persistTimer) clearTimeout(this.persistTimer);
+    this.persistTimer = null;
+    const task = async () => {
+      if (this.pending.length > 1) this.pending = [Y.mergeUpdates(this.pending)];
+      await this.opts.store.savePending(this.pending[0] ?? null);
+    };
+    const next = this.persistChain.then(task, task);
+    this.persistChain = next.catch(() => undefined);
+    return next;
   }
 
   private async persistState(): Promise<void> {
@@ -252,14 +279,22 @@ export class RelayProvider {
       // Serwer, który ciągle zgłasza `hasMore` z pustą stroną, nie może zapętlić klienta.
       for (let pages = 0; pages < MAX_PULL_PAGES; pages++) {
         const page = await this.http<Page>(`${this.roomPath}/updates?since=${this.state.cursor}`, { method: "GET" });
+        if (!page || !Array.isArray(page.entries)) throw new RelayFatalError("Serwer przekaźnika zwrócił nieprawidłową odpowiedź");
         for (const entry of page.entries) {
+          if (!entry || typeof entry.data !== "string" || typeof entry.seq !== "number" || !(entry.seq > this.state.cursor)) {
+            throw new RelayFatalError("Serwer przekaźnika zwrócił nieprawidłowy wpis");
+          }
           let bytes: Uint8Array;
           try {
             bytes = await openBytes(this.opts.keys.dataKey, entry.data, this.aad);
           } catch {
             throw new RelayFatalError("Nie udało się odszyfrować wpisu — sprawdź kod synchronizacji");
           }
-          Y.applyUpdate(this.opts.doc, bytes, this.origin);
+          try {
+            Y.applyUpdate(this.opts.doc, bytes, this.origin);
+          } catch {
+            throw new RelayFatalError("Wpis z przekaźnika jest uszkodzony i nie da się go zastosować");
+          }
           this.state = { ...this.state, cursor: entry.seq };
         }
         if (!page.hasMore || page.entries.length === 0) break;
@@ -280,15 +315,26 @@ export class RelayProvider {
     const parts = this.pending;
     this.pending = [];
     const merged = Y.mergeUpdates(parts);
-    let res: { seq: number; last: number };
-    try {
-      const data = await sealBytes(this.opts.keys.dataKey, merged, this.aad);
-      res = await this.http<{ seq: number; last: number }>(`${this.roomPath}/updates`, { method: "POST", body: { data } });
-    } catch (err) {
-      // Wysłanie się nie udało: wracamy z tym, co zebraliśmy, przed to, co doszło w międzyczasie.
-      this.pending = [...parts, ...this.pending];
-      await this.persistPending();
-      throw err;
+    let res: { seq: number; last: number } | undefined;
+    for (let attempt = 0; !res; attempt++) {
+      try {
+        const data = await sealBytes(this.opts.keys.dataKey, merged, this.aad);
+        res = await this.http<{ seq: number; last: number }>(`${this.roomPath}/updates`, { method: "POST", body: { data } });
+      } catch (err) {
+        // Log pełny (409): jedna próba migawki mimo progu i ponowienie wysyłki.
+        if (attempt === 0 && err instanceof RelayHttpError && err.status === 409) {
+          try {
+            await this.compactTask(true);
+            continue;
+          } catch {
+            // migawka się nie udała — wracamy z pierwotnym błędem
+          }
+        }
+        // Wysłanie się nie udało: wracamy z tym, co zebraliśmy, przed to, co doszło w międzyczasie.
+        this.pending = [...parts, ...this.pending];
+        await this.persistPending();
+        throw err;
+      }
     }
     await this.persistPending();
     // Jeśli nasz wpis dostał numer zaraz za kursorem, dokument już go zawiera — nie trzeba go pobierać.
@@ -300,9 +346,9 @@ export class RelayProvider {
     await this.compactTask();
   }
 
-  private async compactTask(): Promise<void> {
+  private async compactTask(force = false): Promise<void> {
     if (!this.started || this.state.cursor < 1) return;
-    if (this.state.cursor - this.state.compactedAt < COMPACT_AFTER) return;
+    if (!force && this.state.cursor - this.state.compactedAt < COMPACT_AFTER) return;
     const upto = this.state.cursor;
     const data = await sealBytes(this.opts.keys.dataKey, Y.encodeStateAsUpdate(this.opts.doc), this.aad);
     await this.http(`${this.roomPath}/snapshot`, { method: "PUT", body: { upto, data } });

@@ -60,9 +60,44 @@ describe("magazyn faktur (Yjs)", () => {
     const r = await record("i2", "FV/A/2026/002");
     expect(cleanRecord({ ...r, hash: "zły" })).toBeNull();
     expect(cleanRecord({ ...r, xml: "" })).toBeNull();
-    expect(cleanRecord({ ...r, invoice: { ...r.invoice, lines: [] } })).toBeNull();
+    expect(cleanRecord({ ...r, invoice: { ...r.invoice, number: "inny" } })).toBeNull();
     expect(cleanRecord({ ...r, id: "" })).toBeNull();
     expect(cleanRecord(null)).toBeNull();
+  });
+
+  it("cleanRecord nie rzuca na zepsutych danych", async () => {
+    const r = await record("i9", "FV/A/2026/009");
+    expect(cleanRecord({ ...r, invoice: { ...r.invoice, lines: [null] } })).toBeNull();
+    expect(cleanRecord({ ...r, invoice: { ...r.invoice, payment: 5 } })).toBeNull();
+    expect(cleanRecord({ ...r, invoice: { ...r.invoice, seller: null } })).toBeNull();
+    expect(cleanRecord({ ...r, invoice: { ...r.invoice, lines: [{ ...r.invoice.lines[0], rate: 7 }] } })).toBeNull();
+    const { number: _n, ...bez } = r;
+    void _n;
+    expect(cleanRecord(bez)).toBeNull();
+    expect(cleanRecord("tekst")).toBeNull();
+  });
+
+  it("zły rekord nie przeszkadza reszcie, a jego numer nie zostaje nadany ponownie", async () => {
+    const doc = new Y.Doc();
+    const y = createYInvoices(doc);
+    const good = await record("g1", "FV/A/2026/001");
+    y.add(good);
+    doc.getMap("studyInvoices").set("zly", { id: "zly", number: "FV/A/2026/002", invoice: { lines: [null] } });
+    expect(y.all().map((r) => r.id)).toEqual(["g1"]);
+    expect(y.damaged()).toEqual([{ key: "zly", number: "FV/A/2026/002" }]);
+    expect(nextInvoiceNumber("A", 2026, y.numbers())).toBe("FV/A/2026/003");
+    expect(y.add(await record("g2", "FV/A/2026/002"))).toBe(false);
+    y.mergeDump({ invoices: [{ id: "x", invoice: { lines: [null] } }, await record("g3", "FV/A/2026/005")] });
+    expect(y.get("g3")?.number).toBe("FV/A/2026/005");
+  });
+
+  it("add stosuje reguły biznesowe, odczyt ich nie wymaga", async () => {
+    const r = await record("i8", "FV/A/2026/008");
+    const y = createYInvoices(new Y.Doc());
+    expect(y.add({ ...r, invoice: { ...r.invoice, lines: [] } })).toBe(false);
+    const doc = new Y.Doc();
+    doc.getMap("studyInvoices").set("i8", { ...r, invoice: { ...r.invoice, issueDate: "2026-02-31" } });
+    expect(createYInvoices(doc).all()).toHaveLength(1);
   });
 
   it("verifyRecord wykrywa zmianę XML po wystawieniu", async () => {

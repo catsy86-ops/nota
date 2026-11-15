@@ -54,7 +54,7 @@ Pierwszy zapis do pokoju ustawia jego token. Później wymagany jest ten sam tok
 
 ## Limity (`core.js`, `LIMITS`)
 
-- wpis: 700 000 znaków base64 (ok. 512 KB);
+- wpis i migawka: 22 400 000 znaków base64 (ok. 16 MB);
 - pokój: 50 MB zaszyfrowanych danych, 5000 wpisów (powyżej klient musi zrobić snapshot);
 - serwer: 5000 pokoi; pokój nieruszany 180 dni znika;
 - zapytania: 300/min na IP (`RATE_PER_MIN`); nowe pokoje: 20 na dobę na IP (`ROOMS_PER_IP_PER_DAY`), łącznie 5000 pokoi; ciało żądania do 1 MB;

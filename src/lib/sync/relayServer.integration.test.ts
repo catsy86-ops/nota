@@ -117,4 +117,17 @@ describe("klient przekaźnika ↔ prawdziwy serwer", () => {
     });
     expect(res.status).toBe(403);
   });
+
+  it("dokument 2 MB synchronizuje się od zera (limit wpisu 16 MB)", async () => {
+    const code = "BIGBIGBIGBIG";
+    const a = await device(code);
+    const big = Array.from({ length: 2048 }, (_, i) => `${i.toString(36)}${Math.random().toString(36).repeat(60)}`.slice(0, 1024)).join("");
+    a.doc.transact(() => a.text.insert(0, big));
+    await new Promise((r) => setTimeout(r, 1500));
+    const b = await device(code);
+    await until(() => b.text.length === big.length, 15_000);
+    expect(b.text.toString()).toBe(big);
+    a.provider.stop();
+    b.provider.stop();
+  }, 40_000);
 });

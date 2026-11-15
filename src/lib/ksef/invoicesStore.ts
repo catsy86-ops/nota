@@ -11,6 +11,7 @@ const yInvoices = createYInvoices(yjsStore.doc);
 
 export const useInvoices = (): InvoiceRecord[] => useSyncExternalStore(yInvoices.subscribe, yInvoices.all);
 export const getInvoices = (): InvoiceRecord[] => yInvoices.all();
+export const getDamagedInvoices = () => yInvoices.damaged();
 export const invoicesDump = () => yInvoices.dump();
 export const mergeInvoicesDump = (raw: unknown) => yInvoices.mergeDump(raw);
 
@@ -26,7 +27,7 @@ export async function issueInvoice(siteId: string, draft: Omit<Invoice, "number"
   const kind = draft.correction ? "FK" : "FV";
   const series = seriesStore.get();
   const year = new Date(now).getFullYear();
-  const number = nextInvoiceNumber(series, year, yInvoices.all().map((r) => r.number), kind);
+  const number = nextInvoiceNumber(series, year, yInvoices.numbers(), kind);
   const invoice: Invoice = { ...draft, number };
   const problems = validateInvoice(invoice);
   if (problems.length > 0) return { ok: false, problems };

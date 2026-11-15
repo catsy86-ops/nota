@@ -112,3 +112,32 @@ export function mapOffset(from: TextBase, offset: number, to: TextBase): number 
   }
   return 0;
 }
+
+export interface TextSplice { at: number; remove: number; insert: string }
+
+/**
+ * Zmiana `prev → next` jako jedno wycięcie i wstawka, przeniesiona na tekst `current` (to, co jest teraz
+ * w dokumencie). Dla zapisów bez zamontowanego edytora i bez bazy znaków: do `Y.Text` trafia tylko
+ * zmieniony zakres, więc tekst dopisany przez peera poza nim zostaje, a reszta znaków zachowuje tożsamość.
+ * `null`, gdy peer zmienił sam zakres albo nie da się go jednoznacznie odnaleźć — wtedy wołający
+ * odświeża widok i nic nie zapisuje. Brak zmiany daje wycięcie zerowe z pustą wstawką.
+ */
+export function rebaseSplice(prev: string, next: string, current: string): TextSplice | null {
+  let start = 0;
+  const maxStart = Math.min(prev.length, next.length);
+  while (start < maxStart && prev[start] === next[start]) start++;
+  let endPrev = prev.length;
+  let endNext = next.length;
+  while (endPrev > start && endNext > start && prev[endPrev - 1] === next[endNext - 1]) {
+    endPrev--; endNext--;
+  }
+  const removed = prev.slice(start, endPrev);
+  const insert = next.slice(start, endNext);
+  if (current === prev) return { at: start, remove: removed.length, insert };
+  // Peer pisał za zakresem: początek i sam zakres stoją tam, gdzie były.
+  if (current.startsWith(prev.slice(0, endPrev))) return { at: start, remove: removed.length, insert };
+  // Peer pisał przed zakresem: zakres i koniec liczymy od końca tekstu.
+  const tail = prev.slice(start);
+  if (current.endsWith(tail)) return { at: current.length - tail.length, remove: removed.length, insert };
+  return null;
+}

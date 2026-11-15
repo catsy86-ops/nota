@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
-import { applyTextEdit, captureTextBase } from "./yTextEdit";
+import { applyTextEdit, captureTextBase, rebaseSplice, type TextSplice } from "./yTextEdit";
 
 function pair(initial: string) {
   const a = new Y.Doc();
@@ -81,5 +81,63 @@ describe("applyTextEdit", () => {
     sync();
     expect(a.toString()).toContain("!");
     expect(a.toString()).toContain("def");
+  });
+});
+
+function applySplice(t: Y.Text, sp: TextSplice) {
+  if (sp.remove > 0) t.delete(sp.at, sp.remove);
+  if (sp.insert) t.insert(sp.at, sp.insert);
+}
+
+describe("rebaseSplice", () => {
+  it("bez zmian peera: wycięcie i wstawka z różnicy", () => {
+    expect(rebaseSplice("ala ma kota", "ala ma psa", "ala ma kota")).toEqual({ at: 7, remove: 3, insert: "ps" });
+  });
+
+  it("peer dopisał za zakresem: początek bez zmian", () => {
+    expect(rebaseSplice("ala ma kota", "ala ma psa", "ala ma kota i psa")).toEqual({ at: 7, remove: 3, insert: "ps" });
+  });
+
+  it("peer dopisał przed zakresem: pozycja liczona od końca", () => {
+    const sp = rebaseSplice("ala ma kota", "ala ma psa", "Hej! ala ma kota");
+    expect(sp).toEqual({ at: 12, remove: 3, insert: "ps" });
+  });
+
+  it("peer zmienił sam zakres: null", () => {
+    expect(rebaseSplice("ala ma kota", "ala ma psa", "ala ma konia")).toBeNull();
+  });
+
+  it("wstawka w pusty tekst, usunięcie wszystkiego, brak zmiany", () => {
+    expect(rebaseSplice("", "abc", "")).toEqual({ at: 0, remove: 0, insert: "abc" });
+    expect(rebaseSplice("abc", "", "abc")).toEqual({ at: 0, remove: 3, insert: "" });
+    expect(rebaseSplice("abc", "abc", "abc")).toMatchObject({ remove: 0, insert: "" });
+  });
+
+  it("zbieżność na dwóch Y.Doc: zamiana na listę po jednej stronie, dopisane zdanie po drugiej", () => {
+    const { a, b, sync } = pair("punkt 1\npunkt 2");
+    const prev = a.toString();
+    const next = "- punkt 1\n- punkt 2";
+    edit(b, () => b.insert(b.length, "\nZdanie B."));
+    // Zapis A na starym stanie (B jeszcze nieprzesłane), potem wymiana aktualizacji.
+    const sp = rebaseSplice(prev, next, a.toString());
+    expect(sp).not.toBeNull();
+    edit(a, () => applySplice(a, sp!));
+    sync();
+    expect(a.toString()).toBe(b.toString());
+    expect(a.toString()).toContain("Zdanie B.");
+    expect(a.toString()).toContain("- punkt 2");
+  });
+
+  it("peer dopisał przed zapisem (już zsynchronizowany): jego tekst przeżywa", () => {
+    const { a, b, sync } = pair("punkt 1\npunkt 2");
+    const prev = a.toString();
+    edit(b, () => b.insert(0, "Nagłówek\n"));
+    sync();
+    const sp = rebaseSplice(prev, "- punkt 1\n- punkt 2", a.toString());
+    expect(sp).not.toBeNull();
+    edit(a, () => applySplice(a, sp!));
+    sync();
+    expect(a.toString()).toBe(b.toString());
+    expect(a.toString()).toBe("Nagłówek\n- punkt 1\n- punkt 2");
   });
 });

@@ -4,7 +4,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 
 export const LIMITS = {
-  MAX_ENTRY_CHARS: 700_000, // ~512 KB po odkodowaniu
+  MAX_ENTRY_CHARS: 22_400_000, // ~16 MB po odkodowaniu (wpis i migawka)
   MAX_ROOM_CHARS: 50_000_000, // suma zaszyfrowanych danych jednego pokoju
   MAX_ENTRIES: 5_000, // wpisów w logu jednego pokoju; powyżej — klient musi zrobić snapshot
   MAX_ROOMS: 5_000,

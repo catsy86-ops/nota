@@ -18,6 +18,7 @@ const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then(
 const TodayListsCard = lazy(() => import("@/components/review/TodayListsCard").then((m) => ({ default: m.TodayListsCard })));
 export const StudyDueRows = lazy(() => import("@/components/review/StudyDueRows"));
 const TodaySiteCard = lazy(() => import("@/components/review/TodaySiteCard").then((m) => ({ default: m.TodaySiteCard })));
+const TodayInvoiceDue = lazy(() => import("@/components/review/TodayInvoiceDue").then((m) => ({ default: m.TodayInvoiceDue })));
 const TodayStudyCard = lazy(() => import("@/components/review/TodayStudyCard").then((m) => ({ default: m.TodayStudyCard })));
 const BrainTrainingCard = lazy(() => import("@/components/review/BrainTrainingCard").then((m) => ({ default: m.BrainTrainingCard })));
 const TodayPersonalRows = lazy(() => import("@/components/review/TodayPersonalRows").then((m) => ({ default: m.TodayPersonalRows })));
@@ -96,6 +97,7 @@ export function TodayCards({ searching, go, notes, folders, reminderNotes, today
               <Suspense fallback={null}>
                 <StudyDueRows onOpenStudy={(siteId) => go("study", siteId ? { site: siteId } : {})} />
                 <TodaySiteCard />
+                <TodayInvoiceDue />
               </Suspense>
             </ViewErrorBoundary>
           )}
