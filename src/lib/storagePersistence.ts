@@ -33,3 +33,16 @@ export async function getStorageInfo(): Promise<StorageInfo> {
     quotaBytes: estimate?.quota ?? null,
   };
 }
+
+/** Ułamek zajętego miejsca (0–1) albo null, gdy przeglądarka nie podaje limitu. */
+export function storageFill(info: StorageInfo): number | null {
+  if (info.usageBytes === null || !info.quotaBytes) return null;
+  return info.usageBytes / info.quotaBytes;
+}
+
+/** Ostrzeżenie przy > 80% zajętego miejsca; null, gdy nie ma powodu. */
+export function storageWarning(info: StorageInfo): string | null {
+  const fill = storageFill(info);
+  if (fill === null || fill <= 0.8) return null;
+  return `Zajęte ${Math.round(fill * 100)}% miejsca dostępnego dla aplikacji. Zrób kopię i zmniejsz zdjęcia, zanim zapis zacznie się nie udawać.`;
+}

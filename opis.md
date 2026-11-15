@@ -5802,3 +5802,12 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Testy edycji wiązanej (Z-4.T, część Vitest):** `src/lib/yTextEdit.test.ts` — `rebaseSplice` (peer przed/za/w zakresie, puste teksty) i zbieżność dwóch `Y.Doc`. Brak jeszcze e2e „Zamień na listę z podglądu”.
 - **Praca R4.3 — czytanie podsumowania dnia na głos:** `src/lib/speak.ts` (`speak`, `stopSpeaking`, `speechAvailable`; ciche „nie da się” bez API) i przycisk „Przeczytaj na głos” w `EndDaySheet.tsx` (czyta bieżący krok, ucina przy zmianie kroku i zamknięciu). Opcjonalne — domyślnie milczy. Test: `speak.test.ts`.
 - **Praca R3.3 — „Do wystawienia”:** `src/lib/study/toInvoice.ts` (`jobsToInvoice`: zlecenia „zrobione” z pozycjami, bez faktury FV; korekta nie liczy się) i karta `TodayInvoiceDue.tsx` na Dziś z przyciskiem „Wystaw fakturę” otwierającym `InvoiceDialog` (pozycje z wyceny). Test: `toInvoice.test.ts`.
+
+## Pewność danych — blokada kart, błąd zapisu, zapełnienie magazynu (Q1.1, Q1.5, Q1.2 planu QoL, 2026-11-15)
+
+- **Co robi:** migracje przy starcie i import kopii wykonuje jedna karta naraz (druga czeka). Błąd zapisu pokazuje stały komunikat „Nie zapisano — zrób kopię, zmiany są tylko w tej karcie”. W Ustawieniach → Kopia i dane pojawia się ostrzeżenie, gdy zajęte jest ponad 80% miejsca.
+- **Gdzie jest:** `src/lib/tabLock.ts` (`withExclusiveLock`, `MIGRATION_LOCK`), użyte w `yjsStore.ts` (`ready()`) i `exportNotes.ts` (`restoreFullBackup` → `restoreFullBackupLocked`); `src/components/OfflineStatus.tsx` (etykieta błędu); `src/lib/storagePersistence.ts` (`storageFill`, `storageWarning`) i `settings/BackupSettings.tsx`.
+- **Jak działa:** `navigator.locks.request("notatnik-migracja", exclusive)`; bez Web Locks kolejka obietnic w obrębie jednej karty. Druga karta zastaje flagi migracji w `localStorage`, więc nic nie dubluje. Stan błędu zapisu (`saveStatus.ts`, faza `error`) istniał wcześniej i blokuje zamknięcie karty.
+- **Ograniczenia:** nie ma komunikatu „trwa w innej karcie” — druga karta po prostu czeka. Ostrzeżenia „magazyn nietrwały po 7 dniach” nie dodano (jest tylko status trwałości).
+- **Testy:** `src/lib/tabLock.test.ts`, `src/lib/storagePersistence.test.ts`, istniejące `saveStatus.test.ts`.
+- **Commit:** patrz `git log` (2026-11-15).

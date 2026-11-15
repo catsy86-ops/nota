@@ -24,6 +24,7 @@ import { download } from "@/lib/downloadBlob";
 export { download };
 import { getViewPrefs } from "@/lib/viewPrefs";
 import { APP_NAME } from "@/lib/appName";
+import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 
 const PUSH_RESTORE_KEY = PUSH_PREFS_KEY;
 
@@ -382,6 +383,12 @@ export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; merge: (du
 ];
 
 export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number; failed: string[] }> {
+  // `ready()` samo bierze blokadę migracji — wołane w jej środku zakleszczyłoby się.
+  await yjsStore.ready();
+  return withExclusiveLock(MIGRATION_LOCK, () => restoreFullBackupLocked(backup, opts));
+}
+
+async function restoreFullBackupLocked(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number; failed: string[] }> {
   /** Sekcje, których nie udało się przywrócić (W8): wołający pokazuje je zamiast „Przywrócono”. */
   const failed: string[] = [];
   const fail = (name: string, err: unknown) => { failed.push(name); logDiag("warn", "backup", `cannot restore ${name}`, errName(err)); };

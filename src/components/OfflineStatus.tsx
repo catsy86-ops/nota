@@ -79,7 +79,7 @@ export function OfflineStatus() {
   if (!visible) return null;
 
   const label = saveFailed
-    ? "Nie zapisano — zmiany są tylko w tej karcie"
+    ? "Nie zapisano — zrób kopię, zmiany są tylko w tej karcie"
     : saving ? "Zapisywanie…"
     : offline ? "Offline — zapisuję lokalnie"
     : saved ? "Zapisano"

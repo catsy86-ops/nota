@@ -18,6 +18,7 @@ import { mergeSpec, projectReminder, readSpec, REMINDER_FIELDS, specOf, type Rem
 import { fallbackRepeat } from "@/lib/reminderRepeat";
 import { journalRefsIn } from "@/lib/study/journalRefs";
 import { planRefsIn } from "@/lib/plans/planRefs";
+import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 import { cleanLabelPath, isUnderLabel, renameLabelBranch } from "@/lib/labelTree";
 import {
   NOTE_COLORS, PRIORITIES, REMINDER_REPEATS, REMOTE_LIMITS as LIM,
@@ -545,8 +546,11 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
         if (timer) clearTimeout(timer);
         if (!synced) logDiag("error", "yjs", "IndexedDB nie odpowiada — zmiany mogą nie zostać zapisane");
         await images.load();
-        await migrateImagesToStore();
-        await migrateFromLegacyIfNeeded();
+        // Jedna karta naraz: druga czeka i zastaje już zrobioną migrację (flagi w localStorage).
+        await withExclusiveLock(MIGRATION_LOCK, async () => {
+          await migrateImagesToStore();
+          await migrateFromLegacyIfNeeded();
+        });
       })();
     }
     return readyPromise;

@@ -12,7 +12,7 @@ import type { FullBackup } from "@/lib/noteSchema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { daysSinceBackup, LAST_AUTO_EXPORT_KEY } from "@/lib/backupReminder";
-import { requestPersistentStorage, getStorageInfo, type StorageInfo } from "@/lib/storagePersistence";
+import { requestPersistentStorage, getStorageInfo, storageWarning, type StorageInfo } from "@/lib/storagePersistence";
 import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName } from "@/lib/backupFileHandle";
 import { toast } from "sonner";
 import { ResetSectionButton, Section } from "./SettingsShared";
@@ -66,6 +66,9 @@ function StoragePersistenceStatus() {
         <p className="text-muted-foreground">
           Zajęte: {formatBytes(info.usageBytes)} {info.quotaBytes !== null && `z ${formatBytes(info.quotaBytes)} dostępnych`}
         </p>
+        {storageWarning(info) && (
+          <p role="alert" className="text-warning-ink">{storageWarning(info)}</p>
+        )}
         {!info.persisted && (
           <Button size="sm" variant="outline" onClick={handleRequest} disabled={requesting} className="w-full">
             Poproś przeglądarkę o trwałe przechowywanie

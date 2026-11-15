@@ -20,11 +20,11 @@
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
-| Q1.1 | **Jedna karta pisze migracje.** `navigator.locks.request("notatnik-migracja")` wokół migracji i importu kopii; druga karta czeka albo pokazuje „trwa w innej karcie”. Dziś dwie karty mogą migrować naraz. | S |
-| Q1.2 | **Zdrowie magazynu** w Ustawieniach → Kopia i dane: zajęte i wolne miejsce (`storage.estimate`), czy magazyn jest trwały (`persisted`), przycisk „Poproś o trwały”. Ostrzeżenie przy > 80% i przy magazynie nietrwałym po 7 dniach używania. | S |
+| Q1.1 ✅ | **Jedna karta pisze migracje.** `navigator.locks.request("notatnik-migracja")` wokół migracji i importu kopii; druga karta czeka albo pokazuje „trwa w innej karcie”. Dziś dwie karty mogą migrować naraz. | S |
+| Q1.2 ✅ | **Zdrowie magazynu** w Ustawieniach → Kopia i dane: zajęte i wolne miejsce (`storage.estimate`), czy magazyn jest trwały (`persisted`), przycisk „Poproś o trwały”. Ostrzeżenie przy > 80% i przy magazynie nietrwałym po 7 dniach używania. | S |
 | Q1.3 | **Automatyczna kopia do pliku bez pytania:** gdy wybrany jest plik (`tryWriteBackupToFile`), zapis po każdej sesji z > N zmianami, przy `visibilitychange`→ukryta; w Ustawieniach data i rozmiar ostatniego zapisu. Sprawdzić, co robi dziś `LAST_AUTO_EXPORT_KEY`, i nie dublować. | M |
 | Q1.4 | **Rotacja kopii w OPFS:** 7 ostatnich dziennych migawek w Origin Private File System (poza IndexedDB, więc przeżywa uszkodzenie bazy); „Przywróć z dnia…” w Ustawieniach. Szyfrowane kluczem skarbca, gdy skarbiec istnieje — do decyzji z `security-reviewer`. | M |
-| Q1.5 | **Błąd zapisu widoczny:** `QuotaExceededError` i odrzucone transakcje IndexedDB kończą się stałym banerem „Nie zapisano — zrób kopię”, nie toastem. Test z atrapą pełnego magazynu. | S |
+| Q1.5 ✅ | **Błąd zapisu widoczny:** `QuotaExceededError` i odrzucone transakcje IndexedDB kończą się stałym banerem „Nie zapisano — zrób kopię”, nie toastem. Test z atrapą pełnego magazynu. | S |
 | Q1.6 | **Dziennik błędów na urządzeniu:** `error` i `unhandledrejection` do pierścienia 50 wpisów w `localStorage` (bez treści notatek), widoczny w Ustawieniach → Diagnostyka z „Skopiuj”. Ułatwia zgłaszanie błędów z telefonu. | S |
 
 ## Etap Q2: twardnienie (Opus + `security-reviewer`)
