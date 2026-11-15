@@ -18,4 +18,10 @@ describe("isSafeHref", () => {
     expect(safeHref(undefined)).toBeUndefined();
     expect(safeHref("https://a.pl")).toBe("https://a.pl");
   });
+
+  it("odrzuca adresy bez schematu wskazujące inny serwer (//host, /\\host)", () => {
+    expect(isSafeHref("//evil.com")).toBe(false);
+    expect(isSafeHref("/\\evil.com")).toBe(false);
+    expect(isSafeHref("/ścieżka")).toBe(true);
+  });
 });

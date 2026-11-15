@@ -272,7 +272,17 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           // W edycji wszystkie (do 4), bo każde ma przycisk usuwania.
           <div className={cn("grid gap-0.5", isEditing && note.images.length > 1 && "grid-cols-2")}>
             {note.images.slice(0, isEditing ? note.images.length : 1).map((img, i) => (
-              <div key={i} className="relative group/img cursor-pointer overflow-hidden" onClick={() => setPreviewImage(img)}>
+              <div
+                key={i}
+                className="relative group/img cursor-pointer overflow-hidden rounded-control focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => setPreviewImage(img)}
+                role={isEditing ? undefined : "button"}
+                tabIndex={isEditing ? undefined : 0}
+                aria-label={isEditing ? undefined : `Powiększ obraz ${i + 1} z ${note.images.length}`}
+                onKeyDown={(e) => {
+                  if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); setPreviewImage(img); }
+                }}
+              >
                 <NoteImage imageRef={img} alt={`Obraz ${i + 1} z ${note.images.length}`} className={cn("w-full object-cover transition-transform duration-base group-hover/img:scale-105 motion-reduce:transition-none", isEditing ? "h-24" : "aspect-video")} />
                 {!isEditing && note.images.length > 1 && (
                   <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-control bg-foreground/60 text-background text-2xs font-semibold tabular-nums">
@@ -283,7 +293,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                   <button
                     onClick={(e) => { e.stopPropagation(); removeImage(i); }}
                     aria-label="Usuń obrazek"
-                    className="absolute top-1 right-1 p-1 coarse:p-2 rounded-full bg-foreground/60 text-background opacity-0 coarse:opacity-100 group-hover/img:opacity-100 focus-visible:opacity-100 transition-opacity"
+                    className="absolute top-1 right-1 p-1 coarse:p-3 rounded-full bg-foreground/60 text-background opacity-0 coarse:opacity-100 group-hover/img:opacity-100 focus-visible:opacity-100 transition-opacity"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -296,6 +306,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         <div
           // Klawiatura (§audyt 8): treść kafla dostaje fokus, a Enter/Spacja wykonuje to samo co klik.
           tabIndex={isEditing ? undefined : 0}
+          role={isEditing ? undefined : "button"}
+          aria-pressed={!isEditing && selectionMode ? !!selected : undefined}
           onKeyDown={(e) => {
             if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); e.currentTarget.click(); }
           }}

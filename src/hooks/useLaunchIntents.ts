@@ -7,7 +7,6 @@ import { useLatestRef } from "@/hooks/useLatestRef";
 import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
 import { sweepShareInbox, takeShareInbox } from "@/lib/shareInbox";
 import { importNoteFiles, warnImportedFiles } from "@/lib/inboxFiles";
-import { yStudy } from "@/lib/study/data";
 
 type AddNote = ReturnType<typeof useNotes>["addNote"];
 
@@ -79,6 +78,7 @@ export function useLaunchIntents(deps: LaunchIntentsDeps) {
         };
         // H4.1: same zdjęcia, a Praca jest w użyciu — pytamy, czy to wpis z budowy. Zamknięcie dymku albo brak
         // odpowiedzi zapisuje notatkę jak dotąd, więc zdjęcia nigdy nie przepadają.
+        const { yStudy } = await import("@/lib/study/data");
         const study = yStudy.get();
         const usesWork = study.journal.length > 0 || Object.keys(study.sites).length > 0;
         if (imported.images.length === 0 || imported.attachments.length > 0 || !usesWork) { saveAsNote(); return; }

@@ -1,3 +1,4 @@
+import { smoothBehavior } from "@/lib/scrollBehavior";
 import { useEffect, useState, type RefObject } from "react";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +43,7 @@ export function ReaderToc({ rootRef, resetKey, className }: { rootRef: RefObject
           <li key={i} style={{ paddingLeft: `${(h.level - base) * 0.75}rem` }}>
             <button
               type="button"
-              onClick={() => h.el.scrollIntoView({ behavior: "smooth", block: "start" })}
+              onClick={() => h.el.scrollIntoView({ behavior: smoothBehavior(), block: "start" })}
               className="text-left text-sm text-foreground/80 hover:text-primary-ink hover:underline underline-offset-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
             >
               {h.text}

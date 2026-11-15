@@ -19,6 +19,8 @@ export function isSafeHref(raw: string): boolean {
   if (!compact) return false;
   const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(compact);
   if (scheme) return ALLOWED_SCHEMES.has(`${scheme[1].toLowerCase()}:`);
+  // `//host` i `/\host` przeglądarka czyta jako adres z innego serwera, nie jako ścieżkę względną.
+  if (/^[/\\]{2}/.test(compact) || /^\/\\/.test(compact)) return false;
   // Bez schematu: kotwica albo ścieżka względna. Dwukropek przed pierwszym `/?#`
   // oznaczałby nietypowy schemat, którego regex wyżej nie rozpoznał.
   const head = compact.split(/[/?#]/)[0];

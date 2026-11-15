@@ -1,3 +1,4 @@
+import { smoothBehavior } from "@/lib/scrollBehavior";
 import { useState, useCallback, useEffect } from "react";
 import { setViewPref } from "@/lib/viewPrefs";
 import type { View } from "@/hooks/useFilteredNotes";
@@ -48,7 +49,7 @@ export function useNoteNavigation({ route, folders, notes, archivedNotes, notesR
     setSearch("");
     if (viaLink) replaceWith(target); else go(target, { search: "" });
     const show = (el: HTMLElement) => {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.scrollIntoView({ behavior: smoothBehavior(), block: "center" });
       // Pierścień fokusu idzie za notatką — inaczej zostaje na kaflu z linkiem i świecą dwa naraz.
       setGridNavFocus(id);
       el.classList.add("note-flash");

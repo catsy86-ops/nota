@@ -4,6 +4,8 @@
  * istnieć w chwili kliknięcia, więc zostaje w module do odebrania.
  */
 
+import { smoothBehavior } from "./scrollBehavior";
+
 let pending: { heading: string; at: number } | null = null;
 const listeners = new Set<() => void>();
 
@@ -54,7 +56,7 @@ export function scrollToHeading(root: ParentNode | null, heading: string): boole
   if (!root) return false;
   const el = heading.startsWith("^") ? findBlockElement(root, heading.slice(1)) : findHeading(root, heading);
   if (!el) return false;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  el.scrollIntoView({ behavior: smoothBehavior(), block: "start" });
   el.classList.add("note-flash");
   window.setTimeout(() => el.classList.remove("note-flash"), 1600);
   return true;

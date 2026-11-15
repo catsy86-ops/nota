@@ -1,6 +1,6 @@
 ﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { describeBackupSkipped } from "./backupSkipped";
-import { isBackupOversize, buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, SETTING_VALUE_MAX, ACHIEVEMENTS_KEY } from "./exportNotes";
+import { isBackupOversize, buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, MAX_BACKUP_VERSION, SETTINGS_KEYS, SETTING_VALUE_MAX, ACHIEVEMENTS_KEY } from "./exportNotes";
 import { setDayShift, shiftStore } from "./shifts/store";
 import { yjsStore } from "./yjsStore";
 import { versionsStore } from "./versionsStore";
@@ -143,6 +143,12 @@ describe("pełny backup v2", () => {
   it("drops a corrupted optional section instead of rejecting the file", async () => {
     const backup = await parseFullBackup(JSON.stringify({ version: 2, exportedAt: 1, notes: [], labels: [], folders: [], versions: "zepsute" }));
     expect(backup.versions).toBeUndefined();
+  });
+
+  it("odrzuca kopię z nowszej wersji formatu zamiast po cichu obniżyć ją do v1", async () => {
+    const text = JSON.stringify({ version: MAX_BACKUP_VERSION + 1, exportedAt: 1, notes: [], labels: [], folders: [] });
+    await expect(parseFullBackup(text)).rejects.toThrow(/nowszej wersji/);
+    await expect(parseFullBackup(JSON.stringify({ version: MAX_BACKUP_VERSION, exportedAt: 1, notes: [], labels: [], folders: [] }))).resolves.toBeDefined();
   });
 });
 

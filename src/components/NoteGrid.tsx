@@ -1,4 +1,5 @@
 ﻿import { toast } from "sonner";
+import { smoothBehavior } from "@/lib/scrollBehavior";
 import { useRef, useEffect, useLayoutEffect, useCallback, memo, useMemo, useState, forwardRef } from "react";
 import type { CardExitIntent } from "@/lib/cardMotion";
 import { AnimatePresence } from "framer-motion";
@@ -233,7 +234,7 @@ export function NoteGrid({
     },
     // Karta może być jeszcze niezamontowana (render przy przewijaniu): najpierw dorysowanie, potem DOM w następnej klatce.
     openNote: (id) => whenRendered(id, (el) => (el.querySelector(".cursor-pointer") as HTMLElement | null)?.click()),
-    scrollToNote: (id) => whenRendered(id, (el) => el.scrollIntoView({ block: "nearest", behavior: "smooth" })),
+    scrollToNote: (id) => whenRendered(id, (el) => el.scrollIntoView({ block: "nearest", behavior: smoothBehavior() })),
     colsCount,
   };
   });

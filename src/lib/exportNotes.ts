@@ -12,7 +12,6 @@ import { tryWriteBackupToFile } from "@/lib/backupFileHandle";
 import { versionsStore } from "@/lib/versionsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { imageStore, isEmbeddableImageDataUrl } from "@/lib/imageStore";
-import { journalImageRefs } from "@/lib/study/images";
 import { recordingRefsIn, siteDocRefsIn } from "@/lib/study/journalRefs";
 import { planRefsIn } from "@/lib/plans/planRefs";
 import { STUDY_STORAGE_KEY } from "@/lib/study/keys";
@@ -129,6 +128,7 @@ async function collectAttachmentBlobs(budget: number, planImages: boolean): Prom
     else if (recordings.has(hash)) report.recordings++;
     else report.journalPhotos++;
   };
+  const { journalImageRefs } = await import("@/lib/study/images");
   for (const hash of journalImageRefs()) {
     if (blobs[hash]) continue;
     const dataUrl = await imageStore.getDataUrl(hash);
@@ -332,10 +332,17 @@ export function pickFullBackup(): Promise<FullBackup> {
   });
 }
 
+/** Najwyższa wersja kopii, którą ta aplikacja umie wczytać; nowsza ma sekcje, które po cichu by zgubiła. */
+export const MAX_BACKUP_VERSION = 3;
+
 export async function parseFullBackup(text: string): Promise<FullBackup> {
   const raw = JSON.parse(text);
   if (!raw || typeof raw !== "object" || !Array.isArray((raw as Record<string, unknown>).notes)) {
     throw new Error("To nie jest plik pełnego backupu aplikacji G");
+  }
+  const version = (raw as Record<string, unknown>).version;
+  if (typeof version === "number" && version > MAX_BACKUP_VERSION) {
+    throw new Error("Ta kopia pochodzi z nowszej wersji aplikacji. Zaktualizuj aplikację i spróbuj ponownie.");
   }
   const { fullBackupSchema } = await loadSchemas();
   return fullBackupSchema.parse(raw);

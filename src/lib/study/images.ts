@@ -2,7 +2,7 @@ import { isImageRef } from "@/lib/imageStore";
 import { yjsStore } from "@/lib/yjsStore";
 import { JOURNAL_DRAFT_KEY, STUDY_STORAGE_KEY } from "./keys";
 import { legacyStudyMerged } from "./data";
-import { journalRefsIn } from "./yStudy";
+import { journalRefsIn } from "./journalRefs";
 import { journalEditImageRefs } from "./entrySheet";
 
 export { JOURNAL_DRAFT_KEY, STUDY_STORAGE_KEY };

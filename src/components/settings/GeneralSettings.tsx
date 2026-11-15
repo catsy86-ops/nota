@@ -1,3 +1,4 @@
+import { smoothBehavior } from "@/lib/scrollBehavior";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useShifts } from "@/lib/shifts";
@@ -52,7 +53,7 @@ const JUMP_GROUPS = [
 ] as const;
 
 function jumpTo(id: string) {
-  document.getElementById(`ogolne-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.getElementById(`ogolne-${id}`)?.scrollIntoView({ behavior: smoothBehavior(), block: "start" });
 }
 
 function JumpNav() {

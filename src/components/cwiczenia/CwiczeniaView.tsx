@@ -1,3 +1,4 @@
+import { smoothBehavior } from "@/lib/scrollBehavior";
 import { EXERCISE_LABEL } from "@/lib/exerciseLabel";
 import { useId, useMemo, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -159,7 +160,7 @@ export function CwiczeniaView() {
     <section aria-label="Ćwiczenia" className="w-full max-w-(--page-form) pb-32">
 
       <TodayStrip doneSupplements={doneToday} totalSupplements={supplements.length} day={today}
-        onGo={(t) => { setTab(t); document.getElementById(`cwiczenia-${t}`)?.scrollIntoView?.({ block: "start", behavior: "smooth" }); }} />
+        onGo={(t) => { setTab(t); document.getElementById(`cwiczenia-${t}`)?.scrollIntoView?.({ block: "start", behavior: smoothBehavior() }); }} />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as CwiczeniaTab)}>
       <TabsList aria-label="Dział Ćwiczeń" className="mb-4 flex h-auto w-full sm:hidden">

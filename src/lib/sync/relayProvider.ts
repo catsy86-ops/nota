@@ -55,6 +55,8 @@ export const COMPACT_AFTER = 500;
 /** Ping na gnieździe, gdy karta jest schowana: pośrednicy zamykają bezczynne połączenia. */
 export const KEEPALIVE_MS = 20_000;
 const RETRY_MIN_MS = 2000;
+/** Górny limit stron w jednym pobraniu; reszta idzie przy następnym (kursor jest zapisany). */
+const MAX_PULL_PAGES = 1000;
 const RETRY_MAX_MS = 60_000;
 
 /** Kształt odpowiedzi `GET updates` (patrz relay-server/README.md). */
@@ -247,7 +249,8 @@ export class RelayProvider {
     };
     this.opts.doc.on("update", watch);
     try {
-      for (;;) {
+      // Serwer, który ciągle zgłasza `hasMore` z pustą stroną, nie może zapętlić klienta.
+      for (let pages = 0; pages < MAX_PULL_PAGES; pages++) {
         const page = await this.http<Page>(`${this.roomPath}/updates?since=${this.state.cursor}`, { method: "GET" });
         for (const entry of page.entries) {
           let bytes: Uint8Array;
@@ -259,7 +262,7 @@ export class RelayProvider {
           Y.applyUpdate(this.opts.doc, bytes, this.origin);
           this.state = { ...this.state, cursor: entry.seq };
         }
-        if (!page.hasMore) break;
+        if (!page.hasMore || page.entries.length === 0) break;
       }
     } finally {
       this.opts.doc.off("update", watch);

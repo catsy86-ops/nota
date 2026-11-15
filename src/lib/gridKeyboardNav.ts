@@ -1,3 +1,4 @@
+import { smoothBehavior } from "@/lib/scrollBehavior";
 import { useSyncExternalStore } from "react";
 
 /**
@@ -179,13 +180,13 @@ function handlePreviewKeys(e: KeyboardEvent, previewId: string) {
   const step = 80;
   switch (e.key) {
     case "ArrowDown":
-    case "j": e.preventDefault(); sc.scrollBy({ top: step, behavior: "smooth" }); return;
+    case "j": e.preventDefault(); sc.scrollBy({ top: step, behavior: smoothBehavior() }); return;
     case "ArrowUp":
-    case "k": e.preventDefault(); sc.scrollBy({ top: -step, behavior: "smooth" }); return;
-    case "PageDown": e.preventDefault(); sc.scrollBy({ top: sc.clientHeight * 0.9, behavior: "smooth" }); return;
-    case "PageUp": e.preventDefault(); sc.scrollBy({ top: -sc.clientHeight * 0.9, behavior: "smooth" }); return;
-    case "Home": e.preventDefault(); sc.scrollTo({ top: 0, behavior: "smooth" }); return;
-    case "End": e.preventDefault(); sc.scrollTo({ top: sc.scrollHeight, behavior: "smooth" }); return;
+    case "k": e.preventDefault(); sc.scrollBy({ top: -step, behavior: smoothBehavior() }); return;
+    case "PageDown": e.preventDefault(); sc.scrollBy({ top: sc.clientHeight * 0.9, behavior: smoothBehavior() }); return;
+    case "PageUp": e.preventDefault(); sc.scrollBy({ top: -sc.clientHeight * 0.9, behavior: smoothBehavior() }); return;
+    case "Home": e.preventDefault(); sc.scrollTo({ top: 0, behavior: smoothBehavior() }); return;
+    case "End": e.preventDefault(); sc.scrollTo({ top: sc.scrollHeight, behavior: smoothBehavior() }); return;
     default: return;
   }
 }

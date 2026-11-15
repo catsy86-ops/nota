@@ -65,6 +65,7 @@ export async function collectSources(files: File[]): Promise<CollectResult> {
   const warnings: string[] = [];
   const failures: CollectResult["failures"] = [];
   let totalBytes = 0;
+  let inflated = 0;
   let truncated = false;
 
   const push = (s: SourceFile) => {
@@ -81,13 +82,19 @@ export async function collectSources(files: File[]): Promise<CollectResult> {
       const { entries, skipped } = listZip(new Uint8Array(await readBuffer(file)), { maxEntries: IMPORT_LIMITS.maxFiles, maxEntryBytes: IMPORT_LIMITS.maxImageBytes });
       if (skipped) warnings.push(`${file.name}: pominięto ${skipped} pozycji (zaszyfrowane, zbyt duże lub nieobsługiwana kompresja)`);
       const modified = file.lastModified || 0;
+      // Rozmiar z nagłówka ZIP można zafałszować — limit łączny liczymy też z faktycznie rozpakowanych bajtów.
+      const track = <T extends Uint8Array>(bytes: T): T => {
+        inflated += bytes.byteLength;
+        if (inflated > IMPORT_LIMITS.maxTotalBytes) throw new Error("Archiwum po rozpakowaniu przekracza limit importu");
+        return bytes;
+      };
       for (const e of entries) {
         const path = e.name;
         const name = path.split("/").pop() ?? path;
         push({
           path, name, size: e.size, lastModified: modified,
-          bytes: () => e.read(),
-          text: async () => decodeText(await e.read(IMPORT_LIMITS.maxNoteFileBytes)),
+          bytes: async () => track(await e.read()),
+          text: async () => decodeText(track(await e.read(IMPORT_LIMITS.maxNoteFileBytes))),
         });
       }
     } catch (err) {
