@@ -5820,3 +5820,11 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Ograniczenia:** A1.4 zrobione w wersji pośredniej — jeden plik `notify.ts` zamiast wstrzykiwanego ujścia (`setNotifySink`), bo 17 testów mockuje `sonner` i wymagałyby przepisania. A1.5 niezrobione: 8 hooków dalej importuje komponenty (lista wyjątków w `eslint.config.js`, ma malejąć do zera). `resolveDark`/`useToday` z planu występowały tylko w testach.
 - **Testy:** typecheck, lint i całe Vitest. Dwa testy (`searchNotes` limit 50 ms, `yjsSync` liczba transportów) bywają niestabilne w przebiegu równoległym, a osobno przechodzą.
 - **Commit:** zob. `git log` (2026-11-15).
+
+### Faktury: numeracja i seria urządzenia (Z-2.3–Z-2.6, 2026-11-15, commity 129fb3db, 36c7570f)
+
+- **Co robi:** dwa wystawienia naraz nie dostają tego samego numeru; rok numeru to rok daty wystawienia na fakturze; daty nieistniejące w kalendarzu (np. 2026-02-31) i zły termin płatności blokują wystawienie; okno faktury ostrzega, gdy w serii tego telefonu są faktury z innego urządzenia.
+- **Gdzie:** `src/lib/ksef/invoicesStore.ts` (`issueInvoice` → `inCriticalSection` → `issueLocked`; `seriesUsedElsewhere`), `invoice.ts` (`validDate` sprawdza w obie strony, `payment.dueDate`), `sellerPrefs.ts` (`getDeviceId`), `yInvoices.ts` (pole `deviceId`), `InvoiceDialog.tsx` (ostrzeżenie).
+- **Jak działa:** sekcja krytyczna to `navigator.locks` (`notatnik-faktura`) plus kolejka obietnic w module (gdy `locks` brak). Po `await` skrótu numer jest sprawdzany ponownie, a `add` i tak odmawia zajętego numeru. `deviceId` jest losowy, w localStorage `kaczy.ksef.deviceId.v1`, poza kopią.
+- **Ograniczenia:** faktury sprzed zmiany nie mają `deviceId` i nie wywołują ostrzeżenia. Nie zrobione z Z-2.4: limity 256/512 (F-6) i `qtyMilli × unitPrice ≤ MAX_SAFE_INTEGER`.
+- **Testy:** `src/lib/ksef/invoices.test.ts`.
