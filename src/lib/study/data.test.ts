@@ -3,6 +3,7 @@ import { legacyStudyMerged, resetStudyForTests, studyDevice, studyReady, useStud
 import { STUDY_STORAGE_KEY } from "./keys";
 import { getDiagEntries, clearDiagForTests } from "@/lib/diagnostics";
 import { yjsStore } from "@/lib/yjsStore";
+import { dumpFromLegacy } from "./studyDump";
 import { renderHook } from "@testing-library/react";
 
 const LEGACY = {
@@ -90,5 +91,55 @@ describe("useStudyReady", () => {
     await studyReady();
     const { result } = renderHook(() => useStudyReady());
     expect(result.current).toBe(true);
+  });
+});
+
+describe("migracja — przypadki brzegowe (Z-12)", () => {
+  it("ten sam stary zapis pod innym id urządzenia (setItem odrzucany) nie dubluje wpisów", async () => {
+    localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify(LEGACY));
+    await studyReady();
+    // „Nowy start” z innym id urządzenia, bo identyfikatora nie dało się zapisać.
+    yStudy.mergeIn(dumpFromLegacy(LEGACY, "dev-inny00000001"), "dev-inny00000001");
+    expect(yStudy.get().journal.filter((e) => e.id === "old1")).toHaveLength(1);
+  });
+
+  it("uszkodzony JSON przy kolejnych startach nie zapętla się i nie zmienia klucza", async () => {
+    localStorage.setItem(STUDY_STORAGE_KEY, "{nie json");
+    await studyReady();
+    resetStudyForTests();
+    await studyReady();
+    expect(localStorage.getItem(STUDY_STORAGE_KEY)).toBe("{nie json");
+    expect(yStudy.get().journal).toHaveLength(0);
+    expect(getDiagEntries().filter((e) => e.message.includes("uszkodzony stary zapis"))).toHaveLength(2);
+  });
+
+  it("dwa urządzenia ze starymi zapisami: kolejność scalania nie zmienia wyniku", async () => {
+    const A = { ...LEGACY, journal: [{ ...LEGACY.journal[0], id: "a1" }] };
+    const B = { ...LEGACY, journal: [{ ...LEGACY.journal[0], id: "b1" }] };
+    const ids = async (order: [unknown, string][]) => {
+      await yjsStore.resetForTests();
+      for (const [d, dev] of order) yStudy.mergeIn(dumpFromLegacy(d, dev), dev);
+      return yStudy.get().journal.map((e) => e.id).sort();
+    };
+    const ab = await ids([[A, "dev-aaaaaaaaaaaa"], [B, "dev-bbbbbbbbbbbb"]]);
+    const ba = await ids([[B, "dev-bbbbbbbbbbbb"], [A, "dev-aaaaaaaaaaaa"]]);
+    expect(ab).toEqual(["a1", "b1"]);
+    expect(ba).toEqual(ab);
+  });
+
+  it("studyReady() wołane wiele razy migruje raz", async () => {
+    localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify(LEGACY));
+    const spy = vi.spyOn(yStudy, "mergeIn");
+    await Promise.all([studyReady(), studyReady(), studyReady()]);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("wyjątek z mergeIn nie blokuje gotowości widoku", async () => {
+    localStorage.setItem(STUDY_STORAGE_KEY, JSON.stringify(LEGACY));
+    vi.spyOn(yStudy, "mergeIn").mockImplementation(() => { throw new Error("boom"); });
+    await expect(studyReady()).resolves.toBeUndefined();
+    const { result } = renderHook(() => useStudyReady());
+    expect(result.current).toBe(true);
+    expect(getDiagEntries().some((e) => e.level === "error" && e.message.includes("migracja Nauki nie powiodła się"))).toBe(true);
   });
 });
