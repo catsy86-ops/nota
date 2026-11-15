@@ -50,6 +50,8 @@ export function prefetchViewsWhenIdle(): void {
   if (saveData) return;
   const run = () => {
     (Object.keys(loaders) as LazyView[]).forEach((view) => preloadView(view));
+    // Wykresy (recharts) nie są w precache — dociągamy je tu, żeby „Rok” w Grafiku działał offline po pierwszej sesji online.
+    void import("@/components/shifts/YearCharts").catch(() => {});
   };
   if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(run, { timeout: 5000 });
   else window.setTimeout(run, 2000);

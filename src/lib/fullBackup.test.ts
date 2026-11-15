@@ -1,6 +1,6 @@
 ﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { describeBackupSkipped } from "./backupSkipped";
-import { isBackupOversize, buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, MAX_BACKUP_VERSION, SETTINGS_KEYS, SETTING_VALUE_MAX, ACHIEVEMENTS_KEY } from "./exportNotes";
+import { isBackupOversize, buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, MAX_BACKUP_VERSION, MERGE_SECTIONS, SETTINGS_KEYS, SETTING_VALUE_MAX, ACHIEVEMENTS_KEY } from "./exportNotes";
 import { setDayShift, shiftStore } from "./shifts/store";
 import { yjsStore } from "./yjsStore";
 import { versionsStore } from "./versionsStore";
@@ -143,6 +143,13 @@ describe("pełny backup v2", () => {
   it("drops a corrupted optional section instead of rejecting the file", async () => {
     const backup = await parseFullBackup(JSON.stringify({ version: 2, exportedAt: 1, notes: [], labels: [], folders: [], versions: "zepsute" }));
     expect(backup.versions).toBeUndefined();
+  });
+
+  it("rejestr sekcji scalanych pokrywa wszystko, co buduje pełna kopia (bez duplikatów)", async () => {
+    const backup = await buildFullBackup();
+    const keys = MERGE_SECTIONS.map((s) => s.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const k of keys) expect(typeof backup[k], `sekcja ${k} powinna być w kopii`).toBe("string");
   });
 
   it("odrzuca kopię z nowszej wersji formatu zamiast po cichu obniżyć ją do v1", async () => {

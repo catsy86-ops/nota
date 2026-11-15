@@ -32,6 +32,15 @@ async function addClient(page: Page, name: string, phone = "") {
   await expect(page.getByTestId("client-card")).toBeVisible();
 }
 
+/** Escape tuż po otwarciu karty bywa za wcześnie (Radix jeszcze nie słucha, zwłaszcza w WebKit) — ponawiamy do zamknięcia. */
+async function closeCard(page: Page) {
+  const card = page.getByTestId("client-card");
+  await expect(async () => {
+    if (await card.count()) await page.keyboard.press("Escape");
+    await expect(card).toHaveCount(0, { timeout: 700 });
+  }).toPass({ timeout: 10_000 });
+}
+
 test("klienci: dodanie, skróty kontaktu, walidacja NIP i wyszukiwanie @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await openClients(page);
@@ -53,9 +62,9 @@ test("klienci: dodanie, skróty kontaktu, walidacja NIP i wyszukiwanie @mobile",
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(wide, "przewijanie w bok przy 390 px").toBe(false);
 
-  await page.keyboard.press("Escape");
+  await closeCard(page);
   await addClient(page, "Anna Nowak");
-  await page.keyboard.press("Escape");
+  await closeCard(page);
   await expect(page.getByTestId("client-row")).toHaveCount(2);
 
   const search = page.getByTestId("clients-search");
@@ -80,7 +89,7 @@ test("klienci: dostępność listy i karty (axe)", async ({ page }) => {
   await addClient(page, "Jan Kowalski", "600 100 200");
   const axe = await new AxeBuilder({ page }).include("[data-testid='client-card']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
   expect(axe.violations).toEqual([]);
-  await page.keyboard.press("Escape");
+  await closeCard(page);
   const list = await new AxeBuilder({ page }).include("[data-testid='clients-view']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
   expect(list.violations).toEqual([]);
 });
@@ -129,7 +138,7 @@ test("klient w palecie poleceń otwiera zakładkę Klienci z jego kartą", async
   await page.setViewportSize({ width: 1440, height: 1000 });
   await openClients(page);
   await addClient(page, "Zenon Paletowy", "512 333 444");
-  await page.keyboard.press("Escape");
+  await closeCard(page);
   // Zapis do IndexedDB dobiega w tle; pełne przeładowanie tuż po dodaniu klienta gubiło go pod obciążeniem.
   await page.waitForTimeout(1500);
   await page.goto("/");

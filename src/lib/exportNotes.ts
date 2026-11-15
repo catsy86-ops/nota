@@ -359,6 +359,28 @@ export interface RestoreOptions { versions: boolean; settings: boolean; achievem
 /** L1: w dzienniku diagnostycznym zostaje tylko nazwa błędu — komunikat `JSON.parse` może zawierać fragment kopii. */
 const errName = (e: unknown): string => (e instanceof Error ? e.name : "błąd");
 
+/** Sekcje kopii niesione jako JSON w stringu i scalane przy przywracaniu. Nowy dział: jedna pozycja tutaj + pole w schemacie i budowie kopii. */
+type MergeKey = "supplements" | "diet" | "weight" | "training" | "debts" | "entryCheck" | "kits" | "views" | "points" | "plans" | "billing" | "van" | "invoices" | "pricing" | "clients" | "jobs";
+export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; merge: (dump: never) => unknown }[] = [
+  { key: "supplements", label: "Suplementy", merge: async (d) => (await import("@/lib/supplements/store")).mergeSupplementDump(d) },
+  { key: "diet", label: "Dieta", merge: async (d) => (await import("@/lib/diet/store")).mergeDietDump(d) },
+  { key: "weight", label: "Waga", merge: async (d) => (await import("@/lib/weight/store")).mergeWeightDump(d) },
+  // Notatki z kopii są już wczytane, więc można sprawdzić, czy przypomnienie ma swoją notatkę.
+  { key: "training", label: "Trening", merge: async (d) => (await import("@/lib/training/store")).mergeTrainingDump(d, (id: string) => yjsStore.projectNotes().some((n) => n.id === id)) },
+  { key: "debts", label: "Długi", merge: async (d) => (await import("@/lib/debts/store")).mergeDebtsDump(d) },
+  { key: "entryCheck", label: "Lista przed wejściem", merge: async (d) => (await import("@/lib/study/entryCheckStore")).mergeEntryCheckDump(d) },
+  { key: "kits", label: "Zestawy", merge: async (d) => (await import("@/lib/study/kitsStore")).mergeKitsDump(d) },
+  { key: "views", label: "Widoki", merge: async (d) => (await import("@/lib/savedViews")).mergeViewsDump(d) },
+  { key: "points", label: "Punkty wodne", merge: async (d) => (await import("@/lib/study/pointsStore")).mergePointsDump(d) },
+  { key: "plans", label: "Plany", merge: async (d) => (await import("@/lib/plans/plansStore")).mergePlansDump(d) },
+  { key: "billing", label: "Rozliczenia", merge: async (d) => (await import("@/lib/study/billingStore")).mergeBillingDump(d) },
+  { key: "van", label: "Auto", merge: async (d) => (await import("@/lib/study/vanStore")).mergeVanDump(d) },
+  { key: "invoices", label: "Faktury", merge: async (d) => (await import("@/lib/ksef/invoicesStore")).mergeInvoicesDump(d) },
+  { key: "pricing", label: "Cenniki", merge: async (d) => (await import("@/lib/study/pricingStore")).mergePricingDump(d) },
+  { key: "clients", label: "Klienci", merge: async (d) => (await import("@/lib/clients/store")).mergeClientsDump(d) },
+  { key: "jobs", label: "Fuchy", merge: async (d) => (await import("@/lib/study/jobsStore")).mergeJobsDump(d) },
+];
+
 export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number; failed: string[] }> {
   /** Sekcje, których nie udało się przywrócić (W8): wołający pokazuje je zamiast „Przywrócono”. */
   const failed: string[] = [];
@@ -370,49 +392,12 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   const notes = await withStoredImages(backup.notes);
   if (backup.attachmentBlobs) await imageStore.ingest(Object.values(backup.attachmentBlobs));
   yjsStore.replaceAll(notes, backup.folders, backup.labels, backup.propDefs ?? []);
-  if (backup.supplements) {
-    try {
-      const { mergeSupplementDump } = await import("@/lib/supplements/store");
-      mergeSupplementDump(JSON.parse(backup.supplements));
-    } catch (err) { fail("Suplementy", err); }
+  // Sekcje domenowe są scalane (bez kasowania); uszkodzona po prostu się pomija i trafia do `failed`.
+  for (const s of MERGE_SECTIONS) {
+    const raw = backup[s.key];
+    if (!raw) continue;
+    try { await s.merge(JSON.parse(raw) as never); } catch (err) { fail(s.label, err); }
   }
-  if (backup.diet) {
-    try {
-      const { mergeDietDump } = await import("@/lib/diet/store");
-      mergeDietDump(JSON.parse(backup.diet));
-    } catch (err) { fail("Dieta", err); }
-  }
-  if (backup.weight) {
-    try {
-      const { mergeWeightDump } = await import("@/lib/weight/store");
-      mergeWeightDump(JSON.parse(backup.weight));
-    } catch (err) { fail("Waga", err); }
-  }
-  if (backup.training) {
-    try {
-      const { mergeTrainingDump } = await import("@/lib/training/store");
-      // Notatki z kopii są już wczytane (wyżej), więc można sprawdzić, czy przypomnienie ma swoją notatkę.
-      mergeTrainingDump(JSON.parse(backup.training), (id) => yjsStore.projectNotes().some((n) => n.id === id));
-    } catch (err) { fail("Trening", err); }
-  }
-  if (backup.debts) {
-    try {
-      const { mergeDebtsDump } = await import("@/lib/debts/store");
-      mergeDebtsDump(JSON.parse(backup.debts));
-    } catch (err) { fail("Długi", err); }
-  }
-  // Lista przed wejściem: scalanie bez kasowania; uszkodzona sekcja po prostu się pomija.
-  if (backup.entryCheck) await import("@/lib/study/entryCheckStore").then((m) => m.mergeEntryCheckDump(JSON.parse(backup.entryCheck!))).catch((err) => fail("Lista przed wejściem", err));
-  if (backup.kits) await import("@/lib/study/kitsStore").then((m) => m.mergeKitsDump(JSON.parse(backup.kits!))).catch((err) => fail("Zestawy", err));
-  if (backup.views) await import("@/lib/savedViews").then((m) => m.mergeViewsDump(JSON.parse(backup.views!))).catch((err) => fail("Widoki", err));
-  if (backup.points) await import("@/lib/study/pointsStore").then((m) => m.mergePointsDump(JSON.parse(backup.points!))).catch((err) => fail("Punkty wodne", err));
-  if (backup.plans) await import("@/lib/plans/plansStore").then((m) => m.mergePlansDump(JSON.parse(backup.plans!))).catch((err) => fail("Plany", err));
-  if (backup.billing) await import("@/lib/study/billingStore").then((m) => m.mergeBillingDump(JSON.parse(backup.billing!))).catch((err) => fail("Rozliczenia", err));
-  if (backup.van) await import("@/lib/study/vanStore").then((m) => m.mergeVanDump(JSON.parse(backup.van!))).catch((err) => fail("Auto", err));
-  if (backup.invoices) await import("@/lib/ksef/invoicesStore").then((m) => m.mergeInvoicesDump(JSON.parse(backup.invoices!))).catch((err) => fail("Faktury", err));
-  if (backup.pricing) await import("@/lib/study/pricingStore").then((m) => m.mergePricingDump(JSON.parse(backup.pricing!))).catch((err) => fail("Cenniki", err));
-  if (backup.clients) await import("@/lib/clients/store").then((m) => m.mergeClientsDump(JSON.parse(backup.clients!))).catch((err) => fail("Klienci", err));
-  if (backup.jobs) await import("@/lib/study/jobsStore").then((m) => m.mergeJobsDump(JSON.parse(backup.jobs!))).catch((err) => fail("Fuchy", err));
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
   if (opts.versions && backup.versions) {

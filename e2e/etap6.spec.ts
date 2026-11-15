@@ -60,7 +60,9 @@ test("galeria notatki: „Opisz na zdjęciu” dodaje opisaną kopię, oryginał
   await page.locator("body").click({ position: { x: 1200, y: 860 } });
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Space");
-  await page.getByRole("button", { name: /Powiększ obraz 1 z 1/ }).click();
+  // W czytniku (dialog); ten sam obraz na kaflu pod spodem też jest przyciskiem.
+  const reader = page.getByRole("dialog", { name: "Zdjęcie" });
+  await reader.getByRole("button", { name: /Powiększ obraz 1 z 1/ }).click();
   await page.getByRole("button", { name: "Opisz na zdjęciu" }).click();
   const canvas = page.locator("canvas").last();
   const save = page.getByRole("button", { name: "Zapisz rysunek" });
@@ -77,7 +79,7 @@ test("galeria notatki: „Opisz na zdjęciu” dodaje opisaną kopię, oryginał
   await expect(save).toBeEnabled();
   await save.click();
   await expect(page.getByText("Dodano opisane zdjęcie — oryginał został")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Powiększ obraz 2 z 2/ })).toBeVisible();
+  await expect(reader.getByRole("button", { name: /Powiększ obraz 2 z 2/ })).toBeVisible();
 });
 
 test("zapisany widok: zapis z folderu z układem, potem otwarcie z innego miejsca (6.1)", async ({ page }) => {

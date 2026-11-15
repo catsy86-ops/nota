@@ -21,8 +21,13 @@ async function seed(page: Page) {
     localStorage.setItem("kaczy-notes-data", JSON.stringify(notes));
   }, NOTES);
   await page.goto("/");
-  // Render progresywny: przewijamy dopiero, gdy są wszystkie kafle (inaczej strona bywa za krótka).
-  await expect(page.locator("[data-note-id-wrap]")).toHaveCount(NOTES.length);
+  // Siatka montuje kafle przy przewijaniu (Cykl 3) — dosuwamy się do dołu, aż jest ich komplet, żeby strona nie była za krótka.
+  await expect.poll(async () => {
+    await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" }));
+    return page.locator("[data-note-id-wrap]").count();
+  }, { timeout: 20_000 }).toBe(NOTES.length);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 }
 
 const item = (page: Page) => page.locator(`[data-note-id-wrap="${ANCHOR}"], [data-note-row="${ANCHOR}"]`);
