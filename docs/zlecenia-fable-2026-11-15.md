@@ -8,7 +8,7 @@
 ## Kolejność dla następnej sesji
 
 1. Z-2.1 (lista faktur wywraca się na złym rekordzie) i Z-2.2 (walidacja przy odczycie) — małe, a chronią numerację.
-2. Z-5.1 (limit 512 KB wpisu przekaźnika) — bez tego większy notatnik nie zsynchronizuje się wcale.
+2. Z-5.1 (limit wpisu przekaźnika) — zrobione w `67d9758b` razem z Z-5.2–Z-5.4. Drugi przegląd z 2026-11-16 znalazł nowe błędy: Z-5.5–Z-5.9 w zadaniu 5, zacząć od Z-5.5 i Z-5.6.
 3. Testy do poprawek już zrobionych: Z-1.T, Z-4.T.
 4. Z-10 (kroje offline), Z-6 (test-strażnik odśmiecania), Z-12, Z-11.
 5. Decyzje właściciela są podjęte — tabela na końcu.
@@ -19,11 +19,13 @@
 
 Trzy poprawki w `src/lib/shifts/`:
 
-- **Dodatek nocny** (`nightAllowance.ts`): 20% × (minimalne wynagrodzenie miesięczne ÷ godziny wymiaru danego miesiąca), osobno dla każdego miesiąca; wcześniej 20% minimalnej stawki godzinowej dla zleceń. Kwota 4806 zł na 2026 r. i wykładnia art. 151⁸ **[pamięć]**.
+- **Dodatek nocny** (`nightAllowance.ts`): 20% × (minimalne wynagrodzenie miesięczne ÷ godziny wymiaru danego miesiąca), osobno dla każdego miesiąca; wcześniej 20% minimalnej stawki godzinowej dla zleceń. Potwierdzone u źródła 2026-11-16: sposób liczenia to § 4b rozporządzenia MPiPS z 29.05.1996 r. (minimalne wynagrodzenie ÷ godziny przypadające do przepracowania w danym miesiącu); 4806 zł na 2026 r. — Dz.U. 2025 poz. 1242; dopisano 2027 r. — 4950 zł (rozporządzenie z 14.09.2026, numer pozycji Dz.U. niesprawdzony).
 - **Norma przy nieobecności nad zmianą z grafiku** (`summary.ts`, `monthCore`): odejmuje się `plannedMin`, czyli godziny, które przypadały do przepracowania (art. 130 § 3) **[pamięć]**.
 - **Odpoczynek tygodniowy** (`summary.ts`, `weeklyRestShort`): tygodnie to siedmiodniowe bloki od pierwszego dnia okresu rozliczeniowego (art. 128 § 3 pkt 2), nie od poniedziałku; wolne sprzed tygodnia się nie liczy.
 
-**Z-1.T (Sonnet):** testy do tych trzech zmian są już w `nightAllowance.test.ts`, `weeklyRest.test.ts`, `shifts.test.ts` (260 testów w `src/lib/shifts` zielone). Do dopisania: przypadki wzorcowe z całego miesiąca policzone ręcznie (grafik 12-godzinny, równoważny), miesiąc z niepełnym etatem (`nightRateFor` bierze wymiar pełnego etatu — sprawdzić, czy to zamierzone), okres rozliczeniowy 4 miesiące.
+**Z-1.T (Sonnet):** testy do tych trzech zmian są już w `nightAllowance.test.ts`, `weeklyRest.test.ts`, `shifts.test.ts` (260 testów w `src/lib/shifts` zielone). Do dopisania: przypadki wzorcowe z całego miesiąca policzone ręcznie (grafik 12-godzinny, równoważny), miesiąc z niepełnym etatem, okres rozliczeniowy 4 miesiące.
+
+**Rozstrzygnięte 2026-11-16 (niepełny etat):** `nightRateFor` celowo bierze wymiar pełnego etatu. Przy niepełnym etacie minimalne wynagrodzenie maleje proporcjonalnie (art. 8 ust. 1 ustawy o minimalnym wynagrodzeniu) i tak samo maleje liczba godzin do przepracowania, więc stawka godzinowa jest ta sama. Test dla Z-1.T: dla `fte` 0,5 i 0,75 stawka w podsumowaniu miesiąca równa się stawce pełnego etatu (luty 2026 — 6,01 zł, lipiec 2026 — 5,22 zł, styczeń 2027 — 6,51 zł), a kwota dodatku zależy tylko od minut nocnych. Dzielnik to wymiar nominalny miesiąca, nie godziny z grafiku — w miesiącu 12-godzinnym z 168 h w grafiku przy wymiarze 160 h stawka liczy się od 160 h.
 
 **Decyzja D-G1:** `ShiftSummary.tsx:116–118` pokazuje dodatek nocny tylko informacyjnie i nie dolicza go do zarobku; komentarz mówi, że pokrywa go dodatek 100%. To wątpliwe — dodatek nocny należy się niezależnie od dodatku za nadgodziny **[pamięć]**. Doliczać?
 
@@ -80,7 +82,7 @@ Projektu `ksef-server/` jeszcze nie ma; `ksef-integracja-2026-11-11.md` §2 opis
 9. **Walidacja po stronie serwera.** Serwer nie ufa XML-owi z aplikacji: sprawdza XSD, NIP sprzedawcy równy skonfigurowanemu, rozmiar, brak `DOCTYPE`.
 10. **Środowisko.** `test` domyślnie, osobne magazyny stanu na środowisko, numer KSeF z testu nigdy nie trafia do rekordu produkcyjnego.
 
-**Z-3 (Opus, M):** napisać `docs/plan-ksef-etap2.md` według tych punktów, z maszyną stanów i tabelą błędów API; przegląd `security-reviewer` przed kodem.
+**Z-3 — plan napisany 2026-11-16 (Fable):** `docs/plan-ksef-etap2.md`, z maszyną stanów, tabelą błędów i faktami o API sprawdzonymi w dokumentacji MF. Sprawdzenie zmieniło uwagi 1, 5, 6 i 9 powyżej — obowiązuje plan (§1 planu wylicza różnice). Najważniejsze: KSeF sam oznacza fakturę jako offline, gdy `P_1` jest wcześniejsze niż dzień wysyłki, więc „czeka na wysyłkę” z D-K2 działa bez zastrzeżeń tylko tego samego dnia (nowa decyzja D-K3). Dalej: decyzje D-K3…D-K5, zlecenia E2.0–E2.6 z §12 planu, przegląd `security-reviewer` przed kodem.
 
 ---
 
@@ -101,6 +103,18 @@ Typecheck czysty. Testów nie pisano ani nie uruchamiano.
 - Test zbieżności na dwóch `Y.Doc`: A w podglądzie zamienia tekst na listę, B równolegle dopisuje zdanie; po wymianie aktualizacji oba dokumenty równe i zdanie B istnieje. To samo z B offline.
 - e2e: podgląd → „Zamień na listę” → treść poprawna, Ctrl+Z działa po powrocie do edytora.
 - Sprawdzić ręcznie albo testem, czy dodatkowy obserwator nie powoduje podwójnego renderu przy pisaniu w CM (wartość jest ta sama, React powinien pominąć).
+
+**Przegląd Fable 2026-11-16 (pkt 4 kolejki).** Część Vitest z listy wyżej już jest w `src/lib/yTextEdit.test.ts`. Przegląd znalazł dwa błędy, oba poprawione w kodzie (typecheck czysty, `yTextEdit.test.ts` 16/16):
+
+- **Pary zastępcze [uruchomione]:** wspólny początek/koniec liczony po jednostkach UTF-16 rozcinał emoji o tej samej pierwszej połówce (😀→😁); Yjs zamienia wtedy obie połówki na U+FFFD. Dotyczyło też `applyTextEdit`, czyli zwykłego pisania w textarea. Poprawka: `changedRange` w `yTextEdit.ts`, testy dopisane.
+- **Odrzucony zapis a lista zadań [kod]:** przy `null` z `rebaseSplice` treść zostawała, ale `onConvert` (`NoteEditor.tsx`) i Ctrl+Shift+L mimo to ustawiały listę — linie były w treści i na liście, a ponowienie dublowało pozycje. Poprawka: `writeContent` zwraca `boolean`, wołający zmieniają listę tylko przy `true`.
+
+**Z-4.T — zostaje (Opus, M):**
+
+- Vitest `rebaseSplice`, przypadki brzegowe gałęzi tekstowych: dopisek na końcu (`start === prev.length`, pusty `tail`) przy całkiem innym `current` — dziś dokleja na koniec, test ma to utrwalić jako świadome; zmiana ostatniego znaku przy `current` kończącym się tym samym znakiem; peer wstawił dokładnie w punkcie czystej wstawki (oba teksty zostają); Znajdź/Zamień „wszystko” (kilka trafień = jedno wycięcie od pierwszego do ostatniego) z dopiskiem peera między trafieniami → `null`.
+- Zbieżność z B offline: B wstawia zdanie **w środek** zakresu kasowanego przez A; po scaleniu zdanie B istnieje w obu dokumentach, nic się nie dubluje.
+- Test hooka albo e2e: odrzucony zapis (peer zmienił zakres w podglądzie) → komunikat, treść odświeżona, lista zadań **bez zmian**; ponowienie daje listę bez duplikatów.
+- e2e i podwójny render — bez zmian, jak w liście wyżej. Do pomiaru przy okazji: obserwator woła `collabText.toString()` przy każdym znaku (O(n)); sprawdzić na notatce ok. 200 KB, czy pisanie nie zwalnia.
 
 **Do sprawdzenia przy okazji [kod]:** `textBases` zachowuje bazę z `begin()` przez całą sesję wiązania, choć CM pisze do `Y.Text` z pominięciem bazy. Dziś nikt w tym trybie nie woła `onUpdate` z `content`, więc stara baza nie szkodzi; każda przyszła ścieżka, która to zrobi, zdubluje tekst. Zlecenie: asercja albo zamknięcie bazy przy wejściu w wiązanie.
 
@@ -128,6 +142,40 @@ Typecheck czysty. Testów nie pisano ani nie uruchamiano.
 - **Z-5.4 (Sonnet, S).** `if (!this.started) return;` po `await` w `start()`; kontrola `entry.seq > cursor` i typów w odpowiedzi.
 - **Z-5.T (Opus, M).** Testy z atrapą `fetch` i `RelayStore`: zamknięcie karty w trakcie wysyłki (nic nie ginie po ponownym starcie), błąd w połowie strony pobierania, klient z kursorem sprzed migawki, dwa klienty kompaktujące naraz, serwer zwracający 409.
 - **D-R2:** co robić z wpisem nie do odszyfrowania — blokować (dziś) czy pominąć z trwałym ostrzeżeniem. Pominięcie jest bezpieczne dla CRDT tylko wtedy, gdy brak naprawi późniejsza migawka.
+
+### Drugi przegląd (2026-11-16, Fable) — stan po `67d9758b`
+
+Przegląd przez czytanie `relayProvider.ts`, `relayRuntime.ts`, `relay-server/core.js` i `server.js` na `fb635b63`. Oznaczenie **[próba]** — sprawdzone na uruchomionym serwerze albo skryptem; testów do repozytorium nie dopisano.
+
+**Stan poprzednich ustaleń:** R-2, R-4, R-5 naprawione. R-1 i R-3 naprawione częściowo (R-10, R-13 niżej). R-7: kontrola `seq` jest, pola `last` nikt nie sprawdza (R-11). R-9 bez zmian — z analizy wynika, że nieszkodliwe: każdy zapisany `sv` opisuje stan, który ta karta na pewno wysłała, więc nadpisanie cudzym `sv` powoduje najwyżej ponowne wysłanie.
+
+| # | Waga | Ustalenie |
+|---|---|---|
+| R-10 | **wysoka** | **Dokument powyżej limitu nadal ponawia się bez końca.** Serwer zwraca 413 tylko dla treści między limitem wpisu a limitem żądania (4096 znaków zapasu). Większe żądanie zrywa połączenie (`req.destroy()` w `readJson`, zanim pójdzie odpowiedź), więc klient widzi błąd sieci, a nie 413. Pokazuje „offline” i wysyła całość od nowa co 2–60 s, także na danych komórkowych. Klient nie sprawdza rozmiaru przed wysyłką. **[próba]**: 22 400 100 znaków → 413; 30 000 000 → `ECONNRESET`. |
+| R-11 | **wysoka** | **Pokój usunięty albo wygasły rozjeżdża urządzenia po cichu.** Pokój znika przez „usuń też z przekaźnika” na innym urządzeniu, po 180 dniach bez zapisu (`touched` zmienia tylko zapis) albo po utracie danych serwera. Klient zostaje ze starym kursorem i `sv`. Następny zapis zakłada pokój od numeru 1 i wysyła samą różnicę, więc nowe urządzenie dostaje aktualizację bez poprzedników, której Yjs nie zastosuje. Stary klient pyta `since=<stary kursor>` i nie widzi wpisów o niższych numerach. Stan pokazuje „online”. **[próba]**: po `DELETE` i jednym `POST` odpowiedź na `since=2` to `{"entries":[],"last":1}`. |
+| R-12 | **wysoka** | **Po przerwie w sieci gniazdo nie wraca.** `onError` i `ws.onclose` dzielą jeden `retryTimer`. Gdy żądanie padnie przed zamknięciem gniazda (typowe: zapis lokalny przy martwej sieci), licznik ponowień jest już ustawiony, `onclose` wychodzi bez planowania połączenia, a licznik woła samo `sync()`. `connectSocket` wołają tylko `start()` i `onclose`; zdarzenie `online` i powrót do karty wołają `sync()`. Do przeładowania strony zmiany z innych urządzeń przychodzą tylko przy powrocie do karty, zdarzeniu `online` albo ponowieniu po kolejnym błędzie. **[kod]** |
+| R-13 | średnia | **„Pokój pełny” ma ten sam kod co „wpis za duży”.** `appendEntry` zwraca 413 także wtedy, gdy suma pokoju przekroczy 50 mln znaków. Klient pokazuje wtedy trwały błąd „limit 16 MB na wpis” i nie próbuje migawki, choć serwer o nią prosi. **[kod]** |
+| R-14 | średnia | **Żądania nie mają limitu czasu.** `http()` nie przekazuje `signal`. Żądanie, które zawisło, blokuje kolejkę `chain`, więc staje pobieranie i wysyłka, a stan zostaje „online”. `checkRelay` i `deleteRelayRoom` limit mają. **[kod]** |
+| R-15 | niska | **Każdy start wysyła wpis, jeśli w dokumencie cokolwiek kiedyś usunięto.** `encodeStateAsUpdate(doc, sv)` zawsze dołącza pełny zbiór usunięć, więc warunek `initial.length > 2` jest prawie zawsze spełniony. Skutek: wpis na każde uruchomienie każdego urządzenia i pobudka pozostałych. **[próba]**: 3000 usunięć → 8966 bajtów różnicy względem własnego `sv`. |
+| R-16 | niska | **Każde urządzenie kompaktuje osobno.** `compactedAt` jest lokalne, więc trzy urządzenia wysyłają trzy pełne migawki na te same 500 wpisów. Nieudana migawka po udanym pobraniu zgłasza błąd całego pobrania. **[kod]** |
+| R-17 | niska | **Pierwszy start w pustym pokoju pokazuje „offline”.** `GET` nieistniejącego pokoju daje 404, traktowane jak błąd sieci. Z zaległymi zmianami naprawia to następna wysyłka; urządzenie bez zmian ponawia bez końca. **[kod]** |
+
+**Zlecenia z drugiego przeglądu:**
+
+- **Z-5.5 (Opus, M) — epoka pokoju (R-11, R-17).** Serwer nadaje pokojowi losową `epoch` (16 bajtów, hex) przy założeniu, zapisuje ją w magazynie (`cleanStore` ją zachowuje; w F2 trafia do `meta.json`) i zwraca w odpowiedziach `GET updates`, `POST updates`, `PUT snapshot` oraz w wiadomości `ready`. Klient trzyma `epoch` w `RelayState`. Reguły klienta:
+  1. Epoka z odpowiedzi różni się od zapisanej → **reset**: `cursor = 0`, `compactedAt = 0`, `sv = undefined`, `pending = [encodeStateAsUpdate(doc)]`, zapis stanu, potem pobranie od zera i wysyłka. Reset jest bezpieczny, bo ponowne wysłanie pełnego stanu jest w Yjs bez skutku.
+  2. Zapisany stan bez epoki (aktualizacja aplikacji): przyjąć epokę, jeśli `last ≥ cursor`; inaczej reset.
+  3. Serwer bez epoki (stary): reset, gdy `last < cursor` albo `seq` z `POST` jest ≤ kursor.
+  4. `GET` z odpowiedzią 404: przy `cursor > 0` reset, przy `cursor = 0` pusta strona, nie błąd.
+  5. Reset podlega limitowi wpisu z Z-5.6.
+  Samo porównanie `last < cursor` nie wystarcza: odtworzony pokój może dogonić stary kursor, zanim klient wróci.
+- **Z-5.6 (Sonnet, S) — limit po stronie klienta (R-10, R-13).** Stała limitu wspólna z serwerem (albo pole `maxEntryChars` w `/health`). `flushTask` i `compactTask` sprawdzają długość zaszyfrowanych danych przed wysyłką; przekroczenie to błąd trwały z komunikatem, bez żądania. Serwer: „Pokój pełny” jako 409 zamiast 413. Klient: drugie 409 po wymuszonej migawce to błąd trwały „pokój na przekaźniku jest pełny”, a nie ponawianie.
+- **Z-5.7 (Sonnet, S) — osobny licznik dla gniazda (R-12).** `socketRetryTimer` niezależny od `retryTimer`, czyszczony w `stop()`. `sync()` wołane przy `online` i powrocie do karty łączy gniazdo, gdy go nie ma i nie czeka ponowienie.
+- **Z-5.8 (Sonnet, S) — limit czasu żądań (R-14).** `AbortSignal.timeout` w `http()`: 30 s dla `GET`, 120 s dla wysyłki wpisu i migawki. Przekroczenie idzie zwykłą ścieżką ponowień.
+- **Z-5.9 (Sonnet, S) — porządki (R-15, R-16).** Start: nie wysyłać różnicy, gdy wektor stanu dokumentu równa się zapisanemu `sv` i skrót zbioru usunięć równa się zapisanemu przy ostatniej wysyłce (nowe pole stanu). Kompaktowanie: błąd migawki po udanym pobraniu tylko do dziennika diagnostycznego; `compactedAt` podnosić także po zobaczeniu wpisu z `snapshot: true`.
+- **Z-5.T — dopisać:** pokój usunięty między sesjami (trzecie urządzenie dostaje pełny stan), pokój odtworzony z `last` powyżej starego kursora, żądanie zerwane bez odpowiedzi przy za dużym wpisie (jedna próba, stan „błąd”), gniazdo zamknięte przy oczekującym ponowieniu (łączy się ponownie), żądanie bez odpowiedzi (kolejka rusza po limicie czasu).
+
+**Kolejność:** Z-5.5 i Z-5.6 (utrata zbieżności, zużycie danych) → Z-5.7 → Z-5.8 → Z-5.T → Z-5.9. Z-5.5 zmienia protokół, więc przed F2; F2 musi przenieść `epoch` do `meta.json`.
 
 ---
 
