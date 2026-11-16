@@ -17,8 +17,14 @@ describe("dodatek nocny (art. 151⁸ KP)", () => {
     expect(nightRateFor(2026, 1, 9.5)).toBe(9.5);
   });
 
-  it("rok spoza tabeli bierze ostatnio znany, a nie zero", () => {
-    expect(minimumMonthlyWage(2099)).toBe(MIN_MONTHLY_WAGE[2026]);
+  it("rok po tabeli bierze ostatnio znany, a rok sprzed tabeli — najwcześniejszy", () => {
+    expect(minimumMonthlyWage(2099)).toBe(MIN_MONTHLY_WAGE[2027]);
+    expect(minimumMonthlyWage(2020)).toBe(MIN_MONTHLY_WAGE[2026]);
+  });
+
+  it("2027: kwota z rozporządzenia z 14.09.2026", () => {
+    // Styczeń 2027: 21 dni pon.–pt. minus 1 i 6 stycznia = 19 dni = 152 h → 4950 / 152 = 32,57 zł; 20% = 6,51 zł.
+    expect(nightRateFor(2027, 0, 0)).toBe(6.51);
   });
 
   it("kwota z minut pracy nocnej", () => {
