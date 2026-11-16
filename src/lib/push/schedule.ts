@@ -1,5 +1,5 @@
 import { addDays } from "date-fns";
-import { nextOccurrence, ruleOf, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { nextOccurrence, ruleOf, type ReminderRepeat, type RepeatRule } from "@/lib/reminderRepeat";
 import { eveningNudgeFor } from "@/lib/shifts/eveningNudge";
 import { dayType, SHIFT_ALARM_DEFAULT_MIN, type ShiftData, type ShiftType } from "@/lib/shifts/model";
 import { shiftSpan } from "@/lib/shifts/time";
@@ -72,6 +72,8 @@ export interface PushNote {
   reminder: number | null;
   reminderDay?: number;
   reminderRepeat?: ReminderRepeat;
+  /** Reguła z nowszych rodzajów (dni robocze, co N dni…) — bez niej terminy liczyłyby się z zapasowego `reminderRepeat`. */
+  reminderRule?: RepeatRule;
   reminderRepeatUntil?: number;
   reminderTime?: number;
   /** Wcześniejszy sygnał (T 3.2) w minutach; odłożone wystąpienie serii (`reminderBase`) go nie ma. */

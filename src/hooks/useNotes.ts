@@ -12,7 +12,7 @@ import { addSubpage as addSubpageImpl, setParent as setParentImpl } from "@/lib/
 import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
 import { cleanLabelPath } from "@/lib/labelTree";
-import { isDstShiftedOccurrence, minutesOfDay } from "@/lib/reminderRepeat";
+import { anchorAfterWrite, minutesOfDay } from "@/lib/reminderRepeat";
 import { cleanPropDef, hasPropOptions, makePropDef, propNameTaken, type PropDef, type PropType } from "@/lib/noteProps";
 
 export type { NoteColor, FolderColor, Folder, ChecklistItem, Note } from "@/lib/types/note";
@@ -150,21 +150,18 @@ export function useNotes() {
   /** Zwraca id utworzonej notatki — potrzebne, gdy wywołujący musi ją zaraz dopatchować. */
   const addNote = useCallback((title: string, content: string, color: NoteColor = "default", labels: string[] = [], reminder: number | null = null, images: string[] = [], checklist: ChecklistItem[] = [], priority: NotePriority = "none", folderId: string | null = null, attachments: Attachment[] = []): string => {
     const now = Date.now();
-    const note: Note = { id: crypto.randomUUID(), title, content, color, pinned: false, archived: false, trashed: false, trashedAt: null, labels, reminder, priority, images, ...(attachments.length ? { attachments } : {}), checklist, folderId, order: 0, createdAt: now, updatedAt: now };
+    const note: Note = { id: crypto.randomUUID(), title, content, color, pinned: false, archived: false, trashed: false, trashedAt: null, labels, reminder, ...(reminder !== null ? { reminderTime: minutesOfDay(reminder) } : {}), priority, images, ...(attachments.length ? { attachments } : {}), checklist, folderId, order: 0, createdAt: now, updatedAt: now };
     yjsStore.upsertNote(note);
     return note.id;
   }, []);
 
   const updateNote = useCallback((id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => {
     // Godzina serii (T 1.2): ręczne ustawienie terminu zapisuje jego godzinę jako kotwicę. Krok serii
-    // (podaje `reminderDay`) zostawia kotwicę, a krok przesunięty przez zmianę czasu jej nie zmienia.
+    // (podaje `reminderDay`) zostawia kotwicę, a krok przesunięty przez zmianę czasu i odłożone wystąpienie jej nie zmieniają.
     if (typeof updates.reminder === "number" && !("reminderTime" in updates)) {
       const anchor = yjsStore.projectNotes().find((n) => n.id === id)?.reminderTime;
-      if (anchor !== undefined) {
-        updates = { ...updates, reminderTime: isDstShiftedOccurrence(anchor, updates.reminder) ? anchor : minutesOfDay(updates.reminder) };
-      } else if (!("reminderDay" in updates)) {
-        updates = { ...updates, reminderTime: minutesOfDay(updates.reminder) };
-      }
+      const reminderTime = anchorAfterWrite(anchor, updates.reminder, { snoozed: typeof updates.reminderBase === "number", seriesStep: "reminderDay" in updates });
+      if (reminderTime !== undefined) updates = { ...updates, reminderTime };
     }
     // Ręczne ustawienie terminu wyznacza dzień serii. Przesunięcie serii
     // (odpalenie, „pomiń”) podaje `reminderDay` jawnie, żeby go nie nadpisać.

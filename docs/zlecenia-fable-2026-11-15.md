@@ -220,17 +220,44 @@ Zasady: blokada wyłączna tylko dla operacji krótkich i nieodwracalnych; dla d
 
 ---
 
-## Zadanie 8 — godzina ścienna przypomnień (plan, nieukończony)
+## Zadanie 8 — godzina ścienna przypomnień (przegląd zrobiony 2026-11-16)
 
-Nie czytano `reminderSpec.ts`, `reminderRepeat.ts` ani `push/schedule.ts`; istnieje `reminderRepeat.dst.test.ts`, więc część przypadków zmiany czasu jest już pokryta. Pytania, na które plan musi odpowiedzieć, zanim ktoś zmieni model:
+Przeczytane: `reminderSpec.ts`, `reminderRepeat.ts`, `reminderTime.ts`, `reminderDue.ts`, `push/schedule.ts`, `useNotes.ts` (`updateNote`), `useCalendarMoves.ts`, zapis w `yjsStore.ts`.
 
-1. Co jest zapisane: chwila (ms) czy data i godzina lokalna? Przy chwili przypomnienie „8:00” ustawione w lipcu na grudzień wypada o 7:00 albo 9:00, zależnie od sposobu liczenia; powtarzalne przesuwa się po zmianie czasu.
-2. Zgodność wstecz: starsze wersje czytają `reminder` i `reminderRepeat` (kod zapisuje je obok `reminderSpec` — `yjsStore.ts`, okolice wiersza 665). Godzina ścienna musi więc iść jako **dodatkowe** pole w `reminderSpec`, a `reminder` (ms) dalej jest wyliczane dla starszych klientów.
-3. Serwer push liczy terminy sam (`push/schedule.ts`): musi dostać strefę urządzenia albo gotowe chwile na najbliższe N wystąpień; drugie jest prostsze i nie wymaga bazy stref na serwerze.
-4. Godzina nieistniejąca (2:30 w noc zmiany na czas letni) i podwójna (2:30 jesienią): reguła „pierwsze wystąpienie; nieistniejąca przesuwa się do przodu”.
-5. Dwa urządzenia w różnych strefach: przypomnienie w godzinie ściennej dzwoni o 8:00 lokalnie na każdym. Czy tak ma być — **D-P1**.
+**Odpowiedzi na pytania**
 
-**Z-8 (Opus, M):** przeczytać trzy pliki, odpowiedzieć na pytania 1–4 dowodami z kodu i dopiero wtedy napisać plan zmian.
+1. *Co jest zapisane.* `reminder` to chwila (ms). Termin jednorazowy składa `composeReminderTimestamp` z daty i godziny w strefie urządzenia, z przesunięciem obowiązującym **w dniu terminu** — „8:00 w grudniu” ustawione w lipcu wypada o 8:00. Obawa z pierwszej wersji tego punktu nie dotyczy jednej strefy. Serie mają godzinę ścienną od 2026-10-26: kotwica `reminderTime` (minuty od północy) i `reminderDay`, a każdy krok liczy się arytmetyką lokalnej daty (`getNextReminderTime`), więc zmiana czasu ich nie przesuwa.
+2. *Zgodność wstecz.* `reminderTime` jest osobnym kluczem w `Y.Map` notatki, poza `reminderSpec`. Starsze wersje go nie znają i liczą godzinę z bieżącego terminu. Zapis i tak idzie w jednej transakcji z `reminderSpec`.
+3. *Serwer push.* Już dostaje gotowe chwile: `buildPushSchedulePlan` liczy je w przeglądarce na 14 dni (do 60 wystąpień serii) i wysyła listę przy każdej zmianie danych. Serwer nie zna stref i nie musi. Ograniczenie: lista powstaje w strefie urządzenia, które ją wysłało, i wygasa po 14 dniach bez otwarcia aplikacji.
+4. *Godzina nieistniejąca i podwójna.* Seria: nieistniejąca 2:30 daje tego dnia 3:30, następnego dnia wraca 2:30; podwójna 2:30 jesienią to pierwsze wystąpienie (tak `Date` rozstrzyga w V8 i tak działa `withAnchorTime`). Termin jednorazowy o nieistniejącej godzinie jest odrzucany w oknie („Tej godziny nie ma tego dnia”). Reguła z planu jest więc spełniona.
+5. *Dwie strefy (D-P1).* Dziś termin jednorazowy jest stałą chwilą: na urządzeniu w innej strefie pokazuje się i dzwoni o innej godzinie ściennej (jak wydarzenie w Kalendarzu Google). Seria liczy następne wystąpienie w strefie urządzenia, które robi krok.
+
+**Błędy znalezione i poprawione w kodzie (2026-11-16)**
+
+- **Odłożenie przestawiało całą serię.** `updateNote` przy każdym zapisie terminu ustawiał kotwicę na godzinę nowego terminu, także przy odłożonym wystąpieniu. „Odłóż 10 min” na serii o 8:00 dawało kotwicę 8:10 i wszystkie następne wystąpienia o 8:10. Teraz zapis z `reminderBase` nie rusza kotwicy (`anchorAfterWrite` w `reminderRepeat.ts`). Serii już przestawionych nie da się naprawić automatycznie — trzeba ustawić godzinę ponownie.
+- **Ręczna zmiana o godzinę w dniu zmiany czasu była ignorowana.** `isDstShiftedOccurrence` uznawał za przeskok każdą różnicę 60 minut w takim dniu, więc 8:00 → 9:00 ustawione 29.03 wracało następnego dnia na 8:00. Teraz funkcja składa kotwicę w dniu terminu i porównuje chwile.
+- **`addNote` z terminem nie zapisywał kotwicy**, więc seria założona od razu przy tworzeniu notatki nie miała jej nigdy (krok serii jej nie zakłada). Teraz zapisuje.
+- `PushNote` nie miał w typie `reminderRule`; w działającej aplikacji pole dochodziło (przekazywane są całe notatki), ale test na typie `PushNote` nie mógł wyrazić reguły. Dopisane.
+
+Testy: `src/lib/reminderRepeat.dst.test.ts` (trzy nowe przypadki).
+
+**Zalecenie do D-P1: odłożyć „lokalną godzinę na każdym urządzeniu”.** W jednej strefie wszystko, co plan chciał osiągnąć, już działa. Pełna godzina ścienna między strefami wymaga nowego pola i zmiany odczytu w całym dziale Terminy (zlecenie Z-8.4), a zysk pojawia się dopiero przy dwóch urządzeniach w różnych strefach albo wyjeździe. Nie blokuje F1.
+
+**Wymaganie dla F1 (APK z alarmami):** natywne alarmy biorą tę samą listę chwil co serwer push. Trzeba ją przeliczyć po zmianie strefy lub zegara systemu (`ACTION_TIMEZONE_CHANGED`, `ACTION_TIME_CHANGED`), po restarcie telefonu i przy starcie aplikacji; alarm ustawiony na chwilę sam przechodzi przez zmianę czasu poprawnie.
+
+**Zlecenia**
+
+- **Z-8.1 (Sonnet, S):** test `updateNote` w `src/hooks/useNotes.test.ts`: seria dzienna 8:00 → zapis odłożenia (`reminder` 8:10, `reminderBase` 8:00, `reminderDay`) → `reminderTime` zostaje 480; potem krok serii → termin jutro 8:00. Drugi przypadek: cofnięcie odłożenia przywraca stan sprzed.
+- **Z-8.2 (Sonnet, S):** `useCalendarMoves.ts` woła `nextInSeries` bez godziny serii (`moveToInstant`, zapasowa gałąź `handleSkip`). Dodać `seriesMinutes(note)` jako ostatni argument; test w dniu 29.03.2026 dla serii o 2:30.
+- **Z-8.3 (Opus, S, opcjonalne):** przenieść `reminderTime` do `reminderSpec` (pole w `ReminderState`, `REMINDER_FIELDS`, `specOf`, `readSpec`), odczyt: najpierw ze `reminderSpec`, potem ze starego klucza; stary klucz dalej zapisywać. Zysk mały: dziś oba klucze idą w jednej transakcji, rozjazd grozi tylko przy równoczesnym odłożeniu na jednym urządzeniu i zmianie godziny na drugim.
+- **Z-8.4 (Opus, M/L, tylko po decyzji D-P1 = tak):** godzina ścienna między strefami.
+  - Nowe pole w `reminderSpec`: `reminderWall: { d: "RRRR-MM-DD", m: minuty }` dla bieżącego terminu. Piszący dalej liczy `reminder` (ms) w swojej strefie — dla starszych wersji i sortowania.
+  - Odczyt (`plainFromYNote`): gdy jest `reminderWall`, `note.reminder` to chwila złożona z niego w strefie urządzenia. Reszta kodu dalej czyta `note.reminder`. **Odczyt nic nie zapisuje** — inaczej dwa urządzenia w różnych strefach przepisywałyby `reminder` w kółko.
+  - Odłożenie względne („za 10 min”, „za godzinę”) to chwila: zapis bez `reminderWall`. „Jutro 9:00” i „wieczorem” to godzina ścienna.
+  - `reminderBase` i `reminderRepeatUntil` też są chwilami: koniec serii potrzebuje postaci dziennej (`untilDay`), termin bazowy — własnego `reminderWall` albo wyliczenia z kotwicy.
+  - Starsza wersja przy edycji gubi `reminderWall` (`specOf` przepisuje tylko znane pola) — to dobrze: termin wraca do stałej chwili, bez sprzeczności.
+  - Rejestr „już odpalone”, `pushKey.note(id, at)` i lista push są per urządzenie, więc różne chwile na różnych urządzeniach nie kolidują; sprawdzić, czy serwer push trzyma harmonogram per subskrypcję.
+  - Testy w dwóch strefach: osobne pliki z `process.env.TZ` na górze (jak `reminderRepeat.dst.test.ts`), bo `vitest.config.ts` ustawia Europe/Warsaw.
 
 ---
 
@@ -300,6 +327,6 @@ Z lektury `data.ts` **[kod]** — przypadki, których dziś nikt nie sprawdza:
 | D-K2 | Etap 2 bez trybu offline24? | **Tak** — faktura bez sieci czeka na wysyłkę. |
 | D-R1 | Limit wpisu i migawki przekaźnika | **Podnieść do 16 MB** (Z-5.1, wariant zalecany). |
 | D-R2 | Wpis nie do odszyfrowania | **Blokować** synchronizację (jak dziś), z jasnym komunikatem. |
-| D-P1 | Godzina ścienna w różnych strefach | **Tak** — lokalna godzina na każdym urządzeniu. |
+| D-P1 | Godzina ścienna w różnych strefach | **Odłożyć** — w jednej strefie działa już poprawnie; pełna wersja to Z-8.4 (M/L). Zmienione po przeglądzie 2026-11-16, wcześniej „tak”. |
 
 Decyzje z drugiego przeglądu planów (KR-5, KR-6, „plik bez opisu”, S1.5, D4.1, D1.3) są w samych planach.

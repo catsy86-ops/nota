@@ -237,15 +237,26 @@ export function minutesOfDay(at: number): number {
 }
 
 /**
- * Czy `at` to krok serii przesunięty przez zmianę czasu: w tym dniu zmienia się przesunięcie strefy
- * i godzina różni się od kotwicy dokładnie o godzinę (2:30 → 3:30). Taki krok nie zmienia kotwicy.
+ * Czy `at` to krok serii przesunięty przez zmianę czasu: godzina kotwicy tego dnia nie istnieje, więc zegar
+ * dał `at` zamiast niej (2:30 → 3:30). Taki krok nie zmienia kotwicy. Sprawdzamy to wprost — składając kotwicę
+ * w dniu `at` — a nie po różnicy 60 minut: ręczna zmiana 8:00 → 9:00 w dniu zmiany czasu to nowa godzina serii.
  */
 export function isDstShiftedOccurrence(anchorMinutes: number, at: number): boolean {
+  if (minutesOfDay(at) === anchorMinutes) return false;
   const d = new Date(at);
-  const startOffset = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTimezoneOffset();
-  const endOffset = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59).getTimezoneOffset();
-  if (startOffset === endOffset) return false;
-  return Math.abs(minutesOfDay(at) - anchorMinutes) === 60;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, anchorMinutes).getTime() === at;
+}
+
+/**
+ * Godzina serii (`reminderTime`) po zapisie terminu `at`; `undefined` = zostaw, jak jest.
+ * Odłożone wystąpienie (`snoozed`: zapis z `reminderBase`) nie rusza kotwicy — inaczej „Odłóż 10 min” na serii
+ * o 8:00 przestawiało całą serię na 8:10. Krok serii (`seriesStep`: zapis z `reminderDay`) nie zakłada kotwicy,
+ * gdy jej nie było; istniejącą aktualizuje, bo tą drogą idzie też ręczna zmiana godziny w kalendarzu.
+ */
+export function anchorAfterWrite(anchor: number | undefined, at: number, write: { snoozed: boolean; seriesStep: boolean }): number | undefined {
+  if (write.snoozed) return undefined;
+  if (anchor !== undefined) return isDstShiftedOccurrence(anchor, at) ? anchor : minutesOfDay(at);
+  return write.seriesStep ? undefined : minutesOfDay(at);
 }
 
 /** Wejście powtarzania z pickera i kalendarza: sam rodzaj (stare kształty) albo pełna reguła (3.1). */

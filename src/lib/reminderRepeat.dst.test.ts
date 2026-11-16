@@ -38,6 +38,33 @@ describe("seria przez zmianę czasu (T 1.2)", () => {
     expect(minutesOfDay(local(29, 3, 30))).toBe(210);
   });
 
+  it("ręczna zmiana o godzinę w dniu zmiany czasu to nowa kotwica, nie przeskok", async () => {
+    const { isDstShiftedOccurrence, anchorAfterWrite } = await import("./reminderRepeat");
+    // Seria o 8:00, 29.03 przestawiona ręcznie na 9:00 albo 7:00 (różnica dokładnie 60 min).
+    expect(isDstShiftedOccurrence(8 * 60, local(29, 9, 0))).toBe(false);
+    expect(isDstShiftedOccurrence(8 * 60, local(29, 7, 0))).toBe(false);
+    expect(anchorAfterWrite(8 * 60, local(29, 9, 0), { snoozed: false, seriesStep: true })).toBe(9 * 60);
+    // Prawdziwy przeskok zostawia kotwicę.
+    expect(anchorAfterWrite(150, local(29, 3, 30), { snoozed: false, seriesStep: true })).toBe(150);
+  });
+
+  it("odłożone wystąpienie nie przestawia serii: 8:00 odłożone na 8:10, następne znów o 8:00", async () => {
+    const { anchorAfterWrite, nextOccurrence, snoozeTarget } = await import("./reminderRepeat");
+    const note = { reminder: local(10, 8, 0), reminderRepeat: "daily" as const, reminderTime: 8 * 60 };
+    const snz = snoozeTarget(note, local(10, 8, 10), local(10, 8, 0));
+    expect(snz).toEqual({ reminder: local(10, 8, 10), reminderBase: local(10, 8, 0) });
+    const anchor = anchorAfterWrite(note.reminderTime, snz.reminder, { snoozed: true, seriesStep: true });
+    expect(anchor).toBeUndefined();
+    expect(hm(nextOccurrence({ ...note, ...snz }, snz.reminder)!)).toBe("11.3 8:00");
+  });
+
+  it("kotwica: nowy termin ją zakłada, krok serii bez kotwicy — nie", async () => {
+    const { anchorAfterWrite } = await import("./reminderRepeat");
+    expect(anchorAfterWrite(undefined, local(10, 8, 0), { snoozed: false, seriesStep: false })).toBe(8 * 60);
+    expect(anchorAfterWrite(undefined, local(10, 8, 0), { snoozed: false, seriesStep: true })).toBeUndefined();
+    expect(anchorAfterWrite(8 * 60, local(10, 10, 0), { snoozed: false, seriesStep: true })).toBe(10 * 60);
+  });
+
   it("seriesMinutes: z zapisu, a bez niego z terminu bazowego", async () => {
     const { seriesMinutes } = await import("./reminderRepeat");
     expect(seriesMinutes({ reminder: local(28, 3, 30), reminderTime: 150 })).toBe(150);
