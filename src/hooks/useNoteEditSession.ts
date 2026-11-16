@@ -152,7 +152,7 @@ export function useNoteEditSession({
     if (isChecklistShortcut(e)) {
       e.preventDefault();
       const r = selectionToChecklist(editContent, ta.selectionStart, ta.selectionEnd, editChecklist);
-      if (r) { writeContent(r.content); setEditChecklist(r.checklist); setShowChecklist(true); }
+      if (r && writeContent(r.content)) { setEditChecklist(r.checklist); setShowChecklist(true); }
       return;
     }
     // Ctrl+F / Ctrl+H w treści: znajdź i zamień w tej notatce (zamiast wyszukiwania przeglądarki).
@@ -172,9 +172,10 @@ export function useNoteEditSession({
   /**
    * Zapis treści z paska, listy czy Znajdź/Zamień. W trybie wiązania idzie przez edytor
    * (dokument Yjs i historia Ctrl+Z), a stan `editContent` nadąża przez `onChange` edytora.
-   * Poza wiązaniem — przez szkic, jak dotąd.
+   * Poza wiązaniem — przez szkic, jak dotąd. Zwraca `false`, gdy zapis odrzucono (peer zmienił ten sam
+   * zakres) — wołający nie może wtedy zmieniać niczego, co z tej treści wynika (np. listy zadań).
    */
-  function writeContent(next: string, sel?: [number, number]) {
+  function writeContent(next: string, sel?: [number, number]): boolean {
     const ta = textareaRef.current;
     if (collab && ta) {
       applyEdit(ta, {
@@ -182,7 +183,7 @@ export function useNoteEditSession({
         selStart: sel?.[0] ?? Math.min(ta.selectionStart, next.length),
         selEnd: sel?.[1] ?? Math.min(ta.selectionEnd, next.length),
       });
-      return;
+      return true;
     }
     if (collabText) {
       // Edytor CM nie jest zamontowany (lazy chunk, podgląd): do dokumentu idzie tylko zmieniony zakres.
@@ -191,7 +192,7 @@ export function useNoteEditSession({
       if (!splice) {
         setEditContent(collabText.toString());
         toast("Treść zmieniła się na innym urządzeniu. Powtórz zmianę.");
-        return;
+        return false;
       }
       const apply = () => {
         if (splice.remove > 0) collabText.delete(splice.at, splice.remove);
@@ -200,9 +201,10 @@ export function useNoteEditSession({
       if (collabText.doc) collabText.doc.transact(apply);
       else apply();
       setEditContent(collabText.toString());
-      return;
+      return true;
     }
     setEditContent(next);
+    return true;
   }
 
   /** Start sesji: kopia treści z `beginNoteTextEdit` (ta sama, którą widzi peer), a nie surowy `note`. */

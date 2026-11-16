@@ -140,4 +140,34 @@ describe("rebaseSplice", () => {
     expect(a.toString()).toBe(b.toString());
     expect(a.toString()).toBe("Nagłówek\n- punkt 1\n- punkt 2");
   });
+
+  // Yjs przy rozcięciu pary zastępczej zamienia obie połówki na U+FFFD.
+  it("zamiana emoji o wspólnej połówce pary zastępczej nie psuje znaku", () => {
+    const from = "a\u{1F600}b";
+    const to = "a\u{1F601}b";
+    expect(rebaseSplice(from, to, from)).toEqual({ at: 1, remove: 2, insert: "\u{1F601}" });
+    // Ta sama druga połówka, inna pierwsza (U+1F600 → U+1FA00).
+    expect(rebaseSplice(from, "a\u{1FA00}b", from)).toEqual({ at: 1, remove: 2, insert: "\u{1FA00}" });
+    const { a, b, sync } = pair(from);
+    edit(a, () => applySplice(a, rebaseSplice(from, to, a.toString())!));
+    sync();
+    expect(a.toString()).toBe(to);
+    expect(b.toString()).toBe(to);
+  });
+});
+
+describe("applyTextEdit — pary zastępcze", () => {
+  it("zamiana emoji o wspólnej połówce daje dokładnie szkic", () => {
+    const { a, b, sync } = pair("a\u{1F600}b");
+    edit(a, () => applyTextEdit(a, captureTextBase(a), "a\u{1F601}b"));
+    sync();
+    expect(a.toString()).toBe("a\u{1F601}b");
+    expect(b.toString()).toBe("a\u{1F601}b");
+  });
+
+  it("usunięcie jednego z dwóch takich samych emoji", () => {
+    const { a } = pair("\u{1F600}\u{1F600}");
+    edit(a, () => applyTextEdit(a, captureTextBase(a), "\u{1F600}"));
+    expect(a.toString()).toBe("\u{1F600}");
+  });
 });

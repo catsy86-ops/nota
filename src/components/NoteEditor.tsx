@@ -227,7 +227,7 @@ export function NoteEditor({
         <ChecklistConvertButtons
           content={editContent}
           checklist={editChecklist}
-          onConvert={(r, toList) => { writeContent(r.content); setEditChecklist(r.checklist); setShowChecklist(toList); }}
+          onConvert={(r, toList) => { if (writeContent(r.content)) { setEditChecklist(r.checklist); setShowChecklist(toList); } }}
         />
       </div>
 

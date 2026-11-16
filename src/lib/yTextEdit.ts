@@ -36,6 +36,29 @@ function readChars(ytext: Y.Text): CharId[] {
   return ids;
 }
 
+/**
+ * Zakres, którym różnią się `prev` i `next`: wspólny początek do `start`, wspólny koniec od `endPrev`
+ * (w `prev`) i `endNext` (w `next`). Granice nie wypadają w środku pary zastępczej UTF-16 — Yjs przy
+ * rozcięciu pary zamienia obie połówki na U+FFFD, więc zamiana 😀 na 😁 (ta sama pierwsza połówka)
+ * psułaby znak.
+ */
+function changedRange(prev: string, next: string): { start: number; endPrev: number; endNext: number } {
+  let start = 0;
+  const maxStart = Math.min(prev.length, next.length);
+  while (start < maxStart && prev[start] === next[start]) start++;
+  if (start > 0 && isHighSurrogate(prev.charCodeAt(start - 1))) start--;
+  let endPrev = prev.length;
+  let endNext = next.length;
+  while (endPrev > start && endNext > start && prev[endPrev - 1] === next[endNext - 1]) {
+    endPrev--; endNext--;
+  }
+  if (endPrev < prev.length && isLowSurrogate(prev.charCodeAt(endPrev))) { endPrev++; endNext++; }
+  return { start, endPrev, endNext };
+}
+
+function isHighSurrogate(code: number): boolean { return code >= 0xd800 && code <= 0xdbff; }
+function isLowSurrogate(code: number): boolean { return code >= 0xdc00 && code <= 0xdfff; }
+
 export function captureTextBase(ytext: Y.Text): TextBase {
   return { text: ytext.toString(), ids: readChars(ytext) };
 }
@@ -49,14 +72,7 @@ export function applyTextEdit(ytext: Y.Text, base: TextBase, next: string): Text
   const prev = base.text;
   if (prev === next) return base;
 
-  let start = 0;
-  const maxStart = Math.min(prev.length, next.length);
-  while (start < maxStart && prev[start] === next[start]) start++;
-  let endPrev = prev.length;
-  let endNext = next.length;
-  while (endPrev > start && endNext > start && prev[endPrev - 1] === next[endNext - 1]) {
-    endPrev--; endNext--;
-  }
+  const { start, endPrev, endNext } = changedRange(prev, next);
   const inserted = next.slice(start, endNext);
 
   const current = readChars(ytext);
@@ -123,14 +139,7 @@ export interface TextSplice { at: number; remove: number; insert: string }
  * odświeża widok i nic nie zapisuje. Brak zmiany daje wycięcie zerowe z pustą wstawką.
  */
 export function rebaseSplice(prev: string, next: string, current: string): TextSplice | null {
-  let start = 0;
-  const maxStart = Math.min(prev.length, next.length);
-  while (start < maxStart && prev[start] === next[start]) start++;
-  let endPrev = prev.length;
-  let endNext = next.length;
-  while (endPrev > start && endNext > start && prev[endPrev - 1] === next[endNext - 1]) {
-    endPrev--; endNext--;
-  }
+  const { start, endPrev, endNext } = changedRange(prev, next);
   const removed = prev.slice(start, endPrev);
   const insert = next.slice(start, endNext);
   if (current === prev) return { at: start, remove: removed.length, insert };
