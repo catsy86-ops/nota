@@ -2,6 +2,7 @@
  * Jedyne miejsce rejestracji service workera aplikacji.
  * Nigdy nie rejestruje w dev ani w iframe (`?sw=off` też wyłącza).
  */
+import { isNativeShell } from "@/lib/native/platform";
 import { hasUnsavedWork } from "@/lib/saveStatus";
 
 const SW_URL = "/sw.js";
@@ -133,7 +134,8 @@ export function registerServiceWorker() {
   const inIframe = window.self !== window.top;
   const swOff = new URLSearchParams(window.location.search).get("sw") === "off";
 
-  if (!import.meta.env.PROD || inIframe || swOff) {
+  // APK: pliki są w paczce aplikacji, a nowa wersja to nowy APK — worker tylko trzymałby stare.
+  if (!import.meta.env.PROD || inIframe || swOff || isNativeShell()) {
     void unregisterAppSW();
     return;
   }

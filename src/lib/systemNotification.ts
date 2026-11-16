@@ -1,3 +1,4 @@
+import { isNativeShell } from "@/lib/native/platform";
 import { markShown, wasShown } from "@/lib/push/shown";
 
 /**
@@ -25,6 +26,8 @@ export interface SystemNotificationOptions {
 }
 
 export function showSystemNotification(title: string, o: SystemNotificationOptions): void {
+  // APK: jedynym źródłem powiadomień systemowych są alarmy (`lib/reminders/nativeSink.ts`); strona pokazuje tylko dymek.
+  if (isNativeShell()) return;
   if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") return;
   if (o.key) {
     const key = o.key;

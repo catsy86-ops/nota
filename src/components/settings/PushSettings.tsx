@@ -10,6 +10,8 @@ import { disablePush, enablePush, pushSupport, sendTestPush } from "@/lib/push/c
 import { cleanPushToken, normalizePushServer, pushPrefs, pushToken, PUSH_TOKEN_MAX, setPushCategory } from "@/lib/push/prefs";
 import { PUSH_CATEGORIES } from "@/lib/push/schedule";
 import { PUSH_SUMMARY_KEY, readPushSummary } from "@/lib/push/summary";
+import { isNativeShell } from "@/lib/native/platform";
+import { loadNativeSink, nativeAlarmPrefs } from "@/lib/reminders/sink";
 import { cn } from "@/lib/utils";
 import { Section, ToggleRow } from "./SettingsShared";
 
@@ -22,6 +24,10 @@ const errorText = (e: unknown) => (e instanceof Error ? e.message : "Coś poszł
 const safeGet = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 
 export function PushSettings() {
+  return isNativeShell() ? <NativeAlarmSettings /> : <WebPushSettings />;
+}
+
+function WebPushSettings() {
   const prefs = pushPrefs.use();
   const [server, setServer] = useState(prefs.server);
   const [token, setToken] = useState(() => pushToken.get());
@@ -142,6 +148,82 @@ export function PushSettings() {
             label={c.label}
             desc={`Po wyłączeniu terminy tej kategorii nie trafiają na serwer.`}
             checked={!(prefs.off ?? []).includes(c.id)}
+            onCheck={(on) => setPushCategory(c.id, on)}
+          />
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+/**
+ * APK (F1): alarmy planuje sam telefon — bez serwera i bez sieci. Zgoda systemowa, próbny alarm
+ * i stan ostatniego planowania; kategorie te same co w PWA.
+ */
+function NativeAlarmSettings() {
+  const alarms = nativeAlarmPrefs.use();
+  const off = pushPrefs.use().off ?? [];
+  const [busy, setBusy] = useState(false);
+
+  const run = async (fn: (m: Awaited<ReturnType<typeof loadNativeSink>>) => Promise<void>, done: string) => {
+    setBusy(true);
+    try {
+      await fn(await loadNativeSink());
+      toast.success(done);
+    } catch (e) {
+      toast.error(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const last = alarms.last;
+  const status = !alarms.enabled
+    ? "Wyłączone — przypomnienia działają tylko przy otwartej aplikacji."
+    : !last
+      ? "Włączone — alarmy zaplanują się za chwilę."
+      : last.ok
+        ? `Włączone — zaplanowane terminy: ${last.count ?? 0}, ${formatDistanceToNow(last.at, { locale: pl, addSuffix: true })}.`
+        : last.error ?? "Nie udało się zaplanować alarmów.";
+
+  return (
+    <Section title="Powiadomienia przy zamkniętej aplikacji">
+      <div className="space-y-3">
+        <ToggleRow
+          label="Alarmy telefonu"
+          desc="Przypomnienia przychodzą o czasie także przy zamkniętej aplikacji i bez sieci. Planuje je telefon, na 14 dni naprzód."
+          checked={alarms.enabled}
+          onCheck={(on) => {
+            if (busy) return;
+            void (on
+              ? run((m) => m.enableNativeAlarms(), "Alarmy włączone")
+              : run((m) => m.disableNativeAlarms(), "Alarmy wyłączone"));
+          }}
+        />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p role="status" className={cn("text-xs", alarms.enabled && last && !last.ok ? "text-destructive-ink" : "text-muted-foreground")}>{status}</p>
+          {alarms.enabled && (
+            <Button type="button" size="sm" variant="outline" className="pressable gap-1.5" disabled={busy}
+              onClick={() => void run((m) => m.scheduleTestAlarm(), "Próbny alarm przyjdzie za minutę — możesz zamknąć aplikację")}>
+              <BellRing className="w-3.5 h-3.5" />Próbny alarm za minutę
+            </Button>
+          )}
+        </div>
+        {alarms.enabled && last?.ok && last.exact === false && (
+          <p className="text-xs text-warning-ink">
+            Telefon nie pozwala na dokładne alarmy — przypomnienia mogą się spóźnić o kilka minut.
+            Włącz „Alarmy i przypomnienia” w ustawieniach telefonu: Aplikacje → NOTKI.
+          </p>
+        )}
+      </div>
+      <div className="mt-3 space-y-2">
+        <p className="ui-hint">Co ma przypominać, gdy aplikacja jest zamknięta:</p>
+        {PUSH_CATEGORIES.map((c) => (
+          <ToggleRow
+            key={c.id}
+            label={c.label}
+            desc="Po wyłączeniu telefon nie planuje alarmów tej kategorii."
+            checked={!off.includes(c.id)}
             onCheck={(on) => setPushCategory(c.id, on)}
           />
         ))}

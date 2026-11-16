@@ -11,6 +11,7 @@
     "dev": "vite",
     "prebuild": "node scripts/copy-ocr.mjs && node scripts/copy-mermaid.mjs",
     "build": "vite build",
+    "build:android": "npm run build && node scripts/cap-prepare.mjs && cap sync android",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -25,6 +26,9 @@
     "check": "npm run typecheck && npm run lint && npm test && npm run test:e2e:smoke"
   },
   "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/core": "8.6.2",
+    "@capacitor/local-notifications": "8.3.1",
     "@codemirror/autocomplete": "6.20.3",
     "@codemirror/commands": "6.11.1",
     "@codemirror/lang-css": "6.3.1",
@@ -108,6 +112,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@capacitor/cli": "8.6.2",
     "@eslint/js": "^9.32.0",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.3.3",

@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useLatestRef } from "@/hooks/useLatestRef";
-import { uploadSchedule } from "@/lib/push/client";
+import { activeSink } from "@/lib/reminders/sink";
 import { pushPrefs } from "@/lib/push/prefs";
 import { buildPushSchedulePlan, PUSH_MAX_ITEMS, type PushNote } from "@/lib/push/schedule";
 import { PUSH_SUMMARY_KEY } from "@/lib/push/summary";
@@ -15,7 +15,7 @@ const DEBOUNCE_MS = 3000;
 const REFRESH_MS = 60 * 60 * 1000;
 
 /**
- * Wysyła harmonogram przypomnień na serwer push (`lib/push/`), gdy zmienią się notatki, Grafik
+ * Wysyła harmonogram przypomnień do ujścia (`lib/reminders/sink.ts`: serwer push w PWA, alarmy systemowe w APK), gdy zmienią się notatki, Grafik
  * albo dziennik budowy — po chwili spokoju, co godzinę i od razu przy chowaniu aplikacji
  * (zwykle zaraz po dodaniu przypomnienia). Montowany leniwie z `Index.tsx`, tylko przy włączonych
  * powiadomieniach, więc dane działu Praca nie wchodzą do głównej paczki.
@@ -30,6 +30,9 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
   const studyRef = useLatestRef(study);
   const off = pushPrefs.use().off;
   const ready = shiftsReady && studyReady;
+
+  // APK: obsługa stuknięcia w alarm musi być podpięta od razu, nie dopiero przy pierwszej wysyłce.
+  useEffect(() => { void activeSink().then((sink) => sink?.available()); }, []);
 
   useEffect(() => {
     if (!ready) return;
@@ -51,7 +54,7 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
       });
       // Podsumowanie dla Ustawień: ile wysłano z ilu i ile odpadło przy limicie. Tylko na tym urządzeniu.
       try { localStorage.setItem(PUSH_SUMMARY_KEY, JSON.stringify({ sent: plan.items.length, total: plan.total, dropped: plan.dropped, limit: PUSH_MAX_ITEMS, at: Date.now() })); } catch { /* bez localStorage — bez podsumowania */ }
-      void uploadSchedule(plan.items, keepalive);
+      void activeSink().then((sink) => sink?.replace(plan.items, keepalive));
     };
     const timer = window.setTimeout(send, DEBOUNCE_MS);
     const hourly = window.setInterval(send, REFRESH_MS);

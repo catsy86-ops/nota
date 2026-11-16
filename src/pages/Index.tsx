@@ -43,7 +43,7 @@ import { useAchievementToasts } from "@/hooks/useAchievementToasts";
 import { useSelection } from "@/hooks/useSelection";
 import { useSelectionGestures } from "@/hooks/useSelectionGestures";
 import { useBackupReminders } from "@/hooks/useBackupReminders";
-import { pushPrefs } from "@/lib/push/prefs";
+import { useReminderSinkOn } from "@/lib/reminders/sink";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
 import { AddNoteBar, type ComposerAction } from "@/components/AddNoteBar";
@@ -190,7 +190,7 @@ const Index = () => {
     has: (id) => [...notes, ...archivedNotes, ...trashedNotes].some((x) => x.id === id),
     remove: (id) => deleteNote(id),
   }), [notes, archivedNotes, trashedNotes, updateNote, deleteNote]);
-  const pushEnabled = pushPrefs.use().enabled;
+  const pushEnabled = useReminderSinkOn();
   useReminderNotifications(
     reminderNotes,
     (id, nextReminder, reminderDay, reminderBase) => updateNote(id, { reminder: nextReminder, reminderDay, reminderBase }),
