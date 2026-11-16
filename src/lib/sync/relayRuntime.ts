@@ -7,6 +7,7 @@ import { toast } from "@/lib/notify";
 import { deriveRelayKeys } from "@/lib/sync/relayKeys";
 import { RelayProvider, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
 import { RelayBlobs } from "@/lib/sync/relayBlobs";
+import { holdTabRole, RELAY_ROLE } from "@/lib/tabLock";
 
 /**
  * Uruchamianie przekaźnika razem z synchronizacją (`yjsSync.ts` woła `startRelay`
@@ -55,6 +56,8 @@ export interface RelayView {
   detail?: string;
   /** Ostatnie udane wysłanie albo pobranie (ms), do „ostatnio zsynchronizowano”. */
   syncedAt: number | null;
+  /** Przekaźnik prowadzi inna karta tej przeglądarki; ta czeka na rolę. */
+  elsewhere?: boolean;
 }
 
 let view: RelayView = { status: "idle", syncedAt: null };
@@ -185,13 +188,30 @@ let lastRemoteToastAt = 0;
 let startToken = 0;
 let onVisibility: (() => void) | null = null;
 let onOnline: (() => void) | null = null;
+let releaseRole: (() => void) | null = null;
 
+/**
+ * Przy kilku kartach przekaźnik prowadzi jedna (Z-7): kursor i kolejka wysyłki leżą w jednej bazie,
+ * więc dwie karty nadpisywałyby je sobie nawzajem. Pozostałe czekają na rolę; ich zmiany idą do
+ * prowadzącej przez `tabSync` i stamtąd na serwer, a zmiany z serwera wracają tą samą drogą.
+ * Po zamknięciu prowadzącej rolę dostaje następna i startuje od zapisanego kursora.
+ */
 export async function startRelay(code: string): Promise<void> {
   stopRelay();
   const url = validRelayUrl(getRelayUrl());
   if (!url) return;
   const token = ++startToken;
   setView({ status: "connecting", detail: undefined });
+  releaseRole = holdTabRole(
+    RELAY_ROLE,
+    () => { void lead(code, url, token); },
+    () => { if (token === startToken) setView({ status: "idle", detail: undefined, elsewhere: true }); },
+  );
+}
+
+async function lead(code: string, url: string, token: number): Promise<void> {
+  if (token !== startToken) return;
+  setView({ status: "connecting", detail: undefined, elsewhere: false });
   try {
     const keys = await deriveRelayKeys(code);
     if (token !== startToken) return; // zastąpione przez późniejszy start albo stop
@@ -238,6 +258,8 @@ export async function startRelay(code: string): Promise<void> {
 
 export function stopRelay(): void {
   startToken++;
+  releaseRole?.();
+  releaseRole = null;
   if (onVisibility) document.removeEventListener("visibilitychange", onVisibility);
   if (onOnline) window.removeEventListener("online", onOnline);
   onVisibility = null;
@@ -250,5 +272,5 @@ export function stopRelay(): void {
   blobRerun = false;
   unobserveNotes?.();
   unobserveNotes = null;
-  setView({ status: "idle", detail: undefined });
+  setView({ status: "idle", detail: undefined, elsewhere: false });
 }

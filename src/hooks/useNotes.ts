@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Text as YText, UndoManager } from "yjs";
 import { pulseSkinSignal } from "@/lib/skinSignal";
 import { yjsStore } from "@/lib/yjsStore";
+import { GC_LOCK, withLockIfFree } from "@/lib/tabLock";
 import { versionsStore } from "@/lib/versionsStore";
 import { privateNotes } from "@/lib/privateNotes";
 import { toast } from "sonner";
@@ -114,10 +115,11 @@ export function useNotes() {
       gcTimer = setTimeout(() => {
         // Zdjęcia dziennika z budowy nie są w notatkach — liczą się jako używane.
         // Moduł Pracy ładowany dopiero tu, żeby nie wchodził do paczki startowej.
-        void import("@/lib/study/images").then(({ journalImageRefs }) => {
+        // Przy kilku kartach sprząta jedna: druga, startująca w tej samej chwili, pomija przebieg (Z-7).
+        void import("@/lib/study/images").then(({ journalImageRefs }) => withLockIfFree(GC_LOCK, () => {
           const used = new Set<string>([...yjsStore.referencedImages(), ...journalImageRefs()]);
           return yjsStore.images.collectGarbage(used);
-        }).catch(() => { /* bez listy zdjęć dziennika nie sprzątamy — lepiej zostawić niż usunąć używane */ });
+        })).catch(() => { /* bez listy zdjęć dziennika nie sprzątamy — lepiej zostawić niż usunąć używane */ });
       }, IMAGE_GC_DELAY_MS);
     });
 

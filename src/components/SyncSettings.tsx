@@ -438,7 +438,7 @@ function relayStatusText(view: RelayView, syncStatus: string): string {
     case "error":
       return view.detail ?? "Przekaźnik zgłasza błąd.";
     default:
-      return "Czeka na start.";
+      return view.elsewhere ? "Synchronizuje inna karta tej przeglądarki — ta przejmie, gdy tamta się zamknie." : "Czeka na start.";
   }
 }
 

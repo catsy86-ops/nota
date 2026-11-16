@@ -1,4 +1,4 @@
-import { createStore, get as idbGet, set as idbSet, del as idbDel, keys as idbKeys, getMany as idbGetMany, type UseStore } from "idb-keyval";
+import { createStore, get as idbGet, set as idbSet, del as idbDel, keys as idbKeys, type UseStore } from "idb-keyval";
 import { logDiag } from "@/lib/diagnostics";
 
 /**
@@ -91,6 +91,12 @@ export async function sha256Hex(bytes: Uint8Array): Promise<string> {
 
 /** Karencja GC: nieużywany obraz młodszy niż to zostaje (szkic, cofnij, sync w drodze). */
 export const GC_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+/** Ponowne dodanie obrazu starszego niż to odnawia jego datę — karencja liczy się od ostatniego użycia. */
+const TOUCH_REFRESH_MS = 24 * 60 * 60 * 1000;
+/** Bezpiecznik odśmiecania: tylu kandydatów naraz, stanowiących ponad połowę magazynu, to raczej błąd listy używanych. */
+const GC_SUSPICIOUS_MIN = 20;
+
+type TabMessage = { t: "add" | "del"; hash: string };
 
 export function createImageStore(dbName: string) {
   const db: UseStore = createStore(dbName, "images");
@@ -107,6 +113,35 @@ export function createImageStore(dbName: string) {
   const deleting = new Map<string, Promise<void>>();
   const urls = new Map<string, { url: string; refs: number }>();
   const pendingUrls = new Map<string, Promise<string | null>>();
+
+  /**
+   * Inne karty tej przeglądarki mają tę samą bazę, ale własne `known`. Bez tego kanału obraz pobrany
+   * przez kartę prowadzącą przekaźnik byłby w pozostałych „nieobecny” do przeładowania, a plik
+   * odśmiecony w jednej karcie — „obecny” w drugiej.
+   */
+  let channel: BroadcastChannel | null = null;
+  try {
+    if (typeof BroadcastChannel !== "undefined") {
+      channel = new BroadcastChannel(`kaczy-images:${dbName}`);
+      // Node (testy): otwarty kanał nie może trzymać procesu.
+      (channel as { unref?: () => void }).unref?.();
+      channel.onmessage = (e: MessageEvent<TabMessage>) => {
+        const m = e.data;
+        if (!m || typeof m.hash !== "string" || !isImageRef(m.hash)) return;
+        if (m.t === "add") {
+          touched.add(m.hash);
+          if (known.has(m.hash)) return;
+          known.add(m.hash);
+          listeners.forEach((l) => l(m.hash));
+        } else if (m.t === "del") {
+          known.delete(m.hash);
+        }
+      };
+    }
+  } catch { /* bez kanału każda karta zna tylko własne zapisy — jak dawniej */ }
+  const announce = (m: TabMessage) => {
+    try { channel?.postMessage(m); } catch { /* kanał zamknięty */ }
+  };
 
   function load(): Promise<void> {
     if (!loadPromise) {
@@ -133,11 +168,24 @@ export function createImageStore(dbName: string) {
     if (expected !== undefined && hash !== expected) throw new Error("Obraz nie pasuje do swojego hasha");
     touched.add(hash);
     await deleting.get(hash);
-    if (known.has(hash)) return hash;
+    let fresh = true;
+    if (known.has(hash)) {
+      // „Znany” to stan tej karty: inna mogła plik odśmiecić, a stary sierota (np. po usuniętej notatce)
+      // dodany ponownie do szkicu ma karencję liczoną od pierwszego zapisu. Brak → zapis od nowa;
+      // stary → nowa data, żeby odśmiecanie go nie zabrało, zanim trafi do notatki.
+      let rec: StoredImage | undefined;
+      try { rec = await idbGet<StoredImage>(hash, db); }
+      catch { return hash; }
+      if (rec && Date.now() - rec.addedAt < TOUCH_REFRESH_MS) return hash;
+      fresh = !rec;
+    }
     const value: StoredImage = { bytes: bytes.slice().buffer, type, addedAt: Date.now() };
     await idbSet(hash, value, db);
     known.add(hash);
-    listeners.forEach((l) => l(hash));
+    if (fresh) {
+      listeners.forEach((l) => l(hash));
+      announce({ t: "add", hash });
+    }
     return hash;
   }
 
@@ -235,26 +283,50 @@ export function createImageStore(dbName: string) {
     await load();
     const candidates = [...known].filter((h) => !referenced.has(h));
     if (!candidates.length) return 0;
+    // Nagle większość magazynu bez właściciela to prawie na pewno niepełna lista używanych (dokument
+    // wczytany w połowie, pominięty dział), nie porządki użytkownika. Wolimy zostawić śmieci niż skasować zdjęcia.
+    if (candidates.length > GC_SUSPICIOUS_MIN && candidates.length > known.size / 2) {
+      logDiag("warn", "imageStore", `garbage collection skipped: ${candidates.length} of ${known.size} files unreferenced`);
+      return 0;
+    }
     touched = new Set();
     let removed = 0;
     try {
-      const records = await idbGetMany<StoredImage | undefined>(candidates, db);
-      for (let i = 0; i < candidates.length; i++) {
-        const rec = records[i];
-        if (rec && now - rec.addedAt < graceMs) continue;
-        const hash = candidates[i];
+      for (const hash of candidates) {
         if (touched.has(hash) || referenced.has(hash)) continue; // dodane ponownie w trakcie sprzątania
         const del = (async () => {
-          await idbDel(hash, db);
+          if (!(await deleteIfStale(hash, now, graceMs))) return false;
           await idbDel(hash, thumbDb).catch(() => undefined);
           known.delete(hash);
+          announce({ t: "del", hash });
+          return true;
         })();
-        deleting.set(hash, del);
-        try { await del; } finally { deleting.delete(hash); }
-        removed++;
+        const settled = del.then(() => undefined, () => undefined);
+        deleting.set(hash, settled);
+        try { if (await del) removed++; } finally { deleting.delete(hash); }
       }
     } catch (err) { logDiag("error", "imageStore", "garbage collection failed", err); }
     return removed;
+  }
+
+  /**
+   * Sprawdzenie daty i usunięcie w jednej transakcji: inna karta, która właśnie odnowiła datę pliku
+   * (ponowne dodanie), wygrywa z odśmiecaniem — między odczytem a `delete` nic się nie wciśnie.
+   * Plik po kolei, więc bajty kandydatów nie leżą wszystkie naraz w pamięci.
+   */
+  function deleteIfStale(hash: string, now: number, graceMs: number): Promise<boolean> {
+    return db("readwrite", (s) => new Promise<boolean>((resolve, reject) => {
+      let stale = false;
+      const req = s.get(hash) as IDBRequest<StoredImage | undefined>;
+      req.onsuccess = () => {
+        const rec = req.result;
+        if (rec && now - rec.addedAt < graceMs) return;
+        stale = true;
+        s.delete(hash);
+      };
+      s.transaction.oncomplete = () => resolve(stale);
+      s.transaction.onabort = s.transaction.onerror = () => reject(s.transaction.error);
+    }));
   }
 
   /**
