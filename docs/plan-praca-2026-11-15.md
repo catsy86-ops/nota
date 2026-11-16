@@ -50,6 +50,8 @@ Wynik Etapu 1 może zmienić kolejność Etapów 2–4.
 | R2.5 | **„Zacznij dzień”** — brakująca połowa B2.4: budowa z lokalizacji albo Grafiku, godzina wejścia, plan na dziś, jednym arkuszem. | `endDay.ts` jako wzór | M |
 | R2.6 | **Testy e2e bez `waitForTimeout`** w specyfikacjach Pracy (część z 51 w całym e2e). | `e2e/site-*.spec.ts`, `workday.spec.ts` | M |
 
+> **Stan 2026-11-16:** R3.1 — czysta funkcja gotowa (`src/lib/study/receivables.ts`, z danymi pod R3.4), bez ekranu i testów. Reszta planu jako zlecenia: zadanie 14 w `zlecenia-fable-2026-11-15.md`. Etap 1 to pomiary właściciela.
+
 ## Etap 3: pieniądze w jednym miejscu
 
 | Nr | Punkt | Rozmiar |

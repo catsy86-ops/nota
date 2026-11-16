@@ -80,3 +80,19 @@ Krótki zapis decyzji, które łatwo podważyć przy następnej zmianie (Plan-no
 - **Druga decyzja (2026-11-12, właściciel):** siatka notatek (`NoteGrid`) montuje karty przy przewijaniu (strażnik z `IntersectionObserver`, zapas 1200 px), zamiast dociągać w tle wszystkie. Po tej zmianie (ten sam pomiar): najdłuższe zadanie Worker 0,27–0,71 s / główny wątek 2,1 s, suma długich zadań 3,2–3,4 / 4,7–5,0 s (wcześniej 8,9 / 5,5 s i 30,8 / 22,3 s). Worker zostaje: bez niego budowa indeksu blokuje wątek na ok. 2 s.
 - **Koszt renderu na żądanie:** karty daleko na liście nie są w DOM, dopóki się do nich nie przewinie — „Znajdź na stronie” przeglądarki ich nie widzi; „pokaż tę notatkę” i nawigacja klawiaturą proszą siatkę o dorysowanie (`src/lib/gridReveal.ts`).
 - **Ścieżka awaryjna:** bez Workerów (testy) i po błędzie Workera działa dotychczasowy indeks w głównym wątku; bez `IntersectionObserver` siatka dociąga karty w wolnych chwilach jak dawniej.
+
+## ADR-8. Aplikacja Android (APK w Capacitorze) z alarmami telefonu zamiast serwera push
+
+- **Decyzja (2026-11-16, właściciel: N-1…N-3 według ustawień domyślnych planu):** obok PWA powstaje APK — ta sama aplikacja (`dist/`) w powłoce Capacitor 8. Przypomnienia w APK to lokalne alarmy systemu (`@capacitor/local-notifications`), więc przychodzą przy zamkniętej aplikacji i bez internetu, bez serwera push (ADR-3 i ADR-4 zostają dla PWA). APK jest rozdawany jako plik z GitHub Actions, poza sklepem. PWA działa dalej bez zmian.
+- **Powód:** Web Push wymaga stale działającego serwera, którego nie hostujemy (ADR-4). Alarm zaplanowany w telefonie nie potrzebuje nikogo po drugiej stronie.
+- **Zasady:**
+  - **Jedno ujście naraz.** Plan przypomnień (`buildSchedule`) trafia do `ReminderSink`: `webpush` w przeglądarce, `native` w powłoce. W powłoce nie ma Service Workera ani powiadomień z karty (`showSystemNotification` nic nie robi) — inaczej to samo przypomnienie przyszłoby dwa razy.
+  - **Kod natywny poza paczką startową PWA.** `isNativeShell()` czyta `window.Capacitor` bez importu; `nativeSink.ts` i wtyczka ładują się dynamicznie tylko w powłoce.
+  - **Dokładne alarmy:** `USE_EXACT_ALARM` (Android 13+, bez pytania użytkownika). To uprawnienie sklep Google dopuszcza tylko dla budzików i kalendarzy — dlatego dystrybucja poza sklepem. Wejście do sklepu wymaga powrotu do `SCHEDULE_EXACT_ALARM` z ekranem zgody.
+  - **Horyzont 14 dni i wartownik.** System trzyma ograniczoną liczbę alarmów, więc planujemy 14 dni naprzód; gdy coś wypada w ostatnich 2 dniach horyzontu, dochodzi alarm „Otwórz notki, żeby zaplanować dalsze przypomnienia”.
+  - **Osobne dane.** Powłoka ma źródło `https://localhost`, więc jej baza jest osobna od PWA — telefon z APK dołącza do grupy synchronizacji jak nowe urządzenie.
+  - **`allowBackup="false"`:** kopia systemowa Androida wyniosłaby do chmury Google bazę z notatkami i kluczami grupy. Kopię robi aplikacja (plik kopii, synchronizacja).
+  - **CSP jako `<meta>`** generowane z `vercel.json` (`scripts/cap-prepare.mjs`) — WebView nie dostaje nagłówków; dyrektywy działające tylko w nagłówku odpadają.
+  - **Klucz podpisu tylko w sekretach CI**, nigdy w repozytorium. Bez sekretów workflow buduje APK próbny (debug), który nie zaktualizuje poprzedniego.
+- **Niesprawdzone (wymaga telefonu, F1.0):** alarm przy zamkniętej aplikacji, po restarcie i w trybie oszczędzania; most Capacitora pod `script-src 'self'` na starszych WebView; akcje powiadomień przy zimnym starcie. Jeśli próba się nie powiedzie, wracamy do Web Push — port `ReminderSink` zostaje.
+- **Kod:** `capacitor.config.ts`, `android/`, `.github/workflows/android.yml`, `scripts/cap-prepare.mjs`, `src/lib/native/platform.ts`, `src/lib/reminders/` (`sink.ts`, `nativePlan.ts`, `nativeSink.ts`), `src/components/settings/PushSettings.tsx` (`NativeAlarmSettings`).

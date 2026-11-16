@@ -1695,6 +1695,15 @@ Dziennik instalatora wod-kan: co zrobione, jakie problemy, zdjęcia, na której 
 
 **Testy.** `npm run typecheck` czysty, `npx eslint .` 0 błędów (11 ostrzeżeń `react-refresh`), `npx vitest run` 144 pliki zielone. E2e wybrane (`subpages`, `composer`, `notes`, `editing`, `note-groups`, `qol`) 21/21 przy jednym workerze.
 
+## Telefon — aplikacja Android (APK) z alarmami telefonu (F1, ADR-8, 2026-11-16)
+
+- **Co robi.** Oprócz PWA jest aplikacja Android — ten sam interfejs w powłoce Capacitor. W niej przypomnienia (terminy notatek, zmiany z Grafiku, próby, serwis i pozostałe kategorie) to alarmy telefonu: przychodzą przy zamkniętej aplikacji, bez internetu i bez serwera push. W Ustawieniach → Powiadomienia zamiast Web Push jest przełącznik **„Alarmy telefonu”**, linia stanu (ile alarmów zaplanowano, kiedy), przycisk **„Próbny alarm za minutę”**, ostrzeżenie, gdy system nie pozwala na dokładne alarmy, i przełączniki kategorii. Powiadomienie ma te same przyciski co w PWA (odłóż, zrobione, koniec zmiany). **Stan: kod gotowy, nie uruchomiony na telefonie** — APK jeszcze nie zbudowano.
+- **Gdzie.** `src/lib/native/platform.ts` (`isNativeShell`); `src/lib/reminders/sink.ts` (`ReminderSink`, `webpushSink`, `nativeAlarmPrefs`, `activeSink`, `useReminderSinkOn`), `nativePlan.ts` (`alarmId`, `channelOf`, `toAlarms`, `sentinelFor`, `planNative`), `nativeSink.ts` (`nativeSink`, `enableNativeAlarms`, `disableNativeAlarms`, `scheduleTestAlarm`); `src/components/PushScheduleSync.tsx`, `src/components/settings/PushSettings.tsx` (`NativeAlarmSettings`), `src/lib/systemNotification.ts`, `src/lib/registerSW.ts`, `src/pages/Index.tsx`; powłoka: `capacitor.config.ts`, `android/`, `scripts/cap-prepare.mjs`, `.github/workflows/android.yml`; skrypt `npm run build:android`.
+- **Jak działa.** `PushScheduleSync` liczy plan jak dotąd (`buildSchedule`) i oddaje go do aktywnego ujścia: `webpush` (wysyłka na serwer) albo `native`. Ujście natywne ładuje się dynamicznie tylko w powłoce, więc paczka startowa PWA nie rośnie. `planNative` porównuje plan z alarmami już zaplanowanymi w systemie (`getPending`) i zwraca tylko różnicę: identyfikator alarmu to skrót FNV-1a klucza pozycji (kolizje rozsuwane w stałej kolejności), a skrót treści leży w `extra.h` — niezmieniony alarm nie jest ruszany. Plan sięga 14 dni; gdy coś wypada w ostatnich 2 dniach, dochodzi alarm-wartownik „otwórz aplikację”. Kanały Androida odpowiadają kategoriom (`notki-<kategoria>`); notatki, grafik i próby są głośne, treść notatek jest ukryta na ekranie blokady. Stuknięcie przycisku w powiadomieniu trafia do tej samej obsługi co komunikaty Service Workera w PWA. Ustawienie: `localStorage` `kaczy.alarms.v1` (`{ enabled, last }`), per urządzenie. W powłoce nie ma Service Workera, a `showSystemNotification` nic nie robi — przypomnienie ma jedno źródło. CSP trafia do `dist/index.html` jako `<meta>` z polityki w `vercel.json`. APK buduje GitHub Actions (ręcznie albo tag `apk-*`); podpis z sekretów `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
+- **Ograniczenia i pułapki.** Nic nie sprawdzono na telefonie (lista w ADR-8). APK ma osobną bazę od PWA — trzeba dołączyć do grupy synchronizacji jak nowe urządzenie. Bez sekretów powstaje APK próbny, którego nie da się zaktualizować kolejnym przebiegiem. Po 14 dniach bez otwarcia aplikacji dalsze przypomnienia nie przyjdą (uprzedza o tym wartownik). Pobieranie i udostępnianie plików w powłoce (`downloadBlob`, kopia, PDF) nie ma jeszcze gałęzi natywnej. Ikona aplikacji jest domyślna z Capacitora. Kopia systemowa Androida wyłączona (`allowBackup="false"`). Pliki źródłowe są w CRLF — skrypty edytujące muszą to uwzględniać.
+- **Testy.** Brak nowych (zlecenia Z-13.1–Z-13.3 w `docs/zlecenia-fable-2026-11-15.md`). Istniejące `src/lib/push/*.test.ts` i `securityHeaders.test.ts` przechodzą bez zmian; `npm run typecheck`, eslint i `npm run build` czyste.
+- **Commit.** Niezacommitowane (2026-11-16).
+
 ## Telefon — przyciski w powiadomieniach i jedno okno aplikacji (plan mobilny M1.1, M1.2, 2026-10-18)
 
 - **Co robi:** powiadomienie o przypomnieniu z serwera push (aplikacja zamknięta) ma te same przyciski co powiadomienie ze strony: „Gotowe” i — dla przypomnień jednorazowych — „Odłóż 10 min”. Gdy żadna karta aplikacji nie jest otwarta, przycisk otwiera aplikację i wykonuje akcję po wczytaniu notatek (toast „Przypomnienie odhaczone” / „Odłożono o 10 minut”). Skrót z ikony, udostępnienie i powiadomienie otwierają istniejące okno aplikacji zamiast nowego.
@@ -4569,6 +4578,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy.** Vitest: `src/lib/study/billing.test.ts` (tabela przypadków `billingStatement`, wpłaty i nadpłata, grosze, tekst i CSV, `cleanPayment`, wpłaty w Yjs: scalanie i kopia). E2E: `e2e/site-billing.spec.ts` (ryczałt + odhaczony etap, zaliczka, „Zostało”, cofnięcie usunięcia, tekst w schowku, zapis po odświeżeniu).
 - **Commit.** `ba84780` (2026-10-30).
 
+## Praca: należności w jednej liście — sama funkcja (R3.1 i R3.4, plan 2026-11-15)
+
+- **Co robi.** Jeszcze nic na ekranie. Jest gotowe liczenie pod ekran „Należności”: jedna lista tego, co czeka na zapłatę — saldo budów, zlecenia zrobione i niezapłacone, faktury wystawione bez wpłaty — od najdłużej czekających, z sumą i procentem wpłaconym (pod pasek „zapłacono 40%”).
+- **Gdzie.** `src/lib/study/receivables.ts` (`receivables`, `Receivable`, `ReceivablesInput`, `Receivables`, `REMIND_AFTER_DAYS`).
+- **Jak działa.** Czysta funkcja, bez nowych danych. Wiersz `site` powstaje z `billingStatement` budowy, gdy `due > 0` (zestawienia liczy wywołujący, bo potrzebują godzin z Grafiku); czeka od ostatniej wpłaty albo od założenia karty. Strona zlecenia daje najwyżej jeden wiersz na budowę, żeby nie liczyć tej samej kwoty dwa razy: zlecenie „zapłacone” — nic; „zrobione” — wiersz `job` z `quoteSummary` (z numerem i terminem faktury, jeśli jest); faktura wystawiona wcześniej albo bez zlecenia — wiersz `invoice` na kwotę brutto faktur budowy razem z korektami, pomniejszoną o wpłaconą zaliczkę. Faktura nie ma pola „zapłacona” — rozlicza ją status zlecenia. Dni liczone `daysWaiting` (odporne na zmianę czasu); `overdueDays` — od terminu płatności z faktury. Sortowanie: większa z liczb dni czekania i dni po terminie, potem kwota.
+- **Ograniczenia.** Budowa z rozliczeniem dla szefa i własnym zleceniem daje dwa wiersze — to dwa różne źródła pieniędzy. Fakturę bez zlecenia da się „zapłacić” tylko przez status zlecenia, więc taka faktura zostaje na liście. Ekran, pasek wpłaty i miejsce w zakładkach czekają na decyzję PR-2.
+- **Testy.** Brak (zlecenie Z-14.1).
+- **Commit.** Niezacommitowane (2026-11-16).
+
 ## Praca i Grafik: „Z budów” w podsumowaniu miesiąca (H3.3, plan 2026-10-29)
 
 - **Co robi.** W podsumowaniu miesiąca w Grafiku, pod „Razem brutto”, jest zwijana linia **„Z budów — punkty, ryczałt”** z kwotą. Rozwinięta pokazuje budowy z rozbiciem (np. „Lipowa 5 · 2 punkty · 1 etap”) i „Razem z godzinami z Grafiku”. Bez takich zarobków w miesiącu linii nie ma.
@@ -5812,6 +5830,30 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Ograniczenia:** nie ma komunikatu „trwa w innej karcie” — druga karta po prostu czeka. Ostrzeżenia „magazyn nietrwały po 7 dniach” nie dodano (jest tylko status trwałości).
 - **Testy:** `src/lib/tabLock.test.ts`, `src/lib/storagePersistence.test.ts`, istniejące `saveStatus.test.ts`.
 - **Commit:** zob. `git log` (2026-11-15).
+
+## Pewność danych — kilka kart naraz: karta prowadząca przekaźnik, odśmiecanie obrazów (Z-7, Z-6, 2026-11-16)
+
+- **Co robi:** przy kilku otwartych kartach przekaźnik prowadzi jedna z nich, a pozostałe pokazują w Ustawieniach → Sync „Synchronizuje inna karta tej przeglądarki”. Po zamknięciu prowadzącej rolę przejmuje następna. Obrazy odśmieca jedna karta naraz. Zdjęcie dodane ponownie po dłuższym czasie nie znika, a obraz pobrany w jednej karcie jest od razu widoczny w pozostałych.
+- **Gdzie jest:**
+  - `src/lib/tabLock.ts`: `holdTabRole(nazwa, onAcquire, onWait)` (rola trzymana do zwolnienia albo zamknięcia karty), `withLockIfFree(nazwa, fn)` (uruchom tylko, gdy wolne), stałe `RELAY_ROLE`, `GC_LOCK`.
+  - `src/lib/sync/relayRuntime.ts`: `startRelay` prosi o rolę, właściwy start jest w `lead`; `RelayView.elsewhere`; `stopRelay` oddaje rolę.
+  - `src/lib/imageStore.ts`: `putBytes` (odnowienie daty), `collectGarbage` z `deleteIfStale`, kanał `kaczy-images:<baza>`.
+  - `src/hooks/useNotes.ts`: odśmiecanie pod `GC_LOCK`. `src/components/SyncSettings.tsx`: `relayStatusText`.
+- **Jak działa:**
+  - **Dokument między kartami** wymienia `tabSync.ts` (`BroadcastChannel`, start w `main.tsx`), więc edycja tej samej notatki w dwóch kartach scala się jak między urządzeniami. Na tym opiera się rola: zmiany karty czekającej dochodzą do prowadzącej z pochodzeniem `TAB_SYNC_ORIGIN`, które `RelayProvider` traktuje jak lokalne i wysyła. Zmiany z serwera wracają do pozostałych kart tą samą drogą.
+  - **Rola** to blokada Web Locks `notatnik-przekaznik` trzymana obietnicą bez końca. Najpierw idzie próba `ifAvailable` — tylko tak widać, że rolę ma ktoś inny — potem zwykłe czekanie w kolejce. Powód roli: kursor, wektor stanu i kolejka wysyłki leżą w jednej bazie `kaczy-relay`, więc dwie karty nadpisywały je sobie nawzajem i pobierały każdy blob podwójnie. Nowa prowadząca startuje od zapisanego wektora stanu i dosyła różnicę, więc nic nie ginie przy przejęciu.
+  - **Odśmiecanie:** data i usunięcie pliku są w jednej transakcji IndexedDB (`deleteIfStale`), plik po pliku — dawniej wszystkie kandydaty były czytane naraz z bajtami. `putBytes` dla znanego klucza czyta rekord: gdy go nie ma (skasowała go inna karta), zapisuje od nowa; gdy jest starszy niż dobę, odnawia `addedAt`. Karencja 7 dni liczy się więc od ostatniego dodania, nie od pierwszego.
+  - **Bezpiecznik:** gdy kandydatów jest ponad 20 i ponad połowa magazynu, przebieg nic nie kasuje i zapisuje ostrzeżenie w diagnostyce. Taki stan oznacza raczej niepełną listę używanych niż porządki użytkownika.
+  - **Kanał obrazów:** każda karta ma własny zbiór `known`. Zapis rozsyła `add` (druga karta dopisuje klucz, budzi `onAdded` i chroni plik w trwającym odśmiecaniu), usunięcie rozsyła `del`.
+- **Ograniczenia i pułapki:**
+  - Bez `navigator.locks` każda karta prowadzi przekaźnik sama, jak dawniej.
+  - Rola wymaga `BroadcastChannel`; obie funkcje są w tych samych wersjach przeglądarek, osobnego sprawdzenia nie ma.
+  - Prowadząca karta w tle ma dławione liczniki czasu, więc wysyłka zmian z karty widocznej może się opóźnić (zwykle sekundy, w skrajnym razie do minuty).
+  - P2P (WebRTC) nadal działa w każdej karcie osobno. Powiadomienia i automatyczna kopia do pliku nie mają jeszcze roli (zlecenia Z-7.2, Z-7.3).
+  - Po zadziałaniu bezpiecznika śmieci zostają do czasu, aż kandydatów ubędzie; nie ma ręcznego „sprzątnij mimo to”.
+  - Notatka prywatna nie może mieć plików (`privateNotes.lockNote` odmawia z powodem `has-files`), więc zablokowany skarbiec nie ukrywa żadnych odwołań przed odśmiecaniem.
+- **Testy:** istniejące `src/lib/imageStore.test.ts`, `tabLock.test.ts`, `tabSync.test.ts`, `src/lib/sync/*.test.ts` przechodzą. Nowych testów nie ma — przypadki są w zleceniach Z-6.T i Z-7.T (`docs/zlecenia-fable-2026-11-15.md`).
+- **Commit:** zob. `git log` (2026-11-16).
 
 ## Architektura — warstwy `lib ← hooks ← components` (A1.1–A1.4, A1.6 planu architektury, 2026-11-15)
 

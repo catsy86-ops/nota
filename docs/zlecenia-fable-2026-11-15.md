@@ -194,7 +194,29 @@ Przegląd przez czytanie `relayProvider.ts`, `relayRuntime.ts`, `relay-server/co
 1. Test „każdy zapis ma czytelnika”: dla każdej ścieżki zapisu z listy wyżej test tworzy obiekt przez publiczne API działu, cofa zegar o 8 dni, uruchamia `collectGarbage(referencedImages())` i sprawdza, że bajty zostały. Osobny przypadek z zablokowanym skarbcem.
 2. Test statyczny: lista plików importujących `putBlob`/`putBytes` porównana z listą zatwierdzoną w teście; nowy plik zapisujący obrazy wywala test, dopóki ktoś nie dopisze przypadku do punktu 1.
 3. Jedno źródło listy: `useNotes.ts` ma wołać samo `yjsStore.referencedImages()`; jeśli `journalImageRefs` zwraca coś ponad `journalRefsIn`, przenieść to do `journalRefs.ts`.
-4. Bezpiecznik w `collectGarbage`: gdy kandydatów jest więcej niż połowa magazynu i więcej niż 20, nic nie kasować i zapisać ostrzeżenie w diagnostyce.
+4. Bezpiecznik w `collectGarbage`: gdy kandydatów jest więcej niż połowa magazynu i więcej niż 20, nic nie kasować i zapisać ostrzeżenie w diagnostyce. — **ZROBIONE 2026-11-16.**
+
+### Przegląd Fable 2026-11-16 (zrobione w kodzie)
+
+Sprawdzone punkty z „Do sprawdzenia”:
+
+- **Notatki prywatne:** nie mogą mieć plików — `privateNotes.lockNote` odmawia z `has-files`. Zablokowany skarbiec nie ukrywa odwołań. Ryzyka nie ma.
+- **Podpis:** odwołania zbiera `signatureRefsIn`. **Zdjęcia punktów i usterek** trafiają do wpisów dziennika (`images`, `after`), czyta je `journalRefsIn`.
+- **Szkic w `AddNoteBar`:** obrazy są tylko w stanie Reacta (bez zapisu), chroni je karencja. Szkic i edycja wpisu dziennika: `journalImageRefs`.
+
+Błędy znalezione i poprawione w `src/lib/imageStore.ts`:
+
+- `putBytes` dla znanego klucza nie odnawiał `addedAt`. Stary osierocony plik dodany ponownie mógł zniknąć przy najbliższym odśmiecaniu, zanim notatka się zapisała. Teraz rekord starszy niż doba dostaje nową datę.
+- Zbiór `known` jest osobny w każdej karcie. Po skasowaniu pliku w innej karcie `putBytes` uznawał go za obecny i nic nie zapisywał. Teraz czyta rekord i w razie braku zapisuje od nowa; karty wymieniają `add`/`del` kanałem `kaczy-images:<baza>`.
+- Sprawdzenie daty i usunięcie były osobnymi operacjami, a wszystkie kandydaty czytano naraz z bajtami. Teraz jedna transakcja na plik (`deleteIfStale`).
+- Odśmiecanie biegnie pod blokadą `notatnik-gc` (jedna karta naraz).
+
+**Zostaje dla Opus/Sonnet:**
+
+- **Z-6.T (Sonnet, S)** — testy nowych zachowań w `imageStore.test.ts`: (a) ponowne `putDataUrl` rekordu starszego niż karencja → `collectGarbage(new Set())` zwraca 0; (b) dwa magazyny na tej samej bazie: `add` z A widać w `b.has()` i w `onAdded`, po odśmieceniu w B `a.has()` jest fałszem, a ponowne `put` w A odtwarza bajty; (c) bezpiecznik: 30 plików, 5 używanych → 0 usuniętych; 20 używanych → 10 usuniętych. Wszystkie trzy przypadki Fable uruchomił jako test roboczy — przechodzą.
+- **Z-6.1–Z-6.3 (Opus, M)** — punkty 1–3 wyżej bez zmian (test „każdy zapis ma czytelnika”, test statyczny, jedno źródło listy).
+- **Z-6.5 (Opus, S)** — trwałe usunięcie notatki z „Cofnij” tuż przy starcie odśmiecania: jeśli plik jest starszy niż 7 dni, cofnięcie przywraca notatkę bez obrazu. Okno jest wąskie (odśmiecanie biega raz, po starcie). Propozycja: przy trwałym usunięciu odnowić `addedAt` plików notatki (`images.touch`), wtedy karencja liczy się od usunięcia.
+- **Z-6.6 (decyzja właściciela)** — po zadziałaniu bezpiecznika śmieci zostają na stałe. Czy dodać w Ustawieniach → Kopia i dane przycisk „Usuń nieużywane pliki (N)” z potwierdzeniem?
 
 ---
 
@@ -217,6 +239,22 @@ Q1.1 w `plan-qol-platforma-2026-11-15.md` obejmuje tylko migracje i import kopii
 Zasady: blokada wyłączna tylko dla operacji krótkich i nieodwracalnych; dla długotrwałych — rola karty prowadzącej (`navigator.locks.request(nazwa, { mode: "exclusive" }, () => obietnica bez końca)`), przejmowana automatycznie po zamknięciu karty. Bez `navigator.locks` (starsze WebView) zachowanie jak dziś, bez komunikatu. Druga karta nie blokuje pisania — pokazuje tylko „trwa w innej karcie” przy operacji wyłącznej.
 
 **Z-7 (Opus, M):** rozszerzyć Q1.1 o tę tabelę, zacząć od sprawdzenia, jak karty wymieniają dokument.
+
+### Stan po przeglądzie Fable 2026-11-16
+
+- **Edycja tej samej notatki — sprawdzone, bez ryzyka.** Karty dzielą dokument przez `tabSync.ts` (`BroadcastChannel`, start w `main.tsx`).
+- **Migracje, import kopii, faktura** — były zrobione wcześniej (`withExclusiveLock`).
+- **Odśmiecanie** — zrobione: `withLockIfFree(GC_LOCK)` w `useNotes.ts`, szczegóły w Zadaniu 6.
+- **Przekaźnik** — zrobione: `holdTabRole(RELAY_ROLE)` w `relayRuntime.ts`. Karta czekająca pokazuje „Synchronizuje inna karta tej przeglądarki”. Jej zmiany idą przez `tabSync` do prowadzącej i stamtąd na serwer. Sprawdzone ręcznie na prawdziwym Web Locks (Node): kolejność przejęcia, zwolnienie czekającej, `withLockIfFree` przy zajętej roli.
+
+**Zostaje dla Opus/Sonnet:**
+
+- **Z-7.T (Sonnet, S)** — testy `holdTabRole` i `withLockIfFree` w `tabLock.test.ts`. Uwaga: jsdom w Vitest nie ma `navigator.locks`, więc bez atrapy test sprawdza tylko ścieżkę zapasową. Potrzebna prosta atrapa `locks.request` (kolejka, `ifAvailable`, `signal`) albo środowisko `node` dla tego pliku (Node 24 ma Web Locks). Przypadki: pierwsza karta dostaje rolę bez `onWait`; druga dostaje `onWait`, a rolę po zwolnieniu pierwszej; zwolnienie czekającej nie woła `onAcquire`; podwójne zwolnienie nie szkodzi; `withLockIfFree` zwraca `null`, gdy zajęte.
+- **Z-7.1 (Opus, S)** — zmiana hasła skarbca i reset kodem pod `withExclusiveLock("notatnik-skarbiec")`; po wejściu w blokadę odczytać nagłówek skarbca od nowa (druga karta mogła już zmienić klucz).
+- **Z-7.2 (Opus, M)** — harmonogram przypomnień i Web Push pod rolą `holdTabRole("notatnik-przypomnienia")`. Ryzyko jest małe, bo powiadomienia mają `tag` i system je scala; zrobić dopiero, gdy pojawi się zgłoszenie podwójnego dźwięku.
+- **Z-7.3 (Opus, S)** — automatyczna kopia do pliku pod `withLockIfFree`: gdy inna karta właśnie zapisuje, ta pomija przebieg.
+- **Z-7.4 (Sonnet, S)** — e2e na dwóch stronach jednego kontekstu z lokalnym przekaźnikiem: druga karta pokazuje „Synchronizuje inna karta”, po zamknięciu pierwszej przechodzi w „Połączono”, zmiana z drugiej karty dochodzi do drugiego kontekstu. Dotychczasowe testy przekaźnika używają osobnych kontekstów, więc rola ich nie dotyczy.
+- **Znane ograniczenie (bez zlecenia):** prowadząca karta w tle ma dławione liczniki czasu, więc wysyłka zmian z widocznej karty czekającej może się opóźnić do około minuty. Naprawa wymagałaby oddawania roli przy ukryciu karty; warto dopiero po zgłoszeniu.
 
 ---
 
@@ -315,6 +353,39 @@ Z lektury `data.ts` **[kod]** — przypadki, których dziś nikt nie sprawdza:
 6. Wyjątek z `yStudy.mergeIn` nie blokuje `ready` (widok nie zostaje na szkielecie).
 
 **Z-12 (Sonnet, S).**
+
+---
+
+## Zadanie 13 — APK z alarmami telefonu (F1, kod zrobiony 2026-11-16, nie sprawdzony na telefonie)
+
+Stan i decyzje: ADR-8 w `docs/adr.md`, opis w `opis.md` („Telefon — aplikacja Android”). Przyjęte N-1…N-3 według ustawień domyślnych planu: APK tak, plik z GitHub Actions poza sklepem, PWA zostaje.
+
+### Zlecenia (Opus/Sonnet)
+
+- **Z-13.1 (Sonnet) — testy `src/lib/reminders/nativePlan.ts`.** `alarmId`: stały dla klucza, w zakresie 1…2^31−2, nigdy `SENTINEL_ID`. `toAlarms`: dwa klucze o tym samym skrócie dostają różne id, wynik nie zależy od kolejności wejścia. `planNative`: niezmieniony alarm nie trafia ani do `cancel`, ani do `schedule`; zmiana treści albo godziny → anulowanie i ponowne zaplanowanie; alarm spoza planu → anulowanie; alarm obcy (bez `extra.h`) → anulowanie. `sentinelFor`: brak, gdy nic nie wypada w ostatnich 2 dniach horyzontu; godzina zaokrąglona w dół. `channelOf`: nieznana kategoria → `notki-inne`.
+- **Z-13.2 (Sonnet) — test `scripts/cap-prepare.mjs`** obok `securityHeaders.test.ts`: `cspForMeta` usuwa tylko `frame-ancestors`, `report-uri`, `report-to`, `sandbox`; `withCspMeta` wstawia znacznik przed pierwszym `<script>`, odmawia przy drugim wstawieniu i przy braku `<meta charset>`; cudzysłów w polityce jest zamieniany na encję. To zamyka też Q2.2.
+- **Z-13.3 (Sonnet) — test wyboru ujścia (`sink.ts`):** bez `window.Capacitor` → `webpush` według `pushPrefs`; z atrapą `isNativePlatform() === true` → `native` według `nativeAlarmPrefs`; wyłączone → `null`. `nativeSink.replace` z atrapą wtyczki: dwa wywołania naraz idą po kolei; błąd wtyczki zapisuje `last.ok === false` i nie zrywa kolejki.
+- **Z-13.4 (Opus) — pliki w powłoce (F1.4).** `downloadBlob` w WebView nie zapisze pliku. Gałąź natywna: `@capacitor/filesystem` (katalog pamięci podręcznej) + `@capacitor/share`, ładowane dynamicznie jak `nativeSink`. Sprawdzić wszystkie wywołania `downloadBlob`, `shareOrCopy`, `showSaveFilePicker` i `navigator.share` z plikami; `SpeechRecognition.available()` w WebView (pułapka z pamięci: wywraca kartę). Bez wzrostu paczki startowej PWA.
+- **Z-13.5 (`security-reviewer`) — przegląd powłoki:** manifest (uprawnienia, `allowBackup`, eksportowane komponenty), CSP w `<meta>` wobec mostu Capacitora, obsługa akcji powiadomień (`onAction` — czy dane z `extra` nie pozwalają otworzyć obcego adresu), workflow (sekrety, uprawnienia `contents: read`, usuwanie klucza).
+- **Z-13.6 (Sonnet) — ikony aplikacji** z `public/` do `android/app/src/main/res/mipmap-*` (np. `@capacitor/assets` uruchomione w CI, nie lokalnie — dysk).
+
+### Kroki właściciela
+
+1. Utworzyć klucz podpisu (`keytool -genkeypair -v -keystore notki.jks -alias notki -keyalg RSA -keysize 4096 -validity 10000`), zachować kopię poza repozytorium, wpisać cztery sekrety w GitHub (nazwy w `.github/workflows/android.yml`). Utrata klucza = brak aktualizacji bez odinstalowania.
+2. Wypchnąć gałąź i uruchomić workflow „Android APK” ręcznie; pobrać artefakt `notki-apk`.
+3. Próba F1.0 na telefonie: instalacja; „Alarmy telefonu” włączone; „Próbny alarm za minutę” przy zamkniętej aplikacji; po restarcie telefonu; w trybie samolotowym; po nocy w trybie oszczędzania baterii; przyciski powiadomienia (odłóż, zrobione) przy zamkniętej aplikacji; czy aplikacja w ogóle startuje (most Capacitora pod CSP). Wynik wpisać do ADR-8 — od niego zależy „idziemy dalej / wracamy do Web Push”.
+
+---
+
+## Zadanie 14 — plan Pracy z 2026-11-15 (`docs/plan-praca-2026-11-15.md`)
+
+Zrobione przez Fable: czysta funkcja należności `src/lib/study/receivables.ts` (R3.1 bez ekranu, dane pod R3.4). Etap 1 (R1.1–R1.4) to pomiary właściciela na telefonie — nie da się ich zrobić w kodzie. Reszta poniżej.
+
+- **Z-14.1 (Sonnet) — testy `receivables.ts`.** Tabela przypadków: budowa z saldem i bez; nadpłata nie daje wiersza; czekanie od ostatniej wpłaty, a bez wpłat od `siteCreated`; zlecenie „zrobione” z zaliczką (`paidPct`); „zapłacone” znika razem z fakturą; faktura przed „zrobione” daje wiersz `invoice`, po „zrobione” — tylko wiersz `job` z numerem faktury; korekta do zera usuwa wiersz; faktura bez zlecenia; `overdueDays` po terminie i przed; sortowanie i suma; zmiana czasu między `since` a `now`.
+- **Z-14.2 (Opus, po decyzji PR-2) — ekran „Należności” (R3.1, R3.4).** Skill `frontend-design` przed kodem. Zestawienia budów: `billingStatement` dla każdej niearchiwalnej karty z rozliczeniem (wejście jak w `SiteBillingDues.tsx`; godziny z `siteMinutesInRange`) — policzyć raz w hooku i podać jako `statements`. Wiersz: nazwa budowy, kwota „zostało”, dni, pasek `paidPct`, numer faktury i „po terminie N dni”; akcje: przypomnienie (`PaymentReminderButton`), otwarcie karty budowy albo zlecenia. `unpaidTotal` w `JobsDialog` i liczba na Dziś mają brać sumę z tej samej funkcji.
+- **Z-14.3 (Opus) — R2.1 podział `JournalEntrySheet.tsx` i R2.2 `SiteCardDialog.tsx`.** Mechaniczne, bez zmiany zachowania; przed i po `e2e` dziennika i karty budowy (na prośbę właściciela). Uwaga na CRLF i bajty zerowe przy skryptowych edycjach.
+- **Z-14.4 (Sonnet) — R3.2 oś zlecenia, R3.5 paczka dla księgowej, R2.3–R2.6, Etap 4** według planu; każde osobno, z testem Vitest logiki.
+- **Decyzje PR-1…PR-3** czekają na właściciela.
 
 ---
 

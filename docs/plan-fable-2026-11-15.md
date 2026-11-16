@@ -8,6 +8,8 @@ Zasada dla wykonawcy: przed każdym punktem sprawdź stan w kodzie, a nie w liś
 
 ---
 
+> **Stan 2026-11-16:** F1.1–F1.3 w kodzie (port, ujście natywne, Ustawienia, powłoka, workflow) — ADR-8 przyjęty z N-1…N-3 domyślnymi. Niezrobione: F1.0 (próba na telefonie — kroki właściciela), F1.4 (pliki w powłoce), testy. Zlecenia: zadanie 13 w `zlecenia-fable-2026-11-15.md`.
+
 ## F1. Powiadomienia przy zamkniętej aplikacji bez serwera (propozycja ADR-8)
 
 ### Stan dziś
