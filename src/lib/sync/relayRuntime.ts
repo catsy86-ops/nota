@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { mayLeaveDevice, sizeCappedRefsIn } from "@/lib/plans/planRefs";
-import { createStore, get as idbGet, set as idbSet, del as idbDel, type UseStore } from "idb-keyval";
+import { createStore, get as idbGet, set as idbSet, del as idbDel, clear as idbClear, type UseStore } from "idb-keyval";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { toast } from "@/lib/notify";
@@ -144,6 +144,14 @@ export function idbRelayStore(roomId: string): RelayStore {
       await idbSet(stateKey, state, db());
     },
   };
+}
+
+/**
+ * Usuwa kursory i kolejki **wszystkich** pokoi (wymiana całego dokumentu, Z-16.1B): kolejka wysyłki ze starego
+ * dokumentu po wymianie odesłałaby grupie stan, który miał zniknąć.
+ */
+export async function clearRelayState(): Promise<void> {
+  await idbClear(db());
 }
 
 /** Usuwa lokalny kursor i kolejkę pokoju (po wymianie kodu i po dołączeniu nowym kodem po `rekeyed`). */

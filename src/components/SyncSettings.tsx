@@ -6,6 +6,7 @@ import { lazy, Suspense } from "react";
 const QrScanDialog = lazy(() => import("@/components/sync/QrScanDialog").then((m) => ({ default: m.QrScanDialog })));
 import { Wifi, WifiOff, Copy, Check, LogOut } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleRow } from "@/components/settings/SettingsShared";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,10 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
   const [v3For, setV3For] = useState<string | null>(null);
   const [shortOpen, setShortOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  // Z-16.1B: dołączenie z wymianą danych tego urządzenia na dane grupy (po przywróceniu całego dokumentu na innym).
+  const [replaceLocal, setReplaceLocal] = useState(false);
+  const [confirmReplace, setConfirmReplace] = useState(false);
+  const [replacing, setReplacing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [forgetOpen, setForgetOpen] = useState(false);
   const [legacyRoom, setLegacyRoomState] = useState(() => getLegacyRoom());
@@ -106,9 +111,23 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
 
   function handleJoin() {
     if (!joinCode) return;
+    if (replaceLocal) { setConfirmReplace(true); return; }
     if (!joinWithCode(joinCode, { v3: v3For === joinCode })) return;
     setV3For(null);
     toast.success("Dołączono do grupy synchronizacji");
+  }
+
+  async function joinReplacing() {
+    if (!joinCode) return;
+    setReplacing(true);
+    try {
+      const { requestDocReplace } = await import("@/lib/docReplace");
+      await requestDocReplace({ kind: "empty", join: joinCode, v3: v3For === joinCode });
+    } catch (err) {
+      setReplacing(false);
+      setConfirmReplace(false);
+      toast.error("Nie zaczęto wymiany danych" + (err instanceof Error ? `: ${err.message}` : "") + ". Dane są bez zmian.");
+    }
   }
 
   function focusJoin() {
@@ -356,6 +375,29 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
           <Button type="button" variant="outline" onClick={() => setScanOpen(true)} className="coarse:h-11">Zeskanuj kod</Button>
           <Button type="submit" disabled={!joinReady} className="coarse:h-11">Dołącz</Button>
         </form>
+        <label className="flex items-start gap-2 text-xs">
+          <Checkbox className="mt-0.5" checked={replaceLocal} onCheckedChange={(v) => setReplaceLocal(v === true)} />
+          <span>
+            Zastąp dane na tym urządzeniu danymi grupy
+            <span className="block text-2xs text-muted-foreground">Gdy na innym urządzeniu przywrócono cały dokument z kopii. Bez tego dane tego urządzenia scalą się z grupą i cofną przywrócenie.</span>
+          </span>
+        </label>
+        <AlertDialog open={confirmReplace} onOpenChange={(o) => { if (!replacing) setConfirmReplace(o); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Zastąpić dane na tym urządzeniu?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Wszystkie dane w aplikacji na tym urządzeniu zostaną usunięte i zastąpione danymi grupy (zostanie ich kopia na 30 dni w Ustawieniach → Kopia i dane). Aplikacja przeładuje się, także w innych otwartych kartach.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={replacing}>Anuluj</AlertDialogCancel>
+              <AlertDialogAction disabled={replacing} onClick={(e) => { e.preventDefault(); void joinReplacing(); }}>
+                {replacing ? "Zapisuję kopię obecnych danych…" : "Zastąp i dołącz"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <p id="sync-join-hint" className="text-2xs text-muted-foreground">
           Kod z drugiego urządzenia (12 albo 28 znaków) — możesz wkleić cały link. Starszy, 8-znakowy kod już nie zadziała — wygeneruj nowy.{" "}
           <button

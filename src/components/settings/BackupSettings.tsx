@@ -19,6 +19,7 @@ import { ResetSectionButton, Section } from "./SettingsShared";
 import { LastImportUndo } from "./LastImportUndo";
 import { AboutPanel } from "@/components/AboutPanel";
 import { viewLabel } from "@/lib/viewMeta";
+import { DailySnapshotRestore } from "./DailySnapshotRestore";
 import { listDailySnapshots, readSnapshotStatus, unpinDailySnapshot, SNAPSHOT_LAST_KEY, type SnapshotEntry } from "@/lib/dailySnapshot";
 
 function formatBytes(bytes: number | null): string {
@@ -124,6 +125,7 @@ function DailySnapshotHealth() {
  */
 function DailySnapshots() {
   const [list, setList] = useState<SnapshotEntry[] | null | undefined>(undefined);
+  const [restoreFrom, setRestoreFrom] = useState<SnapshotEntry | null>(null);
   const load = () => { listDailySnapshots().then(setList, () => setList(null)); };
   useEffect(load, []);
   if (!list) return null;
@@ -146,13 +148,20 @@ function DailySnapshots() {
       ) : (
         <ul className="rounded-card border border-border/60 bg-muted/20 divide-y divide-border/60 text-xs" aria-label="Kopie dzienne">
           {list.map((e) => (
-            <li key={e.file} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
+            <li key={e.ref} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
               <span className="font-medium text-foreground tabular-nums">{new Date(e.createdAt).toLocaleDateString("pl-PL")}</span>
+              {e.kind === "before" && <span className="text-muted-foreground">sprzed przywrócenia, {new Date(e.createdAt).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}</span>}
               <span className="text-muted-foreground tabular-nums">
                 {e.notes !== null && `${notesLabel(e.notes)} · `}{formatBytes(e.bytes)}
               </span>
               {e.state === "broken" && <span className="text-warning-ink">uszkodzona</span>}
               {e.state === "newer" && <span className="text-warning-ink">zapisana przez nowszą wersję aplikacji</span>}
+              {e.state === "ok" && (
+                <Button type="button" size="sm" variant="outline" className={e.pinned ? "" : "ml-auto"} onClick={() => setRestoreFrom(e)}
+                  aria-label={`Przywróć notatki z kopii z ${new Date(e.createdAt).toLocaleDateString("pl-PL")}`}>
+                  Przywróć…
+                </Button>
+              )}
               {e.pinned && (
                 <span className="ml-auto flex items-center gap-2">
                   <span className="text-foreground">przypięta</span>
@@ -162,6 +171,9 @@ function DailySnapshots() {
             </li>
           ))}
         </ul>
+      )}
+      {restoreFrom && (
+        <DailySnapshotRestore snapshotRef={restoreFrom.ref} createdAt={restoreFrom.createdAt} open onOpenChange={(o) => { if (!o) setRestoreFrom(null); }} />
       )}
       {list.some((e) => e.pinned) && (
         <p className="ui-hint mt-1.5">Przypięta kopia jest sprzed dnia, w którym ubyło ponad połowę notatek. Nie znika z 7 ostatnimi dniami, dopóki jej nie odepniesz.</p>

@@ -17,6 +17,9 @@ import { logDiag } from "@/lib/diagnostics";
  */
 
 export const SNAPSHOT_DIR = "kopie-dzienne";
+/** Kopie sprzed wymiany dokumentu (Z-16.1B): wymianę da się cofnąć tą samą ścieżką; usuwane po 30 dniach. */
+export const BEFORE_DIR = "kopie-przed-przywroceniem";
+export const BEFORE_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
 export const SNAPSHOT_INDEX = "indeks.json";
 export const SNAPSHOT_KEEP = 7;
 /** Przypięcie poprzedniej, gdy nowa ma mniej niż połowę jej notatek, a poprzednia miała co najmniej tyle. */
@@ -50,6 +53,10 @@ export type SnapshotState = "ok" | "broken" | "newer";
 
 export interface SnapshotEntry {
   file: string;
+  /** `katalog/plik` — do `readSnapshotFile` i zamiaru wymiany dokumentu. */
+  ref: string;
+  /** „daily” — kopia dzienna (rotacja), „before” — kopia sprzed wymiany dokumentu (30 dni, poza rotacją). */
+  kind: "daily" | "before";
   /** Z nagłówka; dla pliku uszkodzonego — północ dnia z nazwy. */
   createdAt: number;
   notes: number | null;
@@ -178,7 +185,7 @@ async function writeIndex(env: SnapshotEnv, dir: FileSystemDirectoryHandle, entr
 }
 
 /** Jeden plik, sprawdzony w całości; `null`, gdy go nie ma. */
-async function readEntry(dir: FileSystemDirectoryHandle, file: string, pinned: string | null): Promise<SnapshotEntry | null> {
+async function readEntry(dir: FileSystemDirectoryHandle, file: string, pinned: string | null, kind: SnapshotEntry["kind"] = "daily"): Promise<SnapshotEntry | null> {
   let parsed: ParsedSnapshot = { state: "broken", header: null };
   let size = 0;
   try {
@@ -192,6 +199,8 @@ async function readEntry(dir: FileSystemDirectoryHandle, file: string, pinned: s
   const h = parsed.header;
   return {
     file,
+    ref: `${kind === "daily" ? SNAPSHOT_DIR : BEFORE_DIR}/${file}`,
+    kind,
     createdAt: h && typeof h.createdAt === "number" ? h.createdAt : dayFromName(file),
     notes: h && typeof h.notes === "number" ? h.notes : null,
     bytes: size,
@@ -202,19 +211,19 @@ async function readEntry(dir: FileSystemDirectoryHandle, file: string, pinned: s
 }
 
 /** Wszystkie pliki migawek, od najnowszej, każdy sprawdzony (nagłówek, długość, skrót). */
-async function scan(dir: FileSystemDirectoryHandle): Promise<SnapshotEntry[]> {
-  const pinned = (await readIndex(dir))?.pinned ?? null;
+async function scan(dir: FileSystemDirectoryHandle, kind: SnapshotEntry["kind"] = "daily"): Promise<SnapshotEntry[]> {
+  const pinned = kind === "daily" ? (await readIndex(dir))?.pinned ?? null : null;
   const out: SnapshotEntry[] = [];
   for (const file of await fileNames(dir)) {
-    const e = await readEntry(dir, file, pinned);
+    const e = await readEntry(dir, file, pinned, kind);
     if (e) out.push(e);
   }
   return out;
 }
 
-async function snapshotDir(env: SnapshotEnv): Promise<FileSystemDirectoryHandle | null> {
+async function snapshotDir(env: SnapshotEnv, name: string = SNAPSHOT_DIR): Promise<FileSystemDirectoryHandle | null> {
   const root = await env.root();
-  return root ? root.getDirectoryHandle(SNAPSHOT_DIR, { create: true }) : null;
+  return root ? root.getDirectoryHandle(name, { create: true }) : null;
 }
 
 /**
@@ -311,7 +320,7 @@ export async function takeDailySnapshot(src: SnapshotSource, env: SnapshotEnv = 
         return "error";
       }
 
-      const fresh: SnapshotEntry = { file: name, createdAt: header.createdAt, notes: header.notes, bytes: bytes.length, state: "ok", pinned: false, sha256: header.sha256 };
+      const fresh: SnapshotEntry = { file: name, ref: `${SNAPSHOT_DIR}/${name}`, kind: "daily", createdAt: header.createdAt, notes: header.notes, bytes: bytes.length, state: "ok", pinned: false, sha256: header.sha256 };
       // Najwyżej jedna przypięta: nowsza zastępuje starszą (starsza wraca do rotacji).
       if (pinLatest) entries = entries.map((e) => ({ ...e, pinned: e === latest }));
       entries = [fresh, ...entries];
@@ -333,11 +342,61 @@ export async function takeDailySnapshot(src: SnapshotSource, env: SnapshotEnv = 
   return r;
 }
 
-/** Lista do Ustawień; `null`, gdy OPFS niedostępny (funkcja ukryta). */
+const REF = /^(kopie-dzienne|kopie-przed-przywroceniem)\/([\w.-]+\.nkopia)$/;
+
+/**
+ * Treść kopii (update V2) po sprawdzeniu nagłówka, długości i skrótu — do przywracania (Z-16.1B). `ref` to
+ * `katalog/plik` (`SnapshotEntry.ref`); inny kształt, uszkodzona albo nowszego formatu kopia — rzuca.
+ */
+export async function readSnapshotFile(ref: string, env: SnapshotEnv = browserEnv): Promise<{ header: SnapshotHeader; body: Uint8Array }> {
+  const m = REF.exec(ref);
+  if (!m) throw new Error("Zła nazwa kopii");
+  const dir = await snapshotDir(env, m[1]);
+  if (!dir) throw new Error("Kopie dzienne są niedostępne w tej przeglądarce");
+  const file = m[2];
+  const bytes = await readBytes(dir, file);
+  const parsed = await parseSnapshot(bytes ?? new Uint8Array());
+  if (parsed.state === "newer") throw new Error("Kopia jest zapisana przez nowszą wersję aplikacji");
+  if (parsed.state !== "ok") throw new Error("Kopia jest uszkodzona");
+  return { header: parsed.header, body: parsed.body };
+}
+
+export function readDailySnapshot(file: string, env: SnapshotEnv = browserEnv) {
+  return readSnapshotFile(`${SNAPSHOT_DIR}/${file}`, env);
+}
+
+/**
+ * Kopia bieżącego stanu przed wymianą dokumentu (§1.6 p. 1), w osobnym katalogu poza rotacją. Zapis, odczyt
+ * i sprawdzenie skrótu; kopie starsze niż 30 dni są przy okazji usuwane. Zwraca `ref`. Każdy błąd rzuca —
+ * bez tej kopii wymiany nie wolno zacząć.
+ */
+export async function saveBeforeReplace(src: SnapshotSource, env: SnapshotEnv = browserEnv): Promise<string> {
+  const dir = await snapshotDir(env, BEFORE_DIR);
+  if (!dir) throw new Error("Brak miejsca na kopię w tej przeglądarce");
+  const now = env.now();
+  const p2 = (n: number) => String(n).padStart(2, "0");
+  const name = `przed-przywroceniem-${localDayKey(now)}-${p2(now.getHours())}${p2(now.getMinutes())}${p2(now.getSeconds())}.nkopia`;
+  const { bytes, header } = await encodeSnapshot(src.encode(), { createdAt: now.getTime(), notes: src.notes(), sv: await sha256Hex(src.stateVector()) });
+  await env.write(dir, name, bytes);
+  const check = await parseSnapshot((await readBytes(dir, name)) ?? new Uint8Array());
+  if (check.state !== "ok" || check.header.sha256 !== header.sha256) {
+    await remove(dir, name);
+    throw new Error("Kopia obecnych danych nie przeszła sprawdzenia");
+  }
+  for (const e of await scan(dir, "before")) {
+    if (e.file !== name && now.getTime() - e.createdAt > BEFORE_KEEP_MS) await remove(dir, e.file);
+  }
+  return `${BEFORE_DIR}/${name}`;
+}
+
+/** Lista do Ustawień: kopie dzienne i kopie sprzed wymiany, od najnowszej; `null`, gdy OPFS niedostępny (funkcja ukryta). */
 export async function listDailySnapshots(env: SnapshotEnv = browserEnv): Promise<SnapshotEntry[] | null> {
   try {
     const dir = await snapshotDir(env);
-    return dir ? await scan(dir) : null;
+    if (!dir) return null;
+    const before = await snapshotDir(env, BEFORE_DIR);
+    const all = [...(await scan(dir)), ...(before ? await scan(before, "before") : [])];
+    return all.sort((a, b) => b.createdAt - a.createdAt);
   } catch (err) {
     logDiag("info", "snapshot", "OPFS niedostępny", err);
     return null;

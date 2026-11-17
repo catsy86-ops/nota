@@ -121,6 +121,8 @@ export const FLUSH_TIMEOUT_MS = 15_000;
 export function trackPersistence(doc: DocLike, getPersistence: () => PersistenceLike) {
   doc.on("update", (_update: Uint8Array, origin: unknown) => {
     const persistence = getPersistence();
+    // Baza jeszcze nie otwarta (wymiana dokumentu przy starcie, Z-16.1B) — nie ma zapisu do śledzenia.
+    if (!persistence) return;
     // Wczytanie z IndexedDB nie jest zapisem.
     if (origin === persistence) return;
     writeStarted();

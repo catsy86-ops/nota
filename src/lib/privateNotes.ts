@@ -599,6 +599,32 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   }
 
   /**
+   * Z-16.1B: szyfrogram notatki z kopii dziennej pod **nowy** id (AAD = id, więc sam szyfrogram nie nadaje się do
+   * kopii). Wymaga odblokowanego skarbca z tym samym kluczem; inny klucz albo epoka — `null` (pozycja wyszarzona).
+   * `folderId` trafia też do metadanych w szyfrogramie, żeby zdjęcie blokady nie przeniosło kopii do starego folderu.
+   */
+  async function reencryptCopy(oldId: string, token: string, newId: string, folderId: string): Promise<{ token: string; content: PrivateContent } | null> {
+    const k = key;
+    if (!k || locking || rekeying) return null;
+    const epoch0 = sessionEpoch;
+    try {
+      const parsed = parseContent(await decryptNoteString(k, token, oldId, sessionEpoch));
+      const content: PrivateContent = { ...parsed, meta: { ...parsed.meta, folderId } };
+      const next = await encryptNoteWrite(k, JSON.stringify(content), newId, sessionEpoch);
+      if (key !== k || sessionEpoch !== epoch0) return null;
+      return { token: next, content };
+    } catch {
+      return null;
+    }
+  }
+
+  /** Po wstawieniu kopii (`reencryptCopy`) — treść od razu w pamięci, bez ponownego odszyfrowania. */
+  function adoptCopy(id: string, token: string, content: PrivateContent): void {
+    cache.set(id, { vault: token, content, dirty: false });
+    emit();
+  }
+
+  /**
    * 2.2: nowa notatka prywatna od pierwszego znaku. Szyfrogram powstaje od razu; w dokumencie
    * leży tylko pusta, zablokowana notatka z tokenem. Dalsze zmiany idą przez `yjsStore.patchNote`
    * (sink zapisu), więc jawny tekst nigdy nie trafia do Yjs.
@@ -717,7 +743,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     hasRecovery: () => Boolean(meta()?.recovery),
     ensureDecrypted,
     setup, unlock, unlockWithRecoveryCode, unlockWithPasskey, addPasskey, hasPasskeys, lock, flush,
-    lockNote, removeLock, duplicate, createNote, changePassword, resetPasswordWithRecovery,
+    lockNote, removeLock, duplicate, reencryptCopy, adoptCopy, createNote, changePassword, resetPasswordWithRecovery,
     retryInMs,
   };
 }

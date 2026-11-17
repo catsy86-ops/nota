@@ -52,6 +52,7 @@ import { setupFileLaunch } from "./lib/fileLaunch";
 import { requestPersistentStorage } from "./lib/storagePersistence";
 import { installGlobalDiagHandlers } from "./lib/diagnostics";
 import { startTabSync } from "./lib/tabSync";
+import { docGeneration, watchDocGeneration } from "./lib/docReplaceCore";
 import { yjsStore } from "./lib/yjsStore";
 import { hideBootSplash } from "./lib/bootSplash";
 import { installKeyboardInset } from "./lib/keyboardInset";
@@ -64,7 +65,9 @@ installPageHidden();
 if (import.meta.env.DEV) void import("./lib/perfProbe").then((m) => m.installPerfProbe());
 
 // Zmiany notatek i Grafiku od razu w innych kartach tej przeglądarki, także bez P2P.
-startTabSync(yjsStore.doc, "kaczy-yjs-v1", yjsStore.ready(), yjsStore.isPersistenceOrigin);
+startTabSync(yjsStore.doc, "kaczy-yjs-v1", yjsStore.ready(), yjsStore.isPersistenceOrigin, docGeneration());
+// Wymiana całego dokumentu w innej karcie (Z-16.1B): ta karta ma stary stan — przeładowanie.
+watchDocGeneration();
 
 createRoot(document.getElementById("root")!).render(<App />);
 hideBootSplash(yjsStore.ready());
