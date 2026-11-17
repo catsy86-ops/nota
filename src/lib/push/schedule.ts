@@ -55,8 +55,8 @@ export type PushCategoryId = (typeof PUSH_CATEGORIES)[number]["id"];
 /** Czy termin należy do kategorii wyłączonej przez użytkownika. */
 export function isPushCategoryOff(key: string, off: readonly string[] | undefined): boolean {
   if (!off?.length) return false;
-  const cat = PUSH_CATEGORIES.find((c) => c.prefixes.some((p) => key.startsWith(p)));
-  return cat !== undefined && off.includes(cat.id);
+  const cat = categoryOf(key);
+  return cat !== null && off.includes(cat);
 }
 /** Limit serwera (`push-server/core.js`, `LIMITS.items`). */
 export const PUSH_MAX_ITEMS = 200;
@@ -131,12 +131,15 @@ function noteItems(notes: readonly PushNote[], now: number, end: number): PushIt
     const repeat = ruleOf(n).kind;
     const lead = isLeadMinutes(n.reminderLead) ? n.reminderLead : 0;
     let at: number | null = n.reminder;
+    let leads = 0;
     // Seria: kolejne terminy też — strona przesuwa `reminder` dopiero, gdy jest otwarta.
     for (let i = 0; at !== null && at <= end && i < 60; i++) {
       if (at > now) out.push({ key: pushKey.note(n.id, at), at, title, body, url: notePath(n.id), snooze: true });
       // T 3.2: osobny wpis przed terminem. Bez „Odłóż” — odkłada się sam termin, nie zapowiedź.
+      // Tylko dla najbliższych wystąpień serii (S1 audytu 2): dalsze powstaną przy kolejnym odświeżeniu listy.
       const leadMs = lead > 0 && !(i === 0 && n.reminderBase !== undefined) ? at - lead * 60_000 : null;
-      if (leadMs !== null && leadMs > now) {
+      if (leadMs !== null && leadMs > now && leads < LEADS_PER_SERIES) {
+        leads++;
         out.push({ key: pushKey.noteLead(n.id, at), at: leadMs, title: clip(`${leadPhrase(lead)}: ${title}`, 120), body, url: notePath(n.id) });
       }
       if (repeat === "none") break;
@@ -366,22 +369,59 @@ function studyItems(input: PushInput, now: number, end: number): PushItem[] {
   return out;
 }
 
+export interface PushSchedulePlan {
+  items: PushItem[];
+  total: number;
+  /** Ile pozycji nie zmieściło się w limicie (widać w Ustawieniach). */
+  dropped: number;
+  /** To samo według kategorii (`PUSH_CATEGORIES`); tylko kategorie, z których coś odpadło. */
+  droppedBy: Partial<Record<PushCategoryId, number>>;
+  /** Czas ostatniej zachowanej pozycji, gdy lista została obcięta; `null` = zmieściło się wszystko. */
+  horizonEnd: number | null;
+}
+
 /**
- * Harmonogram do serwera z limitem `PUSH_MAX_ITEMS`. Gdy pozycji jest za dużo, pierwszeństwo mają
- * przypomnienia z notatek, potem Praca (serwis, zamówienia, problemy), na końcu nakazy Grafiku i raporty.
- * W ramach grupy — wcześniejsze. `dropped` = ile pozycji nie zmieściło się w limicie (widać w Ustawieniach).
+ * Harmonogram do serwera z limitem `PUSH_MAX_ITEMS` (S1 audytu 2). Jedna lista po czasie: przy nadmiarze odpadają
+ * najdalsze terminy, nie cała grupa — lista odświeża się przy każdym otwarciu i co godzinę, więc skutkiem jest
+ * krótszy horyzont (`horizonEnd`), a nie zgubiony jutrzejszy budzik. Przy równym czasie kolejność grup jak dawniej
+ * (notatki, Praca, Grafik i raporty). Koniec próby szczelności (`t:`) to umówiony moment — nigdy nie odpada.
  */
-export function buildPushSchedulePlan(input: PushInput): { items: PushItem[]; total: number; dropped: number } {
+export function buildPushSchedulePlan(input: PushInput): PushSchedulePlan {
   const { now } = input;
   const end = now + PUSH_HORIZON_DAYS * DAY_MS;
   const groups = [
     noteItems(input.notes, now, end),
     studyItems(input, now, end),
     [...eveningItems(input, now), ...reportItems(input, now), ...shiftAlarmItems(input, now), ...shiftEndItems(input, now)],
-  ].map((g) => g.filter((i) => !isPushCategoryOff(i.key, input.off)).sort((a, b) => a.at - b.at));
-  const total = groups.reduce((n, g) => n + g.length, 0);
-  const chosen = groups.flat().slice(0, PUSH_MAX_ITEMS);
-  return { items: chosen.sort((a, b) => a.at - b.at), total, dropped: total - chosen.length };
+  ];
+  const ranked = groups
+    .flatMap((g, rank) => g.map((item) => ({ item, rank })))
+    .filter(({ item }) => !isPushCategoryOff(item.key, input.off))
+    .sort((a, b) => a.item.at - b.item.at || a.rank - b.rank)
+    .map(({ item }) => item);
+  const fixed = ranked.filter((i) => i.key.startsWith(PRESSURE_PREFIX));
+  const rest = ranked.filter((i) => !i.key.startsWith(PRESSURE_PREFIX));
+  const kept = rest.slice(0, Math.max(0, PUSH_MAX_ITEMS - fixed.length));
+  const droppedBy: Partial<Record<PushCategoryId, number>> = {};
+  for (const i of rest.slice(kept.length)) {
+    const cat = categoryOf(i.key);
+    if (cat) droppedBy[cat] = (droppedBy[cat] ?? 0) + 1;
+  }
+  const dropped = rest.length - kept.length;
+  return {
+    items: [...fixed, ...kept].sort((a, b) => a.at - b.at),
+    total: ranked.length,
+    dropped,
+    droppedBy,
+    horizonEnd: dropped > 0 && kept.length > 0 ? kept[kept.length - 1].at : null,
+  };
+}
+
+const PRESSURE_PREFIX = "t:";
+const LEADS_PER_SERIES = 3;
+
+function categoryOf(key: string): PushCategoryId | null {
+  return PUSH_CATEGORIES.find((c) => c.prefixes.some((p) => key.startsWith(p)))?.id ?? null;
 }
 
 export function buildPushSchedule(input: PushInput): PushItem[] {

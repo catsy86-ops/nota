@@ -3,7 +3,7 @@ import { logDiag } from "@/lib/diagnostics";
 import { PUSH_CATEGORIES } from "@/lib/push/schedule";
 import { yjsStore } from "@/lib/yjsStore";
 import { CHANNEL_OTHER, CHANNEL_PREFIX, planNative, type NativeAlarm, type PendingAlarm } from "./nativePlan";
-import { nativeAlarmPrefs, type ReminderSink } from "./sink";
+import { nativeAlarmPrefs, type ReminderSink, type ScheduleHorizon } from "./sink";
 
 /**
  * Alarmy systemowe Androida przez `@capacitor/local-notifications` (F1.2). Ten plik wczytuje się
@@ -103,14 +103,14 @@ async function granted(): Promise<boolean> {
 /** Przebiegi jeden po drugim: dwa naraz czytałyby tę samą listę oczekujących i planowały podwójnie. */
 let queue: Promise<void> = Promise.resolve();
 
-async function replaceNow(items: Parameters<ReminderSink["replace"]>[0]): Promise<void> {
+async function replaceNow(items: Parameters<ReminderSink["replace"]>[0], horizon?: ScheduleHorizon): Promise<void> {
   try {
     if (!(await granted())) {
       nativeAlarmPrefs.set({ ...nativeAlarmPrefs.get(), last: { at: Date.now(), ok: false, error: "Brak zgody na powiadomienia — włącz je w ustawieniach telefonu." } });
       return;
     }
     await prepare();
-    const plan = planNative(items, await pendingAlarms(), Date.now());
+    const plan = planNative(items, await pendingAlarms(), Date.now(), horizon);
     if (plan.cancel.length) await LocalNotifications.cancel({ notifications: plan.cancel.map((id) => ({ id })) });
     if (plan.schedule.length) await LocalNotifications.schedule({ notifications: plan.schedule.map(toNotification) });
     const exact = (await LocalNotifications.checkExactNotificationSetting()).exact_alarm === "granted";
@@ -125,8 +125,8 @@ export const nativeSink: ReminderSink = {
   id: "native",
   // Przy okazji podpina obsługę stuknięć — wołane zaraz po starcie (`PushScheduleSync`).
   available: () => granted().then(async (ok) => { if (ok) await prepare(); return ok; }).catch(() => false),
-  replace(items) {
-    const run = queue.then(() => replaceNow(items));
+  replace(items, _keepalive, horizon) {
+    const run = queue.then(() => replaceNow(items, horizon));
     queue = run;
     return run;
   },

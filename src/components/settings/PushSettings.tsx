@@ -4,7 +4,7 @@ import { BellRing, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import { disablePush, enablePush, pushSupport, sendTestPush } from "@/lib/push/client";
 import { cleanPushToken, normalizePushServer, pushPrefs, pushToken, PUSH_TOKEN_MAX, setPushCategory } from "@/lib/push/prefs";
@@ -14,6 +14,17 @@ import { isNativeShell } from "@/lib/native/platform";
 import { loadNativeSink, nativeAlarmPrefs } from "@/lib/reminders/sink";
 import { cn } from "@/lib/utils";
 import { Section, ToggleRow } from "./SettingsShared";
+import type { PushSummary } from "@/lib/push/summary";
+
+/**
+ * Lista obcięta limitem (S1 audytu 2): odpadają najdalsze terminy, więc mówimy, do kiedy przypomnienia są zaplanowane
+ * i z których kategorii coś czeka na kolejne odświeżenie (przy otwarciu aplikacji i co godzinę).
+ */
+function droppedText(s: PushSummary): string {
+  const cats = PUSH_CATEGORIES.filter((c) => (s.droppedBy?.[c.id] ?? 0) > 0).map((c) => `${c.label.toLowerCase()} (${s.droppedBy?.[c.id]})`);
+  const until = s.horizonEnd ? `Zaplanowane do ${format(s.horizonEnd, "dd.MM HH:mm")}; ` : "";
+  return `${until}dalsze terminy (${s.dropped}${cats.length ? `: ${cats.join(", ")}` : ""}) dojdą przy kolejnym otwarciu aplikacji.`;
+}
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : "Coś poszło nie tak.");
 
@@ -127,7 +138,7 @@ function WebPushSettings() {
               {prefs.enabled && summary && (
                 <p className={cn("text-xs", summary.dropped > 0 ? "text-warning-ink" : "text-muted-foreground")}>
                   Serwer przyjmuje do {summary.limit} przypomnień: wysłano {summary.sent} z {summary.total}.
-                  {summary.dropped > 0 && ` ${summary.dropped} nie zmieściło się — najpierw zostają przypomnienia z notatek, potem Praca, na końcu Grafik.`}
+                  {summary.dropped > 0 && ` ${droppedText(summary)}`}
                 </p>
               )}
               {prefs.enabled && (

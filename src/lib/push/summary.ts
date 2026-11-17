@@ -11,6 +11,10 @@ export interface PushSummary {
   limit: number;
   /** Kiedy wysłano (ms). */
   at: number;
+  /** Lista obcięta: ostatni zachowany termin (ms). */
+  horizonEnd?: number | null;
+  /** Pominięte według kategorii (`PUSH_CATEGORIES`). */
+  droppedBy?: Record<string, number>;
 }
 
 /** Odczyt podsumowania; śmieci i brak klucza → `null`. */
@@ -20,7 +24,11 @@ export function readPushSummary(raw: string | null): PushSummary | null {
     const v = JSON.parse(raw) as Partial<PushSummary>;
     if (typeof v.sent !== "number" || typeof v.total !== "number" || typeof v.dropped !== "number") return null;
     if (typeof v.limit !== "number" || typeof v.at !== "number") return null;
-    return { sent: v.sent, total: v.total, dropped: v.dropped, limit: v.limit, at: v.at };
+    const horizonEnd = typeof v.horizonEnd === "number" ? v.horizonEnd : null;
+    const droppedBy = v.droppedBy && typeof v.droppedBy === "object"
+      ? Object.fromEntries(Object.entries(v.droppedBy).filter((e): e is [string, number] => typeof e[1] === "number" && e[1] > 0))
+      : {};
+    return { sent: v.sent, total: v.total, dropped: v.dropped, limit: v.limit, at: v.at, horizonEnd, droppedBy };
   } catch {
     return null;
   }

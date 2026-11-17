@@ -1,4 +1,5 @@
 import { PUSH_CATEGORIES, PUSH_HORIZON_DAYS, type PushItem } from "@/lib/push/schedule";
+import type { ScheduleHorizon } from "./sink";
 
 /**
  * Plan alarmów systemowych dla powłoki Androida (F1.2): numery, kanały, różnica względem tego,
@@ -91,15 +92,20 @@ export function toAlarms(items: readonly PushItem[]): NativeAlarm[] {
  * Gdy terminy dochodzą do końca horyzontu (seria albo wypełniony Grafik), dzień przed końcem
  * przychodzi prośba o otwarcie aplikacji — inaczej dalsze przypomnienia po cichu by przepadły.
  */
-export function sentinelFor(alarms: readonly NativeAlarm[], now: number): NativeAlarm | null {
-  const end = now + PUSH_HORIZON_DAYS * DAY_MS;
-  if (!alarms.some((a) => a.at > end - 2 * DAY_MS)) return null;
+export function sentinelFor(alarms: readonly NativeAlarm[], now: number, horizon?: ScheduleHorizon): NativeAlarm | null {
+  let end = now + PUSH_HORIZON_DAYS * DAY_MS;
+  // Lista obcięta limitem (S2 audytu 2) kończy się wcześniej: strażnik dobę przed jej końcem, nie wcześniej niż za godzinę.
+  const cutAt = horizon && horizon.dropped > 0 ? horizon.horizonEnd : null;
+  if (cutAt !== null) end = Math.max(cutAt, now + DAY_MS + 3_600_000);
+  else if (!alarms.some((a) => a.at > end - 2 * DAY_MS)) return null;
   // Do pełnej godziny: strażnik liczony co przebieg miałby inny czas i byłby planowany od nowa.
-  const at = Math.floor((end - DAY_MS) / 3_600_000) * 3_600_000;
+  const at = Math.max(Math.floor((end - DAY_MS) / 3_600_000) * 3_600_000, Math.ceil((now + 3_600_000) / 3_600_000) * 3_600_000);
   return {
     id: SENTINEL_ID, key: SENTINEL_KEY, at,
     title: "Otwórz NOTKI, żeby przypomnienia działały dalej",
-    body: "Alarmy są zaplanowane na 14 dni. Otwarcie aplikacji planuje kolejne.",
+    body: cutAt !== null
+      ? "Przypomnień jest więcej, niż mieści lista. Otwarcie aplikacji planuje kolejne."
+      : "Alarmy są zaplanowane na 14 dni. Otwarcie aplikacji planuje kolejne.",
     url: "/", channel: CHANNEL_OTHER, hash: `s${at.toString(36)}`, actions: undefined,
   };
 }
@@ -110,9 +116,9 @@ export interface NativePlan {
 }
 
 /** Różnica: kasujemy to, czego już nie ma albo co się zmieniło; planujemy tylko nowe i zmienione. */
-export function planNative(items: readonly PushItem[], pending: readonly PendingAlarm[], now: number): NativePlan {
+export function planNative(items: readonly PushItem[], pending: readonly PendingAlarm[], now: number, horizon?: ScheduleHorizon): NativePlan {
   const alarms = toAlarms(items).filter((a) => a.at > now);
-  const sentinel = sentinelFor(alarms, now);
+  const sentinel = sentinelFor(alarms, now, horizon);
   const wanted = sentinel ? [...alarms, sentinel] : alarms;
   const byId = new Map(wanted.map((a) => [a.id, a]));
   const kept = new Set<number>();

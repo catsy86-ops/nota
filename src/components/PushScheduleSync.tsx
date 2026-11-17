@@ -53,8 +53,13 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
         off,
       });
       // Podsumowanie dla Ustawień: ile wysłano z ilu i ile odpadło przy limicie. Tylko na tym urządzeniu.
-      try { localStorage.setItem(PUSH_SUMMARY_KEY, JSON.stringify({ sent: plan.items.length, total: plan.total, dropped: plan.dropped, limit: PUSH_MAX_ITEMS, at: Date.now() })); } catch { /* bez localStorage — bez podsumowania */ }
-      void activeSink().then((sink) => sink?.replace(plan.items, keepalive));
+      try {
+        localStorage.setItem(PUSH_SUMMARY_KEY, JSON.stringify({
+          sent: plan.items.length, total: plan.total, dropped: plan.dropped, limit: PUSH_MAX_ITEMS, at: Date.now(),
+          horizonEnd: plan.horizonEnd, droppedBy: plan.droppedBy,
+        }));
+      } catch { /* bez localStorage — bez podsumowania */ }
+      void activeSink().then((sink) => sink?.replace(plan.items, keepalive, { horizonEnd: plan.horizonEnd, dropped: plan.dropped }));
     };
     const timer = window.setTimeout(send, DEBOUNCE_MS);
     const hourly = window.setInterval(send, REFRESH_MS);

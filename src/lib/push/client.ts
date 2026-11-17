@@ -107,6 +107,27 @@ function hashOf(s: string): string {
   return (h >>> 0).toString(36);
 }
 
+/** Przeglądarki ograniczają sumę treści żądań `keepalive` do 64 KB; zostawiamy zapas na nagłówki. */
+export const KEEPALIVE_MAX_BYTES = 60 * 1024;
+
+/**
+ * Najdłuższy początek listy (lista jest po czasie), którego treść żądania mieści się w `maxBytes` (S3 audytu 2).
+ * Resztę dośle zwykła wysyłka przy następnym otwarciu aplikacji.
+ */
+export function fitKeepalive<T>(body: (items: T[]) => unknown, items: T[], maxBytes = KEEPALIVE_MAX_BYTES): T[] {
+  const enc = new TextEncoder();
+  const size = (n: number) => enc.encode(JSON.stringify(body(items.slice(0, n)))).length;
+  if (size(items.length) <= maxBytes) return items;
+  let lo = 0;
+  let hi = items.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (size(mid) <= maxBytes) lo = mid;
+    else hi = mid - 1;
+  }
+  return items.slice(0, lo);
+}
+
 /** Po tylu godzinach wysyłamy listę ponownie, nawet bez zmian — przesuwa się horyzont i serwer mógł stracić dane. */
 const RESEND_MS = 6 * 60 * 60 * 1000;
 
@@ -132,9 +153,11 @@ async function uploadNow(items: PushItem[], keepalive: boolean): Promise<void> {
   const hash = hashOf(JSON.stringify([subscription.endpoint, items]));
   const fresh = prefs.last?.ok && Date.now() - prefs.last.at < RESEND_MS;
   if (hash === prefs.sentHash && fresh) return;
+  const sent = keepalive ? fitKeepalive((list) => ({ subscription, items: list }), items) : items;
   try {
-    await call(prefs.server, "/schedule", "PUT", { subscription, items }, keepalive);
-    updatePushPrefs({ sentHash: hash, last: { at: Date.now(), ok: true, count: items.length } });
+    await call(prefs.server, "/schedule", "PUT", { subscription, items: sent }, keepalive);
+    // Obcięta wysyłka nie zapisuje skrótu — następna zwykła wyśle pełną listę.
+    updatePushPrefs({ sentHash: sent.length === items.length ? hash : undefined, last: { at: Date.now(), ok: true, count: sent.length } });
   } catch (e) {
     updatePushPrefs({ sentHash: undefined, last: { at: Date.now(), ok: false, error: e instanceof Error ? e.message : "Brak połączenia z serwerem." } });
   }

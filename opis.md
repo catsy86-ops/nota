@@ -2010,14 +2010,15 @@ Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapi
 - **Testy:** `e2e/bundle.spec.ts`: 6/6.
 - **Commit:** 647f312 (próg 387 KB), podniesienie do 388 KB — w commicie z tym wpisem, 2026-10-19.
 
-## Push — limit 200 z priorytetem i licznikiem w Ustawieniach (P4 planu kalendarza/przypomnień, 2026-10-19)
+## Push — limit 200: obcinanie po czasie, strażnik, wysyłka przy chowaniu (P4 planu kalendarza, Z-18.4 audytu 2)
 
-- **Co robi:** serwer przyjmuje do 200 pozycji harmonogramu. Gdy jest ich więcej, pierwszeństwo mają przypomnienia z notatek, potem Praca (serwis, zamówienia, problemy), na końcu Grafik i raporty. W Ustawieniach → Powiadomienia pod statusem pokazuje się „Serwer przyjmuje do 200 przypomnień: wysłano N z M”. Gdy coś odpadło, dopisane jest ostrzeżenie w kolorze ostrzegawczym.
-- **Gdzie jest:** `src/lib/push/schedule.ts` (`buildPushSchedulePlan`: `items`, `total`, `dropped`; `buildPushSchedule` zwraca `items` jak dotąd), `src/lib/push/summary.ts` (klucz `kaczy.push.summary.v1` w localStorage tego urządzenia, odczyt `readPushSummary`), `src/components/PushScheduleSync.tsx` (zapis podsumowania przy każdym wysłaniu), `src/components/settings/PushSettings.tsx` (wiersz z limitem).
-- **Dlaczego priorytety:** przy kilku seriach dziennych zjadały limit i późniejsze serwisy przepadały bez śladu. Teraz przepadają najmniej ważne rodzaje, a użytkownik to widzi.
-- **Ograniczenia:** podsumowanie jest lokalne dla urządzenia i pojawia się po pierwszym wysłaniu harmonogramu. Liczy tylko wysłane z tego urządzenia.
-- **Testy:** `src/lib/push/schedule.limit.test.ts` (3: w limicie nic nie odpada; nad limitem odpada najpóźniejsze; notatki wypierają serwis z Praca), `src/lib/push/summary.test.ts` (2). E2E `push`, `bundle`: 8/8. Vitest 1457/1457. Typecheck czysty.
-- **Commit:** a00bb21, 2026-10-19.
+- **Co robi:** serwer przyjmuje do 200 pozycji harmonogramu. Przy nadmiarze odpadają **najdalsze terminy** z jednej listy posortowanej po czasie — nie cała grupa. Lista odświeża się przy otwarciu aplikacji i co godzinę, więc skutkiem jest krótszy horyzont, a nie zgubiony jutrzejszy budzik zmiany czy serwis. Koniec próby szczelności nigdy nie odpada. Zapowiedź („za 15 min”) jest planowana tylko dla 3 najbliższych wystąpień serii. W Ustawieniach → Powiadomienia: „Serwer przyjmuje do 200 przypomnień: wysłano N z M.”, a przy obcięciu: „Zaplanowane do DD.MM GG:MM; dalsze terminy (K: przypomnienia notatek (…), …) dojdą przy kolejnym otwarciu aplikacji.”
+- **Alarmy systemowe (APK):** przy obciętej liście strażnik „Otwórz NOTKI…” stoi dobę przed ostatnim zachowanym terminem (nie wcześniej niż za godzinę), z treścią „Przypomnień jest więcej, niż mieści lista”.
+- **Wysyłka przy chowaniu aplikacji (`keepalive`):** przeglądarki ograniczają takie żądania do 64 KB, więc wysyłany jest najdłuższy początek listy, którego treść mieści się w 60 KB. Skrót wysłanej listy nie jest wtedy zapisywany — następna zwykła wysyłka wyśle całość.
+- **Gdzie jest:** `src/lib/push/schedule.ts` (`buildPushSchedulePlan` → `PushSchedulePlan`: `items`, `total`, `dropped`, `droppedBy`, `horizonEnd`; `LEADS_PER_SERIES`, `categoryOf`), `src/lib/push/client.ts` (`fitKeepalive`, `KEEPALIVE_MAX_BYTES`), `src/lib/reminders/sink.ts` (`ScheduleHorizon` w `replace`), `src/lib/reminders/nativePlan.ts` (`sentinelFor(…, horizon)`, `planNative(…, horizon)`), `src/lib/push/summary.ts` (pola `horizonEnd`, `droppedBy` w `kaczy.push.summary.v1`), `src/components/PushScheduleSync.tsx`, `src/components/settings/PushSettings.tsx` (`droppedText`).
+- **Ograniczenia:** podsumowanie jest lokalne dla urządzenia i pojawia się po pierwszym wysłaniu. W PWA strażnika nie ma — seria kończy się po 14 dniach bez otwarcia aplikacji; komunikat z serwera push czeka na decyzję D-A2. Serwer (`push-server/core.js`) tnie na 200 w kolejności otrzymania, co przy liście po czasie daje ten sam wynik.
+- **Testy:** `src/lib/push/schedule.limit.test.ts` (w limicie nic nie odpada; odpada najdalsza; serwis wygrywa z dalszą notatką; 10 serii dziennych z zapowiedzią i budzik zmiany; próba szczelności poza limitem; strażnik przy obcięciu i nie wcześniej niż za godzinę; 200 długich pozycji ≤ 60 KB), `src/lib/push/summary.test.ts`.
+- **Commit:** a00bb21 (2026-10-19), Z-18.4 — 2026-11-17.
 
 ## Terminy — „Przegapione” dla zaległych starszych niż godzina (P5 planu kalendarza/przypomnień, 2026-10-19)
 

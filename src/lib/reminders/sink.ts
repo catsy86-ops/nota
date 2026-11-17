@@ -9,12 +9,21 @@ import type { PushItem } from "@/lib/push/schedule";
  * albo na serwer Web Push (PWA), albo do alarmów systemowych (APK). Strona z timerami
  * (`useReminderNotifications`) nie jest ujściem — działa zawsze, gdy aplikacja jest otwarta.
  */
+/** Gdzie kończy się obcięta lista (`buildPushSchedulePlan`). */
+export interface ScheduleHorizon {
+  horizonEnd: number | null;
+  dropped: number;
+}
+
 export interface ReminderSink {
   id: "webpush" | "native";
   /** Czy ujście może teraz przyjąć listę (zgoda, subskrypcja). */
   available(): Promise<boolean>;
-  /** Zastępuje całą listę. `keepalive` — wysyłka przy chowaniu aplikacji. */
-  replace(items: readonly PushItem[], keepalive?: boolean): Promise<void>;
+  /**
+   * Zastępuje całą listę. `keepalive` — wysyłka przy chowaniu aplikacji. `horizon` — lista obcięta limitem
+   * (S2 audytu 2): alarmy systemowe stawiają wtedy strażnika przed końcem listy.
+   */
+  replace(items: readonly PushItem[], keepalive?: boolean, horizon?: ScheduleHorizon): Promise<void>;
   clear(): Promise<void>;
 }
 
