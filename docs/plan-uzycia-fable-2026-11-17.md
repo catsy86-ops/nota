@@ -1,6 +1,6 @@
 # Plan użycia Fable w planach Praca, Bezpieczeństwo i QoL (2026-11-17)
 
-> **Status:** zapisany, realizacja nie zaczęta. Dotyczy `plan-praca-2026-11-15.md`, `plan-security-2026-11-15.md`, `plan-qol-platforma-2026-11-15.md`.
+> **Status:** zapisany, realizacja nie zaczęta. Dotyczy `plan-praca-2026-11-15.md`, `plan-security-2026-11-15.md`, `plan-qol-platforma-2026-11-15.md`. Część druga (Długi, Ćwiczenia, Architektura, audyt): `plan-uzycia-fable-cz2-2026-11-17.md`.
 > **Zasada (decyzja właściciela):** Fable robi plan, diagnozę, projekt protokołu i trudny kod; testy, interfejs i prace mechaniczne robią Opus i Sonnet. Fable wchodzi tam, gdzie błąd kosztuje dane albo poufność i gdzie nie wykryje go zwykły test: protokół synchronizacji, kryptografia, współbieżność (karty, Yjs, service worker), odtwarzanie danych, decyzje zmieniające ADR.
 > **Stan sprawdzony w kodzie 2026-11-17:** z planu bezpieczeństwa nic nie jest zrobione (brak `docs/model-zagrozen.md`, `SECURITY.md`, `deploy/`, `src/lib/net/`, Trusted Types, COOP, `USER` w `signaling-server/Dockerfile`; audyt npm tylko dla serwerów). Z QoL zrobione Q1.1, Q1.2, Q1.5; brak OPFS, `scheduler.yield`, `protocol_handlers`. Z Pracy jest tylko `src/lib/study/receivables.ts` (R3.1 bez ekranu). Epoka pokoju przekaźnika (Z-5.5) jest w drzewie roboczym, niezacommitowana.
 > Numery zleceń kontynuują `zlecenia-fable-2026-11-15.md`: zadanie 15 — bezpieczeństwo, 16 — QoL, 14 — Praca (uzupełnienie).
