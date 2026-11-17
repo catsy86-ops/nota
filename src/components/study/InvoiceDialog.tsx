@@ -162,7 +162,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
         <fieldset className="space-y-2">
           <legend className="text-xs font-semibold text-muted-foreground">Sprzedawca (seria numeracji tego telefonu: {series})</legend>
           {seriesShared && (
-            <p role="alert" className="rounded-md bg-warning/15 px-2 py-1.5 text-xs text-warning-ink">
+            <p role="alert" className="rounded-control bg-warning/15 px-2 py-1.5 text-xs text-warning-ink">
               W serii {series} są faktury z innego urządzenia. Ustaw w Ustawieniach inną serię na tym telefonie, inaczej numery mogą się powtórzyć.
             </p>
           )}
