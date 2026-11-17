@@ -66,6 +66,10 @@ export default tseslint.config(
       "src/lib/sync/relayProvider.ts",
       "src/lib/sync/relayProvider.test.ts",
       "src/lib/sync/relayServer.integration.test.ts",
+      // Wymiana kodu: znacznik w mapie `syncControl` budowany w osobnym `Y.Doc`, kontrola nowego pokoju w dokumencie pomocniczym.
+      "src/lib/sync/rekey.ts",
+      "src/lib/sync/rekey.test.ts",
+      "src/lib/sync/rekeyRelay.ts",
       // Masa ciała (C-2): warstwa Yjs w dokumencie notatek (wzorem diety), testy na własnym Y.Doc.
       "src/lib/weight/yWeight.ts",
       "src/lib/weight/yWeight.test.ts",

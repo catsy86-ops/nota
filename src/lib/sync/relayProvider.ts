@@ -203,6 +203,21 @@ export class RelayProvider {
     this.run(() => this.flushTask());
   }
 
+  /**
+   * Wysyła zaległości i czeka, aż kolejka zadań się opróżni. `true` = serwer potwierdził wszystko
+   * i nic nie czeka na wysłanie. Dla operacji jednorazowych (zasilenie nowego pokoju przy wymianie
+   * kodu), nie dla zwykłej pracy — tam stan niesie `onStatus`.
+   */
+  async settle(): Promise<boolean> {
+    this.flushNow();
+    let seen: Promise<void>;
+    do {
+      seen = this.chain;
+      await seen;
+    } while (seen !== this.chain);
+    return this.started && this.status === "online" && this.pending.length === 0;
+  }
+
   private readonly onLocalUpdate = (update: Uint8Array, origin: unknown) => {
     if (origin === this.origin) return;
     this.pending.push(update);

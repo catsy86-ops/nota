@@ -132,7 +132,7 @@ Kolejność: 0 → A → B → C → D → E → (F) → G. Sesje A–D nie zale
 | A | zrobiona (dokument) | `plan-wymiana-kodu.md` — zlecenia Z-15.1–Z-15.4; nowa decyzja **D-W1**: nowy kod domyślnie długi (28 znaków) |
 | B | zrobiona (dokument) | `plan-wiadomosci-i-cofniecia.md` — zlecenia Z-15.5, Z-15.6; ustalenia U-1 (możliwy limit 256 KB wiadomości kanału danych — najpierw pomiar) i U-2 (transport obrazów) |
 | C | zrobiona (dokument) | `plan-dane-lokalne.md` — zlecenia Z-16.1 (części A i B), Z-16.2, Z-14.5 (po pomiarze); nowe wymaganie: opcja „Zastąp dane na tym urządzeniu danymi grupy” przy dołączaniu |
-| D | czeka | na Z-15.1, Z-15.2 (Opus) i Z-5.6 (Sonnet) |
+| D | zrobiona poza podpięciem | `rekey.ts`, `rekeyRelay.ts`, `RelayProvider.settle()`/`canSend`, testy sprawdzające; podpięcie w `yjsSync.ts` (lista w `plan-wymiana-kodu.md`, „Sesja D”) czeka na Z-15.1 i Z-15.2 (Opus) |
 | E | czeka | na wynik próby F1.0 (krok właściciela) |
 | F | czeka | na SE-1 |
 | G | czeka | na kod z sesji C i D |

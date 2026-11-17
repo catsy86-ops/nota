@@ -147,6 +147,8 @@ interface RekeyRecord {
   relay: string | null;       // adres przekaźnika z chwili startu; null = sama droga bezpośrednia
   startedAt: number;
   switchedAt?: number;
+  markStarted?: boolean;      // znacznik mógł już wyjść z urządzenia — zapisywane PRZED jego nałożeniem
+  markTries?: number;         // nieudane wysyłki znacznika; od 3 wolno pominąć
   retireAt?: number;          // switchedAt + 7 dni (D-F1)
   retireTries?: number;
   markerSkipped?: boolean;    // użytkownik pominął krok 3
@@ -156,6 +158,8 @@ interface RekeyRecord {
 ```
 
 Krok jest zapisywany **po** wykonaniu działania, a każde działanie jest powtarzalne — wznowienie zawsze powtarza działanie bieżącego kroku od początku.
+
+**Wyjątek: ślad przed znacznikiem (ustalenie z sesji D).** Znacznik nałożony na główny dokument rozchodzi się natychmiast (WebRTC, karta prowadząca przekaźnik). Gdyby karta zginęła między nałożeniem a zapisem kroku `marked`, zapis mówiłby `seeded`, anulowanie byłoby dozwolone, a grupa stałaby zatrzymana znacznikiem, za którym nie idzie żadna zmiana kodu. Dlatego krok 3 **najpierw** zapisuje `markStarted: true`, dopiero potem nakłada znacznik; anulowanie jest dozwolone tylko w krokach `prepared` i `seeded` bez `markStarted` (`canCancelRekey`). Nieudany zapis śladu zatrzymuje krok przed nałożeniem.
 
 | Krok | Działanie (prowadzące do następnego stanu) | Warunek przejścia | Wznowienie po zamknięciu karty | Anulowanie |
 |---|---|---|---|---|
@@ -236,6 +240,16 @@ Kolejność: Z-15.1 → Z-15.2 → sesja D (Fable) → Z-15.3 i Z-15.4 równoleg
 - Testy: tabela przypadków `roomNamesFor` (kod krótki/długi × okno trwa/minęło × `legacyRoom`); przedłużenie raz, dwa razy, twardy koniec; link z `v=3` i bez; `legacyEndsAt` dla ciszy i dla aktywnego starego urządzenia.
 
 ### Sesja D (Fable) — trudny kod §3
+
+**Stan 2026-11-17:** zrobione wszystko poza podpięciem w `yjsSync.ts` (czwarty punkt listy) — to czeka na Z-15.1 i Z-15.2, które zmieniają ten sam plik. Gotowe: `src/lib/sync/rekey.ts` (znacznik, zapis wymiany, sterownik `prepareRekey`/`runRekey`/`cancelRekey` z portami `RekeyPorts`), `src/lib/sync/rekeyRelay.ts` (`seedRekeyRoom`, `postRekeyMarker`, `retireRekeyRoom`, `dropRekeyRoom`), `RelayProvider.settle()`, `canSend`, pobranie przed wysyłką po resecie. Testy sprawdzające: `rekey.test.ts` (18) i blok „wymiana kodu” w `relayServer.integration.test.ts` (3); pełna lista Z-15.4 nadal dla Sonneta.
+
+**Podpięcie (sesja D2, po Z-15.1/Z-15.2) — co zostaje:**
+- Porty produkcyjne: `load`/`save` na `localStorage["kaczy.sync.rekey.v1"]` przez `parseRekeyRecord` (zapis ma rzucać przy błędzie), `newCode` = generator kodu długiego z Z-15.1, `tagFor` = `rekeyTag(await roomNameV3For(code))`, `seedRoom` = `seedRekeyRoom` z `idbRelayStore(<nowy roomId>)` (trzeba go wyeksportować z `relayRuntime.ts`), `forgetRoom` = usunięcie `pending:`/`state:` starego pokoju, `lock` = `withLockIfFree(REKEY_LOCK, …)`, `switchTo` = jeden `writePrefs` + `connect`.
+- `relayRuntime.lead`: `canSend: () => !stoppingMarker(doc, tag, ignoredRekey, ownId)`; po zdjęciu blokady wołać `sync()`. Tag liczony raz przy `connect` (jest asynchroniczny), obserwator `syncControl` synchroniczny.
+- `yjsSync.ts`: stan `rekeyed`, `ignoredRekey` w ustawieniach, zdarzenie `storage` (I-5), `initSync` woła `runRekey` przed `connect` (I-6), `pruneMarkers` raz na start.
+- `runRekey` wołać: po potwierdzeniu, przy starcie, przy zdarzeniu `online`, z przycisków („Ponów”, „Pomiń”, „Usuń teraz”); wynik `wait: "retire"` nie wymaga zegara — wystarczy start aplikacji.
+
+Pierwotny zakres:
 
 - `src/lib/sync/rekey.ts`: czysta funkcja kroku (`RekeyRecord` + wynik działania → następny `RekeyRecord`) i sterownik z portami (ustawienia, przekaźnik, dokument, zegar, blokada).
 - Znacznik: tworzenie w osobnym `Y.Doc`, odczyt z czyszczeniem, tag.

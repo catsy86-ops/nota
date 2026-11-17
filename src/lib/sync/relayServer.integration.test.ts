@@ -6,6 +6,8 @@ import { join, resolve } from "node:path";
 import * as Y from "yjs";
 import { RelayProvider, type RelayState, type RelayStore } from "@/lib/sync/relayProvider";
 import { deriveRelayKeys } from "@/lib/sync/relayKeys";
+import { buildMarkerUpdate, readMarkers, stoppingMarker } from "@/lib/sync/rekey";
+import { dropRekeyRoom, postRekeyMarker, retireRekeyRoom, seedRekeyRoom } from "@/lib/sync/rekeyRelay";
 
 /**
  * Zgodność klienta z prawdziwym `relay-server/server.js` (nie z atrapą): serwer startuje
@@ -238,4 +240,89 @@ describe("klient przekaźnika ↔ prawdziwy serwer", () => {
     a.provider.stop();
     b.provider.stop();
   }, 40_000);
+
+  describe("wymiana kodu", () => {
+    const relay = { baseUrl: BASE, iterations: ITER };
+    const TAG = "a".repeat(32);
+    const marker = { id: "1".repeat(32), tag: TAG, at: 1 };
+
+    async function roomEntries(keys: { roomId: string; token: string }) {
+      const res = await fetch(`${BASE}/rooms/${keys.roomId}/updates?since=0`, { headers: { Authorization: `Bearer ${keys.token}` } });
+      if (res.status === 404) return null;
+      return ((await res.json()) as { entries: unknown[] }).entries.length;
+    }
+
+    it("nowy pokój dostaje pełny stan; powtórzenie niczego nie dokłada, a zwykłe połączenie zaczyna od kursora", async () => {
+      const code = "NOWYPOKOJAAA";
+      const doc = new Y.Doc();
+      doc.getText("t").insert(0, "wszystko, co mam");
+      const store = new MemStore();
+      await seedRekeyRoom(relay, code, doc, store);
+      const keys = await deriveRelayKeys(code, ITER);
+      const after = await roomEntries(keys);
+      expect(after).toBe(1);
+      await seedRekeyRoom(relay, code, doc, store);
+      expect(await roomEntries(keys)).toBe(after);
+
+      const fresh = await device(code);
+      await untilSynced(fresh, () => fresh.text.toString() === "wszystko, co mam");
+      fresh.provider.stop();
+
+      // To samo urządzenie łączy się potem nowym kodem z tym samym magazynem: nic nie wysyła drugi raz.
+      const same = await device(code, { doc, store });
+      await same.provider.settle();
+      expect(await roomEntries(keys)).toBe(after);
+      same.provider.stop();
+
+      await dropRekeyRoom(relay, code);
+      expect(await roomEntries(keys)).toBeNull();
+      await dropRekeyRoom(relay, code); // brak pokoju to też sukces
+    }, 30_000);
+
+    it("znacznik wysłany wprost do pokoju zatrzymuje urządzenie, które go pobierze", async () => {
+      const code = "ZNACZNIKAAAA";
+      const a = await device(code, { canSend: (doc) => !stoppingMarker(doc, TAG) });
+      a.doc.transact(() => a.text.insert(0, "przed"));
+      expect(await a.provider.settle()).toBe(true);
+      await postRekeyMarker(relay, code, buildMarkerUpdate(marker));
+      await untilSynced(a, () => readMarkers(a.doc).length === 1);
+      const before = await roomEntries(a.keys);
+      a.doc.transact(() => a.text.insert(0, "po znaczniku "));
+      expect(await a.provider.settle()).toBe(false);
+      expect(await roomEntries(a.keys)).toBe(before);
+      a.provider.stop();
+    }, 30_000);
+
+    it("wycofany pokój zawiera sam znacznik; spóźnione urządzenie zatrzymuje się i nic nie wysyła", async () => {
+      const code = "WYCOFANYAAAA";
+      const a = await device(code);
+      a.doc.transact(() => a.text.insert(0, "stare dane grupy"));
+      expect(await a.provider.settle()).toBe(true);
+      a.provider.stop();
+
+      // Spóźnione urządzenie: ma stan i własne niewysłane zmiany, o wymianie nic nie wie.
+      const lateDoc = new Y.Doc();
+      Y.applyUpdate(lateDoc, Y.encodeStateAsUpdate(a.doc));
+      const lateStore = new MemStore();
+      const warm = await device(code, { doc: lateDoc, store: lateStore });
+      await warm.provider.settle();
+      warm.provider.stop();
+      lateDoc.getText("t").insert(0, "niewysłane ");
+
+      const update = buildMarkerUpdate(marker);
+      expect(await retireRekeyRoom(relay, code, update)).toBe(true);
+      expect(await roomEntries(a.keys)).toBe(1);
+
+      const late = await device(code, { doc: lateDoc, store: lateStore, canSend: (doc) => !stoppingMarker(doc, TAG) });
+      await untilSynced(late, () => readMarkers(late.doc).length === 1);
+      expect(await late.provider.settle()).toBe(false);
+      expect(await roomEntries(a.keys)).toBe(1);
+      expect(late.text.toString()).toBe("niewysłane stare dane grupy");
+      late.provider.stop();
+
+      // Powtórzone wycofanie daje ten sam wynik.
+      expect(await retireRekeyRoom(relay, code, update)).toBe(true);
+      expect(await roomEntries(a.keys)).toBe(1);
+    }, 30_000);
+  });
 });
