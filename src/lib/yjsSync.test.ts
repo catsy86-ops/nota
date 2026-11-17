@@ -96,19 +96,20 @@ async function waitForMainProvider(countAtLeast = ROOMS_PER_CONNECT): Promise<vo
 describe("yjsSync", () => {
   beforeEach(async () => {
     localStorage.clear();
-    // Większość testów dotyczy maszynerii dwóch pokoi, więc zgodność ze starą
-    // wersją jest tu włączona jawnie; domyślne zachowanie sprawdza blok niżej.
+    // Większość testów dotyczy maszynerii dwóch pokoi, więc zgodność ze starą wersją jest w nich włączana
+    // jawnie po startPairing (nowy kod ją zeruje); domyślne zachowanie sprawdza blok niżej.
     localStorage.setItem("kaczy.sync.v1", JSON.stringify({ enabled: false, code: null, signaling: [], legacyRoom: true }));
     providerInstances.length = 0;
     vi.resetModules();
   });
 
   it("generates codes from the safe alphabet at the expected length", async () => {
-    const { generateCode } = await import("./yjsSync");
+    const { generateCode, parseCode } = await import("./yjsSync");
     for (let i = 0; i < 20; i++) {
-      const code = generateCode();
-      expect(code).toHaveLength(12);
-      expect(code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{12}$/);
+      const long = generateCode();
+      expect(long).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{28}$/);
+      expect(parseCode(long)).toEqual({ code: long, kind: "long" });
+      expect(generateCode("short")).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{12}$/);
     }
   });
 
@@ -141,7 +142,7 @@ describe("yjsSync", () => {
 
   it("startPairing connects to the new room and, during the transition, the legacy one", async () => {
     const { startPairing, getSyncState, roomNameFor, roomNameV3For } = await import("./yjsSync");
-    const code = startPairing();
+    const code = startPairing("short"); (await import("./yjsSync")).setLegacyRoom(true); // nowy kod zeruje zgodność
     expect(getSyncState().code).toBe(code);
     expect(getSyncState().status).toBe("connecting");
 
@@ -152,7 +153,7 @@ describe("yjsSync", () => {
 
   it("also starts the separate image transport, sharing the same pairing code", async () => {
     const { startPairing } = await import("./yjsSync");
-    const code = startPairing();
+    const code = startPairing("short"); (await import("./yjsSync")).setLegacyRoom(true); // nowy kod zeruje zgodność
 
     await waitFor(() => {
       if (providerInstances.filter((p) => p.roomName.endsWith("-img2")).length === 0) {
@@ -164,6 +165,7 @@ describe("yjsSync", () => {
         throw new Error("image providers not connected yet");
       }
     });
+    await waitForMainProvider();
     const imageProviders = providerInstances.filter((p) => p.roomName.endsWith("-img2"));
     expect(imageProviders).toHaveLength(ROOMS_PER_CONNECT);
     expect(imageProviders.map((p) => p.roomName.replace(/-img2$/, ""))).toEqual(mainProviders().map((p) => p.roomName));
@@ -172,7 +174,7 @@ describe("yjsSync", () => {
 
   it("is connected when any room is, and counts devices as the max over rooms", async () => {
     const { startPairing, getSyncState } = await import("./yjsSync");
-    startPairing();
+    startPairing("short"); (await import("./yjsSync")).setLegacyRoom(true); // nowy kod zeruje zgodność
     await waitForMainProvider();
     const [v2, legacy] = mainProviders();
 
@@ -201,7 +203,7 @@ describe("yjsSync", () => {
 
   it("pauseSync disconnects both providers but keeps the code; resumeSync reconnects to the same group", async () => {
     const { startPairing, pauseSync, resumeSync, getSyncState, roomNamesFor } = await import("./yjsSync");
-    const code = startPairing();
+    const code = startPairing("short"); (await import("./yjsSync")).setLegacyRoom(true); // nowy kod zeruje zgodność
     // Pokoje tego kodu. Asercje tylko na nich: asynchroniczny connect z poprzedniego testu
     // (po vi.resetModules) może jeszcze dołożyć providery z innego kodu, których ten test nie kontroluje.
     const rooms = (await roomNamesFor(code)).flatMap((r) => [r, `${r}-img2`]);
@@ -224,7 +226,7 @@ describe("yjsSync", () => {
   it("forgetPairing disconnects and clears the code entirely", async () => {
     const { startPairing, forgetPairing, getSyncState } = await import("./yjsSync");
     const before = mainProviders().length;
-    startPairing();
+    startPairing("short"); (await import("./yjsSync")).setLegacyRoom(true); // nowy kod zeruje zgodność
     await waitForMainProvider(before + ROOMS_PER_CONNECT);
 
     forgetPairing();
@@ -235,7 +237,8 @@ describe("yjsSync", () => {
 
   it("initSync reconnects automatically when a prior session was enabled", async () => {
     const first = await import("./yjsSync");
-    const code = first.startPairing();
+    const code = first.startPairing("short");
+    (await import("./yjsSync")).setLegacyRoom(true); // nowy kod zeruje zgodność
     await waitForMainProvider();
 
     vi.resetModules();
@@ -264,14 +267,14 @@ describe("yjsSync", () => {
 
   it("passes no signaling option by default (y-webrtc public servers)", async () => {
     const { startPairing } = await import("./yjsSync");
-    startPairing();
+    startPairing("short"); (await import("./yjsSync")).setLegacyRoom(true); // nowy kod zeruje zgodność
     await waitForMainProvider();
     for (const p of providerInstances) expect((p.opts as { signaling?: string[] }).signaling).toBeUndefined();
   });
 
   it("custom servers go to BOTH text and image providers and reconnect", async () => {
     const { startPairing, setSignalingServers, getSignalingServers } = await import("./yjsSync");
-    const code = startPairing();
+    const code = startPairing("short"); (await import("./yjsSync")).setLegacyRoom(true); // nowy kod zeruje zgodność
     await waitForMainProvider();
     const before = [...providerInstances];
     setSignalingServers(["wss://sig.example.com", "not a url"]);
@@ -379,7 +382,8 @@ describe("yjsSync - bezpieczne domyślne (A02)", () => {
     expect(codeFromPaste("abcd efgh-jkmn")).toBe("ABCDEFGHJKMN");
     expect(codeFromPaste("https://x.pl/app/?pair=ABCDEFGHJKMN#n")).toBe("ABCDEFGHJKMN");
     expect(codeFromPaste(" ABCD EFGH.")).toBe("ABCDEFGH");
-    expect(codeFromPaste("ABCDEFGHJKMNPQRS")).toBe("ABCDEFGHJKMN");
+    // Bez cichego obcinania do 12 (kod długi ma 28 znaków) — 16 znaków odrzuci dopiero parseCode.
+    expect(codeFromPaste("ABCDEFGHJKMNPQRS")).toBe("ABCDEFGHJKMNPQRS");
   });
 
   it("isShortCode rozpoznaje stare 8-znakowe kody", async () => {
@@ -429,5 +433,256 @@ describe("pokój v3 (S3)", () => {
     expect(v2CompatActive()).toBe(false);
     joinWithCode("ABCDEFGHJKMN");
     expect(v2CompatActive()).toBe(true);
+  });
+});
+
+const DAY = 24 * 60 * 60 * 1000;
+const SHORT = "ABCDEFGHJKMN";
+const setPrefs = (p: Record<string, unknown>) =>
+  localStorage.setItem("kaczy.sync.v1", JSON.stringify({ enabled: false, code: null, signaling: [], legacyRoom: false, ...p }));
+const storedPrefs = () => JSON.parse(localStorage.getItem("kaczy.sync.v1") ?? "{}") as Record<string, unknown>;
+
+describe("kod długi i koniec pokoi v2 (Z-15.1, Z-15.2)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    providerInstances.length = 0;
+    vi.resetModules();
+  });
+
+  it("wektory zgodności: kod 12-znakowy daje te same pokoje i klucze co przed kodem długim", async () => {
+    const { roomNameV3For } = await import("./yjsSync");
+    const { deriveRelayKeys } = await import("./sync/relayKeys");
+    // Policzone na wyprowadzeniu sprzed Z-15.1 — zmiana któregokolwiek rozdzieliłaby istniejące grupy.
+    expect(await roomNameV3For(SHORT)).toBe("kaczy3-8c80e6226002702a84238cf780813e3e");
+    const keys = await deriveRelayKeys(SHORT);
+    expect(keys.roomId).toBe("1b319f26014f5db8dec80f1f9bed0cacc8828510b6bcc8f79f3265574cd44ac1");
+    expect(keys.token).toBe("4cSUSmWWvBXruT9CM-fcLB1DzT7Vu-Q8ADyxNOubvs8");
+  });
+
+  it("tabela pokoi: kod krótki/długi × okno trwa/minęło × zgodność ze starszą wersją", async () => {
+    const { roomNamesFor, roomNameFor, roomNameV2For, roomNameV3For, generateCode } = await import("./yjsSync");
+    const LONG = generateCode("long");
+    const now = Date.now();
+    for (const kind of ["short", "long"] as const) {
+      const code = kind === "short" ? SHORT : LONG;
+      for (const windowOpen of [true, false]) {
+        for (const legacyRoom of [false, true]) {
+          setPrefs({ code, v2Until: windowOpen ? now + DAY : now - DAY, legacyRoom });
+          const expected = [await roomNameV3For(code)];
+          if (kind === "short" && windowOpen) expected.push(await roomNameV2For(code));
+          if (kind === "short" && legacyRoom) expected.push(roomNameFor(code));
+          expect(await roomNamesFor(code), `${kind} okno=${windowOpen} zgodność=${legacyRoom}`).toEqual(expected);
+        }
+      }
+    }
+  });
+
+  it("dołączenie: link z v=3 i kod długi bez okna v2; zwykły kod krótki — 30 dni; zły kod odrzucony", async () => {
+    const { joinWithCode, getV2Until, generateCode } = await import("./yjsSync");
+    expect(joinWithCode(SHORT, { v3: true })).toBe(SHORT);
+    expect(getV2Until()).toBeNull();
+    expect(joinWithCode(generateCode("long"))).not.toBeNull();
+    expect(getV2Until()).toBeNull();
+    joinWithCode("ABCDEFGHJKMP");
+    expect(getV2Until()).toBeGreaterThan(Date.now() + 29 * DAY);
+    const long = generateCode("long");
+    const typo = long.slice(0, 5) + (long[5] === "A" ? "B" : "A") + long.slice(6);
+    expect(joinWithCode(typo)).toBeNull();
+    expect(joinWithCode("ABCDEFGH")).toBeNull();
+  });
+
+  it("propozycja nowego kodu po końcu okna, gdy kod bywał w starszych pokojach", async () => {
+    const now = Date.now();
+    setPrefs({ code: SHORT, v2Until: now - DAY, v2Exposed: true, legacyExposed: false });
+    const mod = await import("./yjsSync");
+    expect(mod.newCodeProposal()).toBe("v2");
+    setPrefs({ code: SHORT, v2Until: now - DAY, v2Exposed: true, legacyExposed: true });
+    expect(mod.newCodeProposal()).toBe("legacy");
+    setPrefs({ code: SHORT, v2Until: now + DAY, v2Exposed: true });
+    expect(mod.newCodeProposal()).toBeNull(); // okno trwa
+    setPrefs({ code: SHORT, v2Until: null, v2Exposed: false, legacyExposed: false });
+    expect(mod.newCodeProposal()).toBeNull(); // nigdy w starszych pokojach
+    setPrefs({ code: mod.generateCode("long"), v2Until: now - DAY, v2Exposed: true });
+    expect(mod.newCodeProposal()).toBeNull(); // kod długi
+    // Zapis sprzed tych pól: kod krótki z oknem v2 był w pokoju v2.
+    setPrefs({ code: SHORT, v2Until: now - DAY });
+    expect(mod.newCodeProposal()).toBe("v2");
+    mod.dismissNewCodeHint();
+    expect(storedPrefs().newCodeHint).toBe("dismissed");
+    // Zmiana kodu zeruje propozycję i baner.
+    mod.joinWithCode("ABCDEFGHJKMP");
+    expect(storedPrefs()).toMatchObject({ v2Exposed: false, legacyExposed: false, newCodeHint: "open", ignoredRekey: [] });
+  });
+
+  it("połączenie z pokojem v2 zapisuje v2Exposed", async () => {
+    const { joinWithCode } = await import("./yjsSync");
+    joinWithCode(SHORT);
+    await waitForMainProvider(2);
+    await waitFor(() => { if (storedPrefs().v2Exposed !== true) throw new Error("not yet"); });
+  });
+
+  it("okno v2 przedłuża się, gdy stare urządzenie było w v2 w ostatnich 14 dniach", async () => {
+    const now = Date.now();
+    setPrefs({ enabled: true, code: SHORT, v2Until: now - 1000, v2Start: now - 31 * DAY });
+    localStorage.setItem("kaczy.sync.v2only.v1", JSON.stringify({ Tablet: now - DAY }));
+    const { initSync, getV2Until, roomNamesFor } = await import("./yjsSync");
+    initSync();
+    expect(getV2Until()).toBeGreaterThan(now + 28 * DAY);
+    expect(storedPrefs().v2Start).toBe(now - 31 * DAY);
+    expect(await roomNamesFor(SHORT)).toHaveLength(2);
+    await waitForMainProvider(2); // połączenie dokończone tu, nie w następnym teście
+  });
+
+  it("urządzenie tylko w pokoju v2 przez minutę trafia do v2Only; po pojawieniu się w v3 znika", async () => {
+    const { joinWithCode, roomNameV2For } = await import("./yjsSync");
+    const { getV2Only } = await import("./sync/v2Window");
+    joinWithCode(SHORT);
+    await waitForMainProvider(2);
+    const v2Name = await roomNameV2For(SHORT);
+    const v2 = mainProviders().filter((p) => p.roomName === v2Name).at(-1)!;
+    const v3 = mainProviders().filter((p) => p.roomName !== v2Name).at(-1)!;
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      v2.awareness.remote(50, { device: { name: "Tablet" } });
+      expect(getV2Only()).toEqual({});
+      vi.setSystemTime(Date.now() + 61_000);
+      v2.awareness.remote(50, { device: { name: "Tablet" } });
+      expect(Object.keys(getV2Only())).toEqual(["Tablet"]);
+      v3.awareness.remote(51, { device: { name: "Tablet" } });
+      expect(getV2Only()).toEqual({});
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("wymiana kodu — zatrzymanie po znaczniku (D2)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    providerInstances.length = 0;
+    vi.resetModules();
+  });
+
+  async function markerFor(code: string) {
+    const { roomNameV3For } = await import("./yjsSync");
+    const { buildMarkerUpdate, newRekeyId, rekeyTag } = await import("./sync/rekey");
+    const marker = { id: newRekeyId(), tag: await rekeyTag(await roomNameV3For(code)), at: Date.now() };
+    return { marker, update: buildMarkerUpdate(marker) };
+  }
+
+  it("znacznik dla obecnego kodu zatrzymuje synchronizację; „Synchronizuj dalej” ją wznawia", async () => {
+    const mod = await import("./yjsSync");
+    const { yjsStore } = await import("./yjsStore");
+    const Y = await import("yjs");
+    mod.joinWithCode(SHORT, { v3: true });
+    await waitForMainProvider(1);
+    const first = mainProviders();
+    const { marker, update } = await markerFor(SHORT);
+    Y.applyUpdate(yjsStore.doc, update);
+    await waitFor(() => { if (mod.getSyncState().status !== "rekeyed") throw new Error("not halted"); });
+    for (const p of first) expect(p.destroyed).toBe(true);
+    expect(storedPrefs().enabled).toBe(true); // §3.3 p. 4: enabled zostaje
+
+    mod.continueOnOldCode();
+    expect(storedPrefs().ignoredRekey).toEqual([marker.id]);
+    await waitFor(() => { if (mainProviders().filter((p) => !p.destroyed).length < 1) throw new Error("not resumed"); });
+    expect(mod.getSyncState().status).not.toBe("rekeyed");
+  });
+
+  it("znacznik już w dokumencie: połączenie nie startuje żadnego dostawcy", async () => {
+    const mod = await import("./yjsSync");
+    const { yjsStore } = await import("./yjsStore");
+    const Y = await import("yjs");
+    Y.applyUpdate(yjsStore.doc, (await markerFor(SHORT)).update);
+    mod.joinWithCode(SHORT, { v3: true });
+    await waitFor(() => { if (mod.getSyncState().status !== "rekeyed") throw new Error("not halted"); });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mainProviders().filter((p) => !p.destroyed)).toHaveLength(0);
+  });
+
+  it("znacznik innego kodu jest ignorowany", async () => {
+    const mod = await import("./yjsSync");
+    const { yjsStore } = await import("./yjsStore");
+    const Y = await import("yjs");
+    Y.applyUpdate(yjsStore.doc, (await markerFor("ABCDEFGHJKMP")).update);
+    // Znaczniki z poprzednich testów zostają w dokumencie (trwały zapis), więc tu kod, którego nikt nie oznaczył.
+    mod.joinWithCode("ABCDEFGHJKMQ", { v3: true });
+    await waitForMainProvider(1);
+    expect(mod.getSyncState().status).toBe("connecting");
+  });
+
+  it("dołączenie nowym kodem po zatrzymaniu łączy normalnie", async () => {
+    const mod = await import("./yjsSync");
+    const { yjsStore } = await import("./yjsStore");
+    const Y = await import("yjs");
+    Y.applyUpdate(yjsStore.doc, (await markerFor(SHORT)).update);
+    mod.joinWithCode(SHORT, { v3: true });
+    await waitFor(() => { if (mod.getSyncState().status !== "rekeyed") throw new Error("not halted"); });
+    const fresh = mod.generateCode("long");
+    mod.joinWithCode(fresh);
+    await waitForMainProvider(1);
+    expect(mod.getSyncState()).toMatchObject({ code: fresh, status: "connecting" });
+  });
+
+  it("I-5: kod zmieniony w innej karcie — ta karta łączy się nowym; wyłączenie — rozłącza", async () => {
+    setPrefs({ enabled: true, code: "ABCDEFGHJKMS", v2Until: null });
+    const mod = await import("./yjsSync");
+    mod.initSync();
+    await waitForMainProvider(1);
+    const fresh = mod.generateCode("long");
+    setPrefs({ enabled: true, code: fresh, v2Until: null });
+    window.dispatchEvent(new StorageEvent("storage", { key: "kaczy.sync.v1" }));
+    expect(mod.getSyncState().code).toBe(fresh);
+    setPrefs({ enabled: false, code: null });
+    window.dispatchEvent(new StorageEvent("storage", { key: "kaczy.sync.v1" }));
+    expect(mod.getSyncState()).toMatchObject({ status: "disabled", code: null });
+  });
+
+  it("nowy kod zeruje zgodność ze starszą wersją (pokój FNV nie przechodzi na nowy kod)", async () => {
+    setPrefs({ enabled: false, code: SHORT, legacyRoom: true, v2Until: null });
+    const mod = await import("./yjsSync");
+    mod.joinWithCode("ABCDEFGHJKMP");
+    expect(storedPrefs().legacyRoom).toBe(false);
+    mod.setLegacyRoom(true);
+    mod.startPairing("short");
+    expect(storedPrefs().legacyRoom).toBe(false);
+  });
+
+  it("od kroku marked własny znacznik zatrzymuje połączenie starym kodem (przełączenie się nie udało)", async () => {
+    const { rekeyTag } = await import("./sync/rekey");
+    const mod = await import("./yjsSync");
+    const { yjsStore } = await import("./yjsStore");
+    const Y = await import("yjs");
+    const { buildMarkerUpdate } = await import("./sync/rekey");
+    const code = "ABCDEFGHJKMT";
+    const tag = await rekeyTag(await mod.roomNameV3For(code));
+    const id = "c".repeat(32);
+    Y.applyUpdate(yjsStore.doc, buildMarkerUpdate({ id, tag, at: Date.now() }));
+    // Zapis w kroku marked, ale ustawienia wciąż ze starym kodem (np. inna karta trzyma blokadę wymiany).
+    localStorage.setItem("kaczy.sync.rekey.v1", JSON.stringify({
+      v: 1, id, step: "marked", oldCode: code, newCode: mod.generateCode("long"), tag, relay: null, startedAt: Date.now(), devices: [],
+    }));
+    mod.joinWithCode(code, { v3: true });
+    await waitFor(() => { if (mod.getSyncState().status !== "rekeyed") throw new Error("not halted"); });
+  });
+
+  it("I-6: start w kroku `marked` kończy przełączenie i łączy się nowym kodem", async () => {
+    const { generateCode } = await import("./sync/pairCode");
+    const newCode = generateCode("long");
+    setPrefs({ enabled: true, code: SHORT, v2Until: null, legacyRoom: true });
+    localStorage.setItem("kaczy.sync.rekey.v1", JSON.stringify({
+      v: 1, id: "a".repeat(32), step: "marked", oldCode: SHORT, newCode, tag: "b".repeat(32), relay: null, startedAt: Date.now(), devices: [],
+    }));
+    const mod = await import("./yjsSync");
+    mod.initSync();
+    await waitFor(() => { if (mod.getSyncState().code !== newCode) throw new Error("not switched"); });
+    expect(storedPrefs()).toMatchObject({ code: newCode, enabled: true, v2Until: null, legacyRoom: false });
+    await waitFor(() => {
+      const r = JSON.parse(localStorage.getItem("kaczy.sync.rekey.v1") ?? "{}") as { step?: string };
+      if (r.step !== "done") throw new Error(`step ${r.step}`);
+    });
+    // Starym kodem nie połączyło się ani razu (I-2).
+    const oldRoom = await mod.roomNameV3For(SHORT);
+    expect(providerInstances.some((p) => p.roomName === oldRoom)).toBe(false);
   });
 });

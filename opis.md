@@ -842,10 +842,13 @@ Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) 
 
 ### Co robi
 
-- **Parowanie kodem.** W Ustawieniach → Sync kod z drugiego urządzenia wpisuje się w 12 kratek w trzech grupach po 4 (`ABCD EFGH JKMN`). Pole przyjmuje tylko znaki alfabetu kodu (bez I, L, O, 0, 1), małe litery zamienia na wielkie, a wklejenie przyjmuje kod ze spacjami/myślnikami albo cały link `?pair=…`.
-  „Dołącz” jest aktywne przy 12 znakach. Kod 9–11 znaków nie aktywuje przycisku.
-- **Link z kodu QR** (`?pair=`) otwiera Ustawienia → Sync z wypełnionymi kratkami. `Index` otwiera okno od startu; okno przełącza na Sync, wpisuje kod i usuwa parametr z adresu.
-- **Krótkie kody odrzucone.** Kody muszą mieć 12 znaków. Zapisany 8-znakowy kod jest usuwany przy starcie i pokazuje komunikat „Synchronizacja wyłączona: kod był za krótki” z przyciskiem „Wygeneruj nowy kod”.
+- **Dwa rodzaje kodu (S2.2, Z-15.1).** Nowa grupa dostaje **kod długi: 28 znaków** (26 losowych ≈ 128 bitów + 2 kontrolne), pokazywany w zawijanych grupach po 4. Przycisk „Kod do przepisania ręcznie” (z ostrzeżeniem) tworzy **kod krótki, 12 znaków** — taki mają też wszystkie starsze grupy. Przy kodzie długim pod QR jest zdanie „Oba urządzenia muszą mieć aktualną wersję aplikacji.”
+- **Pole kodu.** Domyślnie 12 kratek w trzech grupach po 4. Wklejenie dłuższego kodu albo linku przełącza pole na zwykłe pole tekstowe na 28 znaków (28 kratek nie mieści się na telefonie); przełącznik „Mam kod 28-znakowy / 12-znakowy” pod polem robi to ręcznie. Pole przyjmuje tylko znaki alfabetu kodu (bez I, L, O, 0, 1). Literówka w kodzie długim daje „Sprawdź kod — jeden ze znaków się nie zgadza.” „Dołącz” jest aktywne tylko dla kodu, który rozpoznaje `parseCode`.
+- **Link z kodu QR** (`#pair=…`, stare `?pair=` też) otwiera Ustawienia → Sync z wypełnionym polem. Grupa bez pokoju v2 (kod długi albo `v2Until === null`) dostaje w linku `&v=3` — dołączający nie otwiera wtedy okna v2.
+- **Krótkie kody odrzucone.** Zapisany kod, którego nie rozpoznaje `parseCode` (np. 8-znakowy), jest usuwany przy starcie i pokazuje komunikat „Synchronizacja wyłączona: kod był za krótki” z przyciskiem „Wygeneruj nowy kod”.
+- **Koniec pokoi v2 i najstarszego (S2.6, Z-15.2).** Pokój v2 (szybki SHA-256 kodu) jest dołączany tylko dla kodu krótkiego w oknie zgodności (30 dni od dołączenia kodem bez `v=3` albo od aktualizacji). Gdy okno mija, a w ostatnich 14 dniach w pokoju v2 było urządzenie ze starą wersją, okno przedłuża się o 30 dni, najwyżej do 90 dni od początku. Karta „Urządzenia w grupie” pokazuje takie urządzenia: „«Tablet» ma starą wersję aplikacji. Zaktualizuj ją do 14.02…”, po końcu okna — komunikat do zamknięcia. Zgodność z najstarszym pokojem (FNV) wyłącza się najpóźniej 90 dni od włączenia; pod przełącznikiem jest data. Przy kodzie długim przełącznika nie ma.
+- **Propozycja nowego kodu.** Kod krótki, okno v2 minęło, a kod bywał w pokoju v2 albo FNV → karta „Zalecamy nowy kod synchronizacji.” w Ustawieniach i jednorazowy baner na Dziś („×” = „Nie teraz”, na stałe). Przycisku „Zmień kod” jeszcze nie ma (Z-15.3).
+- **Kod zmieniony na innym urządzeniu (D2).** Gdy dokument zawiera znacznik „kod zmieniony” dla obecnego kodu, synchronizacja staje w stanie `rekeyed`: karta w Ustawieniach („Sparuj ponownie”, „Synchronizuj dalej na starym kodzie” z potwierdzeniem), baner na Dziś, czerwona kropka w nagłówku. Dane lokalne zostają.
 - **Diagnoza** (jedno zdanie w Ustawieniach): brak połączenia z serwerami, połączono bez drugiego urządzenia, albo łączenie (ile serwerów odpowiada). Po powrocie do karty albo odzyskaniu sieci sync łączy się ponownie, nie częściej niż co 10 s.
 - **Urządzenia w grupie.** Karta „Urządzenia w grupie”: lista innych urządzeń połączonych teraz (nazwy) i pole „Nazwa tego urządzenia” (domyślnie „Telefon” albo „Komputer” wg przeglądarki). Po połączeniu nowego urządzenia pojawia się toast „Połączono z: [nazwa]”.
 - **Odłączenie.** „Odłącz to urządzenie” (z potwierdzeniem: pozostałe urządzenia zostają w grupie). Sekcja kodu nazywa się „Dodaj urządzenie” (QR i kod).
@@ -855,8 +858,17 @@ Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) 
 
 - `src/components/ui/input-otp.tsx` — `InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator` (shadcn Input OTP na paczce `input-otp` 1.5). Animacja karetki `caret-blink` w `tailwind.config.ts`.
 - `src/components/SyncSettings.tsx` — formularz „Dołącz do istniejącej grupy” (`joinReady`, `LEGACY_CODE_LENGTH`), diagnoza, lista urządzeń, nazwa urządzenia, potwierdzenia „Odłącz”.
-- `src/lib/yjsSync.ts` — `CODE_LENGTH`, `CODE_PATTERN`, `codeFromPaste` (link → kod, odrzuca znaki spoza alfabetu, tnie do 12), `readPrefs` (odrzucenie krótkiego kodu, pole `shortCodeDropped`), `joinWithCode` (`null` dla złej długości), `wasShortCodeDropped`, `SyncState.signalingUp/signalingTotal`, `reconnectIfNeeded` i listener `visibilitychange` w `initSync`, `SyncDevice`, `SyncState.devices`, `getDeviceName` / `setDeviceName` / `defaultDeviceName` (klucz `kaczy.sync.deviceName`), `refreshDevices` (awareness pierwszego pokoju v2), `changedNoteTitle()` (porównuje `updatedAt` z `remoteSeenUpdated`, wołane w `yjsStore.doc.on("update")`).
-- `src/pages/Index.tsx` — `settingsOpen` startuje jako `true`, gdy adres ma `?pair=`.
+- `src/lib/yjsSync.ts` — `CODE_LENGTH`, `CODE_PATTERN`, `readPrefs` (odrzucenie krótkiego kodu, pole `shortCodeDropped`), `joinWithCode` (`null` dla złej długości), `wasShortCodeDropped`, `SyncState.signalingUp/signalingTotal`, `reconnectIfNeeded` i listener `visibilitychange` w `initSync`, `SyncDevice`, `SyncState.devices`, `getDeviceName` / `setDeviceName` / `defaultDeviceName` (klucz `kaczy.sync.deviceName`), `refreshDevices` (awareness pokoju v3), `changedNoteTitle()` (porównuje `updatedAt` z `remoteSeenUpdated`, wołane w `yjsStore.doc.on("update")`).
+- `src/pages/Index.tsx` — `settingsOpen` startuje jako `true`, gdy adres ma `?pair=`; `NewCodeBanner` na Dziś.
+- `src/lib/sync/pairCode.ts` — `generateCode(kind)`, `checksumChars`, `parseCode` (jedyne miejsce rozpoznawania: `short` / `long` / błąd `length|checksum|chars`), `codeFromPaste` (bez obcinania do 12, najwyżej 28), `codeErrorText`. `yjsSync.ts` re-eksportuje te nazwy dla starszych importów. `qrScan.ts` (`codeFromScan`) korzysta z `parseCode`.
+- `src/lib/sync/v2Window.ts` — `extendV2Window`, mapa `v2Only` (`kaczy.sync.v2only.v1`, najwyżej 20 nazw), `v2OnlyNotices`.
+- `src/lib/pairLink.ts` — `pairLink(…, v3)`, `pairTextIsV3`; `clearPairFromLocation` zdejmuje też `v`.
+- `src/lib/legacyRoomIdle.ts` — `LEGACY_MAX_MS`, `legacyEndsAt` (min(ostatnie pojawienie + 30 dni, włączenie + 90 dni)).
+- `src/lib/yjsSync.ts` — pola `v2Start`, `v2Exposed`, `legacyExposed`, `newCodeHint`, `ignoredRekey` w `kaczy.sync.v1`; `roomNamesFor` (kod długi → sam v3), `extendV2IfNeeded`, `observeV2Only`, `newCodeProposal` / `useNewCodeProposal` / `dismissNewCodeHint`, `groupIsV3Only`, `startPairing(kind)`, `joinWithCode(raw, { v3 })`; wymiana kodu: `rekeyStop`, `rekeyGate`, `haltRekeyed`, `onSyncControl`, `continueOnOldCode`, `restartRelay`, `followPrefs` (zdarzenie `storage`), `prepareCodeChange` / `runCodeChange` / `cancelCodeChange` (dla Z-15.3), `tickRekeyDevices`.
+- `src/lib/sync/rekeyRuntime.ts` — zapis wymiany (`loadRekeyRecord`, `saveRekeyRecord`, `useRekeyRecord`) i porty produkcyjne `rekeyPorts(host)`; kod przekaźnika wymiany (`rekeyRelay.ts`) ładowany leniwie.
+- `src/lib/sync/relayRuntime.ts` — `idbRelayStore` (eksport), `forgetRelayRoom`, `setRelayGate` (bramka `canSend` dla wpisów i blobów).
+- `src/components/sync/JoinCodeField.tsx` (`JoinCodeField`, `GroupedCode`), `SyncCodeNotices.tsx` (`NewCodeCard`, `RekeyedCard`, `V2OnlyNotices`), `NewCodeBanner.tsx`; `SyncStatusDot` (ton `rekeyed`), `OfflineQueuePanel` (opis stanu).
+- `src/lib/settingsDeepLink.ts` — `peekRequestedSettingsTab`: `SettingsDialog` tylko podgląda zamówioną kartę w inicjalizatorze, zużywa ją efekt (przerwany render współbieżny gubił kartę „Sync” po kliknięciu kropki).
 
 ### Jak działa i dlaczego
 
@@ -864,16 +876,36 @@ Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) 
 - **Nazwa urządzenia przez awareness.** Nazwa idzie przez `setLocalStateField("device", …)`, więc nie zmienia protokołu ani danych w Yjs. Każde urządzenie ma własne `clientID`; lista pomija własne.
 - **„Odłącz” działa tylko lokalnie.** Wspólny kod nie daje sposobu, by z zewnątrz wyrzucić jedno urządzenie, stąd rozdzielenie na „to urządzenie” i listę pozostałych.
 - **Toast z tytułem** porównuje notatki z poprzednim zdalnym zapisem; nie jest wysyłany częściej niż co 30 s.
+- **Wyprowadzenia bez zmian.** Nazwy pokoi, hasło WebRTC i klucze przekaźnika liczy się z całego napisu kodu, więc kod 12-znakowy daje te same pokoje co przed kodem długim (wektory w `yjsSync.test.ts`). Kod długi nigdy nie trafia do pokoju v2 ani FNV — starsza wersja i tak by go nie przyjęła.
+- **v2Only.** Zaktualizowane urządzenie jest w obu pokojach, więc nazwa widziana w awareness pokoju v2, a nie v3, przez 60 s oznacza starą wersję. Zmiana kodu zeruje `v2Only`, `v2Exposed`, `legacyExposed`, `newCodeHint`, `ignoredRekey` i `legacyRoom` (`freshCode`).
+- **Zatrzymanie po znaczniku (D2, `docs/plan-wymiana-kodu.md` §3.3).** `connect` najpierw liczy tag kodu (`rekeyTag` nazwy v3) i sprawdza mapę `syncControl`; obrazy, przekaźnik i WebRTC startują dopiero po tej bramce. Obserwator mapy działa synchronicznie w `applyUpdate`: bramka przekaźnika (`canSend`, także w przebiegu blobów) blokuje wysyłkę od razu, rozłączenie idzie w mikrozadaniu. Bramka jest zamknięta, dopóki tag nie jest policzony. Własny znacznik jest pomijany tylko w krokach `prepared`/`seeded`; od `marked` urządzenie nie łączy się już starym kodem.
+- **Karty jednego urządzenia (I-5).** Zdarzenie `storage` dla `kaczy.sync.v1`: inna karta zmieniła kod → łączymy nowym; wyłączyła → rozłączamy (naprawia też „Opuść grupę” w drugiej karcie).
+- **Start (I-6).** `initSync` w kroku `marked` najpierw kończy przełączenie (`runRekey`), dopiero potem łączy; inne kroki po potwierdzeniu wznawia po połączeniu i przy zdarzeniu `online`. Raz na start `pruneMarkers` usuwa znaczniki starsze niż 180 dni i wpisy `rekey:…` o złym kształcie (innych kluczy mapy nie rusza).
 
 ### Ograniczenia i pułapki
 
 - Brak TURN (decyzja użytkownika, brak hostingu): połączenie przez część sieci komórkowych może się nie udać. Oba urządzenia muszą być online jednocześnie.
 - Kody spoza alfabetu nie dadzą się wpisać — wszystkie generowane kody są z tego samego alfabetu.
 - PIN skarbca nie korzysta z `InputOTP` (skarbiec ma hasło dowolnej długości).
-- Lista urządzeń pokazuje tylko te w pokoju v2. Przy włączonej zgodności ze starą wersją urządzenie widoczne tylko w starym pokoju się nie pojawi.
+- Lista urządzeń pokazuje tylko te w pokoju v3. Urządzenie ze starą wersją (tylko v2) widać w komunikacie `v2Only`; widoczne tylko w pokoju FNV — nigdzie.
 - „Ostatnia synchronizacja” per urządzenie nie istnieje — awareness jej nie niesie; zostaje globalna z kafla diagnozy.
 - Toast przy kilku zmianach naraz może wskazać lokalną notatkę (porównanie obejmuje lokalne edycje od ostatniego zdalnego zapisu).
 - `fill()` w Playwright nie przechodzi przez `pasteTransformer` — w testach wpisuj `pressSequentially`.
+- Starsza wersja aplikacji, do której wklei się kod długi, utnie go do 12 znaków i dołączy do pustej grupy bez komunikatu — w wydanej wersji tego nie naprawimy; stąd zdanie przy QR.
+- WebRTC startuje równolegle z przekaźnikiem, nie po jego pierwszym pobraniu: urządzenie wracające po wymianie kodu może wysłać zaległe zmiany przez WebRTC do urządzenia online w starym pokoju, zanim zobaczy znacznik (I-7 chroni tylko przekaźnik). Świadome ograniczenie.
+- Znacznik jest niezaufany: każdy, kto zna kod, może wstrzymać synchronizację albo usunąć znacznik z dokumentu. `ignoredRekey` trzyma najwyżej 20 identyfikatorów. `pruneMarkers` ufa zegarowi urządzenia.
+- Kluczem `v2Only` jest nazwa urządzenia — dwa urządzenia o tej samej nazwie się zlewają.
+- „Zmień kod” (UI wymiany, Z-15.3) i pełne testy wymiany (Z-15.4) jeszcze nie istnieją; API jest gotowe w `yjsSync.ts`.
+
+### Testy
+
+- `src/lib/sync/pairCode.test.ts`, `src/lib/sync/v2Window.test.ts`, `src/lib/legacyRoomIdle.test.ts`, `src/lib/pairLink.test.ts`, `src/lib/qrScan.test.ts`.
+- `src/lib/yjsSync.test.ts` — wektory zgodności, tabela pokoi (krótki/długi × okno × zgodność), `v=3`, propozycja, przedłużenie okna, `v2Only`, zatrzymanie po znaczniku, „Synchronizuj dalej”, I-5, I-6, własny znacznik od `marked`, zerowanie `legacyRoom`.
+- e2e: `sync-code.spec.ts`, `sync-qr-scan.spec.ts`, `sync-status-dot.spec.ts`, `a11y.spec.ts`.
+
+### Commit
+
+Niezacommitowane (gałąź `wip/mobile-fala1`, na bazie `bd7e0069`), 2026-11-17.
 - Budżet: `yjsSync` jest w paczce startowej (`NotesProvider`); próg eager w `e2e/bundle.spec.ts`, ostatni pomiar 392,4 KB.
 
 ### Testy

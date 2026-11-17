@@ -33,7 +33,9 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
       ? `Połączono — ${syncState.peerCount} ${deviceWord(syncState.peerCount)}`
       : syncState.status === "connected" || syncState.status === "connecting"
         ? "Szukanie urządzeń…"
-        : "Wyłączona";
+        : syncState.status === "rekeyed"
+          ? "Wstrzymana — kod zmieniono na innym urządzeniu. Sparuj ponownie w Ustawieniach → Sync."
+          : "Wyłączona";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

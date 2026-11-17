@@ -18,8 +18,6 @@ import * as Y from "yjs";
 export const SYNC_CONTROL_MAP = "syncControl";
 const MARKER_PREFIX = "rekey:";
 const HEX32 = /^[0-9a-f]{32}$/;
-/** Ile wpisów mapy oglądamy: znacznik jest niezaufany, więc zapchana mapa nie może zająć urządzenia. */
-const MARKER_SCAN_LIMIT = 200;
 export const MARKER_TTL_MS = 180 * 24 * 60 * 60 * 1000;
 
 export interface RekeyMarker {
@@ -67,12 +65,13 @@ function cleanMarker(key: string, value: unknown): RekeyMarker | null {
   return { id, tag: v.tag, at: v.at };
 }
 
-/** Poprawne znaczniki z dokumentu (najwyżej `MARKER_SCAN_LIMIT` obejrzanych wpisów). */
+/**
+ * Poprawne znaczniki z dokumentu. Bez limitu oglądanych wpisów: limit pozwalałby urządzeniu z kodem zapchać mapę
+ * śmieciami tak, że prawdziwy znacznik nie zostałby nigdy przeczytany (przegląd bezpieczeństwa D2, W3).
+ */
 export function readMarkers(doc: Y.Doc): RekeyMarker[] {
   const out: RekeyMarker[] = [];
-  let seen = 0;
   for (const [key, value] of doc.getMap(SYNC_CONTROL_MAP).entries()) {
-    if (seen++ >= MARKER_SCAN_LIMIT) break;
     const m = cleanMarker(key, value);
     if (m) out.push(m);
   }
@@ -91,12 +90,18 @@ export function stoppingMarker(doc: Y.Doc, myTag: string, ignored: readonly stri
   return null;
 }
 
-/** Usuwa znaczniki starsze niż 180 dni. Zwraca liczbę usuniętych. */
+/** Usuwa znaczniki starsze niż 180 dni i wpisy `rekey:…` o złym kształcie. Zwraca liczbę usuniętych. */
 export function pruneMarkers(doc: Y.Doc, now: number): number {
-  const stale = readMarkers(doc).filter((m) => now - m.at > MARKER_TTL_MS);
-  if (stale.length === 0) return 0;
   const map = doc.getMap(SYNC_CONTROL_MAP);
-  doc.transact(() => stale.forEach((m) => map.delete(MARKER_PREFIX + m.id)));
+  const stale: string[] = [];
+  for (const [key, value] of map.entries()) {
+    // Tylko klucze znaczników — mapa może kiedyś nieść inne wpisy sterujące, a usunięcie rozchodzi się do całej grupy.
+    if (!key.startsWith(MARKER_PREFIX)) continue;
+    const m = cleanMarker(key, value);
+    if (!m || now - m.at > MARKER_TTL_MS) stale.push(key);
+  }
+  if (stale.length === 0) return 0;
+  doc.transact(() => stale.forEach((k) => map.delete(k)));
   return stale.length;
 }
 

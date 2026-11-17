@@ -98,6 +98,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { VaultHost } from "@/components/vault/VaultHost";
 import { TodayCards } from "@/components/review/TodayCards";
 import { OlderDeviceBanner } from "@/components/sync/OlderDeviceBanner";
+import { NewCodeBanner } from "@/components/sync/NewCodeBanner";
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
@@ -565,6 +566,7 @@ const Index = () => {
         <PageActionsProvider>
         <main ref={mainRef} className={`flex-1 max-w-[calc(var(--page-wide)+3rem)] mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col pb-safe ${view === "today" ? "gap-4 sm:gap-10" : "gap-8 sm:gap-10"}`}>
           <OlderDeviceBanner onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }} />
+          {view === "today" && <NewCodeBanner onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }} />}
           {/* Główka kartki w każdym dziale (plan wyglądu, Faza 1); lewa krawędź wspólna z treścią (nowy plan 1.2). */}
           {view !== "widget" && (
             <ViewTitle

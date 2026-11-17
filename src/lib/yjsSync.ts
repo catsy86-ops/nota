@@ -1,11 +1,22 @@
 import { cleanSchemaClaim, cleanVersionClaim, localDeviceSchema, setDeviceSource, type DeviceSchema } from "@/lib/formatSchema";
-import { cleanDeviceName, recordSeenDevices } from "@/lib/syncSeen";
+import { cleanDeviceName, getSeenDevices, recordSeenDevices } from "@/lib/syncSeen";
 import { clearLegacyIdle, legacyIdleExpired, markLegacyEnabled, markLegacySeen, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
+import * as Y from "yjs";
 import { yjsStore } from "@/lib/yjsStore";
 import { startImageSync, stopImageSync } from "@/lib/imageSync";
-import { startRelay, stopRelay } from "@/lib/sync/relayRuntime";
+import { forgetRelayRoom, setRelayGate, startRelay, stopRelay } from "@/lib/sync/relayRuntime";
+import { deriveRelayKeys } from "@/lib/sync/relayKeys";
+import { codeKind, generateCode, parseCode, type CodeKind } from "@/lib/sync/pairCode";
+import {
+  V2_COMPAT_MS, V2_ONLY_GRACE_MS, clearAllV2Only, clearV2Only, extendV2Window, getV2Only, latestV2Only, recordV2Only,
+} from "@/lib/sync/v2Window";
+import {
+  REKEY_STORAGE_KEY, SYNC_CONTROL_MAP, cancelRekey, pruneMarkers, prepareRekey, readMarkers, rekeyTag, runRekey, stoppingMarker,
+  withDevicePaired, type RekeyResult, type RunOptions,
+} from "@/lib/sync/rekey";
+import { loadRekeyRecord, notifyRekeyRecord, rekeyPorts, saveRekeyRecord } from "@/lib/sync/rekeyRuntime";
 import { logDiag } from "@/lib/diagnostics";
 import { toast } from "@/lib/notify";
 
@@ -21,10 +32,12 @@ import { toast } from "@/lib/notify";
  */
 
 const STORAGE_KEY = "kaczy.sync.v1";
-export const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no ambiguous I/O/0/1/L
-// 12 znaków z 31 ≈ 59 bitów (wcześniej 8 ≈ 40). Kod i tak zwykle idzie przez QR,
-// więc długość nic nie kosztuje. Stare 8-znakowe kody działają dalej.
-export const CODE_LENGTH = 12;
+// Format kodu (krótki 12 / długi 28 znaków) i okno pokoju v2 mają własne moduły; tu zostają nazwy dla starszych importów.
+export {
+  CODE_ALPHABET, CODE_LENGTH, CODE_LENGTH_LONG, CODE_PATTERN, codeErrorText, codeFromPaste, codeKind, formatCode, generateCode,
+  normalizeCode, parseCode, type CodeKind,
+} from "@/lib/sync/pairCode";
+export { V2_COMPAT_MS } from "@/lib/sync/v2Window";
 /**
  * Zgodność ze starszą wersją aplikacji (opt-in, domyślnie WYŁĄCZONA).
  * Starsza wersja zna tylko pokój o nazwie FNV-64 z kodu. Taka nazwa idzie
@@ -51,44 +64,95 @@ interface SyncPrefs {
    * (`initSync` zamienia go na 30 dni od pierwszego uruchomienia).
    */
   v2Until?: number | null;
+  /** Początek okna v2 — od niego liczy się twardy koniec 90 dni (S2.6). Brak = `v2Until − 30 dni`. */
+  v2Start?: number | null;
+  /** Urządzenie dołączało z obecnym kodem do pokoju v2 / najstarszego — podstawa propozycji nowego kodu (§2.3). */
+  v2Exposed: boolean;
+  legacyExposed: boolean;
+  /** Baner propozycji na Dziś: „dismissed” = zamknięty na stałe (karta w ustawieniach zostaje). */
+  newCodeHint: "open" | "dismissed";
+  /** Znaczniki „kod zmieniony”, które użytkownik kazał pominąć („Synchronizuj dalej na starym kodzie”). */
+  ignoredRekey: string[];
 }
 
-const DEFAULT_PREFS: SyncPrefs = { enabled: false, code: null, signaling: [], legacyRoom: DEFAULT_LEGACY_ROOM, shortCodeDropped: false, v2Until: null };
+/** Pola związane z kodem — zmiana kodu zeruje je wszystkie. */
+// `legacyRoom` też: zgodność włączona dla starego kodu nie może przejść na nowy (nazwa FNV ujawnia kod).
+const freshCode = (): Pick<SyncPrefs, "v2Exposed" | "legacyExposed" | "newCodeHint" | "ignoredRekey" | "legacyRoom"> =>
+  ({ v2Exposed: false, legacyExposed: false, newCodeHint: "open", ignoredRekey: [], legacyRoom: false });
 
-/** Czas zgodności z pokojem v2 po przejściu na v3 (S3). */
-export const V2_COMPAT_MS = 30 * 24 * 60 * 60 * 1000;
+/** Lokalne magazyny zależne od kodu (poza `kaczy.sync.v1`) — razem z `freshCode` przy każdej zmianie kodu. */
+function clearCodeScoped(): void {
+  clearAllV2Only();
+  clearLegacyIdle();
+}
+
+const DEFAULT_PREFS: SyncPrefs = {
+  ...freshCode(),
+  enabled: false, code: null, signaling: [], legacyRoom: DEFAULT_LEGACY_ROOM, shortCodeDropped: false, v2Until: null, v2Start: null,
+};
+const IGNORED_REKEY_MAX = 20;
+
+// Ostatni przeczytany tekst i wynik: bramka przekaźnika i hooki czytają ustawienia często, a parsowanie nie jest darmowe.
+// Wynik jest współdzielony — wołający nie modyfikują go, tylko budują nowy obiekt do `writePrefs`.
+let prefsCache: { raw: string; prefs: SyncPrefs } | null = null;
 
 function readPrefs(): SyncPrefs {
   if (typeof window === "undefined") return DEFAULT_PREFS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PREFS;
-    const stored = JSON.parse(raw) as Partial<SyncPrefs>;
-    const parsed = { ...DEFAULT_PREFS, ...stored };
-    // localStorage bywa uszkodzony albo podmieniony — każde pole sprawdzamy z osobna.
-    const signaling = Array.isArray(parsed.signaling)
-      ? parseSignalingList(parsed.signaling.filter((s: unknown) => typeof s === "string").join(" ")).valid
-      : [];
-    const rawCode = typeof parsed.code === "string" && /^\S{1,64}$/.test(parsed.code) ? parsed.code : null;
-    // Krótkie kody (starsza wersja) nie są już przyjmowane: nazwa pokoju z 8 znaków dałaby się odgadnąć.
-    const short = rawCode !== null && rawCode.length < CODE_LENGTH;
-    const code = short ? null : rawCode;
-    return {
-      enabled: parsed.enabled === true && code !== null, code, signaling, legacyRoom: parsed.legacyRoom === true,
-      shortCodeDropped: short || parsed.shortCodeDropped === true,
-      v2Until: typeof stored.v2Until === "number" ? stored.v2Until : stored.v2Until === null ? null : undefined,
-    };
+    if (prefsCache?.raw === raw) return prefsCache.prefs;
+    const prefs = parsePrefs(raw);
+    prefsCache = { raw, prefs };
+    return prefs;
   } catch (err) {
     logDiag("warn", "yjsSync", "unreadable sync prefs, using defaults", err);
     return DEFAULT_PREFS;
   }
 }
 
-function writePrefs(prefs: SyncPrefs) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)); } catch (err) { logDiag("warn", "yjsSync", "cannot persist sync prefs", err); }
+/** Rzuca przy uszkodzonym JSON-ie — `readPrefs` łapie i wraca do ustawień domyślnych. */
+function parsePrefs(raw: string): SyncPrefs {
+  const stored = JSON.parse(raw) as Partial<SyncPrefs>;
+  const parsed = { ...DEFAULT_PREFS, ...stored };
+  // localStorage bywa uszkodzony albo podmieniony — każde pole sprawdzamy z osobna.
+  const signaling = Array.isArray(parsed.signaling)
+    ? parseSignalingList(parsed.signaling.filter((s: unknown) => typeof s === "string").join(" ")).valid
+    : [];
+  const rawCode = typeof parsed.code === "string" && /^\S{1,64}$/.test(parsed.code) ? parsed.code : null;
+  // Kod, którego `parseCode` nie rozpoznaje (8 znaków ze starszej wersji, uszkodzony), jest usuwany — nazwa pokoju
+  // z 8 znaków dałaby się odgadnąć; trzeba sparować ponownie.
+  const code = rawCode === null ? null : parseCode(rawCode).code ?? null;
+  const dropped = rawCode !== null && code === null;
+  const short = code !== null && codeKind(code) === "short";
+  return {
+    enabled: parsed.enabled === true && code !== null, code, signaling, legacyRoom: parsed.legacyRoom === true,
+    shortCodeDropped: dropped || parsed.shortCodeDropped === true,
+    v2Until: typeof stored.v2Until === "number" ? stored.v2Until : stored.v2Until === null ? null : undefined,
+    v2Start: typeof stored.v2Start === "number" ? stored.v2Start : null,
+    // Zapis sprzed tych pól: kod krótki z otwartym (albo jeszcze nierozpoczętym) oknem v2 był w pokoju v2.
+    v2Exposed: typeof stored.v2Exposed === "boolean" ? stored.v2Exposed : short && stored.v2Until !== null,
+    legacyExposed: typeof stored.legacyExposed === "boolean" ? stored.legacyExposed : parsed.legacyRoom === true,
+    newCodeHint: stored.newCodeHint === "dismissed" ? "dismissed" : "open",
+    ignoredRekey: Array.isArray(stored.ignoredRekey)
+      ? stored.ignoredRekey.filter((id): id is string => typeof id === "string" && /^[0-9a-f]{32}$/.test(id)).slice(-IGNORED_REKEY_MAX)
+      : [],
+  };
 }
 
-export type SyncStatus = "disabled" | "connecting" | "connected";
+/** `false` = zapis się nie udał (prywatne okno, pełny dysk). Powiadamia hooki czytające ustawienia. */
+function writePrefs(prefs: SyncPrefs): boolean {
+  let ok = true;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)); } catch (err) { ok = false; logDiag("warn", "yjsSync", "cannot persist sync prefs", err); }
+  emit();
+  return ok;
+}
+
+/**
+ * `rekeyed` — kod tej grupy został zmieniony na innym urządzeniu (znacznik w `syncControl`, §3.3): synchronizacja
+ * stoi, `enabled` zostaje `true`, dane lokalne bez zmian. Wyjście: sparować nowym kodem albo „Synchronizuj dalej”.
+ */
+export type SyncStatus = "disabled" | "connecting" | "connected" | "rekeyed";
 
 /** Inne urządzenie w grupie, widoczne przez awareness (nazwa z jego ustawień). */
 export interface SyncDevice extends DeviceSchema {
@@ -146,42 +210,6 @@ export function useSyncState(): SyncState {
   return useSyncExternalStore(subscribe, getSyncState, () => DEFAULT_STATE);
 }
 
-/** Random human-typable pairing code. */
-export function generateCode(): string {
-  // Odrzucanie bajtów z „ogona” — samo `% długość` faworyzowałoby pierwsze znaki alfabetu.
-  const limit = 256 - (256 % CODE_ALPHABET.length);
-  let out = "";
-  while (out.length < CODE_LENGTH) {
-    for (const b of crypto.getRandomValues(new Uint8Array(CODE_LENGTH * 2))) {
-      if (b < limit && out.length < CODE_LENGTH) out += CODE_ALPHABET[b % CODE_ALPHABET.length];
-    }
-  }
-  return out;
-}
-
-/** Kod z pola lub linku: wielkie litery, bez spacji i myślników (kod jest wyświetlany w grupach). */
-export function normalizeCode(raw: string): string {
-  return raw.toUpperCase().replace(/[\s-]/g, "");
-}
-
-/** Dozwolone znaki kodu dla pola z kratkami (małe litery pole zamienia na wielkie). */
-export const CODE_PATTERN = "^[A-HJKMNP-Za-hjkmnp-z2-9]*$";
-
-/**
- * Wklejony tekst → kod: przyjmuje też cały link `?pair=…` i kod w grupach.
- * Odrzuca znaki spoza alfabetu (np. kropkę z końca zdania), tnie do 12.
- */
-export function codeFromPaste(raw: string): string {
-  const fromLink = raw.match(/[?&#]pair=([^&#\s]+)/)?.[1];
-  const code = normalizeCode(fromLink ?? raw);
-  return [...code].filter((c) => CODE_ALPHABET.includes(c)).join("").slice(0, CODE_LENGTH);
-}
-
-/** Kod w grupach po 4 znaki — łatwiej przepisać z ekranu. */
-export function formatCode(code: string): string {
-  return code.match(/.{1,4}/g)?.join(" ") ?? code;
-}
-
 /**
  * STARY pokój (okres przejściowy, patrz `JOIN_LEGACY_ROOM`): dwa 32-bitowe
  * FNV, razem 64 bity. Kolizja nazwy z obcą grupą kończyła się pokojem, w którym
@@ -217,15 +245,23 @@ export async function roomNameV2For(code: string): Promise<string> {
  * offline (rzędu godzin–dni na farmie GPU); wolny KDF przesuwa to poza zasięg (S3 audytu 2026-11-11).
  */
 const ROOM_V3_ITERATIONS = 200_000;
-const roomV3Cache = new Map<string, string>();
-export async function roomNameV3For(code: string): Promise<string> {
-  const cached = roomV3Cache.get(code);
-  if (cached) return cached;
+// Obietnice, nie wyniki: bramka wymiany kodu i lista pokoi pytają równolegle — PBKDF2 liczy się raz.
+const roomV3Cache = new Map<string, Promise<string>>();
+export function roomNameV3For(code: string): Promise<string> {
+  let p = roomV3Cache.get(code);
+  if (!p) {
+    p = deriveRoomV3(code);
+    roomV3Cache.set(code, p);
+    p.catch(() => roomV3Cache.delete(code));
+  }
+  return p;
+}
+
+async function deriveRoomV3(code: string): Promise<string> {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey("raw", enc.encode(code), "PBKDF2", false, ["deriveBits"]);
   const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: enc.encode("kaczy-room-v3"), iterations: ROOM_V3_ITERATIONS }, key, 128);
   const name = `kaczy3-${Array.from(new Uint8Array(bits), (b) => b.toString(16).padStart(2, "0")).join("")}`;
-  roomV3Cache.set(code, name);
   return name;
 }
 
@@ -276,15 +312,69 @@ export function v2CompatActive(now: number = Date.now()): boolean {
   return typeof until === "number" && now < until;
 }
 
+/** Koniec okna v2 (ms) albo `null`, gdy urządzenie do pokoju v2 nie dołącza. */
+export function getV2Until(): number | null {
+  const { code, v2Until } = readPrefs();
+  return code && codeKind(code) === "short" && typeof v2Until === "number" ? v2Until : null;
+}
+
+/** Czy grupa nie ma pokoju v2 — link parowania dostaje wtedy `&v=3` (§2.2). */
+export function groupIsV3Only(): boolean {
+  const { code, v2Until } = readPrefs();
+  return !!code && (codeKind(code) === "long" || v2Until === null);
+}
+
 /**
- * Pokoje, do których dołącza urządzenie: v3 zawsze; v2 w oknie zgodności (30 dni od aktualizacji albo od dołączenia
- * po kodzie — grupa mogła zostać na starszych wersjach); stary FNV tylko po jawnym włączeniu zgodności.
+ * Okno minęło, a w pokoju v2 było niedawno urządzenie ze starą wersją → przedłużenie o 30 dni, najwyżej do 90 dni
+ * od początku okna (§2.2). Wołane przed wyliczeniem pokoi w `connect`.
+ */
+function extendV2IfNeeded(now: number = Date.now()): void {
+  const prefs = readPrefs();
+  if (!prefs.code || codeKind(prefs.code) !== "short" || typeof prefs.v2Until !== "number") return;
+  const next = extendV2Window({ v2Until: prefs.v2Until, v2Start: prefs.v2Start }, latestV2Only(getV2Only(), now), now);
+  if (!next) return;
+  writePrefs({ ...prefs, ...next });
+  logDiag("info", "yjsSync", "room v2: compatibility window extended (old app version seen)");
+}
+
+/**
+ * Pokoje, do których dołącza urządzenie: v3 zawsze; dla kodu krótkiego także v2 w oknie zgodności (30 dni od
+ * aktualizacji albo od dołączenia po kodzie — grupa mogła zostać na starszych wersjach) i stary FNV po jawnym
+ * włączeniu zgodności. Kod długi — sam v3: żadna wersja, która zna tylko starsze pokoje, nie przyjmie 28 znaków.
  */
 export async function roomNamesFor(code: string): Promise<string[]> {
   const rooms = [await roomNameV3For(code)];
+  if (codeKind(code) === "long") return rooms;
   if (v2CompatActive()) rooms.push(await roomNameV2For(code));
   if (readPrefs().legacyRoom) rooms.push(roomNameFor(code));
   return rooms;
+}
+
+export type NewCodeProposal = "v2" | "legacy" | null;
+
+/**
+ * Propozycja nowego kodu (§2.3): kod krótki, okno v2 się skończyło, a kod bywał w pokoju v2 albo najstarszym —
+ * nazwy tych pokoi pozwalały zgadywać kod bez wolnego KDF. `legacy` ma pierwszeństwo (FNV da się odwrócić).
+ */
+export function newCodeProposal(now: number = Date.now()): NewCodeProposal {
+  const p = readPrefs();
+  if (!p.code || codeKind(p.code) !== "short") return null;
+  if (p.v2Until === undefined || (typeof p.v2Until === "number" && now < p.v2Until)) return null;
+  return p.legacyExposed ? "legacy" : p.v2Exposed ? "v2" : null;
+}
+
+const proposalSnapshot = () => `${newCodeProposal() ?? ""}|${readPrefs().newCodeHint}`;
+
+/** Propozycja i to, czy baner na Dziś został zamknięty. */
+export function useNewCodeProposal(): { kind: NewCodeProposal; dismissed: boolean } {
+  const snap = useSyncExternalStore(subscribe, proposalSnapshot, () => "|open");
+  const [kind, hint] = snap.split("|");
+  return { kind: (kind || null) as NewCodeProposal, dismissed: hint === "dismissed" };
+}
+
+/** „Nie teraz” na banerze: chowa go na stałe; karta w ustawieniach zostaje, dopóki kod się nie zmieni. */
+export function dismissNewCodeHint(): void {
+  writePrefs({ ...readPrefs(), newCodeHint: "dismissed" });
 }
 
 export function getLegacyRoom(): boolean {
@@ -304,10 +394,10 @@ export function setLegacyRoom(on: boolean): void {
 /**
  * Kody ze starszych wersji miały 8 znaków (≈ 40 bitów). Nazwa pokoju (SHA-256 kodu)
  * jest jawna dla serwera sygnalizacyjnego, a 2^40 skrótów to minuty na jednej karcie
- * graficznej — krótki kod trzeba wymienić na nowy (12 znaków ≈ 59 bitów).
+ * graficznej — taki kod trzeba wymienić na nowy. (Nie mylić z kodem krótkim 12-znakowym.)
  */
 export function isShortCode(code: string | null): boolean {
-  return !!code && code.length < CODE_LENGTH;
+  return !!code && code.length < 12;
 }
 
 const DEVICE_NAME_KEY = "kaczy.sync.deviceName";
@@ -339,10 +429,53 @@ export function setDeviceName(name: string): void {
 // Id-ki awareness widziane przy poprzednim odczycie — nowe ponad to to „połączono”.
 let previousDeviceIds = new Set<number>();
 
+/** Nazwy innych urządzeń w awareness jednego pokoju (oczyszczone). */
+function awarenessNames(p: WebrtcProvider | undefined): Set<string> {
+  const out = new Set<string>();
+  if (!p) return out;
+  p.awareness.getStates().forEach((s, id) => {
+    const name = (s as { device?: { name?: unknown } }).device?.name;
+    const clean = typeof name === "string" ? cleanDeviceName(name).slice(0, DEVICE_NAME_MAX) : "";
+    if (id !== p.awareness.clientID && clean) out.add(clean);
+  });
+  return out;
+}
+
+// Rodzaj pokoju każdego dostawcy (równolegle do `providers`).
+type RoomKind = "v3" | "v2" | "legacy";
+let roomKinds: RoomKind[] = [];
+// Nazwa → od kiedy jest tylko w pokoju v2 (w tej sesji); po `V2_ONLY_GRACE_MS` trafia do `v2Only`.
+const v2Pending = new Map<string, number>();
+let v2OnlyTimer: ReturnType<typeof setTimeout> | null = null;
+const V2_ONLY_REFRESH_MS = 60 * 60_000;
+
 /**
- * Lista innych urządzeń z awareness pierwszego pokoju (v2). Każdy provider ma własny
- * awareness i własne clientID, więc urządzenie widoczne tylko w starym pokoju (tryb
- * zgodności) nie pojawi się tu — świadomie, bo lista ma być prosta.
+ * Zaktualizowane urządzenie jest w obu pokojach, więc obecność tylko w v2 przez minutę oznacza starą wersję (§2.2).
+ * Urządzenie widziane w v3 znika z `v2Only`.
+ */
+function observeV2Only(now: number = Date.now()): void {
+  const map = getV2Only();
+  const v2Index = roomKinds.indexOf("v2");
+  if (v2Index < 0 && Object.keys(map).length === 0) return;
+  const v3 = awarenessNames(providers[roomKinds.indexOf("v3")]);
+  v3.forEach((n) => { if (Object.prototype.hasOwnProperty.call(map, n)) clearV2Only(n); });
+  if (v2Index < 0) return;
+  const onlyV2 = new Set([...awarenessNames(providers[v2Index])].filter((n) => !v3.has(n)));
+  for (const n of [...v2Pending.keys()]) if (!onlyV2.has(n)) v2Pending.delete(n);
+  const due: string[] = [];
+  for (const n of onlyV2) {
+    const since = v2Pending.get(n) ?? now;
+    v2Pending.set(n, since);
+    if (now - since >= V2_ONLY_GRACE_MS && now - (map[n] ?? 0) >= V2_ONLY_REFRESH_MS) due.push(n);
+  }
+  if (due.length) recordV2Only(due, now);
+  if (onlyV2.size && !v2OnlyTimer) v2OnlyTimer = setTimeout(() => { v2OnlyTimer = null; observeV2Only(); }, V2_ONLY_GRACE_MS);
+}
+
+/**
+ * Lista innych urządzeń z awareness pokoju v3 (`providers[0]`). Każdy provider ma własny
+ * awareness i własne clientID, więc urządzenie widoczne tylko w starszym pokoju (stara
+ * wersja) nie pojawi się tu — o takim mówi komunikat `v2Only` w ustawieniach.
  */
 function refreshDevices() {
   const awareness = providers[0]?.awareness;
@@ -364,6 +497,8 @@ function refreshDevices() {
   recordSeenDevices([...devices.map((d) => d.name), ...left]);
   previousDeviceIds = ids;
   setState({ devices });
+  observeV2Only();
+  tickRekeyDevices(devices.map((d) => d.name));
 }
 
 function setState(patch: Partial<SyncState>) {
@@ -371,17 +506,99 @@ function setState(patch: Partial<SyncState>) {
   emit();
 }
 
+// ── wymiana kodu: zatrzymanie po znaczniku (§3.3) ─────────────────────────────
+
+// Tag kodu, z którym urządzenie się łączy (asynchroniczny — liczony raz w `connect`).
+let codeTag: { code: string; tag: string } | null = null;
+
+/**
+ * Znacznik, który zatrzymuje synchronizację z tym kodem; `null` = można działać (także gdy tagu nie ma).
+ * Własny znacznik jest pomijany tylko przed przełączeniem (`prepared`/`seeded` — musi się rozejść); od `marked`
+ * to urządzenie nie może już łączyć się starym kodem, nawet gdy przełączenie się nie udało albo prowadzi je inna karta.
+ */
+function rekeyStop(code: string) {
+  if (codeTag?.code !== code) return null;
+  const r = loadRekeyRecord();
+  const ownId = r && (r.step === "prepared" || r.step === "seeded") ? r.id : null;
+  return stoppingMarker(yjsStore.doc, codeTag.tag, readPrefs().ignoredRekey, ownId);
+}
+
+/** Bramka wysyłki: zamknięta, dopóki tag tego kodu nie jest policzony. */
+const maySend = (code: string): boolean => codeTag?.code === code && !rekeyStop(code);
+
+/** Liczy tag kodu: `ok` — wolno się połączyć, `stop` — znacznik, `error` — nie da się sprawdzić (zamknięte). */
+async function rekeyGate(code: string): Promise<"ok" | "stop" | "error"> {
+  try {
+    const tag = await rekeyTag(await roomNameV3For(code));
+    codeTag = { code, tag };
+  } catch (err) {
+    logDiag("warn", "yjsSync", "cannot compute rekey tag", err);
+    return "error";
+  }
+  return rekeyStop(code) ? "stop" : "ok";
+}
+
+// Przekaźnik pyta przed każdym żądaniem wysyłki (I-3): po znaczniku nic już nie wychodzi, nawet przed rozłączeniem.
+setRelayGate(maySend);
+
+/** Restart przekaźnika po zmianie jego adresu — tylko przez bramkę (nie w `rekeyed`, nie przed policzeniem tagu). */
+export function restartRelay(): void {
+  const code = state.code;
+  if (!code || state.status === "disabled" || state.status === "rekeyed") return;
+  // Tag jeszcze się liczy: `connect` sam wystartuje przekaźnik z nowym adresem po bramce.
+  if (maySend(code)) void startRelay(code);
+}
+
+function haltRekeyed(): void {
+  disconnectProvider();
+  setState({ status: "rekeyed", peerCount: 0 });
+  logDiag("warn", "yjsSync", "sync code was changed on another device — sync stopped");
+}
+
+/**
+ * Zmiana mapy `syncControl` (wywoływane synchronicznie w `applyUpdate`). Inna karta tego urządzenia mogła już
+ * przejść na nowy kod (I-5) — wtedy idziemy za nią; inaczej znacznik dla naszego kodu zatrzymuje synchronizację.
+ * Samo rozłączenie po bieżącej transakcji: bramka przekaźnika blokuje wysyłkę już teraz.
+ */
+function onSyncControl(): void {
+  const code = state.code;
+  if (!code || state.status === "disabled" || state.status === "rekeyed") return;
+  const prefs = readPrefs();
+  if (prefs.code !== code) { queueMicrotask(followPrefs); return; }
+  if (rekeyStop(code)) queueMicrotask(() => { if (state.code === code && state.status !== "rekeyed" && rekeyStop(code)) haltRekeyed(); });
+}
+yjsStore.doc.getMap(SYNC_CONTROL_MAP).observe(onSyncControl);
+
 function connect(code: string) {
   disconnectProvider();
   const token = ++connectToken;
   lastConnectAt = Date.now();
+  extendV2IfNeeded();
   setState({ status: "connecting", peerCount: 0, code, signalingUp: 0, signalingTotal: 0 });
+  // Najpierw sprawdzenie znacznika „kod zmieniony” — przekaźnik, obrazy i WebRTC ruszają dopiero po nim.
+  const gate = rekeyGate(code);
+  void gate.then((verdict) => {
+    if (token !== connectToken) return;
+    if (verdict === "stop") { haltRekeyed(); return; }
+    if (verdict === "error") { disconnectProvider(); setState({ status: "connecting", lastError: "Nie udało się sprawdzić kodu synchronizacji" }); return; }
+    startImageSync(code);
+    void startRelay(code);
+  });
   // y-webrtc is ~the heaviest dep in the app but sync is opt-in and off by
   // default — load it only once a connection is actually requested, instead
   // of forcing it into the eager main bundle for every visitor.
-  Promise.all([import("y-webrtc"), roomNamesFor(code)]).then(([{ WebrtcProvider }, rooms]) => {
-    if (token !== connectToken) return; // superseded by a later connect()/disconnect()
-    // Jeden dokument, po providerze na pokój (patrz `JOIN_LEGACY_ROOM`).
+  Promise.all([import("y-webrtc"), roomNamesFor(code), gate]).then(([{ WebrtcProvider }, rooms, verdict]) => {
+    if (token !== connectToken || verdict !== "ok") return; // superseded by a later connect()/disconnect()
+    const legacyName = roomNameFor(code);
+    roomKinds = rooms.map((room, i) => (i === 0 ? "v3" : room === legacyName ? "legacy" : "v2"));
+    // Kod bywał w starszych pokojach — podstawa propozycji nowego kodu po końcu okna (§2.3).
+    const prefs = readPrefs();
+    const v2Exposed = prefs.v2Exposed || roomKinds.includes("v2");
+    const legacyExposed = prefs.legacyExposed || roomKinds.includes("legacy");
+    if (prefs.code === code && (v2Exposed !== prefs.v2Exposed || legacyExposed !== prefs.legacyExposed)) {
+      writePrefs({ ...prefs, v2Exposed, legacyExposed });
+    }
+    // Jeden dokument, po providerze na pokój.
     const connected = rooms.map(() => false);
     const peers = rooms.map(() => 0);
     providers = rooms.map((room, i) => {
@@ -396,7 +613,7 @@ function connect(code: string) {
       p.on("peers", ({ webrtcPeers, bcPeers }: { webrtcPeers: string[]; bcPeers: string[] }) => {
         peers[i] = webrtcPeers.length + bcPeers.length;
         // U-3: widziane urządzenie w starym pokoju FNV przesuwa termin wygaszenia zgodności.
-        if (room === roomNameFor(code) && peers[i] > 0) markLegacySeen();
+        if (roomKinds[i] === "legacy" && peers[i] > 0) markLegacySeen();
         // Nowe urządzenia są we wszystkich pokojach, stare tylko w starszych — suma liczyłaby
         // nowe wielokrotnie, a maksimum daje liczbę urządzeń.
         const peerCount = Math.max(...peers);
@@ -411,8 +628,6 @@ function connect(code: string) {
     logDiag("error", "yjsSync", "cannot load WebRTC transport", err);
     setState({ lastError: err instanceof Error ? err.message : String(err) });
   });
-  startImageSync(code);
-  void startRelay(code);
 }
 
 // Zmiana przyszła od peera wtedy, gdy jej źródłem jest pokój y-webrtc —
@@ -456,6 +671,10 @@ function disconnectProvider() {
   connectToken++;
   providers.forEach((p) => p.destroy());
   providers = [];
+  roomKinds = [];
+  v2Pending.clear();
+  if (v2OnlyTimer) clearTimeout(v2OnlyTimer);
+  v2OnlyTimer = null;
   stopImageSync();
   stopRelay();
   previousDeviceIds = new Set();
@@ -463,25 +682,44 @@ function disconnectProvider() {
   setState({ signalingUp: 0, signalingTotal: 0, devices: [] });
 }
 
-/** Generates a fresh pairing code, enables sync and connects. Returns the code. */
-export function startPairing(): string {
-  const code = generateCode();
-  // Nowa grupa: wszystkie jej urządzenia dołączą po tej wersji, więc pokój v2 nie jest potrzebny.
-  writePrefs({ ...readPrefs(), enabled: true, code, shortCodeDropped: false, v2Until: null });
+/**
+ * Generuje nowy kod, włącza synchronizację i łączy się. Domyślnie kod długi (D-W1); `"short"` tylko dla
+ * „Kod do przepisania ręcznie”. Nowa grupa: wszystkie jej urządzenia dołączą po tej wersji, więc bez pokoju v2.
+ */
+export function startPairing(kind: CodeKind = "long"): string {
+  const code = generateCode(kind);
+  writePrefs({ ...readPrefs(), ...freshCode(), enabled: true, code, shortCodeDropped: false, v2Until: null, v2Start: null });
+  clearCodeScoped();
   connect(code);
   return code;
 }
 
 /**
- * Dołącza do grupy po kodzie (albo przełącza na nią). Kod musi mieć 12 znaków — krótsze
- * nie są przyjmowane; zwraca `null`, gdy długość jest zła.
+ * Dołącza do grupy po kodzie (albo przełącza na nią). Kod rozpoznaje `parseCode` (12 albo 28 znaków z poprawnymi
+ * znakami kontrolnymi); zwraca `null`, gdy kod jest zły. `v3` — link z `v=3`: grupa nie ma pokoju v2.
  */
-export function joinWithCode(rawCode: string): string | null {
-  const code = normalizeCode(rawCode);
-  if (code.length !== CODE_LENGTH) return null;
-  // Grupa mogła powstać na starszej wersji (pokój v2) — przez 30 dni dołączamy do obu pokoi.
-  writePrefs({ ...readPrefs(), enabled: true, code, shortCodeDropped: false, v2Until: Date.now() + V2_COMPAT_MS });
+export function joinWithCode(rawCode: string, opts: { v3?: boolean } = {}): string | null {
+  const parsed = parseCode(rawCode);
+  if (!parsed.code) return null;
+  const code = parsed.code;
+  const prefs = readPrefs();
+  const now = Date.now();
+  // Wcześniej zatrzymane znacznikiem: kolejka i kursor starego pokoju przekaźnika są już niepotrzebne (§3.3 p. 6).
+  const leftRekeyed = state.status === "rekeyed" && prefs.code && prefs.code !== code ? prefs.code : null;
+  if (prefs.code === code) {
+    writePrefs({ ...prefs, enabled: true, shortCodeDropped: false });
+  } else {
+    // Grupa mogła powstać na starszej wersji (pokój v2) — przez 30 dni dołączamy do obu pokoi. Kod długi i link
+    // z `v=3` mówią, że pokoju v2 nie ma.
+    const noV2 = parsed.kind === "long" || opts.v3 === true;
+    writePrefs({
+      ...prefs, ...freshCode(), enabled: true, code, shortCodeDropped: false,
+      v2Until: noV2 ? null : now + V2_COMPAT_MS, v2Start: noV2 ? null : now,
+    });
+    clearCodeScoped();
+  }
   connect(code);
+  if (leftRekeyed) void deriveRelayKeys(leftRekeyed).then((k) => forgetRelayRoom(k.roomId)).catch(() => undefined);
   return code;
 }
 
@@ -510,9 +748,86 @@ export function resumeSync(): void {
 /** Disconnects and forgets the pairing code entirely (leaves the group). */
 export function forgetPairing(): void {
   // Serwery to konfiguracja, nie parowanie — zostają.
-  writePrefs({ ...readPrefs(), enabled: false, code: null });
+  writePrefs({ ...readPrefs(), ...freshCode(), enabled: false, code: null });
+  clearCodeScoped();
   disconnectProvider();
   setState({ status: "disabled", peerCount: 0, code: null });
+}
+
+/**
+ * „Synchronizuj dalej na starym kodzie” po `rekeyed`: znaczniki dla obecnego kodu trafiają na listę pominiętych
+ * i synchronizacja rusza od nowa. Tylko gdy nikt z grupy kodu nie zmieniał (znacznik jest niezaufany).
+ */
+export function continueOnOldCode(): void {
+  const prefs = readPrefs();
+  const code = prefs.code;
+  if (!code) return;
+  const tag = codeTag?.code === code ? codeTag.tag : null;
+  const ids = tag ? readMarkers(yjsStore.doc).filter((m) => m.tag === tag).map((m) => m.id) : [];
+  const ignoredRekey = [...new Set([...prefs.ignoredRekey, ...ids])].slice(-IGNORED_REKEY_MAX);
+  writePrefs({ ...prefs, ignoredRekey });
+  logDiag("info", "yjsSync", "rekey marker ignored by user");
+  if (prefs.enabled) connect(code);
+}
+
+// ── wymiana kodu na tym urządzeniu (§3.4; interfejs: Z-15.3) ─────────────────
+
+/** Jednym zapisem ustawień przechodzi na nowy kod i łączy się nim. Rzuca, gdy zapis się nie udał. */
+function switchToCode(newCode: string): void {
+  const prefs = readPrefs();
+  const next: SyncPrefs = { ...prefs, ...freshCode(), code: newCode, v2Until: null, v2Start: null, legacyRoom: false };
+  if (!writePrefs(next)) throw new Error("Nie udało się zapisać ustawień synchronizacji");
+  clearCodeScoped();
+  if (next.enabled) connect(newCode);
+}
+
+const DEVICE_SEEN_MS = 90 * 24 * 60 * 60 * 1000;
+
+/** Urządzenia do ponownego sparowania: połączone teraz i widziane w ostatnich 90 dniach, bez własnego. */
+function rekeyDevices(now: number = Date.now()): { name: string; version?: string }[] {
+  const own = getDeviceName();
+  const out = new Map<string, { name: string; version?: string }>();
+  for (const d of state.devices) out.set(d.name, { name: d.name, ...(d.version ? { version: d.version } : {}) });
+  for (const [name, at] of Object.entries(getSeenDevices())) {
+    if (now - at <= DEVICE_SEEN_MS && !out.has(name)) out.set(name, { name });
+  }
+  out.delete(own);
+  return [...out.values()];
+}
+
+const ports = rekeyPorts({
+  currentCode: () => readPrefs().code,
+  newCode: () => generateCode("long"),
+  tagFor: async (code) => rekeyTag(await roomNameV3For(code)),
+  peers: () => state.peerCount,
+  devices: () => rekeyDevices(),
+  switchTo: switchToCode,
+  applyMarker: (update) => Y.applyUpdate(yjsStore.doc, update),
+});
+
+async function driveRekey(opts: RunOptions = {}): Promise<RekeyResult> {
+  const result = await runRekey(ports, opts);
+  if (result.wait === "error") logDiag("warn", "yjsSync", `code change: step ${result.record?.error?.step} failed`, result.record?.error?.message);
+  return result;
+}
+
+/** Krok 0 wymiany kodu: zapis i nowy kod; nic nie wychodzi z urządzenia, czeka na potwierdzenie. */
+export const prepareCodeChange = (): Promise<RekeyResult> => prepareRekey(ports);
+/** Kolejne kroki: po potwierdzeniu (`confirmed`), „Pomiń” (`skipMarker`), „Usuń teraz” (`retireNow`), „Ponów”. */
+export const runCodeChange = (opts: RunOptions = {}): Promise<RekeyResult> => driveRekey(opts);
+/** Anuluje wymianę, dopóki znacznik nie mógł wyjść z urządzenia. */
+export const cancelCodeChange = (): Promise<boolean> => cancelRekey(ports);
+
+/** Urządzenie widoczne w awareness nowego pokoju odhacza się na liście do ponownego sparowania (§3.6). */
+function tickRekeyDevices(names: readonly string[]): void {
+  const r = loadRekeyRecord();
+  if (!names.length || !r || (r.step !== "switched" && r.step !== "done") || state.code !== r.newCode) return;
+  const next = names.reduce(withDevicePaired, r);
+  if (next === r) return;
+  void ports.lock(async () => {
+    const cur = loadRekeyRecord();
+    if (cur?.id === r.id) saveRekeyRecord(names.reduce(withDevicePaired, cur));
+  }).catch(() => undefined);
 }
 
 /** Call once at app startup, after yjsStore.ready(), to resume a prior session. */
@@ -521,25 +836,65 @@ let returnListenersBound = false;
 /** Wraca do sieci albo do karty: jeśli sync jest włączony, a nie działa, łączymy od nowa. */
 function reconnectIfNeeded() {
   const prefs = readPrefs();
-  if (!prefs.enabled || !prefs.code || state.status === "connected") return;
+  if (!prefs.enabled || !prefs.code || state.status === "connected" || state.status === "rekeyed") return;
   if (Date.now() - lastConnectAt < RECONNECT_MIN_GAP_MS) return;
   connect(prefs.code);
+}
+
+/** Łączy się kodem z ustawień, jeśli jeszcze nie jest z nim połączone. */
+function connectFromPrefs(): void {
+  const prefs = readPrefs();
+  if (prefs.enabled && prefs.code && (state.code !== prefs.code || state.status === "disabled")) connect(prefs.code);
+}
+
+/**
+ * I-5: karty tego samego urządzenia idą za kodem z ustawień. Zmiana kodu albo `enabled` w innej karcie →
+ * połączenie nowym kodem albo rozłączenie; pominięty znacznik w innej karcie → wznowienie po `rekeyed`.
+ */
+function followPrefs(): void {
+  const prefs = readPrefs();
+  if (!prefs.enabled || !prefs.code) {
+    if (state.status !== "disabled") disconnectProvider();
+    setState({ status: "disabled", peerCount: 0, code: prefs.code });
+    return;
+  }
+  if (prefs.code !== state.code || state.status === "disabled") connect(prefs.code);
+  else if (state.status === "rekeyed" && !rekeyStop(prefs.code)) connect(prefs.code);
+  else emit();
+}
+
+/** Kroki wymiany, które mogą iść bez użytkownika (po potwierdzeniu): przy starcie i po powrocie sieci. */
+function resumeRekey(): void {
+  const r = loadRekeyRecord();
+  if (r && r.step !== "prepared" && r.step !== "done") void driveRekey().catch((err) => logDiag("warn", "yjsSync", "code change resume failed", err));
 }
 
 export function initSync(): void {
   const prefs = readPrefs();
   // Zapis sprzed pokoju v3: istniejąca grupa dostaje 30 dni na aktualizację pozostałych urządzeń.
   if (prefs.code && prefs.v2Until === undefined) {
-    prefs.v2Until = Date.now() + V2_COMPAT_MS;
-    writePrefs(prefs);
+    const now = Date.now();
+    writePrefs({ ...prefs, v2Until: now + V2_COMPAT_MS, v2Start: now });
     logDiag("info", "yjsSync", "room v3: v2 compatibility window started");
   }
-  if (prefs.enabled && prefs.code) connect(prefs.code);
   if (!returnListenersBound && typeof window !== "undefined") {
     returnListenersBound = true;
-    window.addEventListener("online", reconnectIfNeeded);
+    // Znaczniki starsze niż 180 dni (§3.2) — raz na start.
+    if (pruneMarkers(yjsStore.doc, Date.now()) > 0) logDiag("info", "yjsSync", "old rekey markers pruned");
+    window.addEventListener("online", () => { reconnectIfNeeded(); resumeRekey(); });
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") reconnectIfNeeded(); });
+    window.addEventListener("storage", (e) => {
+      if (e.key === STORAGE_KEY || e.key === null) followPrefs();
+      if (e.key === REKEY_STORAGE_KEY || e.key === null) notifyRekeyRecord();
+    });
   }
+  // I-6: wymiana w kroku `marked` najpierw kończy przełączenie — połączenie starym kodem byłoby krokiem wstecz.
+  if (loadRekeyRecord()?.step === "marked") {
+    void driveRekey().catch(() => undefined).finally(connectFromPrefs);
+    return;
+  }
+  connectFromPrefs();
+  resumeRekey();
 }
 
 /**

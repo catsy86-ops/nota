@@ -123,7 +123,8 @@ export function useRelayView(): RelayView {
 let relayDb: UseStore | null = null;
 const db = () => (relayDb ??= createStore("kaczy-relay", "state"));
 
-function idbRelayStore(roomId: string): RelayStore {
+/** Magazyn kursora i kolejki jednego pokoju; wymiana kodu (krok 2) zakłada nim nowy pokój z góry. */
+export function idbRelayStore(roomId: string): RelayStore {
   const pendingKey = `pending:${roomId}`;
   const stateKey = `state:${roomId}`;
   return {
@@ -143,6 +144,22 @@ function idbRelayStore(roomId: string): RelayStore {
       await idbSet(stateKey, state, db());
     },
   };
+}
+
+/** Usuwa lokalny kursor i kolejkę pokoju (po wymianie kodu i po dołączeniu nowym kodem po `rekeyed`). */
+export async function forgetRelayRoom(roomId: string): Promise<void> {
+  await Promise.all([idbDel(`pending:${roomId}`, db()), idbDel(`state:${roomId}`, db())]);
+}
+
+// ── blokada wysyłki (wymiana kodu, I-3/I-7) ────────────────────────────────────
+
+/**
+ * `yjsSync` rejestruje tu sprawdzenie „kod nie został wycofany” — bez importu w drugą stronę (`yjsSync` importuje ten
+ * moduł). Brak bramki = wysyłka dozwolona. Blokada zdejmowana jest tylko przez ponowne połączenie (nowy start).
+ */
+let sendGate: ((code: string) => boolean) | null = null;
+export function setRelayGate(gate: ((code: string) => boolean) | null): void {
+  sendGate = gate;
 }
 
 // ── start / stop ─────────────────────────────────────────────────────────────
@@ -220,6 +237,7 @@ async function lead(code: string, url: string, token: number): Promise<void> {
       keys,
       doc: yjsStore.doc,
       store: idbRelayStore(keys.roomId),
+      canSend: () => !sendGate || sendGate(code),
       openSocket: (wsUrl) => new WebSocket(wsUrl),
       onRemoteChange: () => {
         scheduleBlobs(0);
@@ -239,6 +257,8 @@ async function lead(code: string, url: string, token: number): Promise<void> {
     blobs = new RelayBlobs({
       baseUrl: url, keys, refs: () => yjsStore.syncableRefs(), images: yjsStore.images,
       mayUpload: (hash, size) => mayLeaveDevice(hash, size, sizeCappedRefsIn(yjsStore.doc)),
+      // Przebieg trwa po `stopRelay` z przechwyconym obiektem — bez tego wysyłałby dalej po zatrzymaniu (I-3).
+      canSend: () => token === startToken && (!sendGate || sendGate(code)),
     });
     const onNotes = () => scheduleBlobs();
     yjsStore.notesMap.observeDeep(onNotes);

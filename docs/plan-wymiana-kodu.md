@@ -243,7 +243,9 @@ Kolejność: Z-15.1 → Z-15.2 → sesja D (Fable) → Z-15.3 i Z-15.4 równoleg
 
 **Stan 2026-11-17:** zrobione wszystko poza podpięciem w `yjsSync.ts` (czwarty punkt listy) — to czeka na Z-15.1 i Z-15.2, które zmieniają ten sam plik. Gotowe: `src/lib/sync/rekey.ts` (znacznik, zapis wymiany, sterownik `prepareRekey`/`runRekey`/`cancelRekey` z portami `RekeyPorts`), `src/lib/sync/rekeyRelay.ts` (`seedRekeyRoom`, `postRekeyMarker`, `retireRekeyRoom`, `dropRekeyRoom`), `RelayProvider.settle()`, `canSend`, pobranie przed wysyłką po resecie. Testy sprawdzające: `rekey.test.ts` (18) i blok „wymiana kodu” w `relayServer.integration.test.ts` (3); pełna lista Z-15.4 nadal dla Sonneta.
 
-**Podpięcie (sesja D2, po Z-15.1/Z-15.2) — co zostaje:**
+**Stan 2026-11-17 (później):** Z-15.1, Z-15.2 i podpięcie D2 zrobione przez Fable (niezacommitowane) — opis w `opis.md`, dział Synchronizacja. Po przeglądzie bezpieczeństwa dodano: bramkę dla blobów, zamkniętą bramkę do policzenia tagu, własny znacznik od `marked` zatrzymuje, zerowanie `legacyRoom` przy zmianie kodu, odczyt znaczników bez limitu wpisów (zamiast 20/200). Świadome ograniczenie: WebRTC startuje bez czekania na pierwsze pobranie z przekaźnika. Zostają Z-15.3 i Z-15.4.
+
+**Podpięcie (sesja D2, po Z-15.1/Z-15.2) — zakres (zrobione):**
 - Porty produkcyjne: `load`/`save` na `localStorage["kaczy.sync.rekey.v1"]` przez `parseRekeyRecord` (zapis ma rzucać przy błędzie), `newCode` = generator kodu długiego z Z-15.1, `tagFor` = `rekeyTag(await roomNameV3For(code))`, `seedRoom` = `seedRekeyRoom` z `idbRelayStore(<nowy roomId>)` (trzeba go wyeksportować z `relayRuntime.ts`), `forgetRoom` = usunięcie `pending:`/`state:` starego pokoju, `lock` = `withLockIfFree(REKEY_LOCK, …)`, `switchTo` = jeden `writePrefs` + `connect`.
 - `relayRuntime.lead`: `canSend: () => !stoppingMarker(doc, tag, ignoredRekey, ownId)`; po zdjęciu blokady wołać `sync()`. Tag liczony raz przy `connect` (jest asynchroniczny), obserwator `syncControl` synchroniczny.
 - `yjsSync.ts`: stan `rekeyed`, `ignoredRekey` w ustawieniach, zdarzenie `storage` (I-5), `initSync` woła `runRekey` przed `connect` (I-6), `pruneMarkers` raz na start.

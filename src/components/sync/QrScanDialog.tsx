@@ -7,7 +7,8 @@ interface QrScanDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Odczytany kod grupy (12 znaków). Okno zamyka się samo po trafieniu. */
-  onCode: (code: string) => void;
+  /** `raw` — cały odczytany tekst (link może nieść `v=3`). */
+  onCode: (code: string, raw: string) => void;
 }
 
 /**
@@ -35,7 +36,7 @@ export function QrScanDialog({ open, onOpenChange, onCode }: QrScanDialogProps) 
       try {
         const hits = await detector.detect(video);
         const code = hits[0] ? codeFromScan(hits[0].rawValue) : null;
-        if (code) { onCode(code); onOpenChange(false); return; }
+        if (code) { onCode(code, hits[0].rawValue); onOpenChange(false); return; }
       } catch {
         // Klatka bez kodu albo wideo jeszcze się nie zaczęło — spróbujemy za chwilę.
       }
@@ -63,7 +64,7 @@ export function QrScanDialog({ open, onOpenChange, onCode }: QrScanDialogProps) 
     try {
       const raw = await decodeQrImage(file);
       const code = raw ? codeFromScan(raw) : null;
-      if (code) { onCode(code); onOpenChange(false); return; }
+      if (code && raw) { onCode(code, raw); onOpenChange(false); return; }
       setStatus("Nie znalazłem kodu na tym zdjęciu. Spróbuj wyraźniejszego.");
     } catch {
       setStatus("Nie udało się odczytać zdjęcia.");

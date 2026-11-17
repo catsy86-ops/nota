@@ -7,10 +7,10 @@ import { Settings, LayoutGrid, Pencil, Database, Wifi } from "lucide-react";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
-import { consumeRequestedSettingsSection, consumeRequestedSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
+import { consumeRequestedSettingsSection, consumeRequestedSettingsTab, peekRequestedSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { SyncFileSection } from "@/components/settings/SyncFileSection";
-import { clearPairFromLocation, pairCodeFromLocation } from "@/lib/pairLink";
+import { clearPairFromLocation, pairCodeFromLocation, pairTextIsV3 } from "@/lib/pairLink";
 
 // qrcode.react (used only here, for device pairing) kept out of the eager
 // main bundle — TabsContent below only mounts this once the Sync tab is active.
@@ -26,7 +26,8 @@ const SETTINGS_TABS = ["appearance", "general", "backup", "sync"] as const;
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   // Plan 3.6: otwiera się na ostatniej zakładce wybranej przez użytkownika (link z parametrem ma pierwszeństwo).
-  const [activeTab, setActiveTab] = useState<string>(() => consumeRequestedSettingsTab() ?? readViewMemory("settingsTab", SETTINGS_TABS, "appearance"));
+  // Zamówiona karta: tu tylko podgląd, zużywa ją efekt niżej (inicjalizator może się wykonać dwa razy).
+  const [activeTab, setActiveTab] = useState<string>(() => peekRequestedSettingsTab() ?? readViewMemory("settingsTab", SETTINGS_TABS, "appearance"));
   // Zmiana karty zaczyna od góry — dawniej zostawało przewinięcie poprzedniej (np. „Ogólne” od razu przy Skrótach).
   const scrollRef = useRef<HTMLDivElement>(null);
   const chooseTab = (tab: string) => {
@@ -35,6 +36,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   };
   const [joinPrefill, setJoinPrefill] = useState("");
+  const [joinPrefillV3, setJoinPrefillV3] = useState(false);
 
   // Okno jest zamontowane cały czas, więc karta zamówiona przed otwarciem (kropka synchronizacji, paleta)
   // musi być odebrana przy każdym otwarciu, nie tylko przy pierwszym renderze. Sekcja z palety (5.3):
@@ -79,6 +81,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     const pairCode = pairCodeFromLocation(window.location.search, window.location.hash);
     if (!pairCode) return;
     setJoinPrefill(pairCode);
+    setJoinPrefillV3(pairTextIsV3(window.location.href));
     setActiveTab("sync");
     onOpenChange?.(true);
     // Kod jest we fragmencie (`#pair=`) albo, w starych linkach, w zapytaniu.
@@ -129,7 +132,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
             <TabsContent value="sync" className="mt-0">
               <Suspense fallback={<div className="h-40 animate-pulse rounded-card bg-muted/40" aria-hidden />}>
-                <SyncSettings prefillCode={joinPrefill} />
+                <SyncSettings prefillCode={joinPrefill} prefillV3={joinPrefillV3} />
               </Suspense>
               <div className="pt-4"><SyncFileSection /></div>
             </TabsContent>

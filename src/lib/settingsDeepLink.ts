@@ -26,6 +26,14 @@ export function requestSettingsTab(tab: SettingsTab): void {
   requestedTab = tab;
 }
 
+/**
+ * Podgląd bez zużycia — dla inicjalizatora stanu: React może wyrenderować komponent od nowa przed zatwierdzeniem
+ * (przerwany render współbieżny), a zużycie w inicjalizatorze zgubiłoby kartę przy drugim przebiegu.
+ */
+export function peekRequestedSettingsTab(): SettingsTab | null {
+  return requestedTab;
+}
+
 export function consumeRequestedSettingsTab(): SettingsTab | null {
   const tab = requestedTab;
   requestedTab = null;

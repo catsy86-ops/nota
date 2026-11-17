@@ -1,5 +1,5 @@
 import { olderDevices } from "@/lib/formatSchema";
-import { pairLink } from "@/lib/pairLink";
+import { pairLink, pairTextIsV3 } from "@/lib/pairLink";
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { lazy, Suspense } from "react";
@@ -10,17 +10,19 @@ import { ToggleRow } from "@/components/settings/SettingsShared";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
+import { GroupedCode, JOIN_CODE_INPUT_ID, JoinCodeField } from "@/components/sync/JoinCodeField";
+import { NewCodeCard, RekeyedCard, V2OnlyNotices } from "@/components/sync/SyncCodeNotices";
+import { legacyEndsAt, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { toast } from "sonner";
-import { checkRelay, deleteRelayRoom, getRelayUrl, setRelayUrl, startRelay, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
-import { formatDistanceToNow } from "date-fns";
+import { checkRelay, deleteRelayRoom, getRelayUrl, setRelayUrl, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
+import { format, formatDistanceToNow } from "date-fns";
 import { syncErrorText } from "@/lib/syncErrorText";
 import { seenOffline, useSeenDevices } from "@/lib/syncSeen";
 import { pl } from "date-fns/locale";
 import {
-  useSyncState, type SyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing, formatCode,
+  useSyncState, type SyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing,
   getSignalingServers, setSignalingServers, parseSignalingList, wasShortCodeDropped, getLegacyRoom, setLegacyRoom, expireLegacyRoomIfIdle,
-  codeFromPaste, CODE_LENGTH, CODE_PATTERN, getDeviceName, setDeviceName,
+  codeFromPaste, codeKind, parseCode, CODE_LENGTH, getDeviceName, setDeviceName, groupIsV3Only, useNewCodeProposal, restartRelay,
 } from "@/lib/yjsSync";
 
 /** Jedno zdanie o tym, na którym etapie synchronizacja stoi (bez żargonu). */
@@ -34,6 +36,8 @@ function diagnosis(s: SyncState): string {
 
 interface Props {
   prefillCode?: string;
+  /** Link parowania miał `v=3` — grupa nie ma pokoju v2. */
+  prefillV3?: boolean;
 }
 
 /** Polish plural of "urządzenie" (device) for a count — e.g. 1 urządzenie, 2 urządzenia, 5 urządzeń. */
@@ -45,11 +49,16 @@ function deviceWord(n: number): string {
   return "urządzeń";
 }
 
-export function SyncSettings({ prefillCode }: Props) {
+export function SyncSettings({ prefillCode, prefillV3 }: Props) {
   const syncState = useSyncState();
+  const proposal = useNewCodeProposal();
   const seen = useSeenDevices();
   const offline = seenOffline(seen, syncState.devices.map((d) => d.name));
   const [joinInput, setJoinInput] = useState("");
+  const [joinLong, setJoinLong] = useState(false);
+  // Kod, do którego odnosi się `v=3` z linku/skanu/wklejenia; ręczna zmiana kodu go unieważnia.
+  const [v3For, setV3For] = useState<string | null>(null);
+  const [shortOpen, setShortOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [forgetOpen, setForgetOpen] = useState(false);
@@ -63,9 +72,16 @@ export function SyncSettings({ prefillCode }: Props) {
   }, []);
   const [deviceName, setDeviceNameDraft] = useState(() => getDeviceName());
 
+  /** Kod z linku, skanu albo wklejenia: pole przełącza się na długi kod, `v=3` zostaje przy tym kodzie. */
+  function fillJoin(code: string, v3: boolean) {
+    setJoinInput(code);
+    setJoinLong(code.length > CODE_LENGTH);
+    setV3For(v3 ? code : null);
+  }
+
   useEffect(() => {
-    if (prefillCode) setJoinInput(codeFromPaste(prefillCode));
-  }, [prefillCode]);
+    if (prefillCode) fillJoin(codeFromPaste(prefillCode), prefillV3 === true);
+  }, [prefillCode, prefillV3]);
 
   function handleRename() {
     setDeviceName(deviceName);
@@ -82,12 +98,26 @@ export function SyncSettings({ prefillCode }: Props) {
     }
   }
 
-  const joinReady = joinInput.length === CODE_LENGTH;
+  const joinCode = parseCode(joinInput).code;
+  const joinReady = !!joinCode;
 
   function handleJoin() {
-    if (!joinReady) return;
-    if (!joinWithCode(joinInput)) return;
+    if (!joinCode) return;
+    if (!joinWithCode(joinCode, { v3: v3For === joinCode })) return;
+    setV3For(null);
     toast.success("Dołączono do grupy synchronizacji");
+  }
+
+  function focusJoin() {
+    const el = document.getElementById(JOIN_CODE_INPUT_ID);
+    el?.scrollIntoView({ block: "center" });
+    el?.focus();
+  }
+
+  /** „Kod do przepisania ręcznie” (S2.2): krótki kod zastępuje obecny. */
+  function handleShortCode() {
+    startPairing("short");
+    toast.success("Nowy krótki kod gotowy — wpisz go na pozostałych urządzeniach");
   }
 
   function handleForget() {
@@ -117,11 +147,15 @@ export function SyncSettings({ prefillCode }: Props) {
   }
 
   const pairUrl = syncState.code
-    ? pairLink(window.location.origin, window.location.pathname, syncState.code)
+    ? pairLink(window.location.origin, window.location.pathname, syncState.code, groupIsV3Only())
     : "";
+  const codeIsLong = !!syncState.code && codeKind(syncState.code) === "long";
+  const legacyIdle = legacyRoom ? readLegacyIdle() : null;
 
   const statusLabel =
-    syncState.status === "connected" && syncState.peerCount > 0
+    syncState.status === "rekeyed"
+      ? "Wstrzymana — kod zmieniono na innym urządzeniu"
+      : syncState.status === "connected" && syncState.peerCount > 0
       ? `Połączono — ${syncState.peerCount} ${deviceWord(syncState.peerCount)}`
       : syncState.status === "connected" || syncState.status === "connecting"
         ? "Aktywna — szukanie urządzeń…"
@@ -131,7 +165,9 @@ export function SyncSettings({ prefillCode }: Props) {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
         <div className="flex items-start gap-3 min-w-0">
-          {syncState.status !== "disabled" ? (
+          {syncState.status === "rekeyed" ? (
+            <WifiOff className="w-5 h-5 text-warning-ink shrink-0 mt-0.5" />
+          ) : syncState.status !== "disabled" ? (
             <Wifi className="w-5 h-5 text-primary-ink shrink-0 mt-0.5" />
           ) : (
             <WifiOff className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
@@ -139,10 +175,10 @@ export function SyncSettings({ prefillCode }: Props) {
           <div className="min-w-0">
             <p className="text-sm font-semibold">Synchronizacja między urządzeniami</p>
             <p className="ui-hint mt-0.5" role="status" aria-live="polite">{statusLabel}</p>
-            {syncState.status !== "disabled" && (
+            {syncState.status !== "disabled" && syncState.status !== "rekeyed" && (
               <p className="ui-hint mt-1" data-testid="sync-diagnosis">{diagnosis(syncState)}</p>
             )}
-            {syncState.status !== "disabled" && (
+            {syncState.status !== "disabled" && syncState.status !== "rekeyed" && (
               <p className="text-2xs text-muted-foreground mt-0.5">
                 {syncState.lastSyncedAt
                   ? `Ostatnia zmiana z innego urządzenia: ${formatDistanceToNow(syncState.lastSyncedAt, { addSuffix: true, locale: pl })}`
@@ -161,8 +197,12 @@ export function SyncSettings({ prefillCode }: Props) {
         <Switch checked={syncState.status !== "disabled"} onCheckedChange={handleToggle} aria-label="Synchronizacja między urządzeniami" />
       </div>
 
+      {syncState.status === "rekeyed" && <RekeyedCard onPairAgain={focusJoin} />}
+      {syncState.status !== "rekeyed" && proposal.kind && <NewCodeCard kind={proposal.kind} />}
+
       <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-3">
         <h3 className="text-xs font-semibold text-muted-foreground">Urządzenia w grupie</h3>
+        <V2OnlyNotices />
         {olderDevices(syncState.devices).length > 0 && (
           <p role="status" className="rounded-control border border-warning/50 bg-warning/10 px-3 py-2 text-xs text-foreground">
             {olderDevices(syncState.devices).map((d) => d.name).join(", ")} ma starszą wersję aplikacji — część danych może być na nim niewidoczna. Zaktualizuj go.
@@ -212,6 +252,7 @@ export function SyncSettings({ prefillCode }: Props) {
           <h3 className="text-xs font-semibold text-muted-foreground">Dodaj urządzenie</h3>
           <p className="ui-hint">
             Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
+            {codeIsLong && " Oba urządzenia muszą mieć aktualną wersję aplikacji."}
           </p>
           <div className="flex justify-center">
             <div className="bg-white p-2 rounded-field">
@@ -219,14 +260,36 @@ export function SyncSettings({ prefillCode }: Props) {
             </div>
           </div>
           <div className="flex items-center justify-center gap-2">
-            <code className="text-lg font-mono font-bold tracking-widest">{formatCode(syncState.code)}</code>
+            <GroupedCode code={syncState.code} />
             <Button type="button" size="sm" variant="ghost" onClick={handleCopy} aria-label="Kopiuj kod" className="h-7 px-2 coarse:h-11 coarse:px-3">
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             </Button>
           </div>
-          <Button type="button" variant="ghost" size="sm" onClick={() => setForgetOpen(true)} className="text-muted-foreground hover:text-destructive-ink gap-1.5 coarse:h-11">
-            <LogOut className="w-3.5 h-3.5" /> Odłącz to urządzenie
-          </Button>
+          <div className="flex flex-wrap justify-center gap-x-2">
+            {codeIsLong && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => setShortOpen(true)} className="text-muted-foreground coarse:h-11">
+                Kod do przepisania ręcznie
+              </Button>
+            )}
+            <Button type="button" variant="ghost" size="sm" onClick={() => setForgetOpen(true)} className="text-muted-foreground hover:text-destructive-ink gap-1.5 coarse:h-11">
+              <LogOut className="w-3.5 h-3.5" /> Odłącz to urządzenie
+            </Button>
+          </div>
+          <AlertDialog open={shortOpen} onOpenChange={setShortOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Utworzyć krótki kod?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Krótki kod łatwiej przepisać, ale słabiej chroni przed zgadywaniem przez operatora serwera pośredniczącego.
+                  Jeśli możesz, zeskanuj kod QR. Krótki kod zastąpi obecny — urządzenia, które już go użyły, trzeba będzie sparować ponownie.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { setShortOpen(false); handleShortCode(); }}>Utwórz krótki kod</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           {/* Odłączenie działa tylko na tym urządzeniu; bez potwierdzenia łatwo to kliknąć przez pomyłkę. */}
           <AlertDialog open={forgetOpen} onOpenChange={setForgetOpen}>
             <AlertDialogContent>
@@ -256,7 +319,7 @@ export function SyncSettings({ prefillCode }: Props) {
           <h3 className="font-semibold text-foreground">Synchronizacja wyłączona: kod był za krótki</h3>
           <p className="text-muted-foreground">
             Kody z 8 znaków dało się odgadnąć z nazwy pokoju widocznej dla serwera sygnalizacyjnego,
-            więc ich już nie przyjmujemy. Wygeneruj nowy, 12-znakowy kod i wpisz go na pozostałych urządzeniach.
+            więc ich już nie przyjmujemy. Wygeneruj nowy kod i zeskanuj go albo wpisz na pozostałych urządzeniach.
           </p>
           <Button
             type="button"
@@ -272,42 +335,30 @@ export function SyncSettings({ prefillCode }: Props) {
       <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-2">
         <h3 className="text-xs font-semibold text-muted-foreground">Dołącz do istniejącej grupy</h3>
         <Suspense fallback={null}>
-          {scanOpen && <QrScanDialog open={scanOpen} onOpenChange={setScanOpen} onCode={(c) => { setJoinInput(c); toast.success("Kod odczytany — kliknij Dołącz"); }} />}
+          {scanOpen && <QrScanDialog open={scanOpen} onOpenChange={setScanOpen} onCode={(c, raw) => { fillJoin(c, pairTextIsV3(raw)); toast.success("Kod odczytany — kliknij Dołącz"); }} />}
         </Suspense>
         <form
           className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center"
           onSubmit={(e) => { e.preventDefault(); handleJoin(); }}
         >
-          <InputOTP
-            maxLength={CODE_LENGTH}
-            pattern={CODE_PATTERN}
-            pasteTransformer={codeFromPaste}
+          <JoinCodeField
             value={joinInput}
-            onChange={(v) => setJoinInput(v.toUpperCase())}
-            inputMode="text"
-            autoCapitalize="characters"
-            autoCorrect="off"
-            spellCheck={false}
-            aria-label="Kod z innego urządzenia"
-            aria-describedby="sync-join-hint"
-            containerClassName="w-full sm:w-auto"
-          >
-            {[0, 4, 8].map((start, g) => (
-              <div key={start} className="contents">
-                {g > 0 && <InputOTPSeparator />}
-                <InputOTPGroup className="flex-1 min-w-0 sm:flex-none">
-                  {[0, 1, 2, 3].map((i) => (
-                    <InputOTPSlot key={i} index={start + i} className="flex-1 min-w-0 sm:w-9 sm:flex-none" />
-                  ))}
-                </InputOTPGroup>
-              </div>
-            ))}
-          </InputOTP>
+            long={joinLong}
+            onChange={(code, long) => { setJoinInput(code); setJoinLong(long); }}
+            onPasteText={(text) => { const code = codeFromPaste(text); setV3For(pairTextIsV3(text) ? code : null); }}
+          />
           <Button type="button" variant="outline" onClick={() => setScanOpen(true)} className="coarse:h-11">Zeskanuj kod</Button>
           <Button type="submit" disabled={!joinReady} className="coarse:h-11">Dołącz</Button>
         </form>
         <p id="sync-join-hint" className="text-2xs text-muted-foreground">
-          12 znaków z drugiego urządzenia — możesz wkleić cały link. Starszy, 8-znakowy kod już nie zadziała — wygeneruj nowy.
+          Kod z drugiego urządzenia (12 albo 28 znaków) — możesz wkleić cały link. Starszy, 8-znakowy kod już nie zadziała — wygeneruj nowy.{" "}
+          <button
+            type="button"
+            className="underline underline-offset-2 hover:text-foreground"
+            onClick={() => { setJoinLong(!joinLong); setJoinInput(""); setV3For(null); }}
+          >
+            {joinLong ? "Mam kod 12-znakowy" : "Mam kod 28-znakowy"}
+          </button>
         </p>
       </div>
 
@@ -315,12 +366,22 @@ export function SyncSettings({ prefillCode }: Props) {
 
       <RelayServer />
 
-      <ToggleRow
-        label="Zgodność ze starszą wersją aplikacji"
-        desc="Włącz tylko na czas wymiany starego urządzenia. Stary pokój ma słabą nazwę, z której serwer sygnalizacyjny może odzyskać kod parowania — po aktualizacji wszystkich urządzeń wyłącz."
-        checked={legacyRoom}
-        onCheck={(on) => { setLegacyRoom(on); setLegacyRoomState(on); }}
-      />
+      {/* Kod długi nigdy nie dołącza do starego pokoju — starsza wersja go nie przyjmie (S2.2). */}
+      {!codeIsLong && (
+        <div className="space-y-1">
+          <ToggleRow
+            label="Zgodność ze starszą wersją aplikacji"
+            desc="Włącz tylko na czas wymiany starego urządzenia. Stary pokój ma słabą nazwę, z której serwer sygnalizacyjny może odzyskać kod parowania — po aktualizacji wszystkich urządzeń wyłącz."
+            checked={legacyRoom}
+            onCheck={(on) => { setLegacyRoom(on); setLegacyRoomState(on); }}
+          />
+          {legacyIdle && (
+            <p className="px-1 text-2xs text-muted-foreground" data-testid="legacy-ends-at">
+              Zgodność wyłączy się {format(legacyEndsAt(legacyIdle), "dd.MM")} (wcześniej, jeśli stare urządzenie nie pojawi się przez 30 dni).
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
         <h3 className="font-semibold text-foreground">Jak to działa</h3>
@@ -363,7 +424,8 @@ function RelayServer() {
     setSaved(url);
     setDraft(url);
     // Zmiana adresu działa od razu, jeśli synchronizacja już trwa.
-    if (sync.status !== "disabled" && sync.code) void startRelay(sync.code);
+    // Przez bramkę wymiany kodu: w `rekeyed` przekaźnik stoi.
+    restartRelay();
     toast.success(url ? "Zapisano przekaźnik" : "Wyłączono przekaźnik");
   }
 

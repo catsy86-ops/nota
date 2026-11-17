@@ -30,6 +30,8 @@ export interface RelayBlobsOptions {
   fetch?: typeof fetch;
   /** Czy bajty mogą wyjść z urządzenia (prawdziwy rozmiar; `mayLeaveDevice`). Brak = wszystkie z `refs`. */
   mayUpload?: (hash: string, size: number) => boolean;
+  /** Sprawdzane przed każdym obrazem: `false` przerywa przebieg (stop po znaczniku "kod zmieniony" albo `stopRelay`). */
+  canSend?: () => boolean;
 }
 
 export interface BlobSyncResult {
@@ -69,6 +71,7 @@ export class RelayBlobs {
   async sync(): Promise<BlobSyncResult> {
     const result: BlobSyncResult = { uploaded: 0, downloaded: 0, failed: 0 };
     for (const hash of this.opts.refs()) {
+      if (this.opts.canSend && !this.opts.canSend()) break;
       try {
         const id = await blobIdOf(this.opts.keys, hash);
         if (this.opts.images.has(hash)) {
