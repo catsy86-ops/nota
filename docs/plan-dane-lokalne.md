@@ -113,6 +113,8 @@ Usuwane są tylko notatki z `przed`: notatka utworzona przez użytkownika (albo 
 
 ### 2.3 Zlecenie Z-16.2 (Opus, M)
 
+**Stan 2026-11-17 (Fable):** punkty 1, 2 i 4 zrobione — `yjsStore.replaceAllChunked` (porcje ok. 30 ms, nadzbiór, transakcja końcowa z `final` = metadane skarbca), podpięte w `restoreFullBackupLocked` (`RestoreRun`: `onProgress`, `signal`), w oknie przywracania „Przywracanie notatek: N z M” i „Przerwij”; `src/lib/yieldToMain.ts`; testy `src/lib/yjsStore.chunked.test.ts`. Pomiar (punkt 0, `PERF=1 npx playwright test e2e/restore-perf.spec.ts`, Chromium, 4× spowolnienie, 2000 notatek po ok. 500 znaków): całość 3,8 s, **10 długich zadań: 869, 562, 477, 366, 258, 161, 154, 59, 57, 50 ms**. Nie wiadomo jeszcze, gdzie siedzą — wymiana notatek idzie porcjami po 30 ms, więc podejrzane są: budowa kopii „przed przywróceniem” (`buildFullBackup` + `JSON.stringify`), `parseFullBackup` (zod), `withStoredImages` i obserwatorzy po porcjach (rzut notatek, indeks wyszukiwania). **Zostaje:** profil wydajności tych zadań i punkt 3 (odroczenie obserwatorów), jeśli to one.
+
 0. Pomiar na 2000 notatek (profil wydajności, 4× spowolnienie procesora): gdzie są zadania ponad 50 ms — `withStoredImages`, transakcja, obserwatorzy, sekcje działów. Wynik do tego pliku.
 1. `yjsStore.replaceAllChunked(notes, folders, labels, propDefs, { onProgress, signal })` według §2.2; `replaceAll` zostaje dla testów i małych kopii albo staje się wywołaniem nowej funkcji.
 2. Pasek postępu i „Anuluj” w oknie przywracania.

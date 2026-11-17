@@ -3,6 +3,7 @@ import { logDiag } from "@/lib/diagnostics";
 import { imageStore } from "@/lib/imageStore";
 import { cleanPropDef, findPropDefByName, makePropDef, parsePropInput, PROP_LIMITS, propNameKey, type NoteProps, type PropDef, type PropType } from "@/lib/noteProps";
 import { yjsStore } from "@/lib/yjsStore";
+import { yieldToMain } from "@/lib/yieldToMain";
 import { imageMimeFromName } from "./keep";
 import type { ImportPlan, PlannedNote } from "./plan";
 
@@ -51,8 +52,7 @@ export function clearLastImport(): void {
   try { localStorage.removeItem(LAST_IMPORT_KEY); } catch { /* bez localStorage — nic do sprzątania */ }
 }
 
-/** Oddaje wątek przeglądarce między porcjami — długi import nie zamraża strony. */
-const yieldToMain = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
 
 /**
  * Typ nowego pola z wartości z pliku: liczba, data albo tekst. Eksport zapisuje liczby tekstem

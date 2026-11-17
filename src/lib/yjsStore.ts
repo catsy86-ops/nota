@@ -1,3 +1,4 @@
+import { yieldToMain } from "@/lib/yieldToMain";
 import * as Y from "yjs";
 import { toast } from "@/lib/notify";
 import { looksLikeVaultToken } from "@/lib/vault";
@@ -1055,6 +1056,57 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     });
   }
 
+  /**
+   * Wymiana notatek porcjami (Z-16.2, `docs/plan-dane-lokalne.md` §2.2) — przywracanie dużej kopii bez długiego zadania.
+   * Każdy stan pośredni jest **nadzbiorem**: najpierw wstawianie (porcje po ok. `budgetMs`, między nimi oddanie wątku),
+   * dopiero na końcu jedna transakcja z usunięciem notatek sprzed przywracania, których nie ma w kopii, i z wymianą
+   * folderów, etykiet i pól. Notatka dodana w trakcie (lokalnie albo z synchronizacji) zostaje. Przerwanie (`signal`,
+   * zamknięta karta) niczego nie usuwa. `final` wykonuje się w transakcji końcowej — tam idą metadane skarbca (P1).
+   */
+  async function replaceAllChunked(
+    notes: Note[], folders: Folder[], labels: string[], propDefs: PropDef[] = [],
+    opts: { onProgress?: (done: number, total: number) => void; signal?: AbortSignal; final?: () => void; budgetMs?: number } = {},
+  ): Promise<void> {
+    const budget = opts.budgetMs ?? 30;
+    const before = new Set(notesMap.keys());
+    const keepNotes = new Set(notes.map((n) => n.id));
+    const defs = cleanPropDefs(propDefs);
+    const aborted = () => { if (opts.signal?.aborted) throw new DOMException("Przerwano przywracanie", "AbortError"); };
+    let i = 0;
+    let first = true;
+    do {
+      aborted();
+      const t0 = performance.now();
+      doc.transact(() => {
+        if (first) {
+          // Foldery, etykiety i pola dokładane od razu: wstawiane notatki mają do czego wskazywać.
+          for (const folder of folders) foldersMap.set(folder.id, yFolderFromPlain(folder));
+          for (const label of labels) labelsMap.set(label, true);
+          for (const def of defs) propDefsMap.set(def.id, yPropDefFromPlain(def));
+        }
+        while (i < notes.length) {
+          notesMap.set(notes[i].id, yNoteFromPlain(notes[i]));
+          i++;
+          if (performance.now() - t0 > budget) break;
+        }
+      });
+      first = false;
+      opts.onProgress?.(i, notes.length);
+      if (i < notes.length) await yieldToMain();
+    } while (i < notes.length);
+    aborted();
+    const folderIds = new Set(folders.map((f) => f.id));
+    const labelSet = new Set(labels);
+    const defIds = new Set(defs.map((d) => d.id));
+    doc.transact(() => {
+      opts.final?.();
+      for (const id of before) if (!keepNotes.has(id)) notesMap.delete(id);
+      for (const k of [...foldersMap.keys()]) if (!folderIds.has(k)) foldersMap.delete(k);
+      for (const k of [...labelsMap.keys()]) if (!labelSet.has(k)) labelsMap.delete(k);
+      for (const k of [...propDefsMap.keys()]) if (!defIds.has(k)) propDefsMap.delete(k);
+    });
+  }
+
   /** Pełny stan dokumentu (update V2) — do pliku „sneakernet”. Bajty obrazów dokłada `yjsFileSync`. */
   function encodeSyncState(): Uint8Array {
     return Y.encodeStateAsUpdateV2(doc);
@@ -1093,7 +1145,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes, importBatch,
     upsertFolder, patchFolder, removeFolder,
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
-    replaceAll, resetForTests, diagStats, encodeSyncState, mergeSyncState,
+    replaceAll, replaceAllChunked, resetForTests, diagStats, encodeSyncState, mergeSyncState,
     referencedImages, referencedAttachments, syncableRefs, remapImageRefs,
     beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange, getNoteText,
     readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote,

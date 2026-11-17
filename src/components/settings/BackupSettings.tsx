@@ -167,6 +167,9 @@ function RestoreBackup() {
   // Z-18.1: uszkodzone części wykryte przed zapisem — pytanie „Przywróć bez nich / Anuluj”.
   const [broken, setBroken] = useState<string[] | null>(null);
   const [savedCurrent, setSavedCurrent] = useState(false);
+  // Z-16.2: postęp wymiany notatek i „Przerwij”.
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [abort, setAbort] = useState<AbortController | null>(null);
 
   async function pick() {
     try {
@@ -198,7 +201,12 @@ function RestoreBackup() {
           return;
         }
       }
-      const { studyDropped, schedulesSkipped, failed } = await restoreFullBackup(backup, { ...opts, skip });
+      const ctrl = new AbortController();
+      setAbort(ctrl);
+      const { studyDropped, schedulesSkipped, failed } = await restoreFullBackup(backup, { ...opts, skip }, {
+        signal: ctrl.signal,
+        onProgress: (done, total) => setProgress({ done, total }),
+      });
       const notes: string[] = [];
       if (studyDropped > 0) notes.push(`Pominięto ${studyDropped} ${pluralPl(studyDropped, ["wpis Nauki", "wpisy Nauki", "wpisów Nauki"])} o nieznanym kształcie`);
       if (schedulesSkipped > 0) notes.push(`Nie przywrócono ${schedulesSkipped} ${pluralPl(schedulesSkipped, ["grafiku", "grafików", "grafików"])} (limit albo zły plik)`);
@@ -210,6 +218,13 @@ function RestoreBackup() {
       setTimeout(() => window.location.reload(), notes.length ? 6000 : 1200);
     } catch (err) {
       setBusy(false);
+      setProgress(null);
+      setAbort(null);
+      if (err instanceof DOMException && err.name === "AbortError") {
+        toast.info("Przerwano. Notatki dodane z kopii zostają, nic nie zostało usunięte.");
+        setBackup(null);
+        return;
+      }
       // Nic jeszcze nie zapisano — pytamy, czy przywrócić bez uszkodzonych części.
       if (err instanceof RestoreCheckError) { setBroken(err.sections); return; }
       toast.error("Nie udało się przywrócić backupu" + (err instanceof Error ? ": " + err.message : ""));
@@ -267,8 +282,18 @@ function RestoreBackup() {
               a kopia dokłada tylko brakujące wartości. Stare stawki i wpłaty z kopii nie nadpiszą nowszych.
             </p>
           )}
+          {busy && progress && progress.total > 0 && (
+            <div role="status" className="space-y-1 text-sm" data-testid="restore-progress">
+              <p>Przywracanie notatek: {progress.done} z {progress.total}</p>
+              <progress className="h-1.5 w-full" max={progress.total} value={progress.done} aria-label="Postęp przywracania" />
+            </div>
+          )}
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>Anuluj</AlertDialogCancel>
+            {busy && abort ? (
+              <Button type="button" variant="outline" onClick={() => abort.abort()}>Przerwij</Button>
+            ) : (
+              <AlertDialogCancel disabled={busy}>Anuluj</AlertDialogCancel>
+            )}
             <AlertDialogAction className={buttonVariants({ variant: "destructive" })} disabled={busy} onClick={(e) => { e.preventDefault(); void restore(); }}>Przywróć backup</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

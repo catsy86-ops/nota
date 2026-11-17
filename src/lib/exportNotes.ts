@@ -26,6 +26,7 @@ import { getViewPrefs } from "@/lib/viewPrefs";
 import { APP_NAME } from "@/lib/appName";
 import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 import { clearRestoreMarker, setRestoreMarker } from "@/lib/restoreMarker";
+import { yieldToMain } from "@/lib/yieldToMain";
 
 const PUSH_RESTORE_KEY = PUSH_PREFS_KEY;
 
@@ -402,22 +403,29 @@ export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; load: () =
 export const SHIFTS_SECTION = "Grafik";
 export const STUDY_SECTION = "Nauka i Praca";
 
-export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number; failed: string[] }> {
+/** Postęp wymiany notatek i przerwanie (Z-16.2): okno przywracania pokazuje „N z M” i „Przerwij”. */
+export interface RestoreRun {
+  onProgress?: (done: number, total: number) => void;
+  signal?: AbortSignal;
+}
+
+export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions, run: RestoreRun = {}): Promise<{ studyDropped: number; schedulesSkipped: number; failed: string[] }> {
   // `ready()` samo bierze blokadę migracji — wołane w jej środku zakleszczyłoby się.
   await yjsStore.ready();
-  return withExclusiveLock(MIGRATION_LOCK, () => restoreFullBackupLocked(backup, opts));
+  return withExclusiveLock(MIGRATION_LOCK, () => restoreFullBackupLocked(backup, opts, run));
 }
 
 /**
  * Przywracanie w trzech fazach (Z-18.1, P1/P2 audytu 2):
  * 1. **Sprawdzanie, bez zapisu** — moduły działów, `JSON.parse` sekcji, `migrate` Grafiku, `cleanDump` Nauki, wersje.
  *    Uszkodzona sekcja → `RestoreCheckError` przed pierwszym zapisem (dawniej błąd wychodził po zniszczeniu notatek).
- * 2. **Zapis synchroniczny** — bez `await` między zapisami do Yjs: metadane skarbca i notatki jedne po drugich (przerwanie
- *    nie zostawi notatek z kopii z obcym skarbcem), sekcje działów, Grafik, Nauka. Okno przerwania kurczy się z sekund
- *    do jednego zadania; pełną atomowość da dopiero ścieżka awaryjna Q1.4.
+ * 2. **Zapis** — notatki porcjami (`replaceAllChunked`, Z-16.2): najpierw wstawianie (stan pośredni to nadzbiór), potem
+ *    jedna transakcja końcowa z usunięciem starych notatek i z metadanymi skarbca — przerwanie zostawia stare notatki
+ *    prywatne czytelne starym hasłem, nigdy odwrotnie. Dalej sekcje działów, Grafik, Nauka, z oddaniem wątku między nimi.
+ *    Pełną atomowość da dopiero ścieżka awaryjna Q1.4; znacznik zamienia przerwanie w komunikat.
  * 3. **Zapisy asynchroniczne** na końcu — wersje, `localStorage`; potem zdjęcie znacznika.
  */
-async function restoreFullBackupLocked(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number; failed: string[] }> {
+async function restoreFullBackupLocked(backup: FullBackup, opts: RestoreOptions, run: RestoreRun): Promise<{ studyDropped: number; schedulesSkipped: number; failed: string[] }> {
   const skip = new Set(opts.skip ?? []);
   /** Sekcje, których nie udało się przywrócić (W8): wołający pokazuje je zamiast „Przywrócono”. */
   const failed: string[] = [];
@@ -510,15 +518,27 @@ async function restoreFullBackupLocked(backup: FullBackup, opts: RestoreOptions)
   const notes = await withStoredImages(backup.notes);
   if (backup.attachmentBlobs) await imageStore.ingest(Object.values(backup.attachmentBlobs));
 
-  // ── 2. zapis synchroniczny ──
+  // ── 2. zapis ──
   setRestoreMarker({ startedAt: Date.now(), exportedAt: backup.exportedAt });
-  // Metadane skarbca z pliku przed notatkami: zablokowane notatki z kopii są szyfrowane kluczem z kopii.
-  if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
-  yjsStore.replaceAll(notes, backup.folders, backup.labels, backup.propDefs ?? []);
+  const vault = backup.vault;
+  try {
+    await yjsStore.replaceAllChunked(notes, backup.folders, backup.labels, backup.propDefs ?? [], {
+      onProgress: run.onProgress,
+      signal: run.signal,
+      // Metadane skarbca w transakcji końcowej, razem z usunięciem starych notatek (Z-16.2, uwaga do P1).
+      final: isValidMeta(vault) ? () => yjsStore.setVaultMeta(vault) : undefined,
+    });
+  } catch (err) {
+    // „Przerwij”: zostaje nadzbiór (stare notatki i część z kopii), nic nie usunięto — to świadomy stan, nie przerwanie.
+    if (err instanceof DOMException && err.name === "AbortError") clearRestoreMarker();
+    throw err;
+  }
   for (const m of merges) {
     try { m.apply(); } catch (err) { fail(m.label, err); }
+    await yieldToMain();
   }
   if (shiftsApply) { try { shiftsApply(); } catch (err) { fail(SHIFTS_SECTION, err); } }
+  await yieldToMain();
   if (studyApply) { try { studyApply(); } catch (err) { fail(STUDY_SECTION, err); } }
   if (schedulesSkipped) logDiag("warn", "backup", `przywracanie grafików: pominięto ${schedulesSkipped}`);
 
