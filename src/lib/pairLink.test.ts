@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { codeFromPaste } from "./yjsSync";
 import { codeFromScan } from "./qrScan";
+import { pairParams } from "./sync/pairCode";
 import { pairCodeFromLocation, pairLink, pairTextIsV3 } from "./pairLink";
 
 describe("link parowania (S11)", () => {
@@ -36,5 +37,13 @@ describe("link parowania z v=3 (S2.6)", () => {
     expect(pairTextIsV3("v=3")).toBe(false);
     expect(pairCodeFromLocation("", "#pair=ABCDEFGHJKMN&v=3")).toBe("ABCDEFGHJKMN");
     expect(codeFromScan("https://n.example/#pair=ABCDEFGHJKMN&v=3")).toBe("ABCDEFGHJKMN");
+  });
+
+  it("jeden parser: fragment wygrywa z zapytaniem, v=3 liczy się tylko obok kodu", () => {
+    expect(pairParams("https://n.example/?pair=STARY#pair=NOWY")).toEqual({ pair: "NOWY", v3: false });
+    expect(pairParams("https://n.example/?v=3#pair=NOWY")).toEqual({ pair: "NOWY", v3: false });
+    expect(pairParams("https://n.example/#pair=ABCD%20EFGH&v=3")).toEqual({ pair: "ABCD EFGH", v3: true });
+    expect(pairParams("sam tekst")).toEqual({ pair: null, v3: false });
+    expect(codeFromPaste("https://n.example/?pair=STARYSTARYAA#pair=ABCDEFGHJKMN")).toBe("ABCDEFGHJKMN");
   });
 });

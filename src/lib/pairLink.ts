@@ -1,3 +1,5 @@
+import { pairParams } from "@/lib/sync/pairCode";
+
 /**
  * Link parowania urządzeń niesie kod grupy. Kod jest jedynym sekretem pokoju, więc leci we fragmencie (`#pair=…`):
  * fragment nie opuszcza przeglądarki, a `?pair=` trafiałby do logów hostingu (S11 audytu). Stare linki `?pair=` nadal działają.
@@ -10,13 +12,12 @@ export const pairLink = (origin: string, pathname: string, code: string, v3 = fa
 
 /** Kod z adresu: najpierw fragment, potem stary parametr zapytania. */
 export function pairCodeFromLocation(search: string, hash: string): string | null {
-  const fromHash = new URLSearchParams(hash.replace(/^#/, "")).get("pair");
-  return fromHash || new URLSearchParams(search).get("pair") || null;
+  return pairParams(search + hash).pair;
 }
 
 /** Czy tekst (adres, wklejony link, odczyt z QR) to link parowania z `v=3`. */
 export function pairTextIsV3(text: string): boolean {
-  return /[?&#]pair=[^&#\s]+/.test(text) && /[?&#]v=3(?=[&#\s]|$)/.test(text);
+  return pairParams(text).v3;
 }
 
 /** Zdejmuje kod z paska adresu (odświeżenie nie powtórzy akcji, kod nie zostaje w historii). */

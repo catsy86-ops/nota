@@ -67,9 +67,34 @@ export function normalizeCode(raw: string): string {
   return raw.toUpperCase().replace(/[\s-]/g, "");
 }
 
+/**
+ * Jedyny parser linku parowania: `pair` (kod) i `v=3` z tekstu — adresu, wklejonego linku albo odczytu z QR.
+ * Fragment (`#pair=…`, obecny format) ma pierwszeństwo przed zapytaniem (`?pair=…`, stare linki); `v=3` liczy się
+ * tylko w tej samej części co kod.
+ */
+export function pairParams(text: string): { pair: string | null; v3: boolean } {
+  const hashAt = text.indexOf("#");
+  const parts = hashAt >= 0 ? [text.slice(hashAt), text.slice(0, hashAt)] : [text];
+  for (const part of parts) {
+    const params = new Map<string, string>();
+    for (const m of part.matchAll(/[?&#]([^=&#\s]+)=([^&#\s]*)/g)) if (!params.has(m[1])) params.set(m[1], m[2]);
+    const pair = params.get("pair");
+    if (pair) return { pair: safeDecode(pair), v3: params.get("v") === "3" };
+  }
+  return { pair: null, v3: false };
+}
+
+function safeDecode(s: string): string {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
 /** Kod z linku `#pair=…`/`?pair=…`, gdy tekst go zawiera; inaczej cały tekst. */
 export function codeFromLinkOrText(raw: string): string {
-  return raw.match(/[?&#]pair=([^&#\s]+)/)?.[1] ?? raw;
+  return pairParams(raw).pair ?? raw;
 }
 
 /**
