@@ -56,6 +56,12 @@ export interface RelayOptions {
   /** Dokument realnie się zmienił po pobraniu (nie tylko echo naszych wpisów). */
   onRemoteChange?: () => void;
   flushMs?: number;
+  /**
+   * Czy wolno wysyłać dane użytkownika (wpisy, migawki). `false` zatrzymuje wysyłkę bez gubienia
+   * kolejki — pobieranie działa dalej. Pytane tuż przed każdym żądaniem, bo odpowiedź może się
+   * zmienić w trakcie pobierania (znacznik „kod zmieniony” przychodzi jako zwykły wpis).
+   */
+  canSend?: () => boolean;
 }
 
 export const FLUSH_MS = 1000;
@@ -346,7 +352,7 @@ export class RelayProvider {
   }
 
   private async flushTask(): Promise<void> {
-    if (!this.started || this.pending.length === 0) return;
+    if (!this.started || this.pending.length === 0 || !this.maySend()) return;
     const sv = Y.encodeStateVector(this.opts.doc);
     const parts = this.pending;
     this.pending = [];
@@ -355,13 +361,17 @@ export class RelayProvider {
     for (let attempt = 0; !res; attempt++) {
       try {
         const data = await sealBytes(this.opts.keys.dataKey, merged, this.aad);
+        if (!this.maySend()) {
+          this.pending = [...parts, ...this.pending];
+          await this.persistPending();
+          return;
+        }
         res = await this.http<Written>(`${this.roomPath}/updates`, { method: "POST", body: { data, epoch: this.state.epoch } });
       } catch (err) {
         // 412: pokój ma inną epokę albo go nie ma — serwer nie przyjął różnicy. Pełny stan zastępuje
         // to, co właśnie próbowaliśmy wysłać (`parts` są jego częścią).
         if (err instanceof RelayHttpError && err.status === 412) {
           await this.resetRoom(undefined);
-          this.sync();
           return;
         }
         // Log pełny (409): jedna próba migawki mimo progu i ponowienie wysyłki.
@@ -386,7 +396,6 @@ export class RelayProvider {
     const epoch = epochOf(res.epoch);
     if (this.roomReplaced(epoch, res.seq - 1)) {
       await this.resetRoom(epoch);
-      this.sync();
       return;
     }
     if (epoch && this.state.epoch !== epoch) this.state = { ...this.state, epoch };
@@ -400,23 +409,27 @@ export class RelayProvider {
   }
 
   private async compactTask(force = false): Promise<void> {
-    if (!this.started || this.state.cursor < 1) return;
+    if (!this.started || this.state.cursor < 1 || !this.maySend()) return;
     if (!force && this.state.cursor - this.state.compactedAt < COMPACT_AFTER) return;
     const upto = this.state.cursor;
     const data = await sealBytes(this.opts.keys.dataKey, Y.encodeStateAsUpdate(this.opts.doc), this.aad);
+    if (!this.maySend()) return;
     try {
       await this.http(`${this.roomPath}/snapshot`, { method: "PUT", body: { upto, data, epoch: this.state.epoch } });
     } catch (err) {
       // Pokój zniknął (404) albo ma inną epokę (412) między pobraniem a migawką.
       if (err instanceof RelayHttpError && (err.status === 412 || err.status === 404)) {
         await this.resetRoom(undefined);
-        this.sync();
         return;
       }
       throw err;
     }
     this.state = { ...this.state, compactedAt: upto };
     await this.persistState();
+  }
+
+  private maySend(): boolean {
+    return this.opts.canSend?.() ?? true;
   }
 
   /** Czy mamy stan dotyczący jakiegoś pokoju na serwerze (pobrane albo wysłane wpisy). */
@@ -441,6 +454,10 @@ export class RelayProvider {
    * Zaczyna pokój od zera: kursor i `sv` znikają, a do wysłania idzie pełny stan dokumentu (zawiera
    * też wszystko, co czekało w kolejce). Wołane tylko z zadań kolejki `run`, więc nie przeplata się
    * z wysyłką ani pobieraniem.
+   *
+   * Po resecie w kolejce staje **najpierw pobranie, potem wysyłka**: pokój założony od nowa może
+   * nieść wpis, po którym nie wolno już nic wysyłać (`canSend`), a pełny stan wysłany na ślepo
+   * odtworzyłby na serwerze dane pokoju, który ktoś celowo wycofał.
    */
   private async resetRoom(epoch: string | undefined): Promise<void> {
     const full = Y.encodeStateAsUpdate(this.opts.doc);
@@ -448,8 +465,7 @@ export class RelayProvider {
     this.state = { cursor: 0, compactedAt: 0, ...(epoch ? { epoch } : {}) };
     await this.persistPending();
     await this.persistState();
-    // Reset z samego pobrania (wiadomość `updated` z gniazda) nie ma za sobą wysyłki w kolejce.
-    this.run(() => this.flushTask());
+    this.sync();
   }
 
   private connectSocket(): void {

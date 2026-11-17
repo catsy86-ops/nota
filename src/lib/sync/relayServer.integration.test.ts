@@ -53,11 +53,12 @@ class MemStore implements RelayStore {
   }
 }
 
-async function device(code: string, reuse: { doc?: Y.Doc; store?: MemStore } = {}) {
+async function device(code: string, reuse: { doc?: Y.Doc; store?: MemStore; canSend?: (doc: Y.Doc) => boolean } = {}) {
   const keys = await deriveRelayKeys(code, ITER);
   const doc = reuse.doc ?? new Y.Doc();
   const store = reuse.store ?? new MemStore();
-  const provider = new RelayProvider({ baseUrl: BASE, keys, doc, store, flushMs: 5 });
+  const canSend = reuse.canSend ? () => reuse.canSend!(doc) : undefined;
+  const provider = new RelayProvider({ baseUrl: BASE, keys, doc, store, flushMs: 5, canSend });
   await provider.start();
   return { doc, text: doc.getText("t"), provider, store, keys };
 }
@@ -180,6 +181,39 @@ describe("klient przekaźnika ↔ prawdziwy serwer", () => {
     const c = await device(code);
     await untilSynced(c, () => c.text.toString() === "A" && c.doc.getText("d").toString() === "zyx");
     for (const dev of [a2, d, c]) dev.provider.stop();
+  }, 30_000);
+
+  it("po resecie pokoju najpierw pobranie: wpis zatrzymujący wysyłkę działa, zanim pójdzie pełny stan", async () => {
+    const code = "NAGROBEKAAAA";
+    const stopped = (doc: Y.Doc) => doc.getMap("syncControl").size === 0;
+    const c = await device(code, { canSend: stopped });
+    c.doc.transact(() => c.text.insert(0, "dane C"));
+    await until(() => c.provider.cursor === 1);
+
+    // Pokój wycofany; w jego miejscu zostaje jeden wpis z osobnego, pustego dokumentu.
+    await deleteRoom(c.keys);
+    const t = await device(code);
+    t.doc.transact(() => t.doc.getMap("syncControl").set("rekey:1", true));
+    await until(() => t.provider.cursor === 1);
+    t.provider.stop();
+
+    // C nie wie o niczym i wysyła różnicę: 412 → reset → pobranie → znacznik → cisza.
+    c.doc.transact(() => c.text.insert(6, " i jeszcze"));
+    await until(() => c.doc.getMap("syncControl").size === 1);
+    await new Promise((r) => setTimeout(r, 400));
+    c.provider.sync();
+    await new Promise((r) => setTimeout(r, 400));
+
+    const res = await fetch(`${BASE}/rooms/${c.keys.roomId}/updates?since=0`, { headers: { Authorization: `Bearer ${c.keys.token}` } });
+    const page = (await res.json()) as { entries: unknown[] };
+    expect(page.entries).toHaveLength(1);
+    // Kolejka nie zginęła: po zdjęciu blokady pełny stan idzie do pokoju.
+    expect(c.store.pending).not.toBeNull();
+    c.doc.transact(() => c.doc.getMap("syncControl").delete("rekey:1"));
+    const fresh = await device(code);
+    await untilSynced(fresh, () => fresh.text.toString() === "dane C i jeszcze");
+    c.provider.stop();
+    fresh.provider.stop();
   }, 30_000);
 
   it("urządzenie w pustym pokoju jest „online”, nie „offline” (R-17)", async () => {
