@@ -1138,6 +1138,11 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     return Y.encodeStateAsUpdateV2(doc);
   }
 
+  /** Wektor stanu dokumentu — do nagłówka kopii dziennej (`dailySnapshot.ts`). */
+  function encodeStateVector(): Uint8Array {
+    return Y.encodeStateVector(doc);
+  }
+
   /** Scala stan z pliku z bieżącym dokumentem — CRDT merge, nie nadpisanie. */
   function mergeSyncState(update: Uint8Array): { newNotes: number } {
     const before = new Set(notesMap.keys());
@@ -1171,7 +1176,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes, importBatch,
     upsertFolder, patchFolder, removeFolder,
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
-    replaceAll, replaceAllChunked, isBulkWriting, onBulkWriteEnd, resetForTests, diagStats, encodeSyncState, mergeSyncState,
+    replaceAll, replaceAllChunked, isBulkWriting, onBulkWriteEnd, resetForTests, diagStats, encodeSyncState, encodeStateVector, mergeSyncState,
     referencedImages, referencedAttachments, syncableRefs, remapImageRefs,
     beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange, getNoteText,
     readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote,

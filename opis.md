@@ -2144,6 +2144,48 @@ Dział opisany w jednym miejscu. Kalendarz pokazuje terminy przypomnień (`remin
 - **Testy:** `src/lib/reminderAgenda.test.ts` (`weekSeriesForecasts`: zaległa seria 7 wystąpień, seria od jutra 6, jednorazowe pominięte, seria poza oknem i kosz). Vitest 1489/1489 po wszystkich krokach.
 - **Commit:** 392f197, 2026-10-19.
 
+## Kopia zapasowa — kopie dzienne w OPFS (Q1.4, Z-16.1 część A, 2026-11-17)
+
+- **Co robi:** raz na dzień aplikacja zapisuje pełny stan danych (notatki, foldery, Grafik, Praca, Nauka, skarbiec) w prywatnym katalogu przeglądarki (OPFS), poza bazą IndexedDB. Zostaje 7 ostatnich dni ze zmianami. W Ustawieniach → Kopia i dane jest sekcja „Kopie dzienne na tym urządzeniu”: data, liczba notatek, rozmiar, „uszkodzona”, „zapisana przez nowszą wersję aplikacji”, „przypięta” z przyciskiem „Odepnij”. W karcie „Trwałość danych w tej przeglądarce” jest wiersz „Kopia dzienna: dziś, 148 notatek.”. Jeśli dziś zabrakło miejsca, w tym miejscu pojawia się ostrzeżenie „Kopia dzienna nie zapisana — brak miejsca.”. Przywracanie z kopii dziennej to część B (Z-16.1B), jeszcze nie zrobiona.
+- **Gdzie jest:** `src/lib/dailySnapshot.ts` — `takeDailySnapshot(source, env)`, `listDailySnapshots`, `unpinDailySnapshot`, `parseSnapshot`, `encodeSnapshot`, `startDailySnapshots` (harmonogram), `browserEnv` (OPFS, `withLockIfFree`), stałe `SNAPSHOT_DIR` (`kopie-dzienne`), `SNAPSHOT_KEEP` (7), `PIN_MIN_NOTES` (20), `SNAPSHOT_MAX_BYTES` (256 MiB). `src/workers/snapshotWrite.worker.ts` — zapis przez `createSyncAccessHandle` dla przeglądarek bez `createWritable`. `yjsStore.encodeStateVector()`. Start w `src/main.tsx`: leniwy import po `yjsStore.ready()`, więc moduł nie wchodzi do paczki startowej. Interfejs: `DailySnapshots` i `DailySnapshotHealth` w `src/components/settings/BackupSettings.tsx`.
+- **Format:** plik `RRRR-MM-DD.nkopia` (data lokalna). Kolejno: 4 bajty `NKD1`, 4 bajty długości nagłówka (big-endian), nagłówek JSON `{ v: 1, createdAt, app, schema, notes, bytes, sha256, sv }`, treść `Y.encodeStateAsUpdateV2`. `indeks.json` to pamięć podręczna listy i jedyne miejsce zapisu przypięcia. Źródłem prawdy są pliki: lista w Ustawieniach i zapis nowej kopii czytają każdy plik i sprawdzają długość oraz skrót.
+- **Kiedy powstaje:** 30 s po starcie (w `requestIdleCallback`) i przy schowaniu karty, dopóki dzisiejszej kopii nie ma. Blokada `notatnik-kopia-dzienna` sprawia, że przy kilku kartach pisze jedna. Kopia bierze też `MIGRATION_LOCK` bez czekania i sprawdza `yjsStore.isBulkWriting()`. W trakcie przywracania kopii albo importu wynik to „busy” i kopia czeka do następnej okazji — inaczej stan pośredni zostałby kopią dnia. Kolejność kroków:
+  1. Sprawdzenie samego dzisiejszego pliku. Jeśli jest poprawny, to koniec — tak kończy się prawie każde uruchomienie, bez czytania pozostałych plików. Uszkodzony dzisiejszy plik (przerwany zapis) jest usuwany i zapisywany od nowa.
+  2. Pominięcie dnia bez zmian.
+  3. Zapis.
+  4. Odczyt i sprawdzenie skrótu. Błąd sprawdzenia usuwa plik.
+  5. Przypięcie poprzedniej kopii, jeśli trzeba.
+  6. Zapis `indeks.json`, a dopiero po nim rotacja (opis niżej). Bez zapisanego indeksu nic nie jest usuwane, bo przypięcie żyje tylko w indeksie.
+  7. Zapis `kaczy.snapshot.last.v1` (`{ date, notes }`, dla części B) i `kaczy.snapshot.status.v1` (wynik próby, dla wiersza w Ustawieniach).
+
+  Harmonogram: „quota” kończy dzień, więc nie ma ponownych prób przy każdym schowaniu karty. „error” — najwyżej 3 próby na sesję. Zapis przez Worker ma limit 30 s, żeby zawieszony Worker nie trzymał blokady do zamknięcia karty.
+- **Decyzje:**
+  - „Dzień bez zmian” rozpoznaje skrót **treści**, nie wektora stanu (`sv`). Samo usunięcie w Yjs nie przesuwa wektora stanu, więc dzień z samymi usunięciami zostałby pominięty. Pole `sv` zostaje w nagłówku, zgodnie ze specyfikacją.
+  - Przypięcie: jeśli nowa kopia ma mniej niż połowę notatek poprzedniej, a poprzednia miała ich co najmniej 20, poprzednia zostaje przypięta. Przypięta może być tylko jedna — nowsza zastępuje starszą. Przypięta nie podlega rotacji, dopóki użytkownik jej nie odepnie.
+  - Rotacja: zostaje 7 najnowszych poprawnych plików i przypięty. Pliki uszkodzone starsze od siódmego poprawnego też są usuwane. Pliki zapisane przez nowszą wersję aplikacji („newer”) nie są usuwane — po powrocie do starszej wersji nie giną kopie, których ta wersja nie umie przeczytać.
+  - Brak miejsca: usunięcie najstarszej nieprzypiętej kopii i jedna ponowna próba. Nie jest usuwana kopia z nowszej wersji ani poprzednia kopia, która właśnie ma zostać przypięta (spadek notatek). Druga porażka oznacza „quota” i brak kopii z dziś, a reszta kopii zostaje.
+  - Wiersz w „Trwałości danych” mówi wprost, co się stało: „Kopia dzienna: wczoraj, 148 notatek.”, w dzień bez zmian z dopiskiem „Od tamtej pory bez zmian, więc dziś nowej nie trzeba.”, a przy dzisiejszym „quota” albo „error” pokazuje ostrzeżenie. „Odepnij” czeka na blokadę i przy niepowodzeniu pokazuje błąd.
+  - Bez OPFS (tryb prywatny, stara przeglądarka): sekcja i wiersz są ukryte, w diagnostyce jest jeden wpis.
+  - Pomiar kodowania (plan §1.4): `encodeStateAsUpdateV2` dla 2000 notatek z historią edycji (1,4 MB) to mediana 15 ms na komputerze, czyli ok. 60 ms przy 4× spowolnieniu. Dzieje się to raz dziennie, w bezczynności. Kodowanie „z kopii w Workerze” nic nie daje, bo skopiowanie dokumentu do Workera wymaga tego samego kodowania w wątku strony. Jedyna inna droga to Worker czytający IndexedDB sam — do rozważenia, jeśli pomiar na telefonie pokaże ponad 100 ms.
+- **Ograniczenia i pułapki:** w kopii nie ma obrazów, załączników ani historii wersji. „Wyczyść dane witryny” usuwa też kopie dzienne, więc nie zastępują kopii do pliku (tekst w Ustawieniach to mówi). Przypięcie żyje tylko w `indeks.json`: po utracie indeksu kopia przestaje być przypięta. Zapas dla Safari bez `createWritable` nie był sprawdzony na urządzeniu z iOS (QA telefonu).
+- **Testy:** `src/lib/dailySnapshot.test.ts` (atrapa OPFS) sprawdza:
+  - nagłówek i skrót;
+  - odrzucenie pliku obciętego, z podmienionym bajtem, bez magii i z nowszego formatu;
+  - listę z plikiem uszkodzonym;
+  - jedną kopię na dzień i pominięcie dnia bez zmian;
+  - zastąpienie uszkodzonego dzisiejszego pliku;
+  - dwie karty naraz;
+  - brak OPFS;
+  - rotację 7;
+  - przypięcie i jego przetrwanie rotacji, próg 20, zastąpienie przypiętej i odpięcie;
+  - brak miejsca: za pierwszym razem i dwukrotnie; nieusuwanie kopii, która ma zostać przypięta;
+  - brak kopii w trakcie wymiany porcjami („busy”);
+  - pliki nowszej wersji przeżywają rotację;
+  - nieudany zapis indeksu blokuje usuwanie.
+
+  `e2e/daily-snapshot.spec.ts` (prawdziwy OPFS w Chromium) sprawdza zapis po schowaniu karty, brak drugiego pliku tego samego dnia, wiersz i listę w Ustawieniach oraz axe.
+- **Commit:** w commicie z tym wpisem, 2026-11-17.
+
 ## Kopia zapasowa — przywracanie: sprawdzenie przed zapisem, notatki porcjami, znacznik przerwania (Z-18.1, Z-16.2, 2026-11-17)
 
 - **Co robi:** przywracanie najpierw czyta i sprawdza wszystkie części kopii, nic nie zapisując. Uszkodzona część (np. Dieta, Grafik, „Nauka i Praca”) zatrzymuje przywracanie **przed** wymianą notatek: okno „Część kopii jest uszkodzona — nie da się odczytać: … Nic jeszcze nie zostało zmienione” z „Przywróć bez nich” i „Anuluj”. Kopia „przed przywróceniem” pobiera się raz na wybrany plik, także przy ponowieniu. Gdy przywracanie zostało przerwane (zamknięta karta, wywrócona przeglądarka), przy następnym starcie baner: „Przywracanie kopii z DD.MM zostało przerwane. Część danych pochodzi z kopii, część sprzed niej. Wczytaj tę samą kopię jeszcze raz.” z „Kopia i dane” i „Zostaw, jak jest”.

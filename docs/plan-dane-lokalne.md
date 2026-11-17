@@ -83,6 +83,13 @@ Teksty potwierdzenia: „Wszystkie dane w aplikacji wrócą do stanu z 12.11, go
 
 ### 1.7 Zlecenie Z-16.1 (Opus, M; w dwóch częściach)
 
+**Stan 2026-11-17 (Fable):** część A zrobiona — `src/lib/dailySnapshot.ts`, zapas `src/workers/snapshotWrite.worker.ts`, sekcja i wiersz w Ustawieniach → Kopia i dane, testy `src/lib/dailySnapshot.test.ts` i `e2e/daily-snapshot.spec.ts`. Odstępstwa od §1.3–1.4:
+
+- „Dzień bez zmian” rozpoznaje skrót **treści**, nie `sv`. Samo usunięcie nie przesuwa wektora stanu, więc dzień z samymi usunięciami zostałby pominięty.
+- Brak pliku tymczasowego i `move` w zapasie przez Worker. Dzisiejszego pliku przed zapisem nie ma albo jest uszkodzony, a przerwany zapis zostawia plik „uszkodzona”, który następna próba zastępuje.
+
+Pomiar kodowania (§1.4): 2000 notatek, 1,4 MB — mediana 15 ms na komputerze, czyli ok. 60 ms przy 4× spowolnieniu, raz dziennie w bezczynności. Worker nie pomoże, bo kopia dokumentu do Workera to to samo kodowanie. Decyzja: zostaje w wątku strony, do sprawdzenia na telefonie. Zostaje część B.
+
 Część A (bez decyzji D-F3 — obie ścieżki jej potrzebują): `src/lib/dailySnapshot.ts` — format, zapis, weryfikacja, rotacja, przypinanie, brak miejsca, brak OPFS; wiersz w „Zdrowiu magazynu”; lista migawek w Ustawienia → Kopia i dane (data, liczba notatek, rozmiar, „uszkodzona”). Testy (Vitest z atrapą katalogu OPFS): nagłówek i skrót; plik obcięty i z podmienionym bajtem odrzucony; rotacja 7; przypięcie przy spadku liczby notatek; dzień bez zmian pomijany; `QuotaExceededError` nie usuwa niczego poza najstarszą; dwie karty — jedna migawka.
 
 Część B: ścieżka domyślna (§1.5) z ekranem; potem ścieżka awaryjna (§1.6) razem z opcją „Zastąp dane na tym urządzeniu danymi grupy”. Testy: usunięta notatka wraca jako kopia z nowym identyfikatorem i nie zmienia oryginałów; notatka prywatna po zmianie hasła jest wyszarzona; wymiana dokumentu przerwana po usunięciu bazy kończy się poprawnie przy następnym starcie; uszkodzona migawka nie rusza bazy; po wymianie urządzenie nie jest w grupie i nie ma kolejek przekaźnika; e2e „baza usunięta ręcznie → baner → przywrócenie”.

@@ -19,6 +19,7 @@ import { ResetSectionButton, Section } from "./SettingsShared";
 import { LastImportUndo } from "./LastImportUndo";
 import { AboutPanel } from "@/components/AboutPanel";
 import { viewLabel } from "@/lib/viewMeta";
+import { listDailySnapshots, readSnapshotStatus, unpinDailySnapshot, SNAPSHOT_LAST_KEY, type SnapshotEntry } from "@/lib/dailySnapshot";
 
 function formatBytes(bytes: number | null): string {
   if (bytes === null) return "?";
@@ -70,12 +71,101 @@ function StoragePersistenceStatus() {
         {storageWarning(info) && (
           <p role="alert" className="text-warning-ink">{storageWarning(info)}</p>
         )}
+        <DailySnapshotHealth />
         {!info.persisted && (
           <Button size="sm" variant="outline" onClick={handleRequest} disabled={requesting} className="w-full">
             Poproś przeglądarkę o trwałe przechowywanie
           </Button>
         )}
       </div>
+    </Section>
+  );
+}
+
+/** Dni lokalne od chwili `at` do dziś: 0 = dziś. */
+function daysAgo(at: number): number {
+  const a = new Date(at);
+  const b = new Date();
+  return Math.round((new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime() - new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime()) / 86_400_000);
+}
+
+const whenLabel = (at: number) => {
+  const d = daysAgo(at);
+  return d <= 0 ? "dziś" : d === 1 ? "wczoraj" : `${dniPl(d)} temu`;
+};
+
+const notesLabel = (n: number) => `${n} ${pluralPl(n, ["notatka", "notatki", "notatek"])}`;
+
+/** Wiersz „Kopia dzienna” w karcie trwałości (Q1.4): tylko z `localStorage`, bez czytania OPFS. */
+function DailySnapshotHealth() {
+  const status = readSnapshotStatus();
+  if (!status || status.result === "unsupported") return null;
+  const today = daysAgo(status.at) === 0;
+  if (today && status.result === "quota") {
+    return <p role="alert" className="text-warning-ink">Kopia dzienna nie zapisana — brak miejsca. Starsze kopie dzienne zostały.</p>;
+  }
+  if (today && status.result === "error") {
+    return <p role="alert" className="text-warning-ink">Dzisiejsza kopia dzienna nie zapisała się. Szczegóły są w raporcie diagnostycznym niżej.</p>;
+  }
+  let last: { date: number; notes: number } | null = null;
+  try { last = JSON.parse(localStorage.getItem(SNAPSHOT_LAST_KEY) ?? "null"); } catch { /* brak */ }
+  if (!last || typeof last.date !== "number") return null;
+  const unchanged = today && status.result === "unchanged" && daysAgo(last.date) > 0;
+  return (
+    <p className="text-muted-foreground">
+      Kopia dzienna: {whenLabel(last.date)}, {notesLabel(last.notes)}.{unchanged && " Od tamtej pory bez zmian, więc dziś nowej nie trzeba."}
+    </p>
+  );
+}
+
+/**
+ * Kopie dzienne w OPFS (Q1.4, Z-16.1 część A): lista z datą, liczbą notatek, rozmiarem i stanem pliku.
+ * Bez OPFS (tryb prywatny, stara przeglądarka) sekcji nie ma. Przywracanie — część B.
+ */
+function DailySnapshots() {
+  const [list, setList] = useState<SnapshotEntry[] | null | undefined>(undefined);
+  const load = () => { listDailySnapshots().then(setList, () => setList(null)); };
+  useEffect(load, []);
+  if (!list) return null;
+
+  async function unpin() {
+    let ok = false;
+    try { ok = await unpinDailySnapshot(); } catch { /* jak niżej */ }
+    load();
+    if (ok) toast.success("Odpięto — ta kopia zniknie, gdy wypadnie z 7 ostatnich dni");
+    else toast.error("Nie udało się odpiąć kopii dziennej. Spróbuj jeszcze raz.");
+  }
+
+  return (
+    <Section title="Kopie dzienne na tym urządzeniu">
+      <p className="ui-hint mb-2">
+        Raz dziennie aplikacja zapisuje stan wszystkich danych poza główną bazą przeglądarki. Zostaje 7 ostatnich dni ze zmianami. Bez zdjęć, załączników i historii wersji. „Wyczyść dane witryny” usuwa też te kopie, więc nie zastępują kopii do pliku.
+      </p>
+      {list.length === 0 ? (
+        <p className="ui-hint">Pierwsza kopia dzienna powstanie pół minuty po otwarciu aplikacji.</p>
+      ) : (
+        <ul className="rounded-card border border-border/60 bg-muted/20 divide-y divide-border/60 text-xs" aria-label="Kopie dzienne">
+          {list.map((e) => (
+            <li key={e.file} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
+              <span className="font-medium text-foreground tabular-nums">{new Date(e.createdAt).toLocaleDateString("pl-PL")}</span>
+              <span className="text-muted-foreground tabular-nums">
+                {e.notes !== null && `${notesLabel(e.notes)} · `}{formatBytes(e.bytes)}
+              </span>
+              {e.state === "broken" && <span className="text-warning-ink">uszkodzona</span>}
+              {e.state === "newer" && <span className="text-warning-ink">zapisana przez nowszą wersję aplikacji</span>}
+              {e.pinned && (
+                <span className="ml-auto flex items-center gap-2">
+                  <span className="text-foreground">przypięta</span>
+                  <Button type="button" size="sm" variant="outline" onClick={unpin}>Odepnij</Button>
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {list.some((e) => e.pinned) && (
+        <p className="ui-hint mt-1.5">Przypięta kopia jest sprzed dnia, w którym ubyło ponad połowę notatek. Nie znika z 7 ostatnimi dniami, dopóki jej nie odepniesz.</p>
+      )}
     </Section>
   );
 }
@@ -357,6 +447,7 @@ export function BackupSettings() {
   return (
     <div className="space-y-4">
       <StoragePersistenceStatus />
+      <DailySnapshots />
       <BackupFileTarget />
       <LastImportUndo />
 
