@@ -1,5 +1,6 @@
 ﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { describeBackupSkipped } from "./backupSkipped";
+import { RestoreCheckError, readRestoreMarker, clearRestoreMarker } from "./exportNotes";
 import { isBackupOversize, buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, MAX_BACKUP_VERSION, MERGE_SECTIONS, SETTINGS_KEYS, SETTING_VALUE_MAX, ACHIEVEMENTS_KEY } from "./exportNotes";
 import { setDayShift, shiftStore } from "./shifts/store";
 import { yjsStore } from "./yjsStore";
@@ -57,11 +58,42 @@ describe("pełny backup v2", () => {
     expect(isBackupOversize(120 * 1024 * 1024 + 1)).toBe(true);
   });
 
-  it("zgłasza sekcje, których nie udało się przywrócić, zamiast udawać sukces (W8)", async () => {
+  it("Z-18.1: uszkodzone sekcje wykryte przed zapisem — dokument nietknięty; „bez nich” przywraca resztę", async () => {
     const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
     expect((await restoreFullBackup(backup, ALL)).failed).toEqual([]);
-    const broken = { ...backup, diet: "{to nie jest json", kits: "[", points: "nie json" } as typeof backup;
-    expect((await restoreFullBackup(broken, ALL)).failed.sort()).toEqual(["Dieta", "Punkty wodne", "Zestawy"]);
+    yjsStore.upsertNote(makeNote({ id: "teraz", title: "Bieżąca" }));
+    const broken = { ...backup, diet: "{to nie jest json", kits: "[", points: "nie json", shifts: "{" } as typeof backup;
+    const err = await restoreFullBackup(broken, ALL).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(RestoreCheckError);
+    expect((err as RestoreCheckError).sections.sort()).toEqual(["Dieta", "Grafik", "Punkty wodne", "Zestawy"]);
+    // Nic nie zapisano: bieżąca notatka jest, znacznika nie ma.
+    expect(yjsStore.projectNotes().map((n) => n.id)).toContain("teraz");
+    expect(readRestoreMarker()).toBeNull();
+
+    const res = await restoreFullBackup(broken, { ...ALL, skip: (err as RestoreCheckError).sections });
+    expect(res.failed).toEqual([]);
+    expect(yjsStore.projectNotes().map((n) => n.id)).not.toContain("teraz");
+    expect(readRestoreMarker()).toBeNull();
+  });
+
+  it("Z-18.1: przerwanie po zapisie notatek zostawia znacznik; notatki prywatne mają skarbiec z kopii", async () => {
+    const { createVault } = await import("./vault");
+    const { meta } = await createVault("haslo-kopii-1234", { iterations: 1000, withRecovery: false });
+    yjsStore.setVaultMeta(meta);
+    const backup = await parseFullBackup(JSON.stringify({ ...(await buildFullBackup()), versions: [] }));
+    const { meta: other } = await createVault("inne-haslo-5678", { iterations: 1000, withRecovery: false });
+    yjsStore.setVaultMeta(other);
+
+    const flush = vi.spyOn(versionsStore, "flush").mockRejectedValueOnce(new Error("karta zamknięta"));
+    await expect(restoreFullBackup(backup, ALL)).rejects.toThrow("karta zamknięta");
+    flush.mockRestore();
+    expect(readRestoreMarker()).toMatchObject({ exportedAt: backup.exportedAt });
+    expect(yjsStore.getVaultMeta()).toEqual(meta);
+
+    // Ponowne przywrócenie tej samej kopii zdejmuje znacznik.
+    await restoreFullBackup(backup, ALL);
+    expect(readRestoreMarker()).toBeNull();
+    clearRestoreMarker();
   });
 
   it("kopia niesie kilometrówkę, cennik, nazwę firmy i autora, ale nie numer konta (W14)", async () => {

@@ -25,6 +25,7 @@ export { download };
 import { getViewPrefs } from "@/lib/viewPrefs";
 import { APP_NAME } from "@/lib/appName";
 import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
+import { clearRestoreMarker, setRestoreMarker } from "@/lib/restoreMarker";
 
 const PUSH_RESTORE_KEY = PUSH_PREFS_KEY;
 
@@ -349,38 +350,57 @@ export async function parseFullBackup(text: string): Promise<FullBackup> {
   return fullBackupSchema.parse(raw);
 }
 
-export interface RestoreOptions { versions: boolean; settings: boolean; achievements: boolean; shifts: boolean; study: boolean }
+export interface RestoreOptions {
+  versions: boolean; settings: boolean; achievements: boolean; shifts: boolean; study: boolean;
+  /** Sekcje (etykiety), które użytkownik kazał pominąć po zgłoszeniu `RestoreCheckError` („Przywróć bez niej”). */
+  skip?: readonly string[];
+}
 
 /**
- * Przywraca backup: notatki, foldery i etykiety zawsze (destrukcyjnie),
- * pozostałe sekcje tylko zaznaczone i obecne w pliku. Ustawienia działają
- * po przeładowaniu strony, które i tak następuje po przywróceniu.
+ * Uszkodzone sekcje wykryte przy sprawdzaniu — **przed** pierwszym zapisem (Z-18.1, P1/P2 audytu 2). Dokument jest
+ * nietknięty; wołający pyta „Przywróć bez niej / Anuluj” i woła ponownie z `skip`.
  */
-/** Wynik przywracania: ile wpisów Nauki odrzucono przy czyszczeniu kopii (0 = wszystko przeszło). */
+export class RestoreCheckError extends Error {
+  constructor(readonly sections: string[]) {
+    super(`Uszkodzone części kopii: ${sections.join(", ")}`);
+    this.name = "RestoreCheckError";
+  }
+}
+
+export { RESTORE_MARKER_KEY, readRestoreMarker, clearRestoreMarker, type RestoreMarker } from "@/lib/restoreMarker";
+
 /** L1: w dzienniku diagnostycznym zostaje tylko nazwa błędu — komunikat `JSON.parse` może zawierać fragment kopii. */
 const errName = (e: unknown): string => (e instanceof Error ? e.name : "błąd");
 
-/** Sekcje kopii niesione jako JSON w stringu i scalane przy przywracaniu. Nowy dział: jedna pozycja tutaj + pole w schemacie i budowie kopii. */
+/**
+ * Sekcje kopii niesione jako JSON w stringu i scalane przy przywracaniu. Nowy dział: jedna pozycja tutaj + pole w schemacie
+ * i budowie kopii. `load` wczytuje moduł w fazie sprawdzania; zwrócona funkcja scala **synchronicznie** w fazie zapisu.
+ * Kolejność ma znaczenie (P8): `training` sprawdza notatki, więc idzie po wymianie notatek.
+ */
 type MergeKey = "supplements" | "diet" | "weight" | "training" | "debts" | "entryCheck" | "kits" | "views" | "points" | "plans" | "billing" | "van" | "invoices" | "pricing" | "clients" | "jobs";
-export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; merge: (dump: never) => unknown }[] = [
-  { key: "supplements", label: "Suplementy", merge: async (d) => (await import("@/lib/supplements/store")).mergeSupplementDump(d) },
-  { key: "diet", label: "Dieta", merge: async (d) => (await import("@/lib/diet/store")).mergeDietDump(d) },
-  { key: "weight", label: "Waga", merge: async (d) => (await import("@/lib/weight/store")).mergeWeightDump(d) },
+type Merge = (dump: never) => unknown;
+export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; load: () => Promise<Merge> }[] = [
+  { key: "supplements", label: "Suplementy", load: async () => (await import("@/lib/supplements/store")).mergeSupplementDump },
+  { key: "diet", label: "Dieta", load: async () => (await import("@/lib/diet/store")).mergeDietDump },
+  { key: "weight", label: "Waga", load: async () => (await import("@/lib/weight/store")).mergeWeightDump },
   // Notatki z kopii są już wczytane, więc można sprawdzić, czy przypomnienie ma swoją notatkę.
-  { key: "training", label: "Trening", merge: async (d) => (await import("@/lib/training/store")).mergeTrainingDump(d, (id: string) => yjsStore.projectNotes().some((n) => n.id === id)) },
-  { key: "debts", label: "Długi", merge: async (d) => (await import("@/lib/debts/store")).mergeDebtsDump(d) },
-  { key: "entryCheck", label: "Lista przed wejściem", merge: async (d) => (await import("@/lib/study/entryCheckStore")).mergeEntryCheckDump(d) },
-  { key: "kits", label: "Zestawy", merge: async (d) => (await import("@/lib/study/kitsStore")).mergeKitsDump(d) },
-  { key: "views", label: "Widoki", merge: async (d) => (await import("@/lib/savedViews")).mergeViewsDump(d) },
-  { key: "points", label: "Punkty wodne", merge: async (d) => (await import("@/lib/study/pointsStore")).mergePointsDump(d) },
-  { key: "plans", label: "Plany", merge: async (d) => (await import("@/lib/plans/plansStore")).mergePlansDump(d) },
-  { key: "billing", label: "Rozliczenia", merge: async (d) => (await import("@/lib/study/billingStore")).mergeBillingDump(d) },
-  { key: "van", label: "Auto", merge: async (d) => (await import("@/lib/study/vanStore")).mergeVanDump(d) },
-  { key: "invoices", label: "Faktury", merge: async (d) => (await import("@/lib/ksef/invoicesStore")).mergeInvoicesDump(d) },
-  { key: "pricing", label: "Cenniki", merge: async (d) => (await import("@/lib/study/pricingStore")).mergePricingDump(d) },
-  { key: "clients", label: "Klienci", merge: async (d) => (await import("@/lib/clients/store")).mergeClientsDump(d) },
-  { key: "jobs", label: "Fuchy", merge: async (d) => (await import("@/lib/study/jobsStore")).mergeJobsDump(d) },
+  { key: "training", label: "Trening", load: async () => { const m = await import("@/lib/training/store"); return (d: never) => m.mergeTrainingDump(d, (id: string) => yjsStore.projectNotes().some((n) => n.id === id)); } },
+  { key: "debts", label: "Długi", load: async () => (await import("@/lib/debts/store")).mergeDebtsDump },
+  { key: "entryCheck", label: "Lista przed wejściem", load: async () => (await import("@/lib/study/entryCheckStore")).mergeEntryCheckDump },
+  { key: "kits", label: "Zestawy", load: async () => (await import("@/lib/study/kitsStore")).mergeKitsDump },
+  { key: "views", label: "Widoki", load: async () => (await import("@/lib/savedViews")).mergeViewsDump },
+  { key: "points", label: "Punkty wodne", load: async () => (await import("@/lib/study/pointsStore")).mergePointsDump },
+  { key: "plans", label: "Plany", load: async () => (await import("@/lib/plans/plansStore")).mergePlansDump },
+  { key: "billing", label: "Rozliczenia", load: async () => (await import("@/lib/study/billingStore")).mergeBillingDump },
+  { key: "van", label: "Auto", load: async () => (await import("@/lib/study/vanStore")).mergeVanDump },
+  { key: "invoices", label: "Faktury", load: async () => (await import("@/lib/ksef/invoicesStore")).mergeInvoicesDump },
+  { key: "pricing", label: "Cenniki", load: async () => (await import("@/lib/study/pricingStore")).mergePricingDump },
+  { key: "clients", label: "Klienci", load: async () => (await import("@/lib/clients/store")).mergeClientsDump },
+  { key: "jobs", label: "Fuchy", load: async () => (await import("@/lib/study/jobsStore")).mergeJobsDump },
 ];
+
+export const SHIFTS_SECTION = "Grafik";
+export const STUDY_SECTION = "Nauka i Praca";
 
 export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number; failed: string[] }> {
   // `ready()` samo bierze blokadę migracji — wołane w jej środku zakleszczyłoby się.
@@ -388,30 +408,90 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   return withExclusiveLock(MIGRATION_LOCK, () => restoreFullBackupLocked(backup, opts));
 }
 
+/**
+ * Przywracanie w trzech fazach (Z-18.1, P1/P2 audytu 2):
+ * 1. **Sprawdzanie, bez zapisu** — moduły działów, `JSON.parse` sekcji, `migrate` Grafiku, `cleanDump` Nauki, wersje.
+ *    Uszkodzona sekcja → `RestoreCheckError` przed pierwszym zapisem (dawniej błąd wychodził po zniszczeniu notatek).
+ * 2. **Zapis synchroniczny** — bez `await` między zapisami do Yjs: metadane skarbca i notatki jedne po drugich (przerwanie
+ *    nie zostawi notatek z kopii z obcym skarbcem), sekcje działów, Grafik, Nauka. Okno przerwania kurczy się z sekund
+ *    do jednego zadania; pełną atomowość da dopiero ścieżka awaryjna Q1.4.
+ * 3. **Zapisy asynchroniczne** na końcu — wersje, `localStorage`; potem zdjęcie znacznika.
+ */
 async function restoreFullBackupLocked(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number; failed: string[] }> {
+  const skip = new Set(opts.skip ?? []);
   /** Sekcje, których nie udało się przywrócić (W8): wołający pokazuje je zamiast „Przywrócono”. */
   const failed: string[] = [];
   const fail = (name: string, err: unknown) => { failed.push(name); logDiag("warn", "backup", `cannot restore ${name}`, errName(err)); };
+  const broken: string[] = [];
+  const check = <T>(name: string, fn: () => T): T | undefined => {
+    try { return fn(); } catch (err) { broken.push(name); logDiag("warn", "backup", `broken section ${name}`, errName(err)); return undefined; }
+  };
   let studyDropped = 0;
   let schedulesSkipped = 0;
   await yjsStore.ready();
-  // Obrazy i załączniki najpierw: błąd zapisu (brak miejsca) przerywa przed destrukcyjnym replaceAll.
-  const notes = await withStoredImages(backup.notes);
-  if (backup.attachmentBlobs) await imageStore.ingest(Object.values(backup.attachmentBlobs));
-  yjsStore.replaceAll(notes, backup.folders, backup.labels, backup.propDefs ?? []);
-  // Sekcje domenowe są scalane (bez kasowania); uszkodzona po prostu się pomija i trafia do `failed`.
-  for (const s of MERGE_SECTIONS) {
-    const raw = backup[s.key];
-    if (!raw) continue;
-    try { await s.merge(JSON.parse(raw) as never); } catch (err) { fail(s.label, err); }
+
+  // ── 1. sprawdzanie ──
+  const merges: { label: string; apply: () => unknown }[] = [];
+  for (const sec of MERGE_SECTIONS) {
+    const raw = backup[sec.key];
+    if (!raw || skip.has(sec.label)) continue;
+    const dump = check(sec.label, () => JSON.parse(raw) as unknown);
+    if (dump === undefined) continue;
+    let merge: Merge;
+    try { merge = await sec.load(); } catch (err) { broken.push(sec.label); logDiag("warn", "backup", `cannot load ${sec.label}`, errName(err)); continue; }
+    merges.push({ label: sec.label, apply: () => merge(dump as never) });
   }
-  // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
-  if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
-  if (opts.versions && backup.versions) {
-    await versionsStore.load();
-    versionsStore.replaceAll(backup.versions);
-    await versionsStore.flush();
+
+  let shiftsApply: (() => void) | null = null;
+  if (opts.shifts && backup.shifts !== undefined && !skip.has(SHIFTS_SECTION)) {
+    await shiftsReady();
+    const main = check(SHIFTS_SECTION, () => {
+      const raw = JSON.parse(backup.shifts!);
+      // M8: bez pola `bonuses` (kopia sprzed premii) premie z tego telefonu zostają.
+      return { data: migrate(raw), bonuses: Array.isArray(raw?.bonuses) };
+    });
+    // M4: dodatkowe grafiki — każdy osobno; odrzucone (limit, zły id, zły kształt) są liczone i zgłaszane.
+    const extra: { id: string; name: string; data: ReturnType<typeof migrate> }[] = [];
+    try {
+      const list = backup.shiftSchedules ? JSON.parse(backup.shiftSchedules) as { id: string; name: string; data: unknown }[] : [];
+      for (const s of Array.isArray(list) ? list : []) {
+        try {
+          if (typeof s?.id !== "string" || typeof s?.name !== "string") schedulesSkipped++;
+          else extra.push({ id: s.id, name: s.name, data: migrate(s.data) });
+        } catch (err) { schedulesSkipped++; logDiag("warn", "backup", "cannot restore schedule", errName(err)); }
+      }
+    } catch (err) { logDiag("warn", "backup", "cannot read schedules", errName(err)); }
+    if (main) {
+      shiftsApply = () => {
+        restoreShifts(main.data, main.bonuses);
+        for (const s of extra) if (!restoreExtraSchedule(s.id, s.name, s.data)) schedulesSkipped++;
+      };
+    }
   }
+
+  let studyApply: (() => void) | null = null;
+  const legacyStudy = backup.settings?.[STUDY_STORAGE_KEY];
+  if (opts.study && (backup.study !== undefined || legacyStudy !== undefined) && !skip.has(STUDY_SECTION)) {
+    try {
+      const [{ studyDevice, studyReady, yStudy }, { cleanDump, dumpFromLegacy }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy")]);
+      await studyReady();
+      const dump = check(STUDY_SECTION, () => {
+        // Starsze kopie niosą Naukę tylko wśród ustawień, w kształcie dawnego zapisu.
+        const raw = backup.study !== undefined ? JSON.parse(backup.study) : null;
+        const d = raw !== null ? cleanDump(raw) : dumpFromLegacy(JSON.parse(legacyStudy!), studyDevice());
+        // Wpisy nieznanego rodzaju albo z uszkodzonymi polami odpadają przy czyszczeniu — zostawiamy ślad, zamiast gubić je po cichu.
+        const rawCount = raw && Array.isArray(raw.journal) ? raw.journal.length : d.journal.length;
+        if (rawCount > d.journal.length) {
+          studyDropped = rawCount - d.journal.length;
+          logDiag("warn", "backup", `przywracanie Nauki: pominięto ${studyDropped} wpisów`);
+        }
+        return d;
+      });
+      if (dump) studyApply = () => yStudy.replaceAll(dump);
+    } catch (err) { broken.push(STUDY_SECTION); logDiag("warn", "backup", "cannot load study", errName(err)); }
+  }
+
+  if (opts.versions && backup.versions) await versionsStore.load();
   const writes: Record<string, string> = {};
   if (opts.settings && backup.settings) {
     for (const k of SETTINGS_KEYS) {
@@ -423,40 +503,29 @@ async function restoreFullBackupLocked(backup: FullBackup, opts: RestoreOptions)
     }
   }
   if (opts.achievements && backup.achievements !== undefined) writes[ACHIEVEMENTS_KEY] = backup.achievements;
-  if (opts.shifts && backup.shifts !== undefined) {
-    try {
-      await shiftsReady();
-      const raw = JSON.parse(backup.shifts);
-      // M8: bez pola `bonuses` (kopia sprzed premii) premie z tego telefonu zostają.
-      restoreShifts(migrate(raw), Array.isArray(raw?.bonuses));
-    } catch (err) { fail("Grafik", err); }
-    // M4: dodatkowe grafiki — każdy osobno; odrzucone (limit, zły id, zły kształt) są liczone i zgłaszane.
-    try {
-      const extra = backup.shiftSchedules ? JSON.parse(backup.shiftSchedules) as { id: string; name: string; data: unknown }[] : [];
-      for (const s of Array.isArray(extra) ? extra : []) {
-        try {
-          if (typeof s?.id !== "string" || typeof s?.name !== "string" || !restoreExtraSchedule(s.id, s.name, migrate(s.data))) schedulesSkipped++;
-        } catch (err) { schedulesSkipped++; logDiag("warn", "backup", "cannot restore schedule", errName(err)); }
-      }
-    } catch (err) { logDiag("warn", "backup", "cannot read schedules", errName(err)); }
-    if (schedulesSkipped) logDiag("warn", "backup", `przywracanie grafików: pominięto ${schedulesSkipped}`);
+
+  if (broken.length) throw new RestoreCheckError(broken);
+
+  // Obrazy i załączniki: tylko dokładają do magazynu; błąd zapisu (brak miejsca) przerywa przed wymianą notatek.
+  const notes = await withStoredImages(backup.notes);
+  if (backup.attachmentBlobs) await imageStore.ingest(Object.values(backup.attachmentBlobs));
+
+  // ── 2. zapis synchroniczny ──
+  setRestoreMarker({ startedAt: Date.now(), exportedAt: backup.exportedAt });
+  // Metadane skarbca z pliku przed notatkami: zablokowane notatki z kopii są szyfrowane kluczem z kopii.
+  if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
+  yjsStore.replaceAll(notes, backup.folders, backup.labels, backup.propDefs ?? []);
+  for (const m of merges) {
+    try { m.apply(); } catch (err) { fail(m.label, err); }
   }
-  const legacyStudy = backup.settings?.[STUDY_STORAGE_KEY];
-  if (opts.study && (backup.study !== undefined || legacyStudy !== undefined)) {
-    try {
-      const [{ studyDevice, studyReady, yStudy }, { cleanDump, dumpFromLegacy }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy")]);
-      await studyReady();
-      // Starsze kopie niosą Naukę tylko wśród ustawień, w kształcie dawnego zapisu.
-      const raw = backup.study !== undefined ? JSON.parse(backup.study) : null;
-      const dump = raw !== null ? cleanDump(raw) : dumpFromLegacy(JSON.parse(legacyStudy!), studyDevice());
-      // Wpisy nieznanego rodzaju albo z uszkodzonymi polami odpadają przy czyszczeniu — zostawiamy ślad, zamiast gubić je po cichu.
-      const rawCount = raw && Array.isArray(raw.journal) ? raw.journal.length : dump.journal.length;
-      if (rawCount > dump.journal.length) {
-        studyDropped = rawCount - dump.journal.length;
-        logDiag("warn", "backup", `przywracanie Nauki: pominięto ${studyDropped} wpisów`);
-      }
-      yStudy.replaceAll(dump);
-    } catch (err) { fail("Nauka i Praca", err); }
+  if (shiftsApply) { try { shiftsApply(); } catch (err) { fail(SHIFTS_SECTION, err); } }
+  if (studyApply) { try { studyApply(); } catch (err) { fail(STUDY_SECTION, err); } }
+  if (schedulesSkipped) logDiag("warn", "backup", `przywracanie grafików: pominięto ${schedulesSkipped}`);
+
+  // ── 3. zapisy asynchroniczne ──
+  if (opts.versions && backup.versions) {
+    versionsStore.replaceAll(backup.versions);
+    await versionsStore.flush();
   }
   for (const [k, v] of Object.entries(writes)) {
     try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }
@@ -465,6 +534,7 @@ async function restoreFullBackupLocked(backup: FullBackup, opts: RestoreOptions)
   if (opts.settings && backup.settings && ("kaczy.study.pricing.v1" in backup.settings || "kaczy.study.prices.v1" in backup.settings)) {
     await import("@/lib/study/pricingStore").then((m) => m.importLegacyPricing()).catch((err) => fail("Cenniki", err));
   }
+  clearRestoreMarker();
   return { studyDropped, schedulesSkipped, failed };
 }
 

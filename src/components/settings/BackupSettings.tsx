@@ -5,7 +5,7 @@ import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, Share2
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
-import { BACKUP_OVERSIZE_NOTE, buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, shareFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
+import { BACKUP_OVERSIZE_NOTE, buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, RestoreCheckError, shareFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import { dniPl, pluralPl } from "@/lib/plural";
 import type { FullBackup } from "@/lib/noteSchema";
@@ -164,11 +164,16 @@ function RestoreBackup() {
   const [backup, setBackup] = useState<FullBackup | null>(null);
   const [opts, setOpts] = useState<RestoreOptions>({ versions: true, settings: true, achievements: true, shifts: true, study: true });
   const [busy, setBusy] = useState(false);
+  // Z-18.1: uszkodzone części wykryte przed zapisem — pytanie „Przywróć bez nich / Anuluj”.
+  const [broken, setBroken] = useState<string[] | null>(null);
+  const [savedCurrent, setSavedCurrent] = useState(false);
 
   async function pick() {
     try {
       setBackup(await pickFullBackup());
       setOpts({ versions: true, settings: true, achievements: true, shifts: true, study: true });
+      setSavedCurrent(false);
+      setBroken(null);
     } catch (err) {
       if (err instanceof Error && err.message !== "Nie wybrano pliku") {
         toast.error("Nie udało się wczytać backupu: " + err.message);
@@ -176,20 +181,24 @@ function RestoreBackup() {
     }
   }
 
-  async function restore() {
+  async function restore(skip: string[] = []) {
     if (!backup) return;
     setBusy(true);
+    setBroken(null);
     try {
-      // Najpierw kopia tego, co jest teraz — przywrócenie nadpisuje dane, a ten plik jest drogą powrotu.
-      try {
-        const current = await buildFullBackup();
-        download(JSON.stringify(current), `notki-przed-przywroceniem-${new Date().toISOString().slice(0, 10)}.json`, "application/json");
-      } catch (err) {
-        setBusy(false);
-        toast.error("Nie zapisałem kopii sprzed przywrócenia, więc przywracanie wstrzymane" + (err instanceof Error ? ": " + err.message : ""));
-        return;
+      // Najpierw kopia tego, co jest teraz — przywrócenie nadpisuje dane, a ten plik jest drogą powrotu. Raz na plik kopii.
+      if (!savedCurrent) {
+        try {
+          const current = await buildFullBackup();
+          download(JSON.stringify(current), `notki-przed-przywroceniem-${new Date().toISOString().slice(0, 10)}.json`, "application/json");
+          setSavedCurrent(true);
+        } catch (err) {
+          setBusy(false);
+          toast.error("Nie zapisałem kopii sprzed przywrócenia, więc przywracanie wstrzymane" + (err instanceof Error ? ": " + err.message : ""));
+          return;
+        }
       }
-      const { studyDropped, schedulesSkipped, failed } = await restoreFullBackup(backup, opts);
+      const { studyDropped, schedulesSkipped, failed } = await restoreFullBackup(backup, { ...opts, skip });
       const notes: string[] = [];
       if (studyDropped > 0) notes.push(`Pominięto ${studyDropped} ${pluralPl(studyDropped, ["wpis Nauki", "wpisy Nauki", "wpisów Nauki"])} o nieznanym kształcie`);
       if (schedulesSkipped > 0) notes.push(`Nie przywrócono ${schedulesSkipped} ${pluralPl(schedulesSkipped, ["grafiku", "grafików", "grafików"])} (limit albo zły plik)`);
@@ -201,11 +210,13 @@ function RestoreBackup() {
       setTimeout(() => window.location.reload(), notes.length ? 6000 : 1200);
     } catch (err) {
       setBusy(false);
+      // Nic jeszcze nie zapisano — pytamy, czy przywrócić bez uszkodzonych części.
+      if (err instanceof RestoreCheckError) { setBroken(err.sections); return; }
       toast.error("Nie udało się przywrócić backupu" + (err instanceof Error ? ": " + err.message : ""));
     }
   }
 
-  const sections: { key: keyof RestoreOptions; label: string; present: boolean }[] = backup ? [
+  const sections: { key: Exclude<keyof RestoreOptions, "skip">; label: string; present: boolean }[] = backup ? [
     { key: "versions", label: `Historia wersji (${backup.versions?.length ?? 0})`, present: backup.versions !== undefined },
     { key: "settings", label: "Ustawienia (wygląd, styl, efekty, potwierdzenia)", present: backup.settings !== undefined },
     { key: "achievements", label: "Odznaki i passa", present: backup.achievements !== undefined },
@@ -259,6 +270,21 @@ function RestoreBackup() {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={busy}>Anuluj</AlertDialogCancel>
             <AlertDialogAction className={buttonVariants({ variant: "destructive" })} disabled={busy} onClick={(e) => { e.preventDefault(); void restore(); }}>Przywróć backup</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={broken !== null} onOpenChange={(o) => { if (!o) setBroken(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Część kopii jest uszkodzona</AlertDialogTitle>
+            <AlertDialogDescription>
+              Nie da się odczytać: {broken?.join(", ")}. Nic jeszcze nie zostało zmienione. Możesz przywrócić kopię bez tych części
+              — dane z nich zostaną takie, jak są teraz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => void restore(broken ?? [])}>Przywróć bez nich</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
