@@ -47,6 +47,10 @@ export function recordSeenDevices(names: readonly string[], now = Date.now()): v
   if (next !== store.get()) store.set(next);
 }
 
+export function getSeenDevices(): SeenMap {
+  return store.get();
+}
+
 export function useSeenDevices(): SeenMap {
   return store.use();
 }
