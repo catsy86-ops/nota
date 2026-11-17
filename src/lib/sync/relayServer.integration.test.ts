@@ -53,12 +53,28 @@ class MemStore implements RelayStore {
   }
 }
 
-async function device(code: string) {
+async function device(code: string, reuse: { doc?: Y.Doc; store?: MemStore } = {}) {
   const keys = await deriveRelayKeys(code, ITER);
-  const doc = new Y.Doc();
-  const provider = new RelayProvider({ baseUrl: BASE, keys, doc, store: new MemStore(), flushMs: 5 });
+  const doc = reuse.doc ?? new Y.Doc();
+  const store = reuse.store ?? new MemStore();
+  const provider = new RelayProvider({ baseUrl: BASE, keys, doc, store, flushMs: 5 });
   await provider.start();
-  return { doc, text: doc.getText("t"), provider };
+  return { doc, text: doc.getText("t"), provider, store, keys };
+}
+
+/** Pobiera, aż warunek będzie spełniony (testy nie mają gniazda, więc nikt nie budzi urządzenia). */
+async function untilSynced(dev: { provider: RelayProvider }, cond: () => boolean, ms = 8000) {
+  let n = 0;
+  await until(() => {
+    if (cond()) return true;
+    if (n++ % 10 === 0) dev.provider.sync();
+    return false;
+  }, ms);
+}
+
+async function deleteRoom(keys: { roomId: string; token: string }) {
+  const res = await fetch(`${BASE}/rooms/${keys.roomId}`, { method: "DELETE", headers: { Authorization: `Bearer ${keys.token}` } });
+  expect(res.ok).toBe(true);
 }
 
 async function until(cond: () => boolean, ms = 8000) {
@@ -117,6 +133,64 @@ describe("klient przekaźnika ↔ prawdziwy serwer", () => {
     });
     expect(res.status).toBe(403);
   });
+
+  it("pokój usunięty z serwera: następny zapis wysyła pełny stan, nowe urządzenie dostaje całość (R-11)", async () => {
+    const code = "EPOKAEPOKAAA";
+    const a = await device(code);
+    const b = await device(code);
+    a.doc.transact(() => a.text.insert(0, "stare"));
+    await untilSynced(b, () => b.text.toString() === "stare");
+    expect(a.store.state.epoch).toMatch(/^[a-f0-9]{32}$/);
+    const before = a.store.state.epoch;
+
+    await deleteRoom(a.keys);
+    a.doc.transact(() => a.text.insert(5, " nowe"));
+    b.doc.transact(() => b.doc.getText("b").insert(0, "od B"));
+
+    const c = await device(code);
+    await untilSynced(c, () => c.text.toString() === "stare nowe" && c.doc.getText("b").toString() === "od B");
+    await untilSynced(a, () => a.doc.getText("b").toString() === "od B");
+    await untilSynced(b, () => b.text.toString() === "stare nowe");
+    expect(a.store.state.epoch).toMatch(/^[a-f0-9]{32}$/);
+    expect(a.store.state.epoch).not.toBe(before);
+    expect(b.store.state.epoch).toBe(a.store.state.epoch);
+    for (const d of [a, b, c]) d.provider.stop();
+  }, 30_000);
+
+  it("pokój założony od nowa, który przegonił stary kursor, też jest rozpoznany", async () => {
+    const code = "EPOKADRUGAAA";
+    const a = await device(code);
+    a.doc.transact(() => a.text.insert(0, "A"));
+    await until(() => a.provider.cursor === 1);
+    a.provider.stop();
+
+    await deleteRoom(a.keys);
+    // Inne urządzenie zakłada pokój od nowa i zapisuje więcej wpisów, niż A zdążyło pobrać.
+    const d = await device(code);
+    for (const word of ["x", "y", "z"]) {
+      d.doc.transact(() => d.doc.getText("d").insert(0, word));
+      const want = d.provider.cursor + 1;
+      await until(() => d.provider.cursor === want);
+    }
+    expect(d.provider.cursor).toBeGreaterThan(1);
+
+    const a2 = await device(code, { doc: a.doc, store: a.store });
+    await untilSynced(a2, () => a2.doc.getText("d").toString() === "zyx");
+    await untilSynced(d, () => d.text.toString() === "A");
+    const c = await device(code);
+    await untilSynced(c, () => c.text.toString() === "A" && c.doc.getText("d").toString() === "zyx");
+    for (const dev of [a2, d, c]) dev.provider.stop();
+  }, 30_000);
+
+  it("urządzenie w pustym pokoju jest „online”, nie „offline” (R-17)", async () => {
+    const keys = await deriveRelayKeys("PUSTYPUSTYAA", ITER);
+    const statuses: string[] = [];
+    const provider = new RelayProvider({ baseUrl: BASE, keys, doc: new Y.Doc(), store: new MemStore(), flushMs: 5, onStatus: (s) => statuses.push(s) });
+    await provider.start();
+    await until(() => statuses.includes("online"));
+    expect(statuses).not.toContain("offline");
+    provider.stop();
+  }, 20_000);
 
   it("dokument 2 MB synchronizuje się od zera (limit wpisu 16 MB)", async () => {
     const code = "BIGBIGBIGBIG";

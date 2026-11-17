@@ -39,13 +39,15 @@ Stan do przeglądu: `security-review` przed wdrożeniem.
 | Trasa | Co robi |
 |---|---|
 | `GET /health` | `{ok, rooms}` |
-| `GET /rooms/:id/updates?since=n` | wpisy o numerze > n (najwyżej 500), `last`, `hasMore` |
-| `POST /rooms/:id/updates` | `{data}` dopisuje wpis, zwraca `{seq, last}` |
-| `PUT /rooms/:id/snapshot` | `{upto, data}` zastępuje wpisy ≤ upto jednym (kompaktowanie) |
+| `GET /rooms/:id/updates?since=n` | wpisy o numerze > n (najwyżej 500), `last`, `hasMore`, `epoch` |
+| `POST /rooms/:id/updates` | `{data, epoch?}` dopisuje wpis, zwraca `{seq, last, epoch}`; `412`, gdy podana `epoch` nie jest epoką pokoju (albo pokoju nie ma) |
+| `PUT /rooms/:id/snapshot` | `{upto, data, epoch?}` zastępuje wpisy ≤ upto jednym (kompaktowanie); nie zakłada pokoju (`404`); `412` przy innej `epoch` |
 | `DELETE /rooms/:id` | usuwa pokój razem z blobami (token pokoju); zamyka jego gniazda WebSocket. Wywołuje go „Odłącz i usuń z przekaźnika” w Ustawieniach → Sync |
 | `PUT /rooms/:id/blobs/:bid` | surowe bajty zaszyfrowanego bloba (obraz/załącznik), `bid` = HMAC z hasha treści; ponowny zapis tego samego `bid` nic nie zmienia |
 | `GET` / `HEAD /rooms/:id/blobs/:bid` | pobranie bloba (`404`, gdy go nie ma) albo samo sprawdzenie, czy jest |
-| `WS /ws` | po połączeniu wysyłasz `{type:"subscribe", room, token}`; serwer odpowiada `ready` albo zamyka z kodem 4003; po każdym zapisie przychodzi `{type:"updated", last}` |
+| `WS /ws` | po połączeniu wysyłasz `{type:"subscribe", room, token}`; serwer odpowiada `{type:"ready", last, epoch}` albo zamyka z kodem 4003; po każdym zapisie przychodzi `{type:"updated", last, epoch}` |
+
+**Epoka pokoju** (`epoch`, 32 znaki hex) jest losowana przy założeniu pokoju. Pokój usunięty (`DELETE`, 180 dni bez zapisu, utrata danych serwera) i założony od nowa ma inną epokę i numery wpisów od 1. Klient, który widzi inną epokę niż zapisana, zeruje kursor i wysyła pełny stan dokumentu — bez tego nowe urządzenia dostałyby samą różnicę bez poprzedników.
 
 Token idzie w nagłówku `Authorization: Bearer …` (HTTP) lub w pierwszej wiadomości (WS),
 nigdy w adresie, żeby nie trafiał do logów proxy.

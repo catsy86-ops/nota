@@ -1,7 +1,7 @@
 // Czysta logika przekaźnika synchronizacji. Bez I/O i bez czasu w środku (czas przychodzi
 // jako argument), żeby dało się ją testować. Serwer widzi tylko: identyfikator pokoju,
 // hash tokenu dostępu, zaszyfrowane bloby (base64url), numery kolejne i czasy.
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 export const LIMITS = {
   MAX_ENTRY_CHARS: 22_400_000, // ~16 MB po odkodowaniu (wpis i migawka)
@@ -19,6 +19,14 @@ const ROOM_ID = /^[a-f0-9]{64}$/;
 const TOKEN = /^[A-Za-z0-9_-]{43}$/; // 32 bajty w base64url
 const BASE64URL = /^[A-Za-z0-9_-]+$/;
 const BLOB_ID = /^[a-f0-9]{64}$/;
+const EPOCH = /^[a-f0-9]{32}$/;
+
+/**
+ * Epoka pokoju: losowy znacznik nadawany przy założeniu. Pokój usunięty i założony od nowa (albo
+ * odtworzony po utracie danych) ma inną epokę, więc klient ze starym kursorem widzi, że numery wpisów
+ * zaczęły się od początku, i wysyła pełny stan zamiast samej różnicy.
+ */
+export const newEpoch = () => randomBytes(16).toString("hex");
 
 export function validBlobId(id) {
   return typeof id === "string" && BLOB_ID.test(id);
@@ -60,7 +68,7 @@ export function emptyStore() {
 }
 
 /** Odtwarza magazyn z pliku, odrzucając wpisy, których nie da się bezpiecznie użyć. */
-export function cleanStore(raw, now) {
+export function cleanStore(raw, now, makeEpoch = newEpoch) {
   const store = emptyStore();
   if (!raw || typeof raw !== "object" || !raw.rooms || typeof raw.rooms !== "object") return store;
   for (const [id, room] of Object.entries(raw.rooms)) {
@@ -76,6 +84,8 @@ export function cleanStore(raw, now) {
     }
     store.rooms[id] = {
       authHash: room.authHash,
+      // Pokój sprzed epok dostaje ją przy wczytaniu; serwer zapisuje magazyn zaraz po starcie.
+      epoch: typeof room.epoch === "string" && EPOCH.test(room.epoch) ? room.epoch : makeEpoch(),
       last: Number.isSafeInteger(room.last) ? room.last : 0,
       touched: Number.isFinite(room.touched) ? room.touched : now,
       entries,
@@ -90,13 +100,13 @@ export function roomBytes(room) {
 }
 
 /** Pokój do zapisu: tworzy go przy pierwszym zapisie (token staje się kluczem pokoju). */
-export function openRoomForWrite(store, id, token, now) {
+export function openRoomForWrite(store, id, token, now, makeEpoch = newEpoch) {
   if (!validRoomId(id)) return { error: 400, message: "Zły identyfikator pokoju" };
   if (!validToken(token)) return { error: 401, message: "Brak tokenu" };
   let room = store.rooms[id];
   if (!room) {
     if (Object.keys(store.rooms).length >= LIMITS.MAX_ROOMS) return { error: 507, message: "Serwer pełny" };
-    room = { authHash: hashToken(token), last: 0, touched: now, entries: [], blobs: {} };
+    room = { authHash: hashToken(token), epoch: makeEpoch(), last: 0, touched: now, entries: [], blobs: {} };
     store.rooms[id] = room;
   } else if (!tokenMatches(room.authHash, token)) {
     return { error: 403, message: "Zły token" };
@@ -112,6 +122,17 @@ export function openRoomForRead(store, id, token) {
   if (!room) return { error: 404, message: "Nie ma takiego pokoju" };
   if (!tokenMatches(room.authHash, token)) return { error: 403, message: "Zły token" };
   return { room };
+}
+
+/**
+ * Klient podał epokę, którą zna, a pokoju nie ma albo ma inną: jego kursor i różnica dotyczą pokoju,
+ * który już nie istnieje. Odpowiedź 412 każe mu zacząć od pełnego stanu. Klient bez epoki (stary albo
+ * świeżo po resecie) przechodzi.
+ */
+export function epochConflict(room, epoch) {
+  if (typeof epoch !== "string") return null;
+  if (room && room.epoch === epoch) return null;
+  return { error: 412, message: "Pokój został założony od nowa" };
 }
 
 /** Dopisuje zaszyfrowany wpis; zwraca jego numer. */
@@ -142,7 +163,7 @@ export function applySnapshot(room, upto, data, now) {
 export function entriesSince(room, since) {
   const n = Number.isSafeInteger(since) && since >= 0 ? since : 0;
   const entries = room.entries.filter((e) => e.seq > n).slice(0, LIMITS.PAGE);
-  return { entries, last: room.last, hasMore: room.entries.some((e) => e.seq > n) && entries.length === LIMITS.PAGE };
+  return { entries, last: room.last, epoch: room.epoch, hasMore: room.entries.some((e) => e.seq > n) && entries.length === LIMITS.PAGE };
 }
 
 /** Parsuje `since` z query stringu; wszystko, co nie jest liczbą ≥ 0, to 0. */

@@ -104,6 +104,18 @@ async function until(cond: () => boolean, ms = 3000) {
   }
 }
 
+/**
+ * Testy nie mają gniazda, a pusty pokój (404) nie jest już błędem z ponowieniem — urządzenie, które
+ * wystartowało przed pierwszym zapisem, pobiera dopiero na `sync()` (w aplikacji: gniazdo, powrót do karty).
+ */
+async function untilPulled(provider: RelayProvider, cond: () => boolean, ms = 3000) {
+  await until(() => {
+    if (cond()) return true;
+    provider.sync();
+    return false;
+  }, ms);
+}
+
 describe("klucze przekaźnika", () => {
   it("są deterministyczne i zależą od kodu", async () => {
     const a = await deriveRelayKeys(CODE, ITER);
@@ -132,7 +144,7 @@ describe("RelayProvider", () => {
     const b = await device(keys, server);
 
     a.doc.transact(() => a.text.insert(0, "Dziś na budowie"));
-    await until(() => b.text.toString() === "Dziś na budowie");
+    await untilPulled(b.provider, () => b.text.toString() === "Dziś na budowie");
     expect(b.provider.cursor).toBe(1);
     a.provider.stop();
     b.provider.stop();
@@ -164,7 +176,7 @@ describe("RelayProvider", () => {
     const b = await device(keys, server);
     // Ponowienie idzie z rosnącą przerwą; wymuszamy je, zamiast czekać minutami.
     a.provider.sync();
-    await until(() => b.text.toString() === "w pociągu");
+    await untilPulled(b.provider, () => b.text.toString() === "w pociągu");
     a.provider.stop();
     b.provider.stop();
   });
@@ -179,7 +191,7 @@ describe("RelayProvider", () => {
     const a = new RelayProvider({ baseUrl: "https://relay.test", keys, doc: early, store, fetch: server.fetchFn, flushMs: 5 });
     await a.start();
     const b = await device(keys, server);
-    await until(() => b.text.toString() === "sprzed startu");
+    await untilPulled(b.provider, () => b.text.toString() === "sprzed startu");
     a.stop();
     b.provider.stop();
   });

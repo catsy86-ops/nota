@@ -14,6 +14,7 @@ import {
   cleanStore,
   emptyStore,
   entriesSince,
+  epochConflict,
   expiredRooms,
   openRoomForRead,
   openRoomForWrite,
@@ -63,6 +64,9 @@ function scheduleSave() {
     try { saveNow(); } catch (e) { console.error("Zapis przekaźnika nieudany, ponawiam:", e.message); scheduleSave(); }
   }, 500);
 }
+
+// Pokoje sprzed epok dostały je w `cleanStore` — utrwalamy od razu, żeby restart nie nadał innych.
+if (Object.keys(store.rooms).length) scheduleSave();
 
 // Limit zapytań na IP: okno jednej minuty.
 const hits = new Map();
@@ -173,10 +177,10 @@ function tokenOf(req) {
 const sockets = new Map(); // roomId → Set<WebSocket>
 const wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });
 
-function notify(roomId, last) {
+function notify(roomId, room) {
   const set = sockets.get(roomId);
   if (!set) return;
-  const msg = JSON.stringify({ type: "updated", last });
+  const msg = JSON.stringify({ type: "updated", last: room.last, epoch: room.epoch });
   for (const ws of set) if (ws.readyState === ws.OPEN) ws.send(msg);
 }
 
@@ -206,7 +210,7 @@ wss.on("connection", (ws) => {
     sockets.set(msg.room, set);
     roomId = msg.room;
     clearTimeout(timeout);
-    ws.send(JSON.stringify({ type: "ready", last: check.room.last }));
+    ws.send(JSON.stringify({ type: "ready", last: check.room.last, epoch: check.room.epoch }));
     ws.on("close", () => {
       set.delete(ws);
       if (!set.size) sockets.delete(roomId);
@@ -298,26 +302,36 @@ async function handle(req, res) {
 
   if (req.method === "POST" && action === "updates") {
     const body = await readJson(req, MAX_ENTRY_BODY);
+    // Przed założeniem pokoju: klient ze starą epoką nie może odtworzyć pokoju samą różnicą.
+    // Nieznany pokój sprawdzamy tylko z poprawnym tokenem (bez tego odpowiedź zdradzałaby, czy pokój istnieje).
+    const existing = store.rooms[roomId];
+    if (existing ? openRoomForRead(store, roomId, tokenOf(req)).room : validRoomId(roomId) && validToken(tokenOf(req))) {
+      const gone = epochConflict(existing, body.epoch);
+      if (gone) return send(res, gone.error, { error: gone.message });
+    }
     if (creationLimited(req, roomId, Date.now())) return send(res, 429, { error: "Za dużo nowych pokoi z tego adresu" });
     const r = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
     if (r.error) return send(res, r.error, { error: r.message });
     const a = appendEntry(r.room, body.data, Date.now());
     if (a.error) return send(res, a.error, { error: a.message });
     scheduleSave();
-    notify(roomId, r.room.last);
-    return send(res, 200, { seq: a.seq, last: r.room.last });
+    notify(roomId, r.room);
+    return send(res, 200, { seq: a.seq, last: r.room.last, epoch: r.room.epoch });
   }
 
   if (req.method === "PUT" && action === "snapshot") {
     const body = await readJson(req, MAX_ENTRY_BODY);
-    if (creationLimited(req, roomId, Date.now())) return send(res, 429, { error: "Za dużo nowych pokoi z tego adresu" });
-    const r = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
+    // Migawka nigdy nie zakłada pokoju: w pustym pokoju nie ma numeru, który mogłaby zastąpić.
+    const r = openRoomForRead(store, roomId, tokenOf(req));
     if (r.error) return send(res, r.error, { error: r.message });
+    // Migawka z innej epoki skasowałaby cudze wpisy stanem urządzenia, które ich nie pobrało.
+    const gone = epochConflict(r.room, body.epoch);
+    if (gone) return send(res, gone.error, { error: gone.message });
     const s = applySnapshot(r.room, body.upto, body.data, Date.now());
     if (s.error) return send(res, s.error, { error: s.message });
     scheduleSave();
-    notify(roomId, r.room.last);
-    return send(res, 200, { seq: s.seq, last: r.room.last });
+    notify(roomId, r.room);
+    return send(res, 200, { seq: s.seq, last: r.room.last, epoch: r.room.epoch });
   }
 
   return send(res, 405, { error: "Metoda niedozwolona" });
