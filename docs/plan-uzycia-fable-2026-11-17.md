@@ -124,4 +124,19 @@ Zależności: Z-5.5 (epoka) → S2.1, S2.3, F2 · S2.1 ↔ Q1.4 (wspólna „wym
 
 Kolejność: 0 → A → B → C → D → E → (F) → G. Sesje A–D nie zależą od żadnej decyzji o hostingu. Równolegle, bez czekania na Fable: Z-15.0, Z-15.9, Z-15.10 (S0, S5, nagłówki, Trusted Types, Mermaid), Q1.3, Q1.6, Etapy 1–3 planu Pracy.
 
+### 6.1 Stan na 2026-11-17
+
+| Sesja | Stan | Wynik |
+|---|---|---|
+| 0 | zrobiona | `e7c64af0` |
+| A | zrobiona (dokument) | `plan-wymiana-kodu.md` — zlecenia Z-15.1–Z-15.4; nowa decyzja **D-W1**: nowy kod domyślnie długi (28 znaków) |
+| B | zrobiona (dokument) | `plan-wiadomosci-i-cofniecia.md` — zlecenia Z-15.5, Z-15.6; ustalenia U-1 (możliwy limit 256 KB wiadomości kanału danych — najpierw pomiar) i U-2 (transport obrazów) |
+| C | zrobiona (dokument) | `plan-dane-lokalne.md` — zlecenia Z-16.1 (części A i B), Z-16.2, Z-14.5 (po pomiarze); nowe wymaganie: opcja „Zastąp dane na tym urządzeniu danymi grupy” przy dołączaniu |
+| D | czeka | na Z-15.1, Z-15.2 (Opus) i Z-5.6 (Sonnet) |
+| E | czeka | na wynik próby F1.0 (krok właściciela) |
+| F | czeka | na SE-1 |
+| G | czeka | na kod z sesji C i D |
+
+Decyzje przyjęte domyślnie, do potwierdzenia: D-F1, D-F2, D-F3, D-W1, QL-1.
+
 Poza tym planem zostają w kolejce Fable z 16.11: zlecenia Z-13.x po próbie F1.0 i F3 (podział `yjsStore.ts`, dla Opusa).
