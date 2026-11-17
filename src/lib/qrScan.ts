@@ -1,4 +1,4 @@
-import { CODE_ALPHABET, CODE_LENGTH, normalizeCode } from "@/lib/yjsSync";
+import { parseCode } from "@/lib/sync/pairCode";
 
 /** Minimalny kształt `BarcodeDetector` (Chrome na Androidzie); w TypeScript-ie lib.dom go nie ma. */
 interface BarcodeDetectorLike {
@@ -13,14 +13,11 @@ export function barcodeDetectorCtor(): BarcodeDetectorCtor | null {
 }
 
 /**
- * Tekst z kodu QR (sam kod albo link `?pair=…`) → kod grupy; `null`, gdy to nie wygląda na kod grupy.
+ * Tekst z kodu QR (sam kod, krótki albo długi, albo link `#pair=…`) → kod grupy; `null`, gdy to nie wygląda na kod grupy.
  * Inaczej niż przy wklejaniu: tu cały odczytany tekst musi być kodem, bo skaner nie ma wycinać „zdania”.
  */
 export function codeFromScan(text: string): string | null {
-  const fromLink = text.match(/[?&#]pair=([^&#\s]+)/)?.[1];
-  const candidate = normalizeCode(fromLink ?? text);
-  if (candidate.length !== CODE_LENGTH || ![...candidate].every((c) => CODE_ALPHABET.includes(c))) return null;
-  return candidate;
+  return parseCode(text).code ?? null;
 }
 
 /**
