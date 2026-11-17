@@ -100,6 +100,8 @@ Decyzje właściciela: **N-1** czy w ogóle APK (tak → F1.0); **N-2** dystrybu
 
 ## F2. Hartowanie przekaźnika (`relay-server/`)
 
+**Stan 2026-11-17 (Fable, Z-15.8): zrobione.** `relay-server/storage.js` według projektu niżej; odstępstwo: tożsamość (`authHash`, `epoch`, `created`) w osobnym `room.json` zapisywanym raz — brak `meta.json` nie gubi wtedy pokoju. Kryteria odbioru spełnione (testy awarii, obciążenie 200 × 2000 ze stałym czasem dopisania i stertą 9 MB po GC, testy integracyjne bez zmian protokołu). Przegląd `security-reviewer` — wynik w `opis.md`. `signaling-server/Dockerfile` czeka na SE-4 (S4.9).
+
 ### Problemy w obecnym kodzie
 
 1. `saveNow()` (`server.js`) zapisuje **cały magazyn** jednym synchronicznym `JSON.stringify` + `writeFileSync` najpóźniej 500 ms po każdej zmianie. Koszt rośnie z sumą wszystkich pokoi, a zapis blokuje pętlę zdarzeń.

@@ -47,7 +47,7 @@ Uwaga do S4.7 („utrata danych przekaźnika nie gubi zmian”): to dokładnie Z
 - **Z-15.5 (Opus, M)** — S2.5 według specyfikacji; test obciążeniowy.
 - **Z-15.6 (Opus, M)** — S2.3 według specyfikacji; po F2.
 - **Z-15.7 (Opus, M)** — S3.1; okres przejściowy dwóch formatów w serwerze; testy limitu 3 KB i utraty klucza.
-- **Z-15.8 (Opus, L)** — F2 (`relay-server/storage.js`) według `plan-fable-2026-11-15.md`, z `epoch` w `meta.json`; potem S4.2–S4.4.
+- **Z-15.8 (Opus, L)** ✅ 2026-11-17 (Fable) — F2 (`relay-server/storage.js`) według `plan-fable-2026-11-15.md` (`epoch` w `room.json`, nie w `meta.json`); S4.3 i S4.4 zrobione, S4.2 czeka na SE-1.
 - **Z-15.9 (Sonnet, S każdy)** — S5.1, S5.3, S5.4 od razu; reszta S5 i S6 po kolei.
 - **Z-15.10 (Opus + `security-reviewer`, M)** — S1.3 → S1.1 → S1.6, każde z testem ataku przed i po.
 

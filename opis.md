@@ -2970,22 +2970,77 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 ## Synchronizacja — przekaźnik E2E, serwer (Faza 2, 2026-10-23)
 
 - **Co robi:** zmiany w notatkach docierają na drugie urządzenie także wtedy, gdy pierwsze jest wyłączone. Serwer przechowuje tylko zaszyfrowany log aktualizacji Yjs i nie zna treści ani kodu synchronizacji. Sam serwer nie ma jeszcze klienta w aplikacji (patrz „Ograniczenia”).
-- **Gdzie jest:** `relay-server/` — `core.js` (czysta logika: tokeny, log, snapshot, limity, sprzątanie), `server.js` (HTTP i WebSocket), `Dockerfile`, `README.md` (model zagrożeń, protokół, limity).
+- **Gdzie jest:** `relay-server/` — `core.js` (czysta logika: tokeny, liczniki, snapshot, limity, sprzątanie), `storage.js` (dziennik na dysku, F2), `config.js` (zmienne środowiska, S4.3/S4.4), `server.js` (HTTP i WebSocket), `Dockerfile`, `README.md` (model zagrożeń, protokół, limity, układ danych).
 - **Jak działa:**
   - Pokój ma identyfikator 64 znaki hex (klient wylicza go z kodu). Pierwszy zapis zakłada pokój i ustawia jego token; serwer przechowuje tylko `SHA-256(token)` (`hashToken`, porównanie `timingSafeEqual` w `tokenMatches`).
   - Wpisy mają rosnące numery `seq` (`appendEntry`). `GET updates?since=n` zwraca wpisy > n, najwyżej 500 na stronę (`entriesSince`, `hasMore`).
   - Snapshot (`applySnapshot`) zastępuje wpisy ≤ `upto` jednym wpisem o numerze `upto`; numeracja się nie cofa, więc klient na `upto` nie pobiera nic nowego.
   - Token idzie w nagłówku `Authorization: Bearer` albo w pierwszej wiadomości WS (`subscribe`), nigdy w adresie.
   - WS (`/ws`) tylko powiadamia `{type:"updated", last}` po zapisie; treść zawsze idzie przez GET.
-  - Dane w `DATA_DIR/relay.json`, zapis atomowy (plik tymczasowy + `rename`), grupowany co 0,5 s.
+  - **Dane na dysku (F2, Z-15.8, 2026-11-17):** katalog na pokój, `openStorage` w `storage.js`:
+    - `rooms/<id>/room.json` — tożsamość: skrót tokenu, epoka, data założenia. Zapisywana raz, atomowo, przed pierwszą linią dziennika.
+    - `meta.json` — liczniki `last`, `count`, `bytes`, `touched`, `snapshot`, `logSize`, zapisywane z opóźnieniem 1 s w kolejce pokoju.
+    - `log.ndjson` — jeden wpis na linię, tylko dopisywany.
+    - `blobs/<id>/<bid>` — bez zmian.
+
+    Kolejne operacje:
+    - **Dopisanie** to `appendFile` jednej linii, dopiero potem odpowiedź i `notify`. Potwierdzony wpis jest na dysku — dawniej było do 500 ms okna utraty. Błąd zapisu przycina dziennik do poprzedniej długości, żeby pół linii nie zepsuło następnej.
+    - **Migawka** to nowy dziennik w pliku tymczasowym, zmiana nazwy i od razu liczniki.
+    - **Kolejka na pokój** (łańcuch obietnic) obejmuje zapisy, odczyty i liczniki; różne pokoje nie czekają na siebie.
+    - `core.js` sprawdza wpis (`prepareAppend`) bez zmiany pokoju i zatwierdza go (`commitAppend`) dopiero po zapisie. Liczniki są przyrostowe — `roomBytes()` nie jest już liczone przy każdym dopisaniu.
+  - **Po awarii:** dziennik jest źródłem prawdy. Brak `meta.json` albo `logSize` niezgodny z rozmiarem pliku powoduje odtworzenie liczników z dziennika. Urwana linia — także pełny JSON bez znaku nowej linii — albo linia uszkodzona jest odrzucana, a dziennik zapisywany od nowa z poprawnych wpisów. Pliki `*.tmp` są usuwane przy starcie. Bloby są zawsze liczone z katalogu.
+  - **Pamięć:** przy starcie tylko `room.json` i `meta.json`. Wpisy trafiają do pamięci podręcznej LRU (`CACHE_BYTES`, 256 MB). Pokój większy niż ćwierć limitu jest czytany strumieniem (`readline`).
+  - **Limity łączne:** `MAX_TOTAL_BYTES` (20 GB dzienników i blobów) i `MIN_FREE_BYTES` (512 MB wolnego miejsca, `statfs` najwyżej co 5 s, w międzyczasie zapas odliczany lokalnie). Przekroczenie daje `507`.
+  - **Młody pokój** (bez migawki, z jednym wpisem) wygasa po dobie bez zapisu (`expiredRooms`, `YOUNG_TTL_MS`). Pokój zniknięty za wcześnie nie gubi danych: klient dostaje `404`, zakłada pokój z nową epoką i wysyła pełny stan.
+  - **Migracja:** przy pierwszym starcie stary `relay.json` jest rozbijany na katalogi (dziennik, tożsamość, liczniki — w tej kolejności) i zostaje jako `relay.json.bak`.
+  - **Konfiguracja (S4.3, S4.4, `config.js`):** serwer nie startuje, gdy:
+    - `NODE_ENV=production`, a `ALLOWED_ORIGINS` jest puste albo zawiera `*`;
+    - `TRUST_PROXY=1` nie ma `TRUSTED_PROXY`;
+    - zmienna liczbowa nie jest dodatnią liczbą całkowitą.
+
+    `X-Forwarded-For` jest brany tylko z połączeń od adresu `TRUSTED_PROXY`, i to ostatni wpis (`clientIpOf`). Przy `TRUST_PROXY=0` i nagłówku serwer raz ostrzega w logu. `MAX_ROOMS` i `MAX_ROOM_BLOB_BYTES` nadpisują `LIMITS`.
   - **Epoka pokoju (Z-5.5, 2026-11-17):** pokój dostaje przy założeniu losową `epoch` (32 znaki hex, `newEpoch` w `core.js`), zapisaną w magazynie. Serwer zwraca ją w `GET updates`, `POST updates`, `PUT snapshot` i w wiadomościach WS `ready` / `updated`. Pokój usunięty i założony od nowa ma inną epokę i numery od 1. Zapis z polem `epoch` innym niż epoka pokoju (albo do pokoju, którego nie ma) dostaje `412` (`epochConflict`) — różnica ze starego pokoju nie zakłada nowego. Zapis bez `epoch` przechodzi jak dawniej (stary klient, klient po resecie). `PUT snapshot` nie zakłada już pokoju (`404`). Pokoje sprzed epok dostają ją w `cleanStore` przy wczytaniu, a serwer od razu zapisuje magazyn, żeby restart nie nadał innej. Dla nieznanego pokoju `412` idzie tylko przy poprawnym kształcie identyfikatora i tokenu.
-- **Decyzje:** zamiast SQLite (`better-sqlite3`, natywna kompilacja) zwykły plik JSON jak w `push-server` — mniej zależności i prostszy Docker. Limity w `LIMITS` (`core.js`): wpis i migawka 22 400 000 znaków (≈ 16 MB; treść żądania tych dwóch tras ma własny limit `MAX_ENTRY_BODY` w `server.js`), pokój 50 MB i 5000 wpisów, 5000 pokoi, TTL pokoju 180 dni bez zapisu.
+- **Decyzje:**
+  - Zamiast SQLite (zależność natywna albo niestabilne `node:sqlite`) dziennik plikowy. Dane to nieprzezroczyste ciągi w kolejności, a bloby już leżą jako pliki.
+  - Tożsamość pokoju jest w osobnym `room.json`, nie w `meta.json`, jak przewidywał plan. Brak `meta.json` nie gubi wtedy pokoju, bo bez skrótu tokenu nie dałoby się go otworzyć. Epoka też jest w `room.json` — jest niezmienna do usunięcia pokoju.
+  - Bez `fsync` przy dopisaniu: wpis przeżywa zabicie procesu, a awarię systemu operacyjnego klienci nadrabiają ponowieniem albo pełnym stanem.
+  - Limity w `LIMITS` (`core.js`): wpis i migawka 22 400 000 znaków (≈ 16 MB; treść żądania tych dwóch tras ma własny limit `MAX_ENTRY_BODY` w `server.js`), pokój 50 MB i 5000 wpisów, 5000 pokoi, TTL pokoju 180 dni bez zapisu.
+- **Przegląd `security-reviewer` (2026-11-17) — poprawione:**
+  - **H1:** przerwany odczyt strumieniem zostawiał otwarty deskryptor pliku (`rl.close()` nie zamyka strumienia) — `input.destroy()`.
+  - **H2:** migawka z `upto` poniżej pierwszego zachowanego wpisu niczego nie zastępowała, tylko dokładała do 22 MB — pokój rósł bez limitu aż do braku pamięci. Teraz w `applySnapshot` jest `409` i limit `MAX_ROOM_CHARS` na wynik migawki. Strona odczytu ma budżet `PAGE_CHARS` (32 mln znaków, co najmniej jeden wpis; `pageCollector` w `core.js`), a dziennik jest zapisywany strumieniem (`writeLogAtomic`), bez sklejania w jeden ciąg.
+  - **H3:** treść do 22 MB była czytana przed sprawdzeniem pokoju i tokenu. Teraz kolejność jest taka:
+    - najpierw identyfikator, token i limit nowych pokoi;
+    - potem `Content-Length`;
+    - potem budżet treści w locie (256 MB łącznie → `503`) i najwyżej 4 równoległe wysyłki z jednego adresu (`429`).
+
+    Rozliczenie wysyłki następuje dokładnie raz, także przy zerwanym połączeniu.
+  - **H4:** obraz Dockera nie kopiował `config.js`, więc nie startował — test `dockerfile.test.js` sprawdza, że `COPY` obejmuje wszystkie lokalne importy serwera.
+  - **M1:** spóźniona operacja na usuniętym (albo założonym od nowa) pokoju mogła wskrzesić pokój albo nadpisać tożsamość nowego. Każda operacja z kolejki sprawdza teraz `store.rooms[id] === room` (inaczej `404`), a wysyłka bloba ustala pokój ponownie po odczycie treści.
+  - **M2:** limit blobów pokoju jest sprawdzany w kolejce (`blobFits` w `putBlob`).
+  - **M3:** usuwanie pokoju to zmiana nazwy na `trash/…`, a dopiero potem `rm`. Przy starcie znikają: kosz, katalogi pokoi bez tożsamości i bloby bez pokoju. Nowy pokój nie dokleja się do resztek starego dziennika.
+  - **M4:** limity na adres liczą IPv6 jako prefiks /64 (`limitKey`). Mapy liczników mają górną granicę 100 tys. adresów i są sprzątane co minutę.
+  - **M5:** obraz ma `NODE_ENV=production`, więc wymaga `ALLOWED_ORIGINS`.
+  - **L1–L5:**
+    - wygasanie sprawdzane ponownie w kolejce;
+    - uszkodzony `relay.json` → `relay.json.corrupt-<czas>`, a istniejący `.bak` nie jest nadpisywany i już przeniesione pokoje nie są nadpisywane;
+    - limit łączny rezerwowany przed `await`;
+    - logi bez pełnych ścieżek (kod błędu i 8 znaków id);
+    - obsługa błędu strumienia bloba.
+  - **Zostaje (informacyjnie):** WebSocket nie sprawdza `Origin` (subskrypcja i tak wymaga tokenu); `TRUSTED_PROXY` bez CIDR, jeden pośrednik.
 - **Ograniczenia i pułapki:**
-  - Zapis całego pliku JSON skaluje się źle przy dużych danych; przy wielu aktywnych pokojach trzeba będzie przejść na bazę.
-  - `TRUST_PROXY=1` (ustawione w obrazie Dockera) ufa `X-Forwarded-For`; bez reverse proxy nie wolno go ustawiać.
-  - Klient (`src/lib/sync/relayProvider.ts`) jeszcze nie istnieje — serwer działa, ale aplikacja z niego nie korzysta.
-- **Testy:** `relay-server/core.test.js` (19 testów logiki, `npm test`). Ręcznie sprawdzone na uruchomionym serwerze: rejestracja tokenem, 401/403/404, odczyt po `since`, snapshot, odrzucenie złego base64, WebSocket: `ready`, powiadomienie `updated` po zapisie, zamknięcie 4003 dla nieznanego pokoju.
-- **Commit:** `adfb099` (2026-10-23).
+  - Pokój z `openRoomForWrite` ma tablicę `entries`. `storage.js` usuwa ją przy pierwszym zapisie, bo inaczej `commitAppend` trzymałby cały dziennik w pamięci (test obciążenia to złapał: 119 MB zamiast 9 MB).
+  - S4.2 (`deploy/`, Caddy, obrazy przypięte do skrótu) czeka na decyzję SE-1 o hostingu. S4.9 (serwer sygnałów: root, brak pliku blokady) czeka na SE-4.
+  - Nowy moduł serwera trzeba dopisać do `COPY` w `Dockerfile` — pilnuje tego `relay-server/dockerfile.test.js`.
+- **Testy:**
+  - `relay-server/core.test.js` — logika.
+  - `storage.test.js`:
+    - awarie: urwana linia, pełny JSON bez znaku nowej linii, brak `meta.json`, nieaktualne liczniki, plik tymczasowy po migawce;
+    - migracja, migawka, stronicowanie, odczyt strumieniem, limit LRU, limit łączny, mało miejsca na dysku, równoległe dopisania, usuwanie, wygasanie młodych pokoi;
+    - obciążenie 200 × 2000: dopisanie 0,43 ms na początku i na końcu, sterta 9 MB po GC (`LOAD=1 node --expose-gc --test storage.test.js`).
+  - `config.test.js`.
+  - `server.test.js` — prawdziwy proces: odporność, limity, odmowa startu przy złej konfiguracji.
+  - Bez zmian protokołu przechodzą `src/lib/sync/relayServer.integration.test.ts`, `relayBlobs.integration.test.ts`, `relayProvider.test.ts` i `e2e/relay-sync.spec.ts`.
+- **Commit:** `adfb099` (2026-10-23); F2 i S4.3/S4.4 — w commicie z tym wpisem, 2026-11-17.
 
 ## Synchronizacja — przekaźnik E2E, klient (Faza 2, 2026-10-23)
 

@@ -1,21 +1,13 @@
 // Przekaźnik synchronizacji E2E dla NOTKI. Trzyma zaszyfrowany log aktualizacji Yjs,
 // żeby zmiany docierały, nawet gdy drugie urządzenie jest wyłączone. Nie zna kodu
 // synchronizacji ani treści — widzi identyfikator pokoju, hash tokenu i bloby base64url.
-// Dane w jednym pliku JSON w DATA_DIR (jak push-server; bez natywnych modułów).
+// Dane w DATA_DIR: katalog na pokój z dziennikiem dopisywanym (`storage.js`, F2); bez natywnych modułów.
 import { createServer } from "node:http";
-import { createReadStream, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { createReadStream, existsSync, mkdirSync } from "node:fs";
 import { WebSocketServer } from "ws";
 import {
   LIMITS,
-  appendEntry,
-  applySnapshot,
-  blobFits,
-  cleanStore,
-  emptyStore,
-  entriesSince,
   epochConflict,
-  expiredRooms,
   openRoomForRead,
   openRoomForWrite,
   parseSince,
@@ -23,57 +15,59 @@ import {
   validRoomId,
   validToken,
 } from "./core.js";
+import { openStorage } from "./storage.js";
+import { clientIpOf, limitKey, readConfig } from "./config.js";
 
-const PORT = Number(process.env.PORT) || 4466;
-const DATA_DIR = process.env.DATA_DIR || "./data";
-const ORIGINS = (process.env.ALLOWED_ORIGINS || "*").split(",").map((s) => s.trim()).filter(Boolean);
-const TRUST_PROXY = process.env.TRUST_PROXY === "1";
-const RATE_PER_MIN = Number(process.env.RATE_PER_MIN) || 300;
+// S4.3: błędna konfiguracja zatrzymuje start (zamiast przekaźnika otwartego dla każdej strony albo z podrabialnym adresem).
+const CONFIG = readConfig(process.env);
+if (CONFIG.errors.length) {
+  for (const e of CONFIG.errors) console.error(`Konfiguracja: ${e}`);
+  process.exit(1);
+}
+// S4.4: limity do warunków serwera (MAX_ROOMS, MAX_ROOM_BLOB_BYTES ze zmiennych środowiska).
+Object.assign(LIMITS, CONFIG.limits);
+
+const PORT = CONFIG.port;
+const DATA_DIR = CONFIG.dataDir;
+const ORIGINS = CONFIG.origins;
+const RATE_PER_MIN = CONFIG.ratePerMin;
 /** Ile NOWYCH pokoi może założyć jeden adres na dobę (S4 audytu: jedno urządzenie nie zapełni serwera). */
-const ROOMS_PER_IP_PER_DAY = Number(process.env.ROOMS_PER_IP_PER_DAY) || 20;
+const ROOMS_PER_IP_PER_DAY = CONFIG.roomsPerIpPerDay;
 const MAX_BODY = 1024 * 1024;
 // Wpis i migawka mają własny, większy limit treści (dane + koperta JSON).
 const MAX_ENTRY_BODY = LIMITS.MAX_ENTRY_CHARS + 4096;
 const MAX_SOCKETS_PER_ROOM = 20;
+/** Łącznie bajtów treści żądań czytanych naraz (wpis do 22 MB): powyżej — 503 zamiast braku pamięci. */
+const BODY_BUDGET = 256 * 1024 * 1024;
+/** Równoległych wysyłek treści z jednego adresu (IPv6: z jednej /64). */
+const UPLOADS_PER_IP = 4;
+/** Najwięcej śledzonych adresów w licznikach limitów — mapa nie rośnie bez końca przy wielu adresach. */
+const MAX_LIMITER_KEYS = 100_000;
 const SWEEP_MS = 60 * 60 * 1000;
 
 mkdirSync(DATA_DIR, { recursive: true });
-const STORE_FILE = join(DATA_DIR, "relay.json");
-const BLOB_DIR = join(DATA_DIR, "blobs");
+// Każde dopisanie trafia na dysk przed odpowiedzią — nie ma już okna utraty potwierdzonych wpisów (dawniej do 500 ms).
+// Przed zapisem: limit łączny (MAX_TOTAL_BYTES) i wolne miejsce na dysku (MIN_FREE_BYTES) — 507 zamiast awarii.
+const storage = await openStorage({
+  dir: DATA_DIR, cacheBytes: CONFIG.cacheBytes, maxTotalBytes: CONFIG.maxTotalBytes, minFreeBytes: CONFIG.minFreeBytes,
+  log: (...a) => console.error(...a),
+});
+const store = storage.store;
 
-let store = emptyStore();
-try {
-  if (existsSync(STORE_FILE)) store = cleanStore(JSON.parse(readFileSync(STORE_FILE, "utf8")), Date.now());
-} catch (e) {
-  console.error("Nie udało się wczytać", STORE_FILE, e.message);
+/** Wstawienie do mapy limitu z górną granicą: przy przepełnieniu wypadają najstarsze wpisy. */
+function capped(map, key, value) {
+  map.delete(key);
+  map.set(key, value);
+  if (map.size > MAX_LIMITER_KEYS) for (const k of map.keys()) { map.delete(k); if (map.size <= MAX_LIMITER_KEYS * 0.9) break; }
 }
 
-// Zapis partiami: aktualizacje przychodzą co sekundę z każdego aktywnego pokoju,
-// więc pełny zapis po każdej nie ma sensu. Zapis przez plik tymczasowy.
-let saveTimer = null;
-function saveNow() {
-  const tmp = `${STORE_FILE}.tmp`;
-  writeFileSync(tmp, JSON.stringify(store));
-  renameSync(tmp, STORE_FILE);
-}
-function scheduleSave() {
-  if (saveTimer) return;
-  saveTimer = setTimeout(() => {
-    saveTimer = null;
-    // Pełny dysk albo brak uprawnień nie mogą zabić procesu (nieprzechwycony wyjątek w timerze) — logujemy i ponawiamy.
-    try { saveNow(); } catch (e) { console.error("Zapis przekaźnika nieudany, ponawiam:", e.message); scheduleSave(); }
-  }, 500);
-}
-
-// Pokoje sprzed epok dostały je w `cleanStore` — utrwalamy od razu, żeby restart nie nadał innych.
-if (Object.keys(store.rooms).length) scheduleSave();
-
-// Limit zapytań na IP: okno jednej minuty.
+// Limit zapytań na adres (IPv6: /64): okno jednej minuty.
 const hits = new Map();
 function rateLimited(ip, now) {
-  const slot = hits.get(ip);
+  const key = limitKey(ip);
+  const slot = hits.get(key);
   if (!slot || now - slot.start >= 60_000) {
-    hits.set(ip, { start: now, count: 1 });
+    capped(hits, key, { start: now, count: 1 });
     return false;
   }
   slot.count += 1;
@@ -88,9 +82,9 @@ const creations = new Map();
  */
 function creationLimited(req, roomId, now) {
   if (store.rooms[roomId] || !validRoomId(roomId) || !validToken(tokenOf(req))) return false;
-  const ip = clientIp(req);
-  const slot = creations.get(ip);
-  if (!slot || now - slot.start >= 86_400_000) { creations.set(ip, { start: now, count: 1 }); return false; }
+  const key = limitKey(clientIp(req));
+  const slot = creations.get(key);
+  if (!slot || now - slot.start >= 86_400_000) { capped(creations, key, { start: now, count: 1 }); return false; }
   slot.count += 1;
   return slot.count > ROOMS_PER_IP_PER_DAY;
 }
@@ -101,10 +95,15 @@ function sweepHits(now) {
   for (const [ip, slot] of creations) if (now - slot.start >= 86_400_000) creations.delete(ip);
 }
 
+let warnedForwarded = false;
 function clientIp(req) {
-  // Ostatni wpis dopisało nasze zaufane proxy; pierwszy dałoby się podrobić nagłówkiem od klienta (obejście limitu).
-  if (TRUST_PROXY && req.headers["x-forwarded-for"]) return String(req.headers["x-forwarded-for"]).split(",").map((x) => x.trim()).filter(Boolean).pop() || req.socket.remoteAddress || "?";
-  return req.socket.remoteAddress || "?";
+  // X-Forwarded-For tylko od zaufanego pośrednika (TRUSTED_PROXY), i wtedy ostatni wpis — pierwszy dałoby się podrobić.
+  const { ip, forwardedIgnored } = clientIpOf(CONFIG, req.socket.remoteAddress, req.headers["x-forwarded-for"]);
+  if (forwardedIgnored && !warnedForwarded) {
+    warnedForwarded = true;
+    console.error("Uwaga: żądania mają X-Forwarded-For, a TRUST_PROXY=0 — za pośrednikiem limity na adres liczą adres pośrednika. Ustaw TRUST_PROXY=1 i TRUSTED_PROXY.");
+  }
+  return ip;
 }
 
 function cors(req, res) {
@@ -124,47 +123,56 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-function readJson(req, max = MAX_BODY) {
+const httpError = (status, message) => Object.assign(new Error(message), { status });
+
+// Treść żądań w locie: łącznie i na adres. Czytamy dopiero po sprawdzeniu pokoju i tokenu (H3 przeglądu F2).
+let inflight = 0;
+const uploads = new Map();
+
+/** Surowe bajty treści z limitem rozmiaru, budżetem łącznym i limitem równoległych wysyłek z jednego adresu. */
+function readRaw(req, max) {
+  const declared = Number(req.headers["content-length"]);
+  if (Number.isFinite(declared) && declared > max) return Promise.reject(httpError(413, "Za duże"));
+  const key = limitKey(clientIp(req));
+  const running = uploads.get(key) ?? 0;
+  if (running >= UPLOADS_PER_IP) return Promise.reject(httpError(429, "Za dużo równoległych wysyłek"));
+  uploads.set(key, running + 1);
+  let held = 0;
+  let settled = false;
+  // Rozliczenie dokładnie raz: koniec, błąd albo zerwane połączenie (wtedy bywa tylko `close`).
+  const done = () => {
+    if (settled) return false;
+    settled = true;
+    inflight -= held;
+    held = 0;
+    const n = (uploads.get(key) ?? 1) - 1;
+    if (n > 0) uploads.set(key, n); else uploads.delete(key);
+    return true;
+  };
   return new Promise((resolve, reject) => {
-    let size = 0;
     const chunks = [];
+    const fail = (err) => { if (done()) reject(err); req.destroy(); };
     req.on("data", (c) => {
-      size += c.length;
-      if (size > max) {
-        reject(Object.assign(new Error("Za duże"), { status: 413 }));
-        req.destroy();
-        return;
-      }
+      if (settled) return;
+      if (held + c.length > max) return fail(httpError(413, "Za duże"));
+      if (inflight + c.length > BODY_BUDGET) return fail(httpError(503, "Przekaźnik zajęty, spróbuj za chwilę"));
+      held += c.length;
+      inflight += c.length;
       chunks.push(c);
     });
-    req.on("end", () => {
-      try {
-        resolve(JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}"));
-      } catch {
-        reject(Object.assign(new Error("Zły JSON"), { status: 400 }));
-      }
-    });
-    req.on("error", reject);
+    req.on("end", () => { if (done()) resolve(Buffer.concat(chunks)); });
+    req.on("error", (e) => { if (done()) reject(e); });
+    req.on("close", () => { if (done()) reject(httpError(400, "Połączenie zerwane")); });
   });
 }
 
-/** Surowe bajty (bloby), z tym samym limitem co `readJson`, ale bez JSON-a. */
-function readRaw(req, max) {
-  return new Promise((resolve, reject) => {
-    let size = 0;
-    const chunks = [];
-    req.on("data", (c) => {
-      size += c.length;
-      if (size > max) {
-        reject(Object.assign(new Error("Za duże"), { status: 413 }));
-        req.destroy();
-        return;
-      }
-      chunks.push(c);
-    });
-    req.on("end", () => resolve(Buffer.concat(chunks)));
-    req.on("error", reject);
-  });
+async function readJson(req, max = MAX_BODY) {
+  const bytes = await readRaw(req, max);
+  try {
+    return JSON.parse(bytes.toString("utf8") || "{}");
+  } catch {
+    throw httpError(400, "Zły JSON");
+  }
 }
 
 function tokenOf(req) {
@@ -228,23 +236,19 @@ wss.on("connection", (ws) => {
  */
 async function handleBlob(req, res, roomId, blobId) {
   if (!validBlobId(blobId)) return send(res, 400, { error: "Zły identyfikator bloba" });
-  const path = join(BLOB_DIR, roomId, blobId);
+  const path = storage.blobPath(roomId, blobId);
 
   if (req.method === "PUT") {
     if (creationLimited(req, roomId, Date.now())) return send(res, 429, { error: "Za dużo nowych pokoi z tego adresu" });
     const r = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
     if (r.error) return send(res, r.error, { error: r.message });
     const bytes = await readRaw(req, LIMITS.MAX_BLOB_BYTES);
-    const fit = blobFits(r.room, blobId, bytes.length);
-    if (fit.error) return send(res, fit.error, { error: fit.message });
-    if (fit.existing) return send(res, 200, { ok: true, existing: true });
-    mkdirSync(join(BLOB_DIR, roomId), { recursive: true });
-    const tmp = `${path}.tmp`;
-    writeFileSync(tmp, bytes);
-    renameSync(tmp, path);
-    r.room.blobs[blobId] = bytes.length;
-    scheduleSave();
-    return send(res, 200, { ok: true, existing: false });
+    // W trakcie wysyłki (do 24 MB) pokój mógł zostać usunięty albo założony od nowa — bierzemy obecny obiekt.
+    const now2 = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
+    if (now2.error) return send(res, now2.error, { error: now2.message });
+    const put = await storage.putBlob(roomId, now2.room, blobId, bytes);
+    if (put.error) return send(res, put.error, { error: put.message });
+    return send(res, 200, put);
   }
 
   if (req.method === "GET" || req.method === "HEAD") {
@@ -254,7 +258,10 @@ async function handleBlob(req, res, roomId, blobId) {
     if (!size || !existsSync(path)) return send(res, 404, { error: "Nie ma takiego bloba" });
     res.writeHead(200, { "Content-Type": "application/octet-stream", "Content-Length": size, "Cache-Control": "no-store" });
     if (req.method === "HEAD") return res.end();
-    createReadStream(path).pipe(res);
+    const stream = createReadStream(path);
+    // Blob usunięty między sprawdzeniem a otwarciem: zerwanie odpowiedzi zamiast wiszącego żądania.
+    stream.on("error", () => res.destroy());
+    stream.pipe(res);
     return;
   }
 
@@ -282,11 +289,9 @@ async function handle(req, res) {
     const roomId = roomOnly[1];
     const r = openRoomForRead(store, roomId, tokenOf(req));
     if (r.error) return send(res, r.error, { error: r.message });
-    delete store.rooms[roomId];
-    rmSync(join(BLOB_DIR, roomId), { recursive: true, force: true });
+    await storage.deleteRoom(roomId, r.room);
     for (const ws of sockets.get(roomId) ?? []) ws.close(4004, "pokój usunięty");
     sockets.delete(roomId);
-    scheduleSave();
     return send(res, 200, { ok: true });
   }
 
@@ -297,39 +302,46 @@ async function handle(req, res) {
   if (req.method === "GET" && action === "updates") {
     const r = openRoomForRead(store, roomId, tokenOf(req));
     if (r.error) return send(res, r.error, { error: r.message });
-    return send(res, 200, entriesSince(r.room, parseSince(url.searchParams.get("since"))));
+    return send(res, 200, await storage.read(roomId, r.room, parseSince(url.searchParams.get("since"))));
   }
 
   if (req.method === "POST" && action === "updates") {
+    // Przed czytaniem treści (do 22 MB): identyfikator, token, a dla nowego pokoju — limit nowych pokoi (H3 przeglądu F2).
+    if (store.rooms[roomId]) {
+      const pre = openRoomForRead(store, roomId, tokenOf(req));
+      if (pre.error) return send(res, pre.error, { error: pre.message });
+    } else {
+      if (!validRoomId(roomId)) return send(res, 400, { error: "Zły identyfikator pokoju" });
+      if (!validToken(tokenOf(req))) return send(res, 401, { error: "Brak tokenu" });
+      if (creationLimited(req, roomId, Date.now())) return send(res, 429, { error: "Za dużo nowych pokoi z tego adresu" });
+    }
     const body = await readJson(req, MAX_ENTRY_BODY);
     // Przed założeniem pokoju: klient ze starą epoką nie może odtworzyć pokoju samą różnicą.
-    // Nieznany pokój sprawdzamy tylko z poprawnym tokenem (bez tego odpowiedź zdradzałaby, czy pokój istnieje).
     const existing = store.rooms[roomId];
-    if (existing ? openRoomForRead(store, roomId, tokenOf(req)).room : validRoomId(roomId) && validToken(tokenOf(req))) {
+    if (existing ? openRoomForRead(store, roomId, tokenOf(req)).room : true) {
       const gone = epochConflict(existing, body.epoch);
       if (gone) return send(res, gone.error, { error: gone.message });
     }
-    if (creationLimited(req, roomId, Date.now())) return send(res, 429, { error: "Za dużo nowych pokoi z tego adresu" });
     const r = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
     if (r.error) return send(res, r.error, { error: r.message });
-    const a = appendEntry(r.room, body.data, Date.now());
+    const a = await storage.append(roomId, r.room, body.data, Date.now());
     if (a.error) return send(res, a.error, { error: a.message });
-    scheduleSave();
     notify(roomId, r.room);
     return send(res, 200, { seq: a.seq, last: r.room.last, epoch: r.room.epoch });
   }
 
   if (req.method === "PUT" && action === "snapshot") {
+    // Migawka nigdy nie zakłada pokoju: w pustym pokoju nie ma numeru, który mogłaby zastąpić. Sprawdzenie przed treścią.
+    const pre = openRoomForRead(store, roomId, tokenOf(req));
+    if (pre.error) return send(res, pre.error, { error: pre.message });
     const body = await readJson(req, MAX_ENTRY_BODY);
-    // Migawka nigdy nie zakłada pokoju: w pustym pokoju nie ma numeru, który mogłaby zastąpić.
     const r = openRoomForRead(store, roomId, tokenOf(req));
     if (r.error) return send(res, r.error, { error: r.message });
     // Migawka z innej epoki skasowałaby cudze wpisy stanem urządzenia, które ich nie pobrało.
     const gone = epochConflict(r.room, body.epoch);
     if (gone) return send(res, gone.error, { error: gone.message });
-    const s = applySnapshot(r.room, body.upto, body.data, Date.now());
+    const s = await storage.snapshot(roomId, r.room, body.upto, body.data, Date.now());
     if (s.error) return send(res, s.error, { error: s.message });
-    scheduleSave();
     notify(roomId, r.room);
     return send(res, 200, { seq: s.seq, last: r.room.last, epoch: r.room.epoch });
   }
@@ -359,24 +371,25 @@ server.on("upgrade", (req, socket, head) => {
   wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
 });
 
+setInterval(() => sweepHits(Date.now()), 60_000).unref();
+
 setInterval(() => {
-  sweepHits(Date.now());
-  const gone = expiredRooms(store, Date.now());
-  for (const id of gone) {
-    delete store.rooms[id];
-    rmSync(join(BLOB_DIR, id), { recursive: true, force: true });
-  }
-  if (gone.length) scheduleSave();
+  storage.expire(Date.now()).then((gone) => {
+    for (const id of gone) {
+      for (const ws of sockets.get(id) ?? []) ws.close(4004, "pokój wygasł");
+      sockets.delete(id);
+    }
+  }, (e) => console.error("Sprzątanie pokoi nieudane:", e.message));
 }, SWEEP_MS).unref();
 
 server.listen(PORT, () => {
   console.log(`Przekaźnik na porcie ${PORT}; dane w ${DATA_DIR}; limit ${RATE_PER_MIN}/min na IP; wpis ≤ ${LIMITS.MAX_ENTRY_CHARS} zn.`);
 });
 
-// Łagodne zamknięcie: niezapisane zmiany (do 500 ms) trafiają na dysk, zanim proces się skończy.
+// Łagodne zamknięcie: zaległe liczniki pokoi na dysk (wpisy są tam od razu; liczniki odtwarza też sam dziennik).
 for (const sig of ["SIGTERM", "SIGINT"]) {
   process.on(sig, () => {
-    try { if (saveTimer) clearTimeout(saveTimer); saveNow(); } catch (e) { console.error("Zapis przy zamknięciu nieudany:", e.message); }
+    try { storage.flushSync(); } catch (e) { console.error("Zapis przy zamknięciu nieudany:", e.message); }
     process.exit(0);
   });
 }

@@ -209,3 +209,46 @@ test("cleanStore zachowuje poprawne bloby, odrzuca śmieci", () => {
   const store = cleanStore(raw, NOW);
   assert.deepEqual(store.rooms[ROOM].blobs, { [BID]: 5 });
 });
+
+test("snapshot starszy niż pierwszy zachowany wpis — 409 (pokój nie rośnie migawkami)", () => {
+  const { room } = writable();
+  for (let i = 0; i < 5; i++) appendEntry(room, blob(), NOW);
+  applySnapshot(room, 4, "SNAP", NOW);
+  assert.equal(applySnapshot(room, 3, "SNAP2", NOW).error, 409);
+  assert.deepEqual(room.entries.map((e) => e.seq), [4, 5]);
+  assert.deepEqual(applySnapshot(room, 5, "SNAP3", NOW), { seq: 5 });
+});
+
+test("snapshot ponad limit pokoju — 413", () => {
+  const { room } = writable();
+  const saved = LIMITS.MAX_ROOM_CHARS;
+  LIMITS.MAX_ROOM_CHARS = 20;
+  try {
+    for (let i = 0; i < 3; i++) appendEntry(room, blob(4), NOW);
+    assert.equal(applySnapshot(room, 1, blob(19), NOW).error, 413);
+    assert.deepEqual(applySnapshot(room, 2, blob(8), NOW), { seq: 2 });
+  } finally {
+    LIMITS.MAX_ROOM_CHARS = saved;
+  }
+});
+
+test("strona odczytu ma budżet znaków; wpis większy niż budżet i tak przechodzi sam", () => {
+  const { room } = writable();
+  const saved = LIMITS.PAGE_CHARS;
+  LIMITS.PAGE_CHARS = 10;
+  try {
+    appendEntry(room, blob(4), NOW);
+    appendEntry(room, blob(4), NOW);
+    appendEntry(room, blob(4), NOW);
+    appendEntry(room, blob(30), NOW);
+    const first = entriesSince(room, 0);
+    assert.deepEqual(first.entries.map((e) => e.seq), [1, 2]);
+    assert.equal(first.hasMore, true);
+    assert.deepEqual(entriesSince(room, 2).entries.map((e) => e.seq), [3]);
+    const big = entriesSince(room, 3);
+    assert.deepEqual(big.entries.map((e) => e.seq), [4]);
+    assert.equal(big.hasMore, false);
+  } finally {
+    LIMITS.PAGE_CHARS = saved;
+  }
+});

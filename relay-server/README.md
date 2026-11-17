@@ -58,9 +58,10 @@ Pierwszy zapis do pokoju ustawia jego token. Później wymagany jest ten sam tok
 
 - wpis i migawka: 22 400 000 znaków base64 (ok. 16 MB);
 - pokój: 50 MB zaszyfrowanych danych, 5000 wpisów (powyżej klient musi zrobić snapshot);
-- serwer: 5000 pokoi; pokój nieruszany 180 dni znika;
+- serwer: 5000 pokoi (`MAX_ROOMS`); pokój nieruszany 180 dni znika; **młody pokój** (bez migawki, z jednym wpisem) znika po dobie bez zapisu — klient zakłada go wtedy od nowa z nową epoką i pełnym stanem;
+- dysk: łącznie 20 GB dzienników i blobów (`MAX_TOTAL_BYTES`), zapis tylko przy co najmniej 512 MB wolnego miejsca (`MIN_FREE_BYTES`); powyżej — `507`, nie awaria;
 - zapytania: 300/min na IP (`RATE_PER_MIN`); nowe pokoje: 20 na dobę na IP (`ROOMS_PER_IP_PER_DAY`), łącznie 5000 pokoi; ciało żądania do 1 MB;
-- bloby: 24 MB na jeden (zaszyfrowany obraz do 20 MB), 300 MB i 5000 blobów na pokój;
+- bloby: 24 MB na jeden (zaszyfrowany obraz do 20 MB), 300 MB (`MAX_ROOM_BLOB_BYTES`) i 5000 blobów na pokój;
 - WebSocket: 20 gniazd na pokój, 4 KB na wiadomość.
 
 ## Uruchomienie
@@ -76,17 +77,45 @@ Docker:
 
 ```bash
 docker build -t notki-relay .
-docker run -d -p 4466:4466 -v notki-relay:/data --restart unless-stopped notki-relay
+docker run -d -p 4466:4466 -v notki-relay:/data -e ALLOWED_ORIGINS=https://twoja-aplikacja.pl --restart unless-stopped notki-relay
 ```
 
 Za reverse proxy (Caddy: `sync.twojadomena.pl { reverse_proxy localhost:4466 }`) ustaw
-`TRUST_PROXY=1`, żeby limit działał na prawdziwych adresach klientów (obraz Dockera NIE ma tego
-ustawionego domyślnie). Włączaj tylko, gdy port jest dostępny wyłącznie z proxy, które nadpisuje
-`X-Forwarded-For` (Caddy i nginx to robią): bez proxy i z `TRUST_PROXY=1` każdy może podać własny
-`X-Forwarded-For` i obejść limit.
+`TRUST_PROXY=1` **i** `TRUSTED_PROXY=<adres pośrednika>` (np. `172.18.0.2`, kilka po przecinku), żeby limit
+działał na prawdziwych adresach klientów. `X-Forwarded-For` jest brany tylko z połączeń od tego adresu, więc
+klient łączący się z pominięciem pośrednika nie poda sobie adresu. `TRUST_PROXY=1` bez `TRUSTED_PROXY` zatrzymuje
+start. Przy `TRUST_PROXY=0` i żądaniach z `X-Forwarded-For` serwer raz ostrzega w logu.
+
+Konfiguracja produkcyjna (`NODE_ENV=production`) wymaga `ALLOWED_ORIGINS` z adresami aplikacji — bez listy albo z
+`*` serwer nie wystartuje. Liczbowe zmienne (`MAX_ROOMS`, `MAX_ROOM_BLOB_BYTES`, `MAX_TOTAL_BYTES`,
+`MIN_FREE_BYTES`, `CACHE_BYTES`, `RATE_PER_MIN`, `ROOMS_PER_IP_PER_DAY`) muszą być dodatnimi liczbami całkowitymi;
+zła wartość też zatrzymuje start (`config.js`).
+
+## Dane na dysku (`storage.js`)
+
+```
+DATA_DIR/rooms/<id>/room.json   tożsamość: skrót tokenu, epoka, data założenia — zapisywana raz
+DATA_DIR/rooms/<id>/meta.json   liczniki (last, count, bytes, touched, logSize) — z opóźnieniem 1 s
+DATA_DIR/rooms/<id>/log.ndjson  dziennik: jeden zaszyfrowany wpis na linię, tylko dopisywany
+DATA_DIR/blobs/<id>/<bid>       bloby
+```
+
+- **Dopisanie** to jedna linia w dzienniku, zapisana przed odpowiedzią — potwierdzony wpis jest na dysku.
+  Koszt nie zależy od rozmiaru pokoju ani liczby pokoi. Migawka: nowy dziennik w pliku tymczasowym, zmiana nazwy.
+- **Po awarii:** dziennik jest źródłem prawdy. Brak `meta.json` albo niezgodny `logSize` → liczniki odtwarzane
+  z dziennika, urwana albo uszkodzona linia odrzucana (dziennik zapisywany od nowa z poprawnych wpisów). Pliki
+  `*.tmp` po przerwanej migawce są usuwane przy starcie. Bloby liczone z katalogu.
+- **Pamięć:** przy starcie tylko `room.json` i `meta.json`; wpisy w pamięci podręcznej LRU (`CACHE_BYTES`,
+  domyślnie 256 MB), pokój większy niż jej ćwierć jest czytany strumieniem.
+- **Kolejka na pokój:** zapisy i odczyty jednego pokoju po kolei; różne pokoje nie czekają na siebie.
+- **Migracja:** stary `relay.json` jest przy pierwszym starcie rozbijany na katalogi i zostaje jako `relay.json.bak`.
+- Bez `fsync`: wpis przeżywa zabicie procesu, ale awaria systemu operacyjnego może zgubić ostatnie wpisy
+  (klienci wysyłają je ponownie — pełny stan przy nowej epoce albo zwykłe ponowienie).
 
 ## Pliki
 
-- `core.js` — czysta logika (tokeny, log, snapshot, limity), bez I/O;
-- `core.test.js` — 19 testów logiki;
-- `server.js` — HTTP, WebSocket, zapis do `DATA_DIR/relay.json` (atomowo, co 0,5 s po zmianie); bloby jako pliki w `DATA_DIR/blobs/<pokój>/<bid>`.
+- `core.js` — czysta logika (tokeny, liczniki, snapshot, limity), bez I/O; `core.test.js`;
+- `storage.js` — dziennik na dysku, odtwarzanie po awarii, pamięć podręczna, limity łączne; `storage.test.js`
+  (test obciążenia 200 pokoi × 2000 wpisów: `LOAD=1 node --expose-gc --test storage.test.js`);
+- `config.js` — zmienne środowiska i kontrola konfiguracji; `config.test.js`;
+- `server.js` — HTTP i WebSocket; `server.test.js` (prawdziwy proces: odporność, limity, odmowa startu).

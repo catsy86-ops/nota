@@ -88,6 +88,36 @@ test("DELETE /rooms/:id: bez tokenu i ze złym tokenem odmowa, z dobrym kasuje p
   assert.equal(await alive(), true, log);
 });
 
+test("treść do 22 MB nie jest czytana przed sprawdzeniem pokoju i tokenu (H3): odpowiedź przychodzi bez wysłania treści", async () => {
+  const room = "cd".repeat(32);
+  const token = "u".repeat(43);
+  const created = await fetch(`${base}/rooms/${room}/updates`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ data: "AAAA" }) });
+  assert.equal(created.status, 200);
+  const head = (path, auth, length, method = "POST") => raw(`${method} ${path} HTTP/1.1\r\nHost: x\r\n${auth ? `Authorization: Bearer ${auth}\r\n` : ""}Content-Type: application/json\r\nContent-Length: ${length}\r\nConnection: close\r\n\r\n`);
+  // Same nagłówki (treść nigdy nie przychodzi) — serwer odpowiada od razu, zamiast czekać na 20 MB.
+  assert.match(await head(`/rooms/${room}/updates`, "x".repeat(43), 20_000_000), /^HTTP\/1\.1 403/);
+  assert.match(await head(`/rooms/${"ef".repeat(32)}/updates`, undefined, 20_000_000), /^HTTP\/1\.1 401/);
+  assert.match(await head(`/rooms/${room}/updates`, token, 30_000_000), /^HTTP\/1\.1 413/);
+  assert.match(await head(`/rooms/${room}/snapshot`, "x".repeat(43), 20_000_000, "PUT"), /^HTTP\/1\.1 403/);
+  assert.equal(await alive(), true, log);
+});
+
+test("błędna konfiguracja (produkcja bez ALLOWED_ORIGINS, TRUST_PROXY bez pośrednika) zatrzymuje start (S4.3)", async () => {
+  for (const env of [{ NODE_ENV: "production" }, { TRUST_PROXY: "1" }, { MAX_ROOMS: "zero" }]) {
+    const d = mkdtempSync(join(tmpdir(), "notki-relay-cfg-"));
+    try {
+      const c = spawn(process.execPath, ["server.js"], { cwd: import.meta.dirname, env: { PATH: process.env.PATH, PORT: String(await freePort()), DATA_DIR: d, ...env }, stdio: ["ignore", "ignore", "pipe"] });
+      let err = "";
+      c.stderr.on("data", (x) => { err += x; });
+      const code = await new Promise((resolve) => c.on("exit", resolve));
+      assert.equal(code, 1, JSON.stringify(env));
+      assert.match(err, /Konfiguracja:/);
+    } finally {
+      rmSync(d, { recursive: true, force: true });
+    }
+  }
+});
+
 test("limit nowych pokoi na adres na dobę: trzeci nowy pokój dostaje 429, zapis do istniejącego nie jest liczony (S4)", async () => {
   const dir2 = mkdtempSync(join(tmpdir(), "notki-relay-lim-"));
   const port2 = await freePort();
