@@ -70,4 +70,51 @@ describe("replaceAllChunked (Z-16.2)", () => {
     expect(seenOld).toBe(true);
     expect(ids()).toEqual(["k1"]);
   });
+
+  it("flaga „wymiana w toku” przez cały import; koniec ogłaszany raz, też po przerwaniu", async () => {
+    let ends = 0;
+    const off = yjsStore.onBulkWriteEnd(() => { ends++; });
+    try {
+      const during: boolean[] = [];
+      await yjsStore.replaceAllChunked(Array.from({ length: 10 }, (_, i) => note(`k${i}`)), [], [], [], {
+        budgetMs: 0, onProgress: () => { during.push(yjsStore.isBulkWriting()); },
+      });
+      expect(during.length).toBeGreaterThan(1);
+      expect(during.every(Boolean)).toBe(true);
+      expect(yjsStore.isBulkWriting()).toBe(false);
+      expect(ends).toBe(1);
+
+      const ctrl = new AbortController();
+      await expect(yjsStore.replaceAllChunked([note("a"), note("b"), note("c")], [], [], [], {
+        budgetMs: 0, signal: ctrl.signal, onProgress: () => ctrl.abort(),
+      })).rejects.toThrow("Przerwano");
+      expect(yjsStore.isBulkWriting()).toBe(false);
+      expect(ends).toBe(2);
+    } finally {
+      off();
+    }
+  });
+
+  it("budżet obejmuje zamknięcie transakcji: przy kosztownym obserwatorze porcje maleją", async () => {
+    const backup = Array.from({ length: 200 }, (_, i) => note(`k${i}`));
+    const sizes: number[] = [];
+    let last = 0;
+    // Obserwator kosztujący ok. 2 ms na notatkę w porcji — porcje muszą zejść do kilku notatek.
+    const slow = (events: Array<{ changes: { keys: Map<string, unknown> } }>) => {
+      const n = events.reduce((s, e) => s + e.changes.keys.size, 0);
+      const end = performance.now() + 2 * n;
+      while (performance.now() < end) { /* koszt obserwatora */ }
+    };
+    yjsStore.notesMap.observeDeep(slow as never);
+    try {
+      await yjsStore.replaceAllChunked(backup, [], [], [], {
+        budgetMs: 20, onProgress: (done) => { sizes.push(done - last); last = done; },
+      });
+    } finally {
+      yjsStore.notesMap.unobserveDeep(slow as never);
+    }
+    // Pierwsza porcja zgaduje; kolejne mają się zmieścić w budżecie razem z obserwatorem (≤ 10 notatek po 2 ms).
+    expect(Math.max(...sizes.slice(2))).toBeLessThanOrEqual(12);
+    expect(ids()).toEqual(backup.map((n) => n.id).sort());
+  });
 });

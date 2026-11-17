@@ -10,6 +10,10 @@ test("przywracanie 2000 notatek: długie zadania", async ({ page, browserName })
   test.setTimeout(240_000);
   await page.addInitScript(() => {
     localStorage.setItem("kaczy.tour.seen.v1", "1");
+    // Bez przeładowania po przywróceniu (BackupSettings, 1,2 s po komunikacie) — lista zadań ginęłaby razem ze stroną.
+    const st = window.setTimeout;
+    window.setTimeout = ((fn: TimerHandler, ms?: number, ...rest: unknown[]) =>
+      (typeof fn === "function" && /reload\(\)/.test(String(fn)) ? 0 : st(fn, ms, ...rest))) as typeof window.setTimeout;
     const tasks: number[] = [];
     (window as unknown as { __long: number[] }).__long = tasks;
     new PerformanceObserver((list) => { for (const e of list.getEntries()) tasks.push(Math.round(e.duration)); }).observe({ type: "longtask", buffered: true });
@@ -39,6 +43,8 @@ test("przywracanie 2000 notatek: długie zadania", async ({ page, browserName })
   await download;
   await expect(page.getByText(/Przywrócono kopię/)).toBeVisible({ timeout: 200_000 });
   const ms = Date.now() - t0;
+  // Zadania po komunikacie (dorysowanie listy) też się liczą.
+  await page.waitForTimeout(3000);
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
   const long = await page.evaluate(() => (window as unknown as { __long: number[] }).__long.slice().sort((a, b) => b - a));
   console.log(`PERF restore 2000: ${ms} ms, long tasks: ${long.length}, top: ${long.slice(0, 10).join(", ")}`);

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useNotes, whenNotesReady, TRASH_PURGE_GRACE_MS, type Note } from "./useNotes";
 import { clearAllStorage, saveNotesIDB } from "@/lib/notesStore";
@@ -31,6 +31,37 @@ beforeEach(async () => {
   localStorage.clear();
   await clearAllStorage();
   await yjsStore.resetForTests();
+});
+
+describe("useNotes — wymiana porcjami (Z-16.2)", () => {
+  it("rzut notatek nie liczy się po każdej porcji, tylko raz po końcu wymiany", async () => {
+    const { result } = renderHook(() => useNotes());
+    await waitFor(() => expect(result.current.notes).toEqual([]));
+    // Pierwszy rzut po `ready()` hooka ma się odbyć przed wymianą.
+    await act(async () => { await yjsStore.ready(); await new Promise((r) => setTimeout(r, 0)); });
+    const real = yjsStore.projectNotes;
+    let duringBulk = 0;
+    let after = 0;
+    const spy = vi.spyOn(yjsStore, "projectNotes").mockImplementation(() => {
+      if (yjsStore.isBulkWriting()) duringBulk++; else after++;
+      return real();
+    });
+    let chunks = 0;
+    try {
+      await act(async () => {
+        await yjsStore.replaceAllChunked(Array.from({ length: 8 }, (_, i) => makeNote({ id: `k${i}` })), [], ["kopia"], [], {
+          budgetMs: 0, onProgress: () => { chunks++; },
+        });
+      });
+    } finally {
+      spy.mockRestore();
+    }
+    expect(chunks).toBeGreaterThan(1);
+    expect(duringBulk).toBe(0);
+    expect(after).toBe(1);
+    expect(result.current.notes).toHaveLength(8);
+    expect(result.current.allLabels).toContain("kopia");
+  });
 });
 
 describe("useNotes — CRUD", () => {

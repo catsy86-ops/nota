@@ -99,10 +99,23 @@ export function useNotes() {
     const projectLabels = () => setAllLabels(yjsStore.projectLabels());
     const projectPropDefs = () => setPropDefs(yjsStore.projectPropDefs());
 
-    yjsStore.notesMap.observeDeep(projectNotes);
-    yjsStore.foldersMap.observeDeep(projectFolders);
-    yjsStore.labelsMap.observeDeep(projectLabels);
-    yjsStore.propDefsMap.observeDeep(projectPropDefs);
+    // W trakcie wymiany porcjami (przywracanie kopii) rzuty czekają na koniec — jeden przerender zamiast jednego na porcję (Z-16.2).
+    const deferred = new Set<() => void>();
+    const whenIdle = (fn: () => void) => () => { if (yjsStore.isBulkWriting()) deferred.add(fn); else fn(); };
+    const offBulkEnd = yjsStore.onBulkWriteEnd(() => {
+      const fns = [...deferred];
+      deferred.clear();
+      fns.forEach((fn) => fn());
+    });
+    const onNotes = whenIdle(projectNotes);
+    const onFolders = whenIdle(projectFolders);
+    const onLabels = whenIdle(projectLabels);
+    const onPropDefs = whenIdle(projectPropDefs);
+
+    yjsStore.notesMap.observeDeep(onNotes);
+    yjsStore.foldersMap.observeDeep(onFolders);
+    yjsStore.labelsMap.observeDeep(onLabels);
+    yjsStore.propDefsMap.observeDeep(onPropDefs);
     let gcTimer: ReturnType<typeof setTimeout> | undefined;
 
     yjsStore.ready().then(() => {
@@ -126,10 +139,11 @@ export function useNotes() {
     return () => {
       cancelled = true;
       clearTimeout(gcTimer);
-      yjsStore.notesMap.unobserveDeep(projectNotes);
-      yjsStore.foldersMap.unobserveDeep(projectFolders);
-      yjsStore.labelsMap.unobserveDeep(projectLabels);
-      yjsStore.propDefsMap.unobserveDeep(projectPropDefs);
+      offBulkEnd();
+      yjsStore.notesMap.unobserveDeep(onNotes);
+      yjsStore.foldersMap.unobserveDeep(onFolders);
+      yjsStore.labelsMap.unobserveDeep(onLabels);
+      yjsStore.propDefsMap.unobserveDeep(onPropDefs);
     };
   }, []);
 
