@@ -284,3 +284,31 @@ describe("sterownik wymiany", () => {
     expect(log).toEqual([]);
   });
 });
+
+describe("Z-15.4: przerwanie po każdym kroku", () => {
+  // Zapis kroku pada po udanym działaniu — tak wygląda karta zamknięta między działaniem a zapisem.
+  // Wznowienie musi dojść do tego samego końca: jeden znacznik o tym samym id, kod przełączony, zapis `done`.
+  for (let k = 1; k <= 6; k++) {
+    it(`przerwanie przy zapisie nr ${k} po potwierdzeniu`, async () => {
+      const f = fakePorts();
+      await prepareRekey(f.ports);
+      const id = f.state.record!.id;
+      let saves = 0;
+      const realSave = f.ports.save;
+      f.ports.save = (r) => {
+        if (++saves === k) throw new Error("karta zamknięta");
+        realSave(r);
+      };
+      await runRekey(f.ports, { confirmed: true, retireNow: true });
+      f.ports.save = realSave;
+      for (let i = 0; i < 3 && f.state.record?.step !== "done"; i++) {
+        await runRekey(f.ports, { confirmed: true, retireNow: true });
+      }
+      expect(f.state.record).toMatchObject({ id, step: "done", oldCode: null });
+      expect(f.state.code).toBe(f.state.record!.newCode);
+      const markers = readMarkers(f.doc);
+      expect(markers).toHaveLength(1);
+      expect(markers[0].id).toBe(id);
+    });
+  }
+});

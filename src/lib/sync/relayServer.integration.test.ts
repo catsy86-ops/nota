@@ -324,5 +324,60 @@ describe("klient przekaźnika ↔ prawdziwy serwer", () => {
       expect(await retireRekeyRoom(relay, code, update)).toBe(true);
       expect(await roomEntries(a.keys)).toBe(1);
     }, 30_000);
+
+    it("Z-15.4 p. 3: B zatrzymane znacznikiem, po dołączeniu nowym kodem oddaje zmiany zrobione po wymianie", async () => {
+      const oldCode = "STARYBBBBBBB";
+      const newCode = "NOWYBBBBBBBB";
+      const stopped = (doc: Y.Doc) => !stoppingMarker(doc, TAG);
+      // A i B w jednej grupie na starym kodzie.
+      const a = await device(oldCode);
+      a.doc.transact(() => a.text.insert(0, "wspólne"));
+      expect(await a.provider.settle()).toBe(true);
+      const b = await device(oldCode, { canSend: stopped });
+      await untilSynced(b, () => b.text.toString() === "wspólne");
+
+      // A: nowy pokój z pełnym stanem, znacznik w starym, przełączenie.
+      await seedRekeyRoom(relay, newCode, a.doc, new MemStore());
+      await postRekeyMarker(relay, oldCode, buildMarkerUpdate(marker));
+      a.provider.stop();
+      const a2 = await device(newCode, { doc: a.doc });
+
+      // B widzi znacznik i przestaje wysyłać; zmiana zrobiona potem zostaje u niego.
+      await untilSynced(b, () => readMarkers(b.doc).length === 1);
+      b.doc.transact(() => b.text.insert(b.text.length, " + po wymianie"));
+      expect(await b.provider.settle()).toBe(false);
+      b.provider.stop();
+
+      // Ponowne sparowanie: B łączy się nowym kodem (nowy magazyn) i wysyła pełny stan — zmiana dochodzi do A.
+      const b2 = await device(newCode, { doc: b.doc });
+      expect(await b2.provider.settle()).toBe(true);
+      await untilSynced(a2, () => a2.text.toString() === "wspólne + po wymianie");
+      a2.provider.stop();
+      b2.provider.stop();
+    }, 30_000);
+
+    it("Z-15.4 p. 4a: C wraca przed wycofaniem pokoju — zatrzymuje się, zanim cokolwiek wyśle", async () => {
+      const code = "PRZEDCCCCCCC";
+      const a = await device(code);
+      a.doc.transact(() => a.text.insert(0, "grupa"));
+      expect(await a.provider.settle()).toBe(true);
+      a.provider.stop();
+
+      const cDoc = new Y.Doc();
+      Y.applyUpdate(cDoc, Y.encodeStateAsUpdate(a.doc));
+      const cStore = new MemStore();
+      const warm = await device(code, { doc: cDoc, store: cStore });
+      await warm.provider.settle();
+      warm.provider.stop();
+      cDoc.getText("t").insert(0, "zaległe ");
+
+      await postRekeyMarker(relay, code, buildMarkerUpdate(marker));
+      const before = await roomEntries(a.keys);
+      const c = await device(code, { doc: cDoc, store: cStore, canSend: (doc) => !stoppingMarker(doc, TAG) });
+      await untilSynced(c, () => readMarkers(c.doc).length === 1);
+      expect(await c.provider.settle()).toBe(false);
+      expect(await roomEntries(a.keys)).toBe(before);
+      c.provider.stop();
+    }, 30_000);
   });
 });

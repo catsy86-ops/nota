@@ -897,17 +897,18 @@ Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) 
 - WebRTC startuje równolegle z przekaźnikiem, nie po jego pierwszym pobraniu: urządzenie wracające po wymianie kodu może wysłać zaległe zmiany przez WebRTC do urządzenia online w starym pokoju, zanim zobaczy znacznik (I-7 chroni tylko przekaźnik). Świadome ograniczenie.
 - Znacznik jest niezaufany: każdy, kto zna kod, może wstrzymać synchronizację albo usunąć znacznik z dokumentu. `ignoredRekey` trzyma najwyżej 20 identyfikatorów. `pruneMarkers` ufa zegarowi urządzenia.
 - Kluczem `v2Only` jest nazwa urządzenia — dwa urządzenia o tej samej nazwie się zlewają.
-- Ostrzeżenie „Stara wersja” dotyczy urządzeń bez znanej wersji (urządzenia z listy „ostatnio widziane” jej nie niosą). Pełne testy wymiany (Z-15.4) są osobnym zleceniem.
+- Ostrzeżenie „Stara wersja” dotyczy urządzeń bez znanej wersji (urządzenia z listy „ostatnio widziane” jej nie niosą).
 
 ### Testy
 
 - `src/lib/sync/pairCode.test.ts`, `src/lib/sync/v2Window.test.ts`, `src/lib/legacyRoomIdle.test.ts`, `src/lib/pairLink.test.ts`, `src/lib/qrScan.test.ts`.
 - `src/lib/yjsSync.test.ts` — wektory zgodności, tabela pokoi (krótki/długi × okno × zgodność), `v=3`, propozycja, przedłużenie okna, `v2Only`, zatrzymanie po znaczniku, „Synchronizuj dalej”, I-5, I-6, własny znacznik od `marked`, zerowanie `legacyRoom`.
+- Wymiana kodu (Z-15.4): `src/lib/sync/rekey.test.ts` (m.in. przerwanie przy każdym zapisie kroku i wznowienie — jeden znacznik o tym samym id), `src/lib/sync/relayServer.integration.test.ts` (blok „wymiana kodu”: nowy pokój, znacznik zatrzymuje, nagrobek, B oddaje zmiany po ponownym sparowaniu, C wracające przed wycofaniem nic nie wysyła), `src/lib/fullBackup.test.ts` (zapis wymiany, `v2Only` i `syncControl` poza kopią). Raport diagnostyczny (`diagnosticsReport.ts`) zaciera też stary i nowy kod z zapisu wymiany.
 - e2e: `sync-rekey.spec.ts` (przepływ bez przekaźnika, anulowanie, axe panelu), `sync-code.spec.ts`, `sync-qr-scan.spec.ts`, `sync-status-dot.spec.ts`, `a11y.spec.ts`.
 
 ### Commit
 
-`dc54137a`, `de0a0a08`, `89ae0a28` (2026-11-17); interfejs zmiany kodu (Z-15.3) — commit po nich.
+`dc54137a`, `de0a0a08`, `89ae0a28` (2026-11-17); `d1de623c` (Z-15.3); testy wymiany (Z-15.4) — commit po nim.
 - Budżet: `yjsSync` jest w paczce startowej (`NotesProvider`); próg eager w `e2e/bundle.spec.ts`, ostatni pomiar 392,4 KB.
 
 ### Testy

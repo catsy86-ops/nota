@@ -522,6 +522,16 @@ describe("ustawienia w kopii — zakres i push", () => {
     expect(JSON.stringify(backup)).not.toContain("SEKRET");
   });
 
+  it("Z-15.4 p. 11: zapis wymiany kodu, v2Only i mapa syncControl nie trafiają do kopii", async () => {
+    localStorage.setItem("kaczy.sync.rekey.v1", JSON.stringify({ v: 1, oldCode: "STARYSEKRET1", newCode: "NOWYSEKRET".padEnd(28, "A") }));
+    localStorage.setItem("kaczy.sync.v2only.v1", JSON.stringify({ Tablet: 1 }));
+    yjsStore.doc.getMap("syncControl").set(`rekey:${"a".repeat(32)}`, { v: 1, tag: "b".repeat(32), at: 1 });
+    const text = JSON.stringify(await buildFullBackup());
+    for (const needle of ["kaczy.sync.rekey", "kaczy.sync.v2only", "STARYSEKRET1", "NOWYSEKRET", "syncControl", "b".repeat(32)]) {
+      expect(text, needle).not.toContain(needle);
+    }
+  });
+
   it("restores push switched off, without device state and WITHOUT the server address (a malicious backup must not redirect the token)", async () => {
     const backup = await buildFullBackup();
     backup.settings = {

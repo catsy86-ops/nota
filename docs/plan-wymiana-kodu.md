@@ -271,6 +271,8 @@ Pierwotny zakres:
 
 ### Z-15.4 (Sonnet, M) — testy wymiany
 
+**Stan 2026-11-17:** zrobione (Fable). Mapa: 1 — `rekey.test.ts` „przerwanie po każdym kroku”; 2, 9, 10 — `rekey.test.ts`; 3, 4a, 4b — `relayServer.integration.test.ts`; 5, 6 — `rekey.test.ts` i `yjsSync.test.ts`; 7, 8 — `rekey.test.ts` i `yjsSync.test.ts` (I-5, I-6); 11 — `fullBackup.test.ts`.
+
 Vitest z atrapami portów i testy integracyjne z prawdziwym `relay-server` (wzór: `relayServer.integration.test.ts`):
 
 1. Przerwanie po każdym kroku (`prepared`, `seeded`, `marked`, `switched`) i wznowienie — stan końcowy taki sam jak bez przerwania; znacznik nie dubluje się pod innym `id`.
