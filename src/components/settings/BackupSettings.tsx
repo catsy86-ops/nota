@@ -16,6 +16,7 @@ import { requestPersistentStorage, getStorageInfo, storageWarning, type StorageI
 import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName } from "@/lib/backupFileHandle";
 import { toast } from "sonner";
 import { ResetSectionButton, Section } from "./SettingsShared";
+import { LastImportUndo } from "./LastImportUndo";
 import { AboutPanel } from "@/components/AboutPanel";
 import { viewLabel } from "@/lib/viewMeta";
 
@@ -306,6 +307,7 @@ export function BackupSettings() {
     <div className="space-y-4">
       <StoragePersistenceStatus />
       <BackupFileTarget />
+      <LastImportUndo />
 
       <Section title={`Auto-backup ${prefs.autoExportDays === 0 ? "(wyłączony)" : `co ${dniPl(prefs.autoExportDays)}`}`}>
         <Slider

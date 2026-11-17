@@ -138,7 +138,11 @@ export function useExternalImport() {
       const n = result.noteIds.length;
       const label = pluralPl(n, ["notatka", "notatki", "notatek"]);
       toastWithUndo(`Zaimportowano ${n} ${label}`, () => undoImport(result), {
-        description: result.failedImages ? `Nie udało się wczytać obrazów: ${result.failedImages}` : undefined,
+        description: [
+          result.failed ? `Pominięto uszkodzone notatki: ${result.failed}` : "",
+          result.failedImages ? `Nie udało się wczytać obrazów: ${result.failedImages}` : "",
+          "Cofnięcie jest też w Ustawieniach → Kopia i dane przez dobę.",
+        ].filter(Boolean).join(" "),
         duration: 10000,
       });
       reset();

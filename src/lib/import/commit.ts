@@ -16,7 +16,43 @@ export interface ImportResult {
   createdPropDefIds: string[];
   imageCount: number;
   failedImages: number;
+  /** Notatki odrzucone przez schemat przy sprawdzaniu — nie zapisane, import idzie dalej (Z-18.8). */
+  failed: number;
 }
+
+/** Porcja notatek na jedną transakcję Yjs (Z-18.8): jeden zapis do bazy i jedna aktualizacja synchronizacji. */
+export const IMPORT_BATCH = 500;
+/** Ostatni import — „Cofnij ostatni import” w Ustawieniach przez `LAST_IMPORT_TTL_MS`. Lokalnie, poza kopią. */
+export const LAST_IMPORT_KEY = "kaczy.import.last.v1";
+export const LAST_IMPORT_TTL_MS = 24 * 60 * 60 * 1000;
+
+export interface LastImport extends Pick<ImportResult, "noteIds" | "createdFolderIds" | "createdLabels" | "createdPropDefIds"> {
+  at: number;
+}
+
+const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+
+/** Zapis ostatniego importu, jeśli nie starszy niż doba; śmieci → `null`. */
+export function readLastImport(now: number = Date.now()): LastImport | null {
+  try {
+    const raw = localStorage.getItem(LAST_IMPORT_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(raw) as Partial<LastImport>;
+    if (typeof v.at !== "number" || now - v.at > LAST_IMPORT_TTL_MS) return null;
+    const noteIds = strings(v.noteIds);
+    if (!noteIds.length) return null;
+    return { at: v.at, noteIds, createdFolderIds: strings(v.createdFolderIds), createdLabels: strings(v.createdLabels), createdPropDefIds: strings(v.createdPropDefIds) };
+  } catch {
+    return null;
+  }
+}
+
+export function clearLastImport(): void {
+  try { localStorage.removeItem(LAST_IMPORT_KEY); } catch { /* bez localStorage — nic do sprzątania */ }
+}
+
+/** Oddaje wątek przeglądarce między porcjami — długi import nie zamraża strony. */
+const yieldToMain = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 /**
  * Typ nowego pola z wartości z pliku: liczba, data albo tekst. Eksport zapisuje liczby tekstem
@@ -39,7 +75,7 @@ function inferPropType(values: string[]): PropType {
  * Nazwy pól z plików → definicje. Istniejąca definicja o tej samej nazwie (bez wielkości liter)
  * zostaje użyta; nieznane pole powstaje, o ile starczy miejsca (limit `PROP_LIMITS.defs`).
  */
-function resolvePropDefs(notes: PlannedNote[], defs: PropDef[], created: string[]): Map<string, PropDef> {
+function resolvePropDefs(notes: PlannedNote[], defs: PropDef[], created: PropDef[]): Map<string, PropDef> {
   const byKey = new Map<string, { name: string; values: string[] }>();
   for (const n of notes) {
     for (const [name, value] of Object.entries(n.props ?? {})) {
@@ -57,17 +93,21 @@ function resolvePropDefs(notes: PlannedNote[], defs: PropDef[], created: string[
     const def = makePropDef(defs, name, inferPropType(values));
     if (!def) continue;
     defs.push(def);
-    yjsStore.upsertPropDef(def);
-    created.push(def.id);
+    created.push(def);
     out.set(key, def);
   }
   return out;
 }
 
 /**
- * Zapisuje plan w bazie. Kolejność chroni dane: najpierw obrazy (błąd zapisu
- * — np. brak miejsca — przerywa, zanim powstanie jakakolwiek notatka), potem
- * foldery, etykiety, właściwości i notatki. Każdy zapis przechodzi walidację `noteSchema`.
+ * Zapisuje plan w bazie (Z-18.8 audytu 2: najpierw sprawdź wszystko, potem zapisz porcjami).
+ * 1. Obrazy — błąd zapisu (np. brak miejsca) przerywa, zanim powstanie jakakolwiek notatka.
+ * 2. Sprawdzanie bez zapisu: foldery, pola i notatki składane w pamięci; notatka odrzucona przez `noteSchema`
+ *    trafia do `failed`, nie przerywa importu.
+ * 3. Identyfikatory do `kaczy.import.last.v1` przed pierwszym zapisem — przerwanie w trakcie zostawia listę
+ *    do „Cofnij ostatni import” (cofnięcie usuwa tylko to, co istnieje).
+ * 4. Zapis: porcje po `IMPORT_BATCH` notatek, każda w jednej transakcji (`yjsStore.importBatch`). Import tylko
+ *    dodaje, więc każdy stan pośredni jest bezpieczny.
  */
 export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> {
   const { noteSchema } = await import("@/lib/noteSchema");
@@ -90,9 +130,9 @@ export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> 
     }
   }
 
-  // 2. Foldery: ponowne użycie istniejącego o tej samej nazwie i rodzicu.
+  // 2. Foldery: ponowne użycie istniejącego o tej samej nazwie i rodzicu; nowe tylko w pamięci, zapis w pierwszej porcji.
   const folders: Folder[] = yjsStore.projectFolders();
-  const createdFolderIds: string[] = [];
+  const newFolders: Folder[] = [];
   const now = Date.now();
   const resolveFolder = (path: string[]): string | null => {
     let parentId: string | null = null;
@@ -103,8 +143,7 @@ export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> 
       if (!f) {
         f = { id: crypto.randomUUID(), name, color: "default", emoji: null, parentId, order: 0, createdAt: now, updatedAt: now };
         folders.push(f);
-        yjsStore.upsertFolder(f);
-        createdFolderIds.push(f.id);
+        newFolders.push(f);
       }
       parentId = f.id;
     }
@@ -112,17 +151,38 @@ export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> 
   };
 
   // 3. Właściwości: definicje przed notatkami, żeby wartości miały już do czego wskazywać.
-  const createdPropDefIds: string[] = [];
-  const propDefByKey = resolvePropDefs(plan.notes, yjsStore.projectPropDefs(), createdPropDefIds);
+  const newPropDefs: PropDef[] = [];
+  const propDefByKey = resolvePropDefs(plan.notes, yjsStore.projectPropDefs(), newPropDefs);
 
-  // 4. Notatki.
+  // 4. Notatki — sprawdzone wszystkie, zanim powstanie pierwszy zapis.
   const knownLabels = new Set(yjsStore.projectLabels());
   const createdLabels = new Set<string>();
-  const noteIds: string[] = [];
+  const notes: Note[] = [];
   let imageCount = 0;
+  let failed = 0;
   for (const p of plan.notes) {
-    const hashes = p.images.map((i) => hashBySource.get(i)).filter((h): h is string => typeof h === "string");
+    // Uszkodzony wpis planu (np. tytuł, który nie jest tekstem) liczy się do `failed`, jak odrzucenie przez schemat.
+    let note: Note | null;
+    let hashes: string[] = [];
+    try {
+      hashes = p.images.map((i) => hashBySource.get(i)).filter((h): h is string => typeof h === "string");
+      note = buildNote(p, hashes);
+    } catch (err) {
+      logDiag("warn", "import", "note could not be built", err);
+      note = null;
+    }
+    if (!note) {
+      failed++;
+      continue;
+    }
+    notes.push(note);
     imageCount += hashes.length;
+    for (const l of note.labels) {
+      if (!knownLabels.has(l)) { createdLabels.add(l); knownLabels.add(l); }
+    }
+  }
+
+  function buildNote(p: PlannedNote, hashes: string[]): Note | null {
     const props: NoteProps = {};
     for (const [name, raw] of Object.entries(p.props ?? {})) {
       const def = propDefByKey.get(propNameKey(name));
@@ -131,7 +191,7 @@ export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> 
     }
     const created = p.createdAt ?? p.updatedAt ?? now;
     const updated = Math.max(p.updatedAt ?? created, created);
-    const note: Note = noteSchema.parse({
+    const parsed = noteSchema.safeParse({
       id: crypto.randomUUID(),
       title: p.title.trim(),
       content: p.content,
@@ -153,22 +213,55 @@ export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> 
       createdAt: created,
       updatedAt: updated,
     });
-    yjsStore.upsertNote(note);
-    noteIds.push(note.id);
-    for (const l of note.labels) {
-      if (!knownLabels.has(l)) { createdLabels.add(l); knownLabels.add(l); }
-      yjsStore.addLabel(l);
+    if (!parsed.success) {
+      logDiag("warn", "import", "note rejected by schema", parsed.error.issues[0]?.message);
+      return null;
     }
+    return parsed.data;
   }
 
-  return { noteIds, createdFolderIds, createdLabels: [...createdLabels], createdPropDefIds, imageCount, failedImages };
+  // Folder bez żadnej zapisanej notatki (wszystkie odrzucone) nie powstaje.
+  const usedFolders = new Set<string>();
+  const byId = new Map(folders.map((f) => [f.id, f]));
+  for (const n of notes) for (let id = n.folderId; id && !usedFolders.has(id); id = byId.get(id)?.parentId ?? null) usedFolders.add(id);
+  const foldersToWrite = newFolders.filter((f) => usedFolders.has(f.id));
+
+  const result: ImportResult = {
+    noteIds: notes.map((n) => n.id),
+    createdFolderIds: foldersToWrite.map((f) => f.id),
+    createdLabels: [...createdLabels],
+    createdPropDefIds: newPropDefs.map((d) => d.id),
+    imageCount, failedImages, failed,
+  };
+  if (!notes.length) return result;
+
+  // 3. Lista do cofnięcia przed pierwszym zapisem.
+  try {
+    const last: LastImport = { at: Date.now(), noteIds: result.noteIds, createdFolderIds: result.createdFolderIds, createdLabels: result.createdLabels, createdPropDefIds: result.createdPropDefIds };
+    localStorage.setItem(LAST_IMPORT_KEY, JSON.stringify(last));
+  } catch (err) {
+    logDiag("warn", "import", "cannot save undo list", err);
+  }
+
+  // 4. Zapis porcjami. Pierwsza porcja niesie też foldery, etykiety i pola — notatki mają do czego wskazywać.
+  for (let i = 0; i < notes.length; i += IMPORT_BATCH) {
+    if (i > 0) await yieldToMain();
+    yjsStore.importBatch({
+      notes: notes.slice(i, i + IMPORT_BATCH),
+      ...(i === 0 ? { folders: foldersToWrite, labels: result.createdLabels, propDefs: newPropDefs } : {}),
+    });
+  }
+  return result;
 }
 
 /**
  * Cofa import: usuwa dodane notatki i utworzone przez niego foldery oraz
  * etykiety, których nikt już nie używa. Bajty obrazów sprząta GC magazynu.
  */
-export function undoImport(result: ImportResult): void {
+export function undoImport(result: Pick<ImportResult, "noteIds" | "createdFolderIds" | "createdLabels" | "createdPropDefIds">): void {
+  // Ten sam import nie może zostać cofnięty drugi raz z Ustawień.
+  const last = readLastImport();
+  if (last && last.noteIds[0] === result.noteIds[0]) clearLastImport();
   yjsStore.removeNotes(result.noteIds);
   // Folder zostaje, jeśli ktoś go używa (notatka) albo jest przodkiem takiego folderu.
   const all = yjsStore.projectFolders();

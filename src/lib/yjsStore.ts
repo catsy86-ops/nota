@@ -810,6 +810,19 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     });
   }
 
+  /**
+   * Import (Z-18.8 audytu 2): porcja notatek z folderami, etykietami i polami w jednej transakcji — jeden zapis do bazy
+   * i jedna aktualizacja dla synchronizacji zamiast jednej na notatkę. Wewnętrzne `transact` łączą się z zewnętrzną.
+   */
+  function importBatch(batch: { notes: readonly Note[]; folders?: readonly Folder[]; labels?: readonly string[]; propDefs?: readonly PropDef[] }): void {
+    doc.transact(() => {
+      for (const d of batch.propDefs ?? []) upsertPropDef(d);
+      for (const f of batch.folders ?? []) upsertFolder(f);
+      for (const l of batch.labels ?? []) addLabel(l);
+      for (const n of batch.notes) upsertNote(n);
+    });
+  }
+
   /** Bajty obrazów zostają w `imageStore` — sprząta je GC po karencji. */
   function removeNote(id: string): void {
     doc.transact(() => { notesMap.delete(id); });
@@ -1077,7 +1090,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   return {
     doc, notesMap, foldersMap, labelsMap, images, isPersistenceOrigin,
     ready, projectNotes, projectFolders, projectLabels, projectPropDefs, upsertPropDef, deletePropDef, propDefsMap,
-    upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes,
+    upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes, importBatch,
     upsertFolder, patchFolder, removeFolder,
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, resetForTests, diagStats, encodeSyncState, mergeSyncState,

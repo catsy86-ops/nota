@@ -1126,6 +1126,15 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 - Kompozytor i wygląd (2026-10-19): `6e95430`, `280f294`, `2745eaf`, `d3f446f`, `707e7a0`, `bb48640`, `f5e418c`, `0284db6`.
 - Dopracowanie (2026-10-20): `02c1560`.
 
+
+## Notatki — import: sprawdzanie przed zapisem, porcje, „Cofnij ostatni import” (Z-18.8 audytu 2, 2026-11-17)
+
+- **Co robi:** import z Google Keep / Markdown / ZIP najpierw składa i sprawdza wszystkie notatki, a dopiero potem zapisuje. Uszkodzony wpis (np. tytuł, który nie jest tekstem, albo odrzucenie przez schemat) jest pomijany i liczony — dymek po imporcie mówi „Pominięto uszkodzone notatki: N”. Zapis idzie porcjami po 500 notatek, każda w jednej transakcji, z oddaniem wątku przeglądarce między porcjami. W Ustawieniach → Kopia i dane przez dobę od importu jest sekcja „Ostatni import” z „Cofnij import” (z potwierdzeniem); dymek mówi, że tam jest.
+- **Gdzie jest:** `src/lib/import/commit.ts` — `commitImportPlan` (obrazy → składanie w pamięci: `buildNote`, nowe foldery i pola bez zapisu → lista do cofnięcia → porcje `IMPORT_BATCH`), `readLastImport`, `clearLastImport`, `LAST_IMPORT_KEY` (`kaczy.import.last.v1`, lokalnie, poza kopią), `LAST_IMPORT_TTL_MS`, `ImportResult.failed`; `undoImport` przyjmuje też zapis z Ustawień i czyści go. `src/lib/yjsStore.ts` — `importBatch({ notes, folders, labels, propDefs })` w jednej transakcji. `src/components/settings/LastImportUndo.tsx` (w `BackupSettings.tsx`), `src/hooks/useImportExport.ts` (opis dymka).
+- **Jak działa i dlaczego:** dawniej każda notatka, etykieta i folder to była osobna transakcja Yjs (tysiące zapisów i aktualizacji synchronizacji), a wyjątek przy notatce N zostawiał N−1 zapisanych bez możliwości cofnięcia. Lista identyfikatorów trafia do `localStorage` **przed** pierwszym zapisem, więc przerwanie (zamknięta karta, błąd) zostawia ją do „Cofnij import” — cofnięcie usuwa tylko to, co istnieje. Import tylko dodaje, więc każdy stan pośredni jest bezpieczny. Pierwsza porcja niesie foldery, etykiety i pola; folder, którego żadna zapisana notatka nie używa, nie powstaje.
+- **Ograniczenia:** cofnięcie usuwa notatki z importu także wtedy, gdy je potem zmieniono (mówi o tym potwierdzenie). Zapamiętany jest tylko ostatni import. Bajty obrazów sprząta odśmiecanie magazynu.
+- **Testy:** `src/lib/import/commit.batch.test.ts` (notatka nr 300 uszkodzona → 0 wyjątków i `failed`; transakcji nie więcej niż porcji; przerwanie po pierwszej porcji → cofnięcie z Ustawień usuwa dokładnie zapisane; wygaśnięcie po dobie), `src/lib/import/commit.test.ts`; e2e `import-external`, `file-launch`, `settings-links`.
+
 ## Grafik — stan aktualny (zmiany, rachunek, eksporty, wiele grafików)
 
 Dział opisany w jednym miejscu: rdzeń (dotąd nieopisany) i dodatki z 2026-10-09…20. Przegląd audytu z 2026-10-09 jest uwzględniony.

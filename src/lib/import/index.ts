@@ -3,7 +3,7 @@ import { buildImportPlan, type ExistingNoteLike, type ImportPlan } from "./plan"
 
 export type { ImportPlan, PlannedNote, ExistingNoteLike } from "./plan";
 export type { ImportResult } from "./commit";
-export { commitImportPlan, undoImport } from "./commit";
+export { commitImportPlan, undoImport, readLastImport, clearLastImport, LAST_IMPORT_KEY, type LastImport } from "./commit";
 
 /** Wybrane pliki/folder/ZIP → plan importu (bez zapisu). */
 export async function analyzeFiles(files: File[], existing: ExistingNoteLike[]): Promise<ImportPlan> {
