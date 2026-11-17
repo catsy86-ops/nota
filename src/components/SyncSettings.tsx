@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { GroupedCode, JOIN_CODE_INPUT_ID, JoinCodeField } from "@/components/sync/JoinCodeField";
 import { NewCodeCard, RekeyedCard, V2OnlyNotices } from "@/components/sync/SyncCodeNotices";
+import { CodeChangePanel } from "@/components/sync/CodeChangePanel";
+import { useRekeyRecord } from "@/lib/sync/rekeyRuntime";
 import { legacyEndsAt, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { toast } from "sonner";
 import { checkRelay, deleteRelayRoom, getRelayUrl, setRelayUrl, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
@@ -52,6 +54,7 @@ function deviceWord(n: number): string {
 export function SyncSettings({ prefillCode, prefillV3 }: Props) {
   const syncState = useSyncState();
   const proposal = useNewCodeProposal();
+  const rekeyRecord = useRekeyRecord();
   const seen = useSeenDevices();
   const offline = seenOffline(seen, syncState.devices.map((d) => d.name));
   const [joinInput, setJoinInput] = useState("");
@@ -313,6 +316,9 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
           </AlertDialog>
         </div>
       )}
+
+      {/* Wymiana kodu (Z-15.3): przy działającej grupie albo gdy wymiana już trwa (także w kroku po przełączeniu). */}
+      {((syncState.code && syncState.status !== "rekeyed") || rekeyRecord) && <CodeChangePanel />}
 
       {wasShortCodeDropped() && (
         <div role="alert" className="rounded-card border border-warning/40 bg-warning/10 p-3 text-xs space-y-2">

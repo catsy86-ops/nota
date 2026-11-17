@@ -13,8 +13,8 @@ import {
   V2_COMPAT_MS, V2_ONLY_GRACE_MS, clearAllV2Only, clearV2Only, extendV2Window, getV2Only, latestV2Only, recordV2Only,
 } from "@/lib/sync/v2Window";
 import {
-  REKEY_STORAGE_KEY, SYNC_CONTROL_MAP, cancelRekey, pruneMarkers, prepareRekey, readMarkers, rekeyTag, runRekey, stoppingMarker,
-  withDevicePaired, type RekeyResult, type RunOptions,
+  REKEY_LOCK, REKEY_STORAGE_KEY, SYNC_CONTROL_MAP, cancelRekey, pruneMarkers, prepareRekey, readMarkers, rekeyTag, runRekey, stoppingMarker,
+  rekeyFinished, withDevicePaired, type RekeyRecord, type RekeyResult, type RunOptions,
 } from "@/lib/sync/rekey";
 import { loadRekeyRecord, notifyRekeyRecord, rekeyPorts, saveRekeyRecord } from "@/lib/sync/rekeyRuntime";
 import { logDiag } from "@/lib/diagnostics";
@@ -818,16 +818,39 @@ export const runCodeChange = (opts: RunOptions = {}): Promise<RekeyResult> => dr
 /** Anuluje wymianę, dopóki znacznik nie mógł wyjść z urządzenia. */
 export const cancelCodeChange = (): Promise<boolean> => cancelRekey(ports);
 
+/**
+ * Zmiana zapisu wymiany pod blokadą (zapis może równolegle zmieniać sterownik). Zakończona wymiana bez urządzeń do
+ * sparowania znika sama (§3.4: lista żyje, dopóki są nieodhaczone pozycje).
+ */
+function updateRekeyRecord(fn: (r: RekeyRecord) => RekeyRecord | null): Promise<unknown> {
+  // Czeka w kolejce, nie odpuszcza: odhaczenie stuknięte w trakcie kroku sterownika nie może przepaść.
+  const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
+  const withLock = (job: () => Promise<void>) => (locks?.request ? locks.request(REKEY_LOCK, job) : job());
+  return withLock(async () => {
+    const cur = loadRekeyRecord();
+    if (!cur) return;
+    const next = fn(cur);
+    if (next === cur) return;
+    saveRekeyRecord(next && rekeyFinished(next) ? null : next);
+  }).catch((err) => logDiag("warn", "yjsSync", "cannot update code change record", err));
+}
+
 /** Urządzenie widoczne w awareness nowego pokoju odhacza się na liście do ponownego sparowania (§3.6). */
 function tickRekeyDevices(names: readonly string[]): void {
   const r = loadRekeyRecord();
   if (!names.length || !r || (r.step !== "switched" && r.step !== "done") || state.code !== r.newCode) return;
-  const next = names.reduce(withDevicePaired, r);
-  if (next === r) return;
-  void ports.lock(async () => {
-    const cur = loadRekeyRecord();
-    if (cur?.id === r.id) saveRekeyRecord(names.reduce(withDevicePaired, cur));
-  }).catch(() => undefined);
+  if (names.reduce(withDevicePaired, r) === r) return;
+  void updateRekeyRecord((cur) => names.reduce(withDevicePaired, cur));
+}
+
+/** Ręczne odhaczenie urządzenia na liście do ponownego sparowania. */
+export function markRekeyDevicePaired(name: string): Promise<unknown> {
+  return updateRekeyRecord((cur) => withDevicePaired(cur, name));
+}
+
+/** „Zamknij listę” po zakończonej wymianie. */
+export function dismissCodeChange(): Promise<unknown> {
+  return updateRekeyRecord((cur) => (cur.step === "done" ? null : cur));
 }
 
 /** Call once at app startup, after yjsStore.ready(), to resume a prior session. */

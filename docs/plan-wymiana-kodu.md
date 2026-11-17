@@ -261,6 +261,8 @@ Pierwotny zakres:
 
 ### Z-15.3 (Opus, M) — interfejs wymiany (§3.3, §3.7)
 
+**Stan 2026-11-17:** zrobione (Fable) — `CodeChangePanel`, test `e2e/sync-rekey.spec.ts`; ekran i baner `rekeyed` z sesji D2.
+
 - „Zmień kod” w ustawieniach synchronizacji: ekran potwierdzenia, postęp kroków z zapisu wymiany, błąd i ponowienie, „Pomiń”, QR nowego kodu, lista do odhaczania, „Usuń teraz”.
 - Ekran i baner „Kod synchronizacji został zmieniony na innym urządzeniu” ze stanem `rekeyed`; „Synchronizuj dalej na starym kodzie” z potwierdzeniem.
 - Druga karta: sam podgląd postępu.

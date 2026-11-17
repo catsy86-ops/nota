@@ -19,15 +19,15 @@ function newCodeReason(kind: Exclude<NewCodeProposal, null>): string {
 }
 
 /**
- * Propozycja nowego kodu (§2.3). Przycisk „Zmień kod” dojdzie z interfejsem wymiany (Z-15.3) —
- * do tego czasu karta tylko informuje; synchronizacja działa dalej na obecnym kodzie.
+ * Propozycja nowego kodu (§2.3). Samą zmianę prowadzi panel „Zmiana kodu” niżej (`CodeChangePanel`);
+ * synchronizacja działa dalej na obecnym kodzie, nic nie jest wymuszane.
  */
 export function NewCodeCard({ kind }: { kind: Exclude<NewCodeProposal, null> }) {
   return (
     <div role="status" data-testid="new-code-card" className="rounded-card border border-warning/40 bg-warning/10 p-3 text-xs space-y-1">
       <h3 className="font-semibold text-foreground">{NEW_CODE_TITLE}</h3>
       <p className="text-muted-foreground">
-        {newCodeReason(kind)} Nowy, dłuższy kod zamyka tę lukę. Po zmianie trzeba będzie ponownie sparować pozostałe urządzenia.
+        {newCodeReason(kind)} Nowy, dłuższy kod zamyka tę lukę. Po zmianie trzeba będzie ponownie sparować pozostałe urządzenia. Kod zmienisz w sekcji „Zmiana kodu” niżej.
       </p>
     </div>
   );
