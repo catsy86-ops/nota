@@ -1,9 +1,11 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Trash, X, Maximize2, QrCode, Sparkles, Radio } from "lucide-react";
-import { formatFileSize } from "@/lib/attachments";
+import { TriangleAlert, Camera, CircleCheck, ImagePlus, MapPin, Mic, NotebookPen, Trash, Maximize2, QrCode, Sparkles, Radio } from "lucide-react";
 import { addRecording } from "@/lib/study/recordings";
 import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/journalEntry";
 import { EntryKitsPanel } from "./entry/EntryKitsPanel";
+import { EntryRecordings } from "./entry/EntryRecordings";
+import { EntryStageSection } from "./entry/EntryStageSection";
+import { EntryWhereWhen } from "./entry/EntryWhereWhen";
 import { EntrySupplyToggle } from "./entry/EntrySupplyToggle";
 import { EntryTopicPanel } from "./entry/EntryTopicPanel";
 import { PhotoStrip } from "./PhotoStrip";
@@ -46,15 +48,14 @@ import { TOPICS } from "@/lib/study/content";
 import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteStages, updateJournalEntry, useSiteDirectory, useStudy, useStudyLists, type JournalKind } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, freshEntry, getJournalEditBase, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
-import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput, whenLabel, yesterdaySiteText } from "@/lib/study/journalView";
+import { KIND_LABEL, recentSiteTexts, suggestSites, yesterdaySiteText } from "@/lib/study/journalView";
 import { findSiteByName, siteKey } from "@/lib/study/sites";
 import { setSiteSupply, useVan } from "@/lib/study/vanStore";
-import { accuracyLabel, cleanGeo, mapsUrl, nearestSite } from "@/lib/study/geo";
+import { cleanGeo, nearestSite } from "@/lib/study/geo";
 import { suggestFittingNames, sumFittings } from "@/lib/study/fittings";
 import { editDemotesTopic, editSavedMessage, newEntryMessage, shouldOfferSiteGeo } from "@/lib/study/entrySheetRules";
 import { applySpokenEntry } from "@/lib/study/spokenEntryApply";
 import { siteStages, toggleStage } from "@/lib/study/stages";
-import { hasCheckLine, stageTemplate, toggleCheckLine } from "@/lib/study/stageTemplates";
 import { DelayedSpinner } from "@/components/DelayedSpinner";
 import { useTrackUse } from "@/lib/study/usage";
 
@@ -77,10 +78,6 @@ let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
 type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "dimensions" | "point" | "level" | "barcode" | "summary" | "recordings" | "test" | "fittings" | "pipes" | "stage" | "geo">;
-
-/** Odtwarzacz i nagrywanie leniwie, poza główną paczką (jak w notatkach). */
-const VoiceRecorder = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.VoiceRecorder })));
-const AudioPreview = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.AudioPreview })));
 
 function useOnline() {
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
@@ -506,98 +503,27 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         </SheetHeader>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-4">
-          <div className="flex flex-wrap gap-2">
-            {editingSite ? (
-              <label className="block w-full space-y-1 text-xs text-muted-foreground">
-                Inwestycja / adres
-                <input
-                  autoFocus
-                  value={siteText}
-                  onChange={(e) => { setSiteText(e.target.value); pendingSite.current = { text: e.target.value, edit: isEdit }; }}
-                  onBlur={commitSite}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commitSite(); } }}
-                  placeholder="np. Dom Kowalskich, ul. Leśna 4"
-                  enterKeyHint="done"
-                  className="w-full rounded-field border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
-                />
-              </label>
-            ) : (
-              <button
-                type="button"
-                onClick={openSiteEditor}
-                aria-label={site ? `Budowa: ${site}. Zmień` : "Dodaj budowę"}
-                className="pressable inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm coarse:min-h-11"
-              >
-                <MapPin className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
-                <span className={cn("truncate", !site && "text-muted-foreground")}>{site || "Dodaj budowę"}</span>
-                <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-              </button>
-            )}
-            {editingSite && siteChipsRow}
-            {!editingSite && (geo ? (
-              <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-muted/50 pl-3 text-sm coarse:min-h-11" data-testid="journal-geo">
-                <LocateFixed className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
-                <a href={mapsUrl(geo)} target="_blank" rel="noopener noreferrer" className="truncate underline-offset-2 hover:underline">Tu ({accuracyLabel(geo)})</a>
-                <button type="button" onClick={() => patch({ geo: null })} aria-label="Usuń lokalizację wpisu" className="pressable rounded-full p-1.5 text-muted-foreground hover:text-foreground coarse:-my-2.5 coarse:-mr-1 coarse:inline-flex coarse:size-11 coarse:items-center coarse:justify-center">
-                  <X className="h-3.5 w-3.5" aria-hidden />
-                </button>
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={locate}
-                disabled={locating}
-                className="pressable inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground hover:border-primary hover:text-foreground disabled:opacity-60 coarse:min-h-11"
-              >
-                {locating ? <DelayedSpinner active className="h-4 w-4" /> : <LocateFixed className="h-4 w-4" aria-hidden />}
-                {locating ? "Szukam…" : "Tu jestem"}
-              </button>
-            ))}
-            {/* Lokalizacja wpisu obok zapisanej budowy: jeden dotyk zamiast wybierania. */}
-            {!editingSite && nearby && nearby.name !== site && (
-              <button type="button" onClick={() => pickSite(nearby.name)} data-testid="journal-nearby-site" className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-primary/40 px-3 py-1.5 text-sm text-primary-ink hover:bg-primary/10 coarse:min-h-11">
-                <MapPin className="h-4 w-4 shrink-0" aria-hidden />
-                <span className="truncate">Budowa obok: {nearby.name}</span>
-              </button>
-            )}
-            {/* Pierwszy raz na tej budowie: zapisz jej lokalizację, następne wpisy podpowiedzą ją same. */}
-            {!editingSite && geo && siteCard && !siteCard.geo && (
-              <button type="button" onClick={() => { setSiteGeo(siteCard.id, geo); haptic("success"); toast.success(`Zapisano lokalizację budowy „${siteCard.name}”`); }} data-testid="journal-save-site-geo" className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-dashed border-primary/40 px-3 py-1.5 text-sm text-primary-ink hover:bg-primary/10 coarse:min-h-11">
-                <MapPin className="h-4 w-4 shrink-0" aria-hidden />
-                <span className="truncate">Zapisz jako lokalizację budowy</span>
-              </button>
-            )}
-            {/* Wpis „za wczoraj”: data i godzina zwinięte w pigułkę, domyślnie chwila zapisu. */}
-            {editingWhen ? (
-              <div className="flex w-full items-end gap-2">
-                <label className="block min-w-0 flex-1 space-y-1 text-xs text-muted-foreground">
-                  Kiedy
-                  <input
-                    type="datetime-local"
-                    autoFocus
-                    value={toLocalInput(at ?? Date.now())}
-                    max={toLocalInput(Date.now())}
-                    onChange={(e) => { const next = fromLocalInput(e.target.value); if (next !== null) setAt(next); }}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingWhen(false); } }}
-                    className="w-full rounded-field border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
-                  />
-                </label>
-                <Button type="button" variant="outline" onClick={() => { setAt(null); setEditingWhen(false); }} className="coarse:h-11">Teraz</Button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setEditingWhen(true)}
-                aria-label={`Kiedy: ${at === null ? "teraz" : whenLabel(at)}. Zmień`}
-                className="pressable inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm coarse:min-h-11"
-              >
-                <Clock className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
-                <span className={cn("truncate tabular-nums", at === null && "text-muted-foreground")}>{at === null ? "Teraz" : whenLabel(at)}</span>
-                <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-              </button>
-            )}
-            {!editingSite && siteChipsRow}
-          </div>
+          <EntryWhereWhen
+            site={site}
+            editingSite={editingSite}
+            siteText={siteText}
+            onSiteText={(t) => { setSiteText(t); pendingSite.current = { text: t, edit: isEdit }; }}
+            onOpenSiteEditor={openSiteEditor}
+            onCommitSite={commitSite}
+            siteChipsRow={siteChipsRow}
+            geo={geo}
+            onClearGeo={() => patch({ geo: null })}
+            locating={locating}
+            onLocate={locate}
+            nearbyName={nearby?.name ?? null}
+            onPickSite={pickSite}
+            saveSiteGeoFor={siteCard && !siteCard.geo ? siteCard.id : null}
+            onSaveSiteGeo={() => { if (!siteCard || !geo) return; setSiteGeo(siteCard.id, geo); haptic("success"); toast.success(`Zapisano lokalizację budowy „${siteCard.name}”`); }}
+            editingWhen={editingWhen}
+            onEditingWhen={setEditingWhen}
+            at={at}
+            onAt={setAt}
+          />
 
           <ToggleGroup
             variant="plain"
@@ -621,86 +547,17 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             ))}
           </ToggleGroup>
 
-          {entryStage && (
-            <div className="flex items-center gap-2 rounded-card border border-success-ink/40 bg-success/10 px-3 py-1.5 text-sm" data-testid="journal-entry-stage">
-              <ListChecks className="h-4 w-4 shrink-0 text-success-ink" aria-hidden />
-              <span className="min-w-0 flex-1 truncate">Etap: <span className="font-medium">{entryStage.name}</span></span>
-              <button
-                type="button"
-                onClick={() => { haptic("tap"); patch({ stage: null }); }}
-                aria-label={`Odepnij wpis od etapu: ${entryStage.name}`}
-                title="Odepnij od etapu (etap zostaje odhaczony w karcie)"
-                className="pressable grid size-7 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
-              >
-                <X className="h-3.5 w-3.5" aria-hidden />
-              </button>
-            </div>
-          )}
-
-          {entryStage && (() => {
-            // P2.9: lista kontrolna i podpowiedzi zdjęć dla etapu; punkt dopisuje „✓ …” do opisu (drugie stuknięcie usuwa).
-            const tpl = stageTemplate(entryStage);
-            if (!tpl) return null;
-            return (
-              <div className="space-y-1.5 rounded-card border border-border/60 px-3 py-2" data-testid="journal-stage-template">
-                <p className="ui-hint">Na tym etapie potwierdź w opisie:</p>
-                <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Lista kontrolna: ${entryStage.name}`}>
-                  {tpl.checklist.map((item) => {
-                    const on = hasCheckLine(text, item);
-                    return (
-                      <button key={item} type="button" aria-pressed={on}
-                        onClick={() => { haptic("selection"); setText((prev) => toggleCheckLine(prev, item)); }}
-                        className={cn("pressable inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-xs coarse:min-h-11 coarse:px-3",
-                          on ? "border-success-ink/50 bg-success/10 text-success-ink" : "border-border text-foreground hover:bg-muted")}>
-                        {on ? "✓ " : ""}{item}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="ui-hint flex items-start gap-1.5">
-                  <Camera className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-                  <span>Zdjęcia: {tpl.photos.join(" · ")}</span>
-                </p>
-              </div>
-            );
-          })()}
-
-          {!isEdit && !entryStage && kind === "ok" && nextStages.length > 0 && (
-            <div className="space-y-1" data-testid="journal-stage-chips">
-              <p className="ui-hint">Skończony etap? Odhacz go — zdjęcia z wpisu trafią do protokołu przy nim:</p>
-              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Następne etapy budowy">
-                {nextStages.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => markStage(s.id)}
-                    aria-label={`Odhacz etap: ${s.name}`}
-                    className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-success-ink/40 px-2.5 py-1 text-xs text-success-ink hover:bg-success/10 coarse:min-h-11 coarse:px-3 coarse:text-sm"
-                  >
-                    <ListChecks className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                    <span className="truncate">{s.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {isEdit && !entryStage && siteCard && (
-            // Zapisany wpis (np. zdjęcia „przed zakryciem” sprzed odhaczenia) — przypięcie bez ruszania stanu etapu w karcie.
-            <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              <ListChecks className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="shrink-0">Zdjęcia do protokołu przy etapie:</span>
-              <select
-                value=""
-                onChange={(e) => { if (e.target.value) { haptic("selection"); patch({ stage: e.target.value }); } }}
-                aria-label="Przypnij wpis do etapu"
-                className="h-9 min-w-0 flex-1 rounded-field border border-input bg-background px-2 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11"
-              >
-                <option value="">— bez etapu —</option>
-                {siteStages(siteCard).map((s) => <option key={s.id} value={s.id}>{s.done !== undefined ? `✓ ${s.name}` : s.name}</option>)}
-              </select>
-            </label>
-          )}
+          <EntryStageSection
+            entryStage={entryStage}
+            text={text}
+            onText={setText}
+            isEdit={isEdit}
+            kind={kind}
+            nextStages={nextStages}
+            onMarkStage={markStage}
+            siteCard={siteCard ?? null}
+            onStage={(id) => patch({ stage: id })}
+          />
 
           {isEdit && kind === "problem" && (
             <label className="flex items-center gap-2.5 rounded-card border border-border px-3 py-2.5 text-sm coarse:min-h-12">
@@ -797,34 +654,14 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 <Mic className="mr-1.5 h-4 w-4 coarse:h-5 coarse:w-5" />Nagraj
               </Button>
             </div>
-            {recording && (
-              <Suspense fallback={null}>
-                <VoiceRecorder onFile={(f) => void addRecordingFile(f)} onClose={() => setRecording(false)}
-                  onTranscript={(t) => setText((prev) => (prev.trim() ? `${prev.trimEnd()} ${t}` : t))} />
-              </Suspense>
-            )}
-            {recordings.length > 0 && (
-              <ul className="space-y-2" aria-label="Nagrania we wpisie">
-                {recordings.map((a) => (
-                  <li key={a.hash} className="rounded-field border border-border px-2.5 py-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mic className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                      <span className="min-w-0 flex-1 truncate">{a.name}</span>
-                      <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground">{formatFileSize(a.size)}</span>
-                      <button
-                        type="button"
-                        onClick={() => patch({ recordings: getForm().recordings.filter((x) => x.hash !== a.hash) })}
-                        aria-label={`Usuń nagranie: ${a.name}`}
-                        className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
-                      >
-                        <X className="h-3.5 w-3.5" aria-hidden />
-                      </button>
-                    </div>
-                    <Suspense fallback={null}><AudioPreview attachment={a} /></Suspense>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <EntryRecordings
+              recording={recording}
+              onCloseRecorder={() => setRecording(false)}
+              recordings={recordings}
+              onFile={(f) => void addRecordingFile(f)}
+              onTranscript={(t) => setText((prev) => (prev.trim() ? `${prev.trimEnd()} ${t}` : t))}
+              onRemove={(hash) => patch({ recordings: getForm().recordings.filter((x) => x.hash !== hash) })}
+            />
             {!isEdit && form.point && (
               <p className="ui-hint flex items-center gap-2" data-testid="entry-point">
                 <span className="min-w-0 flex-1">Wpis przypiszę do punktu: {cameraPoints.find((p) => p.id === form.point)?.label ?? "punkt"}</span>

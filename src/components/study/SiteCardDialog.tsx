@@ -1,5 +1,5 @@
 import { Activity, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Archive, ArchiveRestore, Wrench, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, PenLine, Phone, Send, Share2, Plus, Camera, PackageX, Contact } from "lucide-react";
+import { Archive, ArchiveRestore, Wrench, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, PenLine, Phone, Send, Share2, Plus, Camera, PackageX } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -12,12 +12,10 @@ import { haptic } from "@/lib/haptics";
 import { useShifts } from "@/lib/shifts";
 import { pluralPl } from "@/lib/plural";
 import { saveSiteCard, useSiteDirectory, useStudy } from "@/lib/study/store";
-import { ClientDatalist } from "@/components/clients/ClientDatalist";
-import { fillFromClient, findClientByName, proposeClient } from "@/lib/clients/siteClient";
-import { getClients } from "@/lib/clients/store";
+import { proposeClient } from "@/lib/clients/siteClient";
 import { addPhotoEntry as saveSitePhoto } from "@/lib/study/photoEntry";
 import { photoSaveFailed } from "@/components/study/useJournalPhotoEdits";
-import { findSiteByName, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
+import { findSiteByName } from "@/lib/study/sites";
 import { entriesPl, problemsPl } from "@/lib/study/journalView";
 import { periodLabel, dayKeyOf, workOn } from "@/lib/study/report";
 import { siteMinutesByDay, siteMinutesInRange } from "@/lib/study/siteHours";
@@ -27,16 +25,13 @@ import { useDayClock } from "@/lib/dayClock";
 import { siteTally } from "@/lib/study/siteTally";
 import { SiteTallyBar } from "./SiteTallyBar";
 import { SitePointsPanel } from "./SitePointsPanel";
+import { SiteDataForm } from "./site/SiteDataForm";
+import { EMPTY_FORM, formOf, type SiteForm } from "./site/siteForm";
+import { SiteMaterialSegment, SiteTodaySegment } from "./site/SiteSegments";
 import { useSitePoints } from "@/lib/study/pointsStore";
 import { pointsProgress } from "@/lib/study/points";
 import { useSiteCardActions } from "./useSiteCardActions";
 import { cn } from "@/lib/utils";
-import { SiteOrderPanel } from "./SiteOrderPanel";
-import { SiteStagesPanel } from "./SiteStagesPanel";
-import { SiteShortagesPanel } from "./SiteShortagesPanel";
-import { SiteFaultsPanel } from "./SiteFaultsPanel";
-import { SiteMaterialPanel } from "./SiteMaterialPanel";
-import { SiteTimePanel } from "./SiteTimePanel";
 import { SiteBillingPanel } from "./SiteBillingPanel";
 import { SiteJobPanel } from "./SiteJobPanel";
 import { removeJob, setJobMeta, useJob } from "@/lib/study/jobsStore";
@@ -57,19 +52,13 @@ import { DayHoursDialog } from "./DayHoursDialog";
 import { RecipientsForm } from "./RecipientsForm";
 import { buildHandover, type Handover } from "@/lib/study/handover";
 import { canViewTransition, withViewTransition } from "@/lib/viewTransition";
-import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref, hasContactPicker, pickContact } from "@/lib/study/contact";
+import { mapsHref, prettyPhone, smsHref, telHref } from "@/lib/study/contact";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { cardClass } from "@/components/ui/card";
 import { useTrackUse } from "@/lib/study/usage";
 import { measureSpan } from "@/lib/study/perf";
 
 
-const EMPTY_FORM = { name: "", address: "", investor: "", phone: "", manager: "", managerPhone: "", supplierPhone: "", access: "" };
-type SiteForm = typeof EMPTY_FORM;
-const formOf = (s: Partial<SiteForm>): SiteForm => ({ ...EMPTY_FORM, ...Object.fromEntries(Object.entries(s).filter(([k, v]) => k in EMPTY_FORM && typeof v === "string")) });
-
-const fieldClass =
-  "w-full rounded-field border border-border bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm";
 
 /**
  * Karta budowy: na górze to, co na budowie się zmienia — „+ Wpis tutaj”, liczniki i panele etapów,
@@ -371,16 +360,12 @@ export function SiteCardDialog({
               </div>
               <TabsContent value="dzis" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
                 <Activity mode={section === "dzis" ? "visible" : "hidden"}>
-                <SiteStagesPanel site={site} journal={study.journal} />
-                <SiteFaultsPanel site={site} journal={study.journal} />
-                {hours && <SiteTimePanel site={site} today={hours.today} monthLabel={new Date(`${hours.today}T12:00`).toLocaleDateString("pl-PL", { month: "long", year: "numeric" })} monthDays={hours.monthDays} />}
+                <SiteTodaySegment site={site} journal={study.journal} hours={hours} />
                 </Activity>
               </TabsContent>
               <TabsContent value="material" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
                 <Activity mode={section === "material" ? "visible" : "hidden"}>
-                <SiteShortagesPanel site={site} />
-                <SiteMaterialPanel site={site} journal={study.journal} />
-                <SiteOrderPanel site={site} />
+                <SiteMaterialSegment site={site} journal={study.journal} />
                 </Activity>
               </TabsContent>
               <TabsContent value="punkty" forceMount className="mt-0 data-[state=inactive]:hidden space-y-3 px-5 pt-3 pb-3">
@@ -398,157 +383,7 @@ export function SiteCardDialog({
               )}
               <TabsContent value="papiery" forceMount className="mt-0 data-[state=inactive]:hidden pb-3 pt-3">
                 <Activity mode={section === "papiery" ? "visible" : "hidden"}>
-              <div className={`${cardClass} mx-5 mt-3`} data-testid="site-data">
-                <button
-                  type="button"
-                  onClick={() => setEditing((v) => !v)}
-                  aria-expanded={editing}
-                  aria-controls="site-card-form"
-                  className="pressable flex w-full items-center gap-2 rounded-card px-3 py-2.5 text-left coarse:min-h-11"
-                >
-                  <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">Edytuj dane</span>
-                  <span className={cn("min-w-0 flex-1 truncate text-sm", !summary && "text-muted-foreground")}>
-                    {editing ? "" : summary || "bez adresu i kontaktów"}
-                  </span>
-                  {dirty && !editing && <span className="shrink-0 text-xs text-warning-ink">niezapisane</span>}
-                  <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", editing && "rotate-180")} aria-hidden />
-                </button>
-                {editing && (
-              <form
-                id="site-card-form"
-                className="space-y-3 border-t border-border px-3 py-3"
-                onSubmit={(e) => { e.preventDefault(); save(); }}
-              >
-                <label className="block space-y-1 text-xs text-muted-foreground">
-                  Nazwa
-                  <input
-                    value={form.name}
-                    onChange={setField("name")}
-                    maxLength={SITE_NAME_MAX}
-                    aria-invalid={!!error}
-                    aria-describedby={error ? "site-card-error" : undefined}
-                    className={fieldClass}
-                  />
-                </label>
-                {error && <p id="site-card-error" className="text-xs text-destructive-ink" role="alert">{error}</p>}
-                <label className="block space-y-1 text-xs text-muted-foreground">
-                  Adres
-                  <input
-                    value={form.address}
-                    onChange={setField("address")}
-                    maxLength={SITE_FIELD_MAX}
-                    placeholder="ul. Lipowa 5, Kraków"
-                    autoComplete="off"
-                    className={fieldClass}
-                  />
-                </label>
-                <label className="block space-y-1 text-xs text-muted-foreground">
-                  Inwestor
-                  <input
-                    value={form.investor}
-                    list="site-card-client-list"
-                    onChange={setField("investor")}
-                    // Telefon i adres klienta wchodzą dopiero po wyjściu z pola: przy pisaniu „Jan” nie wolno ich brać od krótszego „Jan”.
-                    onBlur={() => { const known = findClientByName(getClients(), form.investor); if (known) setForm((f) => ({ ...f, ...fillFromClient(known, f) })); }}
-                    maxLength={SITE_FIELD_MAX}
-                    placeholder="np. Jan Kowalski"
-                    autoComplete="off"
-                    className={fieldClass}
-                  />
-                </label>
-                <ClientDatalist id="site-card-client-list" />
-                <div className="block space-y-1 text-xs text-muted-foreground">
-                  <label>Telefon inwestora</label>
-                  <div className="flex gap-1">
-                    <input
-                      type="tel"
-                      inputMode="tel"
-                      value={form.phone}
-                      onChange={setField("phone")}
-                      maxLength={SITE_PHONE_MAX}
-                      aria-label="Telefon inwestora"
-                      placeholder="600 100 200"
-                      autoComplete="off"
-                      className={cn(fieldClass, "flex-1")}
-                    />
-                    {hasContactPicker() && (
-                      <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, phone: c.tel, investor: f.investor || c.name || "" })); }} title="Z kontaktów" aria-label="Wybierz inwestora z kontaktów" data-testid="pick-contact-investor">
-                        <Contact className="h-4 w-4" aria-hidden />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
-                    Kierownik budowy
-                    <input
-                      value={form.manager}
-                      onChange={setField("manager")}
-                      maxLength={SITE_FIELD_MAX}
-                      placeholder="imię"
-                      autoComplete="off"
-                      className={fieldClass}
-                    />
-                  </label>
-                  <div className="block min-w-0 space-y-1 text-xs text-muted-foreground">
-                    <label>Telefon kierownika</label>
-                    <div className="flex gap-1">
-                      <input
-                        type="tel"
-                        inputMode="tel"
-                        value={form.managerPhone}
-                        onChange={setField("managerPhone")}
-                        maxLength={SITE_PHONE_MAX}
-                        aria-label="Telefon kierownika"
-                      placeholder="600 100 200"
-                        autoComplete="off"
-                        className={cn(fieldClass, "flex-1")}
-                      />
-                      {hasContactPicker() && (
-                        <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, managerPhone: c.tel, manager: f.manager || c.name || "" })); }} title="Z kontaktów" aria-label="Wybierz kierownika z kontaktów" data-testid="pick-contact-manager">
-                          <Contact className="h-4 w-4" aria-hidden />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="block min-w-0 space-y-1 text-xs text-muted-foreground">
-                    <label>Telefon hurtowni (WhatsApp zamówień)</label>
-                    <div className="flex gap-1">
-                      <input
-                        type="tel"
-                        inputMode="tel"
-                        value={form.supplierPhone}
-                        onChange={setField("supplierPhone")}
-                        maxLength={SITE_PHONE_MAX}
-                        aria-label="Telefon hurtowni (WhatsApp zamówień)"
-                      placeholder="np. hurtownia 22 000 00 00"
-                        autoComplete="off"
-                        className={cn(fieldClass, "flex-1")}
-                      />
-                      {hasContactPicker() && (
-                        <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, supplierPhone: c.tel })); }} title="Z kontaktów" aria-label="Wybierz hurtownię z kontaktów" data-testid="pick-contact-supplier">
-                          <Contact className="h-4 w-4" aria-hidden />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <label className="block space-y-1 text-xs text-muted-foreground">
-                  Dostęp do budowy
-                  <textarea
-                    value={form.access}
-                    onChange={setField("access")}
-                    maxLength={SITE_ACCESS_MAX}
-                    rows={2}
-                    placeholder="np. kod do bramy 1234#, klucze u sąsiada spod 7"
-                    className={`${fieldClass} resize-none`}
-                  />
-                </label>
-                <Button type="submit" disabled={!dirty || !!error} className="w-full coarse:h-11">Zapisz kartę</Button>
-              </form>
-                )}
-              </div>
+              <SiteDataForm form={form} setForm={setForm} setField={setField} editing={editing} setEditing={setEditing} summary={summary} dirty={dirty} error={error} save={save} />
 
               {/* Odbiorcy raportu (1.11) — te same dla wszystkich budów, więc formularz jest ten sam co w oknie raportu. */}
               <div className={`${cardClass} mx-5 mt-3`} data-testid="site-recipients">
