@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { extraOf, toStored } from "@/lib/extraFields";
 import { computeInvoice, validateInvoice, VAT_RATES, type Invoice, type InvoiceCorrection, type InvoiceLine, type InvoicePayment, type Party, type VatRate } from "./invoice";
 
 /**
@@ -28,7 +29,14 @@ export interface InvoiceRecord {
   device?: string;
   /** Losowy identyfikator urządzenia (wykrywanie tej samej serii na dwóch telefonach). */
   deviceId?: string;
+  /**
+   * Pola rekordu z nowszej wersji (Z-17.3) — przeżywają kopię. Rekord jest niezmienny, więc stan wysyłki do KSeF
+   * i numer KSeF (Etap 2) **nie mogą** być jego polami: idą do osobnej mapy z kluczem = id faktury (mapa boczna, §1.4).
+   */
+  extra?: Record<string, unknown>;
 }
+
+const RECORD_KNOWN = ["id", "number", "issuedAt", "siteId", "invoice", "xml", "hash", "device", "deviceId"] as const;
 
 const isId = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v.length <= 64;
 const isStr = (v: unknown, max: number): v is string => typeof v === "string" && v.length <= max;
@@ -91,7 +99,8 @@ export function cleanRecord(raw: unknown): InvoiceRecord | null {
     if (!isId(r.siteId) || !isStr(r.xml, XML_MAX_CHARS) || !r.xml || typeof r.hash !== "string" || !/^[0-9a-f]{64}$/.test(r.hash)) return null;
     const invoice = cleanInvoice(r.invoice, r.number);
     if (!invoice) return null;
-    return { id: r.id, number: r.number, issuedAt: r.issuedAt, siteId: r.siteId, invoice, xml: r.xml, hash: r.hash, ...(typeof r.device === "string" ? { device: r.device.slice(0, 6) } : {}), ...(typeof r.deviceId === "string" ? { deviceId: r.deviceId.slice(0, 32) } : {}) };
+    const extra = extraOf(r, RECORD_KNOWN);
+    return { id: r.id, number: r.number, issuedAt: r.issuedAt, siteId: r.siteId, invoice, xml: r.xml, hash: r.hash, ...(typeof r.device === "string" ? { device: r.device.slice(0, 6) } : {}), ...(typeof r.deviceId === "string" ? { deviceId: r.deviceId.slice(0, 32) } : {}), ...(extra ? { extra } : {}) };
   } catch {
     return null;
   }
@@ -171,11 +180,11 @@ export function createYInvoices(doc: Y.Doc) {
   function add(record: InvoiceRecord): boolean {
     const clean = cleanRecord(record);
     if (!clean || validateInvoice(clean.invoice).length > 0 || numbers().includes(clean.number) || map.has(clean.id) || map.size >= INVOICES_MAX) return false;
-    doc.transact(() => map.set(clean.id, clean), INVOICES_ORIGIN);
+    doc.transact(() => map.set(clean.id, toStored(clean)), INVOICES_ORIGIN);
     return true;
   }
 
-  const dump = (): InvoicesDump => ({ invoices: all() });
+  const dump = (): InvoicesDump => ({ invoices: all().map((r) => toStored(r) as InvoiceRecord) });
 
   /** Scala kopię: tylko faktury, których tu nie ma; istniejące nigdy nie są nadpisywane. */
   function mergeDump(raw: unknown): void {
@@ -184,7 +193,7 @@ export function createYInvoices(doc: Y.Doc) {
     doc.transact(() => {
       for (const v of list.slice(0, INVOICES_MAX)) {
         const rec = cleanRecord(v);
-        if (rec && !map.has(rec.id) && map.size < INVOICES_MAX) map.set(rec.id, rec);
+        if (rec && !map.has(rec.id) && map.size < INVOICES_MAX) map.set(rec.id, toStored(rec));
       }
     }, INVOICES_ORIGIN);
   }

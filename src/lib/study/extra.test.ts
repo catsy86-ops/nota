@@ -61,3 +61,23 @@ describe("nieznane pola — wpłaty", () => {
     expect(other.getMap("studyBilling").get(`p${SEP}s1${SEP}p1`)).toMatchObject({ method: "przelew" });
   });
 });
+
+describe("nieznane pola — faktury (pozycja 5)", () => {
+  it("rekord z polem z nowszej wersji przechodzi przez kopię bez zmian XML-a", async () => {
+    const { createYInvoices } = await import("@/lib/ksef/yInvoices");
+    const doc = new Y.Doc();
+    const y = createYInvoices(doc);
+    const party = { name: "A", nip: "1", address1: "x" };
+    const rec = {
+      id: "f1", number: "FV/1", issuedAt: 1, siteId: "s1", xml: "<x/>", hash: "0".repeat(64), archived: true,
+      invoice: { number: "FV/1", issueDate: "2026-11-01", saleDate: "2026-11-01", priceMode: "net", seller: party, buyer: party, lines: [] },
+    };
+    doc.getMap<unknown>("studyInvoices").set("f1", rec);
+    expect(y.get("f1")?.extra).toEqual({ archived: true });
+    const dump = JSON.parse(JSON.stringify(y.dump()));
+    expect(dump.invoices[0]).toMatchObject({ archived: true, xml: "<x/>" });
+    const other = new Y.Doc();
+    createYInvoices(other).mergeDump(dump);
+    expect(other.getMap("studyInvoices").get("f1")).toMatchObject({ archived: true });
+  });
+});

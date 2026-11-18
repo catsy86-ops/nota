@@ -2190,6 +2190,24 @@ Dział opisany w jednym miejscu. Kalendarz pokazuje terminy przypomnień (`remin
 - **Commit:** w commicie z tym wpisem, 2026-11-17.
 
 
+## Dane — zgodność w przód: nieznane pola wpisów (Z-17.3, 2026-11-18)
+
+- **Co robi:** wpis zapisany przez nowszą wersję aplikacji z polem, którego ta wersja nie zna, nie traci tego pola przy edycji, „Cofnij”, kopii zapasowej ani scalaniu kopii. Wpis oznaczony wyższą minimalną wersją czytelnika jest dla tej wersji niewidoczny, zamiast pokazywać złe liczby.
+- **Gdzie jest:** `src/lib/extraFields.ts` — `pickExtra`, `extraOf`, `toStored`, `tooNew`, `keepV`. Używają go:
+  - Długi: `cleanDebt` (`DEBT_ENTRY_V`), `yDebts.ts` (`put`);
+  - Odżywki: `cleanSupplement` (`SUPPLEMENT_ENTRY_V`), `ySupplements.ts`, `updateSupplement` (przenosi `extra` i `v` z poprzedniego wpisu);
+  - Trening: `cleanSet`, `cleanEntry` (`TRAINING_ENTRY_V`), `storedEntry` w `training/model.ts`;
+  - Praca: `cleanJobMeta` (`JOB_ENTRY_V`), `cleanQuoteItem`, `yJobs.ts` (`setMeta` przenosi `extra` i `v`), `cleanPayment` i `yBilling.ts`;
+  - Faktury: `cleanRecord` w `ksef/yInvoices.ts`.
+- **Jak działa:** `clean*` odkłada nieznane klucze w polu `extra` wpisu w pamięci. Jest to zwykłe pole, więc przeżywa `{ ...entry }`, `structuredClone` i JSON, a istniejące „Cofnij” niesie je bez zmian. Każdy zapis do mapy i każdy zrzut do kopii idzie przez `toStored`: nieznane pola wracają na wierzch, znane je nadpisują, a klucza `extra` nie ma. Limity `pickExtra` chronią przed rozdmuchaniem dokumentu przez peera: 8 kluczy `[a-z][A-Za-z0-9]{0,23}`, wartości proste (tekst do 200 znaków) albo płaskie tablice do 16, razem do 512 B. `v` (1–1000) większe niż stała modułu — `clean*` zwraca `null`, a wpis zostaje w mapie. `SCHEMA_VERSION` = 3 służy tylko ostrzeżeniu `olderDevices`.
+- **Ograniczenia i pułapki:**
+  - Wersje sprzed tej zmiany nadal gubią nieznane pola. Dlatego nowe dane wiążące wpisy (grupa, plan rat, dowód, stan wysyłki KSeF) idą do osobnych map (`docs/plan-zgodnosc-i-obieg.md` §1.4), a nie do pól wpisu.
+  - Faktura jest niezmienna: numer KSeF i stan wysyłki (Etap 2) muszą być w mapie bocznej z kluczem = id faktury.
+  - Wycena jako dokument (`q␁budowa␁pole`) ma klucz na pole, więc edycja nie rusza nieznanych pól. Zrzut do kopii ich jednak nie niesie.
+  - Pozostałe `clean*` (klienci, posiłki, premie, zestawy, bus, budowy, dziennik) — bez zmian, przy okazji.
+- **Testy:** `src/lib/debts/yDebts.extra.test.ts`, `src/lib/supplements/extra.test.ts`, `src/lib/training/extra.test.ts`, `src/lib/study/extra.test.ts` (zlecenia, pozycje, wpłaty, faktury).
+- **Commit:** `ec8be170` i kolejne (2026-11-18).
+
 ## Kopia zapasowa — przywracanie z kopii dziennej (Z-16.1B, 2026-11-18)
 
 - **Co robi:** przy każdej kopii dziennej w Ustawieniach → Kopia i dane jest „Przywróć…”. Okno pokazuje notatki z kopii w trzech grupach: usunięte od tamtej pory, zmienione i bez zmian. Wybrane notatki wracają jako **nowe** notatki w folderze „Przywrócone DD.MM”, a obecne zostają bez zmian (ścieżka domyślna). Niżej jest „Przywróć cały dokument…” (ścieżka awaryjna): cały dokument — notatki, foldery, Grafik, Praca, Nauka — wraca do stanu z kopii. W Ustawieniach synchronizacji jest „Zastąp dane na tym urządzeniu danymi grupy”: pusty dokument, a potem dołączenie kodem. Gdy baza zniknęła (np. „Wyczyść dane witryny” bez OPFS-u albo awaria), baner „dane zniknęły” prowadzi do kopii.
