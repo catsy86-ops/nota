@@ -2190,6 +2190,32 @@ Dział opisany w jednym miejscu. Kalendarz pokazuje terminy przypomnień (`remin
 - **Commit:** w commicie z tym wpisem, 2026-11-17.
 
 
+## Ćwiczenia — odhaczenie odżywki i „Gotowe” na przypomnieniu (C1.4, Z-17.7, 2026-11-18)
+
+- **Co robi:** „Wziąłem” na liście odżywek przesuwa dzisiejsze przypomnienie odżywki na jutro. „Gotowe” na przypomnieniu (kafel terminu, powiadomienie systemowe, alarm natywny) odhacza odżywkę w dniu wystąpienia. „Gotowe” z powiadomienia o zwrocie długu pyta teraz o spłatę tak samo jak kafel (R-19). „Cofnij” cofa oba skutki.
+- **Gdzie jest:** `src/lib/supplements/takeFlow.ts` — `setTaken`, `takenFromReminder`, typ `TakeDeps`; `supplementTakeDeps` w `src/lib/supplements/store.ts`; `src/lib/reminderDoneHooks.ts` — `afterReminderDone`, `isDebtNote` (przeniesione z `ReminderQuickActions.tsx`). Podpięcie: `ReminderQuickActions.tsx` („Gotowe”), `useReminderNotifications.ts` (`applyActionRef`; alarm natywny idzie tą samą drogą przez `nativeSink.ts`), `CwiczeniaView.tsx` (`takeSupplement`).
+- **Jak działa:** prawda to klucz `dzień|id` w `supplementLog`, a termin w notatce jest skutkiem.
+  - `setTaken(on)` w jednej transakcji `yjsStore.doc` zapisuje klucz (gdy go nie ma). Dla dzisiejszego dnia — gdy notatka-przypomnienie istnieje, nie jest w koszu, ma dzienną serię i bieżące wystąpienie najpóźniej dziś — zapisuje też łatkę `doneReminderUpdate`. `updateNote` z `useNotes` jest synchroniczny, więc mieści się w tej samej transakcji.
+  - `setTaken(off)` zdejmuje tylko klucz.
+  - `takenFromReminder` odhacza dzień wystąpienia, ale tylko dziś albo wczoraj (powiadomienie z 23:58 stuknięte po północy), i nie rusza notatki.
+  - Każdy krok ma warunek, który po wykonaniu jest fałszywy, więc drugie wywołanie — z tego albo z drugiego telefonu — nic nie zmienia. Żadna funkcja nie woła drugiej, więc pętli nie ma.
+  - `undo` cofa tylko to, co wywołanie faktycznie zmieniło.
+  - `afterReminderDone` rozdziela po etykiecie (`długi` → `offerSettleFromNote`, `ćwiczenia` → `takenFromReminder`) i ładuje dział leniwie, więc paczka startowa nie rośnie.
+- **Ograniczenia i pułapki:**
+  - Notatka prywatna: pola terminu są jawne, więc łatka działa bez skarbca.
+  - Gdy notatki nie ma, odhaczenie jest zapisane, ale skutek pominięty.
+  - Starszego wystąpienia niż wczoraj „Gotowe” nie odhacza.
+  - Pytanie o ratę przy planie spłat (L2.1) dojdzie z Z-17.4.
+- **Testy:** `src/lib/supplements/takeFlow.test.ts` sprawdza:
+  - jedną transakcję i idempotencję;
+  - dwa dokumenty naraz — jeden klucz i ten sam termin;
+  - brak notatki, kosz, regułę inną niż dzienna, notatkę prywatną;
+  - wczorajsze wystąpienie po północy;
+  - „Cofnij” tylko własnych zmian.
+
+  Do tego `src/components/cwiczenia/CwiczeniaView.test.tsx` i `e2e/cwiczenia-tydzien.spec.ts`.
+- **Commit:** zob. historię z 2026-11-18 („Z-17.7”).
+
 ## Dane — zgodność w przód: nieznane pola wpisów (Z-17.3, 2026-11-18)
 
 - **Co robi:** wpis zapisany przez nowszą wersję aplikacji z polem, którego ta wersja nie zna, nie traci tego pola przy edycji, „Cofnij”, kopii zapasowej ani scalaniu kopii. Wpis oznaczony wyższą minimalną wersją czytelnika jest dla tej wersji niewidoczny, zamiast pokazywać złe liczby.

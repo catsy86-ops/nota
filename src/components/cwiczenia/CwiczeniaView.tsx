@@ -11,10 +11,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { nextReminderAt } from "@/lib/timeOfDay";
-import { doneReminderUpdate } from "@/lib/reminderActions";
-import { endOfDay } from "@/lib/reminderRepeat";
+import { setTaken } from "@/lib/supplements/takeFlow";
 import { logKey, weekAdherence, SUPPLEMENT_DOSE_MAX, SUPPLEMENT_NAME_MAX, SUPPLEMENT_WHEN, SUPPLEMENT_WHEN_LABEL, type Supplement, type SupplementWhen } from "@/lib/supplements/model";
-import { addSupplement, removeSupplement, restoreSupplement, setSupplementTaken, updateSupplement, useSupplements, useSupplementsTaken } from "@/lib/supplements/store";
+import { addSupplement, removeSupplement, restoreSupplement, supplementTakeDeps, updateSupplement, useSupplements, useSupplementsTaken } from "@/lib/supplements/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useMeals, useDietGoals } from "@/lib/diet/store";
@@ -53,15 +52,11 @@ function createSupplement(notes: NotesActions, input: { name: string; dose: stri
 }
 
 /**
- * 2.3: „Wziąłem” na dziś zamyka dzisiejsze wystąpienie przypomnienia odżywki — notatka przechodzi do następnego dnia
- * (jak „Gotowe” w Terminach), więc przypomnienie nie dzwoni po wzięciu. Nic nie robi, gdy termin jest już na jutro.
+ * 2.3 / C1.4: „Wziąłem” na dziś zamyka dzisiejsze wystąpienie przypomnienia odżywki — notatka przechodzi do następnego
+ * dnia (jak „Gotowe” w Terminach), w tej samej transakcji co odhaczenie (`takeFlow.setTaken`).
  */
 function takeSupplement(notes: NotesActions, s: Supplement, on: boolean, day: string) {
-  setSupplementTaken(s.id, on, day);
-  if (!on || day !== localDayKey() || !s.reminderNoteId) return;
-  const note = notes.notes?.find((n) => n.id === s.reminderNoteId);
-  if (!note || note.reminder === null || note.reminder === undefined || note.reminder > endOfDay(new Date())) return;
-  notes.updateNote(note.id, doneReminderUpdate(note, Date.now()).patch);
+  setTaken(supplementTakeDeps({ getNote: (id) => notes.notes?.find((n) => n.id === id), updateNote: notes.updateNote }), s, day, on);
 }
 
 const reminderTitle = (name: string, dose: string) => (dose.trim() ? `${name.trim()} — ${dose.trim()}` : name.trim());

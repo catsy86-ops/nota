@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { localDayKey } from "@/lib/dayDone";
-import { cleanSupplement, SUPPLEMENT_DOSE_MAX, SUPPLEMENT_NAME_MAX, SUPPLEMENT_WHEN, type Supplement, type SupplementWhen } from "./model";
+import type { TakeDeps } from "./takeFlow";
+import { cleanSupplement, logKey, SUPPLEMENT_DOSE_MAX, SUPPLEMENT_NAME_MAX, SUPPLEMENT_WHEN, type Supplement, type SupplementWhen } from "./model";
 import { createYSupplements } from "./ySupplements";
 
 /**
@@ -85,6 +86,22 @@ export function removeSupplement(id: string): Supplement | null {
 
 export function restoreSupplement(s: Supplement): void {
   ySupplements.restore(s);
+}
+
+/**
+ * Zależności `takeFlow` na dokumencie aplikacji (C1.4). Notatki z parametru — w widoku `updateNote` z `useNotes`
+ * (kotwica godziny serii), poza widokiem `yjsStore.patchNote`. Oba są synchroniczne, więc mieszczą się w jednej transakcji.
+ */
+export function supplementTakeDeps(notes?: Pick<TakeDeps, "getNote" | "updateNote">): TakeDeps {
+  return {
+    getNote: notes?.getNote ?? ((id) => yjsStore.projectNotes().find((n) => n.id === id)),
+    updateNote: notes?.updateNote ?? ((id, patch) => { yjsStore.patchNote(id, patch); }),
+    transact: (fn) => yjsStore.doc.transact(fn),
+    now: Date.now,
+    supplements: () => ySupplements.get(),
+    isTaken: (day, id) => ySupplements.getTaken().has(logKey(day, id)),
+    markTaken: (day, id, on) => ySupplements.setTaken(day, id, on),
+  };
 }
 
 /** Odhacza odżywkę w danym dniu (domyślnie dziś). */

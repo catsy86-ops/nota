@@ -28,6 +28,11 @@ vi.mock("@/lib/supplements/store", () => ({
   updateSupplement: (id: unknown, edit: unknown) => updateSupplementMock(id, edit),
   restoreSupplement: vi.fn(),
   setSupplementTaken: (...args: unknown[]) => setTaken(...args),
+  // C1.4: widok odhacza przez `takeFlow` — zapis klucza trafia do tej samej atrapy co wcześniej.
+  supplementTakeDeps: (notes: { getNote: (id: string) => unknown; updateNote: (id: string, p: unknown) => void }) => ({
+    ...notes, transact: (fn: () => void) => fn(), now: Date.now, supplements: () => fixture.list,
+    isTaken: () => false, markTaken: (day: string, id: string, on: boolean) => setTaken(id, on, day),
+  }),
 }));
 
 import { CwiczeniaView } from "./CwiczeniaView";

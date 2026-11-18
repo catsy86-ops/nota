@@ -29,7 +29,6 @@ function focusAfterRemoval(el: HTMLElement): () => void {
  * Notatka terminu zwrotu z Długów (etykieta `DEBT_NOTE_LABEL` z `lib/debts/model.ts`; starsze notatki bez
  * etykiety po tytule). Stała wpisana tu, żeby nie ciągnąć modelu Długów do paczki startowej.
  */
-const isDebtNote = (note: Note) => note.labels.includes("długi") || /^(Zwrot od|Oddać) /.test(note.title);
 
 interface ReminderQuickActionsProps {
   note: Note;
@@ -63,9 +62,10 @@ export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuic
             const { patch, message } = doneReminderUpdate(note, Date.now());
             onUpdate(id, patch);
             setDone(false);
-            toastWithUndo(message, () => onUpdate(id, prev), { id: `rem-done-${id}` });
-            // Długi 2.3: zwrot odhaczony w Terminach — zapytaj, czy zapisać spłatę.
-            if (isDebtNote(note)) void import("@/lib/debts/settleFromNote").then((m) => m.offerSettleFromNote(id), () => {});
+            let undoAfter: (() => void) | void;
+            toastWithUndo(message, () => { onUpdate(id, prev); undoAfter?.(); }, { id: `rem-done-${id}` });
+            // Skutki w działach (spłata długu, odhaczenie odżywki) — wspólny punkt z powiadomieniem (C1.4).
+            void import("@/lib/reminderDoneHooks").then((m) => m.afterReminderDone(note, note.reminderBase ?? note.reminder ?? Date.now(), "tile")).then((u) => { undoAfter = u; }, () => {});
             focus();
           });
         }}

@@ -76,7 +76,10 @@ export function useReminderNotifications(
       toastWithUndo("Odłożono o 10 minut", restore, { id: `reminder-snooze-${note.id}` });
     } else if (action === "done") {
       markDone(note, Date.now(), firedCbRef.current);
-      toastWithUndo("Przypomnienie odhaczone", restore, { id: `reminder-done-${note.id}` });
+      let undoAfter: (() => void) | void;
+      toastWithUndo("Przypomnienie odhaczone", () => { restore(); undoAfter?.(); }, { id: `reminder-done-${note.id}` });
+      // Te same skutki co „Gotowe” na kaflu: spłata długu (R-19), odhaczenie odżywki (C1.4).
+      void import("@/lib/reminderDoneHooks").then((m) => m.afterReminderDone(note, note.reminderBase ?? note.reminder ?? Date.now(), "notification")).then((u) => { undoAfter = u; }, () => {});
     }
   });
   useEffect(() => {
