@@ -1,10 +1,13 @@
 /** Masa ciała (C-2): jedno ważenie dziennie, w kilogramach. */
+import { extraOf } from "@/lib/extraFields";
 export interface WeightEntry {
   /** Dzień `YYYY-MM-DD`; jedno ważenie na dzień (klucz wpisu). */
   day: string;
   kg: number;
   /** Moment zapisu (ms) — przy scalaniu kopii wygrywa nowszy zapis dnia. */
   created: number;
+  /** Pola nowszej wersji (D1.1) — do zapisu, nie do interfejsu. */
+  extra?: Record<string, unknown>;
 }
 
 export const WEIGHT_MIN_KG = 20;
@@ -21,6 +24,8 @@ export function parseKg(text: string): number | null {
   return Math.round(n * 10) / 10;
 }
 
+export const WEIGHT_KNOWN = ["day", "kg", "created"] as const;
+
 /** Wpis z dokumentu albo kopii → poprawny `WeightEntry` lub `null`. */
 export function cleanWeight(raw: unknown): WeightEntry | null {
   if (!raw || typeof raw !== "object") return null;
@@ -28,7 +33,8 @@ export function cleanWeight(raw: unknown): WeightEntry | null {
   if (typeof r.day !== "string" || !DAY_RE.test(r.day)) return null;
   if (typeof r.kg !== "number" || !Number.isFinite(r.kg) || r.kg < WEIGHT_MIN_KG || r.kg > WEIGHT_MAX_KG) return null;
   if (typeof r.created !== "number" || !Number.isFinite(r.created)) return null;
-  return { day: r.day, kg: Math.round(r.kg * 10) / 10, created: r.created };
+  const extra = extraOf(r, WEIGHT_KNOWN);
+  return { day: r.day, kg: Math.round(r.kg * 10) / 10, created: r.created, ...(extra ? { extra } : {}) };
 }
 
 /**

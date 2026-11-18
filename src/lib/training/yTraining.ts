@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { toStored } from "@/lib/extraFields";
 import { CUSTOM_MAX, cleanCustomExercise, customExercises, setCustomExercises, type Exercise } from "./catalog";
 import { byTrainingTime, cleanEntry, cleanEquipment, cleanPlanDay, cleanTrainingReminder, PLAN_MAX_DAYS, storedEntry, TRAINING_MAX_ENTRIES, type PlanDay, type TrainingEntry, type TrainingEquipment, type TrainingReminder } from "./model";
 
@@ -63,7 +64,7 @@ export function createYTraining(doc: Y.Doc) {
   function addCustom(e: Exercise): boolean {
     const clean = cleanCustomExercise(e);
     if (!clean || customMap.size >= CUSTOM_MAX || customMap.has(clean.id)) return false;
-    doc.transact(() => customMap.set(clean.id, clean), TRAINING_ORIGIN);
+    doc.transact(() => customMap.set(clean.id, toStored(clean)), TRAINING_ORIGIN);
     return true;
   }
 
@@ -145,7 +146,7 @@ export function createYTraining(doc: Y.Doc) {
 
   function addPlan(p: PlanDay): boolean {
     if (plans.size >= PLAN_MAX_DAYS || plans.has(p.id)) return false;
-    doc.transact(() => plans.set(p.id, p), TRAINING_ORIGIN);
+    doc.transact(() => plans.set(p.id, toStored(p) as PlanDay), TRAINING_ORIGIN);
     return true;
   }
 
@@ -157,11 +158,11 @@ export function createYTraining(doc: Y.Doc) {
   }
 
   function restorePlan(p: PlanDay): void {
-    doc.transact(() => plans.set(p.id, p), TRAINING_ORIGIN);
+    doc.transact(() => plans.set(p.id, toStored(p) as PlanDay), TRAINING_ORIGIN);
   }
 
   function dump(): TrainingDump {
-    return { entries: getEntries().map(storedEntry), plans: getPlans(), reminder: getReminder(), equipment: getEquipment() };
+    return { entries: getEntries().map(storedEntry), plans: getPlans().map((p) => toStored(p) as PlanDay), reminder: getReminder(), equipment: getEquipment() };
   }
 
   /**
@@ -179,7 +180,7 @@ export function createYTraining(doc: Y.Doc) {
     const localReminder = getReminder();
     doc.transact(() => {
       for (const e of inEntries) if (!log.has(e.id) && log.size < TRAINING_MAX_ENTRIES) log.set(e.id, storedEntry(e));
-      for (const p of inPlans) if (!plans.has(p.id) && plans.size < PLAN_MAX_DAYS) plans.set(p.id, p);
+      for (const p of inPlans) if (!plans.has(p.id) && plans.size < PLAN_MAX_DAYS) plans.set(p.id, toStored(p) as PlanDay);
       if (localReminder && !alive(localReminder)) meta.delete("reminder");
       if (inReminder && alive(inReminder) && !alive(getReminder())) meta.set("reminder", inReminder);
       if (inEquipment.dumbbellMaxKg !== undefined && getEquipment().dumbbellMaxKg === undefined) meta.set("equipment", inEquipment);

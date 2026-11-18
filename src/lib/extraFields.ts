@@ -53,6 +53,17 @@ export function extraOf(raw: object, known: readonly string[]): Record<string, u
   return pickExtra({ ...fromRaw, ...fromMem }, known);
 }
 
+/**
+ * Zapis w miejsce wpisu, który już jest w dokumencie (D1.1): nieznane pola z bieżącej wartości przechodzą do nowej,
+ * nawet gdy nowa powstała z formularza bez nich. Pola nowego wpisu wygrywają; reszta przez limity `pickExtra`.
+ */
+export function mergeStored<T extends { extra?: Record<string, unknown> }>(next: T, current: unknown, known: readonly string[]): Omit<T, "extra"> {
+  const prev = current && typeof current === "object" ? extraOf(current, known) : undefined;
+  const extra = prev || next.extra ? pickExtra({ ...prev, ...next.extra }, known) : undefined;
+  const { extra: _drop, ...rest } = next;
+  return toStored({ ...rest, ...(extra ? { extra } : {}) } as T);
+}
+
 /** Kształt do zapisu w Yjs i w kopii: nieznane pola na wierzchu, znane je nadpisują; klucza `extra` nie ma. */
 export function toStored<T extends { extra?: Record<string, unknown> }>(entry: T): Omit<T, "extra"> {
   const { extra, ...rest } = entry;

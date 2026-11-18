@@ -1,3 +1,4 @@
+import { extraOf } from "@/lib/extraFields";
 /**
  * Katalog ćwiczeń startowych (1.1): klatka, biceps, triceps z ławeczką i hantlami, a od 1.1 także plecy, barki, nogi,
  * pośladki, brzuch, przedramiona i całe ciało. Wskazówki nowych ćwiczeń to SZKIC do akceptacji właściciela (C-4)
@@ -17,6 +18,8 @@ export interface Exercise {
   hint: string;
   /** Serie liczone w sekundach, nie w powtórzeniach (deska) — domyślny tryb pola serii (2.7). */
   timed?: boolean;
+  /** Pola nowszej wersji (D1.1, tylko własne ćwiczenia) — do zapisu, nie do interfejsu. */
+  extra?: Record<string, unknown>;
 }
 
 export const MUSCLE_GROUPS: MuscleGroup[] = ["klatka", "biceps", "triceps", "plecy", "barki", "nogi", "posladki", "brzuch", "przedramiona", "cale-cialo"];
@@ -97,6 +100,8 @@ export function allExercises(): Exercise[] {
   return [...EXERCISES, ...custom];
 }
 
+const CUSTOM_KNOWN = ["id", "name", "group", "equipment", "hint", "timed"] as const;
+
 /** Dowolne wejście (kopia, inne urządzenie) → poprawne własne ćwiczenie albo `null`. */
 export function cleanCustomExercise(raw: unknown): Exercise | null {
   const e = raw as Partial<Exercise> | null;
@@ -107,7 +112,8 @@ export function cleanCustomExercise(raw: unknown): Exercise | null {
   if (!MUSCLE_GROUPS.includes(e.group as MuscleGroup)) return null;
   const equipment = Array.isArray(e.equipment) ? e.equipment.filter((x): x is Equipment => EQUIPMENT_LIST.includes(x as Equipment)) : [];
   const hint = typeof e.hint === "string" ? e.hint.trim().slice(0, CUSTOM_HINT_MAX) : "";
-  return { id: e.id, name, group: e.group as MuscleGroup, equipment: [...new Set(equipment)], hint };
+  const extra = extraOf(e, CUSTOM_KNOWN);
+  return { id: e.id, name, group: e.group as MuscleGroup, equipment: [...new Set(equipment)], hint, ...(extra ? { extra } : {}) };
 }
 
 export function exerciseById(id: string): Exercise | undefined {

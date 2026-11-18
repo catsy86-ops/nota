@@ -49,6 +49,8 @@ export interface TrainingEntry {
 export const TRAINING_ENTRY_V = 1;
 const SET_KNOWN = ["reps", "seconds", "kg"] as const;
 const ENTRY_KNOWN = ["id", "day", "time", "exerciseId", "sets", "note", "created"] as const;
+export const PLAN_KNOWN = ["id", "name", "exerciseIds", "targetSets", "targetReps", "created"] as const;
+const withExtra = (raw: object, known: readonly string[]) => { const extra = extraOf(raw, known); return extra ? { extra } : {}; };
 
 /** Kształt wpisu do zapisu w Yjs i w kopii: nieznane pola wpisu i serii na wierzchu. */
 export function storedEntry(e: TrainingEntry): TrainingEntry {
@@ -64,6 +66,8 @@ export interface PlanDay {
   targetSets: number;
   targetReps: number;
   created: number;
+  /** Pola nowszej wersji (D1.1) — tylko do zapisu, nie do interfejsu. */
+  extra?: Record<string, unknown>;
 }
 
 /** Przypomnienie o treningu: godzina „HH:MM” (domyślnie 18:00, okno do 20:00) i id notatki-przypomnienia. */
@@ -184,6 +188,7 @@ export function cleanPlanDay(raw: unknown): PlanDay | null {
     targetSets,
     targetReps,
     created: typeof p.created === "number" && Number.isFinite(p.created) ? p.created : 0,
+    ...withExtra(p, PLAN_KNOWN),
   };
 }
 

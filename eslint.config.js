@@ -132,6 +132,8 @@ export default tseslint.config(
       "src/lib/dataCompat.test.ts",
       // D1.3: wymaganie wersji w dokumencie — scalanie dwóch dokumentów.
       "src/lib/docFormat.test.ts",
+      // D1.1: nieznane pola Ćwiczeń — wpisy wstawiane prosto do map Yjs.
+      "src/lib/exerciseExtra.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.
       "e2e/images.spec.ts",
       "src/hooks/useNotes.ts",

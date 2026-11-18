@@ -1,5 +1,6 @@
 import * as Y from "yjs";
-import { byMealOrder, cleanGoals, cleanMeal, DIET_MAX_MEALS, type DietGoals, type Meal } from "./model";
+import { mergeStored, toStored } from "@/lib/extraFields";
+import { byMealOrder, cleanGoals, cleanMeal, DIET_MAX_MEALS, type DietGoals, type Meal, GOALS_KNOWN } from "./model";
 
 /**
  * Dieta w Y.Doc notatek — ten sam dokument, który niesie synchronizację, plik i kopię.
@@ -51,7 +52,7 @@ export function createYDiet(doc: Y.Doc) {
 
   function add(m: Meal): boolean {
     if (meals.size >= DIET_MAX_MEALS || meals.has(m.id)) return false;
-    doc.transact(() => meals.set(m.id, m), DIET_ORIGIN);
+    doc.transact(() => meals.set(m.id, toStored(m) as Meal), DIET_ORIGIN);
     return true;
   }
 
@@ -65,16 +66,17 @@ export function createYDiet(doc: Y.Doc) {
   /** Cofnięcie usunięcia: posiłek wraca z tym samym id i godziną; `false` gdy lista jest pełna (L6: limit obowiązuje także tu). */
   function restore(m: Meal): boolean {
     if (meals.size >= DIET_MAX_MEALS && !meals.has(m.id)) return false;
-    doc.transact(() => meals.set(m.id, m), DIET_ORIGIN);
+    doc.transact(() => meals.set(m.id, toStored(m) as Meal), DIET_ORIGIN);
     return true;
   }
 
   function setGoals(goals: DietGoals): void {
-    doc.transact(() => meta.set("goals", cleanGoals(goals)), DIET_ORIGIN);
+    // Cele z formularza nadpisują zapis — pola nowszej wersji z bieżących celów przechodzą (D1.1).
+    doc.transact(() => meta.set("goals", mergeStored(cleanGoals(goals), meta.get("goals"), GOALS_KNOWN) as DietGoals), DIET_ORIGIN);
   }
 
   function dump(): DietDump {
-    return { meals: get(), goals: getGoals() };
+    return { meals: get().map((m) => toStored(m) as Meal), goals: toStored(getGoals()) as DietGoals };
   }
 
   /**
@@ -87,8 +89,8 @@ export function createYDiet(doc: Y.Doc) {
     const goals = cleanGoals(d?.goals);
     const hasGoals = goals.kcal !== undefined || goals.protein !== undefined;
     doc.transact(() => {
-      for (const m of incoming) if (!meals.has(m.id) && meals.size < DIET_MAX_MEALS) meals.set(m.id, m);
-      if (hasGoals && Object.keys(getGoals()).length === 0) meta.set("goals", goals);
+      for (const m of incoming) if (!meals.has(m.id) && meals.size < DIET_MAX_MEALS) meals.set(m.id, toStored(m) as Meal);
+      if (hasGoals && Object.keys(getGoals()).length === 0) meta.set("goals", toStored(goals) as DietGoals);
     }, DIET_ORIGIN);
   }
 

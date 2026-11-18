@@ -1022,12 +1022,13 @@ Z-15.6 (część niezależna od F2), 2026-11-18 — commit po tym wpisie.
 
 - Klucz = cecha danych, wartość = najniższa wersja formatu (`SCHEMA_VERSION`), która ją rozumie. Zapis tylko w górę, więc równoległe dopisanie tej samej cechy na dwóch urządzeniach daje ten sam wynik. Wymaganie liczy się na cechę: `docWritable(cecha)` blokuje tylko mapy tej cechy. Wspólnego punktu zapisu nie ma (ponad 40 modułów z własnym `transact`), więc pierwsze wydanie tylko zapisuje, czyta i pokazuje baner — blokadę dostanie każdy magazyn razem z pierwszą cechą, która jej wymaga (planowo `vault-files`). Dziś `KNOWN_FEATURES` jest puste i żadna cecha nie jest zapisywana.
 - Wartości z dokumentu są niezaufane: nazwy `^[a-z][a-z0-9-]{0,31}$`, wartości przez `cleanSchemaClaim`, najwyżej 50 cech. Wymaganie ponad `SCHEMA_VERSION + 1` daje jeden wpis bezpieczeństwa na cechę i wartość — znający kod synchronizacji mógłby inaczej zablokować zapis wszystkim. Po rejestrze urządzeń (D4.1) próg będzie najwyższą wersją z rejestru.
-- D1.2: każda mapa wymieniona w kodzie (`getMap("…")`, stałe z nazwą, nazwy bazowe Grafiku) ma kategorię — zachowuje nieznane pola (7 map z Z-17.3, z testem przy module), zwolniona (mapy pól, bufory, znaczniki) albo „do zrobienia” (37 map). Nowa mapa bez kategorii wywala test, a lista „do zrobienia” może tylko maleć.
+- D1.2: każda mapa wymieniona w kodzie (`getMap("…")`, stałe z nazwą, nazwy bazowe Grafiku) ma kategorię — zachowuje nieznane pola (z testem przy module), zwolniona (mapy pól, wartości proste, wpisy bez edycji, bufory, znaczniki — z uzasadnieniem w teście) albo „do zrobienia”. Nowa mapa bez kategorii wywala test, a lista „do zrobienia” może tylko maleć.
+- D1.1 w Ćwiczeniach (2026-11-18): plan dnia, własne ćwiczenie, waga, posiłek i cele diety zachowują pola nowszej wersji przy „Cofnij”, kopii i nadpisaniu wpisu z formularza (ważenie tego samego dnia, cele). Pomocnik `mergeStored` w `src/lib/extraFields.ts` bierze nieznane pola z bieżącej wartości w dokumencie; limity jak w `pickExtra`. Kopia zapisuje je na wierzchu wpisu, bez klucza `extra`. Klienci są mapą pól (`f␁id␁pole`), więc niczego nie wymagali.
 - D1.4 — granica: wersje wydane przed 2026-11-18 nie znają mapy `docFormat`; zmiany niszczące dla starszych klientów dopiero po D4.
 
 ### Ograniczenia i pułapki
 
-- D1.1 (zachowanie nieznanych pól) zrobione tylko dla 7 map; reszta jest na liście w teście spisu.
+- D1.1 (zachowanie nieznanych pól): 12 map zachowuje, 15 jest zwolnionych z uzasadnieniem, 22 czeka na liście w teście spisu (Grafik, Praca: zestawy, punkty, cennik, auto, powtórki, statystyki, własne pytania, dane szefa; foldery, etykiety, widoki, właściwości, plany, skarbiec).
 - Mapy o nazwach składanych w locie poza Grafikiem test spisu zobaczy dopiero po dopisaniu ich listy (jak `SHIFTS_MAP_BASE_NAMES`).
 - Baner nie mówi, które dane są zagrożone, gdy cecha jest nieznana z nazwy — to zamierzone: nie wiadomo, które mapy obejmuje.
 
@@ -1035,6 +1036,7 @@ Z-15.6 (część niezależna od F2), 2026-11-18 — commit po tym wpisie.
 
 - `src/lib/docFormat.test.ts` — wymaganie tylko w górę i zbieżność dwóch dokumentów, czyszczenie niezaufanych wartości, blokada tylko wybranej cechy, jeden wpis bezpieczeństwa, „Ignoruj i pisz”.
 - `src/lib/docMapsInventory.test.ts` — spis map i zapadka listy „do zrobienia”.
+- `src/lib/exerciseExtra.test.ts` — Ćwiczenia: plan po „Cofnij” i w kopii, ponowne ważenie, posiłek, cele z formularza, `mergeStored`.
 
 ### Commit
 

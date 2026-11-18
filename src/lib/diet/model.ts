@@ -1,3 +1,4 @@
+import { extraOf } from "@/lib/extraFields";
 /**
  * Dieta: dziennik posiłków (opis, godzina, kalorie, białko) i cele dzienne.
  * Czysta logika bez Yjs i bez React. Wejście z dokumentu, kopii i peera przechodzi przez czyszczenie,
@@ -27,11 +28,14 @@ export interface Meal {
   /** Białko w gramach; brak = nieznane. */
   protein?: number;
   created: number;
+  /** Pola nowszej wersji (D1.1) — do zapisu, nie do interfejsu. */
+  extra?: Record<string, unknown>;
 }
 
 export interface DietGoals {
   kcal?: number;
   protein?: number;
+  extra?: Record<string, unknown>;
 }
 
 /** Wartość liczbowa w zakresie `[0, max]`, zaokrąglona; inaczej `undefined`. */
@@ -64,8 +68,13 @@ export function cleanMeal(raw: unknown): Meal | null {
     ...(time ? { time } : {}),
     ...(kcal !== undefined ? { kcal } : {}),
     ...(protein !== undefined ? { protein } : {}),
+    ...withExtra(m, MEAL_KNOWN),
   };
 }
+
+export const MEAL_KNOWN = ["id", "day", "time", "text", "kcal", "protein", "created"] as const;
+export const GOALS_KNOWN = ["kcal", "protein"] as const;
+const withExtra = (raw: object, known: readonly string[]) => { const extra = extraOf(raw, known); return extra ? { extra } : {}; };
 
 /** Cele: tylko poprawne liczby; pusty obiekt = brak celów. */
 export function cleanGoals(raw: unknown): DietGoals {
@@ -73,7 +82,7 @@ export function cleanGoals(raw: unknown): DietGoals {
   if (!g || typeof g !== "object") return {};
   const kcal = cleanAmount(g.kcal, DIET_KCAL_MAX);
   const protein = cleanDecimal(g.protein, DIET_PROTEIN_MAX);
-  return { ...(kcal !== undefined && kcal > 0 ? { kcal } : {}), ...(protein !== undefined && protein > 0 ? { protein } : {}) };
+  return { ...(kcal !== undefined && kcal > 0 ? { kcal } : {}), ...(protein !== undefined && protein > 0 ? { protein } : {}), ...withExtra(g, GOALS_KNOWN) };
 }
 
 /** Kolejność dnia: wg godziny, posiłki bez godziny na końcu, potem wg czasu dodania. */

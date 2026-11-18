@@ -1,5 +1,6 @@
 import * as Y from "yjs";
-import { cleanWeight, WEIGHT_MAX_ENTRIES, type WeightEntry } from "./model";
+import { mergeStored, toStored } from "@/lib/extraFields";
+import { cleanWeight, WEIGHT_MAX_ENTRIES, type WeightEntry, WEIGHT_KNOWN } from "./model";
 
 /**
  * Masa ciała w Y.Doc notatek (C-2) — ten sam dokument co synchronizacja i kopia.
@@ -31,7 +32,8 @@ export function createYWeight(doc: Y.Doc) {
     const clean = cleanWeight(entry);
     if (!clean) return false;
     if (!map.has(clean.day) && map.size >= WEIGHT_MAX_ENTRIES) return false;
-    map.set(clean.day, clean);
+    // Ważenie tego samego dnia nadpisuje wpis — pola nowszej wersji z poprzedniego przechodzą (D1.1).
+    map.set(clean.day, mergeStored(clean, map.get(clean.day), WEIGHT_KNOWN) as WeightEntry);
     return true;
   }
 
@@ -49,7 +51,7 @@ export function createYWeight(doc: Y.Doc) {
       const e = cleanWeight(r);
       if (!e) continue;
       const prev = cleanWeight(map.get(e.day));
-      if (!prev || e.created > prev.created) map.set(e.day, e);
+      if (!prev || e.created > prev.created) map.set(e.day, mergeStored(e, map.get(e.day), WEIGHT_KNOWN) as WeightEntry);
     }
   }
 
@@ -58,5 +60,5 @@ export function createYWeight(doc: Y.Doc) {
     return () => listeners.delete(cb);
   }
 
-  return { get, set, remove, mergeDump, dump: get, subscribe };
+  return { get, set, remove, mergeDump, dump: () => get().map((e) => toStored(e) as WeightEntry), subscribe };
 }
