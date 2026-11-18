@@ -1,5 +1,6 @@
 ﻿import type * as Y from "yjs";
 import { MAIN_SCHEDULE_ID, SHIFTS_MAP_BASE_NAMES, shiftsMapName } from "./yShifts";
+import { mergeStored } from "@/lib/extraFields";
 
 /**
  * Rejestr grafików: nazwy i kolejność. Dane każdego grafiku siedzą we własnych mapach (`yShifts.ts`).
@@ -63,7 +64,8 @@ export function createScheduleRegistry(doc: Y.Doc) {
   function rename(id: string, name: string): boolean {
     const clean = cleanScheduleName(name);
     if (!clean || !has(id)) return false;
-    doc.transact(() => registry.set(id, { id, name: clean }));
+    // D1.1: pola nowszej wersji grafiku zostają przy zmianie nazwy.
+    doc.transact(() => registry.set(id, mergeStored({ id, name: clean }, registry.get(id), ["id", "name"])));
     return true;
   }
 

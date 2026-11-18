@@ -138,6 +138,8 @@ export default tseslint.config(
       "src/lib/study/extraD11.test.ts",
       // L4.3: dowody długów — mapa Yjs w teście.
       "src/lib/debts/proofs.test.ts",
+      // D1.1: Grafik, trening, foldery, właściwości — mapy Yjs w teście.
+      "src/lib/extraD11rest.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.
       "e2e/images.spec.ts",
       "src/hooks/useNotes.ts",

@@ -34,6 +34,15 @@ const PRESERVES: Record<string, string> = {
   studyReview: "src/lib/study/extraD11.test.ts",
   studyRounds: "src/lib/study/extraD11.test.ts",
   studyVan: "src/lib/study/extraD11.test.ts",
+  shiftDays: "src/lib/extraD11rest.test.ts",
+  shiftTypes: "src/lib/extraD11rest.test.ts",
+  shiftPatterns: "src/lib/extraD11rest.test.ts",
+  shiftBonuses: "src/lib/extraD11rest.test.ts",
+  shiftSchedules: "src/lib/extraD11rest.test.ts",
+  trainingMeta: "src/lib/extraD11rest.test.ts",
+  folders: "src/lib/extraD11rest.test.ts",
+  propDefs: "src/lib/extraD11rest.test.ts",
+  views: "src/lib/extraD11rest.test.ts",
 };
 
 const EXEMPT: Record<string, string> = {
@@ -53,15 +62,16 @@ const EXEMPT: Record<string, string> = {
   studyMissed: "wartości `true`",
   studyDays: "wartości `true`",
   studyExams: "wynik zapisywany raz, bez edycji",
+  shiftMeta: "wartości proste pod osobnymi kluczami (stawki, ustawienia)",
+  labels: "wartości `true`",
   debtProofs: "`{ ref, at }` zastępowane w całości przy zmianie zdjęcia; nic do edycji",
 };
 
 /** Do sprawdzenia w D1.1 (działami). Zmniejszaj, przenosząc do PRESERVES albo EXEMPT z uzasadnieniem. */
 const TODO = [
-  "folders", "labels", "plans", "propDefs", "shiftBonuses", "shiftDays", "shiftMeta", "shiftPatterns", "shiftSchedules", "shiftTypes",
-  "studySiteItems", "trainingMeta", "vault", "views",
+  "plans", "studySiteItems", "vault",
 ];
-const TODO_MAX = 14;
+const TODO_MAX = 3;
 
 const CONSTS: Record<string, string> = { SYNC_CONTROL_MAP: "syncControl", PLANS_MAP: "plans", REGISTRY_MAP: "shiftSchedules", DOC_FORMAT_MAP: "docFormat", DEBT_PROOFS_MAP: "debtProofs" };
 

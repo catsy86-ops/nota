@@ -1069,7 +1069,7 @@ Z-17.6, 2026-11-18 — commit po tym wpisie.
 
 ### Ograniczenia i pułapki
 
-- D1.1 (zachowanie nieznanych pól): 20 map zachowuje, 15 jest zwolnionych z uzasadnieniem, 14 czeka na liście w teście spisu (folders, labels, plans, propDefs, shiftBonuses, shiftDays, shiftMeta, shiftPatterns, shiftSchedules, shiftTypes, studySiteItems, trainingMeta, vault, views). `studySiteItems` (listy karty budowy) celowo bez `mergeStored`: pozycje mają pola opcjonalne czyszczone przez użytkownika (np. odhaczenie braku), więc pole spoza listy znanych trzeba rozpoznawać per rodzaj listy, inaczej skasowane pole wróciłoby z poprzedniej wartości. Kopia JSON Pracy (`cleanDump`) nadal gubi nieznane pola — to zakres D5.
+- D1.1 (zachowanie nieznanych pól): zostały 3 mapy — `plans` (analizy planów), `vault` (skarbiec, robi K0 w planie krypto) i `studySiteItems` (listy karty budowy: pola opcjonalne czyszczone przez użytkownika trzeba rozpoznawać per rodzaj listy, inaczej skasowane pole wróciłoby). Kopia JSON Pracy (`cleanDump`) nadal gubi nieznane pola — to zakres D5.
 - Mapy o nazwach składanych w locie poza Grafikiem test spisu zobaczy dopiero po dopisaniu ich listy (jak `SHIFTS_MAP_BASE_NAMES`).
 - Baner nie mówi, które dane są zagrożone, gdy cecha jest nieznana z nazwy — to zamierzone: nie wiadomo, które mapy obejmuje.
 
@@ -1079,6 +1079,7 @@ Z-17.6, 2026-11-18 — commit po tym wpisie.
 - `src/lib/docMapsInventory.test.ts` — spis map i zapadka listy „do zrobienia”.
 - `src/lib/exerciseExtra.test.ts` — Ćwiczenia: plan po „Cofnij” i w kopii, ponowne ważenie, posiłek, cele z formularza, `mergeStored`.
 - `src/lib/study/extraD11.test.ts` — Praca: zestaw, pozycja auta, szablon wyceny, szef i własny punkt, pomieszczenie i punkt, statystyka rundy i karta powtórki.
+- `src/lib/extraD11rest.test.ts` — Grafik (dzień, rodzaj zmiany, wzór, premia, rejestr grafików), przypomnienie i sprzęt treningu, foldery i właściwości (mapy pól: `keepForeignKeys` w `yjsStore.ts` z jawną listą kluczy), zapisane widoki.
 
 ### Commit
 

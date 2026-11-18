@@ -379,6 +379,18 @@ function plainFromYNote(id: string, y: YNote): Note {
   };
 }
 
+/**
+ * D1.1: podmiana mapy pól folderu albo właściwości nową mapą gubiłaby klucze nowszej wersji — przenosimy je ze starej
+ * (tylko wartości proste; zagnieżdżonych typów Yjs nie da się przenieść między mapami).
+ */
+// Nowa `Y.Map` przed wpięciem do dokumentu nie odpowiada na `has()` — stąd jawne listy kluczy znanych tej wersji.
+const FOLDER_KEYS: ReadonlySet<string> = new Set(["name", "color", "emoji", "parentId", "order", "createdAt", "updatedAt", "templateId"]);
+const PROP_DEF_KEYS: ReadonlySet<string> = new Set(["name", "type", "options", "order"]);
+function keepForeignKeys<T extends Y.Map<unknown>>(prev: unknown, next: T, known: ReadonlySet<string>): T {
+  if (prev instanceof Y.Map) prev.forEach((v, k) => { if (!known.has(k) && !(v instanceof Y.AbstractType)) next.set(k, v); });
+  return next;
+}
+
 function yFolderFromPlain(folder: Folder): YFolder {
   const y: YFolder = new Y.Map();
   y.set("name", folder.name);
@@ -721,7 +733,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   /** Dodaje albo zmienia definicję (nazwa, opcje). Typ nie zmienia się po utworzeniu. */
   function upsertPropDef(def: PropDef): void {
     doc.transact(() => {
-      propDefsMap.set(def.id, yPropDefFromPlain(def));
+      propDefsMap.set(def.id, keepForeignKeys(propDefsMap.get(def.id), yPropDefFromPlain(def), PROP_DEF_KEYS));
     });
   }
 
@@ -964,7 +976,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   }
 
   function upsertFolder(folder: Folder): void {
-    doc.transact(() => { foldersMap.set(folder.id, yFolderFromPlain(folder)); });
+    doc.transact(() => { foldersMap.set(folder.id, keepForeignKeys(foldersMap.get(folder.id), yFolderFromPlain(folder), FOLDER_KEYS)); });
   }
 
   function patchFolder(id: string, updates: Partial<Omit<Folder, "id" | "createdAt">>): void {

@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { toStored } from "@/lib/extraFields";
+import { mergeStored, toStored } from "@/lib/extraFields";
 import { CUSTOM_MAX, cleanCustomExercise, customExercises, setCustomExercises, type Exercise } from "./catalog";
 import { byTrainingTime, cleanEntry, cleanEquipment, cleanPlanDay, cleanTrainingReminder, PLAN_MAX_DAYS, storedEntry, TRAINING_MAX_ENTRIES, type PlanDay, type TrainingEntry, type TrainingEquipment, type TrainingReminder } from "./model";
 
@@ -85,7 +85,8 @@ export function createYTraining(doc: Y.Doc) {
   function setReminder(r: TrainingReminder | null): void {
     const clean = r ? cleanTrainingReminder(r) : null;
     doc.transact(() => {
-      if (clean) meta.set("reminder", clean); else meta.delete("reminder");
+      // D1.1: pola nowszej wersji przypomnienia i sprzętu zostają przy zapisie na tej.
+      if (clean) meta.set("reminder", mergeStored(clean, meta.get("reminder"), ["time", "noteId"])); else meta.delete("reminder");
     }, TRAINING_ORIGIN);
   }
 
@@ -95,7 +96,7 @@ export function createYTraining(doc: Y.Doc) {
   }
 
   function setEquipment(e: TrainingEquipment): void {
-    doc.transact(() => meta.set("equipment", cleanEquipment(e) as TrainingEquipment), TRAINING_ORIGIN);
+    doc.transact(() => meta.set("equipment", mergeStored(cleanEquipment(e), meta.get("equipment"), ["dumbbellMaxKg"]) as TrainingEquipment), TRAINING_ORIGIN);
   }
 
   /** Oczyszczony dziennik, chronologicznie. */

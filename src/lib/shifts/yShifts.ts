@@ -1,6 +1,13 @@
 import * as Y from "yjs";
 import { BONUS_MAX_PER_DATA, cleanBonus, cleanPaidGross, DEFAULT_LEAVE_DAYS, DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { shiftMinutes } from "./time";
+import { mergeStored } from "@/lib/extraFields";
+
+/** Pola znane tej wersji (D1.1): reszta wpisu z dokumentu przechodzi przy zapisie (`mergeStored`). */
+const DAY_KNOWN = ["type", "note", "extraMin", "offSchedule", "inLieu", "plannedMin", "timeOff", "hours", "customHours"];
+const TYPE_KNOWN = ["id", "name", "short", "color", "start", "end", "breakMin", "breakAt", "alarmMin", "rate", "kind", "absenceKind", "order"];
+const PATTERN_KNOWN = ["id", "name", "steps", "order", "anchor", "appliedUntil", "kind"];
+const BONUS_KNOWN = ["id", "month", "name", "amount"];
 
 /**
  * Grafik w Y.Doc — tym samym, który niosą synchronizacja P2P i plik, więc
@@ -144,13 +151,13 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
       if (prev?.inLieu) next.inLieu = true;
       const planned = plannedMinutesFor(typeId, prev);
       if (planned) next.plannedMin = planned;
-      days.set(dayKey, next);
+      days.set(dayKey, mergeStored(next, days.get(dayKey), DAY_KNOWN) as DayEntry);
     });
   }
 
   /** Zapisuje pełny wpis dnia (rodzaj, notatka, odchylenie); `null` czyści dzień. */
   function setDayEntry(dayKey: string, entry: DayEntry | null): void {
-    transact(() => { if (entry) days.set(dayKey, entry); else days.delete(dayKey); });
+    transact(() => { if (entry) days.set(dayKey, mergeStored(entry, days.get(dayKey), DAY_KNOWN) as DayEntry); else days.delete(dayKey); });
   }
 
   /**
@@ -184,7 +191,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
         const hours = shiftHours(before);
         days.forEach((e, k) => { if (e.type === type.id && k < todayKey && !e.hours) days.set(k, { ...e, hours }); });
       }
-      types.set(type.id, { ...type, order: prev?.order ?? type.order ?? nextOrder(types) });
+      types.set(type.id, mergeStored({ ...type, order: prev?.order ?? type.order ?? nextOrder(types) }, types.get(type.id), TYPE_KNOWN) as ShiftType);
     });
   }
 
@@ -244,7 +251,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
     transact(() => {
       ensurePatterns();
       const prev = patterns.get(pattern.id);
-      patterns.set(pattern.id, { ...pattern, order: prev?.order ?? pattern.order ?? nextOrder(patterns) });
+      patterns.set(pattern.id, mergeStored({ ...pattern, order: prev?.order ?? pattern.order ?? nextOrder(patterns) }, patterns.get(pattern.id), PATTERN_KNOWN) as ShiftPattern);
     });
   }
 
@@ -257,7 +264,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
     const clean = cleanBonus(bonus);
     if (!clean) return false;
     if (!bonuses.has(clean.id) && bonuses.size >= BONUS_MAX_PER_DATA) return false;
-    transact(() => bonuses.set(clean.id, clean));
+    transact(() => bonuses.set(clean.id, mergeStored(clean, bonuses.get(clean.id), BONUS_KNOWN) as ShiftBonus));
     return true;
   }
 

@@ -3,6 +3,7 @@ import { useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import type { GroupBy } from "@/lib/groupNotes";
 import type { Layout, SortDir, SortKey, ViewPrefs } from "@/lib/viewPrefs";
+import { mergeStored } from "@/lib/extraFields";
 
 /**
  * Zapisane widoki (nowy plan 6.1, Notatki 6.2): źródło notatek (wszystkie, folder albo etykieta),
@@ -135,6 +136,8 @@ export function useSavedViews(): SavedView[] {
   return useSyncExternalStore(subscribe, getViews, getViews);
 }
 
+const VIEW_KNOWN = ["name", "source", "query", "layout", "sortKey", "sortDir", "groupBy", "filterColor", "filterLabel", "filterHasReminder", "filterPriority", "tableHidden", "createdAt"];
+
 /** Zapis (nowy albo zmieniony). `false` = limit widoków albo pusta nazwa. */
 export function saveView(v: SavedView): boolean {
   const clean = sanitizeView(v.id, v);
@@ -142,7 +145,8 @@ export function saveView(v: SavedView): boolean {
   const map = viewsMap();
   if (!map.has(clean.id) && getViews().length >= MAX_VIEWS) return false;
   const { id, ...data } = clean;
-  yjsStore.doc.transact(() => map.set(id, data));
+  // D1.1: pola nowszej wersji widoku zostają przy zapisie na tej.
+  yjsStore.doc.transact(() => map.set(id, mergeStored(data, map.get(id), VIEW_KNOWN)));
   return true;
 }
 
