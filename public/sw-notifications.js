@@ -29,14 +29,79 @@ async function markPushShown(key) {
   } catch (e) { /* bez Cache Storage — co najwyżej podwójne powiadomienie */ }
 }
 
+// Treść zaszyfrowana (S3.1, `src/lib/push/seal.ts`): `{ v: 1, key, enc }`, klucz AES-GCM w IndexedDB
+// `kaczy-push-keys` / `keys` / `content-v1`. Gołe API `indexedDB` — ten skrypt ładuje `importScripts`.
+const PUSH_KEYS_DB = "kaczy-push-keys";
+
+function pushKeysDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(PUSH_KEYS_DB, 1);
+    // Ten sam `onupgradeneeded` co w stronie: worker może otworzyć bazę pierwszy.
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains("keys")) req.result.createObjectStore("keys");
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function pushKeysTx(mode, fn) {
+  const db = await pushKeysDb();
+  try {
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction("keys", mode);
+      const req = fn(tx.objectStore("keys"));
+      tx.oncomplete = () => resolve(req.result);
+      tx.onerror = tx.onabort = () => reject(tx.error);
+    });
+  } finally {
+    db.close();
+  }
+}
+
+function fromBase64url(s) {
+  const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (s.length % 4)) % 4);
+  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+}
+
+/** Odszyfrowana pozycja w starym kształcie (`key/title/body/url/snooze`) albo wyjątek. */
+async function openSealed(d) {
+  if (typeof d.key !== "string" || !/^[A-Za-z0-9_-]{22}$/.test(d.key) || !/^[A-Za-z0-9_-]+$/.test(d.enc)) throw new Error("format");
+  const key = await pushKeysTx("readonly", (store) => store.get("content-v1"));
+  if (!key) throw new Error("brak klucza");
+  const raw = fromBase64url(d.enc);
+  const aad = new TextEncoder().encode("kaczy-push-v1:" + d.key);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12), additionalData: aad }, key, raw.slice(12));
+  const p = JSON.parse(new TextDecoder().decode(plain).trimEnd());
+  if (!p || typeof p !== "object") throw new Error("treść");
+  return { key: p.k, title: p.t, body: p.b, url: p.u, snooze: p.s === 1 };
+}
+
 self.addEventListener("push", (event) => {
-  let d = {};
-  try { d = event.data ? event.data.json() : {}; } catch (e) { d = {}; }
-  const title = typeof d.title === "string" && d.title ? d.title : "NOTKI";
-  const url = typeof d.url === "string" && /^\/(?![/\\])/.test(d.url) ? d.url : "/";
-  const key = typeof d.key === "string" ? d.key : "";
-  const tag = key ? key.split(":").slice(0, 2).join(":") : "push";
+  let raw = {};
+  try { raw = event.data ? event.data.json() : {}; } catch (e) { raw = {}; }
   event.waitUntil((async () => {
+    let d = raw;
+    if (raw && raw.v === 1 && typeof raw.enc === "string") {
+      try {
+        d = await openSealed(raw);
+      } catch (e) {
+        // Nie da się odszyfrować (inny albo brak klucza, zły znacznik, zły JSON): strona wyśle listę od nowa.
+        try { await pushKeysTx("readwrite", (store) => store.put(Date.now(), "resend")); } catch (e2) { /* bez bazy */ }
+        const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+        // Widoczna aplikacja przypomina sama; inaczej powiadomienie ogólne (klucza terminu nie znamy — bez listy pokazanych).
+        if (clients.some((c) => c.visibilityState === "visible")) return;
+        await self.registration.showNotification("NOTKI", {
+          body: "Masz przypomnienie. Otwórz aplikację.", icon: "/pwa-192.png", badge: "/pwa-192.png", tag: "push", data: { url: "/" },
+        });
+        return;
+      }
+    }
+    if (!d || typeof d !== "object") d = {};
+    const title = typeof d.title === "string" && d.title ? d.title : "NOTKI";
+    const url = typeof d.url === "string" && /^\/(?![/\\])/.test(d.url) ? d.url : "/";
+    const key = typeof d.key === "string" ? d.key : "";
+    const tag = key ? key.split(":").slice(0, 2).join(":") : "push";
     const test = key.startsWith("test:");
     if (key && !test) {
       if ((await pushShownList()).includes(key)) return;
