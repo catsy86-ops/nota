@@ -1,4 +1,5 @@
 import type { Note, ChecklistItem } from "@/lib/types/note";
+import { VAULT_LOCK, withExclusiveLock } from "@/lib/tabLock";
 import type { YjsStore } from "@/lib/yjsStore";
 import { yjsStore as defaultStore } from "@/lib/yjsStore";
 import { versionsStore as defaultVersions, type VersionsStore } from "@/lib/versionsStore";
@@ -715,7 +716,13 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     return { recoveryCode: created.recoveryCode, skipped };
   }
 
-  async function changePassword(oldPassword: string, newPassword: string, { withRecovery = true }: { withRecovery?: boolean } = {}) {
+  // Z-7.1: zmiana klucza pod blokadą wyłączną — dwie karty nie wygenerują dwóch różnych kluczy danych. Nagłówek
+  // skarbca (`meta()`) czytany dopiero w blokadzie: druga karta mogła go właśnie zmienić.
+  function changePassword(oldPassword: string, newPassword: string, opts: { withRecovery?: boolean } = {}) {
+    return withExclusiveLock(VAULT_LOCK, () => changePasswordLocked(oldPassword, newPassword, opts));
+  }
+
+  async function changePasswordLocked(oldPassword: string, newPassword: string, { withRecovery = true }: { withRecovery?: boolean } = {}) {
     const m = meta();
     if (!m) throw new Error("Brak skarbca");
     checkThrottle();
@@ -729,7 +736,11 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   }
 
   /** Nowe hasło za pomocą kodu awaryjnego (zapomniane hasło). */
-  async function resetPasswordWithRecovery(recoveryCode: string, newPassword: string, { withRecovery = true }: { withRecovery?: boolean } = {}) {
+  function resetPasswordWithRecovery(recoveryCode: string, newPassword: string, opts: { withRecovery?: boolean } = {}) {
+    return withExclusiveLock(VAULT_LOCK, () => resetPasswordLocked(recoveryCode, newPassword, opts));
+  }
+
+  async function resetPasswordLocked(recoveryCode: string, newPassword: string, { withRecovery = true }: { withRecovery?: boolean } = {}) {
     const m = meta();
     if (!m) throw new Error("Brak skarbca");
     checkThrottle();

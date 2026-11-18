@@ -18,6 +18,10 @@ export function withExclusiveLock<T>(name: string, fn: () => Promise<T>): Promis
 export const MIGRATION_LOCK = "notatnik-migracja";
 /** Odśmiecanie magazynu obrazów: naraz w jednej karcie, pozostałe je pomijają. */
 export const GC_LOCK = "notatnik-gc";
+/** Z-7.1: zmiana hasła skarbca i reset kodem awaryjnym — jedna karta naraz. */
+export const VAULT_LOCK = "notatnik-skarbiec";
+/** Z-7.3: automatyczna kopia do pliku — robi ją jedna karta, pozostałe pomijają przebieg. */
+export const AUTO_BACKUP_LOCK = "notatnik-auto-kopia";
 /** Karta prowadząca przekaźnik: jeden kursor i jedna kolejka wysyłki na przeglądarkę. */
 export const RELAY_ROLE = "notatnik-przekaznik";
 

@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import type { Note } from "@/hooks/useNotes";
 /** Eksport poza paczką startową (Plan-nowy 1.5) — ładowany dopiero, gdy kopia jest potrzebna. */
 const loadExport = () => import("@/lib/exportNotes");
+import { AUTO_BACKUP_LOCK, withLockIfFree } from "@/lib/tabLock";
 import { isBackupDue, markBackup, daysSinceBackup, getLastBackup, oldestCreatedAt } from "@/lib/backupReminder";
 
 export interface BackupReminderPrefs {
@@ -18,7 +19,10 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
     const last = getLastBackup();
     if (sessionStorage.getItem("kaczy.autoBackupDone") === "1") return;
     sessionStorage.setItem("kaczy.autoBackupDone", "1");
-    const t = setTimeout(async () => {
+    // Z-7.3: jedna karta naraz; zajęte = inna karta właśnie robi kopię, ta pomija przebieg.
+    const t = setTimeout(() => void withLockIfFree(AUTO_BACKUP_LOCK, async () => {
+      // Po wejściu w blokadę sprawdzamy od nowa: inna karta mogła przed chwilą zapisać kopię.
+      if (!isBackupDue(prefs.autoExportDays, oldestCreatedAt(notes, archivedNotes))) return;
       try {
         // Bez gestu użytkownika działa tylko zapis do wybranego pliku
         // (File System Access). Inaczej nie udajemy pobrania „w tle” —
@@ -57,7 +61,7 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
       } catch {
         toast.error("Auto-backup nie powiódł się");
       }
-    }, 2500);
+    }), 2500);
     return () => clearTimeout(t);
   }, [prefs.autoExportDays, notes, archivedNotes]);
 
