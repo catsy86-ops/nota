@@ -263,6 +263,37 @@ let onOnline: (() => void) | null = null;
 let releaseRole: (() => void) | null = null;
 
 /**
+ * W4: pierwsze pobranie z przekaźnika po starcie. WebRTC czeka na nie (`relayFirstPull`), żeby urządzenie wracające po
+ * wymianie kodu zobaczyło znacznik z przekaźnika, zanim wyśle zaległe zmiany bezpośrednio do urządzeń w starym pokoju.
+ * Kończy je pierwszy stan inny niż `connecting` (pobranie idzie w łańcuchu przed wysyłką), rola u innej karty, stop
+ * albo brak adresu przekaźnika.
+ */
+let firstPullDone = true;
+let firstPullWaiters: (() => void)[] = [];
+const FIRST_PULL_WAIT_MS = 15_000;
+
+function finishFirstPull(): void {
+  firstPullDone = true;
+  const waiters = firstPullWaiters;
+  firstPullWaiters = [];
+  waiters.forEach((w) => w());
+}
+
+/** Czeka na pierwsze pobranie z przekaźnika, najwyżej `timeoutMs` (wolny albo niedostępny serwer nie blokuje WebRTC). */
+export function relayFirstPull(timeoutMs = FIRST_PULL_WAIT_MS): Promise<void> {
+  if (firstPullDone) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => { clearTimeout(timer); resolve(); };
+    const timer = setTimeout(() => {
+      firstPullWaiters = firstPullWaiters.filter((w) => w !== done);
+      logDiag("warn", "relay", "pierwsze pobranie trwa zbyt długo — WebRTC startuje bez niego");
+      resolve();
+    }, timeoutMs);
+    firstPullWaiters.push(done);
+  });
+}
+
+/**
  * Przy kilku kartach przekaźnik prowadzi jedna (Z-7): kursor i kolejka wysyłki leżą w jednej bazie,
  * więc dwie karty nadpisywałyby je sobie nawzajem. Pozostałe czekają na rolę; ich zmiany idą do
  * prowadzącej przez `tabSync` i stamtąd na serwer, a zmiany z serwera wracają tą samą drogą.
@@ -273,11 +304,17 @@ export async function startRelay(code: string): Promise<void> {
   const url = validRelayUrl(getRelayUrl());
   if (!url) return;
   const token = ++startToken;
+  firstPullDone = false;
   setView({ status: "connecting", detail: undefined });
   releaseRole = holdTabRole(
     RELAY_ROLE,
     () => { void lead(code, url, token); },
-    () => { if (token === startToken) setView({ status: "idle", detail: undefined, elsewhere: true }); },
+    () => {
+      if (token !== startToken) return;
+      // Przekaźnik prowadzi inna karta i to ona pobiera; ta nie ma na co czekać.
+      finishFirstPull();
+      setView({ status: "idle", detail: undefined, elsewhere: true });
+    },
   );
 }
 
@@ -312,6 +349,7 @@ async function lead(code: string, url: string, token: number): Promise<void> {
       },
       onStatus: (status, detail) => {
         if (token !== startToken) return;
+        if (status !== "connecting") finishFirstPull();
         setView({ status, detail, ...(status === "online" ? { syncedAt: Date.now() } : {}) });
         if (status === "error") logDiag("error", "relay", detail ?? "błąd przekaźnika");
       },
@@ -338,12 +376,14 @@ async function lead(code: string, url: string, token: number): Promise<void> {
   } catch (err) {
     if (token !== startToken) return;
     logDiag("error", "relay", "nie udało się uruchomić przekaźnika", err);
+    finishFirstPull();
     setView({ status: "error", detail: "Nie udało się uruchomić przekaźnika" });
   }
 }
 
 export function stopRelay(): void {
   startToken++;
+  finishFirstPull();
   releaseRole?.();
   releaseRole = null;
   if (onVisibility) document.removeEventListener("visibilitychange", onVisibility);

@@ -7,7 +7,7 @@ import { chunkProvider } from "@/lib/sync/peerChunks";
 import * as Y from "yjs";
 import { yjsStore } from "@/lib/yjsStore";
 import { startImageSync, stopImageSync } from "@/lib/imageSync";
-import { compareRelayHeads, forgetRelayRoom, onRelayHead, relayHeadClaim, setRelayGate, startRelay, stopRelay } from "@/lib/sync/relayRuntime";
+import { compareRelayHeads, forgetRelayRoom, onRelayHead, relayFirstPull, relayHeadClaim, setRelayGate, startRelay, stopRelay } from "@/lib/sync/relayRuntime";
 import { deriveRelayKeys } from "@/lib/sync/relayKeys";
 import { codeKind, generateCode, parseCode, type CodeKind } from "@/lib/sync/pairCode";
 import {
@@ -588,8 +588,12 @@ function connect(code: string) {
   // y-webrtc is ~the heaviest dep in the app but sync is opt-in and off by
   // default — load it only once a connection is actually requested, instead
   // of forcing it into the eager main bundle for every visitor.
-  Promise.all([import("y-webrtc"), roomNamesFor(code), gate]).then(([{ WebrtcProvider }, rooms, verdict]) => {
+  Promise.all([import("y-webrtc"), roomNamesFor(code), gate]).then(async ([{ WebrtcProvider }, rooms, verdict]) => {
     if (token !== connectToken || verdict !== "ok") return; // superseded by a later connect()/disconnect()
+    // W4: najpierw pobranie z przekaźnika — znacznik wymiany kodu zatrzymuje (`haltRekeyed` zmienia token), zanim
+    // zaległe zmiany pójdą bezpośrednio do urządzeń w starym pokoju.
+    await relayFirstPull();
+    if (token !== connectToken || rekeyStop(code)) return;
     const legacyName = roomNameFor(code);
     roomKinds = rooms.map((room, i) => (i === 0 ? "v3" : room === legacyName ? "legacy" : "v2"));
     // Kod bywał w starszych pokojach — podstawa propozycji nowego kodu po końcu okna (§2.3).
