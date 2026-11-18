@@ -12,6 +12,8 @@ export const LIMITS = {
   body: 240,
   url: 300,
   key: 120,
+  /** Szyfrogram formatu 1 (S3.1): base64url z iv ‖ szyfrogram ‖ znacznik dla tekstu jawnego ≤ 1536 bajtów. */
+  enc: 2086,
   /** Jak daleko w przód można zaplanować termin. */
   horizonMs: 35 * 24 * 60 * 60 * 1000,
   /** Subskrypcja bez żadnej aktywności (ostatni `PUT /schedule`) tak długo jest uznawana za martwą i sprzątana. */
@@ -77,9 +79,14 @@ export function cleanSubscription(raw) {
   return { endpoint: href, keys: { p256dh: keys.p256dh, auth: keys.auth } };
 }
 
+const ENC_RE = new RegExp(`^[A-Za-z0-9_-]{38,${LIMITS.enc}}$`);
+const ENC_KEY_RE = /^[A-Za-z0-9_-]{22}$/;
+
 /**
- * Terminy z aplikacji: `{ key, at, title, body?, url? }`. Odrzuca przeszłe, zbyt odległe
- * i bez tytułu; adres tylko w obrębie aplikacji (`/…`). Ten sam klucz — zostaje pierwszy.
+ * Terminy z aplikacji: stary format `{ key, at, title, body?, url? }` albo zaszyfrowany `{ v: 1, key, at, enc }`
+ * (S3.1 — serwer nie widzi treści; `title`/`body`/`url` obok `enc` są pomijane). Odrzuca przeszłe, zbyt odległe,
+ * bez tytułu i z `enc` spoza wzorca (za długiego nie przycina — ucięty szyfrogram to śmieć); adres tylko w obrębie
+ * aplikacji (`/…`). Ten sam klucz — zostaje pierwszy. Lista może mieszać formaty.
  */
 export function cleanItems(raw, now) {
   if (!Array.isArray(raw)) return [];
@@ -87,11 +94,19 @@ export function cleanItems(raw, now) {
   const out = [];
   for (const r of raw) {
     if (!r || typeof r !== "object") continue;
+    const at = r.at;
+    const timeOk = typeof at === "number" && Number.isFinite(at) && at > now && at <= now + LIMITS.horizonMs;
+    if (r.v === 1) {
+      if (!timeOk || typeof r.key !== "string" || !ENC_KEY_RE.test(r.key) || seen.has(r.key)) continue;
+      if (typeof r.enc !== "string" || !ENC_RE.test(r.enc)) continue;
+      seen.add(r.key);
+      out.push({ v: 1, key: r.key, at, enc: r.enc });
+      if (out.length >= LIMITS.items) break;
+      continue;
+    }
     const key = str(r.key, LIMITS.key);
     const title = str(r.title, LIMITS.title).trim();
-    const at = r.at;
-    if (!key || !title || seen.has(key)) continue;
-    if (typeof at !== "number" || !Number.isFinite(at) || at <= now || at > now + LIMITS.horizonMs) continue;
+    if (!key || !title || seen.has(key) || !timeOk) continue;
     const url = str(r.url, LIMITS.url);
     seen.add(key);
     // `snooze` — powiadomienie dostaje „Odłóż 10 min” (także przy serii: odkłada tylko to wystąpienie).
@@ -119,6 +134,7 @@ export function dueItems(store, now) {
 
 /** Treść wiadomości push — czyta ją `public/sw-notifications.js`. */
 export function payloadOf(item) {
+  if (item.v === 1) return JSON.stringify({ v: 1, key: item.key, enc: item.enc });
   return JSON.stringify({ title: item.title, body: item.body, url: item.url, key: item.key, snooze: item.snooze === true });
 }
 

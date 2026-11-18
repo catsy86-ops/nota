@@ -78,7 +78,9 @@ test("/health jest jawny, /vapid wymaga tokenu (nie zdradza, że to serwer powia
   assert.equal((await fetch(`${srv.base}/vapid`)).status, 401);
   const v = await fetch(`${srv.base}/vapid`, { headers: auth });
   assert.equal(v.status, 200);
-  assert.equal(typeof (await v.json()).publicKey, "string");
+  const vj = await v.json();
+  assert.equal(typeof vj.publicKey, "string");
+  assert.equal(vj.enc, 1, "serwer ogłasza format zaszyfrowany (S3.1)");
 });
 
 /** Surowe żądanie HTTP przez gniazdo — `fetch` nie pozwoli wysłać ścieżki typu `//[`. */
@@ -142,7 +144,7 @@ test("nagłówki bezpieczeństwa i brak wycieku treści błędów", async () => 
 });
 
 test("za duże ciało: 413 zanim zostanie wczytane", async () => {
-  const r = await fetch(`${srv.base}/schedule`, { method: "PUT", headers: { "Content-Type": "application/json", ...auth }, body: JSON.stringify({ subscription: VALID_SUB, items: [], pad: "x".repeat(70 * 1024) }) });
+  const r = await fetch(`${srv.base}/schedule`, { method: "PUT", headers: { "Content-Type": "application/json", ...auth }, body: JSON.stringify({ subscription: VALID_SUB, items: [], pad: "x".repeat(520 * 1024) }) });
   assert.equal(r.status, 413);
 });
 

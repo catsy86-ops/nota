@@ -14,7 +14,8 @@ const PORT = Number(process.env.PORT) || 4455;
 const DATA_DIR = process.env.DATA_DIR || "./data";
 const SUBJECT = process.env.VAPID_SUBJECT || "mailto:admin@example.com";
 const TICK_MS = 20_000;
-const MAX_BODY = 64 * 1024;
+// 200 terminów zaszyfrowanych (S3.1) to w najgorszym razie ok. 430 KB.
+const MAX_BODY = 512 * 1024;
 
 // ── Zabezpieczenia ────────────────────────────────────────────────────────────────────────────────────
 // Bez nich każdy, kto zna adres serwera, mógłby zająć miejsca na subskrypcje, kasować cudze i wysyłać
@@ -184,7 +185,8 @@ async function handle(req, res) {
     // Klucz publiczny VAPID jest jawny z założenia, ale za tokenem nie ujawniamy, że to serwer powiadomień.
     if (req.method === "GET" && path === "/vapid") {
       if (!authorize(req, res, ip, now)) return;
-      return send(res, 200, { publicKey: vapid.publicKey });
+      // `enc: 1` — serwer przyjmuje terminy zaszyfrowane (S3.1); bez tego klient wysyła stary format.
+      return send(res, 200, { publicKey: vapid.publicKey, enc: 1 });
     }
 
     if (req.method === "PUT" && path === "/schedule") {

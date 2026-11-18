@@ -116,3 +116,23 @@ test("tickStore: spóźnione terminy przepadają bez wysyłki, nieaktywne subskr
   assert.equal(await tickStore(stale, TICK_NOW, async () => "ok"), true);
   assert.equal(stale.subs.s1, undefined);
 });
+
+test("format 1 (S3.1): enc i losowy key, za długie enc odrzucone, title obok enc pominięty, lista mieszana", () => {
+  const key = "A".repeat(22);
+  const enc = "x".repeat(LIMITS.enc);
+  const items = cleanItems([
+    { v: 1, key, at: NOW + 1000, enc, title: "jawny", body: "b", url: "/n/1", snooze: true },
+    { v: 1, key: "B".repeat(22), at: NOW + 2000, enc: enc + "x" },
+    { v: 1, key: "C".repeat(22), at: NOW + 3000, enc: "ab+/" + "x".repeat(40) },
+    { v: 1, key: "krótki", at: NOW + 4000, enc },
+    { v: 1, key: "D".repeat(22), at: NOW - 1, enc },
+    { key: "stary", at: NOW + 5000, title: "Stary" },
+  ], NOW);
+  assert.deepEqual(items.map((i) => i.key), [key, "stary"]);
+  assert.deepEqual(items[0], { v: 1, key, at: NOW + 1000, enc });
+  assert.equal(payloadOf(items[0]), JSON.stringify({ v: 1, key, enc }));
+  assert.equal(JSON.parse(payloadOf(items[1])).title, "Stary");
+  // Zapisany magazyn przechodzi przez cleanStore bez zmian.
+  const store = cleanStore({ subs: { x: { subscription: sub, items, updated: NOW } } }, NOW);
+  assert.deepEqual(Object.values(store.subs)[0].items, items);
+});

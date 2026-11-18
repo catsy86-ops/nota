@@ -74,13 +74,13 @@ powiadomienia w aplikacji jeszcze raz.
 | Metoda i ścieżka | Treść | Odpowiedź |
 |---|---|---|
 | `GET /health` | — | `{ ok: true }` (jawny) |
-| `GET /vapid` | — | `{ publicKey }`. **Wymaga tokenu** (sam klucz jest publiczny, ale nie zdradzamy, że to serwer powiadomień) |
-| `PUT /schedule` | `{ subscription, items: [{ key, at, title, body?, url? }] }` | zastępuje listę terminów urządzenia. **Wymaga tokenu** |
+| `GET /vapid` | — | `{ publicKey, enc: 1 }` (`enc: 1` — przyjmuje terminy zaszyfrowane). **Wymaga tokenu** (sam klucz jest publiczny, ale nie zdradzamy, że to serwer powiadomień) |
+| `PUT /schedule` | `{ subscription, items: [{ key, at, title, body?, url? }] }` albo zaszyfrowane `items: [{ v: 1, key, at, enc }]` (S3.1: serwer nie widzi treści; formaty można mieszać) | zastępuje listę terminów urządzenia. **Wymaga tokenu** |
 | `POST /test` | `{ subscription }` | wysyła od razu próbne powiadomienie. **Wymaga tokenu** |
 | `POST /unsubscribe` | `{ endpoint }` | usuwa urządzenie. **Wymaga tokenu** |
 
 Kody błędów: `401` zły albo brak tokenu, `429` za dużo żądań (z nagłówkiem `Retry-After`), `413` za duże
-ciało (limit 64 KB), `400` zła treść albo adres subskrypcji spoza serwisów push, `503` brak miejsca na urządzenia.
+ciało (limit 512 KB), `400` zła treść albo adres subskrypcji spoza serwisów push, `503` brak miejsca na urządzenia.
 
 ## Limity
 
@@ -108,7 +108,7 @@ ciało (limit 64 KB), `400` zła treść albo adres subskrypcji spoza serwisów 
   `web-push` przekazuje tylko znormalizowany adres. Przekierowań (3xx) nie śledzi. Testy: `security.test.js`,
   `server.test.js`.
 - **CORS:** domyślnie wyłączony. Tylko adresy z `ALLOWED_ORIGINS` mogą wywoływać serwer z przeglądarki.
-- **Limity:** zob. tabelę zmiennych; do tego limit ciała 64 KB, limity czasu połączeń (10 s na nagłówki,
+- **Limity:** zob. tabelę zmiennych; do tego limit ciała 512 KB (dysk w najgorszym razie: 100 subskrypcji × 430 KB = 43 MB), limity czasu połączeń (10 s na nagłówki,
   20 s na żądanie) i ograniczona liczba liczników w pamięci.
 - **Wysyłka z limitem czasu** (10 s na jedną wiadomość), obiegi się nie nakładają, a subskrypcje bez aktywności
   przez 60 dni są sprzątane (po ponownym włączeniu powiadomień na telefonie stary adres nie zajmuje miejsca na zawsze).
