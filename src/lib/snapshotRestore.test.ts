@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { createYjsStore, readDocState } from "@/lib/yjsStore";
 import { createPrivateNotes } from "@/lib/privateNotes";
 import { createVersionsStore } from "@/lib/versionsStore";
-import { compareSnapshot, restoreSnapshotCopies, restoredFolderName, type RestoreDeps } from "@/lib/snapshotRestore";
+import { vaultDiffers, compareSnapshot, restoreSnapshotCopies, restoredFolderName, type RestoreDeps } from "@/lib/snapshotRestore";
 import type { Note } from "@/lib/types/note";
 
 // Z-16.1B (`docs/plan-dane-lokalne.md` §1.5): przywracanie z kopii dziennej jako kopie notatek.
@@ -22,7 +22,7 @@ function fresh() {
   const pn = createPrivateNotes(store, { iterations: IT, minIterations: IT, writeDelayMs: 5, versions: createVersionsStore(`snap.versions.${crypto.randomUUID()}.`) });
   let n = 0;
   const deps: RestoreDeps = {
-    store, reencryptCopy: pn.reencryptCopy, adoptCopy: pn.adoptCopy,
+    store, reencryptCopy: pn.reencryptCopy, adoptCopy: pn.adoptCopy, copySession: pn.copySession,
     newId: () => `nowy-${++n}`, now: () => 5_000, lock: (fn) => fn(),
   };
   return { store, pn, deps };
@@ -130,6 +130,24 @@ describe("restoreSnapshotCopies", () => {
     expect(pn.isUndecryptable(copy.id)).toBe(false);
   });
 
+  it("skarbiec zablokowany w trakcie szyfrowania kopii — kopia prywatna pominięta, jawne wstawione", async () => {
+    const { store, pn, deps } = fresh();
+    store.upsertNote(note("s"));
+    store.upsertNote(note("j"));
+    await pn.setup(PW);
+    await pn.lockNote("s");
+    const snap = readDocState(store.encodeSyncState());
+    store.removeNote("s");
+    store.removeNote("j");
+    const items = compareSnapshot(snap, store.projectNotes(), store.getVaultMeta(), pn.isUnlocked()).deleted;
+    const r = await restoreSnapshotCopies(items, snap, DAY, {
+      ...deps, copySession: pn.copySession,
+      reencryptCopy: async (...a) => { const out = await pn.reencryptCopy(...a); pn.lock(); return out; },
+    });
+    expect(r).toMatchObject({ restored: 1, skipped: ["s"] });
+    expect(store.projectNotes().some((n) => n.locked)).toBe(false);
+  });
+
   it("notatka prywatna po zmianie hasła (inne metadane skarbca) albo przy zablokowanym skarbcu — wyszarzona i pominięta", async () => {
     const { store, pn, deps } = fresh();
     store.upsertNote(note("s"));
@@ -143,5 +161,15 @@ describe("restoreSnapshotCopies", () => {
     const r = await restoreSnapshotCopies(items, snap, DAY, deps);
     expect(r).toMatchObject({ restored: 0, skipped: ["s"] });
     expect(store.projectNotes()).toEqual([]);
+  });
+});
+
+describe("vaultDiffers", () => {
+  it("bez skarbca po obu stronach i ten sam skarbiec — nie; zmiana, założenie, usunięcie — tak", () => {
+    expect(vaultDiffers(undefined, null)).toBe(false);
+    expect(vaultDiffers({ a: 1 }, { a: 1 })).toBe(false);
+    expect(vaultDiffers({ a: 1 }, { a: 2 })).toBe(true);
+    expect(vaultDiffers(null, { a: 1 })).toBe(true);
+    expect(vaultDiffers({ a: 1 }, null)).toBe(true);
   });
 });

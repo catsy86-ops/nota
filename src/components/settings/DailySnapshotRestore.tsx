@@ -9,7 +9,7 @@ import { readSnapshotFile } from "@/lib/dailySnapshot";
 import { getSyncState } from "@/lib/yjsSync";
 import { readDocState, yjsStore, type DocState } from "@/lib/yjsStore";
 import { privateNotes } from "@/lib/privateNotes";
-import { compareSnapshot, restoreSnapshotCopies, restoredFolderName, type SnapshotComparison, type SnapshotItem } from "@/lib/snapshotRestore";
+import { compareSnapshot, restoreSnapshotCopies, restoredFolderName, vaultDiffers, type SnapshotComparison, type SnapshotItem } from "@/lib/snapshotRestore";
 import { pluralPl } from "@/lib/plural";
 
 const dayLabel = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" });
@@ -87,7 +87,7 @@ function Group({ title, items, selected, toggle, children }: {
  * Ścieżka awaryjna (§1.6): cały dokument wraca do stanu z kopii. Potwierdzenie z opisem skutków; przy synchronizacji
  * urządzenie opuszcza grupę. Moduł wymiany ładowany dopiero przy kliknięciu.
  */
-function ReplaceWholeDocument({ snapshotRef, createdAt, disabled }: { snapshotRef: string; createdAt: number; disabled: boolean }) {
+function ReplaceWholeDocument({ snapshotRef, createdAt, disabled, otherVault }: { snapshotRef: string; createdAt: number; disabled: boolean; otherVault: boolean }) {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const inGroup = getSyncState().code !== null;
@@ -125,6 +125,11 @@ function ReplaceWholeDocument({ snapshotRef, createdAt, disabled }: { snapshotRe
                 {inGroup && (
                   <p>
                     To urządzenie opuści grupę synchronizacji. Pozostałe urządzenia zachowają obecne dane, dopóki nie zastąpisz ich danymi z tego urządzenia.
+                  </p>
+                )}
+                {otherVault && (
+                  <p className="font-medium text-foreground">
+                    Skarbiec notatek prywatnych w kopii jest inny niż obecny (np. hasło zmienione po tamtym dniu). Po przywróceniu notatki prywatne otworzysz hasłem z dnia kopii.
                   </p>
                 )}
                 <p>Aplikacja przeładuje się, także w innych otwartych kartach.</p>
@@ -186,7 +191,7 @@ export function DailySnapshotRestore({ snapshotRef, createdAt, open, onOpenChang
     try {
       const items = selectable.filter((i) => selected.has(i.note.id));
       const r = await restoreSnapshotCopies(items, state.snap, createdAt, {
-        store: yjsStore, reencryptCopy: privateNotes.reencryptCopy, adoptCopy: privateNotes.adoptCopy,
+        store: yjsStore, reencryptCopy: privateNotes.reencryptCopy, adoptCopy: privateNotes.adoptCopy, copySession: privateNotes.copySession,
       });
       if (r.restored) toast.success(`Przywrócono ${r.restored} ${pluralPl(r.restored, ["notatkę", "notatki", "notatek"])} do folderu „${folder}”`);
       if (r.skipped.length) toast.warning(`Nie przywrócono ${r.skipped.length} ${pluralPl(r.skipped.length, ["notatki prywatnej", "notatek prywatnych", "notatek prywatnych"])} — skarbiec się zablokował albo zmieniło się hasło`);
@@ -237,7 +242,7 @@ export function DailySnapshotRestore({ snapshotRef, createdAt, open, onOpenChang
               )}
             </>
           )}
-          {!error && <ReplaceWholeDocument snapshotRef={snapshotRef} createdAt={createdAt} disabled={!state || busy} />}
+          {!error && <ReplaceWholeDocument snapshotRef={snapshotRef} createdAt={createdAt} disabled={!state || busy} otherVault={!!state && vaultDiffers(state.snap.vaultMeta, yjsStore.getVaultMeta())} />}
         </div>
         <ResponsiveDialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>Anuluj</Button>

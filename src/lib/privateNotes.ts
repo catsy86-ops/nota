@@ -618,6 +618,16 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     }
   }
 
+  /**
+   * Znacznik sesji klucza (Z-16.1B, L1): między `reencryptCopy` a wstawieniem kopii może przyjść blokada albo zmiana
+   * hasła — wtedy szyfrogramy kopii są pod nieaktualny klucz i nie wolno ich wstawić.
+   */
+  function copySession(): () => boolean {
+    const k = key;
+    const epoch0 = sessionEpoch;
+    return () => !!k && key === k && sessionEpoch === epoch0 && !locking && !rekeying;
+  }
+
   /** Po wstawieniu kopii (`reencryptCopy`) — treść od razu w pamięci, bez ponownego odszyfrowania. */
   function adoptCopy(id: string, token: string, content: PrivateContent): void {
     cache.set(id, { vault: token, content, dirty: false });
@@ -743,7 +753,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     hasRecovery: () => Boolean(meta()?.recovery),
     ensureDecrypted,
     setup, unlock, unlockWithRecoveryCode, unlockWithPasskey, addPasskey, hasPasskeys, lock, flush,
-    lockNote, removeLock, duplicate, reencryptCopy, adoptCopy, createNote, changePassword, resetPasswordWithRecovery,
+    lockNote, removeLock, duplicate, reencryptCopy, copySession, adoptCopy, createNote, changePassword, resetPasswordWithRecovery,
     retryInMs,
   };
 }

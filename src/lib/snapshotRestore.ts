@@ -30,6 +30,12 @@ export interface SnapshotComparison {
 
 const sameMeta = (a: unknown, b: unknown) => a !== undefined && a !== null && JSON.stringify(a) === JSON.stringify(b);
 
+/** Skarbiec w kopii inny niż obecny (zmiana hasła, założenie albo usunięcie skarbca po dniu kopii) — ostrzeżenie przy wymianie całego dokumentu. */
+export function vaultDiffers(snapshotVaultMeta: unknown, currentVaultMeta: unknown): boolean {
+  if (snapshotVaultMeta == null && currentVaultMeta == null) return false;
+  return !sameMeta(snapshotVaultMeta, currentVaultMeta);
+}
+
 /**
  * Trzy grupy: usunięte od tamtej pory (identyfikatora nie ma w dokumencie), zmienione (inny tytuł albo treść; dla
  * notatki prywatnej — inny szyfrogram), bez zmian. Notatka prywatna da się przywrócić tylko wtedy, gdy metadane
@@ -65,6 +71,8 @@ export interface RestoreDeps {
   store: Pick<YjsStore, "insertNoteCopies" | "projectFolders">;
   reencryptCopy: (oldId: string, token: string, newId: string, folderId: string) => Promise<{ token: string; content: PrivateContent } | null>;
   adoptCopy: (id: string, token: string, content: PrivateContent) => void;
+  /** Znacznik sesji klucza skarbca; zwrócona funkcja mówi, czy klucz nadal ten sam. */
+  copySession?: () => () => boolean;
   newId?: () => string;
   now?: () => number;
   lock?: <T>(fn: () => Promise<T>) => Promise<T>;
@@ -93,9 +101,11 @@ export async function restoreSnapshotCopies(items: SnapshotItem[], snapshot: Pic
     // Istniejący folder o tej nazwie (drugie przywracanie z tego dnia) — id znany przed szyfrowaniem notatek prywatnych.
     const existing = deps.store.projectFolders().find((f) => f.name === name && !f.parentId);
     const folder: Folder = existing ?? { id: newId(), name, color: "default", emoji: null, parentId: null, order: 0, createdAt: t, updatedAt: t };
+    const sameKey = deps.copySession?.() ?? (() => true);
     const copies: Note[] = [];
     const adopted: { id: string; token: string; content: PrivateContent }[] = [];
     const skipped: string[] = [];
+    const origin = new Map<string, string>();
     for (const { note, privacy } of items) {
       if (privacy !== "plain" && privacy !== "ok") { skipped.push(note.id); continue; }
       const id = newId();
@@ -111,8 +121,16 @@ export async function restoreSnapshotCopies(items: SnapshotItem[], snapshot: Pic
         if (!enc) { skipped.push(note.id); continue; }
         copy.vault = enc.token;
         adopted.push({ id, token: enc.token, content: enc.content });
+        origin.set(id, note.id);
       }
       copies.push(copy);
+    }
+    // Blokada albo zmiana hasła w trakcie szyfrowania — kopie prywatne odpadają (jak przy zablokowanym skarbcu).
+    if (adopted.length && !sameKey()) {
+      const lost = new Set(adopted.map((a) => a.id));
+      for (const c of copies) if (lost.has(c.id)) skipped.push(origin.get(c.id)!);
+      copies.splice(0, copies.length, ...copies.filter((c) => !lost.has(c.id)));
+      adopted.length = 0;
     }
     const folderId = copies.length ? deps.store.insertNoteCopies(copies, folder, snapshot.propDefs) : folder.id;
     for (const a of adopted) deps.adoptCopy(a.id, a.token, a.content);
