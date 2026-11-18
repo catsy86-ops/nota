@@ -46,6 +46,7 @@ import "./lib/frameLook";
 import "./lib/glowLook";
 // Styl na noc (plan motywów 1.4): przełącza styl o zadanej porze, także zaraz po starcie.
 import "./lib/skinSchedule";
+import { isNativeShell } from "@/lib/native/platform";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
 import { hasUnsavedWork } from "./lib/saveStatus";
 import { setupFileLaunch } from "./lib/fileLaunch";
@@ -68,6 +69,9 @@ if (import.meta.env.DEV) void import("./lib/perfProbe").then((m) => m.installPer
 startTabSync(yjsStore.doc, "kaczy-yjs-v1", yjsStore.ready(), yjsStore.isPersistenceOrigin, docGeneration());
 // Wymiana całego dokumentu w innej karcie (Z-16.1B): ta karta ma stary stan — przeładowanie.
 watchDocGeneration();
+
+// Z-13.4: w APK `navigator.share` z plikami przez wtyczkę (WebView go nie ma); PWA modułu nie pobiera.
+if (isNativeShell()) void import("@/lib/native/fileShare").then((m) => m.installShareShim());
 
 createRoot(document.getElementById("root")!).render(<App />);
 hideBootSplash(yjsStore.ready());
