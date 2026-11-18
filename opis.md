@@ -2313,7 +2313,7 @@ Dział opisany w jednym miejscu. Kalendarz pokazuje terminy przypomnień (`remin
 - **Dlaczego tak:** pobranie pliku nie zwraca wyniku (iOS potrafi je zablokować po kilku `await` bez gestu), więc nie może być jedyną drogą powrotu. Grafik i Praca leżą w tym samym dokumencie Yjs, więc kopia OPFS obejmuje wszystko, co przywracanie zastępuje. Tekst okna liczony z tych samych list co `restoreFullBackup` — nowa sekcja nie zniknie z ostrzeżenia.
 - **Ograniczenia:** kopia OPFS to stan dokumentu Yjs, nie ustawienia z `localStorage`. Potwierdzenie przy synchronizacji nie ma testu e2e (wymaga sparowania).
 - **Testy:** `src/lib/restoreScope.test.ts`, `e2e/restore-before-copy.spec.ts` (zakres w oknie, plik w OPFS, ścieżka bez OPFS); `e2e/daily-snapshot.spec.ts`, `search-backup.spec.ts` bez zmian zielone.
-- **Commit:** zob. historię — 2026-11-18.
+- **Commit:** `4d5c9d59` — 2026-11-18.
 
 ## Kopia zapasowa — przywracanie: sprawdzenie przed zapisem, notatki porcjami, znacznik przerwania (Z-18.1, Z-16.2, 2026-11-17)
 
