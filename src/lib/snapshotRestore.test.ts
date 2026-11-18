@@ -148,6 +148,29 @@ describe("restoreSnapshotCopies", () => {
     expect(store.projectNotes().some((n) => n.locked)).toBe(false);
   });
 
+  it("jawna w kopii, prywatna teraz (M3): przy zablokowanym skarbcu zablokowana, po odblokowaniu wraca zaszyfrowana", async () => {
+    const { store, pn, deps } = fresh();
+    store.upsertNote(note("s", { title: "SEKRET", content: "tajna treść", labels: ["x"] }));
+    const snap = readDocState(store.encodeSyncState());
+    await pn.setup(PW);
+    expect(await pn.lockNote("s")).toEqual({ ok: true });
+    pn.lock();
+    const locked = compareSnapshot(snap, store.projectNotes(), store.getVaultMeta(), false).changed[0];
+    expect(locked).toMatchObject({ sealed: true, privacy: "locked" });
+    await pn.unlock(PW);
+    const item = compareSnapshot(snap, store.projectNotes(), store.getVaultMeta(), true).changed[0];
+    expect(item).toMatchObject({ sealed: true, privacy: "ok" });
+    const r = await restoreSnapshotCopies([item], snap, DAY, { ...deps, sealCopy: pn.sealCopy });
+    expect(r).toMatchObject({ restored: 1, skipped: [] });
+    const copy = store.projectNotes().find((n) => n.id !== "s")!;
+    expect(copy).toMatchObject({ locked: true, title: "", content: "", labels: [] });
+    expect(JSON.stringify(store.readPlainNote(copy.id) ?? {})).not.toContain("tajna");
+    pn.lock();
+    await pn.unlock(PW);
+    await pn.ensureDecrypted(copy);
+    expect(pn.peek(copy.id)).toMatchObject({ title: "SEKRET", content: "tajna treść" });
+  });
+
   it("notatka prywatna po zmianie hasła (inne metadane skarbca) albo przy zablokowanym skarbcu — wyszarzona i pominięta", async () => {
     const { store, pn, deps } = fresh();
     store.upsertNote(note("s"));

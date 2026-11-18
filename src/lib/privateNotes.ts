@@ -628,6 +628,25 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     return () => !!k && key === k && sessionEpoch === epoch0 && !locking && !rekeying;
   }
 
+  /**
+   * Z-16.1B (M3): notatka jawna w kopii dziennej, a prywatna teraz — kopia wraca od razu zaszyfrowana (pod swój nowy id),
+   * nigdy jawnie. Bez odblokowanego skarbca albo z plikami (jak `lockNote`) — `null`.
+   */
+  async function sealCopy(note: Note): Promise<{ token: string; content: PrivateContent } | null> {
+    const k = key;
+    if (!k || locking || rekeying || note.images.length || note.attachments?.length) return null;
+    const epoch0 = sessionEpoch;
+    try {
+      const meta = writeFormatAllowed(METADATA_IN_CIPHERTEXT_SCHEMA) ? privateMetaOf(note) : undefined;
+      const content: PrivateContent = { title: note.title, content: note.content, checklist: note.checklist, labels: note.labels, ...(meta ? { meta } : {}) };
+      const token = await encryptNoteWrite(k, JSON.stringify(content), note.id, sessionEpoch);
+      if (key !== k || sessionEpoch !== epoch0) return null;
+      return { token, content };
+    } catch {
+      return null;
+    }
+  }
+
   /** Po wstawieniu kopii (`reencryptCopy`) — treść od razu w pamięci, bez ponownego odszyfrowania. */
   function adoptCopy(id: string, token: string, content: PrivateContent): void {
     cache.set(id, { vault: token, content, dirty: false });
@@ -753,7 +772,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     hasRecovery: () => Boolean(meta()?.recovery),
     ensureDecrypted,
     setup, unlock, unlockWithRecoveryCode, unlockWithPasskey, addPasskey, hasPasskeys, lock, flush,
-    lockNote, removeLock, duplicate, reencryptCopy, copySession, adoptCopy, createNote, changePassword, resetPasswordWithRecovery,
+    lockNote, removeLock, duplicate, reencryptCopy, sealCopy, copySession, adoptCopy, createNote, changePassword, resetPasswordWithRecovery,
     retryInMs,
   };
 }

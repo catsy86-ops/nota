@@ -20,7 +20,7 @@ const fullTime = (at: number) => {
 const changedAt = (at: number) => new Date(at).toLocaleString("pl-PL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
 function titleOf(item: SnapshotItem): string {
-  if (item.note.locked) return "Notatka prywatna";
+  if (item.note.locked || (item.sealed && item.privacy !== "ok")) return "Notatka prywatna";
   const firstLine = item.note.content.split("\n").find((l) => l.trim())?.trim() ?? "";
   return item.note.title.trim() || firstLine.slice(0, 80) || "(bez tytułu)";
 }
@@ -34,7 +34,7 @@ function Row({ item, checked, onToggle }: { item: SnapshotItem; checked: boolean
   const id = useId();
   const [preview, setPreview] = useState(false);
   const blocked = item.privacy === "locked" || item.privacy === "other-key";
-  const canPreview = !item.note.locked && item.note.content.trim().length > 0;
+  const canPreview = !item.note.locked && !(item.sealed && item.privacy !== "ok") && item.note.content.trim().length > 0;
   return (
     <li className="px-3 py-2 space-y-1">
       <div className="flex items-start gap-2.5">
@@ -191,7 +191,7 @@ export function DailySnapshotRestore({ snapshotRef, createdAt, open, onOpenChang
     try {
       const items = selectable.filter((i) => selected.has(i.note.id));
       const r = await restoreSnapshotCopies(items, state.snap, createdAt, {
-        store: yjsStore, reencryptCopy: privateNotes.reencryptCopy, adoptCopy: privateNotes.adoptCopy, copySession: privateNotes.copySession,
+        store: yjsStore, reencryptCopy: privateNotes.reencryptCopy, adoptCopy: privateNotes.adoptCopy, copySession: privateNotes.copySession, sealCopy: privateNotes.sealCopy,
       });
       if (r.restored) toast.success(`Przywrócono ${r.restored} ${pluralPl(r.restored, ["notatkę", "notatki", "notatek"])} do folderu „${folder}”`);
       if (r.skipped.length) toast.warning(`Nie przywrócono ${r.skipped.length} ${pluralPl(r.skipped.length, ["notatki prywatnej", "notatek prywatnych", "notatek prywatnych"])} — skarbiec się zablokował albo zmieniło się hasło`);

@@ -20,6 +20,8 @@ export interface SnapshotItem {
   current?: Note;
   /** Notatka prywatna: „ok” — da się przywrócić (ten sam klucz, skarbiec odblokowany); inaczej powód. */
   privacy: PrivateState;
+  /** Jawna w kopii, prywatna teraz (M3): bez odblokowania tytuł i treść ukryte, przywracana jako zaszyfrowana. */
+  sealed?: boolean;
 }
 
 export interface SnapshotComparison {
@@ -49,6 +51,11 @@ export function compareSnapshot(snapshot: DocState, current: Note[], currentVaul
     const privacy: PrivateState = !note.locked ? "plain" : !sameKey ? "other-key" : vaultUnlocked ? "ok" : "locked";
     const cur = now.get(note.id);
     if (!cur) { out.deleted.push({ note, privacy }); continue; }
+    if (!note.locked && cur.locked) {
+      // Zaszyfrowana bieżącym kluczem przy przywracaniu — metadane skarbca kopii nie mają znaczenia.
+      out.changed.push({ note, current: cur, privacy: vaultUnlocked ? "ok" : "locked", sealed: true });
+      continue;
+    }
     const differs = note.locked || cur.locked
       ? note.vault !== cur.vault || note.locked !== cur.locked
       : note.title !== cur.title || note.content !== cur.content;
@@ -71,6 +78,8 @@ export interface RestoreDeps {
   store: Pick<YjsStore, "insertNoteCopies" | "projectFolders">;
   reencryptCopy: (oldId: string, token: string, newId: string, folderId: string) => Promise<{ token: string; content: PrivateContent } | null>;
   adoptCopy: (id: string, token: string, content: PrivateContent) => void;
+  /** Szyfrowanie kopii notatki jawnej w kopii dziennej, a prywatnej teraz (`SnapshotItem.sealed`). */
+  sealCopy?: (note: Note) => Promise<{ token: string; content: PrivateContent } | null>;
   /** Znacznik sesji klucza skarbca; zwrócona funkcja mówi, czy klucz nadal ten sam. */
   copySession?: () => () => boolean;
   newId?: () => string;
@@ -106,7 +115,7 @@ export async function restoreSnapshotCopies(items: SnapshotItem[], snapshot: Pic
     const adopted: { id: string; token: string; content: PrivateContent }[] = [];
     const skipped: string[] = [];
     const origin = new Map<string, string>();
-    for (const { note, privacy } of items) {
+    for (const { note, privacy, sealed } of items) {
       if (privacy !== "plain" && privacy !== "ok") { skipped.push(note.id); continue; }
       const id = newId();
       // Aliasy zdublowałyby rozwiązywanie [[linków]] z oryginałem; ulubiona i reguły przypomnienia należą do oryginału.
@@ -115,7 +124,13 @@ export async function restoreSnapshotCopies(items: SnapshotItem[], snapshot: Pic
         reminderRepeat: _rr, reminderRule: _rule, reminderRepeatUntil: _until, reminderBase: _base, snoozedUntil: _snooze, ...rest
       } = note;
       const copy: Note = { ...rest, id, pinned: false, archived: false, trashed: false, trashedAt: null, reminder: null, order: 0, updatedAt: t };
-      if (note.locked && note.vault) {
+      if (sealed) {
+        const enc = await deps.sealCopy?.({ ...copy, folderId: folder.id });
+        if (!enc) { skipped.push(note.id); continue; }
+        Object.assign(copy, { title: "", content: "", labels: [], checklist: [], locked: true, vault: enc.token });
+        adopted.push({ id, token: enc.token, content: enc.content });
+        origin.set(id, note.id);
+      } else if (note.locked && note.vault) {
         // Folder w szyfrogramie ten sam, w którym kopia ląduje (liczy się przy zdjęciu blokady).
         const enc = await deps.reencryptCopy(note.id, note.vault, id, folder.id);
         if (!enc) { skipped.push(note.id); continue; }
