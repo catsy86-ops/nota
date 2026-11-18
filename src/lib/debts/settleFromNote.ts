@@ -2,7 +2,8 @@ import { toast } from "@/lib/notify";
 import { haptic } from "@/lib/haptics";
 import { amountText, getHideAmounts } from "./hideAmounts";
 import { balances, personKey } from "./model";
-import { addDebt, getDebts, removeDebt } from "./store";
+import { formatAmount } from "./model";
+import { addDebt, debtPlanState, getDebtPlans, getDebts, payDebtRate, removeDebt } from "./store";
 
 /**
  * 2.3 „Gotowe” w Terminach przy notatce zwrotu: pytanie „Oznaczyć jako oddane?” i wpis spłaty na kwotę
@@ -14,6 +15,28 @@ export function offerSettleFromNote(noteId: string): boolean {
   const entries = getDebts();
   const entry = entries.find((e) => e.dueNoteId === noteId);
   if (!entry) return false;
+  // L2.1: notatka planu rat — „Gotowe” nie dopisuje spłaty; pyta o ratę (seria idzie dalej jak dziś).
+  const plan = getDebtPlans().find((p) => p.entryId === entry.id);
+  if (plan) {
+    const state = debtPlanState(plan);
+    if (!state?.next) return false;
+    const { k, toPay } = state.next;
+    toast("Rata wpłacona?", {
+      id: `debt-rate-${noteId}`,
+      duration: 12_000,
+      description: `${entry.person}: rata ${k} z ${plan.count} — ${amountText(toPay, getHideAmounts())}`,
+      action: {
+        label: "Wpłacona",
+        onClick: () => {
+          const paid = payDebtRate(plan.id);
+          if (!paid) { haptic("warn"); toast.error("Nie udało się zapisać raty"); return; }
+          haptic("success");
+          toast.success(`Rata ${paid.k} z ${paid.count}: ${getHideAmounts() ? entry.person : formatAmount(paid.entry.amount)}`, { action: { label: "Cofnij", onClick: paid.undo } });
+        },
+      },
+    });
+    return true;
+  }
   const person = balances(entries).find((p) => p.key === personKey(entry.person));
   if (!person || person.balance === 0) return false;
   // Notatka „Zwrot od” (pożyczka) pyta tylko, gdy ta osoba nadal jest nam winna; „Oddać” — gdy my jej.

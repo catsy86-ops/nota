@@ -75,7 +75,7 @@ test("2.3: „Gotowe” w Terminach przy zwrocie pyta o spłatę i rozlicza osob
   await addLent(page, person, inDays(1));
   await page.goto("/przypomnienia");
   const tile = page.locator("[data-note-id-wrap]").filter({ hasText: `Zwrot od ${person}` }).first();
-  await tile.getByRole("button", { name: "Gotowe" }).click();
+  await tile.getByRole("button", { name: "Gotowe", exact: true }).click();
   await expect(page.getByText("Oznaczyć jako oddane?")).toBeVisible();
   await page.getByRole("button", { name: "Oddane" }).click();
   await expect(page.getByText(`Oddane w całości: ${person}`)).toBeVisible();

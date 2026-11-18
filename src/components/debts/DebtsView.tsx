@@ -14,13 +14,15 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { localDayKey } from "@/lib/dayDone";
-import { addDebt, addDebtFromText, removeDebt, renamePeople, restoreDebt, restoreDebts, updateDebt, useDebts } from "@/lib/debts/store";
+import { addDebt, addDebtFromText, addDebtPlan, attachPlanNote, removeDebt, renamePeople, restoreDebt, restoreDebts, updateDebt, useDebts } from "@/lib/debts/store";
 import { shareOrCopy } from "@/lib/shareOrCopy";
 import { downloadBlob } from "@/lib/downloadBlob";
 import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
 import { PageActions } from "@/components/PageActions";
 import { avatarHue, balances, debtsCsv, initialOf, debtSide, doubleSettle, foldName, personKey, personStatement, runningBalances, DEBT_KIND_LABEL, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 import { cardClass } from "@/components/ui/card";
+import { DebtPlans } from "./DebtPlans";
+import { PLAN_MAX_RATES, PLAN_MIN_RATES, rateAmounts } from "@/lib/debts/plans";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -200,7 +202,10 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
   const [note, setNote] = useState("");
   // Termin zwrotu (dzień, 9:00) — tylko przy pożyczce i długu; zapisuje się jako notatka z przypomnieniem.
   const [due, setDue] = useState("");
-  const [error, setError] = useState<{ field: "person" | "amount" | "due"; text: string } | null>(null);
+  // L2.1: „w ratach” — liczba rat i termin pierwszej (dzień miesiąca z tej daty); zamiast jednego terminu zwrotu.
+  const [inRates, setInRates] = useState(false);
+  const [rates, setRates] = useState("6");
+  const [error, setError] = useState<{ field: "person" | "amount" | "due" | "rates"; text: string } | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
   const uid = useId();
   const people = useMemo(() => knownPeople(entries), [entries]);
@@ -218,14 +223,25 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
     if (!person.trim()) { haptic("warn"); setError({ field: "person", text: "Podaj, kto to jest — imię albo nazwę." }); return; }
     if (parseAmount(amount) === null) { haptic("warn"); setError({ field: "amount", text: "Wpisz kwotę większą od zera, np. 150 albo 99,90." }); return; }
     const withDue = hasDue(kind) && !!due;
-    if (withDue && due < today) { setError({ field: "due", text: "Termin zwrotu nie może być w przeszłości." }); return; }
+    const planned = hasDue(kind) && inRates;
+    const count = Number(rates);
+    if (planned) {
+      if (!Number.isInteger(count) || count < PLAN_MIN_RATES || count > PLAN_MAX_RATES) { haptic("warn"); setError({ field: "rates", text: `Liczba rat od ${PLAN_MIN_RATES} do ${PLAN_MAX_RATES}.` }); return; }
+      if (rateAmounts(parseAmount(amount)!, count)[0] <= 0) { haptic("warn"); setError({ field: "rates", text: "Rata wyszłaby 0 zł — mniej rat albo większa kwota." }); return; }
+      if (!due) { haptic("warn"); setError({ field: "due", text: "Podaj termin pierwszej raty." }); return; }
+    }
+    if (withDue && due < today) { setError({ field: "due", text: planned ? "Pierwsza rata nie może być w przeszłości." : "Termin zwrotu nie może być w przeszłości." }); return; }
     const entry = addDebtFromText(person, kind, amount, note, at || undefined);
     if (!entry) { setError({ field: "person", text: "Nie udało się zapisać — sprawdź nazwę i datę." }); return; }
+    const plan = planned ? addDebtPlan({ entryId: entry.id, count, day: Number(due.slice(8, 10)), first: due }) : null;
     if (withDue && addReminderNote) {
       // Notatka z przypomnieniem trafia do Dziś, Terminów i powiadomień; wpis pamięta jej id.
-      const noteId = addReminderNote(dueTitle(kind, entry.person, entry.amount, hidden), entry.note, dueAt(due), [DEBT_NOTE_LABEL]);
+      const title = dueTitle(kind, entry.person, plan ? rateAmounts(entry.amount, count)[0] : entry.amount, hidden);
+      const noteId = addReminderNote(plan ? `${title} (rata)` : title, entry.note, dueAt(due), [DEBT_NOTE_LABEL]);
       updateDebt({ ...entry, dueNoteId: noteId });
+      if (plan) attachPlanNote(noteId, plan);
     }
+    setInRates(false);
     setError(null);
     setAmount("");
     setNote("");
@@ -288,8 +304,31 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
       </div>
 
       {hasDue(kind) && (
+        <label className="flex items-center gap-2 text-sm coarse:min-h-11">
+          <input type="checkbox" className="h-4 w-4" checked={inRates} onChange={(e) => { setInRates(e.target.checked); setError(null); }} />
+          W ratach (co miesiąc)
+        </label>
+      )}
+      {hasDue(kind) && inRates && (
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-due`} className="text-sm font-medium">Termin zwrotu <span className="font-normal text-muted-foreground">(z przypomnieniem o 9:00, nieobowiązkowe)</span></label>
+          <label htmlFor={`${uid}-rates`} className="text-sm font-medium">Liczba rat</label>
+          <Input
+            id={`${uid}-rates`}
+            inputMode="numeric"
+            value={rates}
+            className="shake-invalid tabular-nums"
+            aria-invalid={error?.field === "rates" || undefined}
+            aria-describedby={error?.field === "rates" ? `${uid}-err` : undefined}
+            onChange={(e) => { setRates(e.target.value.replace(/\D/g, "").slice(0, 2)); setError(null); }}
+          />
+          {parseAmount(amount) !== null && Number(rates) >= PLAN_MIN_RATES && Number(rates) <= PLAN_MAX_RATES && (
+            <p className="ui-hint">Rata: {amountText(rateAmounts(parseAmount(amount)!, Number(rates))[0], hidden)}{rateAmounts(parseAmount(amount)!, Number(rates)).at(-1) !== rateAmounts(parseAmount(amount)!, Number(rates))[0] ? `, ostatnia ${amountText(rateAmounts(parseAmount(amount)!, Number(rates)).at(-1)!, hidden)}` : ""}</p>
+          )}
+        </div>
+      )}
+      {hasDue(kind) && (
+        <div className="space-y-1.5">
+          <label htmlFor={`${uid}-due`} className="text-sm font-medium">{inRates ? <>Pierwsza rata <span className="font-normal text-muted-foreground">(kolejne tego dnia miesiąca, przypomnienie o 9:00)</span></> : <>Termin zwrotu <span className="font-normal text-muted-foreground">(z przypomnieniem o 9:00, nieobowiązkowe)</span></>}</label>
           <Input
             id={`${uid}-due`}
             type="date"
@@ -505,6 +544,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
         </SheetDescription>
       </SheetHeader>
       <PersonTools person={person} others={others} onRekey={onRekey} />
+      <DebtPlans person={person} hidden={hidden} />
 
       {twice && (
         // 1.6: „Oddał całość” na dwóch telefonach naraz — saldo przeskoczyło na drugą stronę.

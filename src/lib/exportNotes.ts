@@ -170,7 +170,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   await versionsStore.load();
   await shiftsReady();
   // Dane działu Praca ładowane dopiero tu — nie wchodzą do paczki startowej.
-  const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }, { trainingDump }, { debtsDump }, { entryCheckDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store"), import("@/lib/training/store"), import("@/lib/debts/store"), import("@/lib/study/entryCheckStore")]);
+  const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }, { trainingDump }, { debtsDump, debtPlansDump }, { entryCheckDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store"), import("@/lib/training/store"), import("@/lib/debts/store"), import("@/lib/study/entryCheckStore")]);
   await studyReady();
   const { weightDump } = await import("@/lib/weight/store");
   const { kitsDump } = await import("@/lib/study/kitsStore");
@@ -213,6 +213,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     training: JSON.stringify(trainingDump()),
     // Długi: pożyczki są w dokumencie Yjs, więc bez tej sekcji kopia by je gubiła.
     debts: JSON.stringify(debtsDump()),
+    debtPlans: JSON.stringify(debtPlansDump()),
     // Lista przed wejściem na budowę (punkty i odhaczenia dni) — osobna mapa, scalana przy przywracaniu.
     entryCheck: JSON.stringify(entryCheckDump()),
     // Zestawy materiału (H1.2) — osobna mapa, scalana przy przywracaniu bez nadpisywania.
@@ -378,7 +379,7 @@ const errName = (e: unknown): string => (e instanceof Error ? e.name : "błąd")
  * i budowie kopii. `load` wczytuje moduł w fazie sprawdzania; zwrócona funkcja scala **synchronicznie** w fazie zapisu.
  * Kolejność ma znaczenie (P8): `training` sprawdza notatki, więc idzie po wymianie notatek.
  */
-type MergeKey = "supplements" | "diet" | "weight" | "training" | "debts" | "entryCheck" | "kits" | "views" | "points" | "plans" | "billing" | "van" | "invoices" | "pricing" | "clients" | "jobs";
+type MergeKey = "supplements" | "diet" | "weight" | "training" | "debts" | "debtPlans" | "entryCheck" | "kits" | "views" | "points" | "plans" | "billing" | "van" | "invoices" | "pricing" | "clients" | "jobs";
 type Merge = (dump: never) => unknown;
 export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; load: () => Promise<Merge> }[] = [
   { key: "supplements", label: "Suplementy", load: async () => (await import("@/lib/supplements/store")).mergeSupplementDump },
@@ -387,6 +388,8 @@ export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; load: () =
   // Notatki z kopii są już wczytane, więc można sprawdzić, czy przypomnienie ma swoją notatkę.
   { key: "training", label: "Trening", load: async () => { const m = await import("@/lib/training/store"); return (d: never) => m.mergeTrainingDump(d, (id: string) => yjsStore.projectNotes().some((n) => n.id === id)); } },
   { key: "debts", label: "Długi", load: async () => (await import("@/lib/debts/store")).mergeDebtsDump },
+  // Po „Długi”: plan bez pożyczki jest pomijany.
+  { key: "debtPlans", label: "Raty", load: async () => (await import("@/lib/debts/store")).mergeDebtPlansDump },
   { key: "entryCheck", label: "Lista przed wejściem", load: async () => (await import("@/lib/study/entryCheckStore")).mergeEntryCheckDump },
   { key: "kits", label: "Zestawy", load: async () => (await import("@/lib/study/kitsStore")).mergeKitsDump },
   { key: "views", label: "Widoki", load: async () => (await import("@/lib/savedViews")).mergeViewsDump },

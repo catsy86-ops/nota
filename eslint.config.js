@@ -100,6 +100,8 @@ export default tseslint.config(
       "src/lib/debts/yDebts.test.ts",
       "src/lib/debts/yDebts.edit.test.ts",
       "src/lib/debts/yDebts.extra.test.ts",
+      "src/lib/debts/plans.test.ts",
+      "src/lib/docReplace.test.ts",
       "src/lib/supplements/extra.test.ts",
       "src/lib/supplements/takeFlow.test.ts",
       "src/lib/training/extra.test.ts",
