@@ -14,6 +14,15 @@ import {
   composeSiteLists, itemKey, LIST_FIELD, listItemId, listItemValue, metaKey, sameItem, SITE_LIST_KINDS, stripLists,
   type SiteListKind, type StageItem,
 } from "./siteItems";
+import { mergeStored } from "@/lib/extraFields";
+
+/** Pola znane tej wersji (D1.1): reszta wpisu z dokumentu przechodzi przy nadpisaniu (`mergeStored`). */
+const ROUNDS_KNOWN = ["rounds", "best"] as const;
+const REVIEW_KNOWN = ["reps", "interval", "ease", "due", "last", "lapses", "seen", "right", "stability", "difficulty", "state"] as const;
+const BOSS_KNOWN = ["name", "phone"] as const;
+const GROUP_KNOWN = ["name", "link"] as const;
+const CUSTOM_KNOWN = ["kind", "id", "topic", "question", "correct", "wrong", "explanation", "text", "title"] as const;
+
 
 /**
  * Dane Nauki w Y.Doc notatek — synchronizują się i trafiają do pliku sync razem
@@ -325,7 +334,7 @@ export function createYStudy(doc: Y.Doc) {
     transact(() => {
       const prev = rounds.get(device);
       const best = prev?.best ?? null;
-      rounds.set(device, { rounds: (prev?.rounds ?? 0) + 1, best: best === null ? percent : Math.max(best, percent) });
+      rounds.set(device, mergeStored({ rounds: (prev?.rounds ?? 0) + 1, best: best === null ? percent : Math.max(best, percent) }, prev, ROUNDS_KNOWN) as DeviceRounds);
       if (DAY_RE.test(day) && !days.has(day)) days.set(day, true);
       for (const id of demote) if (board.get(id) === "done") board.set(id, "doing");
       for (const r of results) toggleIn(missed, r.id, !r.ok);
@@ -333,7 +342,8 @@ export function createYStudy(doc: Y.Doc) {
         for (const r of results) {
           const prevCard = cleanCard(review.get(r.id)) ?? undefined;
           const nextCard = reviewCard(prevCard, r.ok, day);
-          if (nextCard !== prevCard) review.set(r.id, nextCard);
+          // Pola nowszej wersji karty (np. inny algorytm powtórek) zostają przy odpowiedzi na tej wersji (D1.1).
+          if (nextCard !== prevCard) review.set(r.id, mergeStored(nextCard, review.get(r.id), REVIEW_KNOWN) as ReviewCard);
         }
       }
     });
@@ -415,12 +425,12 @@ export function createYStudy(doc: Y.Doc) {
 
   /** Szef do raportów; `null` usuwa kontakt. */
   function setBoss(boss: Boss | null): void {
-    transact(() => { if (boss) meta.set("boss", boss); else if (meta.has("boss")) meta.delete("boss"); });
+    transact(() => { if (boss) meta.set("boss", mergeStored(boss, meta.get("boss"), BOSS_KNOWN)); else if (meta.has("boss")) meta.delete("boss"); });
   }
 
   /** Grupa WhatsApp na raporty; `null` ją usuwa. */
   function setGroup(group: WaGroup | null): void {
-    transact(() => { if (group) meta.set("waGroup", group); else if (meta.has("waGroup")) meta.delete("waGroup"); });
+    transact(() => { if (group) meta.set("waGroup", mergeStored(group, meta.get("waGroup"), GROUP_KNOWN)); else if (meta.has("waGroup")) meta.delete("waGroup"); });
   }
 
   function setSite(site: string): void {
@@ -476,7 +486,7 @@ export function createYStudy(doc: Y.Doc) {
 
   /** Edycja własnego wpisu: nowa treść pod tym samym id — powtórki i błędy zostają (§4 P6). */
   function updateCustom(entry: CustomEntry): void {
-    if (custom.has(entry.id)) custom.set(entry.id, entry);
+    if (custom.has(entry.id)) custom.set(entry.id, mergeStored(entry, custom.get(entry.id), CUSTOM_KNOWN) as CustomEntry);
   }
 
   /** Cofnięcie usunięcia: wpis wraca z tym samym id (powtórki już nie wrócą). */

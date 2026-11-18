@@ -134,6 +134,8 @@ export default tseslint.config(
       "src/lib/docFormat.test.ts",
       // D1.1: nieznane pola Ćwiczeń — wpisy wstawiane prosto do map Yjs.
       "src/lib/exerciseExtra.test.ts",
+      // D1.1: nieznane pola Pracy — wpisy wstawiane prosto do map Yjs.
+      "src/lib/study/extraD11.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.
       "e2e/images.spec.ts",
       "src/hooks/useNotes.ts",

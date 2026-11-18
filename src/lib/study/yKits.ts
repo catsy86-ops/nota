@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { cleanKit, DEFAULT_KITS, KITS_MAX, type Kit } from "./kits";
+import { mergeStored } from "@/lib/extraFields";
 
 /**
  * Zestawy materiału w Y.Doc notatek (H1.2) — synchronizacja i kopia jak reszta danych. Mapa `studyKits`:
@@ -75,7 +76,8 @@ export function createYKits(doc: Y.Doc) {
       const prev = map.get(key) as { order?: unknown } | undefined;
       if (!prev && stored().length >= KITS_MAX) { ok = false; return; }
       const order = typeof prev?.order === "number" ? prev.order : Date.now();
-      map.set(key, { ...clean, order });
+      // Pola nowszej wersji zestawu zostają przy edycji na tej (D1.1).
+      map.set(key, mergeStored({ ...clean, order }, prev, ["id", "name", "fittings", "pipes", "forPoints", "order"]));
     }, KITS_ORIGIN);
     return ok;
   }

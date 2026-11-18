@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { cleanPoint, cleanRoom, POINTS_MAX, ROOMS_MAX, type Room, type WaterPoint } from "./points";
+import { mergeStored } from "@/lib/extraFields";
 
 /**
  * Punkty w pomieszczeniach w Y.Doc notatek (H2.1) — synchronizacja i kopia jak reszta danych. Mapa
@@ -72,10 +73,14 @@ export function createYPoints(doc: Y.Doc) {
     return true;
   }
 
+  // D1.1: pola nowszej wersji pomieszczenia i punktu zostają przy zapisie na tej.
+  const ROOM_KNOWN = ["id", "name", "order"];
+  const POINT_KNOWN = ["id", "room", "type", "sides", "height", "steps", "order", "by"];
+
   function renameRoom(site: string, id: string, name: string): void {
     const prev = get(site).rooms.find((r) => r.id === id);
     const r = prev && cleanRoom({ ...prev, name });
-    if (r) doc.transact(() => map.set(roomKey(site, id), r), POINTS_ORIGIN);
+    if (r) doc.transact(() => map.set(roomKey(site, id), mergeStored(r, map.get(roomKey(site, id)), ROOM_KNOWN)), POINTS_ORIGIN);
   }
 
   /** Usuwa pomieszczenie z jego punktami; zwraca je do „Cofnij”. */
@@ -97,7 +102,7 @@ export function createYPoints(doc: Y.Doc) {
     const cur = get(site);
     if (!p || !cur.rooms.some((r) => r.id === p.room)) return false;
     if (!cur.points.some((x) => x.id === p.id) && cur.points.length >= POINTS_MAX) return false;
-    doc.transact(() => map.set(pointKey(site, p.id), p), POINTS_ORIGIN);
+    doc.transact(() => map.set(pointKey(site, p.id), mergeStored(p, map.get(pointKey(site, p.id)), POINT_KNOWN)), POINTS_ORIGIN);
     return true;
   }
 

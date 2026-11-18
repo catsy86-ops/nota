@@ -3,6 +3,7 @@ import { cleanPricing, PRICING_ITEMS_MAX, type CompanyPricing, type PricingItem 
 import { fittingKey } from "./fittings";
 import type { PriceList } from "./materialUsage";
 import { cleanTemplate, TEMPLATES_MAX, type QuoteTemplate } from "./quoteTemplates";
+import { mergeStored } from "@/lib/extraFields";
 
 /**
  * Cenniki w Y.Doc notatek (plan wycen i klientów, 4.1) — synchronizacja i kopia jak reszta danych. Wcześniej leżały
@@ -69,6 +70,9 @@ export function createYPricing(doc: Y.Doc) {
     return () => listeners.delete(cb);
   }
 
+  // D1.1: pola nowszej wersji pozycji cennika i szablonu zostają przy zapisie na tej.
+  const LABOR_KNOWN = ["name", "price", "pointType", "createdAt"];
+  const TEMPLATE_KNOWN = ["name", "items", "margin", "createdAt"];
   const laborValue = (i: PricingItem) => ({ name: i.name, price: i.price, pointType: i.pointType, createdAt: i.createdAt });
 
   /**
@@ -80,7 +84,7 @@ export function createYPricing(doc: Y.Doc) {
     const keep = new Set(clean.map((i) => LABOR + i.id));
     doc.transact(() => {
       for (const k of [...map.keys()]) if (k.startsWith(LABOR) && !keep.has(k)) map.delete(k);
-      for (const i of clean) map.set(LABOR + i.id, laborValue(i));
+      for (const i of clean) map.set(LABOR + i.id, mergeStored(laborValue(i), map.get(LABOR + i.id), LABOR_KNOWN));
     }, PRICING_ORIGIN);
   }
 
@@ -104,7 +108,7 @@ export function createYPricing(doc: Y.Doc) {
     if (!clean) return false;
     if (!map.has(TEMPLATE + clean.id) && templates().length >= TEMPLATES_MAX) return false;
     const { id, ...value } = clean;
-    doc.transact(() => map.set(TEMPLATE + id, value), PRICING_ORIGIN);
+    doc.transact(() => map.set(TEMPLATE + id, mergeStored(value, map.get(TEMPLATE + id), TEMPLATE_KNOWN)), PRICING_ORIGIN);
     return true;
   }
 

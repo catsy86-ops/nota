@@ -26,6 +26,14 @@ const PRESERVES: Record<string, string> = {
   weightEntries: "src/lib/exerciseExtra.test.ts",
   dietMeals: "src/lib/exerciseExtra.test.ts",
   dietMeta: "src/lib/exerciseExtra.test.ts",
+  studyCustom: "src/lib/study/extraD11.test.ts",
+  studyKits: "src/lib/study/extraD11.test.ts",
+  studyMeta: "src/lib/study/extraD11.test.ts",
+  studyPoints: "src/lib/study/extraD11.test.ts",
+  studyPricing: "src/lib/study/extraD11.test.ts",
+  studyReview: "src/lib/study/extraD11.test.ts",
+  studyRounds: "src/lib/study/extraD11.test.ts",
+  studyVan: "src/lib/study/extraD11.test.ts",
 };
 
 const EXEMPT: Record<string, string> = {
@@ -50,10 +58,9 @@ const EXEMPT: Record<string, string> = {
 /** Do sprawdzenia w D1.1 (działami). Zmniejszaj, przenosząc do PRESERVES albo EXEMPT z uzasadnieniem. */
 const TODO = [
   "folders", "labels", "plans", "propDefs", "shiftBonuses", "shiftDays", "shiftMeta", "shiftPatterns", "shiftSchedules", "shiftTypes",
-  "studyCustom", "studyKits", "studyMeta", "studyPoints", "studyPricing", "studyReview", "studyRounds", "studySiteItems", "studyVan", "trainingMeta",
-  "vault", "views",
+  "studySiteItems", "trainingMeta", "vault", "views",
 ];
-const TODO_MAX = 22;
+const TODO_MAX = 14;
 
 const CONSTS: Record<string, string> = { SYNC_CONTROL_MAP: "syncControl", PLANS_MAP: "plans", REGISTRY_MAP: "shiftSchedules", DOC_FORMAT_MAP: "docFormat" };
 

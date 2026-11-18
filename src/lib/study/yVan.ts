@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { cleanVanEvent, cleanVanItem, VAN_ITEMS_MAX, type VanEvent, type VanItem } from "./van";
+import { mergeStored } from "@/lib/extraFields";
 
 /**
  * Materiał w aucie (H1.3) w Y.Doc notatek. Mapa `studyVan`: `i␁id` pozycja, `e␁pozycja␁id` zdarzenie
@@ -62,7 +63,8 @@ export function createYVan(doc: Y.Doc) {
     const exists = map.has(key("i", item.id));
     if (!clean || (!exists && get().items.length >= VAN_ITEMS_MAX)) return false;
     const { id, ...value } = clean;
-    doc.transact(() => map.set(key("i", id), value), VAN_ORIGIN);
+    // D1.1: pola nowszej wersji pozycji zostają przy edycji na tej.
+    doc.transact(() => map.set(key("i", id), mergeStored(value, map.get(key("i", id)), ["name", "unit", "min", "code", "at", "order"])), VAN_ORIGIN);
     return true;
   }
 
