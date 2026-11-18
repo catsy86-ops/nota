@@ -975,6 +975,41 @@ Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) 
 
 Z-15.6 (część niezależna od F2), 2026-11-18 — commit po tym wpisie.
 
+## Synchronizacja — duże wiadomości WebRTC dzielone na ramki (D-U1, U-1, 2026-11-18)
+
+### Co robi
+
+- Pełna wymiana dużego dokumentu notatek i pierwsza wymiana obrazów przez połączenie bezpośrednie dochodzą także powyżej 256 KiB. Wcześniej Chrome odrzucał taką wiadomość, a `y-webrtc` połykał błąd — synchronizacja po cichu stała.
+
+### Gdzie jest
+
+- `src/lib/sync/peerChunks.ts` — `encodeChunks`, `createAssembler`, `attachChunking`, `chunkProvider`; stałe `CHUNK_SIZE` (64 KiB), `CHUNK_FROM` (192 KiB).
+- `src/lib/yjsSync.ts` — `chunkProvider(p, { maxBytes: 64 MiB }, "yjs i")` na każdym dostawcy pokoju.
+- `src/lib/imageSync.ts` — `chunkProvider(p, { maxBytes: 256 MiB }, "img")`.
+- `package.json` — `y-webrtc` przypięty dokładnie na `10.3.0` (owijamy wnętrze biblioteki).
+
+### Jak działa i dlaczego
+
+- Wiadomość od `CHUNK_FROM` idzie jako ramki `[100, 1, id(4), index(4), total(4), dane]`; mniejsze bez zmian, więc ze starszą wersją aplikacji małe wiadomości działają jak dotąd (typ 100 starsza wersja pomija).
+- `chunkProvider` słucha zdarzenia `peers` dostawcy — `y-webrtc` emituje je przy sygnalizacji, przed `connect`, więc owinięcie jest gotowe przed pierwszym krokiem synchronizacji. `attachChunking` podmienia `peer.send` i jedyny słuchacz `data`.
+- Wysyłka ramek idzie kolejką z kontrolą `bufferedAmount` (czeka powyżej 1 MiB; Chrome zamyka kanał przy przepełnieniu bufora). Gdy kolejka nie jest pusta, małe wiadomości czekają za nią, żeby zachować kolejność.
+- Odbiór: najwyżej 4 składane wiadomości naraz, 60 s na złożenie, limit rozmiaru. Każdy błąd ramki zamyka połączenie zamiast gubić część — wiadomości synchronizacji nie wolno pominąć.
+- Połączenie o nieznanym kształcie (inna wersja `simple-peer`) jest zamykane i logowane w diagnostyce.
+
+### Ograniczenia i pułapki
+
+- Owijamy wnętrze `y-webrtc`/`simple-peer` (`room.webrtcConns`, `peer._channel`); aktualizację biblioteki pilnuje test-kanarek w `peerChunks.test.ts`.
+- Wiadomość jest składana w pamięci w całości (do 64 MiB dla dokumentu, 256 MiB dla obrazów).
+
+### Testy
+
+- `src/lib/sync/peerChunks.test.ts` — podział i złożenie, ramki nie po kolei, duplikaty, sprzeczne nagłówki, limity, kolejność małych za dużymi, kształt `y-webrtc` (kanarek).
+- Ręcznie w Chromium (Playwright, dwa `simple-peer` w jednej stronie): 100 B, 300 KiB, 1 MiB, 8 MiB i 50 B doszły w kolejności i bez zmian.
+
+### Commit
+
+`ee4e11ac`, 2026-11-18 (opis — commit po tym wpisie).
+
 ## Notatki — stan aktualny (kafel, edytor, czytnik, kompozytor, lista, wyszukiwanie, właściwości)
 
 Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 planu) jest uwzględniony jako struktura kodu, nie jako historia.
