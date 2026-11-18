@@ -214,7 +214,7 @@ Błędy znalezione i poprawione w `src/lib/imageStore.ts`:
 **Zostaje dla Opus/Sonnet:**
 
 - **Z-6.T (Sonnet, S)** — testy nowych zachowań w `imageStore.test.ts`: (a) ponowne `putDataUrl` rekordu starszego niż karencja → `collectGarbage(new Set())` zwraca 0; (b) dwa magazyny na tej samej bazie: `add` z A widać w `b.has()` i w `onAdded`, po odśmieceniu w B `a.has()` jest fałszem, a ponowne `put` w A odtwarza bajty; (c) bezpiecznik: 30 plików, 5 używanych → 0 usuniętych; 20 używanych → 10 usuniętych. Wszystkie trzy przypadki Fable uruchomił jako test roboczy — przechodzą.
-- **Z-6.1–Z-6.3 (Opus, M)** — punkty 1–3 wyżej bez zmian (test „każdy zapis ma czytelnika”, test statyczny, jedno źródło listy).
+- **Z-6.1–Z-6.3 (Opus, M)** — punkty 1–3 wyżej bez zmian (test „każdy zapis ma czytelnika”, test statyczny, jedno źródło listy). — **Z-6.1 i Z-6.2 ZROBIONE 2026-11-18** (`src/lib/imageWriters.test.ts`); Z-6.3 świadomie nie: stan lokalny dziennika wymaga modułów spoza paczki startowej (opis w `opis.md`).
 - **Z-6.5 (Opus, S)** — trwałe usunięcie notatki z „Cofnij” tuż przy starcie odśmiecania: jeśli plik jest starszy niż 7 dni, cofnięcie przywraca notatkę bez obrazu. Okno jest wąskie (odśmiecanie biega raz, po starcie). Propozycja: przy trwałym usunięciu odnowić `addedAt` plików notatki (`images.touch`), wtedy karencja liczy się od usunięcia.
 - **Z-6.6 (decyzja właściciela)** — po zadziałaniu bezpiecznika śmieci zostają na stałe. Czy dodać w Ustawieniach → Kopia i dane przycisk „Usuń nieużywane pliki (N)” z potwierdzeniem?
 
