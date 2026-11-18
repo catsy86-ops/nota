@@ -215,6 +215,8 @@ export function useNotes() {
   }, []);
 
   const deleteNote = useCallback((id: string) => {
+    // Z-6.5: „Cofnij” trwałego usunięcia oddaje notatkę z obrazami — karencja plików liczy się od usunięcia.
+    void yjsStore.images.touch(yjsStore.noteFileRefs([id]));
     yjsStore.removeNote(id);
   }, []);
 
@@ -231,7 +233,10 @@ export function useNotes() {
 
   const emptyTrash = useCallback(() => {
     const trashedIds = yjsStore.projectNotes().filter((n) => n.trashed).map((n) => n.id);
-    if (trashedIds.length) yjsStore.removeNotes(trashedIds);
+    if (trashedIds.length) {
+      void yjsStore.images.touch(yjsStore.noteFileRefs(trashedIds));
+      yjsStore.removeNotes(trashedIds);
+    }
   }, []);
 
   const togglePin = useCallback((id: string) => {

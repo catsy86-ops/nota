@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createImageStore, dataUrlToBytes, bytesToDataUrl, isImageRef, GC_GRACE_MS } from "./imageStore";
 
 const PNG = "data:image/png;base64,iVBORw0KGgo=";
@@ -63,6 +63,19 @@ describe("imageStore", () => {
     await store.putDataUrl(PNG); // już jest — bez powiadomienia
     off();
     expect(seen).toEqual([ref]);
+  });
+
+  it("Z-6.5: touch odnawia karencję — stary sierota po trwałym usunięciu notatki zostaje", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const old = await store.putDataUrl(GIF);
+      vi.setSystemTime(Date.now() + GC_GRACE_MS + 1000);
+      await store.touch([old, "0".repeat(64)]);
+      expect(await store.collectGarbage(new Set())).toBe(0);
+      expect(await store.collectGarbage(new Set(), Date.now() + GC_GRACE_MS + 1)).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("garbage-collects only unreferenced images older than the grace period", async () => {

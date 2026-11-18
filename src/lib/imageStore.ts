@@ -310,6 +310,26 @@ export function createImageStore(dbName: string) {
   }
 
   /**
+   * Z-6.5: nowa data zapisu istniejących plików — karencja odśmiecania liczy się od teraz. Trwałe usunięcie notatki
+   * z „Cofnij” przy starym pliku (> 7 dni) inaczej oddałoby notatkę bez obrazu, gdy odśmiecanie zdąży pobiec.
+   * Błąd bazy jest pomijany (co najwyżej stara karencja, jak dotąd).
+   */
+  async function touch(hashes: readonly string[]): Promise<void> {
+    if (hashes.length === 0) return;
+    const now = Date.now();
+    try {
+      await db("readwrite", (s) => new Promise<void>((resolve, reject) => {
+        for (const hash of hashes) {
+          const req = s.get(hash) as IDBRequest<StoredImage | undefined>;
+          req.onsuccess = () => { if (req.result) s.put({ ...req.result, addedAt: now }, hash); };
+        }
+        s.transaction.oncomplete = () => resolve();
+        s.transaction.onabort = s.transaction.onerror = () => reject(s.transaction.error);
+      }));
+    } catch (err) { logDiag("warn", "imageStore", "touch failed", err); }
+  }
+
+  /**
    * Sprawdzenie daty i usunięcie w jednej transakcji: inna karta, która właśnie odnowiła datę pliku
    * (ponowne dodanie), wygrywa z odśmiecaniem — między odczytem a `delete` nic się nie wciśnie.
    * Plik po kolei, więc bajty kandydatów nie leżą wszystkie naraz w pamięci.
@@ -381,7 +401,7 @@ export function createImageStore(dbName: string) {
 
   return {
     load, has, putBytes, putDataUrl, putBlob, ingest, get: getRecord, getDataUrl, resolve,
-    acquireUrl, releaseUrl, acquireThumbUrl, releaseThumbUrl, onAdded, collectGarbage, resetForTests,
+    acquireUrl, releaseUrl, acquireThumbUrl, releaseThumbUrl, onAdded, collectGarbage, touch, resetForTests,
   };
 }
 

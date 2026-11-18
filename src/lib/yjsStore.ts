@@ -884,6 +884,19 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     return refs;
   }
 
+  /** Obrazy i załączniki podanych notatek (Z-6.5: odnowienie karencji przy trwałym usunięciu). */
+  function noteFileRefs(ids: readonly string[]): string[] {
+    const refs = new Set<string>();
+    for (const id of ids) {
+      const y = notesMap.get(id);
+      if (!y) continue;
+      const list = y.get("imageHashes");
+      if (Array.isArray(list)) for (const r of list) if (typeof r === "string") refs.add(r);
+      for (const a of plainAttachments(y.get("attachments"))) refs.add(a.hash);
+    }
+    return [...refs];
+  }
+
   /** Załączniki wszystkich notatek: hash → manifest (rozmiar do limitu łącznego i backupu). */
   function referencedAttachments(): Map<string, Attachment> {
     const out = new Map<string, Attachment>();
@@ -1303,7 +1316,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   return {
     doc, notesMap, foldersMap, labelsMap, images, isPersistenceOrigin,
     ready, projectNotes, projectFolders, projectLabels, projectPropDefs, upsertPropDef, deletePropDef, propDefsMap,
-    upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes, importBatch,
+    upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes, importBatch, noteFileRefs,
     upsertFolder, patchFolder, removeFolder, insertNoteCopies,
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, replaceAllChunked, isBulkWriting, onBulkWriteEnd, resetForTests, diagStats, encodeSyncState, encodeStateVector, mergeSyncState,
