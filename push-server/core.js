@@ -20,7 +20,12 @@ export const LIMITS = {
   staleMs: 60 * 24 * 60 * 60 * 1000,
   /** Termin spóźniony bardziej niż tyle (np. serwer stał) przepada zamiast przyjść w nocy. */
   lateMs: 60 * 60 * 1000,
+  /** D-A2: bez `PUT /schedule` tak długo, a zostaje ostatni termin — serwer prosi o otwarcie aplikacji. */
+  nudgeAfterMs: 3 * 24 * 60 * 60 * 1000,
 };
+
+/** Treść prośby o otwarcie aplikacji (D-A2): bez danych użytkownika, jak `POST /test`. */
+export const NUDGE_ITEM = { title: "NOTKI", body: "Otwórz aplikację, żeby przypomnienia przychodziły dalej.", url: "/" };
 
 const str = (v, max) => (typeof v === "string" ? v.slice(0, max) : "");
 
@@ -161,7 +166,7 @@ export function cleanStore(raw, now) {
     if (!subscription) continue;
     // Spóźnione o mniej niż `lateMs` zostają — wyśle je pierwszy obieg.
     const items = cleanItems(sub.items, now - LIMITS.lateMs);
-    store.subs[subKey(subscription.endpoint)] = { subscription, items, updated: Number(sub.updated) || now };
+    store.subs[subKey(subscription.endpoint)] = { subscription, items, updated: Number(sub.updated) || now, ...(sub.nudged === true ? { nudged: true } : {}) };
   }
   return store;
 }
@@ -258,11 +263,21 @@ export async function tickStore(store, now, sendOne) {
   for (const id of staleSubs(store, now)) { delete store.subs[id]; dirty = true; }
   const { send, drop } = dueItems(store, now);
   for (const { id, item } of drop) removeItems(store, id, [item.key]);
+  const sentTo = new Set();
   for (const { id, item } of send) {
     const sub = store.subs[id];
     if (!sub) continue;
     removeItems(store, id, [item.key]);
     if ((await sendOne(id, sub.subscription, payloadOf(item))) === "gone") delete store.subs[id];
+    else sentTo.add(id);
+  }
+  // D-A2: lista kończy się (aplikacja dawno nie wysłała nowej) — raz na listę prośba o otwarcie aplikacji,
+  // inaczej seria w PWA urywa się po cichu po horyzoncie. Nowy `PUT /schedule` zdejmuje znacznik.
+  for (const id of sentTo) {
+    const sub = store.subs[id];
+    if (!sub || sub.nudged || sub.items.length > 1 || now - (Number(sub.updated) || 0) < LIMITS.nudgeAfterMs) continue;
+    sub.nudged = true;
+    if ((await sendOne(id, sub.subscription, payloadOf({ key: `open:${now}`, ...NUDGE_ITEM }))) === "gone") delete store.subs[id];
   }
   return dirty || send.length > 0 || drop.length > 0;
 }

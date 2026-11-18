@@ -138,3 +138,21 @@ test("format 1 (S3.1): enc i losowy key, za długie enc odrzucone, title obok en
   const store = cleanStore({ subs: { x: { subscription: sub, items, updated: NOW } } }, NOW);
   assert.deepEqual(Object.values(store.subs)[0].items, items);
 });
+
+test("D-A2: zostaje ostatni termin, a aplikacja dawno nie wysłała listy — raz prośba o otwarcie", async () => {
+  const old = TICK_NOW - LIMITS.nudgeAfterMs - 1000;
+  const store = storeWith([item("a", TICK_NOW - 1000), item("b", TICK_NOW + 60_000)], old);
+  const sent = [];
+  await tickStore(store, TICK_NOW, async (_id, _sub, payload) => { sent.push(JSON.parse(payload)); return "ok"; });
+  assert.deepEqual(sent.map((p) => p.title), ["a", "NOTKI"]);
+  assert.equal(store.subs.s1.nudged, true);
+  sent.length = 0;
+  store.subs.s1.items.push(item("c", TICK_NOW + 1000));
+  await tickStore(store, TICK_NOW + 2000, async (_id, _sub, payload) => { sent.push(JSON.parse(payload)); return "ok"; });
+  assert.equal(sent.filter((p) => p.title === "NOTKI").length, 0, "drugi raz nie");
+  // Świeża lista — bez prośby.
+  const fresh = storeWith([item("a", TICK_NOW - 1000)], TICK_NOW - 1000);
+  const calls = [];
+  await tickStore(fresh, TICK_NOW, async (_i, _s, payload) => { calls.push(payload); return "ok"; });
+  assert.equal(calls.length, 1);
+});
