@@ -1,5 +1,6 @@
 import { pushPrefs, pushToken, updatePushPrefs } from "./prefs";
 import type { PushItem } from "./schedule";
+import { contentKey, sealItems, takeResendRequest } from "./seal";
 
 /**
  * Subskrypcja Web Push i wysyłka harmonogramu na serwer (`push-server/server.js`):
@@ -66,7 +67,7 @@ async function currentSubscription(): Promise<PushSubscription | null> {
 export async function enablePush(server: string, token = ""): Promise<void> {
   const permission = Notification.requestPermission();
   if ((await permission) !== "granted") throw new Error("Brak zgody na powiadomienia w przeglądarce.");
-  const { publicKey } = (await (await call(server, "/vapid", "GET", undefined, false, token)).json()) as { publicKey?: string };
+  const { publicKey, enc } = (await (await call(server, "/vapid", "GET", undefined, false, token)).json()) as { publicKey?: string; enc?: number };
   if (typeof publicKey !== "string") throw new Error("To nie jest serwer powiadomień G.");
   const key = keyBytes(publicKey);
   const reg = await navigator.serviceWorker.ready;
@@ -82,7 +83,7 @@ export async function enablePush(server: string, token = ""): Promise<void> {
   const subscription = (await reg.pushManager.getSubscription())?.toJSON();
   if (subscription) await call(server, "/schedule", "PUT", { subscription, items: [] }, false, token);
   pushToken.set(token);
-  updatePushPrefs({ server, enabled: true, sentHash: undefined, last: undefined });
+  updatePushPrefs({ server, enabled: true, sentHash: undefined, last: undefined, enc: enc === 1, encAt: Date.now() });
 }
 
 export async function disablePush(): Promise<void> {
@@ -141,24 +142,65 @@ export function uploadSchedule(items: PushItem[], keepalive = false): Promise<vo
   return run;
 }
 
+/** Odświeża `enc` (czy serwer przyjmuje format zaszyfrowany) co `RESEND_MS`; błąd zostawia poprzednią wartość. */
+async function refreshEnc(server: string): Promise<void> {
+  const { encAt } = pushPrefs.get();
+  if (encAt && Date.now() - encAt < RESEND_MS) return;
+  try {
+    const { enc } = (await (await call(server, "/vapid", "GET")).json()) as { enc?: number };
+    updatePushPrefs({ enc: enc === 1, encAt: Date.now() });
+  } catch {
+    /* sprawdzimy przy następnej wysyłce */
+  }
+}
+
+const fail = (error: string) => updatePushPrefs({ sentHash: undefined, last: { at: Date.now(), ok: false, error } });
+
 async function uploadNow(items: PushItem[], keepalive: boolean): Promise<void> {
+  if (!pushPrefs.get().enabled) return;
+  // Worker nie odszyfrował powiadomienia (inny klucz) — serwer ma nieczytelne pozycje, wysyłamy listę od nowa.
+  if (await takeResendRequest()) updatePushPrefs({ sentHash: undefined });
+  if (!keepalive) await refreshEnc(pushPrefs.get().server);
   const prefs = pushPrefs.get();
-  if (!prefs.enabled) return;
   const sub = await currentSubscription().catch(() => null);
   if (!sub) {
     updatePushPrefs({ last: { at: Date.now(), ok: false, error: "Subskrypcja wygasła — włącz powiadomienia jeszcze raz." } });
     return;
   }
   const subscription = sub.toJSON();
-  const hash = hashOf(JSON.stringify([subscription.endpoint, items]));
+  const enc = prefs.enc === true;
+  let sealed: unknown[] = items;
+  let sentHash = prefs.sentHash;
+  if (enc) {
+    try {
+      const { key, created } = await contentKey();
+      // Nowy klucz (pierwszy raz albo utracony): pozycje na serwerze są nieczytelne — wysyłka mimo tej samej listy.
+      if (created) sentHash = undefined;
+      sealed = await sealItems(key, items);
+    } catch {
+      // Serwer przyjmuje szyfrogramy, a tu nie da się szyfrować: nie wysyłamy treści jawnie.
+      fail("Nie udało się zaszyfrować przypomnień w tej przeglądarce — nie zostały wysłane.");
+      return;
+    }
+  }
+  // Skrót z pozycji jawnych: losowe `iv` i `key` dawałyby inne bajty przy każdym przebiegu.
+  const hash = hashOf(JSON.stringify([subscription.endpoint, enc, items]));
   const fresh = prefs.last?.ok && Date.now() - prefs.last.at < RESEND_MS;
-  if (hash === prefs.sentHash && fresh) return;
-  const sent = keepalive ? fitKeepalive((list) => ({ subscription, items: list }), items) : items;
+  if (hash === sentHash && fresh) return;
+  const sent = keepalive ? fitKeepalive((list) => ({ subscription, items: list }), sealed) : sealed;
   try {
-    await call(prefs.server, "/schedule", "PUT", { subscription, items: sent }, keepalive);
+    const res = await call(prefs.server, "/schedule", "PUT", { subscription, items: sent }, keepalive);
+    const accepted = (await res.json().catch(() => ({}))) as { items?: number };
+    const now = Date.now();
+    const future = items.slice(0, sent.length).filter((i) => i.at > now).length;
+    // Serwer po cichu odrzuca pozycje, których nie rozumie (np. stary serwer i szyfrogramy).
+    if (typeof accepted.items === "number" && accepted.items < future) {
+      fail("Serwer nie przyjął części przypomnień.");
+      return;
+    }
     // Obcięta wysyłka nie zapisuje skrótu — następna zwykła wyśle pełną listę.
-    updatePushPrefs({ sentHash: sent.length === items.length ? hash : undefined, last: { at: Date.now(), ok: true, count: sent.length } });
+    updatePushPrefs({ sentHash: sent.length === items.length ? hash : undefined, last: { at: now, ok: true, count: sent.length } });
   } catch (e) {
-    updatePushPrefs({ sentHash: undefined, last: { at: Date.now(), ok: false, error: e instanceof Error ? e.message : "Brak połączenia z serwerem." } });
+    fail(e instanceof Error ? e.message : "Brak połączenia z serwerem.");
   }
 }

@@ -22,7 +22,8 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 
 beforeEach(() => {
   localStorage.clear();
-  updatePushPrefs({ server: "https://srv.example", enabled: false, sentHash: undefined, last: undefined });
+  // `encAt` świeży: testy starego formatu nie pytają serwera o `enc` (S3.1).
+  updatePushPrefs({ server: "https://srv.example", enabled: false, sentHash: undefined, last: undefined, enc: false, encAt: Date.now() });
 });
 afterEach(() => {
   vi.unstubAllGlobals();

@@ -37,6 +37,10 @@ export interface PushPrefs {
   last?: PushSyncResult;
   /** Wyłączone kategorie przypomnień (`PUSH_CATEGORIES` w `schedule.ts`). Brak = wszystkie włączone. */
   off?: string[];
+  /** Serwer przyjmuje terminy zaszyfrowane (`GET /vapid` → `enc: 1`, S3.1). Bez tego klient wysyła stary, jawny format. */
+  enc?: boolean;
+  /** Kiedy ostatnio sprawdzono `enc` (odświeżane co 6 h przy wysyłce). */
+  encAt?: number;
 }
 
 export const pushPrefs = createPersistedStore<PushPrefs>(PUSH_PREFS_KEY, { server: "", enabled: false, off: [] }, {
