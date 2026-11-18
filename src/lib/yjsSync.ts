@@ -3,6 +3,7 @@ import { cleanDeviceName, getSeenDevices, recordSeenDevices } from "@/lib/syncSe
 import { clearLegacyIdle, legacyIdleExpired, markLegacyEnabled, markLegacySeen, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
+import { chunkProvider } from "@/lib/sync/peerChunks";
 import * as Y from "yjs";
 import { yjsStore } from "@/lib/yjsStore";
 import { startImageSync, stopImageSync } from "@/lib/imageSync";
@@ -603,6 +604,8 @@ function connect(code: string) {
     const peers = rooms.map(() => 0);
     providers = rooms.map((room, i) => {
       const p = new WebrtcProvider(room, yjsStore.doc, providerOptions(code));
+      // D-U1: wiadomości > 192 KiB idą ramkami (Chrome odrzuca > 256 KiB, a y-webrtc połyka błąd).
+      chunkProvider(p as never, { maxBytes: 64 * 1024 * 1024 }, `yjs ${i}`);
       p.awareness.setLocalStateField("device", { name: getDeviceName(), ...localDeviceSchema() });
       p.awareness.on("change", refreshDevices);
       p.on("status", ({ connected: c }: { connected: boolean }) => {

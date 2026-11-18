@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import type { WebrtcProvider } from "y-webrtc";
+import { chunkProvider } from "@/lib/sync/peerChunks";
 import { mayLeaveDevice, sizeCappedRefsIn } from "@/lib/plans/planRefs";
 import { yjsStore } from "@/lib/yjsStore";
 import { providerOptions, roomNamesFor } from "@/lib/yjsSync";
@@ -124,6 +125,8 @@ export function startImageSync(code: string): void {
     if (token !== startToken) return; // superseded by a later start/stop
     providers = rooms.map((room) => {
       const p = new WebrtcProvider(`${room}-img2`, doc, providerOptions(code));
+      // D-U1: pierwsza wymiana obrazów to jedna duża wiadomość — idzie ramkami; budżet złożenia 256 MiB.
+      chunkProvider(p as never, { maxBytes: 256 * 1024 * 1024 }, "img");
       // A peer (re)joined — offer our images and check for ones we're missing.
       p.on("peers", onChange);
       return p;
