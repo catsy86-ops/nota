@@ -1,4 +1,5 @@
 import { logDiag } from "@/lib/diagnostics";
+import { classify, newGuardState, type GuardLimits } from "@/lib/sync/peerGuard";
 
 /**
  * Dzielenie dużych wiadomości kanału danych WebRTC (D-U1, U-1 z `docs/plan-wiadomosci-i-cofniecia.md` §1.7).
@@ -109,12 +110,21 @@ const waitBuffer = (peer: PeerLike) => new Promise<void>((resolve) => {
   tick();
 });
 
+/** Strażnik połączenia (Z-15.5): limity wiadomości i reakcje wołającego. */
+export interface PeerGuardHooks {
+  limits: GuardLimits;
+  /** Połączenie zamknięte przez strażnika (wpis bezpieczeństwa, licznik grupy). */
+  onClose(reason: string): void;
+  /** Po przepuszczonym awareness: `true` zamyka połączenie (np. ponad 64 stany). */
+  afterAwareness?(): boolean;
+}
+
 /**
  * Owija `send` i odbiór `data` połączenia. Duże wiadomości idą ramkami w kolejce z kontrolą bufora kanału; gdy
  * kolejka nie jest pusta, małe wiadomości czekają za nią (kolejność zostaje). `false` — kształt obiektu inny niż
  * oczekiwany (aktualizacja biblioteki): wołający zamyka połączenie.
  */
-export function attachChunking(peer: PeerLike, limits: AssemblerLimits, label: string): boolean {
+export function attachChunking(peer: PeerLike, limits: AssemblerLimits, label: string, guard?: PeerGuardHooks): boolean {
   if (peer.__chunked) return true;
   if (typeof peer.send !== "function" || typeof peer.listeners !== "function" || typeof peer.removeAllListeners !== "function") return false;
   const original = peer.listeners("data");
@@ -147,13 +157,31 @@ export function attachChunking(peer: PeerLike, limits: AssemblerLimits, label: s
     void pump();
   };
   const push = createAssembler(limits);
+  const guardState = newGuardState();
+  const close = (reason: string) => {
+    if (peer.destroyed) return;
+    logDiag("warn", "peerChunks", `${label}: zamknięte połączenie (${reason})`);
+    guard?.onClose(reason);
+    peer.destroy();
+  };
   peer.removeAllListeners("data");
   peer.on("data", (data: Uint8Array) => {
+    if (peer.destroyed) return;
     const res = push(data instanceof Uint8Array ? data : new Uint8Array(data as ArrayBuffer));
-    if (res.kind === "pass") for (const l of original) l(res.data);
-    else if (res.kind === "close") {
-      logDiag("warn", "peerChunks", `${label}: zamknięte połączenie (${res.reason})`);
-      peer.destroy();
+    if (res.kind === "close") { close(res.reason); return; }
+    if (res.kind !== "pass") return;
+    if (guard) {
+      const v = classify(res.data, guardState, guard.limits, Date.now());
+      if (v.kind === "close") { close(v.reason); return; }
+      if (v.kind === "drop") return;
+    }
+    try {
+      for (const l of original) l(res.data);
+      if (guard?.afterAwareness && res.data[0] === 1 && guard.afterAwareness()) close("awareness: za dużo stanów");
+    } catch (err) {
+      // Poprawny nagłówek, zepsuta treść: dekodowanie Yjs rzuca — liczy się jak naruszenie, nie ginie po cichu.
+      logDiag("warn", "peerChunks", `${label}: błąd przy nakładaniu wiadomości`, err);
+      close("błąd dekodowania");
     }
   });
   peer.__chunked = true;
@@ -167,12 +195,12 @@ interface ProviderLike {
 }
 
 /** Zakłada dzielenie na każdym nowym połączeniu dostawcy. Połączenie o nieznanym kształcie jest zamykane. */
-export function chunkProvider(p: ProviderLike, limits: AssemblerLimits, label: string): void {
+export function chunkProvider(p: ProviderLike, limits: AssemblerLimits, label: string, guard?: PeerGuardHooks): void {
   p.on("peers", ({ added }) => {
     for (const id of added ?? []) {
       const conn = p.room?.webrtcConns.get(id);
       if (!conn?.peer) continue;
-      if (!attachChunking(conn.peer, limits, label)) {
+      if (!attachChunking(conn.peer, limits, label, guard)) {
         logDiag("error", "peerChunks", `${label}: nieznany kształt połączenia — zamknięte`);
         conn.peer.destroy();
       }

@@ -51,6 +51,8 @@ Dokument obrazów (`imageSync.ts`): te same limity dla kroku 1 i awareness. Dla 
 
 Próg 8 MiB jest tymczasowy. Kryterium z pomiaru: `Y.applyUpdate` wiadomości o progowym rozmiarze na telefonie średniej klasy trwa najwyżej 250 ms. Wynik pomiaru wpisać tutaj.
 
+**Wynik pomiaru 2026-11-18 (Node na komputerze, dokument z notatkami, 3 przebiegi):** 1 MiB 14 ms, 4 MiB 38 ms, 8 MiB 94 ms, 16 MiB 147 ms. Telefon średniej klasy szacunkowo ~4× wolniej → kryterium 250 ms spełnia **aktualizacja ≤ 4 MiB**. Krok 2 (pełna wymiana) nie dostaje tego limitu: to cały dokument, więc 4 MiB odcięłoby duże zbiory notatek od synchronizacji bezpośredniej — **krok 2 ≤ 64 MiB i ≤ 6 na minutę**, bajty kroku 2 i aktualizacji ≤ 96 MiB na minutę. Wdrożone w `src/lib/sync/peerGuard.ts` (`DOC_LIMITS`, `IMAGE_LIMITS`). Pomiaru na telefonie nie było.
+
 ### 1.5 Reakcja
 
 1. **Zamknięcie połączenia:** `conn.peer.destroy()`. `y-webrtc` sam sprząta (`close` → usunięcie z `webrtcConns`, `peers`, ponowne ogłoszenie), więc urządzenie może wrócić — pojedyncza pomyłka nie odcina go na stałe. Wpis `logSecurity("peer-limit", "<typ>: <rozmiar albo częstość>")` (nowy rodzaj zdarzenia).

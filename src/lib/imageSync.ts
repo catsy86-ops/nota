@@ -1,9 +1,10 @@
 import * as Y from "yjs";
 import type { WebrtcProvider } from "y-webrtc";
 import { chunkProvider } from "@/lib/sync/peerChunks";
+import { IMAGE_LIMITS } from "@/lib/sync/peerGuard";
 import { mayLeaveDevice, sizeCappedRefsIn } from "@/lib/plans/planRefs";
 import { yjsStore } from "@/lib/yjsStore";
-import { providerOptions, roomNamesFor } from "@/lib/yjsSync";
+import { p2pPaused, peerGuardHooks, providerOptions, reportPeerViolation, roomNamesFor } from "@/lib/yjsSync";
 import { logDiag, logSecurity } from "@/lib/diagnostics";
 
 /**
@@ -45,6 +46,7 @@ let cleanups: (() => void)[] = [];
 // Bumped on every startImageSync()/stopImageSync() so a dynamic
 // import("y-webrtc") still in flight from a superseded call backs off.
 let startToken = 0;
+let activeCode: string | null = null;
 /** Jeden przebieg naraz; zmiana w trakcie = jeszcze jeden przebieg po nim. */
 let running: Promise<void> | null = null;
 let rerun = false;
@@ -83,6 +85,20 @@ async function reconcileMissingImages(map: Y.Map<WireImage>, token: number): Pro
   }
 }
 
+/**
+ * Budżet pamięci dokumentu obrazów (§1.4). Rozmiaru pojedynczej wiadomości nie da się ograniczyć (pierwsza wymiana
+ * to cały zestaw), więc liczymy bajty obrazów, których **nie wskazuje żadna notatka** — tylko takie są śmieciami;
+ * obrazy z manifestu są uczciwe nawet przy dużej grupie i nowym urządzeniu. Po przekroczeniu dokument jest zakładany
+ * od nowa (bufor w pamięci; obrazy w `imageStore` zostają), a naruszenie liczy się do wstrzymania połączeń.
+ */
+const IMAGE_BUDGET = 64 * 1024 * 1024;
+
+export function overImageBudget(map: Y.Map<WireImage>, referenced: Set<string>): boolean {
+  let junk = 0;
+  for (const [ref, v] of map) if (!referenced.has(ref) && isWireImage(v)) junk += v.b.byteLength;
+  return junk > IMAGE_BUDGET;
+}
+
 function sync(): void {
   const map = blobs;
   if (!map) return;
@@ -100,6 +116,7 @@ function sync(): void {
 /** Starts the image transport for a pairing code; safe to call if already started (restarts). */
 export function startImageSync(code: string): void {
   stopImageSync();
+  activeCode = code;
   const token = ++startToken;
   const doc = new Y.Doc();
   imagesDoc = doc;
@@ -107,11 +124,19 @@ export function startImageSync(code: string): void {
   blobs = blobsMap;
 
   const onChange = () => sync();
+  const onBlobs = (e: Y.YMapEvent<WireImage>) => {
+    if (e.transaction.local || token !== startToken) return;
+    if (!overImageBudget(blobsMap, new Set(yjsStore.syncableRefs()))) return;
+    reportPeerViolation("obrazy: przekroczony budżet pamięci — bufor założony od nowa");
+    queueMicrotask(() => { if (token === startToken && activeCode && !p2pPaused()) startImageSync(activeCode); });
+  };
+  blobsMap.observe(onBlobs);
   blobsMap.observe(onChange);
   yjsStore.notesMap.observeDeep(onChange);
   const offAdded = yjsStore.images.onAdded(onChange);
   cleanups = [
     () => blobsMap.unobserve(onChange),
+    () => blobsMap.unobserve(onBlobs),
     () => yjsStore.notesMap.unobserveDeep(onChange),
     offAdded,
   ];
@@ -126,7 +151,7 @@ export function startImageSync(code: string): void {
     providers = rooms.map((room) => {
       const p = new WebrtcProvider(`${room}-img2`, doc, providerOptions(code));
       // D-U1: pierwsza wymiana obrazów to jedna duża wiadomość — idzie ramkami; budżet złożenia 256 MiB.
-      chunkProvider(p as never, { maxBytes: 256 * 1024 * 1024 }, "img");
+      chunkProvider(p as never, { maxBytes: IMAGE_LIMITS.step2Max }, "img", peerGuardHooks(IMAGE_LIMITS, p.awareness as never, "img"));
       // A peer (re)joined — offer our images and check for ones we're missing.
       p.on("peers", onChange);
       return p;
@@ -142,6 +167,7 @@ export function stopImageSync(): void {
   providers = [];
   imagesDoc?.destroy();
   imagesDoc = null;
+  activeCode = null;
   blobs = null;
 }
 

@@ -1010,6 +1010,51 @@ Z-15.6 (część niezależna od F2), 2026-11-18 — commit po tym wpisie.
 
 `ee4e11ac`, 2026-11-18 (opis — commit po tym wpisie).
 
+## Synchronizacja — strażnik wiadomości WebRTC (S2.5, Z-15.5, 2026-11-18)
+
+### Co robi
+
+- Urządzenie w grupie, które wysyła za duże, za częste albo nieznane wiadomości, jest rozłączane. Może wrócić — pojedyncza pomyłka nie odcina go na stałe.
+- Po trzech takich rozłączeniach w 10 minut połączenie bezpośrednie (tekst i obrazy) jest wstrzymane na 15 minut; przekaźnik działa dalej. Toast i karta w Ustawieniach → Sync z „Wznów teraz”; przy drugim wstrzymaniu w dobie karta radzi zmianę kodu.
+- Każde rozłączenie trafia do dziennika bezpieczeństwa jako `peer-limit`.
+
+### Gdzie jest
+
+- `src/lib/sync/peerGuard.ts` — `classify` (czysta), `GuardLimits`, `DOC_LIMITS`, `IMAGE_LIMITS`, `GuardState`, `PeerCloseCounter`, `MAX_AWARENESS_STATES`.
+- `src/lib/sync/peerChunks.ts` — `PeerGuardHooks`; `attachChunking`/`chunkProvider` przyjmują strażnika i sprawdzają złożoną wiadomość przed oryginalnym słuchaczem `y-webrtc`.
+- `src/lib/yjsSync.ts` — `peerGuardHooks`, `trimAwareness`, `pauseP2p`, `resumeP2p`, `checkPendingStructs`; pola `p2pPausedUntil`, `p2pPausesToday` w `SyncState`.
+- `src/lib/imageSync.ts` — `overImageBudget`, ponowne założenie bufora obrazów.
+- `src/components/sync/SyncCodeNotices.tsx` — `PeerPausedCard`; `src/components/SyncSettings.tsx` ją pokazuje.
+- `src/lib/diagnostics.ts` — rodzaj `peer-limit`.
+
+### Jak działa i dlaczego
+
+- Strażnik czyta tylko długość i dwa pierwsze bajty. **Wiadomości synchronizacji nie są nigdy pomijane** (pominięta aktualizacja Yjs zatrzymuje wszystkie późniejsze od tego klienta) — przepuszczenie albo zamknięcie połączenia. Pomijane bywają tylko awareness i pytanie o awareness.
+- Limity (dokument główny, na połączenie): krok 1 ≤ 64 KiB i ≤ 6/min; krok 2 ≤ 64 MiB i ≤ 6/min; aktualizacja ≤ 4 MiB i ≤ 600/min; bajty kroku 2 i aktualizacji ≤ 96 MiB/min; awareness ≤ 4 KiB i ≤ 30/10 s (inaczej pominięcie, trzecie pominięcie w minucie zamyka); pytanie o awareness ≤ 6/min; typ 4 i nieznane zamykają. Próg 4 MiB z pomiaru `applyUpdate` (kryterium 250 ms na telefonie, `docs/plan-wiadomosci-i-cofniecia.md` §1.4).
+- Ramki D-U1 są składane przed strażnikiem, a limit składania równa się największej dopuszczalnej wiadomości — za duża jest zamykana już po nagłówku pierwszej ramki.
+- Po przepuszczonym awareness: ponad 64 stany → nadmiar usunięty ze `states` (nigdy własny; `meta` zostaje, więc powtórka z tym samym zegarem nie wraca, a usunięcie nie jest rozsyłane dalej) i połączenie zamknięte.
+- Wyjątek przy nakładaniu przepuszczonej wiadomości (poprawny nagłówek, zepsuta treść) też zamyka połączenie i liczy się do wstrzymania.
+- Obrazy: rozmiaru wiadomości nie da się ograniczyć (pierwsza wymiana to cały zestaw), więc budżet pamięci liczy tylko obrazy, których nie wskazuje żadna notatka (≤ 64 MiB) — duża uczciwa grupa i nowe urządzenie się w nim mieszczą. Po przekroczeniu bufor jest zakładany od nowa (obrazy w `imageStore` zostają), naruszenie liczy się do wstrzymania (`reportPeerViolation`), a przy wstrzymaniu bufor nie wraca.
+- Licznik zamknięć jest na całą grupę (identyfikator połączenia jest losowy). Stan wstrzymania tylko w pamięci karty — po przeładowaniu próba od nowa.
+- Miernik: aktualizacje czekające na brakujące poprzedniki (`pendingStructs`) ponad 1 MiB dłużej niż 60 s → wpis diagnostyczny i jedno ponowne połączenie; miernik odnawia się, gdy zaległości znikną.
+- Wstrzymanie i rozłączenie dzielą sprzątanie połączeń bezpośrednich (`stopPeers`); wstrzymanie zmienia token połączenia, więc `connect` w locie nie założy dostawców.
+
+### Ograniczenia i pułapki
+
+- Kanał między kartami (`BroadcastChannel`) jest bez strażnika — ten sam użytkownik.
+- Zalew przez serwer sygnalizacyjny (`y-webrtc` dekoduje każdą wiadomość przed odrzuceniem) i kosztowna, ale mała aktualizacja nie są objęte (§1.6).
+- Progi zmierzone na komputerze, nie na telefonie.
+- Znane z przeglądu bezpieczeństwa: urządzenie z kodem może co 10 minut wywołać trzy zamknięcia i trzymać połączenie bezpośrednie wstrzymane (przekaźnik działa; karta radzi zmianę kodu). Dokument główny większy niż 64 MiB też trafi na wstrzymanie. Zaległości `pendingStructs` nie są zwalniane przy ponownym połączeniu, a aktualizacje dokumentu obrazów po pierwszej wymianie nie mają limitu bajtów na minutę. Nadmiar stanów awareness zamyka bieżące połączenie, nawet jeśli stany przyszły innym.
+
+### Testy
+
+- `src/lib/sync/peerGuard.test.ts` — tabela `classify` pod i nad każdym progiem, `PeerCloseCounter`, aktualizacja 10 MB odrzucona bez wołania oryginalnego słuchacza, awareness pominięte i nadmiar stanów, błąd dekodowania zamyka, `trimAwareness` (z zachowaniem `meta`).
+- `src/lib/imageSync.test.ts` — przekroczenie budżetu zakłada bufor od nowa, obraz w `imageStore` zostaje.
+
+### Commit
+
+Z-15.5, 2026-11-18 — commit po tym wpisie.
+
 ## Notatki — stan aktualny (kafel, edytor, czytnik, kompozytor, lista, wyszukiwanie, właściwości)
 
 Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 planu) jest uwzględniony jako struktura kodu, nie jako historia.

@@ -65,7 +65,8 @@ export type SecurityEventKind =
   | "rejected-sync-file"
   | "relay-rollback"
   | "relay-reset-loop"
-  | "relay-split";
+  | "relay-split"
+  | "peer-limit";
 
 export interface SecurityEvent {
   at: number;

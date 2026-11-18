@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { NEW_CODE_TITLE } from "@/components/sync/NewCodeBanner";
 import { clearV2Only, useV2Only, v2OnlyNotices } from "@/lib/sync/v2Window";
-import { continueOnOldCode, getV2Until, type NewCodeProposal } from "@/lib/yjsSync";
+import { continueOnOldCode, getV2Until, resumeP2p, type NewCodeProposal } from "@/lib/yjsSync";
 
 const day = (ms: number) => format(ms, "dd.MM");
 
@@ -29,6 +29,20 @@ export function NewCodeCard({ kind }: { kind: Exclude<NewCodeProposal, null> }) 
       <p className="text-muted-foreground">
         {newCodeReason(kind)} Nowy, dłuższy kod zamyka tę lukę. Po zmianie trzeba będzie ponownie sparować pozostałe urządzenia. Kod zmienisz w sekcji „Zmiana kodu” niżej.
       </p>
+    </div>
+  );
+}
+
+/** Z-15.5: połączenie bezpośrednie wstrzymane po nieprawidłowych danych od urządzenia; przekaźnik działa dalej. */
+export function PeerPausedCard({ until, pausesToday }: { until: number; pausesToday: number }) {
+  return (
+    <div role="alert" data-testid="sync-p2p-paused" className="rounded-card border border-warning/50 bg-warning/10 p-3 text-xs space-y-2">
+      <h3 className="font-semibold text-foreground">Urządzenie w grupie wysyła nieprawidłowe dane.</h3>
+      <p className="text-muted-foreground">
+        Połączenie bezpośrednie wstrzymane do {format(until, "HH:mm")}. Serwer pośredniczący, jeśli jest ustawiony, działa dalej.
+        {pausesToday >= 2 && " Jeśli nie rozpoznajesz wszystkich urządzeń w grupie, zmień kod synchronizacji w sekcji „Zmiana kodu” niżej."}
+      </p>
+      <Button type="button" size="sm" variant="outline" onClick={resumeP2p} className="coarse:h-11">Wznów teraz</Button>
     </div>
   );
 }

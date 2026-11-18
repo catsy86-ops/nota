@@ -3,7 +3,8 @@ import { cleanDeviceName, getSeenDevices, recordSeenDevices } from "@/lib/syncSe
 import { clearLegacyIdle, legacyIdleExpired, markLegacyEnabled, markLegacySeen, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
-import { chunkProvider } from "@/lib/sync/peerChunks";
+import { chunkProvider, type PeerGuardHooks } from "@/lib/sync/peerChunks";
+import { DOC_LIMITS, MAX_AWARENESS_STATES, PeerCloseCounter, type GuardLimits } from "@/lib/sync/peerGuard";
 import * as Y from "yjs";
 import { yjsStore } from "@/lib/yjsStore";
 import { startImageSync, stopImageSync } from "@/lib/imageSync";
@@ -18,7 +19,7 @@ import {
   rekeyFinished, withDevicePaired, type RekeyRecord, type RekeyResult, type RunOptions,
 } from "@/lib/sync/rekey";
 import { loadRekeyRecord, notifyRekeyRecord, rekeyPorts, saveRekeyRecord } from "@/lib/sync/rekeyRuntime";
-import { logDiag } from "@/lib/diagnostics";
+import { logDiag, logSecurity } from "@/lib/diagnostics";
 import { toast } from "@/lib/notify";
 
 /**
@@ -174,9 +175,13 @@ export interface SyncState {
   /** Ile serwerów sygnalizacji odpowiada z tylu, do których dołączamy (diagnostyka w ustawieniach). */
   signalingUp: number;
   signalingTotal: number;
+  /** Z-15.5: synchronizacja bezpośrednia wstrzymana do tej chwili (ms) po nieprawidłowych danych od urządzenia. */
+  p2pPausedUntil: number;
+  /** Ile wstrzymań w ostatniej dobie — od drugiego komunikat radzi wymianę kodu. */
+  p2pPausesToday: number;
 }
 
-const DEFAULT_STATE: SyncState = { status: "disabled", peerCount: 0, devices: [], code: null, lastSyncedAt: null, lastError: null, signalingUp: 0, signalingTotal: 0 };
+const DEFAULT_STATE: SyncState = { status: "disabled", peerCount: 0, devices: [], code: null, lastSyncedAt: null, lastError: null, signalingUp: 0, signalingTotal: 0, p2pPausedUntil: 0, p2pPausesToday: 0 };
 // Ponowne łączenie po powrocie do karty albo odzyskaniu sieci — nie częściej niż co tyle ms.
 const RECONNECT_MIN_GAP_MS = 10_000;
 let lastConnectAt = 0;
@@ -570,19 +575,109 @@ function onSyncControl(): void {
 }
 yjsStore.doc.getMap(SYNC_CONTROL_MAP).observe(onSyncControl);
 
+// ── strażnik wiadomości WebRTC (Z-15.5) ──────────────────────────────────────
+
+const peerCloses = new PeerCloseCounter();
+let p2pResumeTimer: ReturnType<typeof setTimeout> | null = null;
+
+interface AwarenessLike {
+  clientID: number;
+  getStates(): Map<number, unknown>;
+  states: Map<number, unknown>;
+  emit(name: string, args: unknown[]): void;
+}
+
+/**
+ * Usuwa stany awareness ponad limit (najnowsze, nigdy własny). `true` — było za dużo. `meta` zostaje: powtórka tych
+ * samych stanów z tym samym zegarem jest odrzucana przez y-protocols; bez `meta` wracałaby bez końca. Tylko „change”
+ * (dla UI) — „update” rozesłałby usunięcie do innych urządzeń, a y-webrtc koduje je z `meta`.
+ */
+export function trimAwareness(a: AwarenessLike, max = MAX_AWARENESS_STATES): boolean {
+  if (a.getStates().size <= max) return false;
+  const extra = [...a.states.keys()].filter((id) => id !== a.clientID).slice(max - 1);
+  for (const id of extra) a.states.delete(id);
+  a.emit("change", [{ added: [], updated: [], removed: extra }, "peer-guard"]);
+  return true;
+}
+
+/** Naruszenie limitu przez urządzenie w grupie: wpis bezpieczeństwa i licznik wstrzymania (wspólny dla tekstu i obrazów). */
+export function reportPeerViolation(detail: string): void {
+  logSecurity("peer-limit", detail);
+  if (peerCloses.record(Date.now())) queueMicrotask(pauseP2p);
+}
+
+/** Połączenie bezpośrednie wstrzymane (np. obrazy nie zakładają wtedy bufora od nowa). */
+export const p2pPaused = (): boolean => peerCloses.paused(Date.now());
+
+/** Strażnik dla dostawcy tekstu albo obrazów; zamknięcia liczą się wspólnie dla całej grupy. */
+export function peerGuardHooks(limits: GuardLimits, awareness: AwarenessLike, label: string): PeerGuardHooks {
+  return {
+    limits,
+    onClose: (reason) => reportPeerViolation(`${label}: ${reason}`),
+    afterAwareness: () => trimAwareness(awareness),
+  };
+}
+
+/** Wstrzymanie połączeń bezpośrednich (tekst i obrazy) na 15 minut; przekaźnik działa dalej. */
+function pauseP2p(): void {
+  const now = Date.now();
+  // Token: `connect` w locie nie założy dostawców po wstrzymaniu (sprawdza też `paused`).
+  connectToken++;
+  stopPeers();
+  setState({ peerCount: 0, devices: [], p2pPausedUntil: peerCloses.pausedUntil, p2pPausesToday: peerCloses.pausesToday(now) });
+  logDiag("warn", "yjsSync", "połączenie bezpośrednie wstrzymane na 15 minut (nieprawidłowe dane od urządzenia)");
+  toast.warning("Urządzenie w grupie wysyła nieprawidłowe dane. Połączenie bezpośrednie wstrzymane na 15 minut.");
+  if (p2pResumeTimer) clearTimeout(p2pResumeTimer);
+  p2pResumeTimer = setTimeout(resumeP2p, Math.max(0, peerCloses.pausedUntil - now));
+}
+
+/**
+ * Miernik bez reakcji automatycznej poza jedną (§1.5): aktualizacje czekające na brakujące poprzedniki ponad 1 MiB
+ * dłużej niż 60 s — wpis diagnostyczny i jedno ponowne połączenie (pełna wymiana). Strażnik tego nie widzi.
+ */
+const PENDING_MAX = 1024 * 1024;
+const PENDING_GRACE_MS = 60_000;
+let pendingSince = 0;
+let pendingReconnected = false;
+let pendingTimer: ReturnType<typeof setInterval> | null = null;
+
+export function checkPendingStructs(now = Date.now()): boolean {
+  const pending = (yjsStore.doc.store as { pendingStructs: { update: Uint8Array } | null }).pendingStructs;
+  if (!pending || pending.update.length <= PENDING_MAX) { pendingSince = 0; pendingReconnected = false; return false; }
+  if (!pendingSince) { pendingSince = now; return false; }
+  if (now - pendingSince < PENDING_GRACE_MS || pendingReconnected) return false;
+  pendingReconnected = true;
+  logDiag("warn", "yjsSync", `aktualizacje oczekujące na brakujące poprzedniki: ${pending.update.length} B od ${Math.round((now - pendingSince) / 1000)} s — ponowne połączenie`);
+  const code = state.code;
+  if (code && state.status !== "disabled" && state.status !== "rekeyed") connect(code);
+  return true;
+}
+
+/** „Wznów teraz” albo koniec wstrzymania: ponowne połączenie od zera. */
+export function resumeP2p(): void {
+  if (p2pResumeTimer) clearTimeout(p2pResumeTimer);
+  p2pResumeTimer = null;
+  peerCloses.resume();
+  setState({ p2pPausedUntil: 0 });
+  const code = state.code;
+  if (code && state.status !== "disabled" && state.status !== "rekeyed") connect(code);
+}
+
 function connect(code: string) {
   disconnectProvider();
   const token = ++connectToken;
   lastConnectAt = Date.now();
   extendV2IfNeeded();
   setState({ status: "connecting", peerCount: 0, code, signalingUp: 0, signalingTotal: 0 });
+  pendingSince = 0;
+  pendingTimer ??= setInterval(() => checkPendingStructs(), 30_000);
   // Najpierw sprawdzenie znacznika „kod zmieniony” — przekaźnik, obrazy i WebRTC ruszają dopiero po nim.
   const gate = rekeyGate(code);
   void gate.then((verdict) => {
     if (token !== connectToken) return;
     if (verdict === "stop") { haltRekeyed(); return; }
     if (verdict === "error") { disconnectProvider(); setState({ status: "connecting", lastError: "Nie udało się sprawdzić kodu synchronizacji" }); return; }
-    startImageSync(code);
+    if (!peerCloses.paused(Date.now())) startImageSync(code);
     void startRelay(code);
   });
   // y-webrtc is ~the heaviest dep in the app but sync is opt-in and off by
@@ -593,7 +688,7 @@ function connect(code: string) {
     // W4: najpierw pobranie z przekaźnika — znacznik wymiany kodu zatrzymuje (`haltRekeyed` zmienia token), zanim
     // zaległe zmiany pójdą bezpośrednio do urządzeń w starym pokoju.
     await relayFirstPull();
-    if (token !== connectToken || rekeyStop(code)) return;
+    if (token !== connectToken || rekeyStop(code) || peerCloses.paused(Date.now())) return;
     const legacyName = roomNameFor(code);
     roomKinds = rooms.map((room, i) => (i === 0 ? "v3" : room === legacyName ? "legacy" : "v2"));
     // Kod bywał w starszych pokojach — podstawa propozycji nowego kodu po końcu okna (§2.3).
@@ -609,7 +704,7 @@ function connect(code: string) {
     providers = rooms.map((room, i) => {
       const p = new WebrtcProvider(room, yjsStore.doc, providerOptions(code));
       // D-U1: wiadomości > 192 KiB idą ramkami (Chrome odrzuca > 256 KiB, a y-webrtc połyka błąd).
-      chunkProvider(p as never, { maxBytes: 64 * 1024 * 1024 }, `yjs ${i}`);
+      chunkProvider(p as never, { maxBytes: DOC_LIMITS.step2Max }, `yjs ${i}`, peerGuardHooks(DOC_LIMITS, p.awareness as never, `yjs ${i}`));
       p.awareness.setLocalStateField("device", { name: getDeviceName(), ...localDeviceSchema() });
       p.awareness.on("change", refreshDevices);
       p.on("status", ({ connected: c }: { connected: boolean }) => {
@@ -711,6 +806,15 @@ function watchRelayHeads(p: WebrtcProvider): void {
 
 function disconnectProvider() {
   connectToken++;
+  if (pendingTimer) clearInterval(pendingTimer);
+  pendingTimer = null;
+  stopPeers();
+  stopRelay();
+  setState({ signalingUp: 0, signalingTotal: 0 });
+}
+
+/** Zamyka połączenia bezpośrednie (tekst, obrazy, porównanie głów przekaźnika); przekaźnik zostaje. */
+function stopPeers() {
   offRelayHead?.();
   offRelayHead = null;
   if (relayClaimTimer) clearTimeout(relayClaimTimer);
@@ -723,10 +827,9 @@ function disconnectProvider() {
   if (v2OnlyTimer) clearTimeout(v2OnlyTimer);
   v2OnlyTimer = null;
   stopImageSync();
-  stopRelay();
   previousDeviceIds = new Set();
   recordSeenDevices(state.devices.map((d) => d.name));
-  setState({ signalingUp: 0, signalingTotal: 0, devices: [] });
+  setState({ devices: [] });
 }
 
 /**

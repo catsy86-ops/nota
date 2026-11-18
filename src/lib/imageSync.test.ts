@@ -137,3 +137,20 @@ describe("imageSync", () => {
     expect(yjsStore.images.has(ref)).toBe(false);
   });
 });
+
+describe("budżet pamięci dokumentu obrazów (Z-15.5)", () => {
+  it("przekroczenie zakłada bufor od nowa, a obraz z imageStore zostaje", async () => {
+    const ref = await yjsStore.images.putDataUrl(PNG);
+    yjsStore.upsertNote(makeNote({ id: "n1", images: [ref] }));
+    startImageSync("TESTCODE");
+    await waitForProvider();
+    await imageSyncSettledForTests();
+    const first = providerInstances[0];
+    const peer = new Y.Doc();
+    peer.getMap("blobs").set("x".repeat(64), { t: "image/png", b: new Uint8Array(65 * 1024 * 1024) });
+    Y.applyUpdate(first.doc, Y.encodeStateAsUpdate(peer));
+    await vi.waitFor(() => expect(providerInstances.length).toBeGreaterThan(1));
+    expect(first.destroyed).toBe(true);
+    expect(yjsStore.images.has(ref)).toBe(true);
+  });
+});

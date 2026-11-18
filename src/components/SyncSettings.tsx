@@ -12,7 +12,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { GroupedCode, JOIN_CODE_INPUT_ID, JoinCodeField } from "@/components/sync/JoinCodeField";
-import { NewCodeCard, RekeyedCard, V2OnlyNotices } from "@/components/sync/SyncCodeNotices";
+import { NewCodeCard, PeerPausedCard, RekeyedCard, V2OnlyNotices } from "@/components/sync/SyncCodeNotices";
 import { CodeChangePanel } from "@/components/sync/CodeChangePanel";
 import { useRekeyRecord } from "@/lib/sync/rekeyRuntime";
 import { legacyEndsAt, readLegacyIdle } from "@/lib/legacyRoomIdle";
@@ -221,6 +221,9 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
 
       {syncState.status === "rekeyed" && <RekeyedCard onPairAgain={focusJoin} />}
       {syncState.status !== "rekeyed" && proposal.kind && <NewCodeCard kind={proposal.kind} />}
+      {syncState.status !== "disabled" && syncState.status !== "rekeyed" && syncState.p2pPausedUntil > 0 && (
+        <PeerPausedCard until={syncState.p2pPausedUntil} pausesToday={syncState.p2pPausesToday} />
+      )}
 
       <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-3">
         <h3 className="text-xs font-semibold text-muted-foreground">Urządzenia w grupie</h3>
