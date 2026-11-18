@@ -5,7 +5,7 @@ import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, Share2
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
-import { BACKUP_OVERSIZE_NOTE, buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, RestoreCheckError, shareFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
+import { BACKUP_OVERSIZE_NOTE, buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, RestoreCheckError, restoreScope, shareFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import { dniPl, pluralPl } from "@/lib/plural";
 import type { FullBackup } from "@/lib/noteSchema";
@@ -20,6 +20,7 @@ import { LastImportUndo } from "./LastImportUndo";
 import { AboutPanel } from "@/components/AboutPanel";
 import { viewLabel } from "@/lib/viewMeta";
 import { DailySnapshotRestore } from "./DailySnapshotRestore";
+import { inSyncGroup, saveCurrentLocally } from "@/lib/docReplace";
 import { listDailySnapshots, readSnapshotStatus, unpinDailySnapshot, SNAPSHOT_LAST_KEY, type SnapshotEntry } from "@/lib/dailySnapshot";
 
 function formatBytes(bytes: number | null): string {
@@ -158,7 +159,7 @@ function DailySnapshots() {
               {e.state === "newer" && <span className="text-warning-ink">zapisana przez nowszą wersję aplikacji</span>}
               {e.state === "ok" && (
                 <Button type="button" size="sm" variant="outline" className={e.pinned ? "" : "ml-auto"} onClick={() => setRestoreFrom(e)}
-                  aria-label={`Przywróć notatki z kopii z ${new Date(e.createdAt).toLocaleDateString("pl-PL")}`}>
+                  aria-label={`Przywróć notatki z kopii ${e.kind === "before" ? "sprzed przywrócenia, " : "z "}${new Date(e.createdAt).toLocaleDateString("pl-PL")}`}>
                   Przywróć…
                 </Button>
               )}
@@ -269,6 +270,10 @@ function RestoreBackup() {
   // Z-18.1: uszkodzone części wykryte przed zapisem — pytanie „Przywróć bez nich / Anuluj”.
   const [broken, setBroken] = useState<string[] | null>(null);
   const [savedCurrent, setSavedCurrent] = useState(false);
+  // Z-18.3: bez kopii w OPFS pytamy, czy pobrany plik się zapisał; przy synchronizacji osobne potwierdzenie (D-A1).
+  const [askSaved, setAskSaved] = useState<string[] | null>(null);
+  const [syncAsk, setSyncAsk] = useState<string[] | null>(null);
+  const [syncOk, setSyncOk] = useState(false);
   // Z-16.2: postęp wymiany notatek i „Przerwij”.
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [abort, setAbort] = useState<AbortController | null>(null);
@@ -278,6 +283,7 @@ function RestoreBackup() {
       setBackup(await pickFullBackup());
       setOpts({ versions: true, settings: true, achievements: true, shifts: true, study: true });
       setSavedCurrent(false);
+      setSyncOk(false);
       setBroken(null);
     } catch (err) {
       if (err instanceof Error && err.message !== "Nie wybrano pliku") {
@@ -286,23 +292,33 @@ function RestoreBackup() {
     }
   }
 
-  async function restore(skip: string[] = []) {
+  async function restore(skip: string[] = [], { fileConfirmed = false, syncConfirmed = syncOk } = {}) {
     if (!backup) return;
-    setBusy(true);
     setBroken(null);
+    // D-A1: przy sparowanych urządzeniach osobne potwierdzenie, zanim cokolwiek się zmieni.
+    if (!syncConfirmed && inSyncGroup()) { setSyncAsk(skip); return; }
+    setBusy(true);
     try {
-      // Najpierw kopia tego, co jest teraz — przywrócenie nadpisuje dane, a ten plik jest drogą powrotu. Raz na plik kopii.
-      if (!savedCurrent) {
+      // Najpierw kopia tego, co jest teraz — przywrócenie nadpisuje dane. Raz na plik kopii. P5 audytu 2 (Z-18.3):
+      // droga powrotu to kopia w OPFS sprawdzona po zapisie; pobranie pliku nie mówi, czy się udało, więc bez OPFS
+      // pytamy wprost, czy plik się zapisał.
+      if (!savedCurrent && !fileConfirmed) {
+        let local = false;
+        try { await saveCurrentLocally(); local = true; } catch { /* bez OPFS albo błąd zapisu — plik i pytanie */ }
         try {
           const current = await buildFullBackup();
           download(JSON.stringify(current), `notki-przed-przywroceniem-${new Date().toISOString().slice(0, 10)}.json`, "application/json");
-          setSavedCurrent(true);
         } catch (err) {
-          setBusy(false);
-          toast.error("Nie zapisałem kopii sprzed przywrócenia, więc przywracanie wstrzymane" + (err instanceof Error ? ": " + err.message : ""));
-          return;
+          if (!local) {
+            setBusy(false);
+            toast.error("Nie zapisałem kopii sprzed przywrócenia, więc przywracanie wstrzymane" + (err instanceof Error ? ": " + err.message : ""));
+            return;
+          }
         }
+        if (!local) { setBusy(false); setAskSaved(skip); return; }
+        setSavedCurrent(true);
       }
+      if (fileConfirmed) setSavedCurrent(true);
       const ctrl = new AbortController();
       setAbort(ctrl);
       const { studyDropped, schedulesSkipped, failed } = await restoreFullBackup(backup, { ...opts, skip }, {
@@ -352,8 +368,14 @@ function RestoreBackup() {
             <AlertDialogTitle>Przywrócić ten backup?</AlertDialogTitle>
             <AlertDialogDescription>
               {backup && <>Z {new Date(backup.exportedAt).toLocaleString("pl-PL")}: {backup.notes.length} notatek, {backup.folders.length} folderów. </>}
-              Notatki, foldery i etykiety w tej przeglądarce zostaną zastąpione zawartością pliku. Przy sparowanych urządzeniach
-              zmiany zrobione w międzyczasie na innych urządzeniach mogą przepaść — zrób wcześniej kopię bieżącego stanu.
+              {backup && (() => {
+                const { replaced, merged } = restoreScope(backup as never, opts);
+                return <>
+                  <span data-testid="restore-replaced">Zastąpione zawartością pliku: {replaced.join(", ")}.</span>
+                  {merged.length > 0 && <span data-testid="restore-merged"> Uzupełnione o brakujące: {merged.join(", ")}.</span>}
+                  {" "}Obecne dane zapiszę najpierw jako kopię sprzed przywrócenia.
+                </>;
+              })()}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2">
@@ -400,6 +422,36 @@ function RestoreBackup() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <AlertDialog open={syncAsk !== null} onOpenChange={(o) => { if (!o) setSyncAsk(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Zmiana obejmie wszystkie sparowane urządzenia</AlertDialogTitle>
+            <AlertDialogDescription>
+              To urządzenie jest w grupie synchronizacji. Zastąpione dane zmienią się też na pozostałych urządzeniach,
+              a to, co ktoś dopisał tam po zrobieniu tej kopii, zniknie wszędzie.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => { const skip = syncAsk ?? []; setSyncAsk(null); setSyncOk(true); void restore(skip, { syncConfirmed: true }); }}>Przywróć na wszystkich</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={askSaved !== null} onOpenChange={(o) => { if (!o) setAskSaved(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Czy plik się zapisał?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ta przeglądarka nie ma miejsca na kopię wewnątrz aplikacji, więc obecne dane poszły do pliku
+              „notki-przed-przywroceniem-…”. Sprawdź w Pobranych, czy jest — to jedyna droga powrotu.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Nie, wstrzymaj</AlertDialogCancel>
+            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => { const skip = askSaved ?? []; setAskSaved(null); void restore(skip, { fileConfirmed: true, syncConfirmed: true }); }}>Tak, przywróć</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={broken !== null} onOpenChange={(o) => { if (!o) setBroken(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -411,7 +463,7 @@ function RestoreBackup() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Anuluj</AlertDialogCancel>
-            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => void restore(broken ?? [])}>Przywróć bez nich</AlertDialogAction>
+            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => void restore(broken ?? [], { fileConfirmed: savedCurrent })}>Przywróć bez nich</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

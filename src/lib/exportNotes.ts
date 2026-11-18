@@ -403,6 +403,18 @@ export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; load: () =
 export const SHIFTS_SECTION = "Grafik";
 export const STUDY_SECTION = "Nauka i Praca";
 
+/**
+ * Co przywrócenie zastąpi, a co tylko uzupełni (P6 audytu 2, Z-18.3) — tekst okna liczony z tych samych list,
+ * których używa `restoreFullBackup`, żeby nowa sekcja nie mogła zniknąć z ostrzeżenia.
+ */
+export function restoreScope(backup: Partial<Record<MergeKey, unknown>> & { shifts?: unknown; study?: unknown; settings?: Record<string, unknown> }, opts: RestoreOptions): { replaced: string[]; merged: string[] } {
+  const replaced = ["notatki", "foldery", "etykiety"];
+  if (opts.shifts && backup.shifts !== undefined) replaced.push(SHIFTS_SECTION);
+  if (opts.study && (backup.study !== undefined || backup.settings?.["kaczy.study.v1"] !== undefined)) replaced.push(STUDY_SECTION);
+  const merged = MERGE_SECTIONS.filter((sec) => backup[sec.key]).map((sec) => sec.label);
+  return { replaced, merged };
+}
+
 /** Postęp wymiany notatek i przerwanie (Z-16.2): okno przywracania pokazuje „N z M” i „Przerwij”. */
 export interface RestoreRun {
   onProgress?: (done: number, total: number) => void;

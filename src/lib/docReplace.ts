@@ -51,6 +51,12 @@ export async function requestDocReplace(req: ReplaceRequest, deps: ReplaceDeps =
   return { before, leftGroup };
 }
 
+/** Kopia bieżącego dokumentu w OPFS (`kopie-przed-przywroceniem/`, 30 dni) przed przywróceniem z pliku (Z-18.3). Rzuca bez OPFS albo przy błędzie. */
+export const saveCurrentLocally = (): Promise<string> => browserDeps.saveBefore();
+
+/** Czy urządzenie jest w grupie synchronizacji — przywrócenie dotknie też sparowanych urządzeń (D-A1). */
+export const inSyncGroup = (): boolean => browserDeps.inGroup();
+
 const browserDeps: ReplaceDeps = {
   saveBefore: () => saveBeforeReplace({
     encode: () => yjsStore.encodeSyncState(),
