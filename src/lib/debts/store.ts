@@ -88,9 +88,19 @@ export function renamePeople(fromKeys: readonly string[], name: string): DebtEnt
   return prev;
 }
 
-/** Przywraca wpisy sprzed zmiany nazwy albo łączenia (ten sam id). */
-export function restoreDebts(entries: readonly DebtEntry[]): void {
-  yDebts.replaceMany(entries);
+/**
+ * „Cofnij” po zmianie nazwy albo łączeniu: wraca **tylko** pole `person`, i tylko we wpisach, które nadal noszą nową
+ * nazwę (R-18). Kwota zmieniona w tym czasie na drugim telefonie zostaje; wpis przemianowany dalej — też.
+ */
+export function restoreDebts(prev: readonly DebtEntry[], renamedTo: string): void {
+  const key = personKey(renamedTo);
+  const now = new Map(yDebts.get().map((e) => [e.id, e]));
+  const back: DebtEntry[] = [];
+  for (const p of prev) {
+    const cur = now.get(p.id);
+    if (cur && personKey(cur.person) === key) back.push({ ...cur, person: p.person });
+  }
+  yDebts.replaceMany(back);
 }
 
 /** Zrzut Długów do kopii zapasowej. */

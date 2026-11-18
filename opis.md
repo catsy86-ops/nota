@@ -1827,7 +1827,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
   - **„Wyślij”** — wiadomość z saldem i wpisami („Ania — rozliczenie”, „Do oddania: …”, wiersze „05.10.2026 · Oddał mi · 25,50 zł · za co”) przez `shareOrCopy`: na telefonie arkusz udostępniania, na komputerze schowek. Kwoty zawsze widoczne — to wyraźne stuknięcie, a ukrywanie kwot chroni tylko ekran.
   - **„Zmień nazwę”** — nowa nazwa dla wszystkich wpisów osoby naraz. Nazwa innej istniejącej osoby łączy je („Połączono z …”).
   - **„Połącz z…”** — wybór innej osoby i potwierdzenie; jej wpisy przechodzą pod tę nazwę, saldo się sumuje.
-  - Zmiana nazwy i łączenie to jedna transakcja Yjs (`renamePeople` → `replaceMany`) z „Cofnij” (`restoreDebts` oddaje poprzednie wpisy). Arkusz zostaje otwarty na osobie po nowej nazwie.
+  - Zmiana nazwy i łączenie to jedna transakcja Yjs (`renamePeople` → `replaceMany`) z „Cofnij” (`restoreDebts(prev, nowaNazwa)` przywraca **tylko** pole `person` i tylko we wpisach, które nadal noszą nową nazwę — kwota zmieniona w tym czasie na drugim telefonie zostaje, R-18). Arkusz zostaje otwarty na osobie po nowej nazwie.
 - **Eksport CSV (3.4).** „Eksport CSV” pod listą zapisuje `notki-dlugi-RRRR-MM-DD.csv`: Data, Osoba, Rodzaj, Kwota [zł], Za co, Saldo osoby [zł] (+ nam winna), od najstarszego. Pod polski Excel: średnik, BOM, CRLF, przecinek dziesiętny; pola tekstowe zaczynające się od `=`, `+`, `-`, `@`, tabulatora albo CR dostają apostrof (bez wstrzykiwania formuł), liczby nie.
 - **Kopia zapasowa.** Pożyczki są w pełnej kopii. Przywracanie tylko dodaje brakujące wpisy (po id), niczego nie kasuje i nie nadpisuje wpisu o tym samym id, który już jest na telefonie.
 
@@ -1847,6 +1847,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Kwoty w groszach** (liczby całkowite). `parseAmount` przyjmuje „1 234,5”, „1234.50”, „80”; odrzuca zero, litery, więcej niż dwa miejsca po przecinku i ponad 1 000 000 zł.
 - **Saldo i kolejność.** Saldo osoby = suma `KIND_SIGN × kwota`. Kolejność: nam winni, my winni, rozliczeni. Osoby grupowane bez względu na wielkość liter („Anna” = „anna”).
 - **Nieprawidłowe wpisy od peera** są pomijane po cichu przy odczycie (`cleanDebt` zwraca `null`).
+- **Nieznane pola (Z-17.3).** `cleanDebt` odkłada pola, których ta wersja nie zna, w `extra` (`src/lib/extraFields.ts`: `pickExtra`, `extraOf`), a każdy zapis w `yDebts.ts` (`put` → `toStored`) wraca je na wierzch wpisu. Pole z nowszej wersji przeżywa więc edycję, zmianę nazwy, „Cofnij”, kopię i scalenie. Limity: 8 kluczy `[a-z][A-Za-z0-9]{0,23}`, wartości proste (tekst do 200 znaków) albo płaskie tablice do 16, razem do 512 B JSON. Pole `v` to minimalna wersja czytelnika: wpis z `v` > `DEBT_ENTRY_V` (1) jest dla tej wersji niewidoczny, ale zostaje w mapie i da się go usunąć. `SCHEMA_VERSION` = 3 (tylko ostrzeżenie `olderDevices`).
 - **Usuwanie uszkodzonego wpisu.** `remove` kasuje też wpis, którego `cleanDebt` nie przepuszcza. Inaczej zajmowałby miejsce w limicie 2000 (L9).
 - **Waluta.** Zawsze złote (zł).
 - **Scalanie kopii.** Przywrócona kopia nie kasuje długów. Wpis usunięty na jednym telefonie wróci, jeśli przywracamy kopię sprzed usunięcia — tak samo jak w pozostałych działach.
@@ -1858,12 +1859,14 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - Pułapka (złapana testem 3.4): `"=+-@".includes("")` to `true` — puste pole CSV dostawało apostrof; `textCell` sprawdza długość.
 - Długi są w dokumencie notatek, więc idą z synchronizacją i z pełną kopią; nie ma ich w eksporcie tylko Nauki lub Grafiku, bo tam ich nie ma.
 - Nie ma zapisu długu w innej walucie.
+- **Reguła dla nowych pól (plan zgodności §1.4):** pole, które tylko podpowiada, może iść do wpisu. Pole, które wiąże wpisy (grupa, plan rat, dowód), idzie do osobnej mapy Yjs (`debtGroups`, `debtPlans`, `debtProofs`) z własnym polem w kopii. Pole, które zmienia znaczenie kwoty (waluta), idzie do osobnej mapy — wersje sprzed Z-17.3 gubią nieznane pola wpisu i źle liczą takie wpisy.
 
 ### Testy
 
 - `src/lib/debts/model.test.ts` — kwoty, czyszczenie, znaki salda dla czterech rodzajów, sortowanie.
 - `src/lib/debts/yDebts.test.ts` — scalanie dwóch dokumentów, usunięcie i przywrócenie, śmieci od peera, powiadomienia.
 - `src/lib/debts/yDebts.edit.test.ts` — `replace` i scalanie z kopii bez nadpisania.
+- `src/lib/debts/yDebts.extra.test.ts` — nieznane pole przeżywa każdą drogę zapisu, limity `pickExtra`, `v`, R-18.
 - `src/components/debts/DebtsView.test.tsx` — podsumowanie, pusta lista, edycja kwoty (ten sam id i grosze), zła kwota (`aria-invalid`), zmiana rodzaju, „Oddał całość” (z `settle`), pasek przy „Pożyczyłem od”, baner podwójnego rozliczenia, termin w edycji (zdjęcie i nowa notatka z etykietą).
 - Etap 4: `model.test.ts` (stała barwa i inicjał), `DebtsView.test.tsx` (pasek proporcji, pusty stan, kółko), `e2e/debts-plan.spec.ts` (pusty stan na 390 px — fokus w „Kto”), zrzuty `e2e/visual.spec.ts` (`dlugi-*`, odświeżone 2026-11-02).
 - `model.test.ts` (Etap 3) — wiadomość osoby, CSV (BOM, kolejność, znak salda, apostrof przed formułą, cudzysłów przy średniku, puste pole); `yDebts.test.ts` — `replaceMany` jedną transakcją; `DebtsView.test.tsx` — „Wyślij”.

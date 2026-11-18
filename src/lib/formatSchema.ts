@@ -4,8 +4,10 @@ import { APP_VERSION } from "@/content/changelog";
  * Numer zmian formatu danych (plan Ustawień 2.1). Rośnie, gdy zmienia się kształt danych (Praca, Ćwiczenia,
  * Terminy, Skarbiec). Urządzenia ogłaszają go w awareness; nowego formatu nie zapisuje się, dopóki wszystkie
  * widziane urządzenia go znają (`canWriteSchema`).
+ * 3 — `clean*` zachowuje nieznane pola i zna minimalną wersję czytelnika `v` (Z-17.3); tylko do ostrzeżenia
+ * `olderDevices`, nie bramka zapisu.
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export interface DeviceSchema {
   /** Wersja aplikacji (np. „2026.10.26”); brak u urządzeń sprzed tej zmiany. */

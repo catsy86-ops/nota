@@ -730,7 +730,7 @@ function PersonTools({ person, others, onRekey }: { person: PersonDebts; others:
     setRenaming(false);
     onRekey?.(personKey(clean));
     const merged = others.some((p) => p.key === personKey(clean) && p.key !== person.key);
-    toast.success(merged ? `Połączono z „${clean}”` : `Nowa nazwa: ${clean}`, { action: { label: "Cofnij", onClick: () => { restoreDebts(prev); onRekey?.(person.key); } } });
+    toast.success(merged ? `Połączono z „${clean}”` : `Nowa nazwa: ${clean}`, { action: { label: "Cofnij", onClick: () => { restoreDebts(prev, clean); onRekey?.(person.key); } } });
   };
 
   const doMerge = () => {
@@ -739,7 +739,7 @@ function PersonTools({ person, others, onRekey }: { person: PersonDebts; others:
     setMergeKey(null);
     if (!prev) { toast.error("Nie udało się połączyć"); return; }
     haptic("success");
-    toast.success(`Połączono: wpisy „${merge.name}” są teraz pod „${person.name}”`, { action: { label: "Cofnij", onClick: () => restoreDebts(prev) } });
+    toast.success(`Połączono: wpisy „${merge.name}” są teraz pod „${person.name}”`, { action: { label: "Cofnij", onClick: () => restoreDebts(prev, person.name) } });
   };
 
   return (

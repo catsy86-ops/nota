@@ -1,3 +1,5 @@
+import { extraOf, keepV, tooNew } from "@/lib/extraFields";
+
 /**
  * Długi — kto ile pożyczył i ile już oddał. Czysty model bez Yjs i bez DOM:
  * kształt wpisu, czyszczenie danych z zewnątrz, kwoty i salda.
@@ -34,7 +36,15 @@ export interface DebtEntry {
   dueNoteId?: string;
   /** Wpis z „Oddał całość / Oddałem całość” (1.6) — do wykrycia podwójnego rozliczenia z dwóch telefonów. */
   settle?: true;
+  /** Minimalna wersja czytelnika (Z-17.3): większa niż `DEBT_ENTRY_V` — wpis niewidoczny dla tej wersji. */
+  v?: number;
+  /** Pola z nowszej wersji, których ta nie zna — przeżywają edycję (`toStored` przy zapisie). */
+  extra?: Record<string, unknown>;
 }
+
+/** Wersja wpisu, którą ta wersja aplikacji umie poprawnie policzyć. */
+export const DEBT_ENTRY_V = 1;
+const DEBT_KNOWN = ["id", "person", "kind", "amount", "at", "note", "created", "dueNoteId", "settle"] as const;
 
 /** Etykieta notatki z terminem zwrotu (1.2) — notatka nie ląduje w Skrzynce. */
 export const DEBT_NOTE_LABEL = "długi";
@@ -52,6 +62,7 @@ const ID_MAX = 64;
 export function cleanDebt(raw: unknown): DebtEntry | null {
   const e = raw as Partial<DebtEntry> | null;
   if (!e || typeof e !== "object") return null;
+  if (tooNew(e, DEBT_ENTRY_V)) return null;
   if (typeof e.id !== "string" || !e.id || e.id.length > ID_MAX) return null;
   if (!DEBT_KINDS.includes(e.kind as DebtKind)) return null;
   const person = typeof e.person === "string" ? normalizeName(e.person).slice(0, DEBT_PERSON_MAX) : "";
@@ -60,8 +71,9 @@ export function cleanDebt(raw: unknown): DebtEntry | null {
   if (typeof e.at !== "string" || !DAY_RE.test(e.at)) return null;
   const created = typeof e.created === "number" && Number.isFinite(e.created) ? e.created : 0;
   const note = typeof e.note === "string" ? e.note.trim().slice(0, DEBT_NOTE_MAX) : "";
+  const extra = extraOf(e, DEBT_KNOWN);
   const dueNoteId = typeof e.dueNoteId === "string" && e.dueNoteId && e.dueNoteId.length <= ID_MAX ? e.dueNoteId : undefined;
-  return { id: e.id, person, kind: e.kind as DebtKind, amount: e.amount, at: e.at, note, created, ...(dueNoteId ? { dueNoteId } : {}), ...(e.settle === true ? { settle: true as const } : {}) };
+  return { id: e.id, person, kind: e.kind as DebtKind, amount: e.amount, at: e.at, note, created, ...(dueNoteId ? { dueNoteId } : {}), ...(e.settle === true ? { settle: true as const } : {}), ...keepV(e), ...(extra ? { extra } : {}) };
 }
 
 /** Spacje na brzegach i w środku → jedna spacja. */

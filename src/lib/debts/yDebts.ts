@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { byNewest, cleanDebt, DEBT_MAX_ENTRIES, type DebtEntry } from "./model";
+import { toStored } from "@/lib/extraFields";
 
 /**
  * Długi w Y.Doc notatek — tym samym, który niesie synchronizację, plik i kopię.
@@ -36,9 +37,12 @@ export function createYDebts(doc: Y.Doc) {
     return () => listeners.delete(cb);
   }
 
+  /** Każdy zapis przez tę funkcję: nieznane pola (`extra`) wracają na wierzch wpisu (Z-17.3). */
+  const put = (e: DebtEntry) => entries.set(e.id, toStored(e) as DebtEntry);
+
   function add(entry: DebtEntry): boolean {
     if (entries.size >= DEBT_MAX_ENTRIES || entries.has(entry.id)) return false;
-    doc.transact(() => entries.set(entry.id, entry), DEBTS_ORIGIN);
+    doc.transact(() => put(entry), DEBTS_ORIGIN);
     return true;
   }
 
@@ -56,7 +60,7 @@ export function createYDebts(doc: Y.Doc) {
   /** Zmiana istniejącego wpisu (ten sam id): kwota, dzień, notatka, rodzaj, osoba. `false` gdy wpisu nie ma. */
   function replace(entry: DebtEntry): boolean {
     if (!entries.has(entry.id)) return false;
-    doc.transact(() => entries.set(entry.id, entry), DEBTS_ORIGIN);
+    doc.transact(() => put(entry), DEBTS_ORIGIN);
     return true;
   }
 
@@ -64,19 +68,19 @@ export function createYDebts(doc: Y.Doc) {
   function replaceMany(list: readonly DebtEntry[]): number {
     let n = 0;
     doc.transact(() => {
-      for (const e of list) if (entries.has(e.id)) { entries.set(e.id, e); n++; }
+      for (const e of list) if (entries.has(e.id)) { put(e); n++; }
     }, DEBTS_ORIGIN);
     return n;
   }
 
   /** Cofnięcie usunięcia: wpis wraca z tym samym id i datą. */
   function restore(entry: DebtEntry): void {
-    doc.transact(() => entries.set(entry.id, entry), DEBTS_ORIGIN);
+    doc.transact(() => put(entry), DEBTS_ORIGIN);
   }
 
-  /** Zrzut do kopii zapasowej: wszystkie pożyczki jako zwykłe dane. */
+  /** Zrzut do kopii zapasowej: wszystkie pożyczki w kształcie zapisu (nieznane pola na wierzchu). */
   function dump(): DebtEntry[] {
-    return get();
+    return get().map((e) => toStored(e) as DebtEntry);
   }
 
   /**
@@ -86,7 +90,7 @@ export function createYDebts(doc: Y.Doc) {
   function mergeDump(raw: unknown): void {
     const incoming = Array.isArray(raw) ? raw.map(cleanDebt).filter((e): e is DebtEntry => !!e) : [];
     doc.transact(() => {
-      for (const e of incoming) if (!entries.has(e.id) && entries.size < DEBT_MAX_ENTRIES) entries.set(e.id, e);
+      for (const e of incoming) if (!entries.has(e.id) && entries.size < DEBT_MAX_ENTRIES) put(e);
     }, DEBTS_ORIGIN);
   }
 
