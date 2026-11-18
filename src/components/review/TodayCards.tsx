@@ -120,7 +120,7 @@ export function TodayCards({ searching, go, notes, folders, reminderNotes, today
           {!searching && (
             <ViewErrorBoundary name="Skrzynka i Ćwiczenia">
               <Suspense fallback={null}>
-                <TodayPersonalRows inboxCount={inboxCount} onOpenInbox={() => go("inbox")} onOpenCwiczenia={() => go("cwiczenia")} />
+                <TodayPersonalRows inboxCount={inboxCount} onOpenInbox={() => go("inbox")} onOpenCwiczenia={() => go("cwiczenia")} onOpenDebts={() => go("debts")} />
               </Suspense>
             </ViewErrorBoundary>
           )}

@@ -130,6 +130,21 @@ export function planState(plan: DebtPlan, entries: readonly DebtEntry[], today =
   return { total, amounts, paid, done, partial, next, overdue, finished };
 }
 
+export interface OverdueRate { planId: string; person: string; k: number; count: number; toPay: number; daysLate: number }
+
+/** L2.4: najstarsza zaległa rata każdego planu (termin < dziś), od najdłużej zaległej. */
+export function overdueRates(plans: readonly DebtPlan[], entries: readonly DebtEntry[], today = localDayKey()): OverdueRate[] {
+  const out: OverdueRate[] = [];
+  const dayMs = (d: string) => Date.UTC(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10)));
+  for (const plan of plans) {
+    const st = planState(plan, entries, today);
+    const loan = entries.find((e) => e.id === plan.entryId);
+    if (!st?.next || st.overdue === 0 || !loan) continue;
+    out.push({ planId: plan.id, person: loan.person, k: st.next.k, count: plan.count, toPay: st.next.toPay, daysLate: Math.round((dayMs(today) - dayMs(st.next.due)) / 86_400_000) });
+  }
+  return out.sort((a, b) => b.daysLate - a.daysLate);
+}
+
 /** Identyfikator spłaty raty `k` — wyliczony, więc dwa telefony stukające naraz zapisują jeden wpis. */
 export const rateEntryId = (planId: string, k: number) => `dr-${planId}-${k}`;
 

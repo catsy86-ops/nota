@@ -4,7 +4,7 @@ import * as Y from "yjs";
 import { getNextReminderTime } from "@/lib/reminderRepeat";
 import { localDayKey } from "@/lib/dayDone";
 import { balances, DEBT_KINDS, KIND_SIGN, type DebtEntry, type DebtKind } from "./model";
-import { allocate, cleanPlan, planState, rateAmounts, rateDue, rateEntryId, syncPlanNote, type DebtPlan } from "./plans";
+import { allocate, cleanPlan, overdueRates, planState, rateAmounts, rateDue, rateEntryId, syncPlanNote, type DebtPlan } from "./plans";
 import { createYDebts } from "./yDebts";
 
 const plan = (over: Partial<DebtPlan> = {}): DebtPlan => ({ id: "p-1", entryId: "loan", count: 6, day: 10, first: "2026-01-10", created: 1, ...over });
@@ -130,5 +130,15 @@ describe("dwa telefony", () => {
     y.restore(prev);
     expect(y.plans()).toHaveLength(1);
     expect(y.addPlan(plan({ id: "p-2", entryId: "brak" }))).toBe(false);
+  });
+});
+
+describe("overdueRates (L2.4)", () => {
+  it("najstarsza zaległa rata planu z liczbą dni; spłacona albo w terminie — nic", () => {
+    const loan = e("lent", 60000, "2026-01-01", { id: "loan" });
+    expect(overdueRates([plan()], [loan], "2026-01-15")).toEqual([{ planId: "p-1", person: "Jan", k: 1, count: 6, toPay: 10000, daysLate: 5 }]);
+    expect(overdueRates([plan()], [loan], "2026-01-10")).toEqual([]);
+    expect(overdueRates([plan()], [loan, e("repaid", 10000)], "2026-01-15")).toEqual([]);
+    expect(overdueRates([plan()], [], "2026-01-15")).toEqual([]);
   });
 });
