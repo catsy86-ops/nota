@@ -12,6 +12,9 @@ const { fixture, updateMock, addMock, removeMock } = vi.hoisted(() => ({
 vi.mock("@/lib/debts/store", () => ({
   useDebts: () => fixture.entries,
   useDebtPlans: () => [],
+  useDebtProofs: () => new Map(),
+  attachDebtProof: vi.fn(async () => "ok"),
+  setDebtProof: vi.fn(() => true),
   addDebtPlan: vi.fn(() => null),
   attachPlanNote: vi.fn(),
   payDebtRate: vi.fn(() => null),

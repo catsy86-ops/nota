@@ -1,5 +1,6 @@
 import { isImageRef, MAX_PEER_BLOB_BYTES } from "@/lib/imageStore";
 import { signatureRefsIn } from "@/lib/study/journalRefs";
+import { debtProofRefsIn } from "@/lib/debts/proofs";
 
 type MapLike = { forEach(cb: (value: unknown, key: string) => void): void };
 
@@ -33,12 +34,14 @@ export function planRefsIn(doc: { getMap(name: string): MapLike }, syncable = fa
 
 /**
  * Klucze, które wychodzą z urządzenia tylko do 2 MB prawdziwego rozmiaru (`mayLeaveDevice`): obrazy planów
- * i podpisy klientów z kart budów (P2.4). Podpis nie ma rozmiaru w danych, więc obca karta mogłaby wskazać
+ * i podpisy klientów z kart budów (P2.4), a także zdjęcia dowodów długów (L4.3). Podpis nie ma rozmiaru w danych, więc obca karta mogłaby wskazać
  * hash dowolnego dużego pliku z magazynu i wymusić jego wysłanie — limit to zamyka.
  */
 export function sizeCappedRefsIn(doc: { getMap(name: string): MapLike }): Set<string> {
   const refs = planRefsIn(doc);
   for (const r of signatureRefsIn(doc)) refs.add(r);
+  // Dowody długów (L4.3): ten sam powód — klucz w danych od innego urządzenia może wskazać dowolny plik.
+  for (const r of debtProofRefsIn(doc)) refs.add(r);
   return refs;
 }
 

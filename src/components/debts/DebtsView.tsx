@@ -14,7 +14,8 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { localDayKey } from "@/lib/dayDone";
-import { addDebt, addDebtFromText, addDebtPlan, attachPlanNote, removeDebt, renamePeople, restoreDebt, restoreDebts, updateDebt, useDebts } from "@/lib/debts/store";
+import { addDebt, addDebtFromText, addDebtPlan, attachPlanNote, removeDebt, renamePeople, restoreDebt, restoreDebts, updateDebt, useDebtProofs, useDebts } from "@/lib/debts/store";
+import { DebtProofField, DebtProofThumb } from "./DebtProof";
 import { shareOrCopy } from "@/lib/shareOrCopy";
 import { downloadBlob } from "@/lib/downloadBlob";
 import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
@@ -489,6 +490,7 @@ function clearDueReminders(entries: DebtEntry[], reminders: DebtReminderApi | un
 function PersonHistory({ person, onDone, reminders, addReminderNote, people, hidden, onNewEntry, others = [], onRekey }: { person: PersonDebts; onDone: () => void } & HistoryProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [askRemove, setAskRemove] = useState<DebtEntry | null>(null);
+  const proofs = useDebtProofs();
   const running = useMemo(() => runningBalances(person.entries), [person.entries]);
   const twice = useMemo(() => doubleSettle(person.entries), [person.entries]);
   const names = useMemo(() => knownPeople(people), [people]);
@@ -577,7 +579,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
               {m.items.map(({ e, i }) =>
                 editingId === e.id ? (
                   <li key={e.id}>
-                    <EditDebtForm entry={e} people={names} reminders={reminders} addReminderNote={addReminderNote} hidden={hidden} onDone={() => setEditingId(null)} />
+                    <EditDebtForm entry={e} people={names} reminders={reminders} addReminderNote={addReminderNote} hidden={hidden} proofRef={proofs.get(e.id)?.ref} onDone={() => setEditingId(null)} />
                   </li>
                 ) : (
                   <li key={e.id} className="flex items-center gap-3 rounded-card border border-border/60 bg-background p-3">
@@ -593,6 +595,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
                         Saldo po tym: {running[i] === 0 ? "0" : `${running[i] > 0 ? "" : "− "}${amountText(Math.abs(running[i]), hidden)}`}
                       </p>
                     </div>
+                    {proofs.has(e.id) && <DebtProofThumb proofRef={proofs.get(e.id)!.ref} hidden={hidden} label={`${DEBT_KIND_LABEL[e.kind]}, ${formatDay(e.at)}`} />}
                     <Button variant="ghost" size="icon" aria-label={`Edytuj wpis: ${DEBT_KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => setEditingId(e.id)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -632,8 +635,9 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
  * zwrotu. Zmiana imienia przenosi wpis do innej osoby (grupowanie idzie po nazwie bez wielkości liter).
  * Termin tworzy, zmienia albo zdejmuje przypomnienie notatki; „Cofnij” oddaje wpis i termin.
  */
-function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, onDone }: {
+function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, proofRef, onDone }: {
   entry: DebtEntry;
+  proofRef?: string;
   people: string[];
   reminders?: DebtReminderApi;
   addReminderNote?: AddReminderNote;
@@ -717,6 +721,7 @@ function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, onDon
           </div>
         )}
       </div>
+      <DebtProofField entryId={entry.id} proofRef={proofRef} hidden={hidden} />
       {error && <p id={`${uid}-err`} role="alert" className="text-sm text-destructive-ink">{error.text}</p>}
       <div className="flex gap-2">
         <Button type="submit" size="sm" className="h-11 flex-1">Zapisz zmiany</Button>

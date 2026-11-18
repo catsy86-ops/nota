@@ -53,6 +53,7 @@ const EXEMPT: Record<string, string> = {
   studyMissed: "wartości `true`",
   studyDays: "wartości `true`",
   studyExams: "wynik zapisywany raz, bez edycji",
+  debtProofs: "`{ ref, at }` zastępowane w całości przy zmianie zdjęcia; nic do edycji",
 };
 
 /** Do sprawdzenia w D1.1 (działami). Zmniejszaj, przenosząc do PRESERVES albo EXEMPT z uzasadnieniem. */
@@ -62,7 +63,7 @@ const TODO = [
 ];
 const TODO_MAX = 14;
 
-const CONSTS: Record<string, string> = { SYNC_CONTROL_MAP: "syncControl", PLANS_MAP: "plans", REGISTRY_MAP: "shiftSchedules", DOC_FORMAT_MAP: "docFormat" };
+const CONSTS: Record<string, string> = { SYNC_CONTROL_MAP: "syncControl", PLANS_MAP: "plans", REGISTRY_MAP: "shiftSchedules", DOC_FORMAT_MAP: "docFormat", DEBT_PROOFS_MAP: "debtProofs" };
 
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((n) => {

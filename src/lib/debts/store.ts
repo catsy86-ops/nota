@@ -3,6 +3,7 @@ import { yjsStore } from "@/lib/yjsStore";
 import { localDayKey } from "@/lib/dayDone";
 import { cleanDebt, DEBT_NOTE_MAX, DEBT_PERSON_MAX, normalizeName, parseAmount, personKey, type DebtEntry, type DebtKind } from "./model";
 import { createYDebts } from "./yDebts";
+import type { DebtProof } from "./proofs";
 import { cleanPlan, planState, PLAN_MAX_RATES, PLAN_MIN_RATES, rateAmounts, rateDue, rateEntryId, syncPlanNote, type DebtPlan, type PlanState } from "./plans";
 
 /**
@@ -225,6 +226,40 @@ export function mergeDebtsDump(raw: unknown): void {
 /** Plany rat do kopii (pole `debtPlans`). */
 export function debtPlansDump(): DebtPlan[] {
   return yDebts.dumpPlans();
+}
+
+/** Zdjęcia dowodów do kopii (pole `debtProofs`). */
+export function debtProofsDump(): Record<string, DebtProof> {
+  return yDebts.dumpProofs();
+}
+
+/** Dowody z kopii — po scaleniu wpisów (dowód bez wpisu jest pomijany). */
+export function mergeDebtProofsDump(raw: unknown): void {
+  yDebts.mergeProofs(raw);
+}
+
+const getProofsSnapshot = () => yDebts.proofs();
+
+/** Zdjęcia dowodów (L4.3): id wpisu → dowód; tylko wpisy, które istnieją. */
+export function useDebtProofs(): ReadonlyMap<string, DebtProof> {
+  return useSyncExternalStore(yDebts.subscribe, getProofsSnapshot);
+}
+
+/**
+ * Zdjęcie dowodu przy wpisie: zmniejszone jak zdjęcia notatek (`prepareImage`, do 2 MB), do `imageStore`, odwołanie
+ * w mapie `debtProofs`. Zastępuje poprzednie — jego bajty sprząta odśmiecanie po karencji, więc „Cofnij” działa.
+ */
+export async function attachDebtProof(entryId: string, file: File): Promise<"ok" | "too-big" | "failed"> {
+  const [{ prepareImage }, { imageStore }] = await Promise.all([import("@/lib/imagePrepare"), import("@/lib/imageStore")]);
+  const prepared = await prepareImage(file);
+  if (!prepared) return "too-big";
+  const ref = await imageStore.putBlob(prepared);
+  return yDebts.setProof(entryId, ref) ? "ok" : "failed";
+}
+
+/** Zdjęcie dowodu z powrotem (Cofnij) albo zdjęte (`null`). */
+export function setDebtProof(entryId: string, ref: string | null): boolean {
+  return yDebts.setProof(entryId, ref);
 }
 
 /** Plany z kopii — po scaleniu wpisów (plan bez pożyczki jest pomijany). */

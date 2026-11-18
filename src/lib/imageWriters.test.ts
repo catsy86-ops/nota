@@ -37,6 +37,7 @@ const WRITERS: Record<string, string> = {
   "src/lib/study/photoShrink.ts": "wpis dziennika: images (podmiana na mniejsze)",
   "src/lib/study/siteDocsAdd.ts": "dokumenty budowy: studySiteItems docs",
   "src/lib/study/sitePackageIo.ts": "paczka budowy: wpisy, dokumenty, podpis",
+  "src/lib/debts/store.ts": "dowód długu: mapa debtProofs (debtProofRefsIn)",
 };
 
 const ROOT = resolve(__dirname, "../..");
@@ -141,6 +142,13 @@ describe("Z-6.1: każdy zapis ma czytelnika — bajty przeżywają odśmiecanie 
     expect(createPlan("Plan", img(image), img(work))).not.toBeNull();
     await survives(image);
     await survives(work);
+  });
+
+  it("dowód długu (DebtProof, attachDebtProof)", async () => {
+    const ref = await put();
+    yjsStore.doc.getMap("debts").set("d1", { id: "d1", person: "Ola", kind: "lent", amount: 100, at: "2026-11-18", note: "", created: 1 });
+    yjsStore.doc.getMap("debtProofs").set("d1", { ref, at: Date.now() });
+    await survives(ref);
   });
 
   // Zablokowany skarbiec: notatka prywatna nie może mieć plików — `lockNote` odmawia `has-files`

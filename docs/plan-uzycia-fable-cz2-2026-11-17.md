@@ -138,7 +138,7 @@ Kolejność: **H → I → J → G+**. H i I nie zależą od niczego i mogą iś
 - **Z-17.3 (Opus, S)** — `cleanDebt` zachowuje nieznane pola; testy „stary zapis → nowy odczyt → stary zapis”; ta sama reguła w pozostałych `clean*` według listy z Z-17.1.
 - **Z-17.4 (Opus, M)** — L2.1 (raty) i L3.1 (zapłaciłem za…) według Z-17.2.
 - **Z-17.5 (Sonnet, S)** — L2.4 (zaległe na Dziś); najpierw sprawdzić, co daje notatka z etykietą `długi`.
-- **Z-17.6 (Opus, M)** — L4.3 (dowód) po Z-6.3, z `security-reviewer`.
+- ✅ **2026-11-18 zrobione** (bez Z-6.3 — wystarczył test-strażnik `imageWriters.test.ts`). **Z-17.6 (Opus, M)** — L4.3 (dowód) po Z-6.3, z `security-reviewer`.
 - **Z-17.7 (Opus, M)** — C1.4 według Z-17.2.
 - **Z-17.8 (Fable, S)** — zestaw zbieżności (sesja J) — zrobione: `plan-zestaw-zbieznosci.md`; potem **Z-17.9 (Sonnet, M)** — pomocnik `convergence.ts` i testy dla notatek, długów, zmian, Pracy.
 - **Z-18.1–Z-18.9** — z sesji I, pełna tabela w `audyt-2-2026-11-17.md` §7: Z-18.1 (Opus, M) przywracanie — sprawdzanie przed zapisem i znacznik przerwania; Z-18.2 (Sonnet, S) nieznane i uszkodzone sekcje kopii; Z-18.3 (Opus, S) kopia „przed przywróceniem” w OPFS i tekst okna; Z-18.4 (Opus, S) obcinanie harmonogramu po czasie, strażnik, limit 64 KB; Z-18.5 (Sonnet, S) tytuły i podsumowanie; Z-18.6 (Sonnet, S) rozliczenia w groszach; Z-18.7 (Opus, S) ryczałt bez etapów; Z-18.8 (Opus, M) import w jednej transakcji z cofnięciem; Z-18.9 (Sonnet, S) limity ZIP-a. Diffy Z-18.1 i Z-18.8 przegląda Fable (G+).

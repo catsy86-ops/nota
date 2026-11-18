@@ -1005,6 +1005,47 @@ Z-5.T, 2026-11-18 — commit po tym wpisie.
 
 Z-15.6 (część niezależna od F2), 2026-11-18 — commit po tym wpisie.
 
+## Długi — zdjęcie dowodu przy wpisie (L4.3, Z-17.6, 2026-11-18)
+
+### Co robi
+
+- W edycji wpisu długu jest przycisk „Zdjęcie dowodu” (paragon, przelew, umowa): dodanie, zamiana i usunięcie z „Cofnij”. Zapis od razu, niezależnie od „Zapisz zmiany”.
+- W historii osoby wpis z dowodem ma miniaturę; stuknięcie otwiera podgląd. Przy ukrytych kwotach miniatura i podgląd są rozmyte.
+- Zdjęcie synchronizuje się jak obrazy notatek. W kopii JSON jest tylko przy widocznych kwotach.
+
+### Gdzie jest
+
+- `src/lib/debts/proofs.ts` — mapa `debtProofs` (`DEBT_PROOFS_MAP`, id wpisu → `{ ref, at }`), `cleanProof`, `debtProofRefsIn`.
+- `src/lib/debts/yDebts.ts` — `proofs`, `setProof`, `dropProofOf` (usunięcie wpisu zdejmuje dowód, „Cofnij” go oddaje), `dumpProofs`, `mergeProofs`.
+- `src/lib/debts/store.ts` — `useDebtProofs`, `attachDebtProof` (`prepareImage` → `imageStore.putBlob`), `setDebtProof`, `debtProofsDump`, `mergeDebtProofsDump`.
+- `src/components/debts/DebtProof.tsx` — `DebtProofThumb`, `DebtProofField`; podpięte w `DebtsView.tsx` (`PersonHistory`, `EditDebtForm`).
+- `src/lib/yjsStore.ts` (`referencedImages`, `syncableRefs`), `src/lib/plans/planRefs.ts` (`sizeCappedRefsIn`), `src/lib/exportNotes.ts` (sekcja `debtProofs`, bajty w `collectAttachmentBlobs`), `src/lib/noteSchema.ts` (`debtProofs`).
+
+### Jak działa i dlaczego
+
+- Osobna mapa zamiast pola wpisu: zmiana zdjęcia nie przepisuje wpisu z kwotą, a zdjęcie zmienione na jednym telefonie i kwota na drugim scalają się bez strat.
+- Odwołanie czyta odśmiecanie i transport obrazów — tylko dowody wpisów, które istnieją. Sierota (wpis usunięty na innym telefonie albo id podrzucone przez obcego) nie trzyma pliku i nie jedzie dalej.
+- Dowód jest w `sizeCappedRefsIn`: urządzenie z kodem mogłoby wpisać jako dowód skrót dowolnego dużego pliku z magazynu i wymusić jego wysłanie — wychodzi tylko plik do 2 MB prawdziwego rozmiaru (jak podpisy i plany).
+- Kopia JSON nie jest szyfrowana, a przelew czy umowa pokazują kwoty: przy ukrytych kwotach bajty dowodów nie wchodzą (`proofsExcluded`), odwołania zostają. Pominięte z braku miejsca liczy osobny licznik (`proofs`).
+
+### Ograniczenia i pułapki
+
+- Rozmycie przy ukrytych kwotach jest tylko wizualne (przed wzrokiem osoby obok); plik jest na urządzeniu i w synchronizacji.
+- „Cofnij” po zamianie albo usunięciu zdjęcia wskazuje stare bajty — po karencji odśmiecania (7 dni) mogłoby ich już nie być; dymek znika dużo wcześniej.
+- Wyłączenie bajtów dowodów z kopii przy ukrytych kwotach nie ma testu jednostkowego.
+- Nie sprawdzone na telefonie.
+
+### Testy
+
+- `src/lib/debts/proofs.test.ts` — czyszczenie, dowód tylko przy wpisie, zamiana i usunięcie, „Cofnij” po usunięciu wpisu, kopia, limit 2 MB, sierota.
+- `src/lib/imageWriters.test.ts` — `src/lib/debts/store.ts` na liście zapisujących i przypadek „dowód długu” przeżywa odśmiecanie.
+- `src/components/debts/DebtsView.test.tsx` (atrapa sklepu), `e2e/debts-*.spec.ts`.
+- Przegląd `security-reviewer` 2026-11-18: M (kopia JSON) i L (sieroty, „Cofnij” bez komunikatu) naprawione.
+
+### Commit
+
+Z-17.6, 2026-11-18 — commit po tym wpisie.
+
 ## Dane — wymaganie wersji w dokumencie i spis map (D1.2–D1.4 planu migracji, 2026-11-18)
 
 ### Co robi

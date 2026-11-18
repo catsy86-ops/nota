@@ -87,6 +87,10 @@ export interface BackupAttachmentReport {
   plans: number;
   /** Obrazy analiz planów pominięte z wyboru (Ustawienia → Kopia, `backupPlanImages`) — bez ostrzeżenia przed zapisem. */
   plansExcluded?: number;
+  /** Zdjęcia dowodów długów, które nie weszły (budżet albo brak bajtów). */
+  proofs?: number;
+  /** Zdjęcia dowodów pominięte, bo kwoty długów są ukryte (L4.3) — bez ostrzeżenia przed zapisem. */
+  proofsExcluded?: number;
 }
 
 /** Zdanie do toastu o pominiętych załącznikach; `null`, gdy wszystko weszło. */
@@ -95,12 +99,13 @@ export function describeSkippedAttachments(r?: BackupAttachmentReport): string |
   const n = r.tooLarge.length + r.missing.length;
   const photos = r.journalPhotos;
   const docs = r.siteDocs;
-  if (!n && !photos && !docs && !r.recordings && !r.plans) return null;
+  if (!n && !photos && !docs && !r.recordings && !r.plans && !r.proofs) return null;
   const photosPart = photos ? `Pominięte zdjęcia dziennika z budowy: ${photos} — zostaną tylko na tym urządzeniu.` : null;
   const docsPart = docs ? `Pominięte pliki budów (plany, PDF): ${docs} — zostaną tylko na tym urządzeniu.` : null;
   const recPart = r.recordings ? `Pominięte nagrania głosowe: ${r.recordings} — zostaną tylko na tym urządzeniu.` : null;
   const plansPart = r.plans ? `Pominięte obrazy analiz planów: ${r.plans} — zostaną tylko na tym urządzeniu.` : null;
-  const extra = [photosPart, docsPart, recPart, plansPart].filter(Boolean).join(" ") || null;
+  const proofsPart = r.proofs ? `Pominięte zdjęcia dowodów długów: ${r.proofs} — zostaną tylko na tym urządzeniu.` : null;
+  const extra = [photosPart, docsPart, recPart, plansPart, proofsPart].filter(Boolean).join(" ") || null;
   if (!n) return extra;
   const parts: string[] = [];
   if (r.tooLarge.length) parts.push(`${r.tooLarge.length} za duże na backup (limit ${formatFileSize(BACKUP_ATTACHMENTS_BUDGET_BYTES)} na wszystkie pliki)`);
@@ -146,6 +151,21 @@ async function collectAttachmentBlobs(budget: number, planImages: boolean): Prom
   // urządzeń), potem duże oryginały — przy braku budżetu zostaje przynajmniej obraz do oglądania.
   // Bez obrazów planów (wybór w Ustawieniach): plik JSON nie jest szyfrowany, a plany bywają cudzymi
   // projektami — analizy (trasy, skala, zestawienie) zostają, obrazy tylko na urządzeniu.
+  // Zdjęcia dowodów długów (L4.3): tylko dowody istniejących wpisów i tylko przy widocznych kwotach — kopia JSON nie
+  // jest szyfrowana, a przelew czy umowa pokazują kwoty, które użytkownik schował.
+  const { debtProofsDump } = await import("@/lib/debts/store");
+  const { getHideAmounts } = await import("@/lib/debts/hideAmounts");
+  const proofRefs = [...new Set(Object.values(debtProofsDump()).map((p) => p.ref))];
+  if (getHideAmounts()) report.proofsExcluded = proofRefs.length;
+  else for (const hash of proofRefs) {
+    if (blobs[hash]) continue;
+    const dataUrl = await imageStore.getDataUrl(hash);
+    if (!dataUrl) { report.proofs = (report.proofs ?? 0) + 1; continue; }
+    const approx = Math.ceil(dataUrl.length * 0.75);
+    if (used + approx > budget) { report.proofs = (report.proofs ?? 0) + 1; continue; }
+    blobs[hash] = dataUrl;
+    used += approx;
+  }
   const syncablePlans = planRefsIn(yjsStore.doc, true);
   const planOrder = [...syncablePlans, ...[...planRefsIn(yjsStore.doc)].filter((h) => !syncablePlans.has(h))];
   if (!planImages) {
@@ -170,7 +190,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   await versionsStore.load();
   await shiftsReady();
   // Dane działu Praca ładowane dopiero tu — nie wchodzą do paczki startowej.
-  const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }, { trainingDump }, { debtsDump, debtPlansDump }, { entryCheckDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store"), import("@/lib/training/store"), import("@/lib/debts/store"), import("@/lib/study/entryCheckStore")]);
+  const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }, { trainingDump }, { debtsDump, debtPlansDump, debtProofsDump }, { entryCheckDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store"), import("@/lib/training/store"), import("@/lib/debts/store"), import("@/lib/study/entryCheckStore")]);
   await studyReady();
   const { weightDump } = await import("@/lib/weight/store");
   const { kitsDump } = await import("@/lib/study/kitsStore");
@@ -214,6 +234,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     // Długi: pożyczki są w dokumencie Yjs, więc bez tej sekcji kopia by je gubiła.
     debts: JSON.stringify(debtsDump()),
     debtPlans: JSON.stringify(debtPlansDump()),
+    debtProofs: JSON.stringify(debtProofsDump()),
     // Lista przed wejściem na budowę (punkty i odhaczenia dni) — osobna mapa, scalana przy przywracaniu.
     entryCheck: JSON.stringify(entryCheckDump()),
     // Zestawy materiału (H1.2) — osobna mapa, scalana przy przywracaniu bez nadpisywania.
@@ -379,7 +400,7 @@ const errName = (e: unknown): string => (e instanceof Error ? e.name : "błąd")
  * i budowie kopii. `load` wczytuje moduł w fazie sprawdzania; zwrócona funkcja scala **synchronicznie** w fazie zapisu.
  * Kolejność ma znaczenie (P8): `training` sprawdza notatki, więc idzie po wymianie notatek.
  */
-type MergeKey = "supplements" | "diet" | "weight" | "training" | "debts" | "debtPlans" | "entryCheck" | "kits" | "views" | "points" | "plans" | "billing" | "van" | "invoices" | "pricing" | "clients" | "jobs";
+type MergeKey = "supplements" | "diet" | "weight" | "training" | "debts" | "debtPlans" | "debtProofs" | "entryCheck" | "kits" | "views" | "points" | "plans" | "billing" | "van" | "invoices" | "pricing" | "clients" | "jobs";
 type Merge = (dump: never) => unknown;
 export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; load: () => Promise<Merge> }[] = [
   { key: "supplements", label: "Suplementy", load: async () => (await import("@/lib/supplements/store")).mergeSupplementDump },
@@ -390,6 +411,8 @@ export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; load: () =
   { key: "debts", label: "Długi", load: async () => (await import("@/lib/debts/store")).mergeDebtsDump },
   // Po „Długi”: plan bez pożyczki jest pomijany.
   { key: "debtPlans", label: "Raty", load: async () => (await import("@/lib/debts/store")).mergeDebtPlansDump },
+  // Po „Długi”: dowód bez wpisu jest pomijany.
+  { key: "debtProofs", label: "Dowody długów", load: async () => (await import("@/lib/debts/store")).mergeDebtProofsDump },
   { key: "entryCheck", label: "Lista przed wejściem", load: async () => (await import("@/lib/study/entryCheckStore")).mergeEntryCheckDump },
   { key: "kits", label: "Zestawy", load: async () => (await import("@/lib/study/kitsStore")).mergeKitsDump },
   { key: "views", label: "Widoki", load: async () => (await import("@/lib/savedViews")).mergeViewsDump },

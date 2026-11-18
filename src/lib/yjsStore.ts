@@ -19,6 +19,7 @@ import { mergeSpec, projectReminder, readSpec, REMINDER_FIELDS, specOf, type Rem
 import { fallbackRepeat } from "@/lib/reminderRepeat";
 import { journalRefsIn } from "@/lib/study/journalRefs";
 import { planRefsIn } from "@/lib/plans/planRefs";
+import { debtProofRefsIn } from "@/lib/debts/proofs";
 import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 import { startupReplace } from "@/lib/docReplaceCore";
 import { cleanLabelPath, isUnderLabel, renameLabelBranch } from "@/lib/labelTree";
@@ -881,6 +882,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     for (const r of journalRefsIn(doc)) refs.add(r);
     // Obrazy analiz planów (oryginał i kopia robocza).
     for (const r of planRefsIn(doc)) refs.add(r);
+    // Zdjęcia dowodów długów (L4.3).
+    for (const r of debtProofRefsIn(doc)) refs.add(r);
     return refs;
   }
 
@@ -921,6 +924,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     for (const r of journalRefsIn(doc, true)) refs.add(r);
     // Plany: kopia robocza zawsze, oryginał tylko do 2 MB (D3).
     for (const r of planRefsIn(doc, true)) refs.add(r);
+    // Dowody długów: po `prepareImage` (do 2 MB), więc jadą zawsze.
+    for (const r of debtProofRefsIn(doc)) refs.add(r);
     return refs;
   }
 

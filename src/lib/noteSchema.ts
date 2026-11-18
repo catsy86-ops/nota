@@ -132,6 +132,8 @@ export interface FullBackup {
   debts?: string;
   /** Plany rat długów (L2.1, `lib/debts/plans.ts`, JSON tablica); scalane po `debts`, kształt sprawdza `cleanPlan`. */
   debtPlans?: string;
+  /** Zdjęcia dowodów długów (L4.3, `lib/debts/proofs.ts`, JSON obiekt id wpisu → `{ ref, at }`); scalane po `debts`. */
+  debtProofs?: string;
   /** Lista przed wejściem na budowę (lib/study/yEntryCheck.ts, JSON); czyszczona przy scalaniu. */
   entryCheck?: string;
   /** Zestawy materiału Pracy (lib/study/yKits.ts, JSON); scalane przy przywracaniu bez nadpisywania (H1.2). */
@@ -205,6 +207,7 @@ export const fullBackupSchema = z.object({
   training: z.catch(z.optional(z.string()), undefined),
   debts: z.catch(z.optional(z.string()), undefined),
   debtPlans: z.catch(z.optional(z.string()), undefined),
+  debtProofs: z.catch(z.optional(z.string()), undefined),
   entryCheck: z.catch(z.optional(z.string()), undefined),
   kits: z.catch(z.optional(z.string()), undefined),
   views: z.catch(z.optional(z.string()), undefined),
