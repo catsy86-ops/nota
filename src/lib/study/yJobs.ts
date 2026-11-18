@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { cleanJobMeta, cleanQuoteItem, QUOTE_ITEMS_MAX, type Job, type JobMeta, type QuoteItem } from "./jobs";
+import { toStored } from "@/lib/extraFields";
 import { CONTENT_FIELDS, cleanQuoteDoc, QUOTE_DOC_FIELDS, type QuoteDoc } from "./quoteDoc";
 
 /**
@@ -72,7 +73,7 @@ export function createYJobs(doc: Y.Doc) {
     if (!isId(site)) return false;
     const prev = get(site);
     const base: Partial<JobMeta> = prev
-      ? { status: prev.status, statusAt: prev.statusAt, scope: prev.scope, term: prev.term, margin: prev.margin, created: prev.created, changedAt: prev.changedAt }
+      ? { status: prev.status, statusAt: prev.statusAt, scope: prev.scope, term: prev.term, margin: prev.margin, created: prev.created, changedAt: prev.changedAt, v: prev.v, extra: prev.extra }
       : { status: "quote", statusAt: now, created: now };
     const next = { ...base, ...patch };
     if (patch.status && patch.status !== prev?.status && patch.statusAt === undefined) next.statusAt = now;
@@ -80,7 +81,7 @@ export function createYJobs(doc: Y.Doc) {
     if (prev && (("scope" in patch && patch.scope !== prev.scope) || ("margin" in patch && patch.margin !== prev.margin))) next.changedAt = now;
     const clean = cleanJobMeta(next);
     if (!clean) return false;
-    doc.transact(() => map.set(key("j", site), clean), JOBS_ORIGIN);
+    doc.transact(() => map.set(key("j", site), toStored(clean)), JOBS_ORIGIN);
     return true;
   }
 
@@ -90,7 +91,7 @@ export function createYJobs(doc: Y.Doc) {
     const clean = cleanQuoteItem(item, item.id);
     const exists = map.has(key("i", site, item.id));
     if (!clean || (!exists && (get(site)?.items.length ?? 0) >= QUOTE_ITEMS_MAX)) return false;
-    const { id, ...value } = clean;
+    const { id, ...value } = toStored(clean);
     doc.transact(() => {
       map.set(key("i", site, id), value);
       touch(site);
@@ -159,17 +160,18 @@ export function createYJobs(doc: Y.Doc) {
     const meta = cleanJobMeta(job);
     if (!meta) return;
     doc.transact(() => {
-      map.set(key("j", site), meta);
+      map.set(key("j", site), toStored(meta));
       for (const [f, v] of Object.entries(cleanQuoteDoc(job.doc) ?? {})) map.set(key("q", site, f), v);
       for (const i of job.items) {
         const it = isId(i.id) ? cleanQuoteItem(i, i.id) : null;
-        if (it) { const { id, ...value } = it; map.set(key("i", site, id), value); }
+        if (it) { const { id, ...value } = toStored(it); map.set(key("i", site, id), value); }
       }
     }, JOBS_ORIGIN);
   }
 
   function dump(): JobsDump {
-    return { jobs: Object.fromEntries(all()) };
+    // Kształt zapisu: nieznane pola zlecenia i pozycji na wierzchu (Z-17.3).
+    return { jobs: Object.fromEntries([...all()].map(([site, job]) => [site, { ...toStored(job), items: job.items.map((i) => toStored(i) as QuoteItem) } as Job])) };
   }
 
   /** Scala kopię: zlecenia i pozycje, których tu nie ma, dochodzą; istniejące zostają. */
@@ -181,13 +183,13 @@ export function createYJobs(doc: Y.Doc) {
         if (!isId(site) || !data || typeof data !== "object") continue;
         const meta = cleanJobMeta(data);
         if (!meta) continue;
-        if (!map.has(key("j", site))) map.set(key("j", site), meta);
+        if (!map.has(key("j", site))) map.set(key("j", site), toStored(meta));
         for (const [f, v] of Object.entries(cleanQuoteDoc((data as Partial<Job>).doc) ?? {})) if (!map.has(key("q", site, f))) map.set(key("q", site, f), v);
         const list = (data as Partial<Job>).items;
         for (const v of Array.isArray(list) ? list.slice(0, QUOTE_ITEMS_MAX) : []) {
           const id = (v as Partial<QuoteItem> | null)?.id;
           const it = typeof id === "string" && isId(id) ? cleanQuoteItem(v, id) : null;
-          if (it && !map.has(key("i", site, it.id))) { const { id: _, ...value } = it; map.set(key("i", site, it.id), value); }
+          if (it && !map.has(key("i", site, it.id))) { const { id: _, ...value } = toStored(it); map.set(key("i", site, it.id), value); }
         }
       }
     }, JOBS_ORIGIN);

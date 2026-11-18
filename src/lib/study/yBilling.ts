@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { cleanAmount, cleanModes, cleanPayment, DEFAULT_MODES, PAYMENTS_MAX, sortPayments, type BillingMode, type Payment, type SiteBilling } from "./billing";
+import { toStored } from "@/lib/extraFields";
 
 /**
  * Sposób rozliczenia budów w Y.Doc notatek (H3.1) — synchronizacja i kopia jak reszta danych. Mapa
@@ -94,7 +95,7 @@ export function createYBilling(doc: Y.Doc) {
   function addPayment(site: string, p: Payment): boolean {
     const clean = isId(site) && isId(p.id) ? cleanPayment(p, p.id) : null;
     if (!clean || get(site).payments.length >= PAYMENTS_MAX) return false;
-    const { id, ...value } = clean;
+    const { id, ...value } = toStored(clean);
     doc.transact(() => map.set(key("p", site, id), value), BILLING_ORIGIN);
     return true;
   }
@@ -109,7 +110,7 @@ export function createYBilling(doc: Y.Doc) {
   const DUMP_PAYMENTS_MAX = 2000;
 
   function dump(): BillingDump {
-    return { sites: Object.fromEntries(all()) };
+    return { sites: Object.fromEntries([...all()].map(([site, b]) => [site, { ...b, payments: b.payments.map((p) => toStored(p) as Payment) }])) };
   }
 
   /** Scala kopię: pola, których tu nie ma, dochodzą; istniejące zostają. */
@@ -133,7 +134,7 @@ export function createYBilling(doc: Y.Doc) {
           if (room <= 0) break;
           const id = (v as Partial<Payment> | null)?.id;
           const pay = typeof id === "string" && isId(id) ? cleanPayment(v, id) : null;
-          if (pay && !map.has(key("p", site, pay.id))) { const { id: _, ...value } = pay; put(key("p", site, pay.id), value); room--; }
+          if (pay && !map.has(key("p", site, pay.id))) { const { id: _, ...value } = toStored(pay); put(key("p", site, pay.id), value); room--; }
         }
       }
     }, BILLING_ORIGIN);

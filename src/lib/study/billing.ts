@@ -1,4 +1,5 @@
 import { cell } from "@/lib/shifts/timesheet";
+import { extraOf } from "@/lib/extraFields";
 
 /**
  * Sposób rozliczenia budowy (H3.1, plan 2026-10-29): godziny (stawka w karcie, `SiteCard.rate`),
@@ -91,7 +92,11 @@ export interface Payment {
   day: string;
   amount: number;
   note?: string;
+  /** Pola z nowszej wersji — przeżywają zapis (Z-17.3). `id` jest z klucza mapy, nie z wartości. */
+  extra?: Record<string, unknown>;
 }
+
+const PAYMENT_KNOWN = ["id", "day", "amount", "note"] as const;
 
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -102,7 +107,8 @@ export function cleanPayment(raw: unknown, id: string): Payment | null {
   const amount = cleanAmount(p.amount);
   if (amount === undefined) return null;
   const note = typeof p.note === "string" ? p.note.trim().replace(/\s+/g, " ").slice(0, PAYMENT_NOTE_MAX).trimEnd() : "";
-  return { id, day: p.day, amount, ...(note ? { note } : {}) };
+  const extra = extraOf(p, PAYMENT_KNOWN);
+  return { id, day: p.day, amount, ...(note ? { note } : {}), ...(extra ? { extra } : {}) };
 }
 
 /** Wpłaty od najstarszej (przy tym samym dniu — po id, żeby kolejność była stała na obu telefonach). */

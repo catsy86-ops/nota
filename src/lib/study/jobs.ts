@@ -1,5 +1,6 @@
 import { cleanAmount, round2 } from "./billing";
 import { safeLine } from "@/lib/safeText";
+import { extraOf, keepV, tooNew } from "@/lib/extraFields";
 import { applyQuoteDoc, type DocTotals, type QuoteDoc } from "./quoteDoc";
 
 /**
@@ -43,7 +44,16 @@ export interface JobMeta {
   created: number;
   /** H3.5: ostatnia zmiana treści dla klienta (zakres, marża, pozycje); brak = od założenia. */
   changedAt?: number;
+  /** Minimalna wersja czytelnika (Z-17.3); większa niż `JOB_ENTRY_V` — zlecenie niewidoczne. */
+  v?: number;
+  /** Pola z nowszej wersji — przeżywają zapis (`toStored`). */
+  extra?: Record<string, unknown>;
 }
+
+export const JOB_ENTRY_V = 1;
+// `items` i `doc` — `cleanJobMeta` dostaje też całe zlecenie (przywracanie, kopia); to nie są nieznane pola.
+const JOB_KNOWN = ["status", "statusAt", "scope", "term", "margin", "created", "changedAt", "items", "doc"] as const;
+const QUOTE_ITEM_KNOWN = ["id", "kind", "name", "qty", "unit", "price", "order"] as const;
 
 export interface QuoteItem {
   id: string;
@@ -54,6 +64,8 @@ export interface QuoteItem {
   /** Cena jednostkowa (zł). */
   price: number;
   order: number;
+  /** Pola z nowszej wersji (Z-17.3). */
+  extra?: Record<string, unknown>;
 }
 
 export interface Job extends JobMeta {
@@ -81,13 +93,14 @@ export function cleanMargin(v: unknown): number | undefined {
 /** Wpis zlecenia z dokumentu (także obcy, z kopii) → czysty albo `null`. */
 export function cleanJobMeta(raw: unknown): JobMeta | null {
   const j = raw as Partial<JobMeta> | null;
-  if (!j || typeof j !== "object" || !isStatus(j.status)) return null;
+  if (!j || typeof j !== "object" || tooNew(j, JOB_ENTRY_V) || !isStatus(j.status)) return null;
   const created = time(j.created);
   if (created === undefined) return null;
   const scope = text(j.scope, JOB_SCOPE_MAX);
   const term = typeof j.term === "string" && TERM_RE.test(j.term) ? j.term : undefined;
   const margin = cleanMargin(j.margin);
   const changedAt = time(j.changedAt);
+  const extra = extraOf(j, JOB_KNOWN);
   return {
     status: j.status,
     statusAt: time(j.statusAt) ?? created,
@@ -96,6 +109,8 @@ export function cleanJobMeta(raw: unknown): JobMeta | null {
     ...(margin !== undefined ? { margin } : {}),
     created,
     ...(changedAt !== undefined ? { changedAt } : {}),
+    ...keepV(j),
+    ...(extra ? { extra } : {}),
   };
 }
 
@@ -109,7 +124,8 @@ export function cleanQuoteItem(raw: unknown, id: string): QuoteItem | null {
   const price = q.price === 0 ? 0 : cleanAmount(q.price);
   if (!name || qty === undefined || price === undefined) return null;
   const order = typeof q.order === "number" && Number.isFinite(q.order) ? q.order : 0;
-  return { id, kind, name, qty, unit: text(q.unit, QUOTE_UNIT_MAX) || DEFAULT_UNIT[kind], price, order };
+  const extra = extraOf(q, QUOTE_ITEM_KNOWN);
+  return { id, kind, name, qty, unit: text(q.unit, QUOTE_UNIT_MAX) || DEFAULT_UNIT[kind], price, order, ...(extra ? { extra } : {}) };
 }
 
 
