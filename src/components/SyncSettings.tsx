@@ -17,7 +17,7 @@ import { CodeChangePanel } from "@/components/sync/CodeChangePanel";
 import { useRekeyRecord } from "@/lib/sync/rekeyRuntime";
 import { legacyEndsAt, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { toast } from "sonner";
-import { checkRelay, deleteRelayRoom, getRelayUrl, setRelayUrl, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
+import { acknowledgeRelayWarning, checkRelay, deleteRelayRoom, getRelayUrl, setRelayUrl, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
 import { format, formatDistanceToNow } from "date-fns";
 import { syncErrorText } from "@/lib/syncErrorText";
 import { seenOffline, useSeenDevices } from "@/lib/syncSeen";
@@ -506,6 +506,14 @@ function RelayServer() {
           <span>{relayStatusText(view, sync.status)}</span>
         </p>
         {probe && <p className="text-muted-foreground" aria-live="polite">{probe}</p>}
+        {view.warning && (
+          <div role="alert" className="space-y-2 rounded-card border border-warning/60 bg-warning/10 p-2 text-foreground">
+            <p>{RELAY_WARNING_TEXT[view.warning]}</p>
+            <div className="flex justify-end">
+              <Button type="button" size="sm" variant="outline" onClick={() => void acknowledgeRelayWarning()}>Rozumiem</Button>
+            </div>
+          </div>
+        )}
         <div className="flex justify-end gap-2">
           {saved && <Button type="button" size="sm" variant="ghost" onClick={() => setDraft("")}>Wyczyść</Button>}
           <Button type="button" size="sm" variant="outline" onClick={handleTest} disabled={!(valid ?? saved)}>Testuj</Button>
@@ -517,6 +525,16 @@ function RelayServer() {
     </details>
   );
 }
+
+/** S2.3: ostrzeżenia o serwerze przekaźnika (`docs/plan-wiadomosci-i-cofniecia.md` §2.2). */
+const RELAY_WARNING_TEXT: Record<NonNullable<RelayView["warning"]>, string> = {
+  rollback:
+    "Serwer pośredniczący cofnął się do starszego stanu. Twoje dane są bezpieczne na tym urządzeniu i zostały wysłane ponownie. Jeśli to nie Twój serwer albo zdarza się to znowu — zmień serwer.",
+  "reset-loop":
+    "Serwer pośredniczący kilka razy w ciągu doby zaczynał zapis od nowa. Twoje dane są bezpieczne na tym urządzeniu i zostały wysłane ponownie. Jeśli to się powtarza — sprawdź serwer albo zmień go.",
+  split:
+    "Inne urządzenie w grupie widzi na serwerze pośredniczącym inny stan niż to. Część zmian mogła tu nie dotrzeć. Twoje dane są bezpieczne na tym urządzeniu. Jeśli to nie Twój serwer albo zdarza się to znowu — zmień serwer.",
+};
 
 /** Kropka przy statusie: kolor niesie stan wizualnie, tekst obok mówi to samo dla czytnika. */
 function relayDotClass(status: RelayView["status"], syncStatus: string): string {

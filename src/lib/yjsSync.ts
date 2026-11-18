@@ -6,7 +6,7 @@ import type { WebrtcProvider } from "y-webrtc";
 import * as Y from "yjs";
 import { yjsStore } from "@/lib/yjsStore";
 import { startImageSync, stopImageSync } from "@/lib/imageSync";
-import { forgetRelayRoom, setRelayGate, startRelay, stopRelay } from "@/lib/sync/relayRuntime";
+import { compareRelayHeads, forgetRelayRoom, onRelayHead, relayHeadClaim, setRelayGate, startRelay, stopRelay } from "@/lib/sync/relayRuntime";
 import { deriveRelayKeys } from "@/lib/sync/relayKeys";
 import { codeKind, generateCode, parseCode, type CodeKind } from "@/lib/sync/pairCode";
 import {
@@ -620,6 +620,7 @@ function connect(code: string) {
         if (peerCount !== state.peerCount) logDiag("info", "yjsSync", `peers: ${peerCount}`);
         setState({ peerCount });
       });
+      if (i === 0) watchRelayHeads(p);
       return p;
     });
     logDiag("info", "yjsSync", `provider started (${rooms.length} rooms)`);
@@ -667,8 +668,47 @@ yjsStore.doc.on("update", (_update: Uint8Array, origin: unknown) => {
   setState({ lastSyncedAt: now });
 });
 
+/**
+ * S2.3 §2.3: głowa pokoju przekaźnika w awareness pokoju v3 — najwyżej raz na 15 s (razem z odświeżaniem awareness),
+ * i porównanie z sąsiadami przy każdej ich aktualizacji. Starsze pokoje tego nie niosą: to te same urządzenia.
+ */
+const RELAY_CLAIM_GAP_MS = 15_000;
+let relayClaimAt = 0;
+let relayClaimTimer: ReturnType<typeof setTimeout> | null = null;
+let offRelayHead: (() => void) | null = null;
+
+function publishRelayClaim(): void {
+  const awareness = providers[0]?.awareness;
+  if (!awareness) return;
+  const wait = relayClaimAt + RELAY_CLAIM_GAP_MS - Date.now();
+  if (wait > 0) {
+    relayClaimTimer ??= setTimeout(() => {
+      relayClaimTimer = null;
+      publishRelayClaim();
+    }, wait);
+    return;
+  }
+  relayClaimAt = Date.now();
+  awareness.setLocalStateField("relay", relayHeadClaim());
+}
+
+function watchRelayHeads(p: WebrtcProvider): void {
+  offRelayHead?.();
+  offRelayHead = onRelayHead(publishRelayClaim);
+  p.awareness.on("update", () => {
+    const others = new Map(p.awareness.getStates());
+    others.delete(p.awareness.clientID);
+    compareRelayHeads(others);
+  });
+}
+
 function disconnectProvider() {
   connectToken++;
+  offRelayHead?.();
+  offRelayHead = null;
+  if (relayClaimTimer) clearTimeout(relayClaimTimer);
+  relayClaimTimer = null;
+  relayClaimAt = 0;
   providers.forEach((p) => p.destroy());
   providers = [];
   roomKinds = [];

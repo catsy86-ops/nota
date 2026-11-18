@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { cpSync, mkdtempSync, rmSync } from "node:fs";
+import { once } from "node:events";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import * as Y from "yjs";
@@ -88,13 +89,17 @@ async function until(cond: () => boolean, ms = 8000) {
   }
 }
 
+function startServer() {
+  child = spawn(process.execPath, [SERVER], {
+    env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir },
+    stdio: "ignore",
+  });
+}
+
 describe("klient przekaźnika ↔ prawdziwy serwer", () => {
   beforeAll(async () => {
     dataDir = mkdtempSync(join(tmpdir(), "relay-it-"));
-    child = spawn(process.execPath, [SERVER], {
-      env: { ...process.env, PORT: String(PORT), DATA_DIR: dataDir },
-      stdio: "ignore",
-    });
+    startServer();
     await waitForHealth();
   }, 15_000);
 
@@ -216,6 +221,49 @@ describe("klient przekaźnika ↔ prawdziwy serwer", () => {
     await untilSynced(fresh, () => fresh.text.toString() === "dane C i jeszcze");
     c.provider.stop();
     fresh.provider.stop();
+  }, 30_000);
+
+  it("S2.3 wiersz 4: dane pokoju podmienione na starsze przy tej samej epoce → ostrzeżenie i pełny stan z powrotem", async () => {
+    const code = "COFNIJCOFNIJ";
+    const warnings: string[] = [];
+    const keys = await deriveRelayKeys(code, ITER);
+    const doc = new Y.Doc();
+    const store = new MemStore();
+    const a = new RelayProvider({ baseUrl: BASE, keys, doc, store, flushMs: 5, onWarning: (k) => warnings.push(k) });
+    await a.start();
+    const text = doc.getText("t");
+    for (const part of ["a", "b"]) {
+      text.insert(text.length, part);
+      expect(await a.settle()).toBe(true);
+    }
+    const roomDir = join(dataDir, "rooms", keys.roomId);
+    const backup = mkdtempSync(join(tmpdir(), "relay-old-"));
+    cpSync(roomDir, backup, { recursive: true });
+    for (const part of ["c", "d", "e"]) {
+      text.insert(text.length, part);
+      expect(await a.settle()).toBe(true);
+    }
+    expect(a.cursor).toBe(5);
+    a.stop();
+    // „Odtworzenie z kopii” bez nowych epok: stary katalog pokoju, ten sam `room.json`.
+    const exited = once(child!, "exit");
+    child!.kill();
+    await exited;
+    rmSync(roomDir, { recursive: true, force: true });
+    cpSync(backup, roomDir, { recursive: true });
+    rmSync(backup, { recursive: true, force: true });
+    startServer();
+    await waitForHealth();
+
+    await a.start();
+    await until(() => warnings.includes("rollback"));
+    expect(a.warning).toBe("rollback");
+    expect(text.toString()).toBe("abcde");
+    expect(await a.settle()).toBe(true);
+    const b = await device(code);
+    await untilSynced(b, () => b.text.toString() === "abcde");
+    a.stop();
+    b.provider.stop();
   }, 30_000);
 
   it("urządzenie w pustym pokoju jest „online”, nie „offline” (R-17)", async () => {

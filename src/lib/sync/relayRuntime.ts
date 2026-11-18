@@ -2,10 +2,11 @@ import { useSyncExternalStore } from "react";
 import { mayLeaveDevice, sizeCappedRefsIn } from "@/lib/plans/planRefs";
 import { createStore, get as idbGet, set as idbSet, del as idbDel, clear as idbClear, type UseStore } from "idb-keyval";
 import { yjsStore } from "@/lib/yjsStore";
-import { logDiag } from "@/lib/diagnostics";
+import { logDiag, logSecurity } from "@/lib/diagnostics";
 import { toast } from "@/lib/notify";
 import { deriveRelayKeys } from "@/lib/sync/relayKeys";
-import { RelayProvider, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
+import { RelayProvider, type RelayState, type RelayStatus, type RelayStore, type RelayWarning } from "@/lib/sync/relayProvider";
+import { RelayHeadCompare, relayUrlTag, type OwnRelayHead } from "@/lib/sync/relayHeadCompare";
 import { RelayBlobs } from "@/lib/sync/relayBlobs";
 import { holdTabRole, RELAY_ROLE } from "@/lib/tabLock";
 
@@ -58,6 +59,8 @@ export interface RelayView {
   syncedAt: number | null;
   /** Przekaźnik prowadzi inna karta tej przeglądarki; ta czeka na rolę. */
   elsewhere?: boolean;
+  /** Ostrzeżenie o serwerze (cofnięcie, pętla resetów, rozjazd z sąsiadem) — S2.3. */
+  warning?: RelayWarning | null;
 }
 
 let view: RelayView = { status: "idle", syncedAt: null };
@@ -173,6 +176,50 @@ export function setRelayGate(gate: ((code: string) => boolean) | null): void {
 // ── start / stop ─────────────────────────────────────────────────────────────
 
 let provider: RelayProvider | null = null;
+let providerUrl = "";
+const headCompare = new RelayHeadCompare();
+const WARNING_KINDS: Record<RelayWarning, "relay-rollback" | "relay-reset-loop" | "relay-split"> = {
+  rollback: "relay-rollback",
+  "reset-loop": "relay-reset-loop",
+  split: "relay-split",
+};
+
+/** „Rozumiem” w ustawieniach: zdejmuje ostrzeżenie o serwerze. */
+export async function acknowledgeRelayWarning(): Promise<void> {
+  await provider?.acknowledgeWarning();
+  setView({ warning: null });
+}
+
+/** Głowa pokoju do rozgłoszenia w awareness (`yjsSync.ts`): `{ epoch, last, u }` albo `null`. */
+export function relayHeadClaim(): { epoch: string; last: number; u: string } | null {
+  const head = provider?.head;
+  if (!head?.epoch) return null;
+  return { epoch: head.epoch, last: head.last, u: relayUrlTag(providerUrl) };
+}
+
+const headListeners = new Set<() => void>();
+/** Powiadamia o nowej głowie pokoju po pobraniu (do odświeżenia awareness). */
+export function onRelayHead(cb: () => void): () => void {
+  headListeners.add(cb);
+  return () => headListeners.delete(cb);
+}
+
+/**
+ * Porównanie z głowami sąsiadów (§2.3). `states` — stany awareness bez własnego; wołane przy każdej aktualizacji
+ * awareness (odnawiana co 15 s, więc rozjazd trwający ponad minutę zostanie zauważony).
+ */
+export function compareRelayHeads(states: Map<number, unknown>, now = Date.now()): void {
+  const p = provider;
+  const head = p?.head;
+  const own: OwnRelayHead | null = head ? { ...head, u: relayUrlTag(providerUrl) } : null;
+  headCompare.retain(states.keys());
+  for (const [id, s] of states) {
+    const claim = (s as { relay?: unknown } | null)?.relay;
+    if (headCompare.observe(id, claim, own, now) && p) {
+      void p.raiseWarning("split", `sąsiad: ${String((claim as { last?: unknown }).last)}, tu: ${own?.last}`).then(() => setView({ warning: p.warning }));
+    }
+  }
+}
 // Bloby (obrazy, załączniki): przebieg po zmianach notatek, z opóźnieniem, jeden naraz.
 let blobs: RelayBlobs | null = null;
 let blobTimer: ReturnType<typeof setTimeout> | null = null;
@@ -246,6 +293,14 @@ async function lead(code: string, url: string, token: number): Promise<void> {
       doc: yjsStore.doc,
       store: idbRelayStore(keys.roomId),
       canSend: () => !sendGate || sendGate(code),
+      onWarning: (kind, detail) => {
+        logSecurity(WARNING_KINDS[kind], detail);
+        logDiag("warn", "relay", `ostrzeżenie ${kind}: ${detail}`);
+      },
+      onHead: () => {
+        if (token === startToken) setView({ warning: p.warning });
+        headListeners.forEach((l) => l());
+      },
       openSocket: (wsUrl) => new WebSocket(wsUrl),
       onRemoteChange: () => {
         scheduleBlobs(0);
@@ -262,6 +317,8 @@ async function lead(code: string, url: string, token: number): Promise<void> {
       },
     });
     provider = p;
+    providerUrl = url;
+    headCompare.reset();
     blobs = new RelayBlobs({
       baseUrl: url, keys, refs: () => yjsStore.syncableRefs(), images: yjsStore.images,
       mayUpload: (hash, size) => mayLeaveDevice(hash, size, sizeCappedRefsIn(yjsStore.doc)),
@@ -277,6 +334,7 @@ async function lead(code: string, url: string, token: number): Promise<void> {
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("online", onOnline);
     await p.start();
+    if (token === startToken) setView({ warning: p.warning });
   } catch (err) {
     if (token !== startToken) return;
     logDiag("error", "relay", "nie udało się uruchomić przekaźnika", err);
@@ -294,11 +352,12 @@ export function stopRelay(): void {
   onOnline = null;
   provider?.stop();
   provider = null;
+  headCompare.reset();
   blobs = null;
   if (blobTimer) clearTimeout(blobTimer);
   blobTimer = null;
   blobRerun = false;
   unobserveNotes?.();
   unobserveNotes = null;
-  setView({ status: "idle", detail: undefined, elsewhere: false });
+  setView({ status: "idle", detail: undefined, elsewhere: false, warning: null });
 }

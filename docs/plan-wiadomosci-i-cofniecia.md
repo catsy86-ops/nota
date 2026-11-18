@@ -68,6 +68,7 @@ Miernik bez reakcji automatycznej: po nałożeniu zdalnej aktualizacji, jeśli `
 ### 1.7 Ustalenia przy okazji (osobne od limitów)
 
 - **U-1 (do pomiaru, możliwy poważny błąd).** Przeglądarki ograniczają rozmiar jednej wiadomości kanału danych (Chrome ogłasza w SDP `max-message-size` 262 144 bajty); `simple-peer` 9.11.1 nie dzieli wiadomości, a `y-webrtc` połyka błąd wysyłki. Jeśli limit działa tak, jak zapisano w SDP, to **pełna wymiana dokumentu większego niż około 256 KB i pierwsza wymiana obrazów w ogóle nie przechodzą drogą bezpośrednią** i nikt tego nie widzi. Sprawdzić przed ustawieniem progów: dwie przeglądarki, dokument 1 MB i 10 MB, obraz 2 MB; Chrome↔Chrome, Firefox↔Firefox, Chrome↔Safari na telefonie. Jeśli się potwierdzi — osobne zadanie (dzielenie wiadomości albo przekaźnik jako droga dla dużych wymian), ważniejsze niż same limity.
+  **Wynik pomiaru 2026-11-18 (Chromium z Playwright, dwa `RTCPeerConnection` w jednej stronie):** `sctp.maxMessageSize` = 262 144, SDP `max-message-size:262144`; `send()` 256 KiB — dociera, 1 / 4 / 10 MiB — **`TypeError` przy wysyłce**, nic nie dociera. **U-1 potwierdzone** dla Chrome↔Chrome: pełna wymiana dokumentu > 256 KiB i pierwsza wymiana obrazów nie przechodzą drogą bezpośrednią, a `y-webrtc` połyka błąd. Firefox i Safari niezmierzone (brak przeglądarek w środowisku). Z-15.5 wstrzymane do decyzji **D-U1**: dzielenie wiadomości (własna warstwa nad `peer.send`, wymaga kopii biblioteki albo owinięcia `peer.send`) czy przekaźnik jako droga dużych wymian.
 - **U-2.** Transport obrazów „wszystko w jednym dokumencie” nie skaluje się i uniemożliwia limit rozmiaru. Docelowo: prośba o konkretny skrót i odpowiedź jednym obrazem. Osobna decyzja, zależna od U-1.
 
 ### 1.8 Zlecenie Z-15.5 (Opus, M)
@@ -133,6 +134,8 @@ Część niezależna od F2 (można od razu):
 1. `relayProvider.ts`: wiersz 4 tabeli (cofnięcie przy tej samej epoce) i licznik resetów z wiersza 3; `RelayView.warning`; nowe rodzaje `logSecurity`; komunikat i „Rozumiem” w ustawieniach.
 2. Awareness `relay: { epoch, last }` i porównanie z §2.3 (`yjsSync.ts` + widok przekaźnika); czyszczenie wartości.
 3. Testy: jednostkowe na każdym wierszu 1–4 i 6 tabeli (atrapa serwera zwracająca mniejsze `last`; migawka zmniejszająca liczbę wpisów **nie** daje ostrzeżenia; trzy resety w dobie dają, dwa nie); integracyjny z `relay-server`: podmiana pliku danych na starszy przy tej samej epoce → ostrzeżenie i pełny stan z powrotem na serwerze; porównanie awareness: zgodne, rozjechane krótko (bez ostrzeżenia), rozjechane trwale.
+
+**Stan 2026-11-18: punkty 1–3 zrobione** (`relayProvider.ts`, `relayHeadCompare.ts`, `relayRuntime.ts`, `yjsSync.ts`, `SyncSettings.tsx`; testy `relayRollback.test.ts` i integracyjny „S2.3 wiersz 4”).
 
 Część po F2 (Z-15.8): przełącznik nowych epok po odtworzeniu, test monotoniczności po kompaktowaniu serwera.
 

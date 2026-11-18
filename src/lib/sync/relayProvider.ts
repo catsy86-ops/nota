@@ -33,6 +33,26 @@ export interface RelayState {
   sv?: Uint8Array;
   /** Epoka pokoju, której dotyczą `cursor`, `compactedAt` i `sv`; brak = stan sprzed epok albo po resecie. */
   epoch?: string;
+  /** Czasy ostatnich resetów pokoju (najwyżej `RESET_KEEP`), do wykrycia pętli resetów (S2.3, wiersz 3). */
+  resets?: number[];
+  /** Aktywne ostrzeżenie o stanie serwera i chwila ostatniego zdarzenia; gaśnie po `WARNING_TTL_MS` albo po „Rozumiem”. */
+  warning?: RelayWarning;
+  warnedAt?: number;
+}
+
+/**
+ * Ostrzeżenie o serwerze (S2.3, `docs/plan-wiadomosci-i-cofniecia.md` §2.2):
+ * - `rollback` — ta sama epoka, a serwer ma mniej wpisów, niż już pobraliśmy;
+ * - `reset-loop` — trzy resety jednego pokoju w ciągu doby;
+ * - `split` — urządzenie obok trwale widzi inną głowę pokoju (porównanie przez awareness, `relayRuntime.ts`).
+ */
+export type RelayWarning = "rollback" | "reset-loop" | "split";
+
+/** Głowa pokoju, jaką ostatnio podał serwer, i chwila ostatniego udanego pobrania. */
+export interface RelayHead {
+  epoch?: string;
+  last: number;
+  pulledAt: number;
 }
 
 /** Trwałość: kolejka i kursor. Implementacja produkcyjna — IndexedDB (`relayRuntime.ts`). */
@@ -62,6 +82,11 @@ export interface RelayOptions {
    * zmienić w trakcie pobierania (znacznik „kod zmieniony” przychodzi jako zwykły wpis).
    */
   canSend?: () => boolean;
+  /** Nowe zdarzenie ostrzegawcze (do dziennika bezpieczeństwa); stan ostrzeżenia czyta się z `warning`. */
+  onWarning?: (kind: RelayWarning, detail: string) => void;
+  /** Serwer podał głowę pokoju (po pobraniu). */
+  onHead?: (head: RelayHead) => void;
+  now?: () => number;
 }
 
 export const FLUSH_MS = 1000;
@@ -73,6 +98,10 @@ const RETRY_MIN_MS = 2000;
 const MAX_PULL_PAGES = 1000;
 const RETRY_MAX_MS = 60_000;
 const PERSIST_MS = 500;
+export const RESET_KEEP = 5;
+export const RESET_WINDOW_MS = 24 * 60 * 60 * 1000;
+export const RESET_LOOP_COUNT = 3;
+export const WARNING_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Kształt odpowiedzi `GET updates` (patrz relay-server/README.md). */
 interface Page {
@@ -118,6 +147,7 @@ export class RelayProvider {
   private retryMs = RETRY_MIN_MS;
   private started = false;
   private status: RelayStatus = "idle";
+  private headSeen: RelayHead | null = null;
 
   constructor(private readonly opts: RelayOptions) {
     this.base = opts.baseUrl.replace(/\/+$/, "");
@@ -131,6 +161,36 @@ export class RelayProvider {
 
   get currentStatus(): RelayStatus {
     return this.status;
+  }
+
+  /** Aktywne ostrzeżenie; po `WARNING_TTL_MS` od ostatniego zdarzenia gaśnie samo. */
+  get warning(): RelayWarning | null {
+    const { warning, warnedAt } = this.state;
+    if (!warning || warnedAt === undefined || this.now() - warnedAt > WARNING_TTL_MS) return null;
+    return warning;
+  }
+
+  get head(): RelayHead | null {
+    return this.headSeen;
+  }
+
+  /** „Rozumiem”: zdejmuje ostrzeżenie (licznik resetów zostaje). */
+  async acknowledgeWarning(): Promise<void> {
+    if (!this.state.warning) return;
+    const { warning: _w, warnedAt: _a, ...rest } = this.state;
+    this.state = rest;
+    await this.persistState();
+  }
+
+  /** Ostrzeżenie z zewnątrz (`split` z porównania awareness). */
+  async raiseWarning(kind: RelayWarning, detail: string): Promise<void> {
+    this.state = { ...this.state, warning: kind, warnedAt: this.now() };
+    this.opts.onWarning?.(kind, detail);
+    await this.persistState();
+  }
+
+  private now(): number {
+    return this.opts.now?.() ?? Date.now();
   }
 
   async start(): Promise<void> {
@@ -336,7 +396,12 @@ export class RelayProvider {
           await this.resetRoom(epoch);
           continue;
         }
+        if (this.rolledBack(epoch, page.last)) {
+          await this.onRollback(page.last);
+          continue;
+        }
         if (epoch && this.state.epoch !== epoch) this.state = { ...this.state, epoch };
+        this.headSeen = { epoch: epoch ?? this.state.epoch, last: page.last, pulledAt: this.now() };
         for (const entry of page.entries) {
           if (!entry || typeof entry.data !== "string" || typeof entry.seq !== "number" || !(entry.seq > this.state.cursor)) {
             throw new RelayFatalError("Serwer przekaźnika zwrócił nieprawidłowy wpis");
@@ -360,6 +425,7 @@ export class RelayProvider {
       this.opts.doc.off("update", watch);
       await this.persistState();
     }
+    if (this.headSeen) this.opts.onHead?.(this.headSeen);
     if (changed) this.opts.onRemoteChange?.();
     this.retryMs = RETRY_MIN_MS;
     this.setStatus("online");
@@ -411,6 +477,10 @@ export class RelayProvider {
     const epoch = epochOf(res.epoch);
     if (this.roomReplaced(epoch, res.seq - 1)) {
       await this.resetRoom(epoch);
+      return;
+    }
+    if (this.rolledBack(epoch, res.seq - 1)) {
+      await this.onRollback(res.seq - 1);
       return;
     }
     if (epoch && this.state.epoch !== epoch) this.state = { ...this.state, epoch };
@@ -466,6 +536,23 @@ export class RelayProvider {
   }
 
   /**
+   * Cofnięcie (S2.3, wiersz 4): ta sama epoka, a serwer ma mniej wpisów, niż już pobraliśmy — odtworzony z kopii
+   * bez nowej epoki albo celowe działanie operatora. Liczba wpisów nie jest tu sygnałem (migawka ją zmniejsza,
+   * ale numery rosną dalej); decyduje tylko `last` poniżej kursora.
+   */
+  private rolledBack(epoch: string | undefined, last: number): boolean {
+    return !!epoch && epoch === this.state.epoch && typeof last === "number" && last < this.state.cursor;
+  }
+
+  /** Reakcja na cofnięcie: ostrzeżenie, potem jak przy resecie — pełny stan naprawia serwer treścią z urządzenia. */
+  private async onRollback(last: number): Promise<void> {
+    const detail = `last ${last} < kursor ${this.state.cursor}`;
+    this.state = { ...this.state, warning: "rollback", warnedAt: this.now() };
+    this.opts.onWarning?.("rollback", detail);
+    await this.resetRoom(this.state.epoch, false);
+  }
+
+  /**
    * Zaczyna pokój od zera: kursor i `sv` znikają, a do wysłania idzie pełny stan dokumentu (zawiera
    * też wszystko, co czekało w kolejce). Wołane tylko z zadań kolejki `run`, więc nie przeplata się
    * z wysyłką ani pobieraniem.
@@ -474,10 +561,25 @@ export class RelayProvider {
    * nieść wpis, po którym nie wolno już nic wysyłać (`canSend`), a pełny stan wysłany na ślepo
    * odtworzyłby na serwerze dane pokoju, który ktoś celowo wycofał.
    */
-  private async resetRoom(epoch: string | undefined): Promise<void> {
+  private async resetRoom(epoch: string | undefined, count = true): Promise<void> {
     const full = Y.encodeStateAsUpdate(this.opts.doc);
     this.pending = full.length > 2 ? [full] : [];
-    this.state = { cursor: 0, compactedAt: 0, ...(epoch ? { epoch } : {}) };
+    const now = this.now();
+    // Licznik resetów (wiersz 3): dwa urządzenia z różnym obrazem pokoju mogłyby zakładać go sobie nawzajem bez końca.
+    const resets = [...(this.state.resets ?? []), ...(count ? [now] : [])].filter((t) => now - t < RESET_WINDOW_MS).slice(-RESET_KEEP);
+    let { warning, warnedAt } = this.state;
+    if (count && resets.length >= RESET_LOOP_COUNT) {
+      warning = warning === "rollback" && warnedAt !== undefined && now - warnedAt < WARNING_TTL_MS ? warning : "reset-loop";
+      warnedAt = now;
+      this.opts.onWarning?.("reset-loop", `${resets.length} resety w ciągu doby`);
+    }
+    this.state = {
+      cursor: 0,
+      compactedAt: 0,
+      ...(epoch ? { epoch } : {}),
+      ...(resets.length ? { resets } : {}),
+      ...(warning ? { warning, warnedAt } : {}),
+    };
     await this.persistPending();
     await this.persistState();
     this.sync();

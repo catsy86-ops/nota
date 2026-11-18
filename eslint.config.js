@@ -65,6 +65,7 @@ export default tseslint.config(
       // Przekaźnik E2E: szyfrowany transport `Y.Doc` (kodowanie stanu i scalanie aktualizacji), testy na własnym dokumencie.
       "src/lib/sync/relayProvider.ts",
       "src/lib/sync/relayProvider.test.ts",
+      "src/lib/sync/relayRollback.test.ts",
       "src/lib/sync/relayServer.integration.test.ts",
       // Wymiana kodu: znacznik w mapie `syncControl` budowany w osobnym `Y.Doc`, kontrola nowego pokoju w dokumencie pomocniczym.
       "src/lib/sync/rekey.ts",

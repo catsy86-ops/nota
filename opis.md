@@ -925,6 +925,46 @@ Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) 
 - `842db18` (2026-10-20) — urządzenia w grupie i nazwy (faza 4).
 - `89f1546` (2026-10-20) — toast z tytułem notatki (punkt 3).
 
+## Synchronizacja — przekaźnik: cofnięcie, pętla resetów, rozjazd z sąsiadem (S2.3, Z-15.6, 2026-11-18)
+
+### Co robi
+
+- Gdy serwer pośredniczący wróci do starszego stanu (np. odtworzony z kopii bez nowych epok), urządzenie to zauważa, wysyła mu swój pełny stan i pokazuje w Ustawieniach → Sync → Przekaźnik ostrzeżenie z przyciskiem „Rozumiem”. Dane lokalne nie są ruszane.
+- To samo ostrzeżenie (inna treść) przy trzech resetach jednego pokoju w ciągu doby i gdy urządzenie połączone bezpośrednio trwale widzi na tym samym serwerze inny stan pokoju niż to urządzenie.
+- Ostrzeżenie gaśnie samo po 7 dniach bez nowego zdarzenia; każde zdarzenie trafia do dziennika bezpieczeństwa (`relay-rollback`, `relay-reset-loop`, `relay-split`).
+
+### Gdzie jest
+
+- `src/lib/sync/relayProvider.ts` — `RelayWarning`, `RelayHead`; w `RelayState` pola `resets`, `warning`, `warnedAt`; `rolledBack` + `onRollback` (pobieranie i wysyłka), licznik w `resetRoom(epoch, count)`; `warning` (z wygaśnięciem `WARNING_TTL_MS`), `head`, `acknowledgeWarning`, `raiseWarning`; opcje `onWarning`, `onHead`, `now`. Stałe `RESET_WINDOW_MS`, `RESET_LOOP_COUNT`, `RESET_KEEP`.
+- `src/lib/sync/relayHeadCompare.ts` — `cleanPeerHead`, `relayUrlTag` (FNV-1a adresu, 8 znaków), `RelayHeadCompare` (śledzenie rozjazdu na sąsiada), `HEAD_PAGE`, `HEAD_GRACE_MS`.
+- `src/lib/sync/relayRuntime.ts` — `RelayView.warning`, `acknowledgeRelayWarning`, `relayHeadClaim`, `onRelayHead`, `compareRelayHeads`; `onWarning` → `logSecurity` + `logDiag`.
+- `src/lib/yjsSync.ts` — `publishRelayClaim` (pole awareness `relay` w pokoju v3, najwyżej co 15 s), `watchRelayHeads` (porównanie przy każdej aktualizacji awareness).
+- `src/components/SyncSettings.tsx` — `RELAY_WARNING_TEXT`, ramka `role="alert"` z „Rozumiem” w `RelayServer`.
+- `src/lib/diagnostics.ts` — trzy nowe rodzaje `SecurityEventKind`.
+
+### Jak działa i dlaczego
+
+- Tabela przypadków: `docs/plan-wiadomosci-i-cofniecia.md` §2.2. **Liczba wpisów nigdy nie jest sygnałem** (migawka ją zmniejsza); cofnięcie to wyłącznie `last` poniżej kursora przy tej samej epoce. Inna epoka albo `404` to uczciwy reset jak dotąd.
+- Po cofnięciu klient robi to samo co przy resecie (kursor na zero, pełny stan do wysłania, najpierw pobranie) — serwer zostaje naprawiony treścią z urządzenia. Reset po cofnięciu nie liczy się do pętli resetów (już jest ostrzeżenie).
+- Pętla resetów: czasy resetów w `RelayState.resets` (najwyżej 5, z ostatniej doby), trzy → `reset-loop`. Bez tego dwa urządzenia z różnym obrazem pokoju zakładałyby go sobie bez końca.
+- Porównanie przez awareness (§2.3): deklaracja sąsiada `{ epoch, last, u }` jest niezaufana — czyszczona (`epoch` 32 hex, `last` bezpieczna liczba ≥ 0, `u` 8 hex) i daje wyłącznie ostrzeżenie. Porównujemy tylko ten sam serwer (`u`) i tylko przy własnym pobraniu młodszym niż 60 s. `split` dopiero, gdy rozjazd (inna epoka albo `last` sąsiada wyższe o ponad stronę = 500 wpisów) trwa ponad 60 s **i** nasze pobranie wykonane po jego zauważeniu go nie usunęło; jedno zgłoszenie na rozjazd sąsiada.
+- Stan ostrzeżenia leży w `RelayState` (IndexedDB `kaczy-relay`), więc przeżywa przeładowanie; prowadzi go karta z rolą przekaźnika.
+
+### Ograniczenia i pułapki
+
+- Cofnięcie zamaskowane nowymi wpisami (wiersz 5), cenzura wpisów (wiersz 7) i powtórzenie (wiersz 6, nieszkodliwe) nie są wykrywane w etapie 1; etap 2 (łańcuch wpisów, §2.4) świadomie nie zrobiony. Grupy bez połączeń bezpośrednich nie mają porównania przez awareness.
+- Licznik resetów ufa zegarowi urządzenia.
+- Część po F2 (przełącznik nowych epok po odtworzeniu serwera, test monotoniczności po kompaktowaniu) jeszcze nie zrobiona.
+
+### Testy
+
+- `src/lib/sync/relayRollback.test.ts` — wiersze 1, 2 (migawka bez ostrzeżenia), 3 (trzy resety w dobie dają, dwa i rozłożone ponad dobę nie), 4 (przy pobraniu i przy wysyłce), 6; wygaśnięcie, „Rozumiem”, przeżycie restartu; porównanie awareness: czyszczenie, zgodne, krótki rozjazd, trwały rozjazd, inne epoki, inny serwer, stare pobranie.
+- `src/lib/sync/relayServer.integration.test.ts` — „S2.3 wiersz 4”: katalog pokoju na prawdziwym serwerze podmieniony na starszy przy tej samej epoce → ostrzeżenie, pełny stan z powrotem, nowe urządzenie dostaje całość.
+
+### Commit
+
+Z-15.6 (część niezależna od F2), 2026-11-18 — commit po tym wpisie.
+
 ## Notatki — stan aktualny (kafel, edytor, czytnik, kompozytor, lista, wyszukiwanie, właściwości)
 
 Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 planu) jest uwzględniony jako struktura kodu, nie jako historia.

@@ -62,7 +62,10 @@ export type SecurityEventKind =
   | "rejected-peer-blob"
   | "rejected-share-link"
   | "rejected-import"
-  | "rejected-sync-file";
+  | "rejected-sync-file"
+  | "relay-rollback"
+  | "relay-reset-loop"
+  | "relay-split";
 
 export interface SecurityEvent {
   at: number;
