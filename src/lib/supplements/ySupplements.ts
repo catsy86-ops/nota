@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { bySupplementOrder, cleanSupplement, logKey, parseLogKey, SUPPLEMENT_MAX_ENTRIES, type Supplement } from "./model";
+import { toStored } from "@/lib/extraFields";
 
 /**
  * Odżywki w Y.Doc notatek — ten sam dokument, który niesie synchronizację, plik i kopię.
@@ -47,7 +48,7 @@ export function createYSupplements(doc: Y.Doc) {
 
   function add(s: Supplement): boolean {
     if (list.size >= SUPPLEMENT_MAX_ENTRIES || list.has(s.id)) return false;
-    doc.transact(() => list.set(s.id, s), SUPPLEMENTS_ORIGIN);
+    doc.transact(() => list.set(s.id, toStored(s) as Supplement), SUPPLEMENTS_ORIGIN);
     return true;
   }
 
@@ -64,7 +65,7 @@ export function createYSupplements(doc: Y.Doc) {
 
   /** Cofnięcie usunięcia: odżywka wraca z tym samym id. Odhaczeń nie przywracamy. */
   function restore(s: Supplement): void {
-    doc.transact(() => list.set(s.id, s), SUPPLEMENTS_ORIGIN);
+    doc.transact(() => list.set(s.id, toStored(s) as Supplement), SUPPLEMENTS_ORIGIN);
   }
 
   /** Podmienia dane odżywki (to samo id, odhaczenia zostają). `false` = nie ma jej albo dane są niepoprawne. */
@@ -72,7 +73,7 @@ export function createYSupplements(doc: Y.Doc) {
     if (!list.has(next.id)) return false;
     const clean = cleanSupplement(next);
     if (!clean) return false;
-    doc.transact(() => list.set(clean.id, clean), SUPPLEMENTS_ORIGIN);
+    doc.transact(() => list.set(clean.id, toStored(clean) as Supplement), SUPPLEMENTS_ORIGIN);
     return true;
   }
 
@@ -85,7 +86,7 @@ export function createYSupplements(doc: Y.Doc) {
 
   /** Zrzut do kopii zapasowej: odżywki i odhaczenia jako zwykłe dane. */
   function dump(): SupplementDump {
-    return { list: get(), taken: Array.from(getTaken()) };
+    return { list: get().map((s) => toStored(s) as Supplement), taken: Array.from(getTaken()) };
   }
 
   /**
@@ -97,7 +98,7 @@ export function createYSupplements(doc: Y.Doc) {
     const incoming = Array.isArray(d?.list) ? d.list.map(cleanSupplement).filter((s): s is Supplement => !!s) : [];
     const takenIn = Array.isArray(d?.taken) ? d.taken.filter((k): k is string => typeof k === "string" && parseLogKey(k) !== null) : [];
     doc.transact(() => {
-      for (const s of incoming) if (!list.has(s.id) && list.size < SUPPLEMENT_MAX_ENTRIES) list.set(s.id, s);
+      for (const s of incoming) if (!list.has(s.id) && list.size < SUPPLEMENT_MAX_ENTRIES) list.set(s.id, toStored(s) as Supplement);
       for (const key of takenIn) if (!log.has(key)) log.set(key, true);
     }, SUPPLEMENTS_ORIGIN);
   }

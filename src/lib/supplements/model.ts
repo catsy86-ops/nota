@@ -1,4 +1,5 @@
 import { addDaysToKey } from "@/lib/week";
+import { extraOf, keepV, tooNew } from "@/lib/extraFields";
 /**
  * Odżywki: lista suplementów i dzienne odhaczenia. Czysta logika bez Yjs i bez React —
  * wejście z dokumentu, kopii i peera przechodzi przez `cleanSupplement`, więc śmieci nie wywracają widoku.
@@ -29,7 +30,14 @@ export interface Supplement {
   remindAt?: string;
   /** Id notatki-przypomnienia (dzienne powtarzanie w Przypomnieniach); brak = nie utworzono. */
   reminderNoteId?: string;
+  /** Minimalna wersja czytelnika (Z-17.3); większa niż `SUPPLEMENT_ENTRY_V` — odżywka niewidoczna. */
+  v?: number;
+  /** Pola z nowszej wersji — przeżywają edycję (`toStored` przy zapisie). */
+  extra?: Record<string, unknown>;
 }
+
+export const SUPPLEMENT_ENTRY_V = 1;
+const SUPPLEMENT_KNOWN = ["id", "name", "dose", "when", "created", "remindAt", "reminderNoteId"] as const;
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -39,11 +47,13 @@ const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 export function cleanSupplement(raw: unknown): Supplement | null {
   const s = raw as Partial<Supplement> | null;
   if (!s || typeof s !== "object") return null;
+  if (tooNew(s, SUPPLEMENT_ENTRY_V)) return null;
   if (typeof s.id !== "string" || !s.id || s.id.length > 64) return null;
   if (typeof s.name !== "string" || !s.name.trim()) return null;
   if (!SUPPLEMENT_WHEN.includes(s.when as SupplementWhen)) return null;
   const remindAt = typeof s.remindAt === "string" && TIME_RE.test(s.remindAt) ? s.remindAt : undefined;
   const reminderNoteId = typeof s.reminderNoteId === "string" && s.reminderNoteId && s.reminderNoteId.length <= 64 ? s.reminderNoteId : undefined;
+  const extra = extraOf(s, SUPPLEMENT_KNOWN);
   return {
     id: s.id,
     name: s.name.trim().slice(0, SUPPLEMENT_NAME_MAX),
@@ -52,6 +62,8 @@ export function cleanSupplement(raw: unknown): Supplement | null {
     created: typeof s.created === "number" && Number.isFinite(s.created) ? s.created : 0,
     ...(remindAt ? { remindAt } : {}),
     ...(reminderNoteId ? { reminderNoteId } : {}),
+    ...keepV(s),
+    ...(extra ? { extra } : {}),
   };
 }
 

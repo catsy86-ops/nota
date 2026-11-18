@@ -72,6 +72,9 @@ export function updateSupplement(id: string, edit: SupplementEdit): Supplement |
     created: prev.created,
     ...(edit.remindAt ? { remindAt: edit.remindAt } : {}),
     ...(edit.reminderNoteId ? { reminderNoteId: edit.reminderNoteId } : {}),
+    // Wpis budowany od zera — pola z nowszej wersji i `v` trzeba przenieść z poprzedniego (Z-17.3).
+    ...(prev.v ? { v: prev.v } : {}),
+    ...(prev.extra ? { extra: prev.extra } : {}),
   };
   return ySupplements.replace(next) ? next : null;
 }
