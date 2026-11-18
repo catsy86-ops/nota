@@ -155,3 +155,17 @@ describe("push/client z szyfrowaniem", () => {
     vi.restoreAllMocks();
   });
 });
+
+describe("push/client: cofnięcie szyfrowania", () => {
+  it("serwer przestał ogłaszać enc: 1 → nic nie idzie jawnie do ponownego włączenia", async () => {
+    const sub = { endpoint: "https://push.example/abc", toJSON: () => ({ endpoint: "https://push.example/abc", keys: { p256dh: "p", auth: "a" } }) };
+    Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: { ready: Promise.resolve({ pushManager: { getSubscription: async () => sub } }) } });
+    updatePushPrefs({ server: "https://srv.example", enabled: true, sentHash: undefined, last: undefined, enc: true, encAt: undefined, encLost: false });
+    const f = vi.fn(async (url: string) => new Response(JSON.stringify(url.endsWith("/vapid") ? { publicKey: "k" } : { ok: true, items: 1 })));
+    vi.stubGlobal("fetch", f);
+    await uploadSchedule([item()]);
+    expect(f.mock.calls.some((c) => String(c[0]).endsWith("/schedule"))).toBe(false);
+    expect(pushPrefs.get().last?.ok).toBe(false);
+    vi.unstubAllGlobals();
+  });
+});

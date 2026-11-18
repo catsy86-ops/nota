@@ -79,7 +79,9 @@ export function cleanSubscription(raw) {
   return { endpoint: href, keys: { p256dh: keys.p256dh, auth: keys.auth } };
 }
 
-const ENC_RE = new RegExp(`^[A-Za-z0-9_-]{38,${LIMITS.enc}}$`);
+// Tylko długości możliwe dla tekstu jawnego 256·n bajtów (n = 1…6): iv 12 + tekst + znacznik 16, base64url bez dopełnienia.
+const ENC_LENGTHS = new Set([1, 2, 3, 4, 5, 6].map((n) => Math.ceil(((28 + 256 * n) * 4) / 3)));
+const ENC_RE = /^[A-Za-z0-9_-]+$/;
 const ENC_KEY_RE = /^[A-Za-z0-9_-]{22}$/;
 
 /**
@@ -98,7 +100,7 @@ export function cleanItems(raw, now) {
     const timeOk = typeof at === "number" && Number.isFinite(at) && at > now && at <= now + LIMITS.horizonMs;
     if (r.v === 1) {
       if (!timeOk || typeof r.key !== "string" || !ENC_KEY_RE.test(r.key) || seen.has(r.key)) continue;
-      if (typeof r.enc !== "string" || !ENC_RE.test(r.enc)) continue;
+      if (typeof r.enc !== "string" || !ENC_LENGTHS.has(r.enc.length) || !ENC_RE.test(r.enc)) continue;
       seen.add(r.key);
       out.push({ v: 1, key: r.key, at, enc: r.enc });
       if (out.length >= LIMITS.items) break;

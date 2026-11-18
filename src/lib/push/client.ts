@@ -83,7 +83,7 @@ export async function enablePush(server: string, token = ""): Promise<void> {
   const subscription = (await reg.pushManager.getSubscription())?.toJSON();
   if (subscription) await call(server, "/schedule", "PUT", { subscription, items: [] }, false, token);
   pushToken.set(token);
-  updatePushPrefs({ server, enabled: true, sentHash: undefined, last: undefined, enc: enc === 1, encAt: Date.now() });
+  updatePushPrefs({ server, enabled: true, sentHash: undefined, last: undefined, enc: enc === 1, encAt: Date.now(), encLost: false });
 }
 
 export async function disablePush(): Promise<void> {
@@ -148,11 +148,16 @@ async function refreshEnc(server: string): Promise<void> {
   if (encAt && Date.now() - encAt < RESEND_MS) return;
   try {
     const { enc } = (await (await call(server, "/vapid", "GET")).json()) as { enc?: number };
-    updatePushPrefs({ enc: enc === 1, encAt: Date.now() });
+    // Raz włączone szyfrowanie nie cofa się po cichu (podmieniony albo stary serwer): blokada do ponownego „Włącz”.
+    if (pushPrefs.get().enc && enc !== 1) updatePushPrefs({ encLost: true, encAt: Date.now() });
+    else updatePushPrefs({ enc: enc === 1, encAt: Date.now(), encLost: false });
   } catch {
     /* sprawdzimy przy następnej wysyłce */
   }
 }
+
+/** `LIMITS.horizonMs` serwera. */
+const SERVER_HORIZON_MS = 35 * 24 * 60 * 60 * 1000;
 
 const fail = (error: string) => updatePushPrefs({ sentHash: undefined, last: { at: Date.now(), ok: false, error } });
 
@@ -162,6 +167,10 @@ async function uploadNow(items: PushItem[], keepalive: boolean): Promise<void> {
   if (await takeResendRequest()) updatePushPrefs({ sentHash: undefined });
   if (!keepalive) await refreshEnc(pushPrefs.get().server);
   const prefs = pushPrefs.get();
+  if (prefs.encLost) {
+    fail("Serwer przestał przyjmować szyfrowane przypomnienia — włącz powiadomienia jeszcze raz.");
+    return;
+  }
   const sub = await currentSubscription().catch(() => null);
   if (!sub) {
     updatePushPrefs({ last: { at: Date.now(), ok: false, error: "Subskrypcja wygasła — włącz powiadomienia jeszcze raz." } });
@@ -192,7 +201,13 @@ async function uploadNow(items: PushItem[], keepalive: boolean): Promise<void> {
     const res = await call(prefs.server, "/schedule", "PUT", { subscription, items: sent }, keepalive);
     const accepted = (await res.json().catch(() => ({}))) as { items?: number };
     const now = Date.now();
-    const future = items.slice(0, sent.length).filter((i) => i.at > now).length;
+    // Te same reguły co `cleanItems` na serwerze (horyzont 35 dni, unikalny klucz, tytuł) i minuta zapasu na zegary.
+    const keys = new Set<string>();
+    const future = items.slice(0, sent.length).filter((i) => {
+      if (i.at <= now + 60_000 || i.at > now + SERVER_HORIZON_MS || (!enc && (keys.has(i.key) || !i.title.trim()))) return false;
+      keys.add(i.key);
+      return true;
+    }).length;
     // Serwer po cichu odrzuca pozycje, których nie rozumie (np. stary serwer i szyfrogramy).
     if (typeof accepted.items === "number" && accepted.items < future) {
       fail("Serwer nie przyjął części przypomnień.");

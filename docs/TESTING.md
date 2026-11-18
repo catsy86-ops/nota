@@ -23,6 +23,10 @@
 - [ ] `src/lib/yjsStore.ts` — `referencedImages`/`syncableRefs` i sprzątanie (ryzyko: utrata zdjęć; priorytet wysoki przy następnym przebiegu)
 - [ ] `src/pages/Index.tsx` — powłoka, największy churn (ryzyko: regresje widoków; priorytet średni)
 
+## Ręcznie na urządzeniach
+
+- [ ] **S3.1 na iOS** (aplikacja z ekranu początkowego): czy service worker czyta nieeksportowalny `CryptoKey` z IndexedDB `kaczy-push-keys` i pokazuje treść przypomnienia (nie „Masz przypomnienie. Otwórz aplikację.”). Wynik: niesprawdzone (2026-11-18).
+
 ## CI Gates
 
 `.github/workflows/ci.yml` — do opisania przy Fazie 6.

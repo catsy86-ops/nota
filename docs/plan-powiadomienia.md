@@ -67,7 +67,7 @@ Stary worker z nowym klientem (worker czeka na aktywację): dostaje `{v, key, en
 
 ### 1.6 Serwer (`push-server/core.js`, `server.js`)
 
-- `cleanItems`: pozycja jest poprawna, gdy ma `title` (stary format) **albo** `v === 1` i `enc` pasujące do `/^[A-Za-z0-9_-]{38,2086}$/`. Dla formatu 1 `key` musi pasować do `/^[A-Za-z0-9_-]{22}$/`; `title`, `body`, `url`, `snooze` są pomijane, nawet jeśli przyszły. Lista może mieszać formaty.
+- `cleanItems`: pozycja jest poprawna, gdy ma `title` (stary format) **albo** `v === 1` i `enc` z alfabetu base64url o długości `ceil((28 + 256·n)·4/3)`, n = 1…6 (zmiana po przeglądzie 2026-11-18; było `{38,2086}`). Dla formatu 1 `key` musi pasować do `/^[A-Za-z0-9_-]{22}$/`; `title`, `body`, `url`, `snooze` są pomijane, nawet jeśli przyszły. Lista może mieszać formaty.
 - `payloadOf`: format 1 → `{v:1, key, enc}`; stary bez zmian.
 - `LIMITS.enc = 2086`; `MAX_BODY` 512 KB. Dysk w najgorszym razie: 100 subskrypcji × 430 KB = 43 MB — zapisać w README serwera.
 - `GET /vapid` → `{ publicKey, enc: 1 }`.
@@ -81,6 +81,8 @@ Stary worker z nowym klientem (worker czeka na aktywację): dostaje `{v, key, en
 - Klucz nieeksportowalny chroni przed wyniesieniem pliku bazy przez skrypt strony, nie przed kodem, który działa w tym samym źródle i może klucza **użyć**.
 
 ### 1.8 Zlecenie Z-15.7 (Opus, M)
+
+> **Stan (2026-11-18):** zrobione — `bd5a5b8a` serwer, `cc8c6e6e` klient, `7c9f4e67` worker; testy 1–8 w `seal.test.ts`, `swNotifications.test.ts`, `push-server/*.test.js`. Punkt 9 (iOS) w `docs/TESTING.md` jako niesprawdzony. Data końca starego formatu: 60 dni po wdrożeniu serwera.
 
 Kolejność: serwer (oba formaty, `enc: 1`, limity) → klient (`seal.ts`, `uploadNow`) → worker. Każdy krok osobnym commitem; serwer musi być wdrożony przed klientem.
 

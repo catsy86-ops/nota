@@ -41,6 +41,8 @@ export interface PushPrefs {
   enc?: boolean;
   /** Kiedy ostatnio sprawdzono `enc` (odświeżane co 6 h przy wysyłce). */
   encAt?: number;
+  /** Serwer, który przyjmował szyfrogramy, przestał ogłaszać `enc: 1`: nic nie wysyłamy jawnie do ponownego włączenia. */
+  encLost?: boolean;
 }
 
 export const pushPrefs = createPersistedStore<PushPrefs>(PUSH_PREFS_KEY, { server: "", enabled: false, off: [] }, {

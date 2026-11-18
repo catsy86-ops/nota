@@ -120,6 +120,8 @@ test("tickStore: spóźnione terminy przepadają bez wysyłki, nieaktywne subskr
 test("format 1 (S3.1): enc i losowy key, za długie enc odrzucone, title obok enc pominięty, lista mieszana", () => {
   const key = "A".repeat(22);
   const enc = "x".repeat(LIMITS.enc);
+  assert.equal(cleanItems([{ v: 1, key, at: NOW + 1000, enc: "x".repeat(500) }], NOW).length, 0, "długość spoza 256·n");
+  assert.equal(cleanItems([{ v: 1, key, at: NOW + 1000, enc: "x".repeat(379) }], NOW).length, 1);
   const items = cleanItems([
     { v: 1, key, at: NOW + 1000, enc, title: "jawny", body: "b", url: "/n/1", snooze: true },
     { v: 1, key: "B".repeat(22), at: NOW + 2000, enc: enc + "x" },
