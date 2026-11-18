@@ -242,23 +242,26 @@ export interface MonthSiteEarnings {
   pointsNoRate: number;
   /** Etapy odhaczone w miesiącu, z kwotą etapu. */
   stages: { count: number; amount: number };
-  /** Ryczałt za całość, gdy budowa skończyła się w tym miesiącu (ostatni etap odhaczony); inaczej 0. */
+  /** Ryczałt za całość, gdy budowa skończyła się w tym miesiącu (ostatni etap odhaczony, a bez etapów — archiwizacja); inaczej 0. */
   lump: number;
+  /** B3/D-A3: ryczałt budowy bez etapów, która jeszcze trwa — pokazywany jako „nierozliczony”, poza sumą. */
+  lumpPending: number;
   total: number;
 }
 
 /**
  * Zarobek budowy w miesiącu `[from, to)` (ms) bez godzin — godziny liczy Grafik, więc tu ich nie ma
  * (H3.3: nic dwa razy). Punkt liczy się w miesiącu białego montażu, etap — w miesiącu odhaczenia,
- * ryczałt za całość — w miesiącu odhaczenia ostatniego etapu. Tylko włączone sposoby.
+ * ryczałt za całość — w miesiącu odhaczenia ostatniego etapu, a przy budowie bez etapów w miesiącu jej zakończenia
+ * (archiwizacji, decyzja D-A3; do tej pory `lumpPending`). Tylko włączone sposoby.
  */
 export function monthSiteEarnings(
-  input: { billing: SiteBilling; points: readonly { type: string; doneAt?: number }[]; stages: readonly { id: string; done?: number }[] },
+  input: { billing: SiteBilling; points: readonly { type: string; doneAt?: number }[]; stages: readonly { id: string; done?: number }[]; archived?: number },
   from: number, to: number,
 ): MonthSiteEarnings {
   const { billing: b, points, stages } = input;
   const inMonth = (t: number | undefined) => t !== undefined && t >= from && t < to;
-  const out: MonthSiteEarnings = { points: { count: 0, amount: 0 }, pointsNoRate: 0, stages: { count: 0, amount: 0 }, lump: 0, total: 0 };
+  const out: MonthSiteEarnings = { points: { count: 0, amount: 0 }, pointsNoRate: 0, stages: { count: 0, amount: 0 }, lump: 0, lumpPending: 0, total: 0 };
   if (b.modes.includes("points")) {
     for (const p of points) {
       if (!inMonth(p.doneAt)) continue;
@@ -275,6 +278,10 @@ export function monthSiteEarnings(
     }
     const finished = stages.length > 0 && stages.every((s) => s.done !== undefined);
     if (b.lump !== undefined && finished && inMonth(Math.max(...stages.map((s) => s.done!)))) out.lump = b.lump;
+    if (b.lump !== undefined && stages.length === 0) {
+      if (input.archived === undefined) out.lumpPending = b.lump;
+      else if (inMonth(input.archived)) out.lump = b.lump;
+    }
   }
   out.total = round2(out.points.amount + out.stages.amount + out.lump);
   return out;

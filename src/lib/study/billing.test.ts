@@ -199,6 +199,18 @@ describe("miesiąc razem (H3.3)", () => {
     expect(run({ modes: ["lump"], lump: 8000 }, [], [{ id: "a", done: d(5) }, { id: "b" }]).lump).toBe(0);
     expect(run({ modes: ["lump"], lump: 8000 }, [], [{ id: "a", done: d(5, 10) }]).lump).toBe(0);
   });
+
+  it("ryczałt bez etapów (D-A3): w toku — nierozliczony poza sumą; po archiwizacji — w miesiącu zakończenia", () => {
+    const b = bill({ modes: ["lump"], lump: 12000 });
+    const live = monthSiteEarnings({ billing: b, points: [], stages: [] }, ...oct);
+    expect(live).toMatchObject({ lump: 0, lumpPending: 12000, total: 0 });
+    const done = monthSiteEarnings({ billing: b, points: [], stages: [], archived: d(20) }, ...oct);
+    expect(done).toMatchObject({ lump: 12000, lumpPending: 0, total: 12000 });
+    const other = monthSiteEarnings({ billing: b, points: [], stages: [], archived: d(20, 10) }, ...oct);
+    expect(other).toMatchObject({ lump: 0, lumpPending: 0 });
+    // Bez sposobu „ryczałt” nic.
+    expect(monthSiteEarnings({ billing: bill({ lump: 12000 }), points: [], stages: [] }, ...oct).lumpPending).toBe(0);
+  });
 });
 
 describe("rozliczenie: odporność na dane z kopii (D3, D6)", () => {

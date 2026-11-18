@@ -54,8 +54,8 @@ export function SiteMonthEarnings({ monthKey, base }: {
     return dir.flatMap((s) => {
       if (jobs.has(s.id)) return [];
       const points = getSitePoints(s.id).points.map((p) => ({ type: p.type, doneAt: p.steps.montaz }));
-      const e = monthSiteEarnings({ billing: getSiteBilling(s.id), points, stages: siteStages(s) }, from, to);
-      return e.total > 0 || e.pointsNoRate > 0 ? [{ site: s, e }] : [];
+      const e = monthSiteEarnings({ billing: getSiteBilling(s.id), points, stages: siteStages(s), archived: s.archived }, from, to);
+      return e.total > 0 || e.pointsNoRate > 0 || e.lumpPending > 0 ? [{ site: s, e }] : [];
     });
   }, [dir, from, to, jobs, t]);
   const own = useMemo(() => {
@@ -119,6 +119,9 @@ export function SiteMonthEarnings({ monthKey, base }: {
                 e.stages.count > 0 && `${e.stages.count} ${pluralPl(e.stages.count, ["etap", "etapy", "etapów"])}`,
                 e.lump > 0 && "ryczałt (koniec budowy)",
               ].filter(Boolean).join(" · ")}</span>
+              {e.lumpPending > 0 && (
+                <span className="block text-muted-foreground" data-testid="lump-pending">ryczałt nierozliczony: {money(e.lumpPending)} (budowa w toku — policzy się w miesiącu zakończenia)</span>
+              )}
             </span>
             <span className="shrink-0 font-mono tabular-nums">{money(e.total)}</span>
           </li>
