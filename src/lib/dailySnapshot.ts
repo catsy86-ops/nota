@@ -342,6 +342,8 @@ export async function takeDailySnapshot(src: SnapshotSource, env: SnapshotEnv = 
   return r;
 }
 
+const BEFORE_PREFIX = "przed-przywroceniem-";
+const p2 = (n: number) => String(n).padStart(2, "0");
 const REF = /^(kopie-dzienne|kopie-przed-przywroceniem)\/([\w.-]+\.nkopia)$/;
 
 /**
@@ -361,10 +363,6 @@ export async function readSnapshotFile(ref: string, env: SnapshotEnv = browserEn
   return { header: parsed.header, body: parsed.body };
 }
 
-export function readDailySnapshot(file: string, env: SnapshotEnv = browserEnv) {
-  return readSnapshotFile(`${SNAPSHOT_DIR}/${file}`, env);
-}
-
 /**
  * Kopia bieżącego stanu przed wymianą dokumentu (§1.6 p. 1), w osobnym katalogu poza rotacją. Zapis, odczyt
  * i sprawdzenie skrótu; kopie starsze niż 30 dni są przy okazji usuwane. Zwraca `ref`. Każdy błąd rzuca —
@@ -374,8 +372,8 @@ export async function saveBeforeReplace(src: SnapshotSource, env: SnapshotEnv = 
   const dir = await snapshotDir(env, BEFORE_DIR);
   if (!dir) throw new Error("Brak miejsca na kopię w tej przeglądarce");
   const now = env.now();
-  const p2 = (n: number) => String(n).padStart(2, "0");
-  const name = `przed-przywroceniem-${localDayKey(now)}-${p2(now.getHours())}${p2(now.getMinutes())}${p2(now.getSeconds())}.nkopia`;
+  const stamp = (d: Date) => `${localDayKey(d)}-${p2(d.getHours())}${p2(d.getMinutes())}${p2(d.getSeconds())}`;
+  const name = `${BEFORE_PREFIX}${stamp(now)}${EXT}`;
   const { bytes, header } = await encodeSnapshot(src.encode(), { createdAt: now.getTime(), notes: src.notes(), sv: await sha256Hex(src.stateVector()) });
   await env.write(dir, name, bytes);
   const check = await parseSnapshot((await readBytes(dir, name)) ?? new Uint8Array());
@@ -383,8 +381,10 @@ export async function saveBeforeReplace(src: SnapshotSource, env: SnapshotEnv = 
     await remove(dir, name);
     throw new Error("Kopia obecnych danych nie przeszła sprawdzenia");
   }
-  for (const e of await scan(dir, "before")) {
-    if (e.file !== name && now.getTime() - e.createdAt > BEFORE_KEEP_MS) await remove(dir, e.file);
+  // Wiek z nazwy pliku (bez czytania i liczenia skrótu każdej kopii — mogą mieć dziesiątki MB).
+  const cutoff = `${BEFORE_PREFIX}${stamp(new Date(now.getTime() - BEFORE_KEEP_MS))}`;
+  for (const file of await fileNames(dir)) {
+    if (file.startsWith(BEFORE_PREFIX) && file !== name && file < cutoff) await remove(dir, file);
   }
   return `${BEFORE_DIR}/${name}`;
 }

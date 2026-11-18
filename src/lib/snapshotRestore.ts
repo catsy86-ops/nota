@@ -79,7 +79,7 @@ export interface RestoreResult {
 
 /**
  * Kopie wybranych notatek w jednej transakcji, pod `MIGRATION_LOCK` (jak import kopii). Kopia dostaje nowy id,
- * nie jest przypięta, w koszu ani w archiwum, bez przypomnienia (oryginał może jeszcze istnieć — dwa alarmy) i bez
+ * nie jest przypięta, w koszu ani w archiwum, bez przypomnienia i jego reguł, aliasów i gwiazdki „ulubiona” (oryginał może jeszcze istnieć — dwa alarmy) i bez
  * rodzica (rodzica może już nie być); notatka dzienna przestaje nią być (jedna notatka na dzień). Treść, kolor,
  * etykiety, pola i odwołania do obrazów zostają — obraz jest, jeśli magazyn obrazów go ma.
  */
@@ -99,7 +99,11 @@ export async function restoreSnapshotCopies(items: SnapshotItem[], snapshot: Pic
     for (const { note, privacy } of items) {
       if (privacy !== "plain" && privacy !== "ok") { skipped.push(note.id); continue; }
       const id = newId();
-      const { dailyDate: _daily, periodKey: _period, parentId: _parent, ...rest } = note;
+      // Aliasy zdublowałyby rozwiązywanie [[linków]] z oryginałem; ulubiona i reguły przypomnienia należą do oryginału.
+      const {
+        dailyDate: _daily, periodKey: _period, parentId: _parent, aliases: _aliases, favorite: _fav,
+        reminderRepeat: _rr, reminderRule: _rule, reminderRepeatUntil: _until, reminderBase: _base, snoozedUntil: _snooze, ...rest
+      } = note;
       const copy: Note = { ...rest, id, pinned: false, archived: false, trashed: false, trashedAt: null, reminder: null, order: 0, updatedAt: t };
       if (note.locked && note.vault) {
         // Folder w szyfrogramie ten sam, w którym kopia ląduje (liczy się przy zdjęciu blokady).

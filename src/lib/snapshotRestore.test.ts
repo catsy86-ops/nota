@@ -80,6 +80,21 @@ describe("restoreSnapshotCopies", () => {
     expect(notes.filter((n) => n.title === "Tytuł b").map((n) => n.content).sort()).toEqual(["Dzisiejsza treść", "Treść b"]);
   });
 
+  it("kopia bez aliasów, gwiazdki i reguł przypomnienia oryginału", async () => {
+    const { store, deps } = fresh();
+    store.upsertNote(note("a", {
+      aliases: ["Alias"], favorite: true, reminderRepeat: "daily", reminderRule: { kind: "weekdays" } as Note["reminderRule"],
+      reminderRepeatUntil: 9, reminderBase: 9, snoozedUntil: 9,
+    }));
+    const snap = readDocState(store.encodeSyncState());
+    store.removeNote("a");
+    await restoreSnapshotCopies(compareSnapshot(snap, store.projectNotes(), undefined, false).deleted, snap, DAY, deps);
+    const copy = store.projectNotes().find((n) => n.title === "Tytuł a")!;
+    for (const k of ["aliases", "favorite", "reminderRepeat", "reminderRule", "reminderRepeatUntil", "reminderBase", "snoozedUntil"] as const) {
+      expect(copy[k] ?? undefined, k).toBeUndefined();
+    }
+  });
+
   it("drugie przywracanie z tego samego dnia trafia do tego samego folderu", async () => {
     const { store, deps } = fresh();
     store.upsertNote(note("a"));

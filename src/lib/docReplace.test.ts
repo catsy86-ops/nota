@@ -95,7 +95,7 @@ describe("zamiar wymiany przy starcie", () => {
     const name = dbName();
     const { snapshot } = await seeded(name, ["a"], ["b"]);
     snapshotFile.body = snapshot;
-    expect(writeReplaceIntent({ kind: "snapshot", file: "kopie-dzienne/2026-11-12.nkopia", createdAt: 1, startedAt: 2, leftGroup: true })).toBe(true);
+    expect(writeReplaceIntent({ kind: "snapshot", file: "kopie-dzienne/2026-11-12.nkopia", createdAt: 1, startedAt: Date.now(), leftGroup: true })).toBe(true);
     const s = createYjsStore(name, imageStore, { beforeOpen: (n) => startupReplace(n, replacePersistedDoc) });
     await s.ready();
     expect(ids(s)).toEqual(["a"]);
@@ -107,7 +107,7 @@ describe("zamiar wymiany przy starcie", () => {
     const name = dbName();
     await seeded(name, ["a", "b"], []);
     snapshotFile.fail = "Kopia jest uszkodzona";
-    writeReplaceIntent({ kind: "snapshot", file: "kopie-dzienne/2026-11-12.nkopia", createdAt: 1, startedAt: 2, leftGroup: false });
+    writeReplaceIntent({ kind: "snapshot", file: "kopie-dzienne/2026-11-12.nkopia", createdAt: 1, startedAt: Date.now(), leftGroup: false });
     const s = createYjsStore(name, imageStore, { beforeOpen: (n) => startupReplace(n, replacePersistedDoc) });
     await s.ready();
     expect(ids(s)).toEqual(["a", "b"]);
@@ -115,23 +115,32 @@ describe("zamiar wymiany przy starcie", () => {
     expect(readReplaceResult()).toMatchObject({ ok: false, reason: "Kopia jest uszkodzona" });
   });
 
-  it("przerwana wymiana (awaria w trakcie) zostawia zamiar; następny start kończy ją poprawnie", async () => {
+  it("błąd wymiany: zamiar zdjęty, wynik „nie”, baza nietknięta (bez ponawiania przy kolejnym starcie)", async () => {
     const name = dbName();
     const { snapshot } = await seeded(name, ["a"], ["b"]);
     snapshotFile.body = snapshot;
-    writeReplaceIntent({ kind: "snapshot", file: "kopie-dzienne/2026-11-12.nkopia", createdAt: 1, startedAt: 2, leftGroup: false });
-    await expect(performDocReplace(name, async () => { throw new Error("karta zamknięta"); })).rejects.toThrow();
-    expect(readReplaceIntent()).not.toBeNull();
+    writeReplaceIntent({ kind: "snapshot", file: "kopie-dzienne/2026-11-12.nkopia", createdAt: 1, startedAt: Date.now(), leftGroup: false });
+    await performDocReplace(name, async () => { throw new Error("karta zamknięta"); });
+    expect(readReplaceIntent()).toBeNull();
+    expect(readReplaceResult()).toMatchObject({ ok: false, reason: "karta zamknięta" });
     expect(ids(await reopen(name))).toEqual(["a", "b"]);
+  });
+
+  it("zamiar starszy niż godzina nie jest wykonywany", async () => {
+    const name = dbName();
+    const { snapshot } = await seeded(name, ["a"], ["b"]);
+    snapshotFile.body = snapshot;
+    writeReplaceIntent({ kind: "snapshot", file: "kopie-dzienne/2026-11-12.nkopia", createdAt: 1, startedAt: Date.now() - 2 * 60 * 60 * 1000, leftGroup: false });
     await performDocReplace(name, replacePersistedDoc);
     expect(readReplaceIntent()).toBeNull();
-    expect(ids(await reopen(name))).toEqual(["a"]);
+    expect(readReplaceResult()).toMatchObject({ ok: false, reason: "Zamiar wymiany danych wygasł" });
+    expect(ids(await reopen(name))).toEqual(["a", "b"]);
   });
 
   it("„Zastąp danymi grupy”: pusty dokument, oznaczenie świadomego wyczyszczenia (bez banera „dane zniknęły”)", async () => {
     const name = dbName();
     await seeded(name, ["a"], []);
-    writeReplaceIntent({ kind: "empty", join: "KOD", startedAt: 2 });
+    writeReplaceIntent({ kind: "empty", join: "KOD", startedAt: Date.now() });
     const s = createYjsStore(name, imageStore, { beforeOpen: (n) => startupReplace(n, replacePersistedDoc) });
     await s.ready();
     expect(ids(s)).toEqual([]);
@@ -157,10 +166,10 @@ describe("requestDocReplace — kolejność przed przeładowaniem", () => {
     return { d, calls };
   }
 
-  it("kopia → wyjście z grupy → kolejki → zamiar → sygnał → przeładowanie", async () => {
+  it("kopia → zamiar → wyjście z grupy → kolejki → sygnał → przeładowanie", async () => {
     const { d, calls } = deps();
     const r = await requestDocReplace({ kind: "snapshot", file: "kopie-dzienne/2026-11-12.nkopia", createdAt: 1 }, d);
-    expect(calls).toEqual(["kopia", "opuść grupę", "kolejki przekaźnika", "zamiar", "sygnał", "przeładowanie"]);
+    expect(calls).toEqual(["kopia", "zamiar", "opuść grupę", "kolejki przekaźnika", "sygnał", "przeładowanie"]);
     expect(r.leftGroup).toBe(true);
     expect(readReplaceIntent()).toMatchObject({ kind: "snapshot", leftGroup: true, startedAt: 5 });
   });
