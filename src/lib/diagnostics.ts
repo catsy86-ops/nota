@@ -66,7 +66,8 @@ export type SecurityEventKind =
   | "relay-rollback"
   | "relay-reset-loop"
   | "relay-split"
-  | "peer-limit";
+  | "peer-limit"
+  | "doc-format-claim";
 
 export interface SecurityEvent {
   at: number;

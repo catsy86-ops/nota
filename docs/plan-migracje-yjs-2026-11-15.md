@@ -69,6 +69,8 @@ Sprawdzone czytaniem kodu na `3cc066d6`, bez uruchamiania testów. Punkty D1, D2
 
 ## Etap D1: zgodność w przód (Opus) — najważniejszy, chroni przed utratą danych
 
+**Stan 2026-11-18:** D1.1 częściowo (7 map przez `extraFields.ts`, Z-17.3); D1.2 jako spis z zapadką (`src/lib/docMapsInventory.test.ts`, 37 map do zrobienia); D1.3 bez blokady w magazynach (`src/lib/docFormat.ts`, baner, „Ignoruj i pisz”); D1.4 zapisane w `docFormat.ts` i `opis.md`. Zostaje D1.1 działami.
+
 | Nr | Punkt | Rozmiar |
 |---|---|---|
 | D1.1 | **Nieznane pola przeżywają edycję.** Dla każdej mapy ze zwykłymi obiektami (lista z D0.1): zapis wpisu scala z surową wartością z dokumentu (`{...surowy, ...znane}`), a `clean*` czyści tylko znane pola i przepuszcza resztę do zapisu (nie do interfejsu). Ograniczenia, żeby nie otworzyć drogi śmieciom: najwyżej 20 nieznanych pól, wartości proste albo płytkie, łączny rozmiar ≤ 4 KB, klucze bez `__proto__`/`constructor`/`prototype`. Nadmiar jest odrzucany z wpisem w diagnostyce, nie po cichu — a limity trafiają do zasad (D7.1) jako ograniczenie dla każdego przyszłego pola: pole większe niż limit wymaga podniesienia `SCHEMA_VERSION`, nie liczy na przeżycie w starszym kliencie. Wspólny pomocnik `preserveUnknown()`. Zakres: 93 funkcje `clean*` — robić działami, zaczynając od map, do których planowane są nowe pola (Długi, Klienci, Ćwiczenia). Notatki są mapami pól, więc ich to nie dotyczy, **poza treścią notatki prywatnej** (`parseContent` w `privateNotes.ts` gubi nieznane pola w szyfrogramie) — to warunek załączników skarbca. Tę część wykonuje K0 pkt 2 w `plan-skarbiec-krypto-2026-11-15.md` (własny limit 64 KB, bo manifest plików jest większy niż 4 KB) — nie robić drugi raz, tylko dopisać do listy testu D1.2. | L |

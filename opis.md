@@ -1005,6 +1005,41 @@ Z-5.T, 2026-11-18 — commit po tym wpisie.
 
 Z-15.6 (część niezależna od F2), 2026-11-18 — commit po tym wpisie.
 
+## Dane — wymaganie wersji w dokumencie i spis map (D1.2–D1.4 planu migracji, 2026-11-18)
+
+### Co robi
+
+- Gdy dane zapisała nowsza wersja aplikacji, która oznaczyła w dokumencie cechę wymagającą nowszego formatu, starsza wersja pokazuje baner „Te dane zapisała nowsza wersja aplikacji. Zaktualizuj…”. W Ustawieniach → Kopia i dane → Diagnostyka jest wtedy wiersz z listą cech i przyciskiem „Ignoruj i pisz” (obejście, gdy wymaganie wpisał ktoś obcy).
+
+### Gdzie jest
+
+- `src/lib/docFormat.ts` — mapa `docFormat` (`DOC_FORMAT_MAP`), `requireFeature`, `readDocFormat`, `docWritable`, `docFormatStatus`, `ignoreDocFormat`, `useDocFormatStatus`, `KNOWN_FEATURES`.
+- `src/components/DocFormatBanner.tsx` (w `src/pages/Index.tsx` obok banera przerwanego przywracania); `DocFormatOverride` w `src/components/settings/BackupSettings.tsx`.
+- `src/lib/diagnostics.ts` — rodzaj `doc-format-claim`.
+- `src/lib/docMapsInventory.test.ts` — spis map Yjs (D1.2).
+
+### Jak działa i dlaczego
+
+- Klucz = cecha danych, wartość = najniższa wersja formatu (`SCHEMA_VERSION`), która ją rozumie. Zapis tylko w górę, więc równoległe dopisanie tej samej cechy na dwóch urządzeniach daje ten sam wynik. Wymaganie liczy się na cechę: `docWritable(cecha)` blokuje tylko mapy tej cechy. Wspólnego punktu zapisu nie ma (ponad 40 modułów z własnym `transact`), więc pierwsze wydanie tylko zapisuje, czyta i pokazuje baner — blokadę dostanie każdy magazyn razem z pierwszą cechą, która jej wymaga (planowo `vault-files`). Dziś `KNOWN_FEATURES` jest puste i żadna cecha nie jest zapisywana.
+- Wartości z dokumentu są niezaufane: nazwy `^[a-z][a-z0-9-]{0,31}$`, wartości przez `cleanSchemaClaim`, najwyżej 50 cech. Wymaganie ponad `SCHEMA_VERSION + 1` daje jeden wpis bezpieczeństwa na cechę i wartość — znający kod synchronizacji mógłby inaczej zablokować zapis wszystkim. Po rejestrze urządzeń (D4.1) próg będzie najwyższą wersją z rejestru.
+- D1.2: każda mapa wymieniona w kodzie (`getMap("…")`, stałe z nazwą, nazwy bazowe Grafiku) ma kategorię — zachowuje nieznane pola (7 map z Z-17.3, z testem przy module), zwolniona (mapy pól, bufory, znaczniki) albo „do zrobienia” (37 map). Nowa mapa bez kategorii wywala test, a lista „do zrobienia” może tylko maleć.
+- D1.4 — granica: wersje wydane przed 2026-11-18 nie znają mapy `docFormat`; zmiany niszczące dla starszych klientów dopiero po D4.
+
+### Ograniczenia i pułapki
+
+- D1.1 (zachowanie nieznanych pól) zrobione tylko dla 7 map; reszta jest na liście w teście spisu.
+- Mapy o nazwach składanych w locie poza Grafikiem test spisu zobaczy dopiero po dopisaniu ich listy (jak `SHIFTS_MAP_BASE_NAMES`).
+- Baner nie mówi, które dane są zagrożone, gdy cecha jest nieznana z nazwy — to zamierzone: nie wiadomo, które mapy obejmuje.
+
+### Testy
+
+- `src/lib/docFormat.test.ts` — wymaganie tylko w górę i zbieżność dwóch dokumentów, czyszczenie niezaufanych wartości, blokada tylko wybranej cechy, jeden wpis bezpieczeństwa, „Ignoruj i pisz”.
+- `src/lib/docMapsInventory.test.ts` — spis map i zapadka listy „do zrobienia”.
+
+### Commit
+
+D1.2–D1.4, 2026-11-18 — commit po tym wpisie.
+
 ## Synchronizacja — duże wiadomości WebRTC dzielone na ramki (D-U1, U-1, 2026-11-18)
 
 ### Co robi
@@ -2711,6 +2746,16 @@ Poprawki z przeglądu kodu z 2026-10-20 (`code-review-2026-10-20.md`, usunięty 
 - **Commit:** `1b8bcf8` (2026-10-20, L1–L20).
 - **Commit (L14, udostępnianie):** `1380f10` (2026-10-20).
 
+
+## Praca — podział arkusza wpisu i karty budowy (R2.1, R2.2, Z-14.3, 2026-11-18)
+
+- **Co robi.** Nic nowego dla użytkownika — podział dwóch największych komponentów Pracy bez zmiany zachowania.
+- **Gdzie.**
+  - Arkusz wpisu (`src/components/study/JournalEntrySheet.tsx`, 1083 → 920 linii): `entry/EntryWhereWhen.tsx` (budowa, „Tu jestem”, budowa obok, zapis lokalizacji budowy, „Kiedy”), `entry/EntryStageSection.tsx` (przypięty etap, lista kontrolna P2.9, pigułki następnych etapów, wybór etapu przy edycji), `entry/EntryRecordings.tsx` (rejestrator i lista nagrań, z leniwym `VoiceAttachmentParts`).
+  - Karta budowy (`src/components/study/SiteCardDialog.tsx`, 706 → 548 linii): `site/SiteDataForm.tsx` („Edytuj dane”), `site/siteForm.ts` (`EMPTY_FORM`, `SiteForm`, `formOf`), `site/SiteSegments.tsx` (`SiteTodaySegment`, `SiteMaterialSegment`). Segmenty Punkty i Pieniądze to po jednym panelu — zostały w karcie.
+- **Jak działa i dlaczego.** Wydzielone części są samym widokiem: stan, zapisy (`patch`, `setSiteGeo`, `markStage`, `save`, `persistDirty`) i efekty zostają w rodzicu, a fragmenty JSX przeniesione dosłownie. Odstępstwa od planu: (1) R2.1 zakładał „reduktor szkicu w `draft.ts`”, ale szkic nie ma reduktora — to łatki na magazynie (`patchJournalDraft`/`patchJournalEditForm`), więc nie ma czego wydzielać; (2) R2.2 zakładał leniwe ładowanie segmentów, ale karta montuje wszystkie segmenty od razu (`forceMount` + `Activity`, żeby rozwinięte sekcje i wpisany tekst przeżyły zmianę segmentu) — `lazy` pobrałby te same moduły przy otwarciu, tylko kaskadą. Sekcja próby została w arkuszu (to jedno wywołanie `PressureTestFields`).
+- **Testy.** Bez nowych: zachowanie sprawdzają istniejące e2e dziennika i karty budowy, uruchomione przed i po podziale, oraz `JournalEntrySheet.test.tsx`.
+- **Commit.** Z-14.3, 2026-11-18 — commit po tym wpisie.
 
 ## Praca → Dziennik budowy — lista przed wejściem na budowę (2026-10-22)
 

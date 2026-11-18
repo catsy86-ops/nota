@@ -1,4 +1,6 @@
 import { SiteStorageSettings } from "./SiteStorageSettings";
+import { yjsStore } from "@/lib/yjsStore";
+import { ignoreDocFormat, useDocFormatStatus } from "@/lib/docFormat";
 import { StudyUsageStats } from "./StudyUsageStats";
 import { useEffect, useState } from "react";
 import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, Share2 } from "lucide-react";
@@ -606,8 +608,31 @@ export function BackupSettings() {
             <FileDown className="w-3.5 h-3.5" />Pobierz
           </Button>
         </div>
+        <DocFormatOverride />
         <StudyUsageStats />
       </Section>
+    </div>
+  );
+}
+
+/**
+ * D1.3: „Ignoruj i pisz” — tylko gdy dokument wymaga nowszej wersji. Wymaganie mógł wpisać ktoś znający kod
+ * synchronizacji, żeby zablokować zapis; obejście zostaje na tym urządzeniu.
+ */
+function DocFormatOverride() {
+  const status = useDocFormatStatus(yjsStore.doc as never);
+  if (status.tooNew.length === 0) return null;
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-card border border-warning/50 bg-warning/10 px-4 py-3" data-testid="doc-format-override">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">Dane wymagają nowszej wersji</p>
+        <p className="ui-hint mt-0.5">
+          {status.tooNew.map((f) => `${f.feature} (wersja ${f.required})`).join(", ")}. Najpierw zaktualizuj aplikację. Obejście tylko wtedy, gdy nikt w grupie nie ma nowszej wersji — wtedy wymaganie wpisał ktoś obcy.
+        </p>
+      </div>
+      <Button type="button" size="sm" variant="outline" onClick={() => ignoreDocFormat(!status.ignored)} className="shrink-0">
+        {status.ignored ? "Przywróć blokadę" : "Ignoruj i pisz"}
+      </Button>
     </div>
   );
 }
