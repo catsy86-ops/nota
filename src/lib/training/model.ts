@@ -1,5 +1,6 @@
 import { weekKeys } from "@/lib/week";
 import { isKnownExercise } from "./catalog";
+import { extraOf, keepV, tooNew, toStored } from "@/lib/extraFields";
 
 /**
  * Trening: dziennik serii (ćwiczenie, powtórki × ciężar), plany dni i progres.
@@ -26,6 +27,8 @@ export interface TrainingSet {
   seconds?: number;
   /** Ciężar w kg (co 0,5 kg); brak = bez ciężaru (ćwiczenie z masą ciała albo nieznany). */
   kg?: number;
+  /** Pola z nowszej wersji (np. RIR, C2.3) — przeżywają zapis (Z-17.3). */
+  extra?: Record<string, unknown>;
 }
 
 export interface TrainingEntry {
@@ -38,6 +41,18 @@ export interface TrainingEntry {
   sets: TrainingSet[];
   note: string;
   created: number;
+  /** Minimalna wersja czytelnika (Z-17.3); większa niż `TRAINING_ENTRY_V` — wpis niewidoczny. */
+  v?: number;
+  extra?: Record<string, unknown>;
+}
+
+export const TRAINING_ENTRY_V = 1;
+const SET_KNOWN = ["reps", "seconds", "kg"] as const;
+const ENTRY_KNOWN = ["id", "day", "time", "exerciseId", "sets", "note", "created"] as const;
+
+/** Kształt wpisu do zapisu w Yjs i w kopii: nieznane pola wpisu i serii na wierzchu. */
+export function storedEntry(e: TrainingEntry): TrainingEntry {
+  return toStored({ ...e, sets: e.sets.map((s) => toStored(s) as TrainingSet) }) as TrainingEntry;
 }
 
 export interface PlanDay {
@@ -115,26 +130,30 @@ export function cleanSeconds(v: unknown): number | undefined {
 export function cleanSet(raw: unknown): TrainingSet | null {
   const s = raw as Partial<TrainingSet> | null;
   if (!s || typeof s !== "object") return null;
+  const extra = extraOf(s, SET_KNOWN);
+  const more = extra ? { extra } : {};
   const seconds = cleanSeconds(s.seconds);
   if (seconds !== undefined) {
     const kgT = cleanKg(s.kg);
-    return kgT !== undefined ? { reps: 1, seconds, kg: kgT } : { reps: 1, seconds };
+    return kgT !== undefined ? { reps: 1, seconds, kg: kgT, ...more } : { reps: 1, seconds, ...more };
   }
   if (typeof s.reps !== "number" || !Number.isInteger(s.reps) || s.reps < 1 || s.reps > TRAINING_REPS_MAX) return null;
   const kg = cleanKg(s.kg);
-  return kg !== undefined ? { reps: s.reps, kg } : { reps: s.reps };
+  return kg !== undefined ? { reps: s.reps, kg, ...more } : { reps: s.reps, ...more };
 }
 
 /** Wpis treningu: znane ćwiczenie i od 1 do 30 poprawnych serii. Zły wpis = `null`. */
 export function cleanEntry(raw: unknown): TrainingEntry | null {
   const e = raw as Partial<TrainingEntry> | null;
   if (!e || typeof e !== "object") return null;
+  if (tooNew(e, TRAINING_ENTRY_V)) return null;
   if (typeof e.id !== "string" || !e.id || e.id.length > 64) return null;
   if (typeof e.day !== "string" || !DAY_RE.test(e.day)) return null;
   if (!isKnownExercise(e.exerciseId)) return null;
   const sets = (Array.isArray(e.sets) ? e.sets : []).map(cleanSet).filter((s): s is TrainingSet => !!s).slice(0, TRAINING_MAX_SETS);
   if (sets.length === 0) return null;
   const time = typeof e.time === "string" && TIME_RE.test(e.time) ? e.time : undefined;
+  const extra = extraOf(e, ENTRY_KNOWN);
   return {
     id: e.id,
     day: e.day,
@@ -143,6 +162,8 @@ export function cleanEntry(raw: unknown): TrainingEntry | null {
     note: typeof e.note === "string" ? e.note.trim().slice(0, TRAINING_NOTE_MAX) : "",
     created: typeof e.created === "number" && Number.isFinite(e.created) ? e.created : 0,
     ...(time ? { time } : {}),
+    ...keepV(e),
+    ...(extra ? { extra } : {}),
   };
 }
 

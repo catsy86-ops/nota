@@ -1,6 +1,6 @@
 import * as Y from "yjs";
 import { CUSTOM_MAX, cleanCustomExercise, customExercises, setCustomExercises, type Exercise } from "./catalog";
-import { byTrainingTime, cleanEntry, cleanEquipment, cleanPlanDay, cleanTrainingReminder, PLAN_MAX_DAYS, TRAINING_MAX_ENTRIES, type PlanDay, type TrainingEntry, type TrainingEquipment, type TrainingReminder } from "./model";
+import { byTrainingTime, cleanEntry, cleanEquipment, cleanPlanDay, cleanTrainingReminder, PLAN_MAX_DAYS, storedEntry, TRAINING_MAX_ENTRIES, type PlanDay, type TrainingEntry, type TrainingEquipment, type TrainingReminder } from "./model";
 
 /**
  * Trening w Y.Doc notatek — ten sam dokument co synchronizacja, plik i kopia.
@@ -128,7 +128,7 @@ export function createYTraining(doc: Y.Doc) {
 
   function addEntry(e: TrainingEntry): boolean {
     if (log.size >= TRAINING_MAX_ENTRIES || log.has(e.id)) return false;
-    doc.transact(() => log.set(e.id, e), TRAINING_ORIGIN);
+    doc.transact(() => log.set(e.id, storedEntry(e)), TRAINING_ORIGIN);
     return true;
   }
 
@@ -140,7 +140,7 @@ export function createYTraining(doc: Y.Doc) {
   }
 
   function restoreEntry(e: TrainingEntry): void {
-    doc.transact(() => log.set(e.id, e), TRAINING_ORIGIN);
+    doc.transact(() => log.set(e.id, storedEntry(e)), TRAINING_ORIGIN);
   }
 
   function addPlan(p: PlanDay): boolean {
@@ -161,7 +161,7 @@ export function createYTraining(doc: Y.Doc) {
   }
 
   function dump(): TrainingDump {
-    return { entries: getEntries(), plans: getPlans(), reminder: getReminder(), equipment: getEquipment() };
+    return { entries: getEntries().map(storedEntry), plans: getPlans(), reminder: getReminder(), equipment: getEquipment() };
   }
 
   /**
@@ -178,7 +178,7 @@ export function createYTraining(doc: Y.Doc) {
     const alive = (r: TrainingReminder | null) => !!r && (!r.noteId || !hasNote || hasNote(r.noteId));
     const localReminder = getReminder();
     doc.transact(() => {
-      for (const e of inEntries) if (!log.has(e.id) && log.size < TRAINING_MAX_ENTRIES) log.set(e.id, e);
+      for (const e of inEntries) if (!log.has(e.id) && log.size < TRAINING_MAX_ENTRIES) log.set(e.id, storedEntry(e));
       for (const p of inPlans) if (!plans.has(p.id) && plans.size < PLAN_MAX_DAYS) plans.set(p.id, p);
       if (localReminder && !alive(localReminder)) meta.delete("reminder");
       if (inReminder && alive(inReminder) && !alive(getReminder())) meta.set("reminder", inReminder);
