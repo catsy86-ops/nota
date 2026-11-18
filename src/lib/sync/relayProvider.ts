@@ -87,12 +87,22 @@ export interface RelayOptions {
   /** Serwer podał głowę pokoju (po pobraniu). */
   onHead?: (head: RelayHead) => void;
   now?: () => number;
+  /** Limit czasu jednego żądania (ms); domyślnie `REQUEST_TIMEOUT_MS`. */
+  requestTimeoutMs?: number;
 }
 
 export const FLUSH_MS = 1000;
 export const COMPACT_AFTER = 500;
 /** Ping na gnieździe, gdy karta jest schowana: pośrednicy zamykają bezczynne połączenia. */
 export const KEEPALIVE_MS = 20_000;
+/**
+ * Żądanie bez odpowiedzi (serwer albo pośrednik zawiesił połączenie) blokowałoby łańcuch zadań na zawsze —
+ * po tym czasie traktujemy je jak błąd sieci i ponawiamy (Z-5.T).
+ */
+export const REQUEST_TIMEOUT_MS = 30_000;
+/** Limit wpisu serwera (`relay-server/core.js` `MAX_ENTRY_CHARS`, ~16 MB po odkodowaniu). */
+export const MAX_ENTRY_CHARS = 22_400_000;
+const TOO_BIG = "Dane są za duże dla przekaźnika (limit 16 MB na wpis)";
 const RETRY_MIN_MS = 2000;
 /** Górny limit stron w jednym pobraniu; reszta idzie przy następnym (kursor jest zapisany). */
 const MAX_PULL_PAGES = 1000;
@@ -306,7 +316,7 @@ export class RelayProvider {
       return;
     }
     if (err instanceof RelayHttpError && err.status === 413) {
-      this.setStatus("error", "Dane są za duże dla przekaźnika (limit 16 MB na wpis)");
+      this.setStatus("error", TOO_BIG);
       return;
     }
     // Sieć, 5xx, 429: ponawiamy z rosnącą przerwą.
@@ -326,11 +336,29 @@ export class RelayProvider {
   }
 
   private async http<T = Record<string, unknown>>(path: string, init: { method: "GET" | "POST" | "PUT"; body?: unknown }): Promise<T> {
+    const ctrl = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // Wyścig, nie samo `signal`: atrapy i stare silniki potrafią zignorować przerwanie.
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        ctrl.abort();
+        reject(new TypeError("Przekaźnik nie odpowiedział w czasie"));
+      }, this.opts.requestTimeoutMs ?? REQUEST_TIMEOUT_MS);
+    });
+    try {
+      return await Promise.race([this.request<T>(path, init, ctrl.signal), timeout]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  private async request<T>(path: string, init: { method: "GET" | "POST" | "PUT"; body?: unknown }, signal: AbortSignal): Promise<T> {
     const res = await this.fetchFn(`${this.base}${path}`, {
       method: init.method,
       headers: { Authorization: `Bearer ${this.opts.keys.token}`, "Content-Type": "application/json" },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
       cache: "no-store",
+      signal,
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new RelayHttpError(res.status, typeof json.error === "string" ? json.error : res.statusText);
@@ -442,6 +470,8 @@ export class RelayProvider {
     for (let attempt = 0; !res; attempt++) {
       try {
         const data = await sealBytes(this.opts.keys.dataKey, merged, this.aad);
+        // Serwer zerwie połączenie przy za dużym ciele, zanim odpowie 413 — bez tej kontroli ponawialibyśmy bez końca.
+        if (data.length > MAX_ENTRY_CHARS) throw new RelayFatalError(TOO_BIG);
         if (!this.maySend()) {
           this.pending = [...parts, ...this.pending];
           await this.persistPending();

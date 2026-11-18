@@ -935,6 +935,36 @@ Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) 
 - `842db18` (2026-10-20) — urządzenia w grupie i nazwy (faza 4).
 - `89f1546` (2026-10-20) — toast z tytułem notatki (punkt 3).
 
+## Synchronizacja — przekaźnik: limit czasu żądania, za duży wpis, testy przerwań (Z-5.T, 2026-11-18)
+
+### Co robi
+
+- Zawieszone żądanie do przekaźnika (serwer albo pośrednik nie odpowiada) nie blokuje już synchronizacji na zawsze: po 30 s jest traktowane jak błąd sieci, stan „offline”, ponowienie z rosnącą przerwą.
+- Zmiana większa niż limit wpisu serwera (~16 MB) nie jest wysyłana ani ponawiana w kółko: stan „błąd” z komunikatem o limicie, zaległość zostaje na urządzeniu.
+
+### Gdzie jest
+
+- `src/lib/sync/relayProvider.ts` — `REQUEST_TIMEOUT_MS`, `MAX_ENTRY_CHARS`, opcja `requestTimeoutMs`; `http` (wyścig z limitem czasu i `AbortController`) i `request`; kontrola rozmiaru w `flushTask` przed wysyłką.
+
+### Jak działa i dlaczego
+
+- Wszystkie zadania klienta idą jednym łańcuchem obietnic (pobranie, wysyłka, migawka), więc jedno żądanie bez odpowiedzi zatrzymywało wszystko. Wyścig z zegarem zamiast samego `signal`, bo atrapy i starsze silniki potrafią zignorować przerwanie.
+- Serwer przy ciele większym niż limit zrywa połączenie, zanim odpowie 413 — klient widział błąd sieci i ponawiał bez końca. Teraz szyfrogram jest mierzony przed wysyłką (`MAX_ENTRY_CHARS` jak w `relay-server/core.js`), a przekroczenie to `RelayFatalError`.
+- Ustalone przy testach: w trakcie wysyłki zaległość w magazynie bywa już pusta, ale nic nie ginie — wektor stanu `sv` przesuwa się dopiero po udanej wysyłce, więc po ponownym starcie różnica idzie jeszcze raz.
+
+### Ograniczenia i pułapki
+
+- Migawka (`PUT snapshot`) nie ma kontroli rozmiaru przed wysyłką; dokument większy niż limit kończy się błędem serwera przy kompaktowaniu.
+- Przypadek „gniazdo zamknięte przy oczekującym ponowieniu” nie ma testu — atrapa nie ma gniazda.
+
+### Testy
+
+- `src/lib/sync/relayProvider.test.ts`, blok „Z-5.T”: karta zamknięta w trakcie wysyłki, uszkodzony wpis w połowie strony (kursor na ostatnim dobrym), kursor sprzed migawki, dwa urządzenia kompaktujące naraz, 409 → migawka i ponowienie, żądanie bez odpowiedzi → „offline” i dalsza praca, za duży wpis → jedna próba i „błąd”. Pokój usunięty i odtworzony z wyższym `last` są w `relayServer.integration.test.ts`.
+
+### Commit
+
+Z-5.T, 2026-11-18 — commit po tym wpisie.
+
 ## Synchronizacja — przekaźnik: cofnięcie, pętla resetów, rozjazd z sąsiadem (S2.3, Z-15.6, 2026-11-18)
 
 ### Co robi

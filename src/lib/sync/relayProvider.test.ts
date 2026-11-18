@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import * as Y from "yjs";
-import { RelayProvider, COMPACT_AFTER, KEEPALIVE_MS, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
+import { RelayProvider, COMPACT_AFTER, KEEPALIVE_MS, MAX_ENTRY_CHARS, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
 import { deriveRelayKeys, type RelayKeys } from "@/lib/sync/relayKeys";
 
 /** Atrapa serwera o tym samym protokole co `relay-server/server.js` (bez limitów rozmiaru). */
@@ -359,6 +359,171 @@ describe("RelayProvider", () => {
     await new Promise((r) => setTimeout(r, 30));
     expect(server.control.requests).toBe(before);
   });
+});
+
+describe("Z-5.T: przerwania, błędy w połowie, kompaktowanie, 409, limit czasu, za duży wpis", () => {
+  type Hook = (url: URL, method: string) => Promise<Response> | Response | undefined;
+  /** Nakładka na atrapę serwera: `hook` może odpowiedzieć sam (albo zawiesić żądanie), inaczej idzie do serwera. */
+  function hooked(server: ReturnType<typeof fakeServer>, hook: Hook) {
+    const fetchFn = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const r = hook(new URL(String(input)), init?.method ?? "GET");
+      return r ? await r : server.fetchFn(input, init);
+    }) as typeof fetch;
+    return { ...server, fetchFn };
+  }
+  const never = () => new Promise<Response>(() => {});
+  const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+
+  it("karta zamknięta w trakcie wysyłki: po ponownym starcie zmiana trafia na serwer", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    let hang = true;
+    let inFlight = 0;
+    const a = await device(keys, hooked(server, (_u, m) => (m === "POST" && hang ? (inFlight++, never()) : undefined)));
+    a.doc.transact(() => a.text.insert(0, "w locie"));
+    // Żądanie wisi; zaległość w magazynie bywa już pusta, ale `sv` przesuwa się dopiero po udanej wysyłce,
+    // więc po restarcie różnica względem niego idzie jeszcze raz.
+    await until(() => inFlight > 0);
+    a.provider.stop();
+    hang = false;
+    const doc2 = new Y.Doc();
+    Y.applyUpdate(doc2, Y.encodeStateAsUpdate(a.doc));
+    const again = new RelayProvider({ baseUrl: "https://relay.test", keys, doc: doc2, store: a.store, fetch: server.fetchFn, flushMs: 5 });
+    await again.start();
+    const c = await device(keys, server);
+    await untilPulled(c.provider, () => c.text.toString() === "w locie");
+    again.stop();
+    c.provider.stop();
+  });
+
+  it("uszkodzony wpis w połowie strony: błąd, kursor na ostatnim dobrym wpisie, wcześniejsze nałożone", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const a = await device(keys, server);
+    for (const ch of ["1", "2", "3"]) {
+      a.doc.transact(() => a.text.insert(a.text.length, ch));
+      a.provider.flushNow();
+      await until(() => a.store.pending === null && server.rooms.size > 0 && [...server.rooms.values()][0].last >= Number(ch));
+    }
+    const room = [...server.rooms.values()][0];
+    const good = room.entries[1].data;
+    room.entries[1] = { ...room.entries[1], data: good.slice(0, -8) + (good.endsWith("AAAAAAAA") ? "BBBBBBBB" : "AAAAAAAA") };
+    const statuses: RelayStatus[] = [];
+    const b = await device(keys, server, { statuses });
+    b.provider.sync();
+    await until(() => statuses.includes("error"));
+    expect(b.text.toString()).toBe("1");
+    expect(b.store.state.cursor).toBe(room.entries[0].seq);
+    a.provider.stop();
+    b.provider.stop();
+  });
+
+  it("klient z kursorem sprzed migawki dostaje pełny stan", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const a = await device(keys, server);
+    a.doc.transact(() => a.text.insert(0, "początek "));
+    a.provider.flushNow();
+    await until(() => a.store.pending === null && a.provider.cursor > 0);
+    const b = await device(keys, server);
+    await untilPulled(b.provider, () => b.text.toString() === "początek ");
+    const oldCursor = b.store.state.cursor;
+    b.provider.stop();
+    for (let i = 0; i < COMPACT_AFTER + 2; i++) {
+      a.doc.transact(() => a.text.insert(a.text.length, "."));
+      a.provider.flushNow();
+      await until(() => a.store.pending === null);
+    }
+    await until(() => a.store.state.compactedAt > oldCursor);
+    // Wpisy zaraz po starym kursorze zniknęły w migawce.
+    expect([...server.rooms.values()][0].entries[0].seq).toBeGreaterThan(oldCursor + 1);
+    const back = new RelayProvider({ baseUrl: "https://relay.test", keys, doc: b.doc, store: b.store, fetch: server.fetchFn, flushMs: 5 });
+    await back.start();
+    await untilPulled(back, () => b.text.toString() === a.text.toString(), 10_000);
+    a.provider.stop();
+    back.stop();
+  }, 60_000);
+
+  it("dwa urządzenia kompaktują naraz: trzecie dostaje pełny, zgodny stan", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const a = await device(keys, server);
+    const b = await device(keys, server);
+    for (let i = 0; i < COMPACT_AFTER + 2; i++) {
+      const d = i % 2 ? a : b;
+      d.doc.transact(() => d.text.insert(0, i % 2 ? "a" : "b"));
+      d.provider.flushNow();
+      await until(() => d.store.pending === null);
+    }
+    await untilPulled(a.provider, () => a.store.state.compactedAt > 0, 10_000);
+    await untilPulled(b.provider, () => b.store.state.compactedAt > 0 && b.text.toString() === a.text.toString(), 10_000);
+    const c = await device(keys, server);
+    await untilPulled(c.provider, () => c.text.length === COMPACT_AFTER + 2, 10_000);
+    expect(c.text.toString()).toBe(a.text.toString());
+    a.provider.stop();
+    b.provider.stop();
+    c.provider.stop();
+  }, 60_000);
+
+  it("serwer odpowiada 409 (log pełny): migawka i ponowienie wysyłki", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const a0 = await device(keys, server);
+    a0.doc.transact(() => a0.text.insert(0, "x"));
+    a0.provider.flushNow();
+    await until(() => a0.store.pending === null && a0.provider.cursor > 0);
+    a0.provider.stop();
+    let full = true;
+    let puts = 0;
+    const a = await device(keys, hooked(server, (u, m) => {
+      if (m === "PUT" && u.pathname.endsWith("/snapshot")) { puts++; full = false; return undefined; }
+      if (m === "POST" && full) return json(409, { error: "Log pełny" });
+      return undefined;
+    }));
+    await untilPulled(a.provider, () => a.text.toString() === "x");
+    a.doc.transact(() => a.text.insert(1, "y"));
+    a.provider.flushNow();
+    await until(() => a.store.pending === null && !full);
+    expect(puts).toBe(1);
+    const c = await device(keys, server);
+    await untilPulled(c.provider, () => c.text.toString() === "xy");
+    a.provider.stop();
+    c.provider.stop();
+  });
+
+  it("żądanie bez odpowiedzi: po limicie czasu „offline”, kolejka rusza dalej", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    let hangs = 1;
+    const statuses: RelayStatus[] = [];
+    const doc = new Y.Doc();
+    const store = new MemStore();
+    const fetchFn = hooked(server, (_u, m) => (m === "POST" && hangs-- > 0 ? never() : undefined)).fetchFn;
+    const p = new RelayProvider({ baseUrl: "https://relay.test", keys, doc, store, fetch: fetchFn, flushMs: 5, requestTimeoutMs: 50, onStatus: (s) => statuses.push(s) });
+    await p.start();
+    doc.transact(() => doc.getText("t").insert(0, "po czasie"));
+    p.flushNow();
+    await until(() => statuses.includes("offline"));
+    await until(() => store.pending === null && [...server.rooms.values()].some((r) => r.last > 0), 10_000);
+    p.stop();
+  });
+
+  it("za duży wpis: jedna próba, stan „błąd”, nic nie wysłane, zaległość zostaje", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    let posts = 0;
+    const statuses: RelayStatus[] = [];
+    const a = await device(keys, hooked(server, (_u, m) => { if (m === "POST") posts++; return undefined; }), { statuses });
+    // Szyfrogram w base64url ma ~4/3 długości bajtów; tekst powyżej limitu po odkodowaniu.
+    const chunk = "abcdefghijklmnopqrstuvwxyz0123456789".repeat(1000);
+    const big = chunk.repeat(Math.ceil((MAX_ENTRY_CHARS * 3) / 4 / chunk.length) + 1);
+    a.doc.transact(() => a.text.insert(0, big));
+    a.provider.flushNow();
+    await until(() => statuses.includes("error"), 30_000);
+    expect(posts).toBe(0);
+    await until(() => a.store.pending !== null);
+    a.provider.stop();
+  }, 60_000);
 });
 
 export type { RelayState };
