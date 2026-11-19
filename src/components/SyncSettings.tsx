@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { GroupedCode, JOIN_CODE_INPUT_ID, JoinCodeField } from "@/components/sync/JoinCodeField";
 import { NewCodeCard, PeerPausedCard, RekeyedCard, V2OnlyNotices } from "@/components/sync/SyncCodeNotices";
 import { CodeChangePanel } from "@/components/sync/CodeChangePanel";
+import { DeviceRegistryList } from "@/components/sync/DeviceRegistryList";
 import { useRekeyRecord } from "@/lib/sync/rekeyRuntime";
 import { legacyEndsAt, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { toast } from "sonner";
@@ -260,6 +261,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
             </ul>
           </div>
         )}
+        <DeviceRegistryList />
         <form
           className="flex items-end gap-2"
           onSubmit={(e) => { e.preventDefault(); handleRename(); }}

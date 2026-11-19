@@ -8,6 +8,8 @@ import * as Y from "yjs";
 import { RelayProvider, type RelayState, type RelayStore } from "@/lib/sync/relayProvider";
 import { deriveRelayKeys } from "@/lib/sync/relayKeys";
 import { buildMarkerUpdate, readMarkers, stoppingMarker } from "@/lib/sync/rekey";
+import { activeOtherDevices, recordLocalDevice } from "@/lib/deviceRegistry";
+import { canWriteSchema } from "@/lib/formatSchema";
 import { dropRekeyRoom, postRekeyMarker, retireRekeyRoom, seedRekeyRoom } from "@/lib/sync/rekeyRelay";
 
 /**
@@ -117,6 +119,22 @@ describe("klient przekaźnika ↔ prawdziwy serwer", () => {
     b.provider.sync();
     await until(() => b.text.toString() === "z przekaźnika");
     expect(b.text.toString()).toBe("z przekaźnika");
+    a.provider.stop();
+    b.provider.stop();
+  }, 20_000);
+
+  it("D4.4: dwa urządzenia tylko przez przekaźnik widzą swoje wersje w rejestrze", async () => {
+    const code = "DEVREGISTRY1";
+    const a = await device(code);
+    const b = await device(code);
+    recordLocalDevice(a.doc, "Telefon", Date.now(), "phonephone", { version: "2026.11.01", schema: 2 });
+    recordLocalDevice(b.doc, "Laptop", Date.now(), "laptoplapt", { version: "2026.11.19", schema: 3 });
+    await new Promise((r) => setTimeout(r, 300));
+    await untilSynced(a, () => activeOtherDevices(a.doc, Date.now(), "phonephone").length === 1);
+    await untilSynced(b, () => activeOtherDevices(b.doc, Date.now(), "laptoplapt").length === 1);
+    expect(activeOtherDevices(a.doc, Date.now(), "phonephone")[0]).toMatchObject({ name: "Laptop", version: "2026.11.19", schema: 3 });
+    // Laptop nie zapisze formatu 3, dopóki telefon (2) jest w rejestrze — choć nigdy nie widział go w awareness.
+    expect(canWriteSchema(3, activeOtherDevices(b.doc, Date.now(), "laptoplapt"))).toBe(false);
     a.provider.stop();
     b.provider.stop();
   }, 20_000);

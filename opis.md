@@ -1085,16 +1085,18 @@ Z-17.6, 2026-11-18 — commit po tym wpisie.
 
 D1.2–D1.4, 2026-11-18 — commit po tym wpisie.
 
-## Dane — rejestr urządzeń w dokumencie i bramka formatu (D4.1–D4.2 planu migracji, 2026-11-19)
+## Dane — rejestr urządzeń w dokumencie i bramka formatu (D4.1–D4.4 planu migracji, 2026-11-19)
 
 ### Co robi
 
 - Każde urządzenie w grupie synchronizacji zapisuje w dokumencie swoją nazwę, wersję aplikacji i numer formatu. Dzięki temu urządzenia wiedzą o sobie, nawet gdy nigdy nie były online w tym samym czasie (wpis dochodzi przez WebRTC, przekaźnik i plik).
 - Nowego formatu danych nie wolno zapisać, dopóki nie znają go wszystkie urządzenia obecne teraz **oraz** widziane w ostatnich 30 dniach.
+- Ustawienia → Synchronizacja → „Zapisane w grupie”: pozostałe urządzenia z wersją i czasem ostatniego wpisu, ostrzeżenie „Może stracić dane” przy urządzeniu niewidzianym ponad 30 dni ze starszym formatem i przycisk „Zapomnij” (urządzenie wpisze się ponownie przy następnym starcie).
 
 ### Gdzie jest
 
-- `src/lib/deviceRegistry.ts` — mapa `devices` (`DEVICES_MAP`), klucz lokalny `kaczy.device.id.v1` (`getLocalDeviceId`), `recordLocalDevice`, `readDevices`, `cleanDeviceEntry`, `activeOtherDevices`, `dormantOlderDevices`, `forgetDevice`.
+- `src/lib/deviceRegistry.ts` — mapa `devices` (`DEVICES_MAP`), klucz lokalny `kaczy.device.id.v1` (`getLocalDeviceId`), `recordLocalDevice`, `readDevices`, `cleanDeviceEntry`, `activeOtherDevices`, `dormantOlderDevices`, `forgetDevice`, `useRegistryDevices`.
+- `src/components/sync/DeviceRegistryList.tsx` — lista w `SyncSettings` pod „Ostatnio widziane”.
 - `src/lib/formatSchema.ts` — `setRegistrySource`; `writeFormatAllowed` łączy awareness z rejestrem.
 - `src/lib/yjsSync.ts` — `recordDevice()` po pierwszym pobraniu z przekaźnika w `connect` i po zmianie nazwy; źródło rejestru podpięte tylko przy kodzie grupy.
 
@@ -1109,17 +1111,19 @@ D1.2–D1.4, 2026-11-18 — commit po tym wpisie.
 ### Ograniczenia i pułapki
 
 - Urządzenia sprzed D4.1 nie wpisują się do rejestru; widać je tylko w awareness. Przez 30 dni od wdrożenia nie podnosić `SCHEMA_VERSION` jako bramki zapisu.
-- Urządzenie niewidziane ponad 30 dni nie blokuje; wraca na listę `dormantOlderDevices` (interfejs w D4.3, jeszcze niezrobiony). Gdy wróci ze starą wersją, zatrzymuje je tylko `docFormat` (D1.3).
+- Urządzenie niewidziane ponad 30 dni nie blokuje; dostaje ostrzeżenie na liście w Ustawieniach. Gdy wróci ze starą wersją, zatrzymuje je tylko `docFormat` (D1.3).
 - Migawka OPFS (kopie dzienne) zawiera mapę `devices` — to zgodne z zamiarem, bo bramka bez grupy jej nie czyta.
 
 ### Testy
 
 - `src/lib/deviceRegistry.test.ts` — stały identyfikator, zapis najwyżej raz na dobę bez zmian, przejście wpisu do drugiego dokumentu i bramka, czyszczenie, limit 50, usuwanie po 180 dniach, `forgetDevice`.
 - `src/lib/docMapsInventory.test.ts` — `devices` w spisie map z uzasadnieniem.
+- `src/components/sync/DeviceRegistryList.test.tsx` — lista bez własnego urządzenia, ostrzeżenie, „Zapomnij”.
+- `src/lib/sync/relayServer.integration.test.ts` (D4.4) — dwa urządzenia tylko przez prawdziwy serwer przekaźnika widzą swoje wersje, a bramka blokuje nowszy format.
 
 ### Commit
 
-D4.1–D4.2, 2026-11-19 — commit po tym wpisie.
+D4.1–D4.2: 069616d6, 2026-11-19; D4.3–D4.4: commit po tym wpisie.
 
 ## Synchronizacja — duże wiadomości WebRTC dzielone na ramki (D-U1, U-1, 2026-11-18)
 

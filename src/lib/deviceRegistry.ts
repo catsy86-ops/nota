@@ -1,3 +1,4 @@
+import { useCallback, useSyncExternalStore } from "react";
 import { cleanSchemaClaim, cleanVersionClaim, localDeviceSchema, type DeviceSchema } from "@/lib/formatSchema";
 import { cleanDeviceName } from "@/lib/syncSeen";
 
@@ -30,6 +31,8 @@ export interface DeviceEntry extends DeviceSchema {
 }
 
 interface MapLike {
+  observe(fn: () => void): void;
+  unobserve(fn: () => void): void;
   get(key: string): unknown;
   set(key: string, value: unknown): void;
   delete(key: string): void;
@@ -114,6 +117,18 @@ export function activeOtherDevices(doc: DocLike, now = Date.now(), selfId = getL
 /** Niewidziane ponad 30 dni i ze starszym formatem — „może stracić dane, zaktualizuj przed użyciem”. */
 export function dormantOlderDevices(doc: DocLike, current: number, now = Date.now(), selfId = getLocalDeviceId()): DeviceEntry[] {
   return readDevices(doc, now).filter((d) => d.id !== selfId && now - d.at > ACTIVE_MS && (d.schema ?? 0) < current);
+}
+
+/** Rejestr dla interfejsu (D4.3); odświeża się przy zmianie mapy, także z innego urządzenia. */
+export function useRegistryDevices(doc: DocLike): DeviceEntry[] {
+  const subscribe = useCallback((cb: () => void) => {
+    const map = devicesMap(doc);
+    map.observe(cb);
+    return () => map.unobserve(cb);
+  }, [doc]);
+  // Migawka jako napis: `useSyncExternalStore` wymaga stabilnej wartości między renderami.
+  const snap = useSyncExternalStore(subscribe, () => JSON.stringify(readDevices(doc)));
+  return JSON.parse(snap) as DeviceEntry[];
 }
 
 /** Test-only. */

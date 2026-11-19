@@ -69,7 +69,7 @@ Sprawdzone czytaniem kodu na `3cc066d6`, bez uruchamiania testów. Punkty D1, D2
 
 ## Etap D1: zgodność w przód (Opus) — najważniejszy, chroni przed utratą danych
 
-**Stan 2026-11-18:** D1.1 częściowo (7 map przez `extraFields.ts`, Z-17.3); D1.2 jako spis z zapadką (`src/lib/docMapsInventory.test.ts`); po Ćwiczeniach i klasyfikacji Pracy 22 mapy do zrobienia; D1.3 bez blokady w magazynach (`src/lib/docFormat.ts`, baner, „Ignoruj i pisz”); D1.4 zapisane w `docFormat.ts` i `opis.md`. Zostaje D1.1 działami. **2026-11-19:** D4.1–D4.2 zrobione (`src/lib/deviceRegistry.ts`, bramka w `writeFormatAllowed`); zostają D4.3 (lista w Ustawieniach), D4.4 (test przez przekaźnik).
+**Stan 2026-11-18:** D1.1 częściowo (7 map przez `extraFields.ts`, Z-17.3); D1.2 jako spis z zapadką (`src/lib/docMapsInventory.test.ts`); po Ćwiczeniach i klasyfikacji Pracy 22 mapy do zrobienia; D1.3 bez blokady w magazynach (`src/lib/docFormat.ts`, baner, „Ignoruj i pisz”); D1.4 zapisane w `docFormat.ts` i `opis.md`. Zostaje D1.1 działami. **2026-11-19:** D4 całe zrobione (`src/lib/deviceRegistry.ts`, bramka w `writeFormatAllowed`, `DeviceRegistryList.tsx`, test przez prawdziwy przekaźnik).
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
