@@ -452,7 +452,7 @@ function PaySlipPanel({ monthKey, estimate, paid, facts }: { monthKey: string; e
     : `Wypłacono ${cmp.diff > 0 ? "więcej" : "mniej"} o ${formatMoney(Math.abs(cmp.diff))} niż szacunek (${cmp.percent > 0 ? "+" : ""}${cmp.percent.toLocaleString("pl-PL")} %).`;
   return (
     <section aria-label="Pasek wypłaty" className="mt-4 rounded-card border border-border/60 bg-card p-4">
-      <h3 className="text-xs font-semibold text-muted-foreground">Pasek wypłaty</h3>
+      <h3 className="section-caps">Pasek wypłaty</h3>
       <label className="mt-2 flex flex-col gap-1 text-sm">
         Wypłacono brutto (zł)
         <input

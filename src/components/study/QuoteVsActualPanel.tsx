@@ -27,7 +27,7 @@ export function QuoteVsActualPanel({ site, job }: { site: SiteInfo; job: Job }) 
   if (job.items.length === 0 || !v.hasData) return null;
   return (
     <section aria-label="Wycena a wykonanie" className="space-y-1 rounded-field bg-muted/40 p-2 text-sm" data-testid="quote-vs-actual">
-      <h4 className="text-xs font-semibold text-muted-foreground">Wycena a wykonanie</h4>
+      <h4 className="section-caps">Wycena a wykonanie</h4>
       {v.usedMaterial !== null && v.materialDiff !== null && (
         <div data-testid="qva-material">
           <p className="flex flex-wrap justify-between gap-x-3"><span>Materiał (ceny zakupu)</span><Diff value={v.materialDiff} testId="qva-material-diff" /></p>

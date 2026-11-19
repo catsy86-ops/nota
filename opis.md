@@ -6567,7 +6567,7 @@ W0.2–W0.3: 6f7cc3a3, 2026-11-19.
 
 W1.1–W1.4: 974281cc, 2026-11-19.
 
-## Wygląd — skala ról tekstu, łamanie i 15 px na telefonie (W2.1, W2.2, W2.4, W2.7, WZ-1, 2026-11-19)
+## Wygląd — skala ról tekstu, łamanie i 15 px na telefonie (W2.1, W2.2, W2.3 częściowo, W2.4, W2.7, WZ-1, 2026-11-19)
 
 ### Co robi
 
@@ -6592,7 +6592,8 @@ W1.1–W1.4: 974281cc, 2026-11-19.
 ### Testy
 
 - Vitest 4169 zielone; strażnicy tokenów i kontrastu.
-- `src/test/designTokens.test.ts` — reguła `sizeWeightPair` (W2.7): para `text-xs|sm` + `font-medium|semibold` w jednym `className`, próg 233 (stan 2026-11-19), może tylko maleć.
+- `src/test/designTokens.test.ts` — reguła `sizeWeightPair` (W2.7): para `text-xs|sm` + `font-medium|semibold` w jednym `className`, próg 168 (233 przed migracją), może tylko maleć.
+- W2.3 (część): rola `.ui-label` (`text-sm font-medium`) w `src/index.css`; 15 gołych `<label className="text-sm font-medium">` przeszło na `ui-label`, 50 nagłówków `text-xs font-semibold text-muted-foreground` na istniejącą `section-caps`. Wygląd bez zmian. Zostaje przegląd pogrubień w treści wierszy.
 - W2.2: Grafik (`ShiftSummary`, `Stat size="lg"`, 36 px) i Długi (`Stat` md, 20 px) już mają liczbę główną we wspólnym `ui/stat.tsx`; Długi celowo bez 28 px — dwie kwoty obok siebie nie mieszczą się na 390 px.
 
 ### Commit

@@ -208,7 +208,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
           onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setSaving(false); } }}
           className="absolute right-0 top-full z-dropdown mt-1.5 w-72 max-w-[90vw] space-y-2 rounded-card border border-border bg-popover p-3 shadow-elevation-3"
         >
-          <label className="block text-xs font-semibold text-muted-foreground" htmlFor={`${listId}-name`}>
+          <label className="block section-caps" htmlFor={`${listId}-name`}>
             Nazwa filtra
           </label>
           <input enterKeyHint="search" autoComplete="off"

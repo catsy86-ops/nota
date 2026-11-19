@@ -793,6 +793,10 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   .ui-hint {
     @apply text-sm text-muted-foreground;
   }
+  /* W2.3: etykieta pola i przycisk tekstowy — 500, nie 600; grubość tytułów zostaje dla `title-*`. */
+  .ui-label {
+    @apply text-sm font-medium;
+  }
   /* Data, licznik, jednostka — zerkane, więc 12 px i cyfry tabelaryczne. */
   .ui-meta {
     @apply text-xs tabular-nums text-muted-foreground;

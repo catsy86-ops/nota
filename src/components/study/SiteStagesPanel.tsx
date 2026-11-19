@@ -65,7 +65,7 @@ export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journa
   return (
     <section aria-label="Etapy budowy" data-testid="site-stages" className={`${cardClass} space-y-2 p-3`}>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+        <h3 className="flex items-center gap-2 section-caps">
           <ListChecks className="h-3.5 w-3.5" aria-hidden />Etapy
         </h3>
         <span className="font-mono text-xs tabular-nums text-muted-foreground" data-testid="site-stages-progress">{done}/{total}</span>

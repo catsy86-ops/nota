@@ -261,7 +261,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-person`} className="text-sm font-medium">Kto</label>
+          <label htmlFor={`${uid}-person`} className="ui-label">Kto</label>
           <Input
             id={`${uid}-person`}
             ref={personRef}
@@ -278,7 +278,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
           <datalist id={`${uid}-people`}>{people.map((p) => <option key={p} value={p} />)}</datalist>
         </div>
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-amount`} className="text-sm font-medium">Kwota (zł)</label>
+          <label htmlFor={`${uid}-amount`} className="ui-label">Kwota (zł)</label>
           <Input
             id={`${uid}-amount`}
             ref={amountRef}
@@ -295,11 +295,11 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
 
       <div className="grid gap-3 sm:grid-cols-[auto_1fr]">
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-date`} className="text-sm font-medium">Dzień</label>
+          <label htmlFor={`${uid}-date`} className="ui-label">Dzień</label>
           <Input id={`${uid}-date`} type="date" value={at} max={today} onChange={(e) => setPickedAt(e.target.value || null)} />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-note`} className="text-sm font-medium">Za co <span className="font-normal text-muted-foreground">(nieobowiązkowe)</span></label>
+          <label htmlFor={`${uid}-note`} className="ui-label">Za co <span className="font-normal text-muted-foreground">(nieobowiązkowe)</span></label>
           <Input id={`${uid}-note`} value={note} maxLength={DEBT_NOTE_MAX} placeholder="np. zaliczka na materiał" onChange={(e) => setNote(e.target.value)} />
         </div>
       </div>
@@ -312,7 +312,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
       )}
       {hasDue(kind) && inRates && (
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-rates`} className="text-sm font-medium">Liczba rat</label>
+          <label htmlFor={`${uid}-rates`} className="ui-label">Liczba rat</label>
           <Input
             id={`${uid}-rates`}
             inputMode="numeric"
@@ -329,7 +329,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
       )}
       {hasDue(kind) && (
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-due`} className="text-sm font-medium">{inRates ? <>Pierwsza rata <span className="font-normal text-muted-foreground">(kolejne tego dnia miesiąca, przypomnienie o 9:00)</span></> : <>Termin zwrotu <span className="font-normal text-muted-foreground">(z przypomnieniem o 9:00, nieobowiązkowe)</span></>}</label>
+          <label htmlFor={`${uid}-due`} className="ui-label">{inRates ? <>Pierwsza rata <span className="font-normal text-muted-foreground">(kolejne tego dnia miesiąca, przypomnienie o 9:00)</span></> : <>Termin zwrotu <span className="font-normal text-muted-foreground">(z przypomnieniem o 9:00, nieobowiązkowe)</span></>}</label>
           <Input
             id={`${uid}-due`}
             type="date"
@@ -574,7 +574,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
       <div className="mt-5 space-y-4" role="group" aria-label="Historia">
         {months.map((m) => (
           <section key={m.key} aria-label={monthLabel(m.key)}>
-            <h3 className="mb-2 text-xs font-semibold text-muted-foreground">{monthLabel(m.key)}</h3>
+            <h3 className="mb-2 section-caps">{monthLabel(m.key)}</h3>
             <ol className="space-y-2">
               {m.items.map(({ e, i }) =>
                 editingId === e.id ? (
@@ -698,25 +698,25 @@ function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, proof
       <KindPicker value={kind} onChange={setKind} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-person`} className="text-sm font-medium">Kto</label>
+          <label htmlFor={`${uid}-person`} className="ui-label">Kto</label>
           <Input id={`${uid}-person`} list={`${uid}-people`} autoComplete="off" value={person} maxLength={DEBT_PERSON_MAX} className="shake-invalid" {...invalid("person")} onChange={(e) => { setPerson(e.target.value); setError(null); }} />
           <datalist id={`${uid}-people`}>{people.map((p) => <option key={p} value={p} />)}</datalist>
         </div>
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-amount`} className="text-sm font-medium">Kwota (zł)</label>
+          <label htmlFor={`${uid}-amount`} className="ui-label">Kwota (zł)</label>
           <Input id={`${uid}-amount`} inputMode="decimal" value={amount} className="shake-invalid tabular-nums" {...invalid("amount")} onChange={(e) => { setAmount(e.target.value); setError(null); }} />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-date`} className="text-sm font-medium">Dzień</label>
+          <label htmlFor={`${uid}-date`} className="ui-label">Dzień</label>
           <Input id={`${uid}-date`} type="date" value={at} max={localDayKey()} className="shake-invalid" {...invalid("at")} onChange={(e) => { setAt(e.target.value); setError(null); }} />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor={`${uid}-note`} className="text-sm font-medium">Za co</label>
+          <label htmlFor={`${uid}-note`} className="ui-label">Za co</label>
           <Input id={`${uid}-note`} value={note} maxLength={DEBT_NOTE_MAX} onChange={(e) => setNote(e.target.value)} />
         </div>
         {dueEditable && (
           <div className="space-y-1.5 sm:col-span-2">
-            <label htmlFor={`${uid}-due`} className="text-sm font-medium">Termin zwrotu <span className="font-normal text-muted-foreground">(9:00; puste — bez przypomnienia)</span></label>
+            <label htmlFor={`${uid}-due`} className="ui-label">Termin zwrotu <span className="font-normal text-muted-foreground">(9:00; puste — bez przypomnienia)</span></label>
             <Input id={`${uid}-due`} type="date" value={due} className="shake-invalid" {...invalid("due")} onChange={(e) => { setDue(e.target.value); setError(null); }} />
           </div>
         )}

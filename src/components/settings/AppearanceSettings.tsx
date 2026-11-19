@@ -189,7 +189,7 @@ export function AppearanceSettings() {
               if (g.id === "wyglad-zaawansowane" && !advanced) { setAdvanced(true); window.requestAnimationFrame(() => jumpTo(g.id)); }
               else jumpTo(g.id);
             }}
-            className="pressable inline-flex items-center justify-center whitespace-nowrap rounded-full border border-border/60 bg-muted/40 px-2.5 py-1.5 coarse:min-h-11 sm:px-3 sm:coarse:px-4 text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="pressable inline-flex items-center justify-center whitespace-nowrap rounded-full border border-border/60 bg-muted/40 px-2.5 py-1.5 coarse:min-h-11 sm:px-3 sm:coarse:px-4 section-caps hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >{g.label}</a>
         ))}
       </nav>

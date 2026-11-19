@@ -160,7 +160,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
         </DialogHeader>
 
         <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold text-muted-foreground">Sprzedawca (seria numeracji tego telefonu: {series})</legend>
+          <legend className="section-caps">Sprzedawca (seria numeracji tego telefonu: {series})</legend>
           {seriesShared && (
             <p role="alert" className="rounded-control bg-warning/15 px-2 py-1.5 text-xs text-warning-ink">
               W serii {series} są faktury z innego urządzenia. Ustaw w Ustawieniach inną serię na tym telefonie, inaczej numery mogą się powtórzyć.
@@ -175,7 +175,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
         </fieldset>
 
         <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold text-muted-foreground">Nabywca</legend>
+          <legend className="section-caps">Nabywca</legend>
           <input aria-label="Nazwa nabywcy" placeholder="Imię i nazwisko albo firma" value={buyer.name} onChange={setB("name")} className={fieldCls} />
           <div className="grid grid-cols-2 gap-2">
             <input aria-label="NIP nabywcy" placeholder="NIP (puste = konsument)" inputMode="numeric" value={buyer.nip} onChange={setB("nip")} className={cn(fieldCls, "font-mono")} />
@@ -198,7 +198,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
         </fieldset>
 
         <fieldset className="space-y-2">
-          <legend className="text-xs font-semibold text-muted-foreground">Ceny i VAT</legend>
+          <legend className="section-caps">Ceny i VAT</legend>
           {job.doc?.discount !== undefined && (
             <p className="ui-hint" data-testid="invoice-discount">Rabat z wyceny ({job.doc.discount}%) jest wliczony w ceny pozycji.</p>
           )}
@@ -236,7 +236,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
         </fieldset>
 
         <fieldset className="grid grid-cols-2 gap-2">
-          <legend className="mb-1 text-xs font-semibold text-muted-foreground">Płatność i data</legend>
+          <legend className="mb-1 section-caps">Płatność i data</legend>
           <label className="space-y-1 text-xs text-muted-foreground">Forma płatności
             <select aria-label="Forma płatności" value={form} onChange={(e) => setForm(Number(e.target.value) as 1 | 2 | 6 | 7)} className={fieldCls}>
               {PAYMENT_FORMS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
@@ -264,7 +264,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
 
         {mine.length > 0 && (
           <section aria-label="Wystawione faktury tej budowy" className="space-y-1 border-t border-dashed border-border pt-2" data-testid="invoice-list">
-            <h4 className="text-xs font-semibold text-muted-foreground">Wystawione</h4>
+            <h4 className="section-caps">Wystawione</h4>
             <ul className="space-y-1 text-sm">
               {mine.map((r) => (
                 <li key={r.id} className="flex items-center gap-2" data-testid="invoice-item">

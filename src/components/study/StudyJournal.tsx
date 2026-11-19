@@ -264,7 +264,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         ) : (
           <>
             <div className="mb-4 space-y-2 xl:col-start-2 xl:row-span-3 xl:row-start-1 xl:mb-0 xl:sticky xl:top-24 xl:self-start xl:rounded-card xl:border xl:border-border/60 xl:bg-card xl:p-4 xl:shadow-elevation-1" role="search" aria-label="Filtry dziennika">
-              <h4 className="hidden xl:block text-xs font-semibold text-muted-foreground">Filtry</h4>
+              <h4 className="hidden xl:block section-caps">Filtry</h4>
               <label className="relative block">
                 <span className="sr-only">Szukaj w dzienniku</span>
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
@@ -436,7 +436,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   {sep && (
                     // P5.3: separator tygodnia z sumą godzin na budowach.
                     <div role="separator" aria-label={`${sep.label}${sep.minutes > 0 ? `, ${formatHoursShort(sep.minutes)} h na budowach` : ""}`} data-journal-week={sep.start}
-                      className="flex items-center gap-2 pt-1 text-xs font-semibold text-muted-foreground">
+                      className="flex items-center gap-2 pt-1 section-caps">
                       <span className="h-px flex-1 bg-border" aria-hidden />
                       <span className="shrink-0 tabular-nums">{sep.label}{sep.minutes > 0 && ` · ${formatHoursShort(sep.minutes)} h`}</span>
                       <span className="h-px flex-1 bg-border" aria-hidden />

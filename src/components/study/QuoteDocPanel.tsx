@@ -105,7 +105,7 @@ export function QuoteDocPanel({ siteId, job, signed, onSign }: {
   return (
     <div className="space-y-3 border-t border-dashed border-border pt-2.5" data-testid="quote-doc">
       <div className="flex flex-wrap items-center gap-2">
-        <h4 className="text-xs font-semibold text-muted-foreground">Dokument wyceny</h4>
+        <h4 className="section-caps">Dokument wyceny</h4>
         <span
           className={cn("rounded-full px-2 py-0.5 text-2xs", state === "accepted" ? "bg-primary/15 font-medium text-primary-ink" : state === "rejected" ? "bg-destructive/10 text-destructive-ink" : "bg-muted text-foreground")}
           data-testid="quote-state"
@@ -198,7 +198,7 @@ export function QuoteDocPanel({ siteId, job, signed, onSign }: {
 
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <label htmlFor={`quote-notes-${siteId}`} className="min-w-0 flex-1 text-xs font-semibold text-muted-foreground">Uwagi i warunki</label>
+          <label htmlFor={`quote-notes-${siteId}`} className="min-w-0 flex-1 section-caps">Uwagi i warunki</label>
           {terms && !doc?.notes && (
             <button type="button" onClick={() => setQuoteDoc(siteId, { notes: terms })} data-testid="quote-terms-insert"
               className="pressable text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground coarse:min-h-11">

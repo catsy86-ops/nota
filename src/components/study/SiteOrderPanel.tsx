@@ -52,7 +52,7 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
 
   return (
     <section aria-label="Do zamówienia" data-testid="site-order" className={`${cardClass} space-y-2 p-3`}>
-      <h3 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+      <h3 className="flex items-center gap-2 section-caps">
         <PackageCheck className="h-3.5 w-3.5" aria-hidden />
         Do zamówienia
       </h3>

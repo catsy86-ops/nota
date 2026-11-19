@@ -30,7 +30,7 @@ export function OwnTopics({ topics, onPractice }: { topics: readonly CustomTopic
 
   return (
     <section aria-label="Moje tematy" className={`${cardClass} space-y-2 p-3`} data-testid="own-topics">
-      <h3 className="text-xs font-semibold text-muted-foreground">Moje tematy</h3>
+      <h3 className="section-caps">Moje tematy</h3>
       {topics.length > 0 && (
         <ul className="space-y-1">
           {topics.map((t) => (

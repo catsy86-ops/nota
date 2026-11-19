@@ -70,15 +70,15 @@ export function NewScheduleWizard({ open, onOpenChange }: { open: boolean; onOpe
         {step === 0 && (
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="sched-name" className="text-sm font-medium">Nazwa</label>
+              <label htmlFor="sched-name" className="ui-label">Nazwa</label>
               <input id="sched-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="np. Budowa Lipowa" className={CONTROL} autoFocus />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="sched-rate" className="text-sm font-medium">Stawka za godzinę (zł, nieobowiązkowa)</label>
+              <label htmlFor="sched-rate" className="ui-label">Stawka za godzinę (zł, nieobowiązkowa)</label>
               <input id="sched-rate" inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="np. 32" className={CONTROL} />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="sched-system" className="text-sm font-medium">System czasu pracy</label>
+              <label htmlFor="sched-system" className="ui-label">System czasu pracy</label>
               <select id="sched-system" value={workSystem} onChange={(e) => setWorkSys(e.target.value as WorkSystem)} className={CONTROL}>
                 {(Object.keys(WORK_SYSTEM_LABELS) as WorkSystem[]).map((w) => <option key={w} value={w}>{WORK_SYSTEM_LABELS[w]}</option>)}
               </select>

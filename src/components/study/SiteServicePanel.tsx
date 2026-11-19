@@ -74,7 +74,7 @@ export function SiteServicePanel({ site }: { site: SiteInfo }) {
   return (
     <section aria-label="Serwis i gwarancja" data-testid="site-service" className={`${cardClass} space-y-2 p-3`}>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+        <h3 className="flex items-center gap-2 section-caps">
           <Wrench className="h-3.5 w-3.5" aria-hidden />Serwis i gwarancja
         </h3>
         {open.length > 0 && <span className="font-mono text-xs tabular-nums text-muted-foreground" data-testid="site-service-open">otwarte: {open.length}</span>}

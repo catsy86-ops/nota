@@ -42,7 +42,7 @@ export function WikiEmbed({ title, heading, embed, onWikiClick, knownTitles }: W
   }
   return (
     <figure data-embed="" className="my-2 rounded-field border border-border/60 bg-muted/20 px-3 py-2">
-      <figcaption className="mb-1 text-xs font-semibold text-muted-foreground">
+      <figcaption className="mb-1 section-caps">
         {heading ? `${note.title} › ${heading}` : note.title}
       </figcaption>
       <Suspense fallback={<p className="text-xs text-muted-foreground">Wczytywanie…</p>}>

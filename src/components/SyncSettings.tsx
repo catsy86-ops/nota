@@ -227,7 +227,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
       )}
 
       <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-3">
-        <h3 className="text-xs font-semibold text-muted-foreground">Urządzenia w grupie</h3>
+        <h3 className="section-caps">Urządzenia w grupie</h3>
         <V2OnlyNotices />
         {olderDevices(syncState.devices).length > 0 && (
           <p role="status" className="rounded-control border border-warning/50 bg-warning/10 px-3 py-2 text-xs text-foreground">
@@ -276,7 +276,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
 
       {syncState.code && (
         <div className="rounded-card border border-border/60 bg-muted/20 p-4 space-y-3 text-center">
-          <h3 className="text-xs font-semibold text-muted-foreground">Dodaj urządzenie</h3>
+          <h3 className="section-caps">Dodaj urządzenie</h3>
           <p className="ui-hint">
             Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
             {codeIsLong && " Oba urządzenia muszą mieć aktualną wersję aplikacji."}
@@ -363,7 +363,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
       )}
 
       <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-2">
-        <h3 className="text-xs font-semibold text-muted-foreground">Dołącz do istniejącej grupy</h3>
+        <h3 className="section-caps">Dołącz do istniejącej grupy</h3>
         <Suspense fallback={null}>
           {scanOpen && <QrScanDialog open={scanOpen} onOpenChange={setScanOpen} onCode={(c, raw) => { fillJoin(c, pairTextIsV3(raw)); toast.success("Kod odczytany — kliknij Dołącz"); }} />}
         </Suspense>

@@ -66,7 +66,7 @@ function CorrectionForm({ record, onClose }: { record: InvoiceRecord; onClose: (
       </DialogHeader>
 
       <fieldset className="space-y-2">
-        <legend className="text-xs font-semibold text-muted-foreground">Pozycje po korekcie ({inv.priceMode === "gross" ? "ceny brutto" : "ceny netto"})</legend>
+        <legend className="section-caps">Pozycje po korekcie ({inv.priceMode === "gross" ? "ceny brutto" : "ceny netto"})</legend>
         {lines.length === 0 && <p className="text-sm text-muted-foreground">Brak pozycji — korekta anuluje całą fakturę.</p>}
         <ul className="space-y-2">
           {rows.map(({ uid, line: l }, i) => (
@@ -101,7 +101,7 @@ function CorrectionForm({ record, onClose }: { record: InvoiceRecord; onClose: (
       </fieldset>
 
       <fieldset className="space-y-2">
-        <legend className="text-xs font-semibold text-muted-foreground">Powód i skutek</legend>
+        <legend className="section-caps">Powód i skutek</legend>
         <input aria-label="Przyczyna korekty" placeholder="Przyczyna korekty, np. rabat, błąd w cenie" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={256} className={fieldCls} />
         <label className="space-y-1 text-xs text-muted-foreground">Skutek w ewidencji VAT
           <select aria-label="Skutek korekty" value={type} onChange={(e) => setType(Number(e.target.value) as 1 | 2)} className={fieldCls}>

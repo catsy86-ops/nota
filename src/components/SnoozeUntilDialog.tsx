@@ -37,7 +37,7 @@ export function SnoozeUntilDialog({ open, onOpenChange, onPick }: SnoozeUntilDia
           <DialogDescription>Wpisz kiedy, np. „piątek 8:00”, „jutro 15”, „12.11 9:00”. Odłoży tylko to jedno wystąpienie.</DialogDescription>
         </DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); save(); }} className="space-y-2">
-          <label htmlFor={inputId} className="text-sm font-medium">Kiedy</label>
+          <label htmlFor={inputId} className="ui-label">Kiedy</label>
           <Input id={inputId} autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder="piątek 8:00" aria-invalid={text.trim() !== "" && !valid} />
           <p className="ui-hint min-h-4" role="status">
             {text.trim() === "" ? "" : valid && parsed ? `Ustawię na: ${formatReminderShort(parsed.getTime())}` : "Nie rozumiem tej daty albo jest w przeszłości."}
