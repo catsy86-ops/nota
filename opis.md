@@ -6567,7 +6567,7 @@ W0.2–W0.3: 6f7cc3a3, 2026-11-19.
 
 W1.1–W1.4: 974281cc, 2026-11-19.
 
-## Wygląd — skala ról tekstu, łamanie i 15 px na telefonie (W2.1, W2.2 częściowo, W2.4, WZ-1, 2026-11-19)
+## Wygląd — skala ról tekstu, łamanie i 15 px na telefonie (W2.1, W2.2, W2.4, W2.7, WZ-1, 2026-11-19)
 
 ### Co robi
 
@@ -6587,11 +6587,13 @@ W1.1–W1.4: 974281cc, 2026-11-19.
 ### Ograniczenia i pułapki
 
 - Sprawdzone w Chromium na 390 i 1280 px (Notatki, Dziś, Kalendarz, Grafik, Praca): brak przepełnienia poziomego. Zrzuty `@visual` i e2e nie odnowione — przesunięcia tekstu na telefonie są spodziewane.
-- Nie zrobione: przegląd pozostałych ekranów pod element główny (reszta W2.2; Długi, Grafik i Ćwiczenia nie mają jeszcze liczby głównej w roli), W2.3 (grubości), W2.5–W2.7. Dzielenie wyrazów (`hyphens: auto`) zależy od słownika przeglądarki — w Safari nie sprawdzone. Tabele i kod nie mają limitu 68ch.
+- Nie zrobione:  W2.3 (grubości), W2.5–W2.7. Dzielenie wyrazów (`hyphens: auto`) zależy od słownika przeglądarki — w Safari nie sprawdzone. Tabele i kod nie mają limitu 68ch.
 
 ### Testy
 
-- Vitest bez zmian (4169 zielone); strażnicy tokenów i kontrastu.
+- Vitest 4169 zielone; strażnicy tokenów i kontrastu.
+- `src/test/designTokens.test.ts` — reguła `sizeWeightPair` (W2.7): para `text-xs|sm` + `font-medium|semibold` w jednym `className`, próg 233 (stan 2026-11-19), może tylko maleć.
+- W2.2: Grafik (`ShiftSummary`, `Stat size="lg"`, 36 px) i Długi (`Stat` md, 20 px) już mają liczbę główną we wspólnym `ui/stat.tsx`; Długi celowo bez 28 px — dwie kwoty obok siebie nie mieszczą się na 390 px.
 
 ### Commit
 

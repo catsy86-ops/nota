@@ -48,6 +48,9 @@ const LIMITS = {
   // Zmienna `--radius-*` nie istnieje — promienie to `--r-control/field/card`.
   missingRadiusVar: { pattern: /var\(--radius-/g, max: 0, token: "var(--r-field) itd." },
   // Blady przycisk wygląda na zepsuty (nowy plan 2.4) — nieaktywny szarzeje kolorem.
+  // W2.7: para rozmiar + grubość składana ręcznie zamiast roli (`title-card`, `title-section`, `ui-meta`).
+  // Próg = stan z 2026-11-19; W2.3 i migracje działów go obniżają.
+  sizeWeightPair: { pattern: /className="(?=[^"]*(?<![\w-])text-(?:xs|sm)(?![\w-]))(?=[^"]*(?<![\w-])font-(?:medium|semibold)(?![\w-]))[^"]*"/g, max: 233, token: "title-card / title-section / ui-meta" },
   disabledOpacity: { pattern: /(?<![\w-])disabled:opacity-\d+/g, max: 30, token: "disabled:text-muted-foreground / Button" },
 } as const;
 
