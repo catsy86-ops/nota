@@ -1,0 +1,230 @@
+{
+  "date": "2026-11-19",
+  "files": {
+    "code": 1026,
+    "css": 36
+  },
+  "index.css linie": 1632,
+  "metrics": {
+    "tekst: text-xs": {
+      "hits": 730,
+      "files": 214
+    },
+    "tekst: text-sm": {
+      "hits": 753,
+      "files": 237
+    },
+    "tekst: text-base": {
+      "hits": 100,
+      "files": 71
+    },
+    "tekst: text-lg": {
+      "hits": 45,
+      "files": 44
+    },
+    "tekst: text-xl": {
+      "hits": 10,
+      "files": 10
+    },
+    "tekst: text-2xl+": {
+      "hits": 24,
+      "files": 17
+    },
+    "tekst: title-section": {
+      "hits": 5,
+      "files": 4
+    },
+    "tekst: title-page": {
+      "hits": 0,
+      "files": 0
+    },
+    "tekst: text-[Npx]": {
+      "hits": 0,
+      "files": 0
+    },
+    "grubość: font-medium": {
+      "hits": 326,
+      "files": 151
+    },
+    "grubość: font-semibold": {
+      "hits": 272,
+      "files": 130
+    },
+    "grubość: font-bold": {
+      "hits": 41,
+      "files": 30
+    },
+    "interlinia: leading-": {
+      "hits": 93,
+      "files": 56
+    },
+    "interlinia: tracking-": {
+      "hits": 21,
+      "files": 18
+    },
+    "łamanie: text-balance/pretty": {
+      "hits": 0,
+      "files": 0
+    },
+    "wyciszenie: opacity-NN": {
+      "hits": 131,
+      "files": 59
+    },
+    "wyciszenie: text-muted-foreground/NN": {
+      "hits": 10,
+      "files": 7
+    },
+    "karty: rounded-card border": {
+      "hits": 191,
+      "files": 115
+    },
+    "karty: <SectionCard": {
+      "hits": 10,
+      "files": 9
+    },
+    "karty: <Card": {
+      "hits": 7,
+      "files": 2
+    },
+    "cienie: shadow-elevation": {
+      "hits": 39,
+      "files": 36
+    },
+    "cienie: shadow-sm..2xl": {
+      "hits": 23,
+      "files": 18
+    },
+    "cienie: shadow-[": {
+      "hits": 7,
+      "files": 6
+    },
+    "kolor: hex w ts/tsx": {
+      "hits": 300,
+      "files": 32
+    },
+    "kolor: hsl( w CSS": {
+      "hits": 196,
+      "files": 12
+    },
+    "kolor: #hex w CSS": {
+      "hits": 102,
+      "files": 11
+    },
+    "kolor: dark:": {
+      "hits": 32,
+      "files": 14
+    },
+    "kolor: paleta Tailwinda": {
+      "hits": 4,
+      "files": 1
+    },
+    "ikony: h-3": {
+      "hits": 61,
+      "files": 33
+    },
+    "ikony: h-3.5": {
+      "hits": 213,
+      "files": 95
+    },
+    "ikony: h-4": {
+      "hits": 617,
+      "files": 183
+    },
+    "ikony: h-5": {
+      "hits": 75,
+      "files": 41
+    },
+    "ikony: h-6": {
+      "hits": 48,
+      "files": 23
+    },
+    "ikony: size-N": {
+      "hits": 117,
+      "files": 51
+    },
+    "ikony: strokeWidth": {
+      "hits": 55,
+      "files": 23
+    },
+    "wymiary: w/h-[N]": {
+      "hits": 155,
+      "files": 75
+    },
+    "warstwy: z-[": {
+      "hits": 1,
+      "files": 1
+    },
+    "warstwy: z-10..50": {
+      "hits": 0,
+      "files": 0
+    },
+    "stany: hover:": {
+      "hits": 508,
+      "files": 177
+    },
+    "stany: focus-visible:": {
+      "hits": 403,
+      "files": 90
+    },
+    "stany: disabled:": {
+      "hits": 81,
+      "files": 43
+    },
+    "stany: active:": {
+      "hits": 29,
+      "files": 23
+    },
+    "kontrolki: surowe <button": {
+      "hits": 492,
+      "files": 177
+    },
+    "kontrolki: <Button": {
+      "hits": 549,
+      "files": 151
+    },
+    "kontrolki: surowe pola": {
+      "hits": 260,
+      "files": 112
+    },
+    "css: !important": {
+      "hits": 34,
+      "files": 4
+    },
+    "css: @layer": {
+      "hits": 11,
+      "files": 2
+    },
+    "css: @container": {
+      "hits": 0,
+      "files": 0
+    },
+    "css: forced-colors": {
+      "hits": 2,
+      "files": 2
+    },
+    "css: prefers-contrast": {
+      "hits": 1,
+      "files": 1
+    },
+    "css: @media print": {
+      "hits": 1,
+      "files": 1
+    },
+    "dane: <svg": {
+      "hits": 21,
+      "files": 19
+    },
+    "dane: <img": {
+      "hits": 10,
+      "files": 10
+    },
+    "rozmycie: backdrop-blur": {
+      "hits": 13,
+      "files": 11
+    },
+    "gradienty: bg-gradient/linear-gradient": {
+      "hits": 174,
+      "files": 27
+    }
+  }
+}

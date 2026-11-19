@@ -1,6 +1,6 @@
 # Plan: warstwa graficzna i wizualna (2026-11-15)
 
-> **Status:** zapisany, realizacja nie zaczęta. Wykonawca: Sonnet (W1, W3–W5, W7–W9), Opus (W2, W6). Przed każdym etapem skill `frontend-design`, przy przeglądzie `refactoring-ui` i `ux-heuristics`.
+> **Status:** 2026-11-19 — W0.2 (`scripts/ui-metrics.mjs`, `docs/ui-metryki.json`) i W0.3 (`src/lib/skinContrastReport.test.ts`, `docs/kontrast-tokenow.md`; porażki: Zeszyt jasny `primary` < 3:1) zrobione; W0.1 (zrzuty) nie. Wykonawca: Sonnet (W1, W3–W5, W7–W9), Opus (W2, W6). Przed każdym etapem skill `frontend-design`, przy przeglądzie `refactoring-ui` i `ux-heuristics`.
 >
 > **Czego tu nie ma, bo jest gdzie indziej:** ruch i animacje — `plan-ruch-2026-11-15.md`; nawigacja mobilna i migracja surowych kontrolek — Etapy 4–5 w `plan-ui-spojnosc-2026-11-06.md` (ten plan je porządkuje i daje im miarę, nie powtarza); dostępność klawiatury i tryb „duże cele” — Q5 w `plan-qol-platforma-2026-11-15.md`. Rozmiaru `Button` na dotyku nie zmieniać (cofnięte 15.11, decyzja właściciela).
 

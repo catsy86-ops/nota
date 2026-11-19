@@ -6498,3 +6498,34 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** sekcja krytyczna to `navigator.locks` (`notatnik-faktura`) plus kolejka obietnic w module (gdy `locks` brak). Po `await` skrótu numer jest sprawdzany ponownie, a `add` i tak odmawia zajętego numeru. `deviceId` jest losowy, w localStorage `kaczy.ksef.deviceId.v1`, poza kopią.
 - **Ograniczenia:** faktury sprzed zmiany nie mają `deviceId` i nie wywołują ostrzeżenia. Nie zrobione z Z-2.4: limity 256/512 (F-6) i `qtyMilli × unitPrice ≤ MAX_SAFE_INTEGER`.
 - **Testy:** `src/lib/ksef/invoices.test.ts`.
+
+## Wygląd — baza porównawcza: metryki i kontrast tokenów (W0.2–W0.3 planu warstwy wizualnej, 2026-11-19)
+
+### Co robi
+
+- Dla użytkownika nic. Daje liczby, względem których każdy kolejny etap planu wyglądu podaje „przed i po”, i tabelę kontrastu wszystkich stylów.
+
+### Gdzie jest
+
+- `scripts/ui-metrics.mjs` — liczy w `src/` (bez testów) wzorce z §1 planu: role i rozmiary tekstu, grubości, wyciszanie przez `opacity`, ręczne karty, cienie, kolory poza tokenami, rozmiary ikon, wymiary arbitralne, stany, surowe kontrolki, cechy CSS. Zapis do `docs/ui-metryki.json`; `--check` tylko wypisuje.
+- `src/lib/skinContrastReport.test.ts` — kontrast elementów interfejsu (≥ 3:1): `primary` na tle i karcie, `ring` (fokus) na tle i karcie, `input`; plus pary tekstu dla tabeli. Z `UI_CONTRAST_REPORT=1` zapisuje `docs/kontrast-tokenow.md`.
+
+### Jak działa
+
+- Tokeny czytane z `src/index.css` i `src/styles/skins/*.css` tak samo jak w `skinContrast.test.ts` (ten dalej pilnuje progów tekstu, pól i akcentów — nie powtarzamy go).
+- Porażki są na liście `KNOWN`, która może tylko maleć: test czerwieni się przy nowej porażce i przy naprawionej, której nie skreślono.
+
+### Ograniczenia i pułapki
+
+- Znane porażki (zadania W6.1): Zeszyt jasny — `primary` na tle 2,65 i na karcie 2,75 (próg 3).
+- `--border` to `color-mix` z przezroczystością — bez przeglądarki nie da się go policzyć, więc nie ma go w tabeli.
+- Metryki to wyrażenia regularne, nie parser: liczą też wystąpienia w komentarzach i napisach. Porównywać tylko liczby z tego samego skryptu.
+- W0.1 (zrzuty 12 ekranów × 3 style × 2 szerokości z komentarzem) nie zrobione.
+
+### Testy
+
+- `src/lib/skinContrastReport.test.ts`.
+
+### Commit
+
+W0.2–W0.3, 2026-11-19 — commit po tym wpisie.
