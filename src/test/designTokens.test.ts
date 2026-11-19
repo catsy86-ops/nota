@@ -51,6 +51,9 @@ const LIMITS = {
   // W2.7: para rozmiar + grubość składana ręcznie zamiast roli (`title-card`, `title-section`, `ui-meta`).
   // Próg = stan z 2026-11-19 (233) po migracji etykiet na `ui-label` i nagłówków na `section-caps`; W2.3 i migracje działów go obniżają.
   sizeWeightPair: { pattern: /className="(?=[^"]*(?<![\w-])text-(?:xs|sm)(?![\w-]))(?=[^"]*(?<![\w-])font-(?:medium|semibold)(?![\w-]))[^"]*"/g, max: 168, token: "title-card / title-section / ui-meta" },
+  // W2.5: interlinia idzie z roli i rozmiaru. Zostają wyjątki: pigułki i znaczki (`leading-4/5/none`),
+  // tytuły display (`tight/snug`), czytana treść (`relaxed`). Próg = stan z 2026-11-19 po przeglądzie.
+  manualLeading: { pattern: /(?<![\w-])leading-(?:none|tight|snug|normal|relaxed|loose|\d+)(?![\w-])/g, max: 91, token: "rola tekstu (title-*, ui-*, text-sm)" },
   disabledOpacity: { pattern: /(?<![\w-])disabled:opacity-\d+/g, max: 30, token: "disabled:text-muted-foreground / Button" },
 } as const;
 
