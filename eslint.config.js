@@ -48,6 +48,7 @@ export default tseslint.config(
       "src/lib/yjsSync.ts",
       "src/lib/yjsSync.test.ts",
       "src/lib/deviceRegistry.test.ts",
+      "src/test/fixtures/docs/*.test.ts",
       "src/lib/imageSync.ts",
       "src/lib/imageSync.test.ts",
       "src/lib/shifts/yShifts.ts",

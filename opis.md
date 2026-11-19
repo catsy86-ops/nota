@@ -1123,7 +1123,37 @@ D1.2–D1.4, 2026-11-18 — commit po tym wpisie.
 
 ### Commit
 
-D4.1–D4.2: 069616d6, 2026-11-19; D4.3–D4.4: commit po tym wpisie.
+D4.1–D4.2: 069616d6, D4.3–D4.4: 851a4012, 2026-11-19.
+
+## Dane — wzorce dokumentu dla każdej wersji formatu (D3.1 planu migracji, 2026-11-19)
+
+### Co robi
+
+- Dla użytkownika nic. Chroni przed zmianą, po której bieżąca aplikacja przestałaby czytać dokument zapisany starszą wersją.
+
+### Gdzie jest
+
+- `src/test/fixtures/docs/<wersja>.update` — zakodowane stany Yjs (1, 2, 3) z danymi syntetycznymi: 6 notatek (przypięta, w podfolderze z etykietami zagnieżdżonymi, lista z wcięciem, zarchiwizowana, w koszu, z `[[link]]` i `^id`), 2 foldery, 3 etykiety.
+- `src/test/fixtures/docs/generate.test.ts` — generator (pomijany bez `GEN_DOC_FIXTURE=1`), tylko API `createYjsStore` dostępne od października.
+- `scripts/doc-fixture.ps1 <wersja> <commit>` — uruchamia generator na starym kodzie (worktree + junction do `node_modules`, usuwany bez kasowania celu). Wersja 1: `98706d2f^`, wersja 2: `ec8be170^`.
+- `src/test/fixtures/docs/fixtures.test.ts` — każdy wzorzec czytany bieżącym kodem.
+
+### Jak działa
+
+- Test sprawdza, że istnieje wzorzec dla każdej wersji od 1 do `SCHEMA_VERSION`, więc podniesienie `SCHEMA_VERSION` bez nowego wzorca czerwieni test. Nowy wzorzec: `GEN_DOC_FIXTURE=1 npx vitest run src/test/fixtures/docs/generate.test.ts`.
+- Generator ustawia stały `clientID`, więc wynik jest powtarzalny.
+
+### Ograniczenia i pułapki
+
+- Wzorce 1–3 są bajtowo identyczne: zwykłe notatki, foldery i etykiety nie zmieniły kształtu. Wersja 2 zmieniła tylko notatki prywatne (metadane w szyfrogramie), a wersja 3 — mapy Długów, Pracy i Ćwiczeń; generator ich nie obejmuje, bo ich API zmieniało się między wersjami. Do rozszerzenia przy D3.2–D3.4.
+
+### Testy
+
+- `src/test/fixtures/docs/fixtures.test.ts`.
+
+### Commit
+
+D3.1, 2026-11-19 — commit po tym wpisie.
 
 ## Synchronizacja — duże wiadomości WebRTC dzielone na ramki (D-U1, U-1, 2026-11-18)
 
