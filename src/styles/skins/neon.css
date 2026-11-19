@@ -33,10 +33,10 @@ html[data-skin="neon"] {
   --note-lavender: oklch(0.2519 0.0465 299.97);
   --note-rose: oklch(0.2568 0.0446 345.65);
 
-  --elevation-1: 0 1px 2px hsl(280 60% 2% / 0.6);
-  --elevation-2: 0 6px 16px -4px hsl(280 60% 2% / 0.7), 0 0 0 1px hsl(300 100% 80% / 0.05);
-  --elevation-3: 0 14px 36px -10px hsl(280 60% 2% / 0.8), 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent), 0 0 24px -6px color-mix(in srgb, var(--primary) 35%, transparent);
-  --elevation-up: 0 -8px 24px -12px hsl(280 60% 2% / 0.7);
+  --elevation-1: 0 1px 2px oklch(0.1035 0.0249 316.91 / 0.6);
+  --elevation-2: 0 6px 16px -4px oklch(0.1035 0.0249 316.91 / 0.7), 0 0 0 1px oklch(0.8218 0.1746 327.02 / 0.05);
+  --elevation-3: 0 14px 36px -10px oklch(0.1035 0.0249 316.91 / 0.8), 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent), 0 0 24px -6px color-mix(in srgb, var(--primary) 35%, transparent);
+  --elevation-up: 0 -8px 24px -12px oklch(0.1035 0.0249 316.91 / 0.7);
   --glow-primary: 0 0 0 1px color-mix(in srgb, var(--primary) 60%, transparent), 0 0 18px color-mix(in srgb, var(--primary) 55%, transparent), 0 0 42px -6px color-mix(in srgb, var(--primary) 50%, transparent);
 }
 
@@ -86,8 +86,8 @@ html[data-skin="neon"]:not(.dark) {
 /* Ceglana ściana w półmroku i dwie plamy światła z neonów nad nią. */
 html[data-skin="neon"] .paper-grid::before {
   background-image:
-    radial-gradient(60% 45% at 12% 0%, hsl(316 100% 60% / 0.16), transparent 70%),
-    radial-gradient(55% 40% at 92% 6%, hsl(186 100% 55% / 0.12), transparent 70%),
+    radial-gradient(60% 45% at 12% 0%, oklch(0.6887 0.2689 341.83 / 0.16), transparent 70%),
+    radial-gradient(55% 40% at 92% 6%, oklch(0.8525 0.1439 207.71 / 0.12), transparent 70%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='36'%3E%3Cg fill='none' stroke='%23d9a6ff' stroke-opacity='.07'%3E%3Cpath d='M0 .5h72M0 18.5h72M.5 0v18M36.5 18v18'/%3E%3C/g%3E%3C/svg%3E");
   background-size: 100% 100%, 100% 100%, 72px 36px;
   -webkit-mask-image: none;
@@ -97,7 +97,7 @@ html[data-skin="neon"] .paper-grid::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 80% at 50% 120%, hsl(282 60% 2% / 0.8), transparent 60%);
+  background: radial-gradient(120% 80% at 50% 120%, oklch(0.1040 0.0251 318.11 / 0.8), transparent 60%);
 }
 /* Tylko nagłówki widoków i okien: Unbounded jest bardzo szeroki i ucinałby tytuły kafli na telefonie. */
 html[data-skin="neon"] h1,
@@ -132,8 +132,8 @@ html[data-skin="neon"] .note-card:hover { border-color: color-mix(in srgb, var(-
 /* Jasny Neon (4.1): szyld za dnia. Bez ciemnej winiety, cegła rysowana ciemną fugą, nagłówek z lekką poświatą. */
 html[data-skin="neon"]:not(.dark) .paper-grid::before {
   background-image:
-    radial-gradient(60% 45% at 12% 0%, hsl(316 100% 60% / 0.1), transparent 70%),
-    radial-gradient(55% 40% at 92% 6%, hsl(186 100% 45% / 0.08), transparent 70%),
+    radial-gradient(60% 45% at 12% 0%, oklch(0.6887 0.2689 341.83 / 0.1), transparent 70%),
+    radial-gradient(55% 40% at 92% 6%, oklch(0.7809 0.1346 208.90 / 0.08), transparent 70%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='36'%3E%3Cg fill='none' stroke='%237a3d6b' stroke-opacity='.08'%3E%3Cpath d='M0 .5h72M0 18.5h72M.5 0v18M36.5 18v18'/%3E%3C/g%3E%3C/svg%3E");
 }
 html[data-skin="neon"]:not(.dark) .paper-grid::after { background: none; }

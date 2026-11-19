@@ -6722,3 +6722,34 @@ W1.5 — commit po tym wpisie (2026-11-19).
 ### Commit
 
 W1.6 — commit po tym wpisie (2026-11-19).
+
+## Wygląd — kolory CSS w OKLCH (W1.7, 2026-11-19)
+
+### Co robi
+
+- Wszystkie kolory w plikach CSS są zapisane w `oklch()`. Wcześniej było tam 110 `hsl()` i 100 wartości hex. Wartości przeliczyłem narzędziem, więc kolory się nie zmieniają.
+
+### Gdzie jest
+
+- `src/index.css`, `src/styles/skins/*.css` (14 plików, 210 zamian).
+- `src/test/designTokens.test.ts` — strażnik „W1.7”: zero `hsl(` i `#hex` w `src/**/*.css`, poza komentarzami i `url(…)`.
+- Usunięty `src/App.css`, nieużywaną pozostałość szablonu Vite.
+
+### Jak działa
+
+- Przeliczenie idzie z sRGB (hex, `hsl()` z alfą) przez OKLab do OKLCH (4 miejsca dla L i C, 2 dla H). Kolory w `url(…)` zostały, bo SVG w data URL nie musi rozumieć `oklch()`.
+- Bloki tokenów dodane w W1.5, W1.6 i W6.6 mają selektor `html`, nie `:root`. Testy kontrastu (`skinContrast*.test.ts`) czytają pierwszy blok z selektorem :root jako tokeny schematu jasnego. Nowy blok wcześniej w pliku zepsuł je po W6.6. Nie wpisuj tego selektora z klamrą nawet w komentarzu.
+
+### Ograniczenia i pułapki
+
+- Gradienty i przejścia między kolorami w `oklch()` interpolują w OKLab, a między kolorami legacy (hex, `hsl`) interpolowały w sRGB. Gradienty stylów mogą mieć nieco inny środek przejścia. Trzeba to obejrzeć na zrzutach.
+- `src/lib/skinContrast.test.ts` czyta tokeny marki (`--brand-*`) także w `oklch()`. `src/lib/oled.test.ts` oczekuje `oklch(0.0000 0.0000 0.00)` zamiast `#000`.
+- Hex w plikach `.ts` i `.tsx` to W1.8.
+
+### Testy
+
+- `src/test/designTokens.test.ts`, `src/lib/skinContrast.test.ts`, `src/lib/skinContrastReport.test.ts`, `src/lib/oled.test.ts`. Pełny Vitest: 4179 przeszło, 1 (OLED) poprawiony.
+
+### Commit
+
+W1.7 — commit po tym wpisie (2026-11-19).

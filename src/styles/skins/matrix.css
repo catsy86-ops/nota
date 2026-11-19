@@ -34,11 +34,11 @@ html[data-skin="matrix"] {
   --note-lavender: oklch(0.1896 0.0226 299.53);
   --note-rose: oklch(0.1860 0.0188 347.63);
 
-  --elevation-1: 0 1px 2px hsl(120 100% 2% / 0.6), inset 0 1px 0 hsl(125 100% 60% / 0.06);
-  --elevation-2: 0 8px 20px -6px hsl(120 100% 2% / 0.7), inset 0 1px 0 hsl(125 100% 60% / 0.08);
-  --elevation-3: 0 18px 40px -12px hsl(120 100% 2% / 0.8), 0 0 30px -10px hsl(125 100% 55% / 0.35), inset 0 1px 0 hsl(125 100% 60% / 0.1);
-  --elevation-up: 0 -8px 24px -12px hsl(120 100% 2% / 0.7);
-  --glow-primary: 0 10px 30px -8px hsl(125 100% 55% / 0.6);
+  --elevation-1: 0 1px 2px oklch(0.1263 0.0430 142.50 / 0.6), inset 0 1px 0 oklch(0.8726 0.2708 143.64 / 0.06);
+  --elevation-2: 0 8px 20px -6px oklch(0.1263 0.0430 142.50 / 0.7), inset 0 1px 0 oklch(0.8726 0.2708 143.64 / 0.08);
+  --elevation-3: 0 18px 40px -12px oklch(0.1263 0.0430 142.50 / 0.8), 0 0 30px -10px oklch(0.8686 0.2845 143.15 / 0.35), inset 0 1px 0 oklch(0.8726 0.2708 143.64 / 0.1);
+  --elevation-up: 0 -8px 24px -12px oklch(0.1263 0.0430 142.50 / 0.7);
+  --glow-primary: 0 10px 30px -8px oklch(0.8686 0.2845 143.15 / 0.6);
 }
 
 /* Drugi schemat (plan motywów 4.1) — jasny. Wydruk z drukarki igłowej: papier w zielone pasy z perforacją, czarny tusz.
@@ -90,23 +90,23 @@ html[data-skin="matrix"] .paper-grid::before { display: none; }
    a za środkiem ekranu (pusty stan, tekst) leży ciemna winieta, żeby znaki nie mieszały się z tekstem. */
 html[data-skin="matrix"] .paper-grid > canvas {
   opacity: 0.6;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 110px, #000 260px);
-  mask-image: linear-gradient(to bottom, transparent 0, transparent 110px, #000 260px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 110px, oklch(0.0000 0.0000 0.00) 260px);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent 110px, oklch(0.0000 0.0000 0.00) 260px);
 }
 html[data-skin="matrix"] .paper-grid::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(40% 36% at 50% 50%, hsl(125 90% 3% / 0.9), hsl(125 90% 3% / 0.45) 60%, transparent 100%);
+  background: radial-gradient(40% 36% at 50% 50%, oklch(0.1458 0.0413 145.76 / 0.9), oklch(0.1458 0.0413 145.76 / 0.45) 60%, transparent 100%);
 }
 html[data-skin="matrix"] h1,
 html[data-skin="matrix"] h2 {
   font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
   letter-spacing: -0.02em;
-  text-shadow: 0 0 12px hsl(125 100% 55% / 0.35);
+  text-shadow: 0 0 12px oklch(0.8686 0.2845 143.15 / 0.35);
 }
-html[data-skin="matrix"] .notki-logo { filter: drop-shadow(0 0 12px hsl(125 100% 55% / 0.6)); }
+html[data-skin="matrix"] .notki-logo { filter: drop-shadow(0 0 12px oklch(0.8686 0.2845 143.15 / 0.6)); }
 /* Karta trochę przezroczysta na komputerze: deszcz prześwituje, tekst czyta się na ciemnym tle. */
 @media (pointer: fine) {
   html[data-skin="matrix"] .note-card[data-note-color="default"] {
@@ -119,9 +119,9 @@ html[data-skin="matrix"] .notki-logo { filter: drop-shadow(0 0 12px hsl(125 100%
 html[data-skin="matrix"]:not(.dark) .paper-grid::before {
   display: block;
   background-image:
-    radial-gradient(circle at 8px 12px, hsl(140 12% 82%) 0 3.5px, transparent 4px),
-    radial-gradient(circle at calc(100% - 8px) 12px, hsl(140 12% 82%) 0 3.5px, transparent 4px),
-    repeating-linear-gradient(transparent 0 24px, hsl(130 45% 86% / 0.4) 24px 48px);
+    radial-gradient(circle at 8px 12px, oklch(0.8674 0.0155 156.90) 0 3.5px, transparent 4px),
+    radial-gradient(circle at calc(100% - 8px) 12px, oklch(0.8674 0.0155 156.90) 0 3.5px, transparent 4px),
+    repeating-linear-gradient(transparent 0 24px, oklch(0.9107 0.0494 150.05 / 0.4) 24px 48px);
   background-size: 100% 24px, 100% 24px, auto;
   background-repeat: repeat-y, repeat-y, repeat;
   -webkit-mask-image: none;
@@ -130,7 +130,7 @@ html[data-skin="matrix"]:not(.dark) .paper-grid::before {
 html[data-skin="matrix"]:not(.dark) .paper-grid::after { background: none; }
 html[data-skin="matrix"]:not(.dark) h1,
 html[data-skin="matrix"]:not(.dark) h2 { text-shadow: none; }
-html[data-skin="matrix"]:not(.dark) .notki-logo { filter: drop-shadow(0 0 6px hsl(140 60% 35% / 0.35)); }
+html[data-skin="matrix"]:not(.dark) .notki-logo { filter: drop-shadow(0 0 6px oklch(0.5733 0.1430 149.84 / 0.35)); }
 
 /* Okna Matrycy (plan motywów 2.3): zielona poświata wokół okna, tytuł w monospace. */
 html[data-skin="matrix"] { --overlay-border: color-mix(in srgb, var(--primary) 50%, transparent); --overlay-shadow: 0 0 18px color-mix(in srgb, var(--primary) 30%, transparent); --overlay-title-font: 'JetBrains Mono Variable', ui-monospace, monospace; }

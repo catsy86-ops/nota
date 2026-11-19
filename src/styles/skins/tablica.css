@@ -113,8 +113,8 @@ html[data-skin="tablica"] .paper-grid::before {
 html[data-skin="tablica"].dark .paper-grid::before {
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='260'%3E%3Cg fill='none' stroke='%23f2f0e6' stroke-opacity='.06' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M30 60c20-18 40 18 60 0s40-18 60 0 40 18 60 0'/%3E%3Cpath d='M250 40c10 30 30 30 40 0m10 0c10 30 30 30 40 0'/%3E%3Cpath d='M60 180h120M70 196h80'/%3E%3Cpath d='M280 170c-20 10-20 40 10 40s40-30 10-40-40 20-10 30'/%3E%3C/g%3E%3C/svg%3E"),
-    linear-gradient(100deg, transparent 20%, hsl(60 30% 95% / 0.035) 28%, transparent 40%),
-    radial-gradient(40% 25% at 70% 30%, hsl(60 30% 95% / 0.04), transparent 70%);
+    linear-gradient(100deg, transparent 20%, oklch(0.9713 0.0101 106.59 / 0.035) 28%, transparent 40%),
+    radial-gradient(40% 25% at 70% 30%, oklch(0.9713 0.0101 106.59 / 0.04), transparent 70%);
   background-size: 420px 260px, 100% 100%, 100% 100%;
 }
 html[data-skin="tablica"] .paper-grid::after { content: none; }
@@ -122,7 +122,7 @@ html[data-skin="tablica"] .paper-grid::after { content: none; }
 /* Aluminiowa rama przy pasku bocznym. */
 html[data-skin="tablica"] .sidebar-gradient {
   border-right-color: transparent !important;
-  box-shadow: inset -6px 0 0 -1px hsl(210 6% 70%), inset -3px 0 0 -1px hsl(210 10% 90%);
+  box-shadow: inset -6px 0 0 -1px oklch(0.7629 0.0083 247.94), inset -3px 0 0 -1px oklch(0.9222 0.0044 247.87);
 }
 
 /* Magnes trzyma kafel notatki: kółko przy górnej krawędzi w kolorze markera. */
@@ -137,7 +137,7 @@ html[data-skin="tablica"] .note-card::after {
   border-radius: 50%;
   pointer-events: none;
   background: radial-gradient(circle at 35% 30%, color-mix(in srgb, white 55%, var(--primary)), var(--primary) 60%);
-  box-shadow: 0 2px 3px hsl(220 20% 10% / 0.3);
+  box-shadow: 0 2px 3px oklch(0.2077 0.0145 264.19 / 0.3);
 }
 
 html[data-skin="tablica"] h1,
@@ -197,7 +197,7 @@ html[data-sig="view"][data-skin="tablica"] .sig-layer::before {
 .skin-thumb[data-thumb="tablica"]::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='70'%3E%3Cg fill='none' stroke='%231f4fbf' stroke-opacity='.5' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M70 18c6-8 12 8 18 0s12-8 18 0'/%3E%3C/g%3E%3Cpath d='M76 30h28' stroke='%23d32f2f' stroke-opacity='.5' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
   background-size: 100% 100%;
-  box-shadow: inset 0 0 0 3px #c8ccd2;
+  box-shadow: inset 0 0 0 3px oklch(0.8439 0.0094 258.34);
 }
 
 /* Okna Tablicy (plan motywów 2.3): zaokrąglone jak kreda, krawędź w odcieniu drewnianej ramy. */

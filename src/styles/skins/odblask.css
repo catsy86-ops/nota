@@ -121,7 +121,7 @@ html[data-skin="odblask"] .notki-logo { filter: none; }
 
 /* Miniatura w galerii. */
 .skin-thumb[data-thumb="odblask"]::before {
-  background-image: repeating-linear-gradient(-45deg, #161616 0 6px, #e1f23a 6px 12px);
+  background-image: repeating-linear-gradient(-45deg, oklch(0.2002 0.0000 0.00) 0 6px, oklch(0.9185 0.1927 114.99) 6px 12px);
   background-size: 100% 6px;
   background-repeat: no-repeat;
 }

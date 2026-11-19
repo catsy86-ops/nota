@@ -71,6 +71,24 @@ describe("W6.3 — `dark:` poza components/ui", () => {
   });
 });
 
+// W1.7: kolory w CSS tylko w OKLCH (przeliczone narzędziem 2026-11-19). Komentarze i `url(…)` (SVG w data URL) się nie liczą.
+function cssFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) return cssFiles(path);
+    return name.endsWith(".css") ? [path] : [];
+  });
+}
+describe("W1.7 — kolory w CSS w OKLCH", () => {
+  it("bez hsl() i #hex poza komentarzami i url()", () => {
+    const hits = cssFiles(SRC).flatMap((path) => {
+      const text = readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/url\([^)]*\)/g, "");
+      return (text.match(/hsla?\(|#[0-9a-fA-F]{3,8}\b/g) ?? []).map((m) => `${path}: ${m}`);
+    });
+    expect(hits).toEqual([]);
+  });
+});
+
 describe("tokeny projektowe — surowe klasy nie przybywają", () => {
   for (const [name, { pattern, max, token }] of Object.entries(LIMITS)) {
     it(`${name}: co najwyżej ${max} wystąpień (zamiast tego: ${token})`, () => {

@@ -49,16 +49,17 @@
     interpolate-size: allow-keywords;
   }
 
-  /* W1.5: odstępy semantyczne — aliasy skali, nie nowa skala. Liczone od `--spacing`, więc idą za gęstością
+  /* Selektor `html`, nie `:root`: testy kontrastu czytają pierwszy blok z selektorem :root jako tokeny schematu jasnego.
+     W1.5: odstępy semantyczne — aliasy skali, nie nowa skala. Liczone od `--spacing`, więc idą za gęstością
      (`html[data-ui-density]`). Tailwind: `p-card`, `px-page`, `gap-stack`, `py-row`. */
-  :root {
+  html {
     --space-page: calc(var(--spacing) * 4);
     --space-card: calc(var(--spacing) * 4);
     --space-stack: calc(var(--spacing) * 8);
     --space-row: calc(var(--spacing) * 2);
   }
   @media (min-width: 640px) {
-    :root {
+    html {
       --space-page: calc(var(--spacing) * 6);
       --space-card: calc(var(--spacing) * 5);
       --space-stack: calc(var(--spacing) * 10);
@@ -68,7 +69,7 @@
   /* W1.6: paleta danych. Wykresy mają dziś po jednej serii (dwie w nadgodzinach roku), więc dwie barwy serii;
      kolejne dopisywać w stałej kolejności i sprawdzać walidatorem CVD (skill dataviz). Siatka i osie wycofane,
      podpisy w tokenie tekstu, nie w kolorze serii. */
-  :root {
+  html {
     --chart-1: var(--primary);
     --chart-2: var(--accent);
     --chart-grid: var(--border);
@@ -79,7 +80,7 @@
 
   /* W6.6: natywne kontrolki (checkbox, radio, suwak, postęp) i zaznaczenie tekstu w akcencie stylu.
      `color-scheme` i `theme-color` ustawiają `prepaint.js` i `useTheme` przy każdej zmianie stylu. */
-  :root {
+  html {
     accent-color: var(--primary);
   }
   ::selection {
@@ -128,12 +129,12 @@
     background-position: -1px -1px;
     -webkit-mask-image: radial-gradient(
       140% 110% at 50% 0%,
-      #000 45%,
+      oklch(0.0000 0.0000 0.00) 45%,
       transparent 100%
     );
     mask-image: radial-gradient(
       140% 110% at 50% 0%,
-      #000 45%,
+      oklch(0.0000 0.0000 0.00) 45%,
       transparent 100%
     );
   }
@@ -300,7 +301,7 @@ html[data-skin="zeszyt"] .app-header {
   background-image: linear-gradient(
     135deg,
     var(--primary),
-    hsl(28 85% 38%)
+    oklch(0.5678 0.1381 53.47)
   );
 }
 
@@ -813,16 +814,16 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   }
   /* Maska tylko przy rzeczywistym ucięciu — `data-clipped` ustawia `src/lib/clipObserver.ts`. */
   .tile-fade[data-clipped] {
-    -webkit-mask-image: linear-gradient(to bottom, #000 4.5em, transparent 6em);
-    mask-image: linear-gradient(to bottom, #000 4.5em, transparent 6em);
+    -webkit-mask-image: linear-gradient(to bottom, oklch(0.0000 0.0000 0.00) 4.5em, transparent 6em);
+    mask-image: linear-gradient(to bottom, oklch(0.0000 0.0000 0.00) 4.5em, transparent 6em);
   }
   @media (max-width: 639.98px) {
     .tile-fade {
       max-height: 4.5em;
     }
     .tile-fade[data-clipped] {
-      -webkit-mask-image: linear-gradient(to bottom, #000 3em, transparent 4.5em);
-      mask-image: linear-gradient(to bottom, #000 3em, transparent 4.5em);
+      -webkit-mask-image: linear-gradient(to bottom, oklch(0.0000 0.0000 0.00) 3em, transparent 4.5em);
+      mask-image: linear-gradient(to bottom, oklch(0.0000 0.0000 0.00) 3em, transparent 4.5em);
     }
   }
   .section-label {
@@ -1045,8 +1046,8 @@ html[data-motion="reduced"] .fab-ring[data-pressing="true"] { stroke-dashoffset:
     background: inherit;
     /* Górne 8 px paska wtapia się w kartę zamiast twardej kreski cienia. Ta przezroczysta
        część nie łapie kliknięć — linki zwrotne tuż nad stopką zostają klikalne. */
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 0.5rem);
-    mask-image: linear-gradient(to bottom, transparent, #000 0.5rem);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, oklch(0.0000 0.0000 0.00) 0.5rem);
+    mask-image: linear-gradient(to bottom, transparent, oklch(0.0000 0.0000 0.00) 0.5rem);
     pointer-events: none;
   }
   .card-actions:not([data-open]):not([data-editing]) :is(button, [role="button"], a) { pointer-events: auto; }
@@ -1092,8 +1093,8 @@ html[data-motion="reduced"] .fab-ring[data-pressing="true"] { stroke-dashoffset:
   background: var(--background);
   border-radius: 0.75rem 0.75rem 0 0;
   --tooth: 0.625rem;
-  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--tooth) 100%;
-  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--tooth) 100%;
+  -webkit-mask: conic-gradient(from -45deg at bottom, oklch(0.0000 0.0000 0.00 / 0), oklch(0.0000 0.0000 0.00) 1deg 89deg, oklch(0.0000 0.0000 0.00 / 0) 90deg) 50% / var(--tooth) 100%;
+  mask: conic-gradient(from -45deg at bottom, oklch(0.0000 0.0000 0.00 / 0), oklch(0.0000 0.0000 0.00) 1deg 89deg, oklch(0.0000 0.0000 0.00 / 0) 90deg) 50% / var(--tooth) 100%;
 }
 .dark .receipt { background: color-mix(in srgb, var(--muted) 60%, transparent); }
 
@@ -1272,10 +1273,10 @@ html[data-motion="reduced"] .n-mark-dot { animation: none; opacity: 0; }
 
 /* ── Logo „notki” (NotkiLogo.tsx, plan motywów 1.6): gradient marki z tokenów, każdy styl przestawia swój ── */
 :root {
-  --brand-from: #ffc247;
-  --brand-via: #ff8a40;
-  --brand-to: #ec5562;
-  --brand-ink: #111;
+  --brand-from: oklch(0.8487 0.1508 81.27);
+  --brand-via: oklch(0.7502 0.1657 49.86);
+  --brand-to: oklch(0.6546 0.1858 18.93);
+  --brand-ink: oklch(0.1776 0.0000 0.00);
 }
 
 /* ── Szerokości strony (nowy plan 2026-11-05, 1.2): trzy kolumny, każda przy lewej krawędzi główki ──
@@ -1292,20 +1293,20 @@ html[data-motion="reduced"] .n-mark-dot { animation: none; opacity: 0; }
   color: var(--brand-ink);
   background-color: var(--brand-via);
   background-image: linear-gradient(155deg,
-    color-mix(in srgb, var(--brand-via), #000 var(--fab-shade, 0%)),
-    color-mix(in srgb, var(--brand-to), #000 var(--fab-shade, 0%)));
+    color-mix(in srgb, var(--brand-via), oklch(0.0000 0.0000 0.00) var(--fab-shade, 0%)),
+    color-mix(in srgb, var(--brand-to), oklch(0.0000 0.0000 0.00) var(--fab-shade, 0%)));
 }
-html[data-skin="plan"] { --brand-from: #5bc8f5; --brand-via: #2f8fd8; --brand-to: #1d5fa8; --brand-ink: #fff; }
-html[data-skin="neon"] { --brand-from: #ff47d1; --brand-via: #c77dff; --brand-to: #47e6ff; --brand-ink: #111; }
-html[data-skin="zorza"] { --brand-from: #3cf5a6; --brand-via: #5fd0ff; --brand-to: #b58cff; --brand-ink: #111; }
-html[data-skin="miedz"] { --brand-from: #e9a06a; --brand-via: #c8642e; --brand-to: #7a3418; --brand-ink: #fff; }
-html[data-skin="matrix"] { --brand-from: #7dff9a; --brand-via: #00ff41; --brand-to: #00b82e; --brand-ink: #111; }
-html[data-skin="hydraulika"] { --brand-from: #e8a46a; --brand-via: #d08a4e; --brand-to: #8a4a1e; --brand-ink: #fff; --fab-shade: 8%; }
-html[data-skin="odblask"] { --brand-from: #1c1c1c; --brand-via: #161616; --brand-to: #000; --brand-ink: #e1f23a; }
-html[data-skin="odblask"].dark { --brand-from: #f2ff5c; --brand-via: #e1f23a; --brand-to: #c9dc2a; --brand-ink: #111; }
-html[data-skin="kafle"] { --brand-from: #4f7fe0; --brand-via: #2448b8; --brand-to: #1b3a8a; --brand-ink: #fff; }
-html[data-skin="tablica"] { --brand-from: #3d6150; --brand-via: #2f4a3c; --brand-to: #223a2e; --brand-ink: #fff; }
-html[data-skin="tablica"].dark { --brand-from: #f2f0e6; --brand-via: #d9e6dc; --brand-to: #bfd3c5; --brand-ink: #111; }
+html[data-skin="plan"] { --brand-from: oklch(0.7868 0.1179 228.25); --brand-via: oklch(0.6295 0.1403 246.05); --brand-to: oklch(0.4846 0.1338 254.19); --brand-ink: oklch(1.0000 0.0000 0.00); }
+html[data-skin="neon"] { --brand-from: oklch(0.7061 0.2556 339.95); --brand-via: oklch(0.7197 0.1930 308.60); --brand-to: oklch(0.8541 0.1318 210.38); --brand-ink: oklch(0.1776 0.0000 0.00); }
+html[data-skin="zorza"] { --brand-from: oklch(0.8620 0.1823 159.40); --brand-via: oklch(0.8104 0.1216 228.43); --brand-to: oklch(0.7258 0.1656 298.65); --brand-ink: oklch(0.1776 0.0000 0.00); }
+html[data-skin="miedz"] { --brand-from: oklch(0.7657 0.1117 56.65); --brand-via: oklch(0.6135 0.1437 46.29); --brand-to: oklch(0.4162 0.1058 40.94); --brand-ink: oklch(1.0000 0.0000 0.00); }
+html[data-skin="matrix"] { --brand-from: oklch(0.9018 0.1802 148.94); --brand-via: oklch(0.8686 0.2776 144.47); --brand-to: oklch(0.6799 0.2162 144.62); --brand-ink: oklch(0.1776 0.0000 0.00); }
+html[data-skin="hydraulika"] { --brand-from: oklch(0.7719 0.1097 60.58); --brand-via: oklch(0.6927 0.1146 59.77); --brand-to: oklch(0.4790 0.1035 51.79); --brand-ink: oklch(1.0000 0.0000 0.00); --fab-shade: 8%; }
+html[data-skin="odblask"] { --brand-from: oklch(0.2264 0.0000 0.00); --brand-via: oklch(0.2002 0.0000 0.00); --brand-to: oklch(0.0000 0.0000 0.00); --brand-ink: oklch(0.9185 0.1927 114.99); }
+html[data-skin="odblask"].dark { --brand-from: oklch(0.9613 0.1814 113.68); --brand-via: oklch(0.9185 0.1927 114.99); --brand-to: oklch(0.8517 0.1848 116.06); --brand-ink: oklch(0.1776 0.0000 0.00); }
+html[data-skin="kafle"] { --brand-from: oklch(0.6104 0.1563 262.81); --brand-via: oklch(0.4501 0.1817 265.63); --brand-to: oklch(0.3778 0.1386 264.54); --brand-ink: oklch(1.0000 0.0000 0.00); }
+html[data-skin="tablica"] { --brand-from: oklch(0.4598 0.0502 163.18); --brand-via: oklch(0.3827 0.0408 161.05); --brand-to: oklch(0.3245 0.0371 161.64); --brand-ink: oklch(1.0000 0.0000 0.00); }
+html[data-skin="tablica"].dark { --brand-from: oklch(0.9539 0.0134 97.44); --brand-via: oklch(0.9123 0.0193 152.80); --brand-to: oklch(0.8478 0.0289 155.21); --brand-ink: oklch(0.1776 0.0000 0.00); }
 
 /* ── Logo „G” (NotkiLogo.tsx) ───────────────────────────────────────── */
 .notki-logo {
@@ -1471,9 +1472,9 @@ html[data-motion="reduced"] .entry-stamp[data-fresh] { animation: none; }
 @media print {
   html.printing-report body > *:not(#report-print) { display: none !important; }
   html.printing-report #report-print { display: block; }
-  html.printing-report body { background: #fff; }
+  html.printing-report body { background: oklch(1.0000 0.0000 0.00); }
   /* Ciemny motyw nie trafia na papier. */
-  html.printing-report .report-paper, html.printing-report .report-paper * { background: transparent !important; color: #000 !important; border-color: #999 !important; }
+  html.printing-report .report-paper, html.printing-report .report-paper * { background: transparent !important; color: oklch(0.0000 0.0000 0.00) !important; border-color: oklch(0.6830 0.0000 0.00) !important; }
   @page { margin: 14mm; }
 }
 
@@ -1568,9 +1569,9 @@ html[data-motion="reduced"]::view-transition-group(day-active) { animation-durat
     color-mix(in srgb, var(--primary) 60%, transparent) 300deg,
     transparent 360deg
   );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask: linear-gradient(oklch(0.0000 0.0000 0.00) 0 0) content-box, linear-gradient(oklch(0.0000 0.0000 0.00) 0 0);
   -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  mask: linear-gradient(oklch(0.0000 0.0000 0.00) 0 0) content-box exclude, linear-gradient(oklch(0.0000 0.0000 0.00) 0 0);
   opacity: 0;
   transition: opacity var(--dur-base, 200ms) var(--ease-out, ease-out);
 }
@@ -1678,7 +1679,7 @@ html[data-motion='reduced'] .section-title::after { animation: none; transform: 
 
 /* Czarne tło OLED (plan motywów 3.3): tylko w ciemnym schemacie. Specyficzność wyższa niż tokeny stylów
    (`html[data-skin].dark`), więc działa w każdym stylu; karty zostają rozjaśnione tokenami stylu. */
-html[data-oled="on"][data-skin].dark { --background: #000; }
+html[data-oled="on"][data-skin].dark { --background: oklch(0.0000 0.0000 0.00); }
 
 /* Podkreślenia działów (plan motywów 3.4): subtelne domyślnie, wyraźne po przełączeniu w Wyglądzie. */
 html:not([data-sections]) .section-title::after { height: 2px; opacity: 0.6; }

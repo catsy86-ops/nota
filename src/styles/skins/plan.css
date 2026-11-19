@@ -39,10 +39,10 @@ html[data-skin="plan"] {
   --note-lavender: oklch(0.3495 0.0638 286.41);
   --note-rose: oklch(0.3627 0.0458 352.99);
 
-  --elevation-1: 0 0 0 1px hsl(205 80% 85% / 0.06), 0 2px 6px -2px hsl(214 80% 5% / 0.5);
-  --elevation-2: 0 0 0 1px hsl(205 80% 85% / 0.08), 0 8px 18px -6px hsl(214 80% 5% / 0.6);
-  --elevation-3: 0 0 0 1px hsl(205 80% 85% / 0.12), 0 16px 34px -10px hsl(214 80% 4% / 0.7);
-  --elevation-up: 0 -8px 24px -12px hsl(214 80% 4% / 0.6);
+  --elevation-1: 0 0 0 1px oklch(0.8827 0.0516 239.26 / 0.06), 0 2px 6px -2px oklch(0.1481 0.0304 250.16 / 0.5);
+  --elevation-2: 0 0 0 1px oklch(0.8827 0.0516 239.26 / 0.08), 0 8px 18px -6px oklch(0.1481 0.0304 250.16 / 0.6);
+  --elevation-3: 0 0 0 1px oklch(0.8827 0.0516 239.26 / 0.12), 0 16px 34px -10px oklch(0.1363 0.0259 247.19 / 0.7);
+  --elevation-up: 0 -8px 24px -12px oklch(0.1363 0.0259 247.19 / 0.6);
   --glow-primary: 0 8px 26px -8px color-mix(in srgb, var(--primary) 55%, transparent);
 }
 
@@ -99,8 +99,8 @@ html[data-skin="plan"] .paper-grid::before {
     linear-gradient(color-mix(in srgb, var(--grid) 6%, transparent) 1px, transparent 1px),
     linear-gradient(90deg, color-mix(in srgb, var(--grid) 6%, transparent) 1px, transparent 1px);
   background-size: 60px 60px, 60px 60px, 12px 12px, 12px 12px;
-  -webkit-mask-image: radial-gradient(130% 100% at 50% 30%, #000 50%, rgb(0 0 0 / 0.35) 100%);
-  mask-image: radial-gradient(130% 100% at 50% 30%, #000 50%, rgb(0 0 0 / 0.35) 100%);
+  -webkit-mask-image: radial-gradient(130% 100% at 50% 30%, oklch(0.0000 0.0000 0.00) 50%, rgb(0 0 0 / 0.35) 100%);
+  mask-image: radial-gradient(130% 100% at 50% 30%, oklch(0.0000 0.0000 0.00) 50%, rgb(0 0 0 / 0.35) 100%);
 }
 html[data-skin="plan"] .notki-logo { filter: none; }
 html[data-skin="plan"] h1,

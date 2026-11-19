@@ -162,7 +162,9 @@ describe("Miedź: gradient przycisku głównego (plan motywów 2026-10-30, 0.1)"
 });
 
 describe("przycisk „+” w gradiencie marki (plan motywów 1.6): ikona ≥3:1 na obu końcach", () => {
+  // W1.7: tokeny marki są w `oklch()`; hex zostaje dla zgodności ze starszym zapisem.
   const hex = (h: string): [number, number, number] => {
+    if (h.startsWith("oklch")) return oklchToRgb(parseOklch(h)!);
     const v = h.replace("#", "");
     const full = v.length === 3 ? v.split("").map((c) => c + c).join("") : v;
     return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255) as [number, number, number];
@@ -173,7 +175,7 @@ describe("przycisk „+” w gradiencie marki (plan motywów 1.6): ikona ≥3:1 
     const read = (selector: string) => {
       const re = new RegExp(`(?:^|\\n)${selector.replace(/[[\]().:"]/g, "\\$&")} \\{([^}]*)\\}`);
       const m = re.exec(index);
-      if (m) for (const t of m[1]!.matchAll(/--(brand-\w+|fab-shade):\s*(#[0-9a-f]{3,6}|\d+%)/gi)) out[t[1]!] = t[2]!;
+      if (m) for (const t of m[1]!.matchAll(/--(brand-\w+|fab-shade):\s*(#[0-9a-f]{3,6}|oklch\([^)]*\)|\d+%)/gi)) out[t[1]!] = t[2]!;
     };
     read(":root");
     if (skin !== "zeszyt") read(`html[data-skin="${skin}"]`);

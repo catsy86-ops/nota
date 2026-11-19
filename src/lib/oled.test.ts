@@ -19,6 +19,6 @@ describe("czarne tło OLED (plan motywów 3.3)", () => {
 
   it("klucz jest w kodzie wyglądu, a reguła CSS działa tylko w ciemnym schemacie", () => {
     expect(APPEARANCE_KEYS).toContain("kaczy.oled.v1");
-    expect(css).toContain('html[data-oled="on"][data-skin].dark { --background: #000; }');
+    expect(css).toContain('html[data-oled="on"][data-skin].dark { --background: oklch(0.0000 0.0000 0.00); }');
   });
 });

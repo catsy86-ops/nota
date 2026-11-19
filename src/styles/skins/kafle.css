@@ -90,7 +90,7 @@ html[data-skin="kafle"] .paper-grid::before {
   background-image:
     linear-gradient(var(--grid) 3px, transparent 3px),
     linear-gradient(90deg, var(--grid) 3px, transparent 3px),
-    radial-gradient(50% 45% at 30% 25%, hsl(0 0% 100% / 0.75), transparent 70%);
+    radial-gradient(50% 45% at 30% 25%, oklch(1.0000 0.0000 0.00 / 0.75), transparent 70%);
   background-size: 64px 64px;
   background-position: -2px -2px, -2px -2px, 0 0;
 }
@@ -98,7 +98,7 @@ html[data-skin="kafle"].dark .paper-grid::before {
   background-image:
     linear-gradient(var(--grid) 3px, transparent 3px),
     linear-gradient(90deg, var(--grid) 3px, transparent 3px),
-    radial-gradient(50% 45% at 30% 25%, hsl(0 0% 100% / 0.04), transparent 70%);
+    radial-gradient(50% 45% at 30% 25%, oklch(1.0000 0.0000 0.00 / 0.04), transparent 70%);
 }
 html[data-skin="kafle"] .paper-grid::after { content: none; }
 
@@ -109,10 +109,10 @@ html[data-skin="kafle"] .note-card::after {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(135deg, hsl(0 0% 100% / 0.6), transparent 32%);
+  background: linear-gradient(135deg, oklch(1.0000 0.0000 0.00 / 0.6), transparent 32%);
 }
 html[data-skin="kafle"].dark .note-card::after {
-  background: linear-gradient(135deg, hsl(0 0% 100% / 0.07), transparent 32%);
+  background: linear-gradient(135deg, oklch(1.0000 0.0000 0.00 / 0.07), transparent 32%);
 }
 
 html[data-skin="kafle"] h1,
@@ -139,7 +139,7 @@ html[data-skin="kafle"] .sig-layer::after {
   height: 72px;
   border: 3px solid var(--grid);
   border-radius: calc(var(--radius) - 6px);
-  background: linear-gradient(135deg, hsl(0 0% 100% / 0.8), transparent 40%), var(--card);
+  background: linear-gradient(135deg, oklch(1.0000 0.0000 0.00 / 0.8), transparent 40%), var(--card);
   box-shadow: var(--elevation-2);
 }
 html[data-sig="save"][data-skin="kafle"] .sig-layer::after {
@@ -153,10 +153,10 @@ html[data-sig="save"][data-skin="kafle"] .sig-layer::after {
 }
 html[data-skin="kafle"] .sig-layer::before {
   inset: 0;
-  background: linear-gradient(110deg, transparent 38%, hsl(0 0% 100% / 0.45) 50%, transparent 62%);
+  background: linear-gradient(110deg, transparent 38%, oklch(1.0000 0.0000 0.00 / 0.45) 50%, transparent 62%);
 }
 html[data-skin="kafle"].dark .sig-layer::before {
-  background: linear-gradient(110deg, transparent 38%, hsl(0 0% 100% / 0.08) 50%, transparent 62%);
+  background: linear-gradient(110deg, transparent 38%, oklch(1.0000 0.0000 0.00 / 0.08) 50%, transparent 62%);
 }
 html[data-sig="view"][data-skin="kafle"] .sig-layer::before {
   animation: kafle-gloss calc(var(--sig-dur) * 2) ease-out 1 both;
@@ -169,8 +169,8 @@ html[data-sig="view"][data-skin="kafle"] .sig-layer::before {
 /* Miniatura w galerii. */
 .skin-thumb[data-thumb="kafle"]::before {
   background-image:
-    linear-gradient(#cfd6de 2px, transparent 2px),
-    linear-gradient(90deg, #cfd6de 2px, transparent 2px),
+    linear-gradient(oklch(0.8731 0.0134 251.57) 2px, transparent 2px),
+    linear-gradient(90deg, oklch(0.8731 0.0134 251.57) 2px, transparent 2px),
     radial-gradient(50% 45% at 30% 25%, rgb(255 255 255 / 0.9), transparent 70%);
   background-size: 22px 22px;
 }
@@ -183,7 +183,7 @@ html[data-skin="kafle"]:not(.dark) .paper-grid::before {
   background-image:
     linear-gradient(var(--grid) 1.5px, transparent 1.5px),
     linear-gradient(90deg, var(--grid) 1.5px, transparent 1.5px),
-    radial-gradient(50% 45% at 30% 25%, hsl(0 0% 100% / 0.75), transparent 70%);
+    radial-gradient(50% 45% at 30% 25%, oklch(1.0000 0.0000 0.00 / 0.75), transparent 70%);
   background-size: 20px 20px;
   background-position: -1px -1px, -1px -1px, 0 0;
 }

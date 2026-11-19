@@ -11,7 +11,7 @@ html.theme-reveal::view-transition-new(root) { z-index: 2; }
 .skin-thumb { position: relative; overflow: hidden; isolation: isolate; }
 .skin-thumb::before { content: ""; position: absolute; inset: 0; z-index: -1; }
 .skin-thumb[data-thumb="zeszyt"]::before {
-  background-image: linear-gradient(#dfe6f0 1px, transparent 1px), linear-gradient(90deg, #dfe6f0 1px, transparent 1px);
+  background-image: linear-gradient(oklch(0.9226 0.0155 257.20) 1px, transparent 1px), linear-gradient(90deg, oklch(0.9226 0.0155 257.20) 1px, transparent 1px);
   background-size: 10px 10px;
 }
 .skin-thumb[data-thumb="plan"]::before {
@@ -27,8 +27,8 @@ html.theme-reveal::view-transition-new(root) { z-index: 2; }
 }
 .skin-thumb[data-thumb="zorza"]::before {
   background:
-    radial-gradient(1px 1px at 12px 14px, #fff, transparent), radial-gradient(1px 1px at 70px 30px, #fff, transparent),
-    radial-gradient(1px 1px at 110px 8px, #fff, transparent),
+    radial-gradient(1px 1px at 12px 14px, oklch(1.0000 0.0000 0.00), transparent), radial-gradient(1px 1px at 70px 30px, oklch(1.0000 0.0000 0.00), transparent),
+    radial-gradient(1px 1px at 110px 8px, oklch(1.0000 0.0000 0.00), transparent),
     radial-gradient(50% 40% at 30% 30%, rgb(60 245 166 / 0.55), transparent 70%),
     radial-gradient(45% 40% at 80% 35%, rgb(155 123 255 / 0.5), transparent 70%);
   filter: saturate(1.2);

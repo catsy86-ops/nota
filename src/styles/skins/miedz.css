@@ -83,9 +83,9 @@ html[data-skin="miedz"].dark {
 /* Beton architektoniczny: ziarno, styki płyt szalunkowych i otwory po ściągach. */
 html[data-skin="miedz"] .paper-grid::before {
   background-image:
-    radial-gradient(circle at 60px 60px, hsl(25 8% 45% / 0.55) 0 3px, hsl(30 10% 98% / 0.5) 3.5px 4.5px, transparent 5px),
-    linear-gradient(hsl(30 6% 72% / 0.7) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(30 6% 72% / 0.7) 1px, transparent 1px),
+    radial-gradient(circle at 60px 60px, oklch(0.5569 0.0178 57.92 / 0.55) 0 3px, oklch(0.9851 0.0009 67.81 / 0.5) 3.5px 4.5px, transparent 5px),
+    linear-gradient(oklch(0.7836 0.0077 67.71 / 0.7) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.7836 0.0077 67.71 / 0.7) 1px, transparent 1px),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .32 0 0 0 0 .3 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 240px 120px, 240px 120px, 240px 120px, 160px 160px;
   background-position: 0 0, -1px -1px, -1px -1px, 0 0;
@@ -108,7 +108,7 @@ html[data-skin="miedz"] h2 {
     background-image: linear-gradient(180deg, var(--primary), oklch(from var(--primary) calc(l - 0.09) c h));
   }
   html[data-skin="miedz"].dark button.bg-primary:not(:disabled) {
-    background-image: linear-gradient(115deg, transparent 30%, hsl(36 90% 85% / 0.4) 45%, transparent 60%),
+    background-image: linear-gradient(115deg, transparent 30%, oklch(0.9181 0.0618 77.86 / 0.4) 45%, transparent 60%),
       linear-gradient(180deg, oklch(from var(--primary) calc(l + 0.08) c h), var(--primary));
     background-size: 250% 100%, 100% 100%;
     background-position: 120% 0, 0 0;
@@ -120,9 +120,9 @@ html[data-skin="miedz"] h2 {
 /* Ciemna Miedź (4.1): beton w nocy — styki płyt i otwory po ściągach ciemniejsze, bez jasnych obwódek. */
 html[data-skin="miedz"].dark .paper-grid::before {
   background-image:
-    radial-gradient(circle at 60px 60px, hsl(25 10% 8% / 0.7) 0 3px, hsl(30 10% 40% / 0.35) 3.5px 4.5px, transparent 5px),
-    linear-gradient(hsl(30 6% 38% / 0.6) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(30 6% 38% / 0.6) 1px, transparent 1px),
+    radial-gradient(circle at 60px 60px, oklch(0.1937 0.0051 57.99 / 0.7) 0 3px, oklch(0.5167 0.0204 67.35 / 0.35) 3.5px 4.5px, transparent 5px),
+    linear-gradient(oklch(0.4958 0.0118 67.55 / 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.4958 0.0118 67.55 / 0.6) 1px, transparent 1px),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .7 0 0 0 0 .66 0 0 0 0 .6 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
