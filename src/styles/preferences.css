@@ -27,6 +27,15 @@
   }
 }
 
+/* W3.5: tryb „Oszczędny” (czarne tło OLED, `data-oled="on"`) — rozmycie to koszt GPU i baterii, więc znika.
+   Poza tym rozmycie zostaje tylko na paskach przyklejonych, pływającym pasku zaznaczenia i tle pod arkuszem. */
+html[data-oled="on"] *,
+html[data-oled="on"] *::before,
+html[data-oled="on"] *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 /* Ograniczona przezroczystość: rozmycia znikają; tła z `/95` zostają prawie pełne. */
 @media (prefers-reduced-transparency: reduce) {
   *,

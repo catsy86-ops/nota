@@ -18,7 +18,7 @@ interface Props {
 /** Obraz notatki z `imageStore`; kafel zastępczy, gdy bajty jeszcze nie dotarły na to urządzenie. */
 export function NoteImage({ imageRef, className, placeholderClassName, loading = "lazy", alt = "", thumb = false }: Props) {
   const url = useImageUrl(imageRef, thumb);
-  if (url) return <img src={url} alt={alt} className={className} loading={loading} />;
+  if (url) return <img src={url} alt={alt} className={className} loading={loading} decoding="async" />;
   return (
     <div
       role="img"

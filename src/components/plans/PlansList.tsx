@@ -85,6 +85,6 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
 /** Miniatura analizy — obraz dopiero po sprawdzeniu bajtów (`usePlanImageUrl`). */
 function PlanThumb({ image }: { image: PlanImage }) {
   const url = usePlanImageUrl(image);
-  if (url && url !== "bad") return <img src={url} alt="" className="aspect-[16/9] w-full bg-white object-contain" loading="lazy" />;
+  if (url && url !== "bad") return <img src={url} alt="" className="aspect-[16/9] w-full bg-white object-contain" loading="lazy" decoding="async" />;
   return <span aria-hidden className="block aspect-[16/9] w-full bg-muted/60" />;
 }

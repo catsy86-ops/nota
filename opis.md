@@ -6828,4 +6828,41 @@ W1.8 — commit po tym wpisie (2026-11-19).
 
 ### Commit
 
-W3.2 Długi — a1c616bb; Praca — 69be452f; Ustawienia — commit po tym wpisie (2026-11-19).
+W3.2 Długi — a1c616bb; Praca — 69be452f; Ustawienia — d610da72 (2026-11-19).
+
+## Wygląd — rozmycie, gradienty, obrazy (W3.5, W3.6, W5.6, 2026-11-19)
+
+### Co robi
+
+- Rozmycie tła zostało tylko tam, gdzie treść przewija się pod elementem: paski przyklejone, pływający pasek zaznaczenia i tło pod otwartą notatką. Pieczątka osiągnięcia, ekran błędu, nagłówek kolumny tablicy i panel czytnika notatki mają pełne tło. W trybie „Oszczędny” rozmycia nie ma wcale.
+- Kafel logo w panelu bocznym ma jednolite tło akcentu zamiast dekoracyjnego gradientu. Pozostałe gradienty niosą treść i zostają.
+- Obrazy dekodują się poza głównym wątkiem (`decoding="async"`). Miniatury mają tło zastępcze w kolorze `--muted`, zanim się wczytają.
+
+### Gdzie jest
+
+- `src/styles/preferences.css` — `html[data-oled="on"] *` (z `::before`/`::after`) bez `backdrop-filter`, obok istniejącej reguły `prefers-reduced-transparency`.
+- Bez rozmycia (`bg-card` zamiast `bg-card/95|80`): `AchievementStamp.tsx`, `ErrorBoundary.tsx`, `NoteBoard.tsx` (nagłówek kolumny), `NoteReader.tsx` (panel; tło pod nim zostaje rozmyte).
+- Zostają z rozmyciem: `InboxBar.tsx`, `settings/GeneralSettings.tsx` (`JumpNav`), `shifts/PatternDialog.tsx` (stopka), `shifts/ShiftsView.tsx` (pędzle), `study/QuizPanel.tsx` (akcja), `study/StudyJournal.tsx` (dzień), `BulkActionBar.tsx`, `NoteReader.tsx` (tło).
+- `src/components/AppSidebar.tsx` — kafel logo `bg-primary/10`.
+- Obrazy: `InboxTriage.tsx`, `NoteGallery.tsx`, `NoteImage.tsx`, `plans/PlansList.tsx`, `plans/NewAnalysisDialog.tsx`, `study/PhotoDayDialog.tsx` (też `loading="lazy"`).
+- `src/test/designTokens.test.ts` — strażnicy `backdropBlur` (próg 9) i `classGradient` (`bg-linear|radial|conic|gradient-`, próg 1).
+
+### Jak działa
+
+- Tryb „Oszczędny” (`src/lib/appearancePresets.ts`) włącza czarne tło OLED, więc reguła wisi na `data-oled="on"`. Ten sam atrybut ustawia osobny przełącznik OLED, który też ma oszczędzać prąd.
+- Gradienty, które zostają: kratka wykresu i przewodnika (`NoteGraph`, `GuideArt`), zanikanie krawędzi przewijania (`QuickTemplates`, `BrushBar`), kreskowanie nadgodzin (`ShiftSummary`, `YearSummaryDialog`), dwukolorowa próbka „kolor stylu” (`GlowPicker`, `FrameLookPicker`) i ciemny spód pod napisem na zdjęciu budowy (`SiteCardDialog`). Tylko ostatni jest klasą `bg-gradient-*`, reszta to `style` albo `mask-*`.
+
+### Ograniczenia i pułapki
+
+- Wydruk protokołu (`HandoverPaper.tsx`) celowo bez `loading="lazy"` i `decoding="async"`: obraz musi być gotowy przed drukiem. Plany (`PlansList`, `NewAnalysisDialog`) zostają na białym tle (`bg-white`), bo rysunek planu jest na białym papierze.
+- `NoteImage` nie dostał `bg-muted` na `<img>`: obrazy z przezroczystością (schematy) dostałyby szare tło. Zastępczy kształt przed wczytaniem już miał.
+- W tym kroku nie było zmian w klasach kart (`rounded-card border`). Linie w `AchievementStamp`, `ErrorBoundary`, `NoteBoard` i `NoteReader` zawierają jednak te klasy, więc przy scalaniu z W3.2 mogą wymagać ręcznego połączenia.
+- `npm run build` w worktree agenta pada na `prebuild` (brak `node_modules/tesseract.js-core`). Sprawdzone przez `npx vite build`.
+
+### Testy
+
+- `npx vitest run src/test src/lib/skin` (139), `npm run typecheck`, `npx vite build`. Bez e2e.
+
+### Commit
+
+W3.5, W3.6, W5.6 — commit po tym wpisie (2026-11-19).

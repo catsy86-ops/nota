@@ -279,7 +279,7 @@ export function AppSidebar({
                 <button
                   type="button"
                   onClick={onLogoClick}
-                  className="pressable relative shrink-0 grid place-items-center size-12 rounded-card bg-linear-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
+                  className="pressable relative shrink-0 grid place-items-center size-12 rounded-card bg-primary/10 ring-1 ring-border/60"
                   aria-label={APP_NAME}
                 >
                   <div className="absolute inset-0 rounded-card bg-primary/20 blur-lg opacity-70 -z-raised" />

@@ -68,7 +68,7 @@ export function NewAnalysisDialog({ open, onOpenChange, onCreated }: { open: boo
         <form className="space-y-3 px-5 py-4" onSubmit={(e) => { e.preventDefault(); create(); }}>
           {picked ? (
             <figure className="space-y-1">
-              <img src={picked.previewUrl} alt="Podgląd planu" className="max-h-56 w-full rounded-card border border-border/60 bg-white object-contain" />
+              <img src={picked.previewUrl} alt="Podgląd planu" decoding="async" className="max-h-56 w-full rounded-card border border-border/60 bg-white object-contain" />
               <figcaption className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                 <span className="font-mono tabular-nums">{picked.image.w}×{picked.image.h} px · {mb(picked.image.size)}{picked.work ? " · kopia robocza do synchronizacji" : ""}</span>
                 <button type="button" onClick={() => input.current?.click()} className="rounded-control px-1.5 py-0.5 font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">

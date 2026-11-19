@@ -47,7 +47,7 @@ function quickReminders(now: Date): { label: string; at: number }[] {
 function TriageCover({ imageRef }: { imageRef: string }) {
   const url = useImageUrl(imageRef);
   if (!url) return null;
-  return <img src={url} alt="" className="-mx-4 -mt-4 mb-3 h-36 w-[calc(100%+2rem)] max-w-none rounded-t-[inherit] object-cover" />;
+  return <img src={url} alt="" decoding="async" className="-mx-4 -mt-4 mb-3 h-36 w-[calc(100%+2rem)] max-w-none rounded-t-[inherit] bg-muted object-cover" />;
 }
 
 interface UndoStep {

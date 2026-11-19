@@ -321,7 +321,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
         // Przejście współdzielonego elementu z kafla (plan motywów 4.3): podgląd nosi tę samą nazwę co kafel.
         style={present ? undefined : ({ viewTransitionName: "note-shared" } as CSSProperties)}
         className={cn(
-          "pointer-events-auto flex flex-col rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-elevation-3",
+          "pointer-events-auto flex flex-col rounded-card border border-border/60 bg-card shadow-elevation-3",
           present ? "w-[min(56rem,95vw)] h-[90dvh]" : wide ? "w-full max-w-5xl max-h-[80dvh]" : "w-full max-w-2xl max-h-[80dvh]",
         )}
         onClick={(e) => e.stopPropagation()}

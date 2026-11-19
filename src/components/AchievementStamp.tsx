@@ -44,7 +44,7 @@ export function AchievementStamp() {
             animate={{ opacity: 1, scale: stamp.big ? 1.15 : 1, rotate: -4 }}
             exit={{ opacity: 0, scale: 0.92, y: -12, transition: { duration: 0.3 } }}
             transition={{ type: "spring", stiffness: 420, damping: 22, mass: 0.8 }}
-            className="relative flex flex-col items-center gap-1 rounded-card border-[3px] border-double border-primary/80 bg-card/95 px-6 py-4 text-center shadow-elevation-3 backdrop-blur-xs"
+            className="relative flex flex-col items-center gap-1 rounded-card border-[3px] border-double border-primary/80 bg-card px-6 py-4 text-center shadow-elevation-3"
           >
             <span className="text-2xs font-semibold uppercase tracking-[0.25em] text-primary-ink">
               {stamp.big ? "Pierwszy raz!" : "Nowa odznaka"}

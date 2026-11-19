@@ -18,7 +18,7 @@ function Cover({ note }: { note: Note }) {
   const ref = !note.locked ? note.images?.[0] : undefined;
   const url = useImageUrl(ref ?? "", true);
   if (ref && url) {
-    return <img src={url} alt="" loading="lazy" decoding="async" className="size-full object-cover" draggable={false} />;
+    return <img src={url} alt="" loading="lazy" decoding="async" className="size-full bg-muted object-cover" draggable={false} />;
   }
   return (
     <span className="flex size-full items-center justify-center bg-muted/50 text-muted-foreground" aria-hidden>
