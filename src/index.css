@@ -39,6 +39,10 @@
   .lucide[stroke-width="2"] {
     stroke-width: var(--icon-stroke);
   }
+  /* W4.3: ikona obok tekstu nie ściska się, gdy tekst łamie się w wierszu flex — kreska zostaje w skali. */
+  .lucide {
+    flex-shrink: 0;
+  }
 
   /* Przejścia do `height: auto` (plan 2.4). Bez przejść w CSS nic się nie zmienia; w starszych przeglądarkach skok jak dziś. */
   html {

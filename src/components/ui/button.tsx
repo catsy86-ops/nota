@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 // Promień siedzi w wariancie, nie w bazie: `cn` (tailwind-merge) nie zna `rounded-control`, więc nie zdjąłby go
 // pod `rounded-full` pigułki (plan UI 2026-11-06, 1.2).
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background pressable active:shadow-[inset_0_1px_2px_color-mix(in srgb, var(--foreground) 12%, transparent)] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:[stroke-width:1.75]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background pressable active:shadow-[inset_0_1px_2px_color-mix(in srgb, var(--foreground) 12%, transparent)] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:shadow-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:[stroke-width:var(--icon-stroke)]",
   {
     variants: {
       variant: {
