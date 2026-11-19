@@ -57,6 +57,7 @@ Sprawdzone czytaniem kodu na `3cc066d6`, bez uruchamiania testów. Punkty D1, D2
 6. **Nowsze dane = tylko odczyt.** Aplikacja, która widzi w dokumencie wymaganie wyższe niż własna wersja, nie zapisuje do objętych nim map i prosi o aktualizację.
 7. **Jedna wersja formatu, jeden rejestr.** `SCHEMA_VERSION` rośnie przy każdej zmianie, której stary klient nie przeżyje bez strat; każda zmiana ma wpis w dzienniku formatów.
 8. **Przed migracją migawka** stanu (`Y.encodeStateAsUpdate`) przechowywana 14 dni.
+9. **Nie zmieniaj znaczenia pola (D2.6).** Pole o nowym znaczeniu albo jednostce dostaje nową nazwę; stare zostaje i dalej znaczy to samo. Przy przeglądzie zmiany danych: czy jakieś istniejące pole zaczyna znaczyć co innego? Wzorce w `src/lib/migrations/patterns.ts`.
 
 ## Etap D0: spis (Sonnet, S)
 
@@ -69,7 +70,7 @@ Sprawdzone czytaniem kodu na `3cc066d6`, bez uruchamiania testów. Punkty D1, D2
 
 ## Etap D1: zgodność w przód (Opus) — najważniejszy, chroni przed utratą danych
 
-**Stan 2026-11-18:** D1.1 częściowo (7 map przez `extraFields.ts`, Z-17.3); D1.2 jako spis z zapadką (`src/lib/docMapsInventory.test.ts`); po Ćwiczeniach i klasyfikacji Pracy 22 mapy do zrobienia; D1.3 bez blokady w magazynach (`src/lib/docFormat.ts`, baner, „Ignoruj i pisz”); D1.4 zapisane w `docFormat.ts` i `opis.md`. Zostaje D1.1 działami. **2026-11-19:** D4 całe zrobione (`src/lib/deviceRegistry.ts`, bramka w `writeFormatAllowed`, `DeviceRegistryList.tsx`, test przez prawdziwy przekaźnik). D3.1 zrobione (`src/test/fixtures/docs/`, `scripts/doc-fixture.ps1`; wzorce 1–3 tylko notatki/foldery/etykiety). D2.1–D2.4 zrobione (`src/lib/migrations/`; D2.4 przez katalog „przed przywróceniem”); test D3.3 w `runner.test.ts`. Zostają D2.5, D2.6, D3.2, D3.4–D3.6, D5–D7.
+**Stan 2026-11-18:** D1.1 częściowo (7 map przez `extraFields.ts`, Z-17.3); D1.2 jako spis z zapadką (`src/lib/docMapsInventory.test.ts`); po Ćwiczeniach i klasyfikacji Pracy 22 mapy do zrobienia; D1.3 bez blokady w magazynach (`src/lib/docFormat.ts`, baner, „Ignoruj i pisz”); D1.4 zapisane w `docFormat.ts` i `opis.md`. Zostaje D1.1 działami. **2026-11-19:** D4 całe zrobione (`src/lib/deviceRegistry.ts`, bramka w `writeFormatAllowed`, `DeviceRegistryList.tsx`, test przez prawdziwy przekaźnik). D3.1 zrobione (`src/test/fixtures/docs/`, `scripts/doc-fixture.ps1`; wzorce 1–3 tylko notatki/foldery/etykiety). D2.1–D2.4 zrobione (`src/lib/migrations/`; D2.4 przez katalog „przed przywróceniem”); test D3.3 w `runner.test.ts`. D2.5 (`patterns.ts`) i D2.6 (zasada 9) zrobione. Zostają D3.2, D3.4–D3.6, D5–D7.
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|

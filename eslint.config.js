@@ -49,6 +49,8 @@ export default tseslint.config(
       "src/lib/yjsSync.test.ts",
       "src/lib/deviceRegistry.test.ts",
       "src/lib/migrations/runner.ts",
+      "src/lib/migrations/patterns.ts",
+      "src/lib/migrations/patterns.test.ts",
       "src/lib/migrations/registry.ts",
       "src/lib/migrations/runner.test.ts",
       "src/test/fixtures/docs/*.test.ts",

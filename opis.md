@@ -1182,7 +1182,7 @@ D3.1: 963d900d, 2026-11-19.
 - D2.4 uproszczone: migawka trafia do katalogu „przed przywróceniem” (30 dni, istniejące przywracanie w Ustawieniach → Kopia i dane), nie do osobnego katalogu 14 dni / 3 sztuki. Ostrzeżenie o grupie synchronizacji daje istniejące okno przywracania (D-A1).
 - Przed pierwszą migracją dokumentu trzeba spisać obserwatory, które biorą zmianę za edycję użytkownika (`updatedAt`, historia wersji, status zapisu), i dodać im `isMigrationOrigin`.
 - Migracja dodana później niż zmiana od starszego klienta: znacznik już jest, więc czytnik musi rozumieć oba kształty (zasada 2, test D3.4 do zrobienia).
-- Nie zrobione: D2.5 (wzorce migracji jako pomocniki), D2.6 (reguła w zasadach D7).
+- Wzorce (D2.5) w `src/lib/migrations/patterns.ts`: `copyField` + `readRenamed` (zmiana nazwy), `deriveField` (zmiana jednostki), `objectsToFieldMaps` (obiekt → `Y.Map` pól, identyfikatory z danych), `splitInto`, `mergeInto` — wszystkie tylko dopisują. Reguła D2.6 („nie zmieniaj znaczenia pola”) jako zasada 9 w planie migracji. Testy zbieżności: `patterns.test.ts`.
 
 ### Testy
 
