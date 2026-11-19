@@ -185,9 +185,9 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
 
       {timeOff && (timeOff.owedMin > 0 || timeOff.takenMin > 0) && (
         <p aria-label="Odbiór nadgodzin" className="text-sm text-muted-foreground">
-          Nadgodziny w okresie: <span className="font-semibold text-foreground tabular-nums">{formatDuration(timeOff.owedMin)}</span>
-          {" · "}odebrane: <span className="font-semibold text-foreground tabular-nums">{formatDuration(timeOff.takenMin)}</span>
-          {" · "}{timeOff.remainingMin < 0 ? "odebrano więcej" : "do odbioru"}: <span className={cn("font-semibold tabular-nums", timeOff.remainingMin < 0 ? "text-destructive-ink" : "text-foreground")}>{formatDuration(Math.abs(timeOff.remainingMin))}</span>
+          Nadgodziny w okresie: <span className="font-medium text-foreground tabular-nums">{formatDuration(timeOff.owedMin)}</span>
+          {" · "}odebrane: <span className="font-medium text-foreground tabular-nums">{formatDuration(timeOff.takenMin)}</span>
+          {" · "}{timeOff.remainingMin < 0 ? "odebrano więcej" : "do odbioru"}: <span className={cn("font-medium tabular-nums", timeOff.remainingMin < 0 ? "text-destructive-ink" : "text-foreground")}>{formatDuration(Math.abs(timeOff.remainingMin))}</span>
         </p>
       )}
 

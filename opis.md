@@ -6567,7 +6567,7 @@ W0.2–W0.3: 6f7cc3a3, 2026-11-19.
 
 W1.1–W1.4: 974281cc, 2026-11-19.
 
-## Wygląd — skala ról tekstu, łamanie i 15 px na telefonie (W2.1, W2.2, W2.3 częściowo, W2.4, W2.7, WZ-1, 2026-11-19)
+## Wygląd — skala ról tekstu, łamanie i 15 px na telefonie (W2.1–W2.4, W2.6 częściowo, W2.7, WZ-1, 2026-11-19)
 
 ### Co robi
 
@@ -6593,7 +6593,8 @@ W1.1–W1.4: 974281cc, 2026-11-19.
 
 - Vitest 4169 zielone; strażnicy tokenów i kontrastu.
 - `src/test/designTokens.test.ts` — reguła `sizeWeightPair` (W2.7): para `text-xs|sm` + `font-medium|semibold` w jednym `className`, próg 168 (233 przed migracją), może tylko maleć.
-- W2.3 (część): rola `.ui-label` (`text-sm font-medium`) w `src/index.css`; 15 gołych `<label className="text-sm font-medium">` przeszło na `ui-label`, 50 nagłówków `text-xs font-semibold text-muted-foreground` na istniejącą `section-caps`. Wygląd bez zmian. Zostaje przegląd pogrubień w treści wierszy.
+- W2.3 (część): rola `.ui-label` (`text-sm font-medium`) w `src/index.css`; 15 gołych `<label className="text-sm font-medium">` przeszło na `ui-label`, 50 nagłówków `text-xs font-semibold text-muted-foreground` na istniejącą `section-caps`. Wygląd bez zmian. Przegląd pogrubień w wierszach: jedyny wiersz z trzema pogrubionymi polami — „Odbiór nadgodzin” w `ShiftSummary.tsx` — ma liczby w 500 + `text-foreground`; znaczki komórek Grafiku i nagłówki tabel celowo zostają pogrubione.
+- W2.6 (część): `SiteMaterialPanel.tsx` i `SiteTimePanel.tsx` biorą `formatMoney` z `src/lib/shifts/time.ts` (separator tysięcy od 10 000, `pl-PL`). `src/lib/study/materialUsage.ts` ma jeszcze własny `zl` (tekst eksportu) — nie ruszany. Jednostka mniejsza i wyciszona — tylko w `Stat`.
 - W2.2: Grafik (`ShiftSummary`, `Stat size="lg"`, 36 px) i Długi (`Stat` md, 20 px) już mają liczbę główną we wspólnym `ui/stat.tsx`; Długi celowo bez 28 px — dwie kwoty obok siebie nie mieszczą się na 390 px.
 
 ### Commit

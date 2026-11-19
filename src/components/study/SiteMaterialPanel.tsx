@@ -1,3 +1,4 @@
+import { formatMoney } from "@/lib/shifts/time";
 import { useState } from "react";
 import { metersLabel } from "@/lib/study/pipes";
 import { ChevronDown, Copy, FileSpreadsheet, Package2 } from "lucide-react";
@@ -11,7 +12,7 @@ import { setFittingPrice, usePrices } from "@/lib/study/pricingStore";
 import type { SiteInfo } from "@/lib/study/sites";
 import type { JournalEntry } from "@/lib/study/journalEntry";
 
-const zl = (n: number) => `${n.toFixed(2).replace(".", ",")} zł`;
+const zl = formatMoney;
 
 /**
  * P2.6 Zużycie materiału w karcie budowy: kształtki z wpisów per miesiąc i dostarczone braki,

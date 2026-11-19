@@ -1,3 +1,4 @@
+import { formatMoney } from "@/lib/shifts/time";
 import { useEffect, useState } from "react";
 import { Clock, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { durationLabel, liveMinutes, monthHours, siteMonthCsv } from "@/lib/stud
 import { setSiteRate } from "@/lib/study/store";
 import { SITE_RATE_MAX, type SiteInfo } from "@/lib/study/sites";
 
-const zl = (n: number) => `${n.toFixed(2).replace(".", ",")} zł`;
+const zl = formatMoney;
 const hoursText = (min: number) => (min / 60).toFixed(min % 60 ? 1 : 0).replace(".", ",");
 
 /**
