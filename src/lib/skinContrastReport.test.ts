@@ -69,7 +69,7 @@ const PAIRS: [string, string, number][] = [
 ];
 
 /** Znane porażki (`styl/schemat: para`) — do naprawy w W6.1 w tokenach stylów. Lista może tylko maleć. */
-const KNOWN: string[] = ["zeszyt/light: primary/background", "zeszyt/light: primary/card"];
+const KNOWN: string[] = [];
 
 const rows = SKINS.flatMap((skin) => (["light", "dark"] as const).map((scheme) => {
   const t = resolveSkin(skin, scheme);

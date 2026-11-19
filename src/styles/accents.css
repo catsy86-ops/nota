@@ -2,21 +2,24 @@
   Kolor akcentu (plan motywów 1.1, `src/lib/accent.ts`). PLIK GENEROWANY: `node docs/tools/accents/accents-gen.mjs`.
   `html[data-accent="N"]` zmienia odcień `--primary` (i `--ring`, gdy ma ten sam odcień) w stylu; jasność
   jest dobrana tak, żeby przechodziły progi `src/lib/skinContrast.test.ts`. Akcent 0 = barwa stylu (bez atrybutu).
+  UWAGA (W6.1, 2026-11-19): `--primary` czterech akcentów Zeszytu w jasnym schemacie poprawione ręcznie do ≥ 3:1
+  względem tła (0,655 / 0,635 / 0,67 / 0,67). Generator pada już od wcześniej („Nie da się dobrać L dla H=27”)
+  i nie sprawdza `primary/background` ≥ 3 — przed ponownym uruchomieniem dopisać ten warunek do `passes()`.
 */
 html[data-skin="zeszyt"]:not(.dark)[data-accent="1"] {
-  --primary: oklch(0.7022 0.1566 255.00);
+  --primary: oklch(0.6550 0.1566 255.00);
   --ring: oklch(0.6123 0.1355 255.00);
 }
 html[data-skin="zeszyt"]:not(.dark)[data-accent="2"] {
-  --primary: oklch(0.7022 0.1566 150.00);
+  --primary: oklch(0.6350 0.1566 150.00);
   --ring: oklch(0.6123 0.1355 150.00);
 }
 html[data-skin="zeszyt"]:not(.dark)[data-accent="3"] {
-  --primary: oklch(0.7022 0.1566 25.00);
+  --primary: oklch(0.6700 0.1566 25.00);
   --ring: oklch(0.6123 0.1355 25.00);
 }
 html[data-skin="zeszyt"]:not(.dark)[data-accent="4"] {
-  --primary: oklch(0.7022 0.1566 300.00);
+  --primary: oklch(0.6700 0.1566 300.00);
   --ring: oklch(0.6123 0.1355 300.00);
 }
 html[data-skin="zeszyt"].dark[data-accent="1"] {

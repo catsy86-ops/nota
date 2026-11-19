@@ -4,7 +4,7 @@ Wygenerowane przez `src/lib/skinContrastReport.test.ts` (2026-11-19). Pogrubione
 
 | styl | schemat | foreground / background (≥ 4.5) | muted-foreground / background (≥ 4.5) | muted-foreground / card (≥ 4.5) | faint / background (≥ 4.5) | faint / card (≥ 4.5) | faint / muted (≥ 4.5) | primary-foreground / primary (≥ 4.5) | primary / background (≥ 3) | primary / card (≥ 3) | ring / background (≥ 3) | ring / card (≥ 3) | input / background (≥ 3) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| zeszyt | light | 15.46 | 5.42 | 5.64 | 5.01 | 5.21 | 4.63 | 6.49 | **2.65** | **2.75** | 3.74 | 3.89 | 3.61 |
+| zeszyt | light | 15.46 | 5.42 | 5.64 | 5.01 | 5.21 | 4.63 | 5.64 | 3.05 | 3.17 | 3.74 | 3.89 | 3.61 |
 | zeszyt | dark | 15.12 | 8.02 | 7.47 | 5.74 | 5.35 | 4.75 | 8.58 | 8.79 | 8.19 | 8.79 | 8.19 | 4.12 |
 | plan | light | 13.67 | 6.16 | 6.71 | 5.65 | 6.16 | 5.25 | 6.88 | 6.23 | 6.78 | 6.23 | 6.78 | 3.86 |
 | plan | dark | 12.52 | 8.27 | 7.18 | 6.15 | 5.34 | 4.77 | 9.84 | 8.13 | 7.06 | 8.13 | 7.06 | 4.72 |

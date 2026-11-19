@@ -6634,3 +6634,29 @@ W2.1, WZ-1, 2026-11-19 — commit po tym wpisie.
 ### Commit
 
 W3.1 — 573c83d1; W3.4 — commit po tym wpisie (2026-11-19).
+
+## Wygląd — kontrast akcentu Zeszytu (W6.1, 2026-11-19)
+
+### Co robi
+
+- Bursztynowy akcent domyślnego stylu „Zeszyt” w jasnym schemacie jest odrobinę ciemniejszy. Obrysy, ikony i znaczniki w akcencie mają teraz co najmniej 3:1 względem tła i karty (WCAG 1.4.11). Wcześniej miały 2,65:1 i 2,75:1.
+
+### Gdzie jest
+
+- `src/index.css` (`:root`) — `--primary: oklch(0.6650 0.1566 63.41)` (było 0,7022).
+- `src/styles/accents.css` — cztery akcenty Zeszytu w jasnym schemacie: niebieski 0,655, zielony 0,635, czerwony 0,67, fiolet 0,67. Każda barwa ma inną luminancję przy tej samej jasności OKLCH, więc wartości są dobrane osobno.
+- `src/lib/skinContrastReport.test.ts` — `KNOWN` jest puste. `docs/kontrast-tokenow.md` jest wygenerowany ponownie: 3,05 i 3,17.
+
+### Ograniczenia i pułapki
+
+- `accents.css` to plik generowany, ale te cztery reguły są poprawione ręcznie. Generator `docs/tools/accents/accents-gen.mjs` pada już na wcześniejszym stanie („Nie da się dobrać L dla H=27”). Nie sprawdza też `primary/background` ≥ 3. Przed ponownym uruchomieniem trzeba dopisać ten warunek do `passes()`, inaczej poprawka zniknie. Jest o tym uwaga w nagłówku pliku.
+- Raport kontrastu nie sprawdza akcentów 1–4 innych stylów.
+- Bursztyn przy L 0,665 i C 0,1566 jest minimalnie poza sRGB, a przeglądarka go przycina. Kontrast liczony po przycięciu wynosi 3,05.
+
+### Testy
+
+- `src/lib/skinContrastReport.test.ts`, `src/lib/skinContrast.test.ts`.
+
+### Commit
+
+W6.1 — commit po tym wpisie (2026-11-19).
