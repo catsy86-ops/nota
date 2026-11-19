@@ -6635,7 +6635,7 @@ W2.1, WZ-1, 2026-11-19 — commit po tym wpisie.
 
 W3.1 — 573c83d1; W3.4 — commit po tym wpisie (2026-11-19).
 
-## Wygląd — kontrast akcentu Zeszytu (W6.1, 2026-11-19)
+## Wygląd — kontrast akcentu, kolory z tokenów i natywne kontrolki (W6.1, W6.3, W6.6, 2026-11-19)
 
 ### Co robi
 
@@ -6646,17 +6646,21 @@ W3.1 — 573c83d1; W3.4 — commit po tym wpisie (2026-11-19).
 - `src/index.css` (`:root`) — `--primary: oklch(0.6650 0.1566 63.41)` (było 0,7022).
 - `src/styles/accents.css` — cztery akcenty Zeszytu w jasnym schemacie: niebieski 0,655, zielony 0,635, czerwony 0,67, fiolet 0,67. Każda barwa ma inną luminancję przy tej samej jasności OKLCH, więc wartości są dobrane osobno.
 - `src/lib/skinContrastReport.test.ts` — `KNOWN` jest puste. `docs/kontrast-tokenow.md` jest wygenerowany ponownie: 3,05 i 3,17.
+- W6.3: `src/lib/notePriority.ts` — kolory priorytetu z tokenów: niski `text-muted-foreground`, średni `text-warning-ink`, wysoki `text-destructive-ink`. Wcześniej była paleta sky/amber/rose z `dark:`. `src/components/plans/PlanCanvas.tsx` — tło płótna `bg-muted` zamiast dwóch wartości hex.
+- W6.6: `src/index.css` (`@layer base`) — `accent-color: var(--primary)` na `:root` i `::selection` w 30% akcentu.
 
 ### Ograniczenia i pułapki
 
 - `accents.css` to plik generowany, ale te cztery reguły są poprawione ręcznie. Generator `docs/tools/accents/accents-gen.mjs` pada już na wcześniejszym stanie („Nie da się dobrać L dla H=27”). Nie sprawdza też `primary/background` ≥ 3. Przed ponownym uruchomieniem trzeba dopisać ten warunek do `passes()`, inaczej poprawka zniknie. Jest o tym uwaga w nagłówku pliku.
 - Raport kontrastu nie sprawdza akcentów 1–4 innych stylów.
+- W6.3: `.dark` idzie za schematem stylu (`useTheme.ts`, `prepaint.js`), więc `dark:` nie był błędny. Zostało 8 wystąpień w `.tsx` poza `ui/` (dzień w Kalendarzu, `dark:prose-invert`) i 3 w `dayCellStyles.ts`. Strażnik w `src/test/designTokens.test.ts` liczy tylko pliki `.tsx`, próg 8.
+- W6.6: `color-scheme` i `theme-color` już były ustawiane (`prepaint.js`, `useTheme`). Doszły tylko `accent-color` i `::selection`.
 - Bursztyn przy L 0,665 i C 0,1566 jest minimalnie poza sRGB, a przeglądarka go przycina. Kontrast liczony po przycięciu wynosi 3,05.
 
 ### Testy
 
-- `src/lib/skinContrastReport.test.ts`, `src/lib/skinContrast.test.ts`.
+- `src/lib/skinContrastReport.test.ts`, `src/lib/skinContrast.test.ts`, `src/test/designTokens.test.ts` (W6.3).
 
 ### Commit
 
-W6.1 — commit po tym wpisie (2026-11-19).
+W6.1 — 8f01f30c; W6.3 i W6.6 — commit po tym wpisie (2026-11-19).

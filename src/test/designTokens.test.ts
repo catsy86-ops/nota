@@ -59,6 +59,18 @@ const LIMITS = {
   disabledOpacity: { pattern: /(?<![\w-])disabled:opacity-\d+/g, max: 30, token: "disabled:text-muted-foreground / Button" },
 } as const;
 
+// W6.3: `.dark` idzie za schematem stylu (`useTheme`), ale kolor ma wynikać z tokenu, nie z pary jasny/ciemny.
+// Zostają: dzień w Kalendarzu (obrys i tło z `--primary` mocniejsze na ciemnym) i `dark:prose-invert` w czytniku.
+const DARK_OUTSIDE_UI_MAX = 8;
+
+describe("W6.3 — `dark:` poza components/ui", () => {
+  it(`co najwyżej ${DARK_OUTSIDE_UI_MAX} wystąpień (zamiast tego: token stylu)`, () => {
+    const n = SOURCES.filter(({ path }) => !/[\\/]components[\\/]ui[\\/]/.test(path))
+      .reduce((sum, { text }) => sum + (text.match(/(?<![\w-])dark:[^\s"'`]+/g)?.length ?? 0), 0);
+    expect(n).toBeLessThanOrEqual(DARK_OUTSIDE_UI_MAX);
+  });
+});
+
 describe("tokeny projektowe — surowe klasy nie przybywają", () => {
   for (const [name, { pattern, max, token }] of Object.entries(LIMITS)) {
     it(`${name}: co najwyżej ${max} wystąpień (zamiast tego: ${token})`, () => {

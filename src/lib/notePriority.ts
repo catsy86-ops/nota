@@ -15,10 +15,11 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
   high: 3,
 };
 
-/** Kolor ikony priorytetu: ciemniejszy na jasnym tle (≥4.5:1), jaśniejszy w ciemnym motywie. */
+/** Kolor ikony priorytetu z tokenów stylu (W6.3): kontrast pilnowany w każdym stylu i schemacie, bez `dark:`.
+ *  Niski jest wyciszony, średni i wysoki biorą barwy ostrzeżenia i błędu. */
 export const PRIORITY_COLOR_CLASS: Record<NotePriority, string> = {
   none: "",
-  low: "text-sky-700 dark:text-sky-400",
-  medium: "text-amber-700 dark:text-amber-400",
-  high: "text-rose-700 dark:text-rose-400",
+  low: "text-muted-foreground",
+  medium: "text-warning-ink",
+  high: "text-destructive-ink",
 };
