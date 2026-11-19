@@ -58,7 +58,7 @@ function Result({ label, value, unit, testId }: { label: string; value: string |
   return (
     <p className="flex items-baseline justify-between gap-3 rounded-field bg-muted/50 px-3 py-2" data-testid={testId}>
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="font-mono text-2xl font-semibold tabular-nums text-primary-ink">
+      <span className="num-lg text-primary-ink">
         {value ?? "—"}{value !== null && <span className="ml-1 text-base font-normal text-muted-foreground">{unit}</span>}
       </span>
     </p>

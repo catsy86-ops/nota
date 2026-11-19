@@ -1,6 +1,6 @@
 # Plan: warstwa graficzna i wizualna (2026-11-15)
 
-> **Status:** 2026-11-19 — W0.2 (`scripts/ui-metrics.mjs`, `docs/ui-metryki.json`) i W0.3 (`src/lib/skinContrastReport.test.ts`, `docs/kontrast-tokenow.md`; porażki: Zeszyt jasny `primary` < 3:1) zrobione; W0.1 (zrzuty) nie. W1.1–W1.4 zrobione (`--faint`, cienie z `--shadow-tint`, jedna skala cieni, opis warstw); bez `--surface-raised` i zrzutów `@visual`. W2.1 zrobione (`docs/typografia.md`), WZ-1 = 15 px na telefonie (rekomendacja, do potwierdzenia), W2.2 tylko nagłówki `SectionCard`; W2.4 zrobione (balance w rolach `title-*`, `.prose-note`: 68ch i dzielenie wyrazów dla p/li/blockquote); dalej W2.2 reszta, W2.3, W2.5–W2.7. Wykonawca: Sonnet (W1, W3–W5, W7–W9), Opus (W2, W6). Przed każdym etapem skill `frontend-design`, przy przeglądzie `refactoring-ui` i `ux-heuristics`.
+> **Status:** 2026-11-19 — W0.2 (`scripts/ui-metrics.mjs`, `docs/ui-metryki.json`) i W0.3 (`src/lib/skinContrastReport.test.ts`, `docs/kontrast-tokenow.md`; porażki: Zeszyt jasny `primary` < 3:1) zrobione; W0.1 (zrzuty) nie. W1.1–W1.4 zrobione (`--faint`, cienie z `--shadow-tint`, jedna skala cieni, opis warstw); bez `--surface-raised` i zrzutów `@visual`. W2.1 zrobione (`docs/typografia.md`), WZ-1 = 15 px na telefonie (potwierdzone 2026-11-19), W2.2 częściowo (nagłówki `SectionCard`, `num-lg` w Pracy: statystyki, kalkulatory, rozliczenie budowy); W2.4 zrobione (balance w rolach `title-*`, `.prose-note`: 68ch i dzielenie wyrazów dla p/li/blockquote); dalej W2.2 reszta, W2.3, W2.5–W2.7. Wykonawca: Sonnet (W1, W3–W5, W7–W9), Opus (W2, W6). Przed każdym etapem skill `frontend-design`, przy przeglądzie `refactoring-ui` i `ux-heuristics`.
 >
 > **Czego tu nie ma, bo jest gdzie indziej:** ruch i animacje — `plan-ruch-2026-11-15.md`; nawigacja mobilna i migracja surowych kontrolek — Etapy 4–5 w `plan-ui-spojnosc-2026-11-06.md` (ten plan je porządkuje i daje im miarę, nie powtarza); dostępność klawiatury i tryb „duże cele” — Q5 w `plan-qol-platforma-2026-11-15.md`. Rozmiaru `Button` na dotyku nie zmieniać (cofnięte 15.11, decyzja właściciela).
 
@@ -143,7 +143,7 @@
 
 ## Decyzje właściciela
 
-- **WZ-1:** rozmiar treści w interfejsie — zostaje 14 px, czy 15 px na telefonie (czytelniej, mniej wierszy na ekranie).
+- **WZ-1:** rozstrzygnięte 2026-11-19 — 15 px na telefonie, 14 px na komputerze.
 - **WZ-2:** czy łączyć style, które po W6.2 różnią się tylko barwą.
 - **WZ-3:** grubość kreski ikon — jedna dla wszystkich stylów (1,75) czy zależna od stylu.
 - **WZ-4:** eksport karty jako obraz (W8.3).

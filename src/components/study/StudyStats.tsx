@@ -260,7 +260,7 @@ function Tile({ label, value, hint, ring }: { label: string; value: string; hint
     <div className={`${cardClass} px-3 py-2.5`}>
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 flex items-center justify-between gap-2">
-        <span className="font-mono text-2xl font-semibold tabular-nums leading-tight">{value}</span>
+        <span className="num-lg">{value}</span>
         {ring !== undefined && (
           <svg viewBox="0 0 36 36" className="h-9 w-9 shrink-0 -rotate-90" aria-hidden>
             <circle cx="18" cy="18" r={r} fill="none" stroke="var(--muted)" strokeWidth="4" />

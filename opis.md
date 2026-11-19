@@ -6571,7 +6571,7 @@ W1.1–W1.4: 974281cc, 2026-11-19.
 
 ### Co robi
 
-- Na telefonie tekst interfejsu ma 15 px zamiast 14 (decyzja WZ-1 — przyjęta rekomendacja, do potwierdzenia przez właściciela); na komputerze bez zmian.
+- Na telefonie tekst interfejsu ma 15 px zamiast 14 (decyzja WZ-1, potwierdzona przez właściciela 2026-11-19); na komputerze bez zmian.
 - Nagłówki kart (`SectionCard`) są o stopień większe od tekstu i w kroju tytułów — wcześniej miały ten sam rozmiar co opis pod nimi.
 - Tytuły z rolą `title-*` łamią się równo, także gdy nie są nagłówkami `h1–h3`. Akapity, listy i cytaty w treści notatki mają wiersz najwyżej 68 znaków i dzielenie wyrazów po polsku.
 
@@ -6581,12 +6581,13 @@ W1.1–W1.4: 974281cc, 2026-11-19.
 - `tailwind.config.ts` — `text-sm` z `--text-ui`.
 - `src/index.css` — role `title-page`, `title-section` (17/24, 650), `title-card`, `num-lg`; `text-wrap: balance` dla ról `title-*` i reguła `.prose-note :where(p, li, blockquote)` (68ch, `hyphens: auto`) dla treści z `MarkdownRendererImpl.tsx`.
 - `src/components/ui/section-card.tsx` — nagłówek `title-card`.
+- `num-lg` (28/32, mono): kafle `StudyStats.tsx`, wynik `CalculatorsSheet.tsx`, „Zostało do zapłaty” w `SiteBillingDues.tsx`.
 - `docs/typografia.md` — tabela ról i decyzje.
 
 ### Ograniczenia i pułapki
 
 - Sprawdzone w Chromium na 390 i 1280 px (Notatki, Dziś, Kalendarz, Grafik, Praca): brak przepełnienia poziomego. Zrzuty `@visual` i e2e nie odnowione — przesunięcia tekstu na telefonie są spodziewane.
-- Nie zrobione: przegląd 12 ekranów pod element główny (reszta W2.2), `num-lg` jeszcze nieużyte, W2.3 (grubości), W2.5–W2.7. Dzielenie wyrazów (`hyphens: auto`) zależy od słownika przeglądarki — w Safari nie sprawdzone. Tabele i kod nie mają limitu 68ch.
+- Nie zrobione: przegląd pozostałych ekranów pod element główny (reszta W2.2; Długi, Grafik i Ćwiczenia nie mają jeszcze liczby głównej w roli), W2.3 (grubości), W2.5–W2.7. Dzielenie wyrazów (`hyphens: auto`) zależy od słownika przeglądarki — w Safari nie sprawdzone. Tabele i kod nie mają limitu 68ch.
 
 ### Testy
 

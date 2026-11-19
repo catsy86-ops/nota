@@ -123,7 +123,7 @@ export function SiteBillingDues({ site, billing, hours, points }: {
       {/* Suma jak w zeszycie: podwójna kreska pod kwotą. */}
       <p className="flex items-baseline justify-between pt-1" data-testid="billing-due">
         <span className="text-sm font-semibold">{st.due >= 0 ? "Zostało do zapłaty" : "Nadpłata"}</span>
-        <span className={cn("border-b-[3px] border-double pb-0.5 font-mono text-lg font-bold tabular-nums", st.due > 0 ? "border-primary text-foreground" : "border-border text-muted-foreground")}>
+        <span className={cn("num-lg border-b-[3px] border-double pb-0.5", st.due > 0 ? "border-primary text-foreground" : "border-border text-muted-foreground")}>
           {money(Math.abs(st.due))}
         </span>
       </p>
