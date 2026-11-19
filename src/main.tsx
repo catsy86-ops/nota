@@ -81,6 +81,8 @@ setupFileLaunch();
 void requestPersistentStorage();
 // Kopia dzienna w OPFS (Q1.4): moduł dopiero po wczytaniu dokumentu, poza paczką startową.
 void yjsStore.ready().then(() => import("./lib/dailySnapshot")).then((m) => m.startDailySnapshots(), () => undefined);
+// D2.2: migracje dokumentu z rejestru (pusty rejestr — sam import, bez blokady i migawki).
+void yjsStore.ready().then(() => import("./lib/migrations/start")).then((m) => m.startDocMigrations(), () => undefined);
 
 window.addEventListener(SW_UPDATE_EVENT, (e) => {
   const registration = (e as CustomEvent<ServiceWorkerRegistration>).detail;

@@ -1153,7 +1153,45 @@ D4.1–D4.2: 069616d6, D4.3–D4.4: 851a4012, 2026-11-19.
 
 ### Commit
 
-D3.1, 2026-11-19 — commit po tym wpisie.
+D3.1: 963d900d, 2026-11-19.
+
+## Dane — rejestr i wykonawca migracji dokumentu (D2.1–D2.4 planu migracji, 2026-11-19)
+
+### Co robi
+
+- Gdy nowa wersja aplikacji zmienia kształt danych, zmiana wykonuje się raz na dokument, w jednej karcie, po kopii obecnego stanu. Gdy się nie uda, dane zostają bez zmian, a próba powtarza się przy następnym starcie. Po trzech porażkach pojawia się baner z prośbą o kopię i zgłoszenie.
+- Dziś rejestr jest pusty — nic się nie wykonuje (bez blokady i bez kopii).
+
+### Gdzie jest
+
+- `src/lib/migrations/registry.ts` — `DocMigration` (`id`, `scope`, `description`, `since`, `run`, `check`), `DOC_MIGRATIONS` (pusta), `LOCAL_MIGRATIONS` (opis istniejących migracji: dawny IndexedDB → Yjs, Praca i Grafik z localStorage), `DOC_MIGRATIONS_MAP`, `isMigrationOrigin`, `MIGRATION_ID_RE`.
+- `src/lib/migrations/runner.ts` — `runDocMigrations`, `migrateOnCopy`, `pendingMigrations`, `MAX_FAILURES`.
+- `src/lib/migrations/start.ts` — `startDocMigrations` (blokada `MIGRATION_LOCK`, migawka `saveBeforeReplace`, porażki w `kaczy.migrations.failures.v1`, rezygnacje w `kaczy.migrations.giveup.v1`), `useMigrationGiveUps`.
+- `src/main.tsx` — start po `yjsStore.ready()`, import dynamiczny.
+- `src/components/DocFormatBanner.tsx` — baner `migration-giveup-banner`.
+
+### Jak działa
+
+- Yjs nie cofa transakcji, więc migracja działa na kopii roboczej: nowy `Y.Doc` (własny, losowy `clientID`) + stan żywego dokumentu → jedna transakcja z danymi i znacznikiem `{ at, version }` w mapie `docMigrations` → `check` na kopii → różnica `encodeStateAsUpdate(kopia, wektorŻywego)` jednym `applyUpdate` z `origin` `migration:<id>`.
+- Pod blokadą znaczniki są sprawdzane od nowa (inna karta albo inne urządzenie mogły już migrować). Po porażce kolejne migracje z listy czekają do następnego startu.
+- `check` po scaleniu z żywym dokumentem jest tylko wpisem w dzienniku — zmiany, które przyszły w trakcie, scalają się jak każde inne.
+- Istniejące migracje (D2.3) zostają w miejscu ze swoimi znacznikami na urządzenie; rejestr je tylko opisuje — przeniesienie znaczników byłoby kolejną migracją.
+
+### Ograniczenia i pułapki
+
+- D2.4 uproszczone: migawka trafia do katalogu „przed przywróceniem” (30 dni, istniejące przywracanie w Ustawieniach → Kopia i dane), nie do osobnego katalogu 14 dni / 3 sztuki. Ostrzeżenie o grupie synchronizacji daje istniejące okno przywracania (D-A1).
+- Przed pierwszą migracją dokumentu trzeba spisać obserwatory, które biorą zmianę za edycję użytkownika (`updatedAt`, historia wersji, status zapisu), i dodać im `isMigrationOrigin`.
+- Migracja dodana później niż zmiana od starszego klienta: znacznik już jest, więc czytnik musi rozumieć oba kształty (zasada 2, test D3.4 do zrobienia).
+- Nie zrobione: D2.5 (wzorce migracji jako pomocniki), D2.6 (reguła w zasadach D7).
+
+### Testy
+
+- `src/lib/migrations/runner.test.ts` — identyfikatory rejestru, jeden update z `origin` `migration:<id>`, znacznik i migawka, brak pracy przy drugim uruchomieniu, błąd i nieudane sprawdzenie bez zmian w dokumencie, rezygnacja po 3 porażkach, brak migracji bez migawki, zbieżność dwóch urządzeń (D3.3).
+- `src/lib/docMapsInventory.test.ts` — `docMigrations` w spisie.
+
+### Commit
+
+D2.1–D2.4, 2026-11-19 — commit po tym wpisie.
 
 ## Synchronizacja — duże wiadomości WebRTC dzielone na ramki (D-U1, U-1, 2026-11-18)
 
