@@ -6602,7 +6602,7 @@ W1.1–W1.4: 974281cc, 2026-11-19.
 
 W2.1, WZ-1, 2026-11-19 — commit po tym wpisie.
 
-## Wygląd — odmiany karty, wiersz listy i rozmiary ikon (W3.1, W3.4, W4.1 częściowo, W4.2, W4.3, 2026-11-19)
+## Wygląd — odmiany karty, wiersz listy i rozmiary ikon (W3.1, W3.4, W4.1 częściowo, W4.2–W4.4, 2026-11-19)
 
 ### Co robi
 
@@ -6625,6 +6625,7 @@ W2.1, WZ-1, 2026-11-19 — commit po tym wpisie.
 - W4.1 (część): 1103 pary `h-N w-N` / `w-N h-N` w 242 plikach zamienione na `size-N` (bez zmiany wyglądu); strażnik `squarePair` (próg 0). Skala ikon 14/16/20 = `size-3.5/4/5`; nie przejrzane jeszcze 66 × `size-3` i 25 × `size-6` (część to kropki i awatary, nie ikony).
 - W4.2: `--icon-stroke` w `src/index.css` — domyślnie 1,75 (`:root`), 1,5 w stylach plan, matryca i zeszyt, 2 w hydraulice; reguła `.lucide[stroke-width="2"]` ustawia kreskę raz. Selektor celowo tylko na domyślną kreskę lucide: CSS przebija atrybut, więc jawne `strokeWidth` (✓ w zaznaczeniu 3, rysunki pustych stanów 1,1–1,5) by zniknęły. Zostałe 49 `strokeWidth` to rysunki SVG i takie wyjątki. `Button` (`src/components/ui/button.tsx`) bierze kreskę z `var(--icon-stroke)` zamiast stałego 1,75, więc styl zmienia też ikony w przyciskach.
 - W4.3: `.lucide { flex-shrink: 0 }` w `src/index.css` — ikona nie ściska się, gdy tekst obok łamie się w wierszu flex. Przegląd: żadna ikona nie ma `text-foreground` (nie jest ciemniejsza od tekstu). Wyrównanie do linii bazowej (`mt-0.5` przy wielowierszowym tekście) zostaje w miejscu użycia.
+- W4.4: tabela stanów w `docs/komponenty.md`. `Button` nieaktywny ma `text-faint` zamiast `text-muted-foreground` (jeden wzór, bez `opacity`). `Card variant="interactive"`: wybrana (`aria-selected`/`aria-pressed`/`aria-current`) — obrys `primary`; nieaktywna (`aria-disabled`) — `text-faint`, bez reakcji. Pułapka: `aria-current="false"` też podświetli — atrybut pomijać.
 
 ### Testy
 

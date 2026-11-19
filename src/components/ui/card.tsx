@@ -9,14 +9,15 @@ export const cardClass = "rounded-card border border-border bg-card";
  * - `plain` — obrys, bez cienia (domyślna);
  * - `raised` — obrys i elewacja 1 (karta nad tłem, np. podsumowanie);
  * - `inset` — grupa w karcie: tło wyciszone, bez obrysu (W3.3: karta w karcie tylko tak);
- * - `interactive` — cała karta klikalna: hover, wciśnięcie, pierścień fokusu;
+ * - `interactive` — cała karta klikalna: hover, wciśnięcie, pierścień fokusu; wybrana (`aria-selected|pressed|current`)
+ *   obrys w akcencie; nieaktywna (`aria-disabled`) tekst `--faint` bez reakcji (W4.4);
  * - `status` — lewa krawędź w kolorze stanu (`tone`).
  */
 const VARIANT = {
   plain: cardClass,
   raised: `${cardClass} shadow-elevation-1`,
   inset: "rounded-field bg-muted/50",
-  interactive: `${cardClass} pressable cursor-pointer transition-colors hover:border-foreground/25 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring`,
+  interactive: `${cardClass} pressable cursor-pointer transition-colors hover:border-foreground/25 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring aria-selected:border-primary aria-pressed:border-primary aria-[current]:border-primary aria-disabled:pointer-events-none aria-disabled:text-faint`,
   status: `${cardClass} border-l-4`,
 } as const;
 

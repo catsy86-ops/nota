@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 // Wciśnięcie = dociśnięcie: reguła `.pressable` z index.css (1 px w dół, ciemniej) + wewnętrzny cień.
 // Nieaktywny (nowy plan 2.4): bez `opacity-50` — blady bursztyn wyglądał na zepsuty i miał za mały kontrast.
-// Wypełnione warianty przechodzą na neutralne tło z tekstem `muted-foreground`, obrysowe tylko szarzeją.
+// Wypełnione warianty przechodzą na neutralne tło z tekstem `--faint` (W4.4: jeden wzór nieaktywnego), obrysowe tylko szarzeją.
 // Czego brakuje, mówi linijka pod formularzem (`aria-describedby`), nie sam przycisk.
 // Promień siedzi w wariancie, nie w bazie: `cn` (tailwind-merge) nie zna `rounded-control`, więc nie zdjąłby go
 // pod `rounded-full` pigułki (plan UI 2026-11-06, 1.2).
@@ -16,16 +16,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "rounded-control bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground",
-        destructive: "rounded-control bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:bg-muted disabled:text-muted-foreground",
-        outline: "rounded-control border border-input bg-background hover:bg-muted hover:text-foreground disabled:text-muted-foreground",
-        secondary: "rounded-control bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:bg-muted disabled:text-muted-foreground",
-        ghost: "rounded-control hover:bg-muted hover:text-foreground disabled:text-muted-foreground",
-        link: "rounded-control text-primary-ink underline-offset-4 hover:underline active:translate-none! active:shadow-none active:filter-none! disabled:text-muted-foreground disabled:no-underline",
+        default: "rounded-control bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-faint",
+        destructive: "rounded-control bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:bg-muted disabled:text-faint",
+        outline: "rounded-control border border-input bg-background hover:bg-muted hover:text-foreground disabled:text-faint",
+        secondary: "rounded-control bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:bg-muted disabled:text-faint",
+        ghost: "rounded-control hover:bg-muted hover:text-foreground disabled:text-faint",
+        link: "rounded-control text-primary-ink underline-offset-4 hover:underline active:translate-none! active:shadow-none active:filter-none! disabled:text-faint disabled:no-underline",
         /** Pasek narzędzi działu (Cofnij/Ponów w Grafiku): obrys na karcie, żeby stał osobno od siatki. */
-        toolbar: "rounded-control border border-border/60 bg-card hover:bg-muted disabled:bg-muted/40 disabled:text-muted-foreground",
+        toolbar: "rounded-control border border-border/60 bg-card hover:bg-muted disabled:bg-muted/40 disabled:text-faint",
         /** Pigułka podpowiedzi (budowa, „Tu jestem”): akcentowy obrys, cała szerokość tekstu. */
-        pill: "max-w-full gap-1 rounded-full border border-primary/40 text-primary-ink hover:bg-primary/10 disabled:border-border disabled:text-muted-foreground",
+        pill: "max-w-full gap-1 rounded-full border border-primary/40 text-primary-ink hover:bg-primary/10 disabled:border-border disabled:text-faint",
       },
       size: {
         default: "h-10 px-4 py-2",
