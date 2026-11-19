@@ -7,6 +7,8 @@ import { amountText } from "@/lib/debts/hideAmounts";
 import type { PersonDebts } from "@/lib/debts/model";
 import { planState } from "@/lib/debts/plans";
 import { payDebtRate, useDebtPlans } from "@/lib/debts/store";
+import { cn } from "@/lib/utils";
+import { cardVariant } from "@/components/ui/card";
 
 const plDay = (day: string) => `${day.slice(8, 10)}.${day.slice(5, 7)}.${day.slice(0, 4)}`;
 
@@ -38,7 +40,7 @@ export function DebtPlans({ person, hidden }: { person: PersonDebts; hidden: boo
   return (
     <section aria-label="Raty" className="mt-4 space-y-2" data-testid="debt-plans">
       {mine.map(({ plan, state }) => state && (
-        <div key={plan.id} className="rounded-card border border-border/70 p-3 text-sm">
+        <div key={plan.id} className={cn(cardVariant("inset"), "p-3 text-sm")}>
           <p className="flex items-center gap-2 font-medium">
             <CalendarClock className="size-4 text-muted-foreground" aria-hidden />
             {state.finished

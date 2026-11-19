@@ -21,7 +21,7 @@ import { downloadBlob } from "@/lib/downloadBlob";
 import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
 import { PageActions } from "@/components/PageActions";
 import { avatarHue, balances, debtsCsv, initialOf, debtSide, doubleSettle, foldName, personKey, personStatement, runningBalances, DEBT_KIND_LABEL, DEBT_KINDS, DEBT_NOTE_LABEL, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
-import { cardClass } from "@/components/ui/card";
+import { cardVariant } from "@/components/ui/card";
 import { DebtPlans } from "./DebtPlans";
 import { PLAN_MAX_RATES, PLAN_MIN_RATES, rateAmounts } from "@/lib/debts/plans";
 
@@ -145,7 +145,7 @@ function Summary({ owedToMe, iOwe, hidden }: { owedToMe: number; iOwe: number; h
     : <AnimatedNumber value={v} format={formatAmount} data-testid={testId} />;
   return (
     // Liczby przez `Stat` (nowy plan 2.3): ten sam wygląd co w Grafiku i Pracy.
-    <div className={`${cardClass} p-4 sm:p-5`} role="group" aria-label="Podsumowanie">
+    <div className={cn(cardVariant("raised"), "p-card")} role="group" aria-label="Podsumowanie">
       <div className="grid grid-cols-2 gap-3">
         <Stat label="Są nam winni" value={money(owedToMe, "debts-owed")} tone="success" />
         <Stat label="Jesteś winien" value={money(iOwe, "debts-owe")} tone="warning" align="end" />
@@ -256,7 +256,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
   };
 
   return (
-    <form onSubmit={submit} noValidate aria-label="Nowy wpis" className="@container mb-6 space-y-4 rounded-card border border-border/70 bg-card p-4">
+    <form onSubmit={submit} noValidate aria-label="Nowy wpis" className={cn(cardVariant(), "@container mb-6 space-y-4 p-card")}>
       <KindPicker value={kind} onChange={setKind} />
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -421,7 +421,7 @@ function PersonList({ people, onOpen, hidden, label }: { people: PersonDebts[]; 
             <button
               type="button"
               onClick={() => onOpen(p.key)}
-              className="pressable group w-full rounded-card border border-border/70 bg-card p-4 text-left transition-colors hover:border-primary/50 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              className={cn(cardVariant("interactive"), "group w-full p-card text-left")}
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="flex min-w-0 items-center gap-2.5">
@@ -550,7 +550,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
 
       {twice && (
         // 1.6: „Oddał całość” na dwóch telefonach naraz — saldo przeskoczyło na drugą stronę.
-        <div role="status" className="mt-4 flex flex-wrap items-center gap-3 rounded-card border border-warning/50 bg-warning/10 p-3 text-sm" data-testid="debts-double-settle">
+        <div role="status" className={cn(cardVariant("status", "warning"), "mt-4 flex flex-wrap items-center gap-3 bg-warning/10 p-3 text-sm")} data-testid="debts-double-settle">
           <TriangleAlert className="size-4 shrink-0 text-warning-ink" aria-hidden />
           <span className="min-w-0 flex-1">Rozliczono dwa razy — usunąć drugi wpis?</span>
           <Button size="sm" variant="outline" className="h-11" onClick={() => remove(twice, false)}>Usuń drugi wpis</Button>
@@ -582,7 +582,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
                     <EditDebtForm entry={e} people={names} reminders={reminders} addReminderNote={addReminderNote} hidden={hidden} proofRef={proofs.get(e.id)?.ref} onDone={() => setEditingId(null)} />
                   </li>
                 ) : (
-                  <li key={e.id} className="flex items-center gap-3 rounded-card border border-border/60 bg-background p-3">
+                  <li key={e.id} className={cn(cardVariant("inset"), "flex items-center gap-3 p-3")}>
                     <span className={cn("grid size-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-success/15 text-success-ink" : "bg-warning/15 text-warning-ink")} aria-hidden>
                       {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="size-4" /> : <ArrowDownLeft className="size-4" />}
                     </span>
@@ -693,7 +693,7 @@ function EditDebtForm({ entry, people, reminders, addReminderNote, hidden, proof
       onSubmit={(e) => { e.preventDefault(); save(); }}
       noValidate
       aria-label="Edycja wpisu"
-      className="@container space-y-3 rounded-card border border-primary/40 bg-background p-3"
+      className={cn(cardVariant(), "@container space-y-3 border-primary/40 p-3")}
     >
       <KindPicker value={kind} onChange={setKind} />
       <div className="grid gap-3 sm:grid-cols-2">

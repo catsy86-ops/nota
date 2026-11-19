@@ -6786,3 +6786,38 @@ W1.7 — commit po tym wpisie (2026-11-19).
 ### Commit
 
 W1.8 — commit po tym wpisie (2026-11-19).
+
+## Wygląd — karty na odmianach: Długi (W3.2, 2026-11-19)
+
+### Co robi
+
+- W Długach karty biorą odmiany ze wspólnego `Card`:
+  - podsumowanie jest uniesione (cień);
+  - osoby na liście to karty klikalne (hover, fokus, wciśnięcie z odmiany);
+  - wpisy historii i raty w arkuszu osoby mają wyciszone tło bez drugiej ramki;
+  - ostrzeżenie o podwójnym rozliczeniu ma lewą krawędź w kolorze ostrzeżenia.
+
+### Gdzie jest
+
+- `src/components/debts/DebtsView.tsx`: `Summary` (`raised`), formularz „Nowy wpis” (`plain`), osoba (`interactive`), wpis historii (`inset`), „Edycja wpisu” (`plain` + `border-primary/40`), `debts-double-settle` (`status`, `warning`).
+- `src/components/debts/DebtPlans.tsx` — rata (`inset`).
+- `src/test/designTokens.test.ts` — strażnik „W3.2”: ręczne `rounded-card … border` i goły `cardClass` poza `components/ui/`, próg 211. Maleje z kolejnymi działami.
+
+### Jak działa
+
+- Klasy idą przez `cn(cardVariant(...), ...)`. `tailwind-merge` zdejmuje `border-border` z odmiany, gdy miejsce dokłada własny kolor obrysu (`border-primary/40`).
+- Dopełnienie kart w widoku to `p-card` (W1.5), więc idzie za gęstością.
+
+### Ograniczenia i pułapki
+
+- Plan Długów zakładał podział `DebtsView.tsx` (L1.1) przed W3.2. Karty są przeniesione w obecnym pliku, a podział nadal czeka.
+- Hover osoby ma obrys `foreground/25` z odmiany, a nie `primary/50` jak wcześniej.
+- Zrzuty `@visual` mają tylko pusty stan Długów. Wzorce `dlugi-telefon-*` są zaktualizowane i ich różnice wynikały z W2.1 (15 px) i W6.1 (bursztyn). Pozostałe wzorce `@visual` są nieaktualne po tych samych zmianach.
+
+### Testy
+
+- `src/components/debts/DebtsView.test.tsx` (22), e2e `debts-due`, `debts-plan`, `debts-rates` (13), `@visual dlugi` (6), strażnik.
+
+### Commit
+
+W3.2 Długi — commit po tym wpisie (2026-11-19).

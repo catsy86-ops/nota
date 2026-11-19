@@ -71,6 +71,18 @@ describe("W6.3 — `dark:` poza components/ui", () => {
   });
 });
 
+// W3.2: karta poza `components/ui/` to `<Card variant>` albo `cardVariant()`, nie ręczne `rounded-card … border`
+// ani goły `cardClass`. Próg = stan po migracji Długów (2026-11-19); maleje działami (Praca, Ćwiczenia, Grafik, …).
+const MANUAL_CARD_MAX = 211;
+const manualCard = /(?<![\w-])rounded-card(?![\w-])[^"'`\n]*?(?<![\w:-])border(?![\w-])|\bcardClass\b(?! =)/g;
+describe("W3.2 — ręczne karty poza components/ui", () => {
+  it(`co najwyżej ${MANUAL_CARD_MAX} (zamiast tego: Card variant / cardVariant())`, () => {
+    const n = SOURCES.filter(({ path }) => !/[\\/]components[\\/]ui[\\/]/.test(path))
+      .reduce((sum, { text }) => sum + (text.replace(/^import .*$/gm, "").match(manualCard)?.length ?? 0), 0);
+    expect(n).toBeLessThanOrEqual(MANUAL_CARD_MAX);
+  });
+});
+
 // W1.7: kolory w CSS tylko w OKLCH (przeliczone narzędziem 2026-11-19). Komentarze i `url(…)` (SVG w data URL) się nie liczą.
 function cssFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
