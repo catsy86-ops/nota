@@ -25,13 +25,18 @@
 
 /* Podpowiedź w polach jak w v3 (szary 400) — v4 bierze półprzezroczysty kolor tekstu. */
 @layer base {
-  /* Motywy techniczne: cieńsze ikony lucide (plan 1.6). Reszta zostaje przy domyślnej grubości. */
+  /* W4.2: grubość kreski ikon z tokenu, ustawiona raz. Cieńsza w stylach rysunkowych (plan, matryca, zeszyt),
+     pełna 2 w hydraulice. Tylko ikony z domyślną kreską (`stroke-width="2"` od lucide): jawne `strokeWidth`
+     (pogrubiony ✓ w zaznaczeniu, cienki rysunek pustego stanu) zostają, bo CSS przebiłby atrybut. */
   html[data-skin="plan"],
-  html[data-skin="matrix"] {
+  html[data-skin="matrix"],
+  html[data-skin="zeszyt"] {
     --icon-stroke: 1.5;
   }
-  html[data-skin="plan"] .lucide,
-  html[data-skin="matrix"] .lucide {
+  html[data-skin="hydraulika"] {
+    --icon-stroke: 2;
+  }
+  .lucide[stroke-width="2"] {
     stroke-width: var(--icon-stroke);
   }
 
@@ -386,8 +391,8 @@ html[data-skin="zeszyt"] .app-header {
 
     /* Pierścień fokusu (plan 1.7): jeden token, na razie ten sam kolor co `--ring`. */
     --ring-focus: var(--ring);
-    /* Grubość kreski ikon lucide (plan 1.6). 2 = domyślna lucide; motywy techniczne dają cieńszą. */
-    --icon-stroke: 2;
+    /* Grubość kreski ikon lucide (W4.2): 1,75 — o włos lżejsza od domyślnej 2 lucide przy 16 px; styl może zmienić. */
+    --icon-stroke: 1.75;
 
     /* Kierunek „zeszyt w kratkę przy barze”: papier, kratka, bursztyn piwa,
        niebieski długopis i czerwony margines (święta, usuwanie). */
