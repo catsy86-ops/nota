@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MODULES, TOPICS } from "@/lib/study/content";
 import { HeightsButton } from "../HeightsSheet";
+import { cardVariant } from "@/components/ui/card";
 
 type Topic = (typeof TOPICS)[number];
 interface CheckItem { id: string; text: string; critical?: boolean; risk?: string }
@@ -18,7 +19,7 @@ export function EntryTopicPanel({ topic, current, items, checked, onTopic, onTog
   onPractice: (id: string) => void;
 }) {
   return (
-    <div id="journal-topic" className="rounded-card border border-border" data-testid="journal-topic-panel">
+    <div id="journal-topic" className={cardVariant()} data-testid="journal-topic-panel">
       {topic === "punkty" && <div className="px-2 py-1"><HeightsButton variant="link" /></div>}
       <label className="block space-y-1 text-xs text-muted-foreground">
         Czego dotyczy

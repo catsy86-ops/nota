@@ -8,6 +8,7 @@ import { FITTING_NAME_MAX, FITTING_QTY_MAX, FITTINGS_MAX, fittingKey, fittingsLi
 import { catalogFittings, useCatalogPrefs } from "@/lib/study/catalog";
 import { SystemPicker } from "./SystemPicker";
 import { mergeFittings, parseSpokenFittings } from "@/lib/study/spokenFittings";
+import { cardVariant } from "@/components/ui/card";
 
 /**
  * Kształtki we wpisie: nazwa (z podpowiedziami z poprzednich wpisów) i liczba sztuk
@@ -68,7 +69,7 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
   );
 
   return (
-    <fieldset className="min-w-0 space-y-2 rounded-card border border-border p-3" data-testid="fittings">
+    <fieldset className={cn(cardVariant(), "min-w-0 space-y-2 p-3")} data-testid="fittings">
       <legend className="sr-only">Kształtki</legend>
       <p className="flex items-center gap-2 text-sm font-medium"><Package className="size-4 text-primary-ink" aria-hidden />Kształtki</p>
       <datalist id={listId}>{names.map((n) => <option key={n} value={n} />)}</datalist>

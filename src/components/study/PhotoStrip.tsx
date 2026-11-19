@@ -7,6 +7,7 @@ import { CAPTION_MAX } from "@/lib/study/photoCaption";
 import { DelayedSpinner } from "@/components/DelayedSpinner";
 import type { Dimension } from "@/lib/study/dimensions";
 import { dimensionsLine } from "@/lib/study/dimensions";
+import { cardVariant } from "@/components/ui/card";
 
 /**
  * Pasek zdjęć wpisu w arkuszu i formularz podpisu pod nim (§5.5). Stan wpisu zostaje w arkuszu;
@@ -119,7 +120,7 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
       )}
       {captioning && images.includes(captioning) && (
         <form
-          className="space-y-2 rounded-card border border-primary/40 bg-primary/5 p-3"
+          className={cn(cardVariant("status"), "space-y-2 bg-primary/5 p-3")}
           onSubmit={(ev) => { ev.preventDefault(); onSubmitCaption(captioning); }}
           aria-label="Podpis na zdjęciu"
         >

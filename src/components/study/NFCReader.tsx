@@ -5,6 +5,8 @@ import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { hasNFC, readNFCTag } from "@/lib/nfc";
 import { toast } from "sonner";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface NFCReaderProps {
   open: boolean;
@@ -59,7 +61,7 @@ export function NFCReader({ open, onOpenChange, onDetected }: NFCReaderProps) {
 
         <div className="space-y-4 px-5 py-4 min-h-24">
           {!supported ? (
-            <div className="flex gap-3 rounded-card border border-warning bg-warning/5 p-3">
+            <div className={cn(cardVariant("status", "warning"), "flex gap-3 bg-warning/5 p-3")}>
               <AlertCircle className="size-5 shrink-0 text-warning-ink" aria-hidden />
               <div className="text-sm" data-testid="nfc-unsupported">Ta przeglądarka nie obsługuje NFC (działa w Chrome na Androidzie).</div>
             </div>
@@ -71,7 +73,7 @@ export function NFCReader({ open, onOpenChange, onDetected }: NFCReaderProps) {
               <p className="text-sm text-muted-foreground">Przytrzymaj tag przy telefonie…</p>
             </div>
           ) : tag ? (
-            <div className="rounded-card border border-success bg-success/5 p-3" role="status">
+            <div className={cn(cardVariant("status", "success"), "bg-success/5 p-3")} role="status">
               <p className="text-2xs text-muted-foreground mb-1">Odczytany tag:</p>
               <p className="font-mono text-sm text-foreground break-all">{tag}</p>
             </div>

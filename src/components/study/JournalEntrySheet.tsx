@@ -58,6 +58,7 @@ import { applySpokenEntry } from "@/lib/study/spokenEntryApply";
 import { siteStages, toggleStage } from "@/lib/study/stages";
 import { DelayedSpinner } from "@/components/DelayedSpinner";
 import { useTrackUse } from "@/lib/study/usage";
+import { cardVariant } from "@/components/ui/card";
 
 export function KindIcon({ kind, className = "size-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-success-ink")} aria-hidden />;
@@ -560,7 +561,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           />
 
           {isEdit && kind === "problem" && (
-            <label className="flex items-center gap-2.5 rounded-card border border-border px-3 py-2.5 text-sm coarse:min-h-12">
+            <label className={cn(cardVariant(), "flex items-center gap-2.5 px-3 py-2.5 text-sm coarse:min-h-12")}>
               <Checkbox
                 checked={editForm.resolved !== null}
                 onCheckedChange={(on) => patchJournalEditForm({ resolved: on === true ? editForm.resolved ?? Date.now() : null })}
@@ -783,12 +784,12 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </button>
             </div>
             {testVisible && (
-              <div id="journal-test" className="rounded-card border border-border p-2">
+              <div id="journal-test" className={cn(cardVariant(), "p-2")}>
                 <PressureTestFields value={form.test} topic={topic} onChange={(t) => patch({ test: t })} />
               </div>
             )}
             {levelVisible && (
-              <div id="journal-level" className="rounded-card border border-border p-2">
+              <div id="journal-level" className={cn(cardVariant(), "p-2")}>
                 <button
                   type="button"
                   onClick={() => setLevelOpen(true)}
@@ -801,7 +802,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             )}
             <LevelMeter open={levelOpen} onOpenChange={setLevelOpen} onSelect={(angle) => patch({ level: angle })} />
             {barcodeVisible && (
-              <div id="journal-barcode" className="rounded-card border border-border p-2">
+              <div id="journal-barcode" className={cn(cardVariant(), "p-2")}>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -828,7 +829,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             <BarcodeScanner open={barcodeOpen} onOpenChange={setBarcodeOpen} onDetected={(code) => patch({ barcode: code })} />
             <NFCReader open={nfcOpen} onOpenChange={setNfcOpen} onDetected={(tag) => patch({ barcode: tag })} />
             {aiVisible && (
-              <div id="journal-ai" className="rounded-card border border-border p-2">
+              <div id="journal-ai" className={cn(cardVariant(), "p-2")}>
                 <button
                   type="button"
                   onClick={() => setAiOpen(true)}
@@ -852,7 +853,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               onPoint={(id) => patch({ point: id })}
             />
             {fittingsVisible && (
-              <div id="journal-fittings" className="rounded-card border border-border p-2">
+              <div id="journal-fittings" className={cn(cardVariant(), "p-2")}>
                 <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
               </div>
             )}
@@ -863,7 +864,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </Suspense>
             )}
             {pipesVisible && (
-              <div id="journal-pipes" className="rounded-card border border-border p-3">
+              <div id="journal-pipes" className={cn(cardVariant(), "p-3")}>
                 <PipesFields value={form.pipes ?? []} history={pipeHistory} onChange={(p) => patch({ pipes: p })} />
               </div>
             )}

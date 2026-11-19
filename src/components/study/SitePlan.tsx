@@ -7,6 +7,8 @@ import { haptic } from "@/lib/haptics";
 import { activePlanItems, cleanPlanItems, PLAN_MAX, PLAN_TEXT_MAX, type PlanItem } from "@/lib/study/planItems";
 import { setSitePlan } from "@/lib/study/store";
 import type { SiteInfo } from "@/lib/study/sites";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 /** Plan na dziś na budowie (P-5): 3–5 zadań, odhaczanie w ciągu dnia; niezrobione zostają na jutro. */
 export function SitePlan({ site }: { site: SiteInfo }) {
@@ -40,7 +42,7 @@ export function SitePlan({ site }: { site: SiteInfo }) {
   }
 
   return (
-    <section aria-label="Plan na dziś" className="mt-3 space-y-2 rounded-card border border-border/60 bg-muted/30 p-3" data-testid="site-plan">
+    <section aria-label="Plan na dziś" className={cn(cardVariant("inset"), "mt-3 space-y-2 p-3")} data-testid="site-plan">
       <h3 className="section-caps">Plan na dziś</h3>
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">Wpisz 3–5 zadań na budowę. Niezrobione przejdą na jutro.</p>

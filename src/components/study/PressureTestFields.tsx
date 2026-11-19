@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { clockLabel, defaultTest, isRunning, readingsLine, remainingSec, TEST_MEDIA, TEST_MEDIUM_LABEL, type PressureTest, type TestMedium } from "@/lib/study/pressureTest";
 import { PressureChart } from "./PressureChart";
 import { PressureTestTimer } from "./PressureTestTimer";
+import { cardVariant } from "@/components/ui/card";
 
 /**
  * Protokół próby szczelności w arkuszu wpisu: medium, ciśnienie, czas, spadek i wynik.
@@ -38,7 +39,7 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
   const set = (patch: Partial<PressureTest>) => onChange({ ...value, ...patch });
   return (
     <>
-      <fieldset className="min-w-0 space-y-3 rounded-card border border-primary/40 bg-primary/5 p-3" data-testid="pressure-test">
+      <fieldset className={cn(cardVariant("status"), "min-w-0 space-y-3 bg-primary/5 p-3")} data-testid="pressure-test">
         <legend className="sr-only">Protokół próby szczelności</legend>
         <div className="flex items-center gap-2">
           <Gauge className="size-4 shrink-0 text-primary-ink" aria-hidden />

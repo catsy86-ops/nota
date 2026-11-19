@@ -6,6 +6,8 @@ import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui
 import { cleanCode, CODE_MAX, hasBarcodeDetector, requestCamera, scanBarcode } from "@/lib/barcode";
 import { haptic } from "@/lib/haptics";
 import { toast } from "sonner";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type CameraState = "starting" | "scanning" | "unsupported" | "denied";
 
@@ -110,7 +112,7 @@ export function BarcodeScanner({ open, onOpenChange, onDetected, autoUse = false
 
         <div className="space-y-3 px-5 py-4">
           {noCamera ? (
-            <div className="flex gap-3 rounded-card border border-warning bg-warning/5 p-3" role="status" data-testid="scanner-fallback">
+            <div className={cn(cardVariant("status", "warning"), "flex gap-3 bg-warning/5 p-3")} role="status" data-testid="scanner-fallback">
               <AlertCircle className="size-5 shrink-0 text-warning-ink" aria-hidden />
               <p className="text-sm">
                 {camera === "denied" ? "Brak dostępu do kamery. Zezwól na nią w ustawieniach przeglądarki albo wpisz kod poniżej." : "Ta przeglądarka nie ma skanera kodów. Wpisz kod z opakowania poniżej."}
@@ -126,7 +128,7 @@ export function BarcodeScanner({ open, onOpenChange, onDetected, autoUse = false
           )}
 
           {code && (
-            <div className="rounded-card border border-success bg-success/5 p-3" data-testid="scanner-code">
+            <div className={cn(cardVariant("status", "success"), "bg-success/5 p-3")} data-testid="scanner-code">
               <p className="ui-hint">Kod:</p>
               <p className="break-all font-mono text-sm text-foreground">{code}</p>
             </div>

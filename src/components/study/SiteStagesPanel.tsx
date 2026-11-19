@@ -11,7 +11,7 @@ import { COVER_STAGE_ID, coverPhotoCount } from "@/lib/study/coverPhotos";
 import type { JournalEntry } from "@/lib/study/journalEntry";
 import { getSitePoints } from "@/lib/study/pointsStore";
 import { CoverPhotoButton } from "./CoverPhotoButton";
-import { cardClass } from "@/components/ui/card";
+import { cardVariant } from "@/components/ui/card";
 
 const shortDate = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" });
 
@@ -63,7 +63,7 @@ export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journa
   }
 
   return (
-    <section aria-label="Etapy budowy" data-testid="site-stages" className={`${cardClass} space-y-2 p-3`}>
+    <section aria-label="Etapy budowy" data-testid="site-stages" className={cn(cardVariant(), "space-y-2 p-3")}>
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 section-caps">
           <ListChecks className="size-3.5" aria-hidden />Etapy

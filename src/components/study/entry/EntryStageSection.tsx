@@ -4,6 +4,7 @@ import { haptic } from "@/lib/haptics";
 import type { JournalKind } from "@/lib/study/store";
 import { siteStages, type SiteStage } from "@/lib/study/stages";
 import { hasCheckLine, stageTemplate, toggleCheckLine } from "@/lib/study/stageTemplates";
+import { cardVariant } from "@/components/ui/card";
 
 /**
  * Etap budowy we wpisie (R2.1): przypięty etap z listą kontrolną (P2.9), pigułki następnych etapów przy nowym wpisie
@@ -26,7 +27,7 @@ export function EntryStageSection(p: {
   return (
     <>
       {entryStage && (
-        <div className="flex items-center gap-2 rounded-card border border-success-ink/40 bg-success/10 px-3 py-1.5 text-sm" data-testid="journal-entry-stage">
+        <div className={cn(cardVariant("status", "success"), "flex items-center gap-2 bg-success/10 px-3 py-1.5 text-sm")} data-testid="journal-entry-stage">
           <ListChecks className="size-4 shrink-0 text-success-ink" aria-hidden />
           <span className="min-w-0 flex-1 truncate">Etap: <span className="font-medium">{entryStage.name}</span></span>
           <button
@@ -43,7 +44,7 @@ export function EntryStageSection(p: {
 
       {/* P2.9: lista kontrolna i podpowiedzi zdjęć dla etapu; punkt dopisuje „✓ …” do opisu (drugie stuknięcie usuwa). */}
       {entryStage && tpl && (
-        <div className="space-y-1.5 rounded-card border border-border/60 px-3 py-2" data-testid="journal-stage-template">
+        <div className={cn(cardVariant(), "space-y-1.5 px-3 py-2")} data-testid="journal-stage-template">
           <p className="ui-hint">Na tym etapie potwierdź w opisie:</p>
           <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Lista kontrolna: ${entryStage.name}`}>
             {tpl.checklist.map((item) => {

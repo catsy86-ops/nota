@@ -10,6 +10,8 @@ import { useEntryCheck } from "@/lib/study/entryCheckStore";
 import { durationLabel, liveMinutes, monthHours, siteMonthCsv } from "@/lib/study/siteTime";
 import { setSiteRate } from "@/lib/study/store";
 import { SITE_RATE_MAX, type SiteInfo } from "@/lib/study/sites";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const zl = formatMoney;
 const hoursText = (min: number) => (min / 60).toFixed(min % 60 ? 1 : 0).replace(".", ",");
@@ -50,7 +52,7 @@ export function SiteTimePanel({ site, today, monthLabel, monthDays }: {
   }
 
   return (
-    <section aria-label="Czas na budowie" data-testid="site-time" className="space-y-2.5 rounded-card border border-border/60 bg-card p-3">
+    <section aria-label="Czas na budowie" data-testid="site-time" className={cn(cardVariant(), "space-y-2.5 p-3")}>
       <h3 className="flex items-center gap-1.5 text-sm font-semibold"><Clock className="size-4" aria-hidden />Czas na budowie</h3>
       {live !== null && record?.at && (
         <p className="text-sm" aria-live="polite">

@@ -6,6 +6,8 @@ import { ClipboardCheck, FileText, Gauge, Package, TriangleAlert, Truck, Wrench 
 import { pluralPl } from "@/lib/plural";
 import { type StudyReminder } from "@/lib/study/reminders";
 import { CoverPhotoButton } from "./CoverPhotoButton";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 
 const REMINDER_ICON: Partial<Record<StudyReminder["kind"], typeof TriangleAlert>> = {
@@ -37,7 +39,7 @@ export function ReminderRow({ reminder: r, onShow, coverPhotos = 0 }: { reminder
   // Każdy rodzaj przypomnienia ma swoją ikonę, żeby dało się je odróżnić bez czytania (§9 W5).
   const Icon = REMINDER_ICON[r.kind] ?? TriangleAlert;
   return (
-    <li className="flex items-start gap-2.5 rounded-card border border-warning/50 bg-warning/10 p-3 text-sm" data-reminder={r.kind}>
+    <li className={cn(cardVariant("status", "warning"), "flex items-start gap-2.5 bg-warning/10 p-3 text-sm")} data-reminder={r.kind}>
       <Icon className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
       <div className="min-w-0 flex-1 space-y-1.5">
         <p className="leading-snug">{text}</p>

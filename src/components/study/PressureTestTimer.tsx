@@ -12,6 +12,8 @@ import {
   addReading, cancelRun, clockLabel, elapsedSec, finishRun, isRunning, remainingSec, startRun, type PressureTest,
 } from "@/lib/study/pressureTest";
 import { PressureChart } from "./PressureChart";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const PRESETS = [15, 30, 60];
 const fmtBar = (n: number | null | undefined) => (n === null || n === undefined ? "" : String(n).replace(".", ","));
@@ -155,7 +157,7 @@ export function PressureTestTimer({ open, onOpenChange, test, onUpdate }: {
             </>
           ) : (
             <>
-              <div className="rounded-card border border-border bg-muted p-4 text-center" role="timer" aria-live="off" data-testid="timer-display">
+              <div className={cn(cardVariant("inset"), "p-4 text-center")} role="timer" aria-live="off" data-testid="timer-display">
                 <div className={over ? "font-mono text-4xl font-bold tabular-nums text-success-ink" : "font-mono text-4xl font-bold tabular-nums text-foreground"} data-testid="timer-clock">
                   {over ? "Czas minął" : clockLabel(left)}
                 </div>

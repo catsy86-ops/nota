@@ -15,7 +15,7 @@ import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { haptic } from "@/lib/haptics";
 import { pluralPl } from "@/lib/plural";
-import { cardClass } from "@/components/ui/card";
+import { cardVariant } from "@/components/ui/card";
 
 const ROUND_SIZE = 10;
 const LETTERS = ["A", "B", "C", "D"];
@@ -186,7 +186,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   if (examDone && round) {
     const weak = weakTopicsOf(examDone.byTopic);
     return (
-      <section aria-label="Wynik egzaminu" className={`${cardClass} p-5 sm:p-7 space-y-5`}>
+      <section aria-label="Wynik egzaminu" className={cn(cardVariant(), "p-5 sm:p-7 space-y-5")}>
         <div className="flex items-end gap-4">
           <p className="font-mono text-6xl font-semibold leading-none tabular-nums text-primary-ink">{examDone.correct}<span className="text-2xl text-muted-foreground">/{examDone.total}</span></p>
           <p className="pb-1 text-sm text-muted-foreground">Egzamin próbny · {Math.max(1, Math.round(examDone.seconds / 60))} min</p>
@@ -214,7 +214,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   if (result && round) {
     const percent = Math.round((result.correct / round.length) * 100);
     return (
-      <section aria-label="Wynik rundy" className={`${cardClass} p-5 sm:p-7 space-y-5`}>
+      <section aria-label="Wynik rundy" className={cn(cardVariant(), "p-5 sm:p-7 space-y-5")}>
         <div className="flex items-end gap-4">
           <p className="font-mono text-6xl font-semibold leading-none tabular-nums text-primary-ink">{result.correct}<span className="text-2xl text-muted-foreground">/{round.length}</span></p>
           <p className="pb-1 text-sm text-muted-foreground">
@@ -261,7 +261,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
 
   if (!round || !current) {
     return (
-      <section aria-label="Quiz" className={`${cardClass} p-5 sm:p-7 space-y-4`}>
+      <section aria-label="Quiz" className={cn(cardVariant(), "p-5 sm:p-7 space-y-4")}>
         <h2 className="title-section">Sprawdź, co umiesz</h2>
         <p className="text-sm text-muted-foreground max-w-prose">
           {ROUND_SIZE} pytań z poradnika, list kontrolnych i Twoich własnych. Najpierw wypadają tematy, których jeszcze nie masz w kolumnie „Umiem”.
@@ -269,7 +269,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           coraz rzadziej, po błędzie — następnego dnia.
         </p>
         {due.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-3 rounded-card border border-primary/30 bg-primary/5 px-3.5 py-3" data-testid="due-today">
+          <div className={cn(cardVariant("status"), "flex flex-wrap items-center gap-3 bg-primary/5 px-3.5 py-3")} data-testid="due-today">
             <p className="text-sm"><span className="font-semibold tabular-nums">{Math.min(ROUND_SIZE, due.length)} z {due.length} na dziś</span> <span className="text-muted-foreground">{pluralPl(Math.min(ROUND_SIZE, due.length), ["pytanie", "pytania", "pytań"])} w tej rundzie</span></p>
             <Button size="sm" onClick={() => onScopeChange?.({ kind: "due" })}>Powtórz</Button>
           </div>
@@ -320,7 +320,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   const reveal = answered && !examMode;
   const left = examEnd !== null ? Math.max(0, Math.ceil((examEnd - now) / 1000)) : 0;
   return (
-    <section aria-label="Quiz" className={`${cardClass} p-5 sm:p-7 space-y-5`}>
+    <section aria-label="Quiz" className={cn(cardVariant(), "p-5 sm:p-7 space-y-5")}>
       <div className="flex items-center justify-between gap-3 text-xs">
         <span className="font-mono tabular-nums text-muted-foreground">
           Pytanie {index + 1} z {round.length}

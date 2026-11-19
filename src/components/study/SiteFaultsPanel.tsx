@@ -13,6 +13,7 @@ import type { JournalEntry } from "@/lib/study/journalEntry";
 import type { SiteInfo } from "@/lib/study/sites";
 import { pluralPl } from "@/lib/plural";
 import { photoSaveFailed } from "@/components/study/useJournalPhotoEdits";
+import { cardVariant } from "@/components/ui/card";
 
 /** Ile dni do terminu, po polsku: „za 3 dni”, „dziś”, „po terminie 2 dni”. */
 function dueText(n: number | null): string {
@@ -50,7 +51,7 @@ export function SiteFaultsPanel({ site, journal }: { site: SiteInfo; journal: Jo
   if (faults.length === 0) return null;
 
   return (
-    <section aria-label="Usterki budowy" data-testid="site-faults" className="space-y-2 rounded-card border border-border/60 bg-card p-3">
+    <section aria-label="Usterki budowy" data-testid="site-faults" className={cn(cardVariant(), "space-y-2 p-3")}>
       <h3 className="flex items-center gap-1.5 text-sm font-semibold"><Wrench className="size-4" aria-hidden />Usterki ({faults.length})</h3>
       <ul className="space-y-2.5">
         {faults.map((f) => {

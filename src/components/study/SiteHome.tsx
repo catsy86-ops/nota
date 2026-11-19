@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Camera, ChevronRight, Mic, PackageX } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { cardClass } from "@/components/ui/card";
+import { cardVariant } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { haptic } from "@/lib/haptics";
 import { addPhotoEntry } from "@/lib/study/photoEntry";
@@ -17,7 +17,8 @@ import { photoEntryToast, photoSaveFailed } from "./useJournalPhotoEdits";
 import { SitePlan } from "./SitePlan";
 import { SiteShortagesPanel } from "./SiteShortagesPanel";
 
-const TILE = "pressable flex min-h-24 flex-col items-center justify-center gap-1.5 rounded-card border border-border bg-card px-2 py-3 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-60 coarse:min-h-28";
+// W3.2: kafel to klikalna karta; nieaktywny jak w `docs/komponenty.md` (`--faint`, bez `opacity`).
+const TILE = cn(cardVariant("interactive"), "flex min-h-24 flex-col items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium text-foreground hover:bg-muted disabled:pointer-events-none disabled:text-faint coarse:min-h-28");
 
 /**
  * Zakładka „Budowa” (plan Pracy na budowie, B2.1): bieżąca budowa na jednym ekranie — trzy duże przyciski
@@ -40,7 +41,7 @@ export function SiteHome({ onOpenCard, onOpenJournal, tools }: { onOpenCard: (si
 
   if (!current) {
     return (
-      <section className={cn(cardClass, "space-y-3 p-4 text-center")} data-testid="site-home-empty">
+      <section className={cn(cardVariant(), "space-y-3 p-4 text-center")} data-testid="site-home-empty">
         <p className="title-section">Nie ma jeszcze żadnej budowy</p>
         <p className="ui-hint">Załóż budowę w Dzienniku, a tu pojawią się zdjęcie, wpis głosem, plan na dziś i braki.</p>
         <Button type="button" variant="outline" onClick={onOpenJournal} className="coarse:min-h-11">Otwórz Dziennik</Button>
@@ -107,7 +108,7 @@ export function SiteHome({ onOpenCard, onOpenJournal, tools }: { onOpenCard: (si
         type="button"
         onClick={() => onOpenCard(current.id)}
         aria-label={`Karta budowy: ${current.name}`}
-        className={cn(cardClass, "pressable flex w-full items-center gap-3 p-4 text-left")}
+        className={cn(cardVariant("interactive"), "flex w-full items-center gap-3 p-4 text-left")}
         data-testid="site-home-card"
       >
         <span className="min-w-0 flex-1">

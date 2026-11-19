@@ -14,6 +14,7 @@ import { FittingsFields } from "./FittingsFields";
 import { PipesFields } from "./PipesFields";
 import { cn } from "@/lib/utils";
 import { POINT_TYPES, pointType } from "@/lib/study/points";
+import { cardVariant } from "@/components/ui/card";
 
 const newKit = (): Kit => ({ id: `kit-${crypto.randomUUID()}`, name: "", fittings: [], pipes: [] });
 
@@ -61,10 +62,10 @@ export function KitsDialog({ open, onOpenChange, fittingHistory, pipeHistory }: 
               <Input id="kit-name" value={editing.name} maxLength={KIT_NAME_MAX} placeholder="np. Podejście umywalki"
                 onChange={(e) => { setEditing({ ...editing, name: e.target.value }); setError(null); }} />
             </div>
-            <div className="rounded-card border border-border p-2">
+            <div className={cn(cardVariant(), "p-2")}>
               <FittingsFields value={editing.fittings} history={fittingHistory} onChange={(fittings) => { setEditing({ ...editing, fittings }); setError(null); }} />
             </div>
-            <div className="rounded-card border border-border p-3">
+            <div className={cn(cardVariant(), "p-3")}>
               <PipesFields value={editing.pipes} history={pipeHistory} onChange={(pipes) => { setEditing({ ...editing, pipes }); setError(null); }} />
             </div>
             <fieldset className="space-y-1.5">
@@ -94,7 +95,7 @@ export function KitsDialog({ open, onOpenChange, fittingHistory, pipeHistory }: 
           <>
             <ul className="space-y-2" aria-label="Zestawy">
               {kits.map((kit) => (
-                <li key={kit.id} className="flex items-center gap-2 rounded-card border border-border px-3 py-2">
+                <li key={kit.id} className={cn(cardVariant(), "flex items-center gap-2 px-3 py-2")}>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{kit.name}</p>
                     <p className="truncate text-xs text-muted-foreground">

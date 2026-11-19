@@ -24,6 +24,7 @@ import { mapsHref, primaryCall } from "@/lib/study/contact";
 import { QuickLink } from "./QuickLink";
 import { toastWithUndo } from "@/lib/undoToast";
 import { formatHoursShort } from "@/lib/shifts/time";
+import { cardVariant } from "@/components/ui/card";
 
 const hhmm = (at: number) => new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 const pointsPl = (n: number) => `${n} ${pluralPl(n, ["punktu", "punktów", "punktów"])}`;
@@ -108,7 +109,7 @@ export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) 
     <section
       aria-label="Przed wejściem na budowę"
       data-testid="entry-check"
-      className="entry-pass relative mb-4 rounded-card border border-border/70 bg-card p-3 shadow-elevation-1 xl:col-start-1"
+      className={cn(cardVariant("raised"), "entry-pass relative mb-4 p-3 xl:col-start-1")}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

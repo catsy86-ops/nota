@@ -11,6 +11,7 @@ import { siteStages } from "@/lib/study/stages";
 import { setSiteRate } from "@/lib/study/store";
 import { SITE_RATE_MAX, type SiteInfo } from "@/lib/study/sites";
 import { SiteBillingDues } from "./SiteBillingDues";
+import { cardVariant } from "@/components/ui/card";
 
 /** Pole kwoty: zapis przy wyjściu z pola; pusty tekst usuwa, zły tekst wraca do poprzedniej wartości. */
 function AmountField({ label, value, onSave, placeholder, unit = "zł" }: {
@@ -74,7 +75,7 @@ export function SiteBillingPanel({ site, hours }: { site: SiteInfo; /** Godziny 
   };
 
   return (
-    <section aria-label="Rozliczenie" data-testid="site-billing" className="rounded-card border border-border/60 bg-card">
+    <section aria-label="Rozliczenie" data-testid="site-billing" className={cardVariant()}>
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls={`billing-${site.id}`}
         className="pressable flex w-full items-center gap-2 px-3 py-2.5 text-left coarse:min-h-11">
         <Wallet className="size-4 shrink-0" aria-hidden />

@@ -1,9 +1,11 @@
 import { kitSummary, type Kit } from "@/lib/study/kits";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 /** H1.2: pigułki zestawów materiału pod „+ Zestaw”; edycja zestawów w osobnym oknie. */
 export function EntryKitsPanel({ kits, onAdd, onEdit }: { kits: readonly Kit[]; onAdd: (kit: Kit) => void; onEdit: () => void }) {
   return (
-    <div id="journal-kits" className="space-y-2 rounded-card border border-border p-3" data-testid="journal-kits">
+    <div id="journal-kits" className={cn(cardVariant(), "space-y-2 p-3")} data-testid="journal-kits">
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Zestawy materiału">
         {kits.map((kit) => (
           <button

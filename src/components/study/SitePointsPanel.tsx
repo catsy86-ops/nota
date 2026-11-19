@@ -14,6 +14,7 @@ import { addPoint, addRoom, removePoint, removeRoom, renameRoom, restoreRoom, sa
 import type { SiteInfo } from "@/lib/study/sites";
 import { PointsEstimate } from "./PointsEstimate";
 import { otherAuthor, useAuthor } from "@/lib/study/companyPrefs";
+import { cardVariant } from "@/components/ui/card";
 
 /** Opis kroku do zrobienia przy punkcie: „→ próba” albo „gotowe”. */
 const nextLabel = (p: WaterPoint) => {
@@ -133,7 +134,7 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
         const rp = pointsProgress(list);
         const expanded = isOpen(room.id);
         return (
-          <div key={room.id} className="rounded-card border border-border" data-testid="site-room">
+          <div key={room.id} className={cardVariant()} data-testid="site-room">
             <div className="flex items-center gap-1 pr-1">
               {renaming === room.id ? (
                 <input

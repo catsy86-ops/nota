@@ -8,6 +8,7 @@ import { haptic } from "@/lib/haptics";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { slopeLabel, slopePercent, slopeZone, smooth, SLOPE_OK_MAX, SLOPE_OK_MIN } from "@/lib/study/slope";
 import { toast } from "sonner";
+import { cardVariant } from "@/components/ui/card";
 
 type Axis = "beta" | "gamma";
 type Status = "idle" | "waiting" | "live" | "denied" | "nosensor";
@@ -119,7 +120,7 @@ export function LevelMeter({ open, onOpenChange, onSelect }: LevelMeterProps) {
 
         <div className="space-y-3 px-5 py-4">
           {blocked ? (
-            <div className="flex gap-3 rounded-card border border-warning bg-warning/5 p-3" role="status" data-testid="level-blocked">
+            <div className={cn(cardVariant("status", "warning"), "flex gap-3 bg-warning/5 p-3")} role="status" data-testid="level-blocked">
               <AlertCircle className="size-5 shrink-0 text-warning-ink" aria-hidden />
               <p className="text-sm">{status === "denied" ? "Brak zgody na czujnik ruchu. Zezwól na nią w ustawieniach przeglądarki." : "Ten telefon nie przesyła danych z czujnika orientacji (albo to komputer)."}</p>
             </div>
@@ -127,7 +128,7 @@ export function LevelMeter({ open, onOpenChange, onSelect }: LevelMeterProps) {
             <Button type="button" onClick={() => void enable()} className="w-full coarse:h-12" data-testid="level-enable">Włącz czujnik</Button>
           ) : (
             <>
-              <div className="rounded-card border border-border bg-muted p-5 text-center" role="status" aria-live="off">
+              <div className={cn(cardVariant("inset"), "p-5 text-center")} role="status" aria-live="off">
                 <div className={cn("font-mono text-5xl font-bold tabular-nums", live && zone === "ok" ? "text-success-ink" : "text-warning-ink")} data-testid="level-percent">
                   {live ? `${String(Math.abs(percent)).replace(".", ",")}%` : "…"}
                 </div>

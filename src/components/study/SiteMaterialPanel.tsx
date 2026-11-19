@@ -11,6 +11,7 @@ import { materialCsv, materialText, materialUsage, priceOf } from "@/lib/study/m
 import { setFittingPrice, usePrices } from "@/lib/study/pricingStore";
 import type { SiteInfo } from "@/lib/study/sites";
 import type { JournalEntry } from "@/lib/study/journalEntry";
+import { cardVariant } from "@/components/ui/card";
 
 const zl = formatMoney;
 
@@ -49,7 +50,7 @@ export function SiteMaterialPanel({ site, journal }: { site: SiteInfo; journal: 
   }
 
   return (
-    <section aria-label="Zużycie materiału" data-testid="site-material" className="rounded-card border border-border/60 bg-card">
+    <section aria-label="Zużycie materiału" data-testid="site-material" className={cardVariant()}>
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-controls="site-material-body"
         className="pressable flex w-full items-center gap-2 px-3 py-2.5 text-left coarse:min-h-11">
         <Package2 className="size-4 shrink-0 text-muted-foreground" aria-hidden />

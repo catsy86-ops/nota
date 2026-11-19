@@ -7,6 +7,7 @@ import { captureFrame, hasTorch, openCamera, setTorch, stopStream, type CameraEr
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { cardVariant } from "@/components/ui/card";
 
 export interface CameraPointOption {
   id: string;
@@ -117,7 +118,7 @@ export function CameraCapture({ open, onOpenChange, onCapture, count, max, point
 
         <div className="space-y-3 px-5 py-4">
           {problem ? (
-            <div className="flex gap-3 rounded-card border border-warning bg-warning/5 p-3" role="status" data-testid="camera-problem">
+            <div className={cn(cardVariant("status", "warning"), "flex gap-3 bg-warning/5 p-3")} role="status" data-testid="camera-problem">
               <AlertCircle className="size-5 shrink-0 text-warning-ink" aria-hidden />
               <p className="text-sm">{PROBLEM[problem]}</p>
             </div>

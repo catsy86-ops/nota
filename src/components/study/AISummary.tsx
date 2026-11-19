@@ -5,6 +5,8 @@ import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { hasAISummarizer, summarizeText } from "@/lib/aiModel";
 import { toast } from "sonner";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface AISummaryProps {
   open: boolean;
@@ -71,7 +73,7 @@ export function AISummary({ open, onOpenChange, text, onSelect }: AISummaryProps
 
         <div className="space-y-3 px-5 py-4 min-h-24">
           {!supported ? (
-            <div className="flex gap-3 rounded-card border border-warning bg-warning/5 p-3">
+            <div className={cn(cardVariant("status", "warning"), "flex gap-3 bg-warning/5 p-3")}>
               <AlertCircle className="size-5 shrink-0 text-warning-ink" aria-hidden />
               <div className="text-sm">AI Model niedostępny. Dostępny na Chrome 131+ na Android.</div>
             </div>
@@ -80,7 +82,7 @@ export function AISummary({ open, onOpenChange, text, onSelect }: AISummaryProps
               <div className="animate-pulse text-muted-foreground text-sm">Generuję streszczenie…</div>
             </div>
           ) : summary ? (
-            <div className="rounded-card border border-border bg-muted p-3">
+            <div className={cn(cardVariant("inset"), "p-3")}>
               <p className="text-sm text-foreground leading-relaxed">{summary}</p>
               <Button type="button" size="sm" variant="ghost" onClick={copy} className="mt-2 h-8 gap-1">
                 {copied ? (

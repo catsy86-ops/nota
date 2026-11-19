@@ -1,7 +1,7 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import { ChevronDown, Contact, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cardClass } from "@/components/ui/card";
+import { cardVariant } from "@/components/ui/card";
 import { ClientDatalist } from "@/components/clients/ClientDatalist";
 import { fillFromClient, findClientByName } from "@/lib/clients/siteClient";
 import { getClients } from "@/lib/clients/store";
@@ -30,7 +30,7 @@ export function SiteDataForm({ form, setForm, setField, editing, setEditing, sum
   save: () => void;
 }) {
   return (
-    <div className={`${cardClass} mx-5 mt-3`} data-testid="site-data">
+    <div className={cn(cardVariant(), "mx-5 mt-3")} data-testid="site-data">
       <button
         type="button"
         onClick={() => setEditing((v) => !v)}

@@ -54,7 +54,7 @@ import { buildHandover, type Handover } from "@/lib/study/handover";
 import { canViewTransition, withViewTransition } from "@/lib/viewTransition";
 import { mapsHref, prettyPhone, smsHref, telHref } from "@/lib/study/contact";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { cardClass } from "@/components/ui/card";
+import { cardVariant } from "@/components/ui/card";
 import { useTrackUse } from "@/lib/study/usage";
 import { measureSpan } from "@/lib/study/perf";
 
@@ -386,7 +386,7 @@ export function SiteCardDialog({
               <SiteDataForm form={form} setForm={setForm} setField={setField} editing={editing} setEditing={setEditing} summary={summary} dirty={dirty} error={error} save={save} />
 
               {/* Odbiorcy raportu (1.11) — te same dla wszystkich budów, więc formularz jest ten sam co w oknie raportu. */}
-              <div className={`${cardClass} mx-5 mt-3`} data-testid="site-recipients">
+              <div className={cn(cardVariant(), "mx-5 mt-3")} data-testid="site-recipients">
                 <button
                   type="button"
                   onClick={() => setRecipientsOpen((v) => !v)}

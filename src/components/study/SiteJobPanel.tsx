@@ -26,6 +26,7 @@ import { getStudy, siteDirectoryOf } from "@/lib/study/studyProjection";
 import { clientAddress } from "@/lib/clients/model";
 import { getClient, getClientLinks } from "@/lib/clients/store";
 import type { SiteInfo } from "@/lib/study/sites";
+import { cardVariant } from "@/components/ui/card";
 
 const fieldCls = "h-9 rounded-field border border-input bg-background px-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
 const qtyText = (n: number) => n.toLocaleString("pl-PL", { maximumFractionDigits: 2 });
@@ -187,7 +188,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
   }
 
   return (
-    <section aria-label="Zlecenie własne" data-testid="site-job" className="rounded-card border border-primary/40 bg-card">
+    <section aria-label="Zlecenie własne" data-testid="site-job" className={cn(cardVariant("status"), "bg-card")}>
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls={`job-${site.id}`}
         className="pressable flex w-full items-center gap-2 px-3 py-2.5 text-left coarse:min-h-11">
         <Wrench className="size-4 shrink-0 text-primary-ink" aria-hidden />
