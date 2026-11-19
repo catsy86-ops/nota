@@ -28,11 +28,11 @@ export const dayCellClass = (inMonth: boolean, today = false, empty = false) => 
 
 /** Numer dnia: „dziś” w kółku marki, święto pogrubione (czerwone w bieżącym miesiącu). */
 export const dayNumberClass = ({ today, holiday, inMonth }: { today: boolean; holiday: boolean; inMonth: boolean }) => cn(
-  "text-xs font-medium tabular-nums w-5 h-5 flex items-center justify-center rounded-full shrink-0",
+  "text-xs font-medium tabular-nums size-5 flex items-center justify-center rounded-full shrink-0",
   today ? "bg-primary text-primary-foreground" : holiday && cn("font-bold", inMonth && "text-destructive-ink"),
 );
 
 /** Nazwa święta pod numerem (od `sm`); na telefonie zostaje kropka `holidayDotClass`. */
 export const holidayNameClass = (inMonth: boolean, container = false) => cn(container ? "hidden @[6rem]:block" : "hidden sm:block", "text-2xs leading-tight truncate", inMonth && "text-destructive-ink");
 
-export const holidayDotClass = (inMonth: boolean, container = false) => cn(container ? "@[6rem]:hidden" : "sm:hidden", "w-1.5 h-1.5 rounded-full", inMonth ? "bg-destructive" : "bg-muted-foreground");
+export const holidayDotClass = (inMonth: boolean, container = false) => cn(container ? "@[6rem]:hidden" : "sm:hidden", "size-1.5 rounded-full", inMonth ? "bg-destructive" : "bg-muted-foreground");

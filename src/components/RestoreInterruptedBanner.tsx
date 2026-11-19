@@ -19,7 +19,7 @@ export function RestoreInterruptedBanner({ onOpenBackup }: { onOpenBackup: () =>
 
   return (
     <div role="alert" data-testid="restore-interrupted" className="flex flex-wrap items-start gap-2 rounded-card border border-warning/50 bg-warning/10 px-3 py-2 text-sm">
-      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
       <p className="min-w-0 flex-1">
         Przywracanie kopii z {format(marker.exportedAt, "dd.MM")} zostało przerwane. Część danych pochodzi z kopii, część sprzed niej.
         Wczytaj tę samą kopię jeszcze raz.

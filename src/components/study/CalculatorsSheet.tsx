@@ -33,7 +33,7 @@ export function CalculatorsButton({ variant = "pill", className }: { variant?: "
           className,
         )}
       >
-        <Calculator className="h-4 w-4" aria-hidden />
+        <Calculator className="size-4" aria-hidden />
         {variant !== "icon" && "Kalkulatory"}
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -200,7 +200,7 @@ function VolumeCalc() {
               aria-label={`Usuń rurę ${i + 1}`}
               className="pressable grid size-11 place-items-center rounded-field text-muted-foreground hover:bg-muted disabled:opacity-40"
             >
-              <X className="h-4 w-4" aria-hidden />
+              <X className="size-4" aria-hidden />
             </button>
           </li>
         ))}
@@ -211,7 +211,7 @@ function VolumeCalc() {
         disabled={rows.length >= 8}
         className="pressable inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-sm text-muted-foreground hover:bg-muted coarse:min-h-11"
       >
-        <Plus className="h-4 w-4" aria-hidden />Kolejny odcinek
+        <Plus className="size-4" aria-hidden />Kolejny odcinek
       </button>
       <Result label="Razem" value={total !== null ? plNum(total, total < 10 ? 2 : 1) : null} unit="l" testId="calc-volume-total" />
       <p className="ui-hint">Ile wody wejdzie przy napełnianiu i płukaniu. Średnica wewnętrzna = zewnętrzna − 2 × ścianka.</p>

@@ -111,7 +111,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
     >
       <Search
         className={cn(
-          "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors",
+          "absolute left-3 top-1/2 -translate-y-1/2 size-4 transition-colors",
           focused ? "text-primary-ink" : "text-muted-foreground"
         )}
       />
@@ -152,7 +152,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
             onClick={() => setSaving((v) => !v)}
             className="pressable absolute right-9 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary-ink"
           >
-            <Bookmark className="w-4 h-4" />
+            <Bookmark className="size-4" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -167,7 +167,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
             onClick={() => { setSaving(false); commit(""); }}
             className="pressable absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
-            <X className="w-4 h-4" />
+            <X className="size-4" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -194,7 +194,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
                 s.kind === "clear" && "mt-1 border-t border-border/60 pt-2 text-xs text-muted-foreground",
               )}
             >
-              {s.kind === "recent" && <Clock className="h-3.5 w-3.5 shrink-0 self-center text-muted-foreground" aria-hidden />}
+              {s.kind === "recent" && <Clock className="size-3.5 shrink-0 self-center text-muted-foreground" aria-hidden />}
               <span className={cn("truncate", (s.kind === "operator" || s.kind === undefined) && "font-mono")}>{s.label}</span>
               {s.hint && <span className="ml-auto shrink-0 truncate text-xs text-muted-foreground">{s.hint}</span>}
             </li>

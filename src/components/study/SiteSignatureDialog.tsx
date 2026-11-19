@@ -65,7 +65,7 @@ export function SiteSignatureDialog({ site, open, onOpenChange }: { site: SiteIn
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-md" data-testid="site-signature">
         <div className="space-y-1 border-b border-border px-5 pb-4 pt-5 pr-12">
           <DialogTitle className="flex items-center gap-1.5 font-display text-lg">
-            <PenLine className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />Podpis klienta
+            <PenLine className="size-5 shrink-0 text-primary-ink" aria-hidden />Podpis klienta
           </DialogTitle>
           <DialogDescription className="text-xs">
             Podpis trafia na protokół odbioru „{site.name}” (wydruk i PDF). Zostaje w karcie budowy i w kopii danych, nie w paczce ZIP. Usunięcie zdejmie go z protokołu na wszystkich urządzeniach, ale nie z kopii danych ani PDF-ów zapisanych wcześniej.

@@ -34,7 +34,7 @@ export function ReminderDueToast({ toastId, title, when, description, onOpen, on
       <span className="absolute inset-y-0 left-0 w-1 bg-primary" aria-hidden />
       <div className="min-w-0">
         <div className="flex items-center gap-2 min-w-0">
-          <BellRing className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+          <BellRing className="size-4 shrink-0 text-primary-ink" aria-hidden />
           <span className="text-sm font-semibold truncate">{title}</span>
           <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{when}</span>
         </div>
@@ -44,7 +44,7 @@ export function ReminderDueToast({ toastId, title, when, description, onOpen, on
         <Button size="sm" variant="outline" className="coarse:h-11" onClick={() => { haptic("success"); run(onDone)(); }}>Gotowe</Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" variant="ghost" className="gap-1 coarse:h-11">Odłóż <ChevronDown className="w-3.5 h-3.5" /></Button>
+            <Button size="sm" variant="ghost" className="gap-1 coarse:h-11">Odłóż <ChevronDown className="size-3.5" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onSelect={run(onSnooze10)}>Za 10 minut</DropdownMenuItem>

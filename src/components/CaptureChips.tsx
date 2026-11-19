@@ -23,10 +23,10 @@ export function CaptureChips({ tokens, ignored, onToggle }: { tokens: CaptureTok
             onKeyDown={(e) => { if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); onToggle(t.key); } }}
             className={cn("pressable inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-primary coarse:min-h-11 coarse:px-3",
               off ? "border-border text-muted-foreground line-through" : "border-primary/40 bg-primary/10 text-primary-ink hover:bg-primary/15")}>
-            <Icon className="w-3 h-3 shrink-0" aria-hidden />
+            <Icon className="size-3 shrink-0" aria-hidden />
             <span>{d.label}</span>
             {t.kind === "label" && t.isNew && !off && <span className="text-2xs opacity-70">nowa</span>}
-            <X className="w-3 h-3 shrink-0 opacity-70" aria-hidden />
+            <X className="size-3 shrink-0 opacity-70" aria-hidden />
           </button>
         );
       })}

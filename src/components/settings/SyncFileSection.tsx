@@ -36,10 +36,10 @@ export function SyncFileSection() {
       <Section title="Synchronizacja przez plik">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <Button onClick={exportSyncNow} variant="outline" className="gap-2">
-            <FileDown className="w-4 h-4" /> Zapisz plik synchronizacji
+            <FileDown className="size-4" /> Zapisz plik synchronizacji
           </Button>
           <Button onClick={mergeSyncNow} variant="outline" className="gap-2">
-            <GitMerge className="w-4 h-4" /> Scal z pliku
+            <GitMerge className="size-4" /> Scal z pliku
           </Button>
         </div>
         <p className="ui-hint mt-1.5">

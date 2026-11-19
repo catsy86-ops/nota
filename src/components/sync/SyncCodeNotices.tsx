@@ -109,7 +109,7 @@ export function V2OnlyNotices() {
               aria-label={`Zamknij komunikat o urządzeniu ${name}`}
               className="pressable grid size-6 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted coarse:size-11"
             >
-              <X className="h-3.5 w-3.5" aria-hidden />
+              <X className="size-3.5" aria-hidden />
             </button>
           )}
         </li>

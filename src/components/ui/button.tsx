@@ -31,10 +31,10 @@ const buttonVariants = cva(
         default: "h-10 px-4 py-2",
         sm: "h-9 px-3",
         lg: "h-11 px-8",
-        icon: "tap-target h-9 w-9 coarse:h-11 coarse:w-11",
-        "icon-sm": "tap-target h-8 w-8 coarse:h-11 coarse:w-11",
+        icon: "tap-target size-9 coarse:h-11 coarse:w-11",
+        "icon-sm": "tap-target size-8 coarse:h-11 coarse:w-11",
         /** Duży przycisk z ikoną na pasku działu — zawsze 44 px, ikona 20 px. */
-        "icon-lg": "h-11 w-11 [&_svg]:size-5",
+        "icon-lg": "size-11 [&_svg]:size-5",
         pill: "h-9 px-3 coarse:min-h-11",
       },
     },

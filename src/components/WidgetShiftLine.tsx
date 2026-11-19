@@ -30,7 +30,7 @@ export default function WidgetShiftLine() {
     : null;
   return (
     <p className="flex items-center gap-2 text-sm" data-testid="widget-shift">
-      <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+      <CalendarClock className="size-4 shrink-0 text-muted-foreground" aria-hidden />
       <span className="min-w-0 truncate">
         {shift}{timing && <span className="text-muted-foreground"> · {timing}</span>}
       </span>

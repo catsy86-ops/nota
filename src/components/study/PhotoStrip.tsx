@@ -42,14 +42,14 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
         <ul className="flex flex-wrap gap-2" aria-label="Zdjęcia we wpisie">
           {images.map((ref, i) => (
             <li key={ref} className="relative">
-              <NoteImage thumb imageRef={ref} alt={`Zdjęcie ${i + 1} z ${images.length} we wpisie`} className="h-20 w-20 rounded-field object-cover" placeholderClassName="h-20 w-20 rounded-field" />
+              <NoteImage thumb imageRef={ref} alt={`Zdjęcie ${i + 1} z ${images.length} we wpisie`} className="size-20 rounded-field object-cover" placeholderClassName="size-20 rounded-field" />
               <button
                 type="button"
                 onClick={() => onRemove(ref)}
                 aria-label="Usuń zdjęcie z wpisu"
-                className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
+                className="absolute -right-1.5 -top-1.5 grid size-6 place-items-center rounded-full bg-destructive text-destructive-foreground coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="size-3.5" />
               </button>
               <button
                 type="button"
@@ -57,20 +57,20 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
                 aria-label="Podpis na zdjęciu"
                 aria-pressed={captioning === ref}
                 className={cn(
-                  "absolute -bottom-1.5 -left-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-elevation-1 coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
+                  "absolute -bottom-1.5 -left-1.5 grid size-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-elevation-1 coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
                   captioning === ref && "border-primary bg-primary text-primary-foreground",
                 )}
               >
-                <Type className="h-3.5 w-3.5" aria-hidden />
+                <Type className="size-3.5" aria-hidden />
               </button>
               <button
                 type="button"
                 onClick={() => onDraw(ref)}
                 aria-label="Rysuj na zdjęciu"
                 title="Strzałka, wymiar, zaznaczenie — rysunek zostaje na zdjęciu"
-                className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-elevation-1 coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
+                className="absolute -bottom-1.5 -right-1.5 grid size-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-elevation-1 coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
               >
-                <PenTool className="h-3.5 w-3.5" aria-hidden />
+                <PenTool className="size-3.5" aria-hidden />
               </button>
               {onMeasure && (
                 <button
@@ -79,11 +79,11 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
                   aria-label={dimensions[ref]?.length ? `Wymiary na zdjęciu ${i + 1} (${dimensions[ref].length})` : `Dodaj wymiary na zdjęciu ${i + 1}`}
                   title="Wymiar na zdjęciu — linia z opisem, zdjęcie zostaje bez zmian"
                   className={cn(
-                    "absolute -bottom-1.5 left-1/2 grid h-6 w-6 -translate-x-1/2 place-items-center rounded-full border border-border bg-card text-foreground shadow-elevation-1 relative coarse:after:absolute coarse:after:-inset-1.5 coarse:after:content-['']",
+                    "absolute -bottom-1.5 left-1/2 grid size-6 -translate-x-1/2 place-items-center rounded-full border border-border bg-card text-foreground shadow-elevation-1 relative coarse:after:absolute coarse:after:-inset-1.5 coarse:after:content-['']",
                     dimensions[ref]?.length && "border-primary bg-primary text-primary-foreground",
                   )}
                 >
-                  <Ruler className="h-3.5 w-3.5" aria-hidden />
+                  <Ruler className="size-3.5" aria-hidden />
                 </button>
               )}
               {drawnFrom[ref] && onUndoDrawing && (
@@ -92,16 +92,16 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
                   onClick={() => onUndoDrawing(ref)}
                   aria-label={`Cofnij rysunek na zdjęciu ${i + 1}`}
                   title="Przywróć zdjęcie sprzed rysowania"
-                  className="absolute -left-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full border border-primary bg-card text-foreground shadow-elevation-1 coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
+                  className="absolute -left-1.5 -top-1.5 grid size-6 place-items-center rounded-full border border-primary bg-card text-foreground shadow-elevation-1 coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
                 >
-                  <Undo2 className="h-3.5 w-3.5" aria-hidden />
+                  <Undo2 className="size-3.5" aria-hidden />
                 </button>
               )}
             </li>
           ))}
           {Array.from({ length: processing }, (_, i) => (
-            <li key={`processing-${i}`} className="grid h-20 w-20 place-items-center rounded-field bg-muted" data-testid="journal-photo-processing">
-              <DelayedSpinner active className="h-5 w-5 text-muted-foreground" />
+            <li key={`processing-${i}`} className="grid size-20 place-items-center rounded-field bg-muted" data-testid="journal-photo-processing">
+              <DelayedSpinner active className="size-5 text-muted-foreground" />
               <span className="sr-only">Przygotowuję zdjęcie</span>
             </li>
           ))}

@@ -133,7 +133,7 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote, onPeriodNot
         title="Jedna notatka na dzień — kolejne kliknięcie dopisuje do dzisiejszej"
         className={chipClass}
       >
-        <BookOpen className="w-3.5 h-3.5" />
+        <BookOpen className="size-3.5" />
         <span>Notatka dnia</span>
       </button>
       <button
@@ -142,7 +142,7 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote, onPeriodNot
         title="Jedna notatka na tydzień — kolejne kliknięcie otwiera tę samą"
         className={chipClass}
       >
-        <CalendarRange className="w-3.5 h-3.5" />
+        <CalendarRange className="size-3.5" />
         <span>Notatka tygodnia</span>
       </button>
       <button
@@ -151,7 +151,7 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote, onPeriodNot
         title="Jedna notatka na miesiąc — kolejne kliknięcie otwiera tę samą"
         className={chipClass}
       >
-        <CalendarRange className="w-3.5 h-3.5" />
+        <CalendarRange className="size-3.5" />
         <span>Notatka miesiąca</span>
       </button>
       {TEMPLATES.map((t) => {
@@ -167,7 +167,7 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote, onPeriodNot
             }}
             className={chipClass}
           >
-            <Icon className="w-3.5 h-3.5" />
+            <Icon className="size-3.5" />
             <span>{t.label}</span>
           </button>
         );
@@ -193,12 +193,12 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote, onPeriodNot
             aria-label={`Edytuj szablon: ${t.name}`}
             className="self-stretch px-1.5 rounded-r-lg border border-l-0 border-border/60 bg-card text-muted-foreground hover:text-primary-ink hover:bg-primary/5 transition-colors"
           >
-            <Pencil className="w-3 h-3" />
+            <Pencil className="size-3" />
           </button>
         </span>
       ))}
       <button type="button" onClick={() => setEditing(null)} className={chipClass} title="Zapisz własny szablon ze zmiennymi, np. {{data}}">
-        <Plus className="w-3.5 h-3.5" />
+        <Plus className="size-3.5" />
         <span>Własny</span>
       </button>
     </div>

@@ -24,7 +24,7 @@ export function ReportPaper({ report, print = false }: { report: Report; print?:
     <article className={cn("report-paper rounded-card border border-border bg-card px-4 py-4 sm:px-6", print && "border-0 px-0")} aria-label="Podgląd raportu">
       <header className="border-b-2 border-foreground/80 pb-2">
         <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-          <MapPin className="h-3.5 w-3.5 text-primary-ink" aria-hidden />
+          <MapPin className="size-3.5 text-primary-ink" aria-hidden />
           {report.site === null ? "Wszystkie budowy" : report.site || "Bez budowy"}
         </p>
         {(report.address || report.investor) && (
@@ -48,7 +48,7 @@ export function ReportPaper({ report, print = false }: { report: Report; print?:
                 <h3 className="text-sm font-semibold first-letter:uppercase">{d.label}</h3>
                 {d.work && (
                   <p className="inline-flex items-center gap-1 font-mono text-xs tabular-nums text-muted-foreground" data-report-work>
-                    <Clock className="h-3.5 w-3.5" aria-hidden />
+                    <Clock className="size-3.5" aria-hidden />
                     {workLine(d.work)}
                   </p>
                 )}
@@ -62,7 +62,7 @@ export function ReportPaper({ report, print = false }: { report: Report; print?:
                 {d.entries.map((r) => (
                   <li key={r.entry.id} className="grid grid-cols-[2.75rem_1rem_minmax(0,1fr)] gap-x-2 text-sm" data-report-entry={r.entry.kind}>
                     <span className="pt-px font-mono text-xs tabular-nums text-muted-foreground">{r.time}</span>
-                    <KindIcon kind={r.entry.kind} className="mt-0.5 h-4 w-4" />
+                    <KindIcon kind={r.entry.kind} className="mt-0.5 size-4" />
                     <div className="min-w-0">
                       <p className="whitespace-pre-wrap wrap-break-word leading-snug">{entryHeadline(r.entry)}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
@@ -84,7 +84,7 @@ export function ReportPaper({ report, print = false }: { report: Report; print?:
                       )}
                       {r.entry.test && (
                         <p className={cn("mt-0.5 inline-flex items-start gap-1 text-xs font-medium", r.entry.test.ok ? "text-success-ink" : "text-destructive-ink")} data-report-test>
-                          <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(r.entry.test)}
+                          <Gauge className="mt-px size-3.5 shrink-0" aria-hidden />{testLine(r.entry.test)}
                         </p>
                       )}
                       {r.entry.solution && (
@@ -98,8 +98,8 @@ export function ReportPaper({ report, print = false }: { report: Report; print?:
                                 imageRef={ref}
                                 alt=""
                                 loading="eager"
-                                className={cn("rounded-control object-cover", print ? "h-32 w-32" : "h-14 w-14")}
-                                placeholderClassName={print ? "h-32 w-32" : "h-14 w-14"}
+                                className={cn("rounded-control object-cover", print ? "size-32" : "size-14")}
+                                placeholderClassName={print ? "size-32" : "size-14"}
                               />
                             </li>
                           ))}

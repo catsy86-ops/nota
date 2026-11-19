@@ -75,12 +75,12 @@ export function DebtProofField({ entryId, proofRef, hidden }: { entryId: string;
       <input ref={input} type="file" accept="image/*" className="hidden" data-testid="debt-proof-input"
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; void pick(f); }} />
       <Button type="button" variant="outline" size="sm" className="h-11 gap-1.5" disabled={busy} onClick={() => input.current?.click()}>
-        <Camera className="h-4 w-4" aria-hidden />
+        <Camera className="size-4" aria-hidden />
         {busy ? "Zapisuję…" : proofRef ? "Zmień zdjęcie dowodu" : "Zdjęcie dowodu"}
       </Button>
       {proofRef && (
         <Button type="button" variant="ghost" size="icon" className="size-11" aria-label="Usuń zdjęcie dowodu" onClick={remove}>
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="size-4" />
         </Button>
       )}
     </div>

@@ -65,8 +65,8 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setName(folder.name); setEditing(false); } }}
           className="flex-1 text-sm bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground min-w-0" />
-        <IconButton size="sm" tone="active" onClick={save} aria-label="Zapisz nazwę folderu"><Check className="w-3.5 h-3.5" /></IconButton>
-        <IconButton size="sm" onClick={() => { setName(folder.name); setEditing(false); }} aria-label="Anuluj edycję folderu"><X className="w-3.5 h-3.5" /></IconButton>
+        <IconButton size="sm" tone="active" onClick={save} aria-label="Zapisz nazwę folderu"><Check className="size-3.5" /></IconButton>
+        <IconButton size="sm" onClick={() => { setName(folder.name); setEditing(false); }} aria-label="Anuluj edycję folderu"><X className="size-3.5" /></IconButton>
       </div>
     );
   }
@@ -84,9 +84,9 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
             onClick={() => setExpanded(!expanded)}
             aria-label={expanded ? "Zwiń podfoldery" : "Rozwiń podfoldery"}
             aria-expanded={expanded}
-            className="pressable relative grid h-6 w-6 coarse:h-9 coarse:w-9 place-items-center rounded-control coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring"
+            className="pressable relative grid size-6 coarse:h-9 coarse:w-9 place-items-center rounded-control coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <ChevronRight className={cn("w-3.5 h-3.5 transition-transform duration-(--dur-fast)", expanded && "rotate-90")} />
+            <ChevronRight className={cn("size-3.5 transition-transform duration-(--dur-fast)", expanded && "rotate-90")} />
           </button>
         ) : (
           <span className="w-6 coarse:w-9" aria-hidden />
@@ -94,7 +94,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
         icon={folder.emoji ? (
           <span className="text-sm leading-none">{folder.emoji}</span>
         ) : (
-          <span data-swatch={folder.color} className={cn("w-2.5 h-2.5 rounded-full", folderColorDot[folder.color] || folderColorDot.default)} />
+          <span data-swatch={folder.color} className={cn("size-2.5 rounded-full", folderColorDot[folder.color] || folderColorDot.default)} />
         )}
         label={folder.name}
         trailing={(() => {
@@ -118,20 +118,20 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
         actions={
             <SidebarRowMenu label={`folderu ${folder.name}`} onCloseAutoFocus={keepInputFocus}>
               <DropdownMenuItem onSelect={() => { focusInput.current = true; setEditing(true); }}>
-                <Pencil className="w-4 h-4 mr-2" />Zmień nazwę
+                <Pencil className="size-4 mr-2" />Zmień nazwę
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => { setShowColorPicker(!showColorPicker); setShowEmojiPicker(false); }}>
-                <Palette className="w-4 h-4 mr-2" />Kolor
+                <Palette className="size-4 mr-2" />Kolor
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => { setShowEmojiPicker(!showEmojiPicker); setShowColorPicker(false); }}>
-                <FaceSlightlySmiling className="w-4 h-4 mr-2" />Emoji
+                <FaceSlightlySmiling className="size-4 mr-2" />Emoji
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => { focusInput.current = true; setAddingSub(true); setExpanded(true); }}>
-                <FolderPlus className="w-4 h-4 mr-2" />Dodaj podfolder
+                <FolderPlus className="size-4 mr-2" />Dodaj podfolder
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => onDelete(folder.id)} className="text-destructive-ink focus:text-destructive-ink focus:bg-destructive/10">
-                <Trash className="w-4 h-4 mr-2" />Usuń folder
+                <Trash className="size-4 mr-2" />Usuń folder
               </DropdownMenuItem>
             </SidebarRowMenu>
         }
@@ -146,7 +146,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
                   key={c.value}
                   onClick={(e) => { e.stopPropagation(); onSetColor(folder.id, c.value); setShowColorPicker(false); }}
                   data-swatch={c.value}
-                  className={cn("pressable w-5 h-5 coarse:w-7 coarse:h-7 rounded-full ring-offset-2 ring-offset-background outline-hidden focus-visible:ring-2 focus-visible:ring-ring", folderColorDot[c.value], folder.color === c.value ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-border")}
+                  className={cn("pressable size-5 coarse:w-7 coarse:h-7 rounded-full ring-offset-2 ring-offset-background outline-hidden focus-visible:ring-2 focus-visible:ring-ring", folderColorDot[c.value], folder.color === c.value ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-border")}
                   aria-pressed={folder.color === c.value}
                   title={c.label}
                   aria-label={`Ustaw kolor: ${c.label}`}
@@ -164,18 +164,18 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
               {folder.emoji && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSetEmoji(folder.id, null); setShowEmojiPicker(false); }}
-                  className="pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-control text-xs flex items-center justify-center border border-dashed border-muted-foreground/30 hover:bg-muted/80 text-muted-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                  className="pressable size-7 coarse:w-9 coarse:h-9 rounded-control text-xs flex items-center justify-center border border-dashed border-muted-foreground/30 hover:bg-muted/80 text-muted-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                   title="Usuń emoji"
                   aria-label="Usuń emoji folderu"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="size-3" />
                 </button>
               )}
               {FOLDER_EMOJIS.map((emoji) => (
                 <button
                   key={emoji}
                   onClick={(e) => { e.stopPropagation(); onSetEmoji(folder.id, emoji); setShowEmojiPicker(false); }}
-                  className={cn("pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-control text-sm flex items-center justify-center outline-hidden focus-visible:ring-2 focus-visible:ring-ring", folder.emoji === emoji ? "bg-primary/10 ring-1 ring-primary" : "hover:bg-muted/80")}
+                  className={cn("pressable size-7 coarse:w-9 coarse:h-9 rounded-control text-sm flex items-center justify-center outline-hidden focus-visible:ring-2 focus-visible:ring-ring", folder.emoji === emoji ? "bg-primary/10 ring-1 ring-primary" : "hover:bg-muted/80")}
                   aria-pressed={folder.emoji === emoji}
                   aria-label={`Ustaw emoji: ${emoji}`}
                 >
@@ -192,8 +192,8 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
           <input ref={subInputRef} value={subName} onChange={(e) => setSubName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") submitSub(); if (e.key === "Escape") { setSubName(""); setAddingSub(false); } }}
             className="flex-1 text-xs bg-muted/60 border border-border rounded-field px-2 py-0.5 outline-hidden focus:ring-2 focus:ring-ring text-foreground min-w-0" placeholder="Subfolder..." />
-          <IconButton size="sm" tone="active" onClick={submitSub} aria-label="Dodaj podfolder"><Check className="w-3.5 h-3.5" /></IconButton>
-          <IconButton size="sm" onClick={() => { setSubName(""); setAddingSub(false); }} aria-label="Anuluj dodawanie podfolderu"><X className="w-3.5 h-3.5" /></IconButton>
+          <IconButton size="sm" tone="active" onClick={submitSub} aria-label="Dodaj podfolder"><Check className="size-3.5" /></IconButton>
+          <IconButton size="sm" onClick={() => { setSubName(""); setAddingSub(false); }} aria-label="Anuluj dodawanie podfolderu"><X className="size-3.5" /></IconButton>
         </div>
       )}
 

@@ -54,7 +54,7 @@ export function PaymentReminderButton({
         aria-label="Przypomnij SMS-em"
         className="coarse:h-11 coarse:w-11"
       >
-        <MessageSquare className="h-4 w-4" aria-hidden />
+        <MessageSquare className="size-4" aria-hidden />
       </Button>
       <Button
         type="button"
@@ -66,7 +66,7 @@ export function PaymentReminderButton({
         aria-label="Przypomnij na WhatsAppie"
         className="coarse:h-11 coarse:w-11"
       >
-        <MessageCircle className="h-4 w-4" aria-hidden />
+        <MessageCircle className="size-4" aria-hidden />
       </Button>
     </div>
   );

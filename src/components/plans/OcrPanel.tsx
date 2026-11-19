@@ -43,7 +43,7 @@ export function OcrSection({ run, engineCached, proposals, texts, focusId, onFoc
       <h3 className={h3}>Opisy z planu (OCR)</h3>
       {run.state === "running" ? (
         <div className="space-y-2" role="status" aria-live="polite">
-          <p className="flex items-center gap-2 text-sm"><LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />{run.label}</p>
+          <p className="flex items-center gap-2 text-sm"><LoaderCircle className="size-4 animate-spin" aria-hidden />{run.label}</p>
           <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={run.label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(run.value * 100)}>
             <div className="h-full bg-primary transition-[width]" style={{ width: pct(run.value) }} />
           </div>
@@ -57,7 +57,7 @@ export function OcrSection({ run, engineCached, proposals, texts, focusId, onFoc
           </p>
           {run.state === "error" && <p role="alert" className="text-sm text-destructive-ink">{run.message}</p>}
           <Button type="button" variant={proposals.length || texts.length ? "outline" : "default"} onClick={onRun} className="pressable w-full coarse:h-11">
-            <ScanText className="mr-1.5 h-4 w-4" aria-hidden />{run.state === "error" ? "Spróbuj ponownie" : proposals.length || texts.length ? "Rozpoznaj ponownie" : "Rozpoznaj opisy"}
+            <ScanText className="mr-1.5 size-4" aria-hidden />{run.state === "error" ? "Spróbuj ponownie" : proposals.length || texts.length ? "Rozpoznaj ponownie" : "Rozpoznaj opisy"}
           </Button>
         </>
       )}
@@ -78,12 +78,12 @@ export function OcrSection({ run, engineCached, proposals, texts, focusId, onFoc
                     <input value={p.text} onChange={(e) => onEdit(p.id, e.target.value)} aria-label={`Odczytany tekst: ${p.raw}`}
                       className="h-9 min-w-0 flex-1 rounded-field border border-border bg-background px-2 font-mono text-sm outline-hidden focus:ring-2 focus:ring-ring coarse:h-11" />
                     <button type="button" onClick={() => onAccept(p)} disabled={!p.text.trim()} aria-label={`Zatwierdź „${p.text}”`}
-                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-primary-ink hover:bg-primary/10 disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
-                      <Check className="h-4 w-4" aria-hidden />
+                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-primary-ink hover:bg-primary/10 disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                      <Check className="size-4" aria-hidden />
                     </button>
                     <button type="button" onClick={() => onReject(p.id)} aria-label={`Odrzuć „${p.text}”`}
-                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
-                      <X className="h-4 w-4" aria-hidden />
+                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                      <X className="size-4" aria-hidden />
                     </button>
                   </div>
                   <p className="ui-hint mt-0.5 px-0.5">{meaningLabel(meaning)} · pewność {pct(p.confidence)}</p>
@@ -103,8 +103,8 @@ export function OcrSection({ run, engineCached, proposals, texts, focusId, onFoc
                 onMouseEnter={() => onFocus(t.id)} onMouseLeave={() => onFocus(null)}>
                 <span className="min-w-0 flex-1 truncate py-1.5 text-sm"><span className="font-mono">{t.text}</span> <span className="text-xs text-muted-foreground">· {meaningLabel(interpretOcrText(t.text))}</span></span>
                 <button type="button" onClick={() => onRemoveText(t.id)} aria-label={`Usuń opis „${t.text}”`}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
-                  <Trash className="h-4 w-4" aria-hidden />
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                  <Trash className="size-4" aria-hidden />
                 </button>
               </li>
             ))}

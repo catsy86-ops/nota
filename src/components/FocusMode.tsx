@@ -88,17 +88,17 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
         <DialogTitle className="sr-only">Tryb skupienia</DialogTitle>
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
           <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-            {mode === "work" ? <Brain className="w-4 h-4 text-primary-ink" /> : <Coffee className="w-4 h-4 text-accent" />}
+            {mode === "work" ? <Brain className="size-4 text-primary-ink" /> : <Coffee className="size-4 text-accent" />}
             <span>{mode === "work" ? "Skupienie" : "Przerwa"}</span>
           </div>
           <button type="button" onClick={close} aria-label="Zamknij tryb skupienia" className="p-2 rounded-field hover:bg-muted">
-            <X className="w-5 h-5" />
+            <X className="size-5" />
           </button>
         </div>
 
         <div className="flex flex-col items-center gap-3 py-6 border-b border-border/50">
           <div className="relative grid place-items-center" role="timer" aria-label={`${mode === "work" ? "Skupienie" : "Przerwa"}: zostało ${Number(m)} min ${Number(s)} s`}>
-            <svg viewBox="0 0 120 120" className="h-56 w-56 max-w-[70vw] -rotate-90" aria-hidden>
+            <svg viewBox="0 0 120 120" className="size-56 max-w-[70vw] -rotate-90" aria-hidden>
               <circle cx="60" cy="60" r="54" fill="none" stroke="var(--muted)" strokeWidth="2" />
               <circle
                 cx="60" cy="60" r="54" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round"
@@ -110,11 +110,11 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
           </div>
           <div className="flex gap-2">
             <Button size="sm" variant={running ? "secondary" : "default"} onClick={() => setRunning((r) => !r)}>
-              {running ? <Pause className="w-4 h-4 mr-1.5" /> : <Play className="w-4 h-4 mr-1.5" />}
+              {running ? <Pause className="size-4 mr-1.5" /> : <Play className="size-4 mr-1.5" />}
               {running ? "Pauza" : "Start"}
             </Button>
             <Button size="sm" variant="outline" onClick={reset}>
-              <RotateCcw className="w-4 h-4 mr-1.5" /> Reset
+              <RotateCcw className="size-4 mr-1.5" /> Reset
             </Button>
           </div>
         </div>

@@ -11,7 +11,7 @@ export const BOARD_COLUMN_WIDTH = "w-70 sm:w-72";
 export function BoardColumnHeading({ label, icon: Icon, count, className }: { label: ReactNode; icon?: LucideIcon; count: number; className?: string }) {
   return (
     <div className={cn("flex items-center gap-1.5 text-xs font-semibold text-muted-foreground", className)}>
-      {Icon && <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
+      {Icon && <Icon className="size-3.5 shrink-0" aria-hidden />}
       <span className="truncate">{label}</span>
       <span className="bg-muted text-foreground/80 text-2xs px-1.5 rounded-full tabular-nums normal-case tracking-normal">{count}</span>
     </div>

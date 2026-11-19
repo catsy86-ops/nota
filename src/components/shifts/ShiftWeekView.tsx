@@ -179,7 +179,7 @@ export const ShiftWeekView = memo(function ShiftWeekView({
                     ) : null}
                     {entry?.note && (
                       <span className="flex items-start gap-1 text-xs text-muted-foreground">
-                        <StickyNote className="w-3 h-3 mt-0.5 shrink-0" />
+                        <StickyNote className="size-3 mt-0.5 shrink-0" />
                         <span className="line-clamp-2 wrap-break-word">{entry.note}</span>
                       </span>
                     )}

@@ -32,12 +32,12 @@ function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: (siteId?: string) => v
     <section aria-label="Terminy z Praca" data-testid="study-due" className={`${cardClass} p-4 sm:p-5 space-y-3`}>
       <div className="flex items-center justify-between gap-3">
         <h2 className="section-label gap-2">
-          <HardHat className="h-3.5 w-3.5" aria-hidden />
+          <HardHat className="size-3.5" aria-hidden />
           Praca
           <AnimatedNumber value={rows.length} className="stamp-tag normal-case text-primary-ink" data-testid="study-due-count" />
         </h2>
         <Button variant="ghost" size="sm" onClick={() => onOpenStudy()} className="coarse:h-11">
-          Otwórz Pracę<ChevronRight className="ml-0.5 h-4 w-4" aria-hidden />
+          Otwórz Pracę<ChevronRight className="ml-0.5 size-4" aria-hidden />
         </Button>
       </div>
       <ul className="divide-y divide-border/50">

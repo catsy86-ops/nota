@@ -43,15 +43,15 @@ export function SidebarFilterItem({ name, query, count, isActive, onSelect, onRe
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setDraft(name); setEditing(false); } }}
           className="flex-1 text-sm bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground min-w-0"
         />
-        <IconButton size="sm" tone="active" onClick={save} aria-label={`Zapisz nazwę ${noun.of}`}><Check className="w-3.5 h-3.5" /></IconButton>
-        <IconButton size="sm" onClick={() => { setDraft(name); setEditing(false); }} aria-label={`Anuluj edycję ${noun.of}`}><X className="w-3.5 h-3.5" /></IconButton>
+        <IconButton size="sm" tone="active" onClick={save} aria-label={`Zapisz nazwę ${noun.of}`}><Check className="size-3.5" /></IconButton>
+        <IconButton size="sm" onClick={() => { setDraft(name); setEditing(false); }} aria-label={`Anuluj edycję ${noun.of}`}><X className="size-3.5" /></IconButton>
       </div>
     );
   }
 
   return (
     <SidebarRow
-      icon={kind === "view" ? <LayoutDashboard className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
+      icon={kind === "view" ? <LayoutDashboard className="size-3.5" /> : <Bookmark className="size-3.5" />}
       label={name}
       active={isActive}
       onClick={onSelect}
@@ -60,11 +60,11 @@ export function SidebarFilterItem({ name, query, count, isActive, onSelect, onRe
       actions={
         <SidebarRowMenu label={`${noun.of} ${name}`} onCloseAutoFocus={keepInputFocus}>
           <DropdownMenuItem onSelect={() => { focusInput.current = true; setDraft(name); setEditing(true); }}>
-            <Pencil className="w-4 h-4 mr-2" />Zmień nazwę
+            <Pencil className="size-4 mr-2" />Zmień nazwę
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={onDelete} className="text-destructive-ink focus:text-destructive-ink focus:bg-destructive/10">
-            <Trash className="w-4 h-4 mr-2" />{noun.del}
+            <Trash className="size-4 mr-2" />{noun.del}
           </DropdownMenuItem>
         </SidebarRowMenu>
       }

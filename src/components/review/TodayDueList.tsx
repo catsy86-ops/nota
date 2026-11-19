@@ -55,7 +55,7 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
       title={<>Terminy{total > 0 && <span key={bump} className={cn("stamp-tag normal-case text-primary-ink", bump > 0 && "count-bump")} data-testid="today-due-count">{total}</span>}</>}
       action={
         <Button variant="ghost" size="sm" onClick={onOpenReminders} className="coarse:h-11">
-          Wszystkie<ChevronRight className="ml-0.5 h-4 w-4" aria-hidden />
+          Wszystkie<ChevronRight className="ml-0.5 size-4" aria-hidden />
         </Button>
       }>
 
@@ -92,7 +92,7 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
                       className="pressable flex min-w-0 flex-1 items-center gap-3 text-left coarse:min-h-11"
                     >
                       <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
-                        {n.locked && <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />}
+                        {n.locked && <Lock className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />}
                         <span className="truncate">{noteListTitle(n)}</span>
                       </span>
                       <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">

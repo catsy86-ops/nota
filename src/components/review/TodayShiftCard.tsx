@@ -105,10 +105,10 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={onOpenShifts} className="coarse:h-11">
-            <CalendarClock className="mr-1.5 h-4 w-4" aria-hidden />Grafik
+            <CalendarClock className="mr-1.5 size-4" aria-hidden />Grafik
           </Button>
           <Button variant={quiet && !dailyNote ? "default" : "outline"} size="sm" onClick={onDailyNote} className="coarse:h-11">
-            <NotebookPen className="mr-1.5 h-4 w-4" aria-hidden />{dailyNote ? "Dopisz" : "Notatka dnia"}
+            <NotebookPen className="mr-1.5 size-4" aria-hidden />{dailyNote ? "Dopisz" : "Notatka dnia"}
           </Button>
         </div>
       </div>
@@ -131,7 +131,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
         <button type="button" onClick={onOpenTomorrow} data-testid="today-tomorrow"
           className="pressable mt-3 flex w-full items-center justify-between gap-2 rounded-field border-t border-border/50 pt-3 text-left text-sm text-muted-foreground hover:text-foreground coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           <span className="min-w-0 truncate">{tomorrow}</span>
-          <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+          <ChevronRight className="size-4 shrink-0" aria-hidden />
         </button>
       )}
     </section>

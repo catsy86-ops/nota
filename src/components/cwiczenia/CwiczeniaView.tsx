@@ -182,7 +182,7 @@ export function CwiczeniaView() {
           </div>
         ) : supplements.length > 0 && (
           <Button variant="outline" size="sm" className="gap-1.5 coarse:h-11" aria-expanded={false} onClick={() => setFormOpen(true)}>
-            <Plus className="h-4 w-4" aria-hidden />Dodaj odżywkę
+            <Plus className="size-4" aria-hidden />Dodaj odżywkę
           </Button>
         )}
       </SectionCard>
@@ -207,7 +207,7 @@ function EmptyList({ notes, onAdd }: { notes: NotesActions; onAdd: () => void })
       title="Nie masz jeszcze odżywek na liście"
       actions={<>
         <Button variant="outline" size="sm" className="coarse:h-11" aria-expanded={false} onClick={onAdd}>
-          <Plus className="h-4 w-4" aria-hidden />Dodaj odżywkę
+          <Plus className="size-4" aria-hidden />Dodaj odżywkę
         </Button>
         <Button
           variant="ghost"
@@ -255,7 +255,7 @@ function SupplementList({ supplements, taken, day, notes }: { supplements: Suppl
                   </label>
                   <WeekDots days={weekAdherence(s.id, taken, day)} />
                   <Button variant="ghost" size="sm" className="coarse:h-11" aria-label={`Edytuj ${s.name}`} onClick={() => setEditingId(s.id)}>
-                    <Pencil className="h-4 w-4" aria-hidden />
+                    <Pencil className="size-4" aria-hidden />
                   </Button>
                   <Button
                     variant="ghost"
@@ -264,7 +264,7 @@ function SupplementList({ supplements, taken, day, notes }: { supplements: Suppl
                     aria-label={`Usuń ${s.name}`}
                     onClick={() => removeWithUndo(notes, s)}
                   >
-                    <Trash className="h-4 w-4" aria-hidden />
+                    <Trash className="size-4" aria-hidden />
                   </Button>
                 </li>
               );

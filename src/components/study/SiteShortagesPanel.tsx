@@ -111,7 +111,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
       <p role="status" className="sr-only">{announce}</p>
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 section-caps">
-          <PackageX className="h-3.5 w-3.5" aria-hidden />Braki materiału
+          <PackageX className="size-3.5" aria-hidden />Braki materiału
         </h3>
         {open > 0 && <span className="font-mono text-xs tabular-nums text-muted-foreground" data-testid="site-shortages-open">{open} w drodze lub brak</span>}
       </div>
@@ -150,7 +150,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
                 aria-label={`Usuń brak: ${s.text}`}
                 className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
               >
-                <X className="h-3.5 w-3.5" aria-hidden />
+                <X className="size-3.5" aria-hidden />
               </button>
             </li>
           ))}
@@ -193,7 +193,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
               title="Powiedz np. „dokupić trójnik fi 32”"
               className={cn("pressable grid size-9 shrink-0 place-items-center rounded-field border coarse:size-11", dictation.listening ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-muted")}
             >
-              <Mic className={cn("h-4 w-4", dictation.listening && "animate-pulse")} aria-hidden />
+              <Mic className={cn("size-4", dictation.listening && "animate-pulse")} aria-hidden />
             </button>
           )}
           <button
@@ -202,7 +202,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
             aria-label="Dodaj brak"
             className="pressable grid size-9 shrink-0 place-items-center rounded-field border border-border text-muted-foreground hover:bg-muted disabled:opacity-50 coarse:size-11"
           >
-            <Plus className="h-4 w-4" aria-hidden />
+            <Plus className="size-4" aria-hidden />
           </button>
         </form>
       )}
@@ -210,7 +210,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
       {list.length > 0 && (
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={copy} disabled={open === 0} className="coarse:h-11">
-            <Copy className="mr-1.5 h-4 w-4" aria-hidden />Kopiuj braki
+            <Copy className="mr-1.5 size-4" aria-hidden />Kopiuj braki
           </Button>
           {delivered > 0 && (
             <Button variant="ghost" size="sm" onClick={clear} className="text-muted-foreground coarse:h-11">

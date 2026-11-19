@@ -59,7 +59,7 @@ export function useConfirmAction() {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            {Icon && meta && <Icon className={`w-4 h-4 ${meta.tone}`} />}
+            {Icon && meta && <Icon className={`size-4 ${meta.tone}`} />}
             {pending ? meta?.heading : ""}
           </AlertDialogTitle>
           <AlertDialogDescription>

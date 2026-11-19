@@ -67,14 +67,14 @@ export function TimeStepper({ id, label, value, onChange, invalid }: TimeStepper
         <button type="button" className={btn} aria-label={`${label}: ${STEP} minut wcześniej`}
           onPointerDown={(e) => { e.preventDefault(); press(-1); }} onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bump(-1); } }}>
-          <Minus className="w-4 h-4" />
+          <Minus className="size-4" />
         </button>
         <Input id={id} type="time" step={60 * STEP} value={value} aria-invalid={invalid || undefined}
           onChange={(e) => onChange(e.target.value)} className="min-w-0 text-center tabular-nums" />
         <button type="button" className={btn} aria-label={`${label}: ${STEP} minut później`}
           onPointerDown={(e) => { e.preventDefault(); press(1); }} onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bump(1); } }}>
-          <Plus className="w-4 h-4" />
+          <Plus className="size-4" />
         </button>
       </div>
     </div>

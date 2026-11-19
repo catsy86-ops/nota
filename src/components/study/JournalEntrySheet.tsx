@@ -59,7 +59,7 @@ import { siteStages, toggleStage } from "@/lib/study/stages";
 import { DelayedSpinner } from "@/components/DelayedSpinner";
 import { useTrackUse } from "@/lib/study/usage";
 
-export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
+export function KindIcon({ kind, className = "size-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-success-ink")} aria-hidden />;
   if (kind === "problem") return <TriangleAlert className={cn(className, "shrink-0 text-warning-ink")} aria-hidden />;
   return <NotebookPen className={cn(className, "shrink-0 text-muted-foreground")} aria-hidden />;
@@ -476,7 +476,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           onClick={() => pickSite(s)}
           className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-primary hover:text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm"
         >
-          <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          <MapPin className="size-3.5 shrink-0" aria-hidden />
           <span className="truncate">{s}</span>
         </button>
       ))}
@@ -541,7 +541,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   kind === k ? cn(KIND_ON[k], "font-semibold text-foreground") : "border-border text-muted-foreground hover:bg-muted",
                 )}
               >
-                <KindIcon kind={k} className="h-5 w-5" />
+                <KindIcon kind={k} className="size-5" />
                 {KIND_LABEL[k]}
               </ToggleGroupItem>
             ))}
@@ -595,11 +595,11 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                     aria-label={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj"}
                     title={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj wpis"}
                     className={cn(
-                      "absolute right-1.5 top-1.5 grid h-10 w-10 place-items-center rounded-full transition-colors coarse:h-12 coarse:w-12",
+                      "absolute right-1.5 top-1.5 grid size-10 place-items-center rounded-full transition-colors coarse:h-12 coarse:w-12",
                       dictation.listening ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    <Mic className={cn("h-5 w-5", dictation.listening && "animate-pulse")} />
+                    <Mic className={cn("size-5", dictation.listening && "animate-pulse")} />
                   </button>
                 )}
               </span>
@@ -639,10 +639,10 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             {fileInput({ ref: galleryRef, testId: "journal-photo-input" })}
             <div className="flex gap-2 coarse:grid coarse:grid-cols-2">
               <Button type="button" variant="outline" onClick={() => setCameraOpen(true)} className="hidden coarse:inline-flex coarse:h-12">
-                <Camera className="mr-1.5 h-5 w-5" />Aparat
+                <Camera className="mr-1.5 size-5" />Aparat
               </Button>
               <Button type="button" variant="outline" onClick={() => galleryRef.current?.click()} className="coarse:h-12">
-                <ImagePlus className="mr-1.5 h-4 w-4 coarse:h-5 coarse:w-5" /><span className="coarse:hidden">Dodaj zdjęcie</span><span className="hidden coarse:inline">Galeria</span>
+                <ImagePlus className="mr-1.5 size-4 coarse:h-5 coarse:w-5" /><span className="coarse:hidden">Dodaj zdjęcie</span><span className="hidden coarse:inline">Galeria</span>
               </Button>
               <Button
                 type="button"
@@ -651,7 +651,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 disabled={recording || recordings.length >= JOURNAL_MAX_RECORDINGS}
                 className="coarse:h-12"
               >
-                <Mic className="mr-1.5 h-4 w-4 coarse:h-5 coarse:w-5" />Nagraj
+                <Mic className="mr-1.5 size-4 coarse:h-5 coarse:w-5" />Nagraj
               </Button>
             </div>
             <EntryRecordings
@@ -794,7 +794,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   onClick={() => setLevelOpen(true)}
                   className="pressable flex w-full items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
                 >
-                  <Maximize2 className="h-4 w-4 shrink-0" aria-hidden />
+                  <Maximize2 className="size-4 shrink-0" aria-hidden />
                   {form.level !== undefined ? `Spadek: ${slopeLabel(form.level)}` : "Zmierz spadek"}
                 </button>
               </div>
@@ -808,7 +808,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                     onClick={() => setBarcodeOpen(true)}
                     className="pressable flex flex-1 items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
                   >
-                    <QrCode className="h-4 w-4 shrink-0" aria-hidden />
+                    <QrCode className="size-4 shrink-0" aria-hidden />
                     {form.barcode ? `Kod: ${form.barcode}` : "Dodaj kod"}
                   </button>
                   {hasNFC() && (
@@ -819,7 +819,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                       title="NFC tag"
                       aria-label="Odczytaj tag NFC"
                     >
-                      <Radio className="h-4 w-4 shrink-0" aria-hidden />
+                      <Radio className="size-4 shrink-0" aria-hidden />
                     </button>
                   )}
                 </div>
@@ -834,7 +834,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   onClick={() => setAiOpen(true)}
                   className="pressable flex w-full items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
                 >
-                  <Sparkles className="h-4 w-4 shrink-0" aria-hidden />
+                  <Sparkles className="size-4 shrink-0" aria-hidden />
                   {form.summary ? `Streszczenie: ${form.summary.slice(0, 50)}…` : "Dodaj streszczenie AI"}
                 </button>
               </div>
@@ -888,12 +888,12 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           <div className="flex gap-2">
             {isEdit && (
               <Button type="button" variant="outline" onClick={remove} className="h-12 shrink-0 text-destructive-ink hover:text-destructive-ink">
-                <Trash className="mr-1.5 h-4 w-4" aria-hidden />Usuń
+                <Trash className="mr-1.5 size-4" aria-hidden />Usuń
               </Button>
             )}
             <Button onClick={submit} disabled={processing > 0} className="h-12 min-w-0 flex-1 text-base">
               {processing > 0
-                ? <><DelayedSpinner active className="mr-1.5 h-4 w-4" />Przygotowuję zdjęcia…</>
+                ? <><DelayedSpinner active className="mr-1.5 size-4" />Przygotowuję zdjęcia…</>
                 : isEdit ? "Zapisz zmiany" : "Zapisz wpis"}
             </Button>
           </div>

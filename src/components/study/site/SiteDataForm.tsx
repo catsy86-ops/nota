@@ -38,13 +38,13 @@ export function SiteDataForm({ form, setForm, setField, editing, setEditing, sum
         aria-controls="site-card-form"
         className="pressable flex w-full items-center gap-2 rounded-card px-3 py-2.5 text-left coarse:min-h-11"
       >
-        <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+        <Pencil className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
         <span className="shrink-0 section-caps">Edytuj dane</span>
         <span className={cn("min-w-0 flex-1 truncate text-sm", !summary && "text-muted-foreground")}>
           {editing ? "" : summary || "bez adresu i kontaktów"}
         </span>
         {dirty && !editing && <span className="shrink-0 text-xs text-warning-ink">niezapisane</span>}
-        <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", editing && "rotate-180")} aria-hidden />
+        <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", editing && "rotate-180")} aria-hidden />
       </button>
       {editing && (
     <form
@@ -106,7 +106,7 @@ export function SiteDataForm({ form, setForm, setField, editing, setEditing, sum
           />
           {hasContactPicker() && (
             <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, phone: c.tel, investor: f.investor || c.name || "" })); }} title="Z kontaktów" aria-label="Wybierz inwestora z kontaktów" data-testid="pick-contact-investor">
-              <Contact className="h-4 w-4" aria-hidden />
+              <Contact className="size-4" aria-hidden />
             </Button>
           )}
         </div>
@@ -139,7 +139,7 @@ export function SiteDataForm({ form, setForm, setField, editing, setEditing, sum
             />
             {hasContactPicker() && (
               <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, managerPhone: c.tel, manager: f.manager || c.name || "" })); }} title="Z kontaktów" aria-label="Wybierz kierownika z kontaktów" data-testid="pick-contact-manager">
-                <Contact className="h-4 w-4" aria-hidden />
+                <Contact className="size-4" aria-hidden />
               </Button>
             )}
           </div>
@@ -160,7 +160,7 @@ export function SiteDataForm({ form, setForm, setField, editing, setEditing, sum
             />
             {hasContactPicker() && (
               <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, supplierPhone: c.tel })); }} title="Z kontaktów" aria-label="Wybierz hurtownię z kontaktów" data-testid="pick-contact-supplier">
-                <Contact className="h-4 w-4" aria-hidden />
+                <Contact className="size-4" aria-hidden />
               </Button>
             )}
           </div>

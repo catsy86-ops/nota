@@ -129,7 +129,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
           >
             {stage === "reading" ? (
               <p role="status" className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <DelayedSpinner active className="w-4 h-4" />
+                <DelayedSpinner active className="size-4" />
                 Czytam pliki…
               </p>
             ) : (
@@ -152,7 +152,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
 
         {error && (
           <p role="alert" className="text-sm text-destructive-ink flex items-start gap-2">
-            <TriangleAlert className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
+            <TriangleAlert className="size-4 mt-0.5 shrink-0" aria-hidden />
             {error}
           </p>
         )}
@@ -182,7 +182,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
               <ul className="space-y-1.5 rounded-field border border-primary/30 bg-primary/5 px-3 py-2.5" aria-label="Ostrzeżenia">
                 {plan.warnings.map((w) => (
                   <li key={w} className="flex items-start gap-2 text-xs text-foreground/90">
-                    <TriangleAlert className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary-ink" aria-hidden />
+                    <TriangleAlert className="size-3.5 mt-0.5 shrink-0 text-primary-ink" aria-hidden />
                     <span>{w}</span>
                   </li>
                 ))}

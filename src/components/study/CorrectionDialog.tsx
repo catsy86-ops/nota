@@ -74,7 +74,7 @@ function CorrectionForm({ record, onClose }: { record: InvoiceRecord; onClose: (
               <div className="flex items-center gap-2">
                 <span className="min-w-0 flex-1 truncate text-sm font-medium">{l.name}</span>
                 <Button type="button" variant="ghost" size="sm" onClick={() => setRows((rs) => rs.filter((_, k) => k !== i))} className="coarse:h-11" aria-label={`Usuń pozycję ${i + 1}`}>
-                  <Trash2 className="h-4 w-4" aria-hidden />
+                  <Trash2 className="size-4" aria-hidden />
                 </Button>
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -119,7 +119,7 @@ function CorrectionForm({ record, onClose }: { record: InvoiceRecord; onClose: (
       )}
 
       <Button type="button" onClick={() => void issue()} disabled={busy} className="w-full coarse:h-11" data-testid="correction-issue">
-        <FileCode2 className="h-4 w-4" aria-hidden />Wystaw korektę
+        <FileCode2 className="size-4" aria-hidden />Wystaw korektę
       </Button>
     </DialogContent>
   );

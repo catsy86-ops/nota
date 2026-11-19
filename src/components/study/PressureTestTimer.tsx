@@ -119,7 +119,7 @@ export function PressureTestTimer({ open, onOpenChange, test, onUpdate }: {
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-sm" data-testid="pressure-test-timer">
         <div className="border-b border-border px-5 pb-4 pt-5">
           <DialogTitle className="flex items-center gap-2 font-display text-lg">
-            <Clock className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />
+            <Clock className="size-5 shrink-0 text-primary-ink" aria-hidden />
             Próba szczelności
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -150,7 +150,7 @@ export function PressureTestTimer({ open, onOpenChange, test, onUpdate }: {
               </div>
               {test.readings && test.readings.length > 1 && <PressureChart test={test} />}
               <Button type="button" size="lg" onClick={start} className="w-full coarse:h-12" data-testid="timer-start">
-                <Play className="mr-2 h-4 w-4" aria-hidden />Start próby
+                <Play className="mr-2 size-4" aria-hidden />Start próby
               </Button>
             </>
           ) : (
@@ -188,10 +188,10 @@ export function PressureTestTimer({ open, onOpenChange, test, onUpdate }: {
           {running ? (
             <>
               <Button type="button" variant="ghost" onClick={() => { onUpdate(cancelRun(test)); setError(""); haptic("tap"); }} className="coarse:h-11" data-testid="timer-cancel">
-                <X className="mr-1 h-4 w-4" aria-hidden />Przerwij próbę
+                <X className="mr-1 size-4" aria-hidden />Przerwij próbę
               </Button>
               <Button type="button" onClick={() => (finishing ? finish() : setFinishing(true))} className="coarse:h-11" data-testid="timer-finish">
-                <Square className="mr-1 h-4 w-4" aria-hidden />{finishing ? "Zapisz wynik" : "Zakończ próbę"}
+                <Square className="mr-1 size-4" aria-hidden />{finishing ? "Zapisz wynik" : "Zakończ próbę"}
               </Button>
             </>
           ) : (

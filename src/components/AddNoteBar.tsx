@@ -657,8 +657,8 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             className="group w-full flex items-center gap-3.5 px-4 py-3.5 text-muted-foreground hover:text-foreground transition-colors"
           >
             {/* Kafelek z bursztynowym plusem — jak zakładka w zeszycie; reaguje na najechanie i fokus. */}
-            <span aria-hidden className="grid place-items-center w-9 h-9 rounded-card bg-primary/12 text-primary-ink ring-1 ring-primary/20 transition-[background-color,transform] duration-(--dur-fast) group-hover:bg-primary/20 group-active:scale-95">
-              <Plus className="w-5 h-5" />
+            <span aria-hidden className="grid place-items-center size-9 rounded-card bg-primary/12 text-primary-ink ring-1 ring-primary/20 transition-[background-color,transform] duration-(--dur-fast) group-hover:bg-primary/20 group-active:scale-95">
+              <Plus className="size-5" />
             </span>
             <span className="font-medium font-display text-base tracking-tight">Zapisz notatkę...</span>
             {destination && <span className="ml-auto text-xs truncate max-w-[45%]">trafi do: {destination}</span>}
@@ -688,7 +688,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                       </button>
                       <button type="button" onClick={() => deleteParked(p.id)} aria-label={`Usuń odłożony szkic: ${label}`}
                         className="pr-2 pl-0.5 text-muted-foreground hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11">
-                        <X className="h-3 w-3" aria-hidden />
+                        <X className="size-3" aria-hidden />
                       </button>
                     </span>
                   );
@@ -748,13 +748,13 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
               <div className="flex gap-2 flex-wrap">
                 {images.map((img, i) => (
                   <div key={i} className="relative group/img">
-                    <NoteImage imageRef={img} className="w-16 h-16 object-cover rounded-field" />
+                    <NoteImage imageRef={img} className="size-16 object-cover rounded-field" />
                     <button
                       onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
                       aria-label="Usuń obrazek"
                       className="absolute -top-1.5 -right-1.5 p-0.5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover/img:opacity-100 focus-visible:opacity-100 coarse:opacity-100 coarse:p-2 transition-opacity"
                     >
-                      <X className="w-2.5 h-2.5" />
+                      <X className="size-2.5" />
                     </button>
                   </div>
                 ))}
@@ -775,16 +775,16 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             {/* Reminder display */}
             {reminder && (
               <div className="flex items-center gap-1 text-xs text-primary-ink">
-                <Bell className="w-3 h-3" />
+                <Bell className="size-3" />
                 {formatReminderShort(reminder)}
-                {reminderRepeat !== "none" && <Repeat className="w-3 h-3" aria-label="Powtarzane" />}
+                {reminderRepeat !== "none" && <Repeat className="size-3" aria-label="Powtarzane" />}
                 <button onClick={() => { setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setReminderAllDay(false); setReminderLead(undefined); }} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground coarse:inline-flex coarse:h-11 coarse:w-11 coarse:items-center coarse:justify-center">×</button>
               </div>
             )}
 
             {isPrivate && (
               <p className="flex items-center gap-1 text-2xs text-primary-ink">
-                <Lock className="w-3 h-3" aria-hidden />
+                <Lock className="size-3" aria-hidden />
                 Zapisuje się zaszyfrowana hasłem skarbca, poza folderem. Obrazy, przypomnienia i odłożenie szkicu są wyłączone.
               </p>
             )}
@@ -798,13 +798,13 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
               <div className={cn("flex min-w-0 flex-1 items-center gap-1", fullScreen ? "flex-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden *:shrink-0" : "flex-wrap")}>
                 <IconButton size="sm" tone={showChecklist ? "active" : "muted"} onClick={() => setShowChecklist(!showChecklist)}
                   title="Lista zadań" aria-label="Lista zadań" aria-pressed={showChecklist}>
-                  <ListChecks className="w-4 h-4" />
+                  <ListChecks className="size-4" />
                 </IconButton>
                 {!isPrivate && (
                   <Popover>
                     <PopoverTrigger asChild>
                       <IconButton size="sm" tone={color !== "default" ? "active" : "muted"} title="Kolor" aria-label="Kolor">
-                        <Palette className="w-4 h-4" />
+                        <Palette className="size-4" />
                       </IconButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-2.5" align="start">
@@ -821,12 +821,12 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                   disabled={isPrivate && privateId !== null}
                   title={isPrivate ? "Notatka prywatna — zaszyfrowana hasłem skarbca" : "Notatka prywatna (zaszyfrowana)"}
                   aria-label="Notatka prywatna" aria-pressed={isPrivate}>
-                  <Lock className="w-4 h-4" />
+                  <Lock className="size-4" />
                 </IconButton>
                 {dictation.supported && (
                   <IconButton size="sm" tone={dictation.listening ? "active" : "muted"} onClick={dictation.toggle}
                     title={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj"} aria-label={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj"} aria-pressed={dictation.listening}>
-                    <Mic className={cn("w-4 h-4", dictation.listening && "animate-pulse")} />
+                    <Mic className={cn("size-4", dictation.listening && "animate-pulse")} />
                   </IconButton>
                 )}
                 {/* Pliki, rysunki i przypomnienia nie wchodzą do notatki prywatnej (patrz `enablePrivate`). */}
@@ -834,22 +834,22 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                   <>
                     {/* Image upload */}
                     <IconButton size="sm" onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" aria-label="Dodaj obrazek">
-                      <ImagePlus className="w-4 h-4" />
+                      <ImagePlus className="size-4" />
                     </IconButton>
                     <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
                     {/* Attachments: PDF, tekst, dokumenty */}
                     <IconButton size="sm" onClick={() => attachmentsRef.current?.pick()} title="Dodaj plik" aria-label="Dodaj plik">
-                      <Paperclip className="w-4 h-4" />
+                      <Paperclip className="size-4" />
                     </IconButton>
                     {/* Notatka głosowa jako załącznik (dyktowanie to osobny przycisk z mikrofonem). */}
                     {canRecordVoice() && (
                       <IconButton size="sm" onClick={() => attachmentsRef.current?.record()} title="Nagraj notatkę głosową (do 3 min)" aria-label="Nagraj notatkę głosową">
-                        <AudioLines className="w-4 h-4" />
+                        <AudioLines className="size-4" />
                       </IconButton>
                     )}
                     {/* Drawing */}
                     <IconButton size="sm" onClick={() => setShowDrawing(true)} title="Rysuj" aria-label="Rysuj">
-                      <PenTool className="w-4 h-4" />
+                      <PenTool className="size-4" />
                     </IconButton>
                   </>
                 )}
@@ -857,7 +857,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                 <Popover>
                   <PopoverTrigger asChild>
                     <IconButton size="sm" title="Etykiety" aria-label="Etykiety">
-                      <Tag className="w-4 h-4" />
+                      <Tag className="size-4" />
                     </IconButton>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-3 space-y-3" align="start">
@@ -875,7 +875,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                       <input enterKeyHint="done" autoComplete="off" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateLabel()}
                         placeholder="Nowa etykieta..." className="flex-1 text-xs max-sm:text-base bg-muted/60 border border-border rounded-field px-2.5 py-1.5 outline-hidden focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground" />
                       <IconButton size="sm" tone="primary" onClick={handleCreateLabel} aria-label="Dodaj etykietę">
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="size-3.5" />
                       </IconButton>
                     </div>
                     )}
@@ -893,7 +893,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                   openSignal={reminderOpenSignal}
                   trigger={
                     <IconButton size="sm" tone={reminder ? "active" : "muted"} title="Przypomnienie" aria-label="Przypomnienie">
-                      <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
+                      <Bell className={cn("size-4", reminder && "fill-current")} />
                     </IconButton>
                   }
                 />}
@@ -902,7 +902,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                   <Popover>
                     <PopoverTrigger asChild>
                       <IconButton size="sm" tone={parentId ? "active" : "muted"} title="Podstrona w…" aria-label="Podstrona w…">
-                        <CornerDownRight className="w-4 h-4" />
+                        <CornerDownRight className="size-4" />
                       </IconButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3 space-y-2" align="start">
@@ -931,7 +931,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                 )}
                 {!isDraftEmpty && (fullScreen ? (
                   <IconButton onClick={saveAndNext} title="Zapisz i dodaj kolejną (Ctrl+Shift+Enter)" aria-label="Zapisz i dodaj kolejną">
-                    <CopyPlus className="w-4 h-4" />
+                    <CopyPlus className="size-4" />
                   </IconButton>
                 ) : (
                   <button type="button" onClick={saveAndNext}

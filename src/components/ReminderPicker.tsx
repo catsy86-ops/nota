@@ -215,7 +215,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
             )}
             title="Przypomnienie"
           >
-            <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
+            <Bell className={cn("size-4", reminder && "fill-current")} />
           </button>
         )}>
         <p className="ui-hint font-semibold font-display">Przypomnienie</p>
@@ -288,7 +288,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
           </div>
         )}
         <div className="flex items-center gap-2">
-          <label htmlFor={`${uid}-repeat`} className="text-xs text-muted-foreground flex items-center gap-1"><Repeat className="w-3 h-3" />Powtarzaj:</label>
+          <label htmlFor={`${uid}-repeat`} className="text-xs text-muted-foreground flex items-center gap-1"><Repeat className="size-3" />Powtarzaj:</label>
           <RepeatRuleSelect
             id={`${uid}-repeat`}
             value={repeat}
@@ -312,7 +312,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
             />
             {untilText && (
               <button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" className="p-1 rounded text-muted-foreground hover:text-foreground">
-                <X className="w-3 h-3" />
+                <X className="size-3" />
               </button>
             )}
           </div>
@@ -350,7 +350,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
           </Button>
           {reminder && (
             <Button size="sm" variant="outline" onClick={handleClear} aria-label="Usuń przypomnienie">
-              <X className="w-3 h-3" />
+              <X className="size-3" />
             </Button>
           )}
         </div>
@@ -377,10 +377,10 @@ export const ReminderBadge = forwardRef<HTMLElement, ReminderBadgeProps & HTMLAt
   );
   const content = (
     <>
-      {passed ? <BellRing className="w-2.5 h-2.5" aria-hidden /> : <Bell className="w-2.5 h-2.5" aria-hidden />}
+      {passed ? <BellRing className="size-2.5" aria-hidden /> : <Bell className="size-2.5" aria-hidden />}
       {passed && <span className="sr-only">Zaległe: </span>}
       <span className="font-mono tabular-nums">{formatReminderShort(reminder)}</span>
-      {reminderRepeat && reminderRepeat !== "none" && <Repeat className="w-2.5 h-2.5" />}
+      {reminderRepeat && reminderRepeat !== "none" && <Repeat className="size-2.5" />}
     </>
   );
   if (interactive) {

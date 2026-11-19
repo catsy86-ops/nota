@@ -30,7 +30,7 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
         onClick={() => onChange(defaultTest(topic))}
         className="pressable flex w-full items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
       >
-        <Gauge className="h-4 w-4 shrink-0" aria-hidden />Dodaj protokół próby szczelności
+        <Gauge className="size-4 shrink-0" aria-hidden />Dodaj protokół próby szczelności
       </button>
     );
   }
@@ -41,16 +41,16 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
       <fieldset className="min-w-0 space-y-3 rounded-card border border-primary/40 bg-primary/5 p-3" data-testid="pressure-test">
         <legend className="sr-only">Protokół próby szczelności</legend>
         <div className="flex items-center gap-2">
-          <Gauge className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+          <Gauge className="size-4 shrink-0 text-primary-ink" aria-hidden />
           <p className="flex-1 text-sm font-medium">Protokół próby</p>
           {!sewer && (
             <Button size="sm" variant="outline" onClick={() => setTimerOpen(true)} className="coarse:h-9">
-              <Clock className="mr-1 h-4 w-4" aria-hidden />Minutnik
+              <Clock className="mr-1 size-4" aria-hidden />Minutnik
               {isRunning(value) && <span className="ml-1 font-mono tabular-nums" data-testid="timer-badge">· {clockLabel(remainingSec(value, now))}</span>}
             </Button>
           )}
           <button type="button" onClick={() => onChange(null)} aria-label="Usuń protokół próby" className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-muted coarse:size-11">
-            <X className="h-4 w-4" aria-hidden />
+            <X className="size-4" aria-hidden />
           </button>
         </div>
       <ToggleGroup

@@ -104,13 +104,13 @@ export function WholesaleOrderDialog({ open, onOpenChange, groups, van, dir }: {
         )}
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={copy} disabled={empty} className="coarse:h-11">
-            <Copy className="h-4 w-4" aria-hidden />Kopiuj
+            <Copy className="size-4" aria-hidden />Kopiuj
           </Button>
           <Button variant="outline" size="sm" onClick={sendWhatsApp} disabled={empty} className="coarse:h-11">
-            <MessageCircle className="h-4 w-4" aria-hidden />WhatsApp
+            <MessageCircle className="size-4" aria-hidden />WhatsApp
           </Button>
           <Button size="sm" onClick={markAll} disabled={groups.length === 0} className="coarse:h-11">
-            <Check className="h-4 w-4" aria-hidden />Oznacz wszystko jako zamówione
+            <Check className="size-4" aria-hidden />Oznacz wszystko jako zamówione
           </Button>
         </div>
       </DialogContent>

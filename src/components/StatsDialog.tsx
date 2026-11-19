@@ -73,7 +73,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
       <DialogContent className={cn("max-h-[85dvh] overflow-y-auto", tab === "graph" ? "sm:max-w-3xl" : "sm:max-w-lg")}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-primary-ink" /> Statystyki i osiągnięcia
+            <Trophy className="size-5 text-primary-ink" /> Statystyki i osiągnięcia
           </DialogTitle>
           <DialogDescription>Twoje postępy — zapisywane lokalnie</DialogDescription>
         </DialogHeader>
@@ -91,7 +91,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
                 tab === id ? "bg-background text-foreground shadow-elevation-1" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon className="h-3.5 w-3.5" aria-hidden /> {label}
+              <Icon className="size-3.5" aria-hidden /> {label}
             </button>
           ))}
         </div>
@@ -110,7 +110,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
         <div className="grid grid-cols-3 gap-2 pt-2">
           {tiles.map((t) => (
             <div key={t.label} className="rounded-card border border-border/60 bg-muted/30 p-3 text-center">
-              <t.icon className="w-4 h-4 mx-auto text-primary-ink mb-1" />
+              <t.icon className="size-4 mx-auto text-primary-ink mb-1" />
               <p className="text-lg font-display font-bold">{t.value}</p>
               <p className="ui-hint">{t.label}</p>
             </div>
@@ -118,7 +118,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
         </div>
 
         <div className="flex items-center gap-3 mt-3 rounded-card border border-border/60 bg-muted/30 p-3">
-          <Flame className={`w-6 h-6 shrink-0 ${live.currentStreak > 0 ? "text-warning-ink" : "text-muted-foreground"}`} />
+          <Flame className={`size-6 shrink-0 ${live.currentStreak > 0 ? "text-warning-ink" : "text-muted-foreground"}`} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold">
               {live.currentStreak > 0
@@ -158,7 +158,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
           <div className="flex items-center justify-between">
             <p className="ui-hint font-semibold">Odznaki</p>
             <Button variant="ghost" size="sm" onClick={() => setResetAsk(true)} className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-destructive-ink">
-              <RotateCcw className="w-3 h-3" /> Resetuj
+              <RotateCcw className="size-3" /> Resetuj
             </Button>
           </div>
           {ACHIEVEMENTS.map((a, i) => {

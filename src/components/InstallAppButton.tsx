@@ -21,16 +21,16 @@ interface InstallAppButtonProps {
 
 type Step = { icon: ReactNode; text: ReactNode };
 
-const STEP_ICON = "w-7 h-7 shrink-0 rounded-field bg-muted flex items-center justify-center text-primary-ink";
+const STEP_ICON = "size-7 shrink-0 rounded-field bg-muted flex items-center justify-center text-primary-ink";
 
 function manualSteps(isIos: boolean, isAndroid: boolean): { intro: string; steps: Step[] } {
   if (isIos) {
     return {
       intro: "Na iPhonie instaluje się ręcznie, w Safari:",
       steps: [
-        { icon: <Share className="w-4 h-4" />, text: <>Dotknij przycisku <strong>Udostępnij</strong> na pasku Safari.</> },
-        { icon: <SquarePlus className="w-4 h-4" />, text: <>Wybierz <strong>„Do ekranu początkowego”</strong>.</> },
-        { icon: <CircleCheck className="w-4 h-4" />, text: <>Potwierdź przyciskiem <strong>Dodaj</strong>.</> },
+        { icon: <Share className="size-4" />, text: <>Dotknij przycisku <strong>Udostępnij</strong> na pasku Safari.</> },
+        { icon: <SquarePlus className="size-4" />, text: <>Wybierz <strong>„Do ekranu początkowego”</strong>.</> },
+        { icon: <CircleCheck className="size-4" />, text: <>Potwierdź przyciskiem <strong>Dodaj</strong>.</> },
       ],
     };
   }
@@ -38,17 +38,17 @@ function manualSteps(isIos: boolean, isAndroid: boolean): { intro: string; steps
     return {
       intro: "Przeglądarka nie pokazała okna instalacji — zrób to z jej menu:",
       steps: [
-        { icon: <EllipsisVertical className="w-4 h-4" />, text: <>Otwórz menu przeglądarki <strong>⋮</strong> (prawy górny róg).</> },
-        { icon: <Download className="w-4 h-4" />, text: <>Wybierz <strong>„Zainstaluj aplikację”</strong> albo <strong>„Dodaj do ekranu głównego”</strong>.</> },
-        { icon: <CircleCheck className="w-4 h-4" />, text: <>Potwierdź — ikona G pojawi się na ekranie głównym.</> },
+        { icon: <EllipsisVertical className="size-4" />, text: <>Otwórz menu przeglądarki <strong>⋮</strong> (prawy górny róg).</> },
+        { icon: <Download className="size-4" />, text: <>Wybierz <strong>„Zainstaluj aplikację”</strong> albo <strong>„Dodaj do ekranu głównego”</strong>.</> },
+        { icon: <CircleCheck className="size-4" />, text: <>Potwierdź — ikona G pojawi się na ekranie głównym.</> },
       ],
     };
   }
   return {
     intro: "Zainstaluj z paska adresu przeglądarki (Chrome, Edge):",
     steps: [
-      { icon: <MonitorDown className="w-4 h-4" />, text: <>Kliknij ikonę <strong>instalacji</strong> po prawej stronie paska adresu.</> },
-      { icon: <CircleCheck className="w-4 h-4" />, text: <>Potwierdź <strong>Zainstaluj</strong>. Na telefonie otwórz tę stronę i użyj tego samego przycisku.</> },
+      { icon: <MonitorDown className="size-4" />, text: <>Kliknij ikonę <strong>instalacji</strong> po prawej stronie paska adresu.</> },
+      { icon: <CircleCheck className="size-4" />, text: <>Potwierdź <strong>Zainstaluj</strong>. Na telefonie otwórz tę stronę i użyj tego samego przycisku.</> },
     ],
   };
 }
@@ -93,8 +93,8 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
           className
         )}
       >
-        <span className="w-10 h-10 rounded-card bg-background flex items-center justify-center text-primary-ink">
-          <Download className="w-5 h-5" />
+        <span className="size-10 rounded-card bg-background flex items-center justify-center text-primary-ink">
+          <Download className="size-5" />
         </span>
         <span className="text-xs font-medium font-display text-foreground">Zainstaluj</span>
       </button>
@@ -115,7 +115,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
-              <Download className="w-5 h-5 text-primary-ink" /> Zainstaluj NOTKI
+              <Download className="size-5 text-primary-ink" /> Zainstaluj NOTKI
             </DialogTitle>
             <DialogDescription>{help.intro}</DialogDescription>
           </DialogHeader>
@@ -128,7 +128,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
             ))}
           </ol>
           <p className="ui-hint flex items-center gap-2 border-t border-border/60 pt-3">
-            <WifiOff className="w-3.5 h-3.5 shrink-0" />
+            <WifiOff className="size-3.5 shrink-0" />
             Zainstalowana aplikacja działa bez internetu — notatki są zapisane na urządzeniu.
           </p>
         </DialogContent>

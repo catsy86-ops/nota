@@ -23,7 +23,7 @@ export function TodayInvoiceDue() {
   return (
     <section aria-label="Do wystawienia" className="rounded-card border border-border bg-card p-4" data-testid="today-invoice-due">
       <h2 className="mb-2 flex items-center gap-1.5 font-display text-base">
-        <FileText className="h-4 w-4 text-primary-ink" aria-hidden />Do wystawienia
+        <FileText className="size-4 text-primary-ink" aria-hidden />Do wystawienia
         <span className="text-xs font-normal text-muted-foreground">{due.length} {pluralPl(due.length, ["zlecenie", "zlecenia", "zleceń"])} bez faktury</span>
       </h2>
       <ul className="space-y-1.5">

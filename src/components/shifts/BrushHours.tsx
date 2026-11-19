@@ -57,7 +57,7 @@ export function BrushHours({ type, hours, onChange }: BrushHoursProps) {
     return (
       <button type="button" onClick={() => setOpen(true)}
         className="pressable flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-        <Clock className="w-4 h-4" /> Własne godziny dla „{type.name}”
+        <Clock className="size-4" /> Własne godziny dla „{type.name}”
       </button>
     );
   }
@@ -74,7 +74,7 @@ export function BrushHours({ type, hours, onChange }: BrushHoursProps) {
         </div>
         <button type="button" onClick={reset} disabled={hours === null}
           className="pressable h-10 coarse:h-11 px-3 rounded-card flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-          <RotateCcw className="w-4 h-4" /> Godziny zmiany
+          <RotateCcw className="size-4" /> Godziny zmiany
         </button>
       </div>
       <div className="flex flex-wrap items-center gap-1.5">

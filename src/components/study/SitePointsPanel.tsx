@@ -124,7 +124,7 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
       <input ref={photoInput} type="file" accept="image/*" capture="environment" hidden data-testid="point-photo-input"
         onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void savePhoto(f); }} />
       <h3 className="flex items-center gap-2 section-caps">
-        <Droplets className="h-4 w-4" aria-hidden />Punkty
+        <Droplets className="size-4" aria-hidden />Punkty
         {progress.total > 0 && <span className="font-mono tabular-nums normal-case" data-testid="site-points-progress">{progress.done}/{progress.total} gotowe</span>}
       </h3>
 
@@ -155,19 +155,19 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
                 <>
                   <button type="button" onClick={() => flip(room.id)} aria-expanded={expanded} aria-controls={`room-${room.id}`}
                     className="pressable flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-left coarse:min-h-11">
-                    <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", !expanded && "-rotate-90")} aria-hidden />
+                    <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", !expanded && "-rotate-90")} aria-hidden />
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">{room.name}</span>
                     <span className="font-mono text-xs tabular-nums text-muted-foreground" aria-label={`${rp.done} z ${rp.total} gotowe`}>{rp.done}/{rp.total}</span>
                   </button>
                   <button type="button" onClick={() => setRenaming(room.id)} aria-label={`Zmień nazwę: ${room.name}`}
                     className="pressable grid size-9 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
-                    <Pencil className="h-4 w-4" aria-hidden />
+                    <Pencil className="size-4" aria-hidden />
                   </button>
                 </>
               )}
               <button type="button" onClick={() => dropRoom(room.id)} aria-label={`Usuń pomieszczenie ${room.name}`}
                 className="pressable grid size-9 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
-                <Trash2 className="h-4 w-4" aria-hidden />
+                <Trash2 className="size-4" aria-hidden />
               </button>
             </div>
             {expanded && (
@@ -200,11 +200,11 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
                           <button type="button" onClick={() => takePhoto(p, room.name)} disabled={photoBusy === p.id} aria-label={`Zdjęcie punktu: ${t.label}`}
                             title="Zdjęcie z podpisem: pomieszczenie, punkt, wysokość"
                             className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground disabled:opacity-50 coarse:size-11">
-                            <Camera className="h-4 w-4" aria-hidden />
+                            <Camera className="size-4" aria-hidden />
                           </button>
                           <button type="button" onClick={() => dropPoint(p)} aria-label={`Usuń punkt ${t.label}`}
                             className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
-                            <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                            <Trash2 className="size-3.5" aria-hidden />
                           </button>
                         </div>
                         <div className="flex items-center gap-1.5" role="group" aria-label={`${t.label}: stan`}>
@@ -222,7 +222,7 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
                                 stage > i ? "border-success-ink bg-success-ink text-background" : stage === i ? "border-foreground/60" : "border-border",
                               )}
                             >
-                              {stage > i && <Check className="h-4 w-4" aria-hidden />}
+                              {stage > i && <Check className="size-4" aria-hidden />}
                             </button>
                           ))}
                           <span className={cn("pl-1 text-xs", stage >= POINT_STEPS.length ? "text-success-ink" : "text-muted-foreground")}>{nextLabel(p)}{otherAuthor(p.by, me) && <span data-testid="point-by"> · {p.by}</span>}</span>
@@ -232,7 +232,7 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
                   })}
                 </ul>
                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Plus className="h-3.5 w-3.5" aria-hidden />
+                  <Plus className="size-3.5" aria-hidden />
                   <select
                     value=""
                     onChange={(e) => { if (e.target.value && addPoint(site.id, room.id, e.target.value)) haptic("success"); }}

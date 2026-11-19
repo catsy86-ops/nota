@@ -63,9 +63,9 @@ export function CodeChangePanel() {
           const current = !done && STEPS.slice(0, i).every((p) => p.doneAt.includes(record.step));
           return (
             <li key={s.label} className="flex items-center gap-2 text-sm">
-              {done ? <Check className="h-4 w-4 text-success-ink" aria-hidden />
-                : current && running ? <Loader2 className="h-4 w-4 motion-safe:animate-spin text-muted-foreground" aria-hidden />
-                : <Circle className="h-4 w-4 text-faint" aria-hidden />}
+              {done ? <Check className="size-4 text-success-ink" aria-hidden />
+                : current && running ? <Loader2 className="size-4 motion-safe:animate-spin text-muted-foreground" aria-hidden />
+                : <Circle className="size-4 text-faint" aria-hidden />}
               <span className={done ? "" : current ? "font-medium" : "text-muted-foreground"}>{s.label}</span>
               <span className="sr-only">{done ? "— zrobione" : current ? "— w toku" : "— czeka"}</span>
             </li>
@@ -75,7 +75,7 @@ export function CodeChangePanel() {
 
       {record.error && (
         <div role="alert" className="flex items-start gap-2 rounded-control border border-warning/50 bg-warning/10 px-3 py-2 text-foreground">
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
           <p className="min-w-0 flex-1">{record.error.message}</p>
         </div>
       )}

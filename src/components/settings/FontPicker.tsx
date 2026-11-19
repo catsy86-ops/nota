@@ -44,7 +44,7 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
               )}
               <span className="relative flex items-baseline justify-between gap-2" style={{ fontFamily: meta.family }}>
                 <span className="text-base font-semibold text-foreground">{meta.label}</span>
-                {active && <Check className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />}
+                {active && <Check className="size-4 shrink-0 text-primary-ink" aria-hidden />}
               </span>
               {/* Próbka zawija się zamiast się ucinać — znaki „Il1 O0” są tym, po co ludzie porównują kroje. */}
               <span className="relative mt-0.5 block text-sm leading-snug text-foreground/80 break-words" style={{ fontFamily: meta.family }} aria-hidden>

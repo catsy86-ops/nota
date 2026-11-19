@@ -116,7 +116,7 @@ export function SiteHome({ onOpenCard, onOpenJournal, tools }: { onOpenCard: (si
             {[current.address, `Etapy ${tally.stages.done}/${tally.stages.total}`, progress.total > 0 ? `Punkty ${progress.done}/${progress.total}` : null, tally.missing > 0 ? `Braki ${tally.missing}` : null].filter(Boolean).join(" · ")}
           </span>
         </span>
-        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
       </button>
 
       <div className="grid grid-cols-3 gap-2" role="group" aria-label="Szybkie akcje">
@@ -132,13 +132,13 @@ export function SiteHome({ onOpenCard, onOpenJournal, tools }: { onOpenCard: (si
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void onFile(f); }}
         />
         <button type="button" disabled={busy} onClick={() => input.current?.click()} className={TILE} data-testid="site-home-photo">
-          <Camera className="h-6 w-6 text-primary-ink" aria-hidden />{busy ? "Zapisuję…" : "Zdjęcie"}
+          <Camera className="size-6 text-primary-ink" aria-hidden />{busy ? "Zapisuję…" : "Zdjęcie"}
         </button>
         <button type="button" onClick={voice} className={TILE} data-testid="site-home-voice">
-          <Mic className="h-6 w-6 text-primary-ink" aria-hidden />Wpis głosem
+          <Mic className="size-6 text-primary-ink" aria-hidden />Wpis głosem
         </button>
         <button type="button" onClick={shortage} className={TILE} data-testid="site-home-shortage">
-          <PackageX className="h-6 w-6 text-primary-ink" aria-hidden />Brak
+          <PackageX className="size-6 text-primary-ink" aria-hidden />Brak
         </button>
       </div>
 

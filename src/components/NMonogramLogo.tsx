@@ -18,7 +18,7 @@ export function NMonogramLogo({ className }: NMonogramLogoProps) {
   // Unikalny gradient — logo bywa jednocześnie w nagłówku i w pasku bocznym.
   const grad = `n-mark-grad-${useId().replace(/:/g, "")}`;
   return (
-    <svg viewBox="0 0 24 24" className={cn("n-mark w-8 h-8 overflow-visible", className)} aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={cn("n-mark size-8 overflow-visible", className)} aria-hidden="true">
       <defs>
         <linearGradient id={grad} x1="6" y1="5" x2="18" y2="19" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="var(--primary)" />

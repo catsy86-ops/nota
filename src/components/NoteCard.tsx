@@ -144,14 +144,14 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         <>
           {canSwipePin && (
             <motion.div style={{ opacity: pinOpacity }} data-swipe-bg="pin" className="absolute inset-y-0 left-0 w-1/2 rounded-card bg-primary/15 flex items-center justify-start gap-2 pl-5 pointer-events-none text-primary-ink">
-              {note.pinned ? <PinOff className="w-6 h-6" aria-hidden /> : <Pin className="w-6 h-6" aria-hidden />}
+              {note.pinned ? <PinOff className="size-6" aria-hidden /> : <Pin className="size-6" aria-hidden />}
               {swipeLabels && <span className="text-sm font-semibold">{note.pinned ? "Odepnij" : "Przypnij"}</span>}
             </motion.div>
           )}
           {canSwipeArchive && (
             <motion.div style={{ opacity: archiveOpacity }} data-swipe-bg="archive" className="absolute inset-y-0 right-0 w-1/2 rounded-card bg-secondary flex items-center justify-end gap-2 pr-5 pointer-events-none text-foreground">
               {swipeLabels && <span className="text-sm font-semibold">{isArchived ? "Przywróć" : "Archiwizuj"}</span>}
-              {isArchived ? <ArchiveRestore className="w-6 h-6" aria-hidden /> : <Archive className="w-6 h-6" aria-hidden />}
+              {isArchived ? <ArchiveRestore className="size-6" aria-hidden /> : <Archive className="size-6" aria-hidden />}
             </motion.div>
           )}
         </>
@@ -221,7 +221,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         {pinFx > 0 && (
           <span key={pinFx} className="pin-stamp" aria-hidden onAnimationEnd={() => setPinFx(0)}>
             <span className="pin-stamp-ripple" />
-            <Pin className="w-4 h-4 fill-current" />
+            <Pin className="size-4 fill-current" />
           </span>
         )}
         {stampKey > 0 && (
@@ -235,7 +235,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           <button
             onClick={(e) => { e.stopPropagation(); onToggleSelect(note.id, e.shiftKey); }}
             className={cn(
-              "absolute top-2 right-2 z-sticky w-6 h-6 rounded-control border-2 flex items-center justify-center transition-[color,background-color,border-color,opacity] coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
+              "absolute top-2 right-2 z-sticky size-6 rounded-control border-2 flex items-center justify-center transition-[color,background-color,border-color,opacity] coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
               // Start zaznaczania bez Ctrl+A: pole pojawia się po najechaniu / fokusie, a na dotyku jest zawsze lekko widoczne.
               // Plan nowy V12 / NP-2: na dotyku pole ukryte do trybu zaznaczania; ukryte nie łapie stuknięć.
               !(selectionMode || selected) && "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto focus-visible:opacity-100 focus-visible:pointer-events-auto",
@@ -243,7 +243,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             )}
             aria-label={selected ? "Odznacz notatkę" : "Zaznacz notatkę"}
           >
-            {selected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+            {selected && <Check className="size-3.5" strokeWidth={3} />}
           </button>
         )}
 
@@ -295,7 +295,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     aria-label="Usuń obrazek"
                     className="absolute top-1 right-1 p-1 coarse:p-3 rounded-full bg-foreground/60 text-background opacity-0 coarse:opacity-100 group-hover/img:opacity-100 focus-visible:opacity-100 transition-opacity"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="size-3" />
                   </button>
                 )}
               </div>
@@ -382,7 +382,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
 
           <ActionBtn
-            icon={<Ellipsis className="w-4 h-4" />}
+            icon={<Ellipsis className="size-4" />}
             onClick={() => (isTouch ? setSheetOpen(true) : setShowMore((v) => !v))}
             title={showMore ? "Mniej opcji" : "Więcej opcji"}
             aria-expanded={isTouch ? sheetOpen : showMore}

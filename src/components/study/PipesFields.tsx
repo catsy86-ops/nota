@@ -54,14 +54,14 @@ export function PipesFields({ value, history, onChange }: { value: Pipe[]; histo
         </button>
       ))}
       <button type="button" onClick={() => add()} className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted coarse:min-h-11 coarse:px-3 coarse:text-sm">
-        <Plus className="h-3.5 w-3.5" aria-hidden />Inna
+        <Plus className="size-3.5" aria-hidden />Inna
       </button>
     </div>
   );
 
   return (
     <fieldset className="min-w-0 space-y-2" data-testid="pipes">
-      <legend className="flex items-center gap-2 text-sm font-medium"><Cylinder className="h-4 w-4 text-primary-ink" aria-hidden />Rury</legend>
+      <legend className="flex items-center gap-2 text-sm font-medium"><Cylinder className="size-4 text-primary-ink" aria-hidden />Rury</legend>
       <datalist id={listId}>{names.map((n) => <option key={n} value={n} />)}</datalist>
       {value.length > 0 && (
         <ul className="space-y-2">
@@ -103,7 +103,7 @@ export function PipesFields({ value, history, onChange }: { value: Pipe[]; histo
                   aria-label={`Usuń rurę ${p.name || i + 1}`}
                   className="pressable grid size-10 shrink-0 place-items-center rounded-field border border-border text-muted-foreground coarse:size-11"
                 >
-                  <Trash className="h-4 w-4" aria-hidden />
+                  <Trash className="size-4" aria-hidden />
                 </button>
               </li>
             );

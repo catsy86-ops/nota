@@ -236,7 +236,7 @@ export function CommandPalette({
                 onClick={() => run(() => onNewNote(search.trim()))}
                 className="flex items-center gap-1.5 text-xs text-primary-ink hover:underline"
               >
-                <Plus className="w-3.5 h-3.5" /> Utwórz notatkę „{search.trim()}”
+                <Plus className="size-3.5" /> Utwórz notatkę „{search.trim()}”
               </button>
             )}
           </div>
@@ -244,18 +244,18 @@ export function CommandPalette({
         {currentNote && pickFolder && onMoveToFolder && (
           <CommandGroup heading="Przenieś do folderu">
             <CommandItem value="wróć" onSelect={() => setPickFolder(false)}>
-              <ArrowLeft className="w-4 h-4 mr-2" /> Wróć
+              <ArrowLeft className="size-4 mr-2" /> Wróć
             </CommandItem>
             {currentNote.folderId && (
               <CommandItem value="bez folderu" onSelect={() => run(() => onMoveToFolder(currentNote.id, null))}>
-                <StickyNote className="w-4 h-4 mr-2" /> Bez folderu
+                <StickyNote className="size-4 mr-2" /> Bez folderu
               </CommandItem>
             )}
             {folders.filter((f) => f.id !== currentNote.folderId).map((f) => {
               const path = [...folderCrumbs(folders, f.id).map((c) => c.label), f.name || "Folder"].join(" / ");
               return (
                 <CommandItem key={f.id} value={`folder ${path}`} onSelect={() => run(() => onMoveToFolder(currentNote.id, f.id))}>
-                  <FolderIcon className="w-4 h-4 mr-2" /> {f.emoji ? `${f.emoji} ` : ""}{path}
+                  <FolderIcon className="size-4 mr-2" /> {f.emoji ? `${f.emoji} ` : ""}{path}
                 </CommandItem>
               );
             })}
@@ -265,46 +265,46 @@ export function CommandPalette({
           <>
             <CommandGroup heading="Ta notatka">
               <CommandItem value="ta notatka otwórz" onSelect={() => run(() => onOpenNote(currentNote.id))}>
-                <StickyNote className="w-4 h-4 mr-2" /> Otwórz
+                <StickyNote className="size-4 mr-2" /> Otwórz
               </CommandItem>
               {onTogglePin && !currentNote.trashed && (
                 <CommandItem value={currentNote.pinned ? "ta notatka odepnij" : "ta notatka przypnij"} onSelect={() => run(() => onTogglePin(currentNote.id))}>
-                  <Pin className="w-4 h-4 mr-2" /> {currentNote.pinned ? "Odepnij" : "Przypnij"}
+                  <Pin className="size-4 mr-2" /> {currentNote.pinned ? "Odepnij" : "Przypnij"}
                 </CommandItem>
               )}
               {onToggleFavorite && !currentNote.trashed && (
                 <CommandItem value={currentNote.favorite ? "ta notatka usun z ulubionych" : "ta notatka do ulubionych"} onSelect={() => run(() => onToggleFavorite(currentNote.id, !currentNote.favorite))}>
-                  <Star className="w-4 h-4 mr-2" /> {currentNote.favorite ? "Usuń z ulubionych" : "Do ulubionych"}
+                  <Star className="size-4 mr-2" /> {currentNote.favorite ? "Usuń z ulubionych" : "Do ulubionych"}
                 </CommandItem>
               )}
               {currentNote.title.trim() && !currentNote.locked && (
                 <CommandItem value="ta notatka kopiuj link wiki" onSelect={() => run(() => { void copyWikiLink(currentNote); })}>
-                  <Link2 className="w-4 h-4 mr-2" /> Kopiuj link [[{currentNote.title.trim()}]]
+                  <Link2 className="size-4 mr-2" /> Kopiuj link [[{currentNote.title.trim()}]]
                 </CommandItem>
               )}
               {onMoveToFolder && !currentNote.trashed && folders.length > 0 && (
                 <CommandItem value="ta notatka przenies do folderu" onSelect={() => { setSearch(""); setPickFolder(true); }}>
-                  <FolderInput className="w-4 h-4 mr-2" /> Przenieś do folderu…
+                  <FolderInput className="size-4 mr-2" /> Przenieś do folderu…
                 </CommandItem>
               )}
               {!currentNote.locked && (["html", "pdf", "md"] as const).map((kind) => (
                 <CommandItem key={kind} value={`ta notatka eksport ${kind}`} onSelect={() => run(() => { void exportCurrent(currentNote, kind); })}>
-                  <Download className="w-4 h-4 mr-2" /> Eksportuj jako {kind === "md" ? "Markdown" : kind.toUpperCase()}
+                  <Download className="size-4 mr-2" /> Eksportuj jako {kind === "md" ? "Markdown" : kind.toUpperCase()}
                 </CommandItem>
               ))}
               {onDuplicate && !currentNote.trashed && (
                 <CommandItem value="ta notatka duplikuj" onSelect={() => run(() => onDuplicate(currentNote.id))}>
-                  <Copy className="w-4 h-4 mr-2" /> Duplikuj
+                  <Copy className="size-4 mr-2" /> Duplikuj
                 </CommandItem>
               )}
               {onArchive && !currentNote.trashed && !currentNote.archived && (
                 <CommandItem value="ta notatka archiwizuj" onSelect={() => run(() => onArchive(currentNote.id))}>
-                  <Archive className="w-4 h-4 mr-2" /> Archiwizuj
+                  <Archive className="size-4 mr-2" /> Archiwizuj
                 </CommandItem>
               )}
               {onTrash && !currentNote.trashed && (
                 <CommandItem value="ta notatka do kosza usun" onSelect={() => run(() => onTrash(currentNote.id))}>
-                  <Trash className="w-4 h-4 mr-2" /> Do kosza
+                  <Trash className="size-4 mr-2" /> Do kosza
                 </CommandItem>
               )}
             </CommandGroup>
@@ -316,7 +316,7 @@ export function CommandPalette({
             <CommandGroup heading="Ostatnie notatki">
               {recentNotes.map((n) => (
                 <CommandItem key={`last-${n.id}`} value={`ostatnie ${n.id}`} onSelect={() => run(() => onOpenNote(n.id))}>
-                  <RotateCcwClock className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <RotateCcwClock className="size-4 mr-2 text-muted-foreground" />
                   <span className="truncate">{n.title || n.content.slice(0, 60) || "(bez tytułu)"}</span>
                 </CommandItem>
               ))}
@@ -328,7 +328,7 @@ export function CommandPalette({
           <>
             <CommandGroup heading="Grafik">
               <CommandItem value="grafik skończyłem teraz koniec zmiany" onSelect={() => run(() => window.dispatchEvent(new Event(FINISH_SHIFT_NOW_EVENT)))}>
-                <Clock className="w-4 h-4 mr-2" /> Skończyłem teraz
+                <Clock className="size-4 mr-2" /> Skończyłem teraz
               </CommandItem>
             </CommandGroup>
             <CommandSeparator />
@@ -339,7 +339,7 @@ export function CommandPalette({
             <CommandGroup heading="Ostatnio użyte">
               {recentNav.map((n) => (
                 <CommandItem key={`recent-${n.id}`} value={`ostatnio ${n.label}`} onSelect={() => run(() => goNav(n.id))}>
-                  <n.Icon className="w-4 h-4 mr-2" /> {n.label}
+                  <n.Icon className="size-4 mr-2" /> {n.label}
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -351,7 +351,7 @@ export function CommandPalette({
             <CommandGroup heading="Ostatnio szukane">
               {recent.map((q) => (
                 <CommandItem key={q} value={`recent-${q}`} onSelect={() => setSearch(q)}>
-                  <RotateCcwClock className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <RotateCcwClock className="size-4 mr-2 text-muted-foreground" />
                   <span className="truncate">{q}</span>
                 </CommandItem>
               ))}
@@ -364,7 +364,7 @@ export function CommandPalette({
             <CommandGroup heading="Filtry">
               {filters.map((f) => (
                 <CommandItem key={f.id} value={`filtr ${f.name}`} onSelect={() => run(() => onGoFilter(f.query))}>
-                  <Bookmark className="w-4 h-4 mr-2" />
+                  <Bookmark className="size-4 mr-2" />
                   <span className="truncate">{f.name}</span>
                   <span className="ml-auto pl-3 text-xs text-muted-foreground truncate max-w-[40%]">{f.query}</span>
                 </CommandItem>
@@ -378,7 +378,7 @@ export function CommandPalette({
             {questionHits.map((q) => (
               // `value` z bieżącym zapytaniem: filtr cmdk nie zna polskich znaków, a trafienie już jest policzone.
               <CommandItem key={`question-${q.id}`} value={`pytanie ${q.id} ${search}`} onSelect={() => run(() => navigate(`/praca?${STUDY_TOPIC_PARAM}=${encodeURIComponent(q.topic)}`))}>
-                <HardHat className="w-4 h-4 mr-2 text-muted-foreground" />
+                <HardHat className="size-4 mr-2 text-muted-foreground" />
                 <span className="truncate">{q.question}</span>
                 <span className="ml-auto shrink-0 pl-2 text-xs text-muted-foreground">{topicTitle(q.topic)}</span>
               </CommandItem>
@@ -389,7 +389,7 @@ export function CommandPalette({
           <CommandGroup heading="Klienci">
             {clientHits.map((c) => (
               <CommandItem key={`client-${c.id}`} value={`klient ${c.name} ${c.phone} ${c.nip} ${c.address1}`} onSelect={() => run(() => navigate(clientUrl(c.id)))}>
-                <UserRound className="w-4 h-4 mr-2 text-muted-foreground" />
+                <UserRound className="size-4 mr-2 text-muted-foreground" />
                 <span className="truncate">Klient: {c.name}</span>
                 {c.phone && <span className="ml-auto shrink-0 pl-2 text-xs text-muted-foreground">{c.phone}</span>}
               </CommandItem>
@@ -402,7 +402,7 @@ export function CommandPalette({
               <CommandGroup heading="Budowy">
                 {studyHits.sites.map((x) => (
                   <CommandItem key={`site-${x.id}`} value={`budowa ${x.name}`} onSelect={() => run(() => navigate(siteCardUrl(x.id)))}>
-                    <HardHat className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <HardHat className="size-4 mr-2 text-muted-foreground" />
                     <span className="truncate">Karta budowy: {x.name}</span>
                   </CommandItem>
                 ))}
@@ -418,7 +418,7 @@ export function CommandPalette({
                   const id = entrySiteId(e);
                   return (
                     <CommandItem key={`entry-${e.id}`} value={`wpis ${e.text} ${e.site}`} onSelect={() => run(() => navigate(id ? siteCardUrl(id) : "/praca"))}>
-                      <HardHat className="w-4 h-4 mr-2 text-muted-foreground" />
+                      <HardHat className="size-4 mr-2 text-muted-foreground" />
                       <span className="truncate">{e.text.slice(0, 60) || "bez opisu"}</span>
                       {e.site && <span className="ml-auto text-xs text-muted-foreground">{e.site}</span>}
                     </CommandItem>
@@ -437,18 +437,18 @@ export function CommandPalette({
         {/* Adres dnia kalendarza (K1.5): „Dziś” i „Jutro” z palety otwierają kalendarz na właściwym dniu. */}
         <CommandGroup heading={viewLabel("calendar")}>
           <CommandItem value="kalendarz terminy dziś" onSelect={() => run(() => navigate(`/kalendarz?dzien=${dayKey(new Date())}`))}>
-            <Calendar className="w-4 h-4 mr-2 text-muted-foreground" /> Terminy na dziś
+            <Calendar className="size-4 mr-2 text-muted-foreground" /> Terminy na dziś
           </CommandItem>
           <CommandItem value="kalendarz terminy jutro" onSelect={() => run(() => navigate(`/kalendarz?dzien=${dayKey(addDays(new Date(), 1))}`))}>
-            <Calendar className="w-4 h-4 mr-2 text-muted-foreground" /> Terminy na jutro
+            <Calendar className="size-4 mr-2 text-muted-foreground" /> Terminy na jutro
           </CommandItem>
         </CommandGroup>
         <CommandGroup heading="Praca">
           <CommandItem value="praca nowy wpis" onSelect={() => run(() => navigate("/praca?wpis=1"))}>
-            <Plus className="w-4 h-4 mr-2 text-muted-foreground" /> Nowy wpis w Pracy
+            <Plus className="size-4 mr-2 text-muted-foreground" /> Nowy wpis w Pracy
           </CommandItem>
           <CommandItem value="praca raport dnia" onSelect={() => run(() => navigate(`/praca?${JOURNAL_REPORT_PARAM}=${reportParam({ range: "day", allSites: false })}`))}>
-            <HardHat className="w-4 h-4 mr-2 text-muted-foreground" /> Raport dnia
+            <HardHat className="size-4 mr-2 text-muted-foreground" /> Raport dnia
           </CommandItem>
         </CommandGroup>
         <CommandGroup heading={viewLabel("shifts")}>
@@ -464,76 +464,76 @@ export function CommandPalette({
         </CommandGroup>
         <CommandGroup heading="Akcje">
           <CommandItem onSelect={() => run(onNewNote)}>
-            <Plus className="w-4 h-4 mr-2" /> Nowa notatka <span className="ml-auto text-xs text-muted-foreground">{modShortcut("N")}</span>
+            <Plus className="size-4 mr-2" /> Nowa notatka <span className="ml-auto text-xs text-muted-foreground">{modShortcut("N")}</span>
           </CommandItem>
           <CommandItem value="do skrzynki zapisz pomysl przechwyc" onSelect={() => run(onQuickInbox)}>
-            <Inbox className="w-4 h-4 mr-2" /> Do skrzynki… <span className="ml-auto text-xs text-muted-foreground">Alt+K</span>
+            <Inbox className="size-4 mr-2" /> Do skrzynki… <span className="ml-auto text-xs text-muted-foreground">Alt+K</span>
           </CommandItem>
           <CommandItem onSelect={() => run(onDailyNote)}>
-            <BookOpen className="w-4 h-4 mr-2" /> Notatka dnia
+            <BookOpen className="size-4 mr-2" /> Notatka dnia
           </CommandItem>
           <CommandItem value="notatka tygodnia" onSelect={() => run(() => onPeriodNote("week"))}>
-            <CalendarRange className="w-4 h-4 mr-2" /> Notatka tygodnia
+            <CalendarRange className="size-4 mr-2" /> Notatka tygodnia
           </CommandItem>
           <CommandItem value="notatka miesiaca" onSelect={() => run(() => onPeriodNote("month"))}>
-            <CalendarRange className="w-4 h-4 mr-2" /> Notatka miesiąca
+            <CalendarRange className="size-4 mr-2" /> Notatka miesiąca
           </CommandItem>
           {onCopyNote && (
             <>
               <CommandItem value="kopiuj notatke jako markdown" onSelect={() => run(() => onCopyNote("markdown"))}>
-                <Copy className="w-4 h-4 mr-2" /> Kopiuj notatkę jako Markdown
+                <Copy className="size-4 mr-2" /> Kopiuj notatkę jako Markdown
               </CommandItem>
               <CommandItem value="kopiuj notatke jako tekst" onSelect={() => run(() => onCopyNote("text"))}>
-                <Copy className="w-4 h-4 mr-2" /> Kopiuj notatkę jako tekst
+                <Copy className="size-4 mr-2" /> Kopiuj notatkę jako tekst
               </CommandItem>
             </>
           )}
           {vault.phase === "unlocked" && (
             <CommandItem value="zablokuj prywatne notatki teraz" onSelect={() => run(() => { void lockEverywhere(privateNotes); })}>
-              <Lock className="w-4 h-4 mr-2" /> Zablokuj prywatne notatki teraz
+              <Lock className="size-4 mr-2" /> Zablokuj prywatne notatki teraz
             </CommandItem>
           )}
           {vault.phase === "locked" && (
             <CommandItem value="odblokuj prywatne notatki" onSelect={() => run(() => vaultUi.open("unlock"))}>
-              <LockOpen className="w-4 h-4 mr-2" /> Odblokuj prywatne notatki
+              <LockOpen className="size-4 mr-2" /> Odblokuj prywatne notatki
             </CommandItem>
           )}
           <CommandItem onSelect={() => run(onOpenSettings)}>
-            <Settings className="w-4 h-4 mr-2" /> Ustawienia
+            <Settings className="size-4 mr-2" /> Ustawienia
           </CommandItem>
           {/* Powłoka 2.5: od razu na karcie Ustawień (te same karty co link `?settings=`). */}
           {SETTINGS_SHORTCUTS.map((t) => (
             <CommandItem key={`tab-${t.tab}`} value={`ustawienia ${t.label} ${t.keywords}`} onSelect={() => run(() => { requestSettingsTab(t.tab); onOpenSettings(); })}>
-              <t.icon className="w-4 h-4 mr-2" /> {t.label}
+              <t.icon className="size-4 mr-2" /> {t.label}
             </CommandItem>
           ))}
           <CommandItem onSelect={() => run(onOpenStats)}>
-            <Trophy className="w-4 h-4 mr-2" /> Statystyki i osiągnięcia
+            <Trophy className="size-4 mr-2" /> Statystyki i osiągnięcia
           </CommandItem>
           <CommandItem onSelect={() => run(() => { requestLinkGraph(); onOpenStats(); })}>
-            <Network className="w-4 h-4 mr-2" /> Graf powiązań
+            <Network className="size-4 mr-2" /> Graf powiązań
           </CommandItem>
           <CommandItem onSelect={() => run(onOpenFocusMode)}>
-            <Brain className="w-4 h-4 mr-2" /> Tryb skupienia
+            <Brain className="size-4 mr-2" /> Tryb skupienia
           </CommandItem>
           <CommandItem onSelect={() => run(() => changeTextSize(1))}>
-            <ZoomIn className="w-4 h-4 mr-2" /> Powiększ tekst
+            <ZoomIn className="size-4 mr-2" /> Powiększ tekst
           </CommandItem>
           <CommandItem onSelect={() => run(() => changeTextSize(-1))}>
-            <ZoomOut className="w-4 h-4 mr-2" /> Pomniejsz tekst
+            <ZoomOut className="size-4 mr-2" /> Pomniejsz tekst
           </CommandItem>
           <CommandItem onSelect={() => run(resetTextSize)}>
-            <ResetText className="w-4 h-4 mr-2" /> Domyślny rozmiar tekstu
+            <ResetText className="size-4 mr-2" /> Domyślny rozmiar tekstu
           </CommandItem>
           <CommandItem onSelect={() => run(onToggleTheme)}>
-            <Moon className="w-4 h-4 mr-2" /> Przełącz motyw jasny/ciemny
+            <Moon className="size-4 mr-2" /> Przełącz motyw jasny/ciemny
           </CommandItem>
           <CommandItem value="nastepny styl motyw skorka wyglad" onSelect={() => run(() => trySkin(nextSkin))}>
-            <Palette className="w-4 h-4 mr-2" /> Następny styl
+            <Palette className="size-4 mr-2" /> Następny styl
             <span className="ml-auto text-xs text-muted-foreground">{SKIN_META[nextSkin].label}</span>
           </CommandItem>
           <CommandItem onSelect={() => run(onOpenShortcuts)}>
-            <Keyboard className="w-4 h-4 mr-2" /> Skróty klawiszowe <span className="ml-auto text-xs text-muted-foreground">?</span>
+            <Keyboard className="size-4 mr-2" /> Skróty klawiszowe <span className="ml-auto text-xs text-muted-foreground">?</span>
           </CommandItem>
         </CommandGroup>
         <CommandSeparator />
@@ -541,7 +541,7 @@ export function CommandPalette({
           <CommandGroup heading="Styl">
             {SKINS.filter((s) => s !== skin).map((s) => (
               <CommandItem key={s} value={`styl motyw skorka ${SKIN_META[s].label} ${s}`} onSelect={() => run(() => trySkin(s))}>
-                <Palette className="w-4 h-4 mr-2" /> Styl: {SKIN_META[s].label}
+                <Palette className="size-4 mr-2" /> Styl: {SKIN_META[s].label}
                 <span className="ml-auto pl-3 truncate text-xs text-muted-foreground max-w-[50%]">{SKIN_META[s].blurb}</span>
               </CommandItem>
             ))}
@@ -550,7 +550,7 @@ export function CommandPalette({
         <CommandGroup heading="Nawigacja">
           {NAV_ITEMS.filter((n) => isViewShown(hiddenViews, n.id)).map((n) => (
             <CommandItem key={n.id} value={`nawigacja ${n.label}`} onSelect={() => run(() => goNav(n.id))}>
-              <n.Icon className="w-4 h-4 mr-2" /> {n.label}
+              <n.Icon className="size-4 mr-2" /> {n.label}
               {n.hint && <span className="ml-auto text-xs text-muted-foreground">{n.hint}</span>}
             </CommandItem>
           ))}
@@ -567,7 +567,7 @@ export function CommandPalette({
                   value={`shift-${h.key}`}
                   onSelect={() => run(() => { requestShiftDay(h.key); onGo("shifts"); })}
                 >
-                  <BriefcaseBusiness className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <BriefcaseBusiness className="size-4 mr-2 text-muted-foreground" />
                   <span className="truncate first-letter:uppercase">{h.dateLabel}</span>
                   <span className="ml-2 truncate text-xs text-muted-foreground">{h.shiftLabel}{h.note ? ` · ${h.note}` : ""}</span>
                 </CommandItem>
@@ -587,7 +587,7 @@ export function CommandPalette({
                   value={`sekcja-${h.note.id}-${i}`}
                   onSelect={() => { setRecent(saveRecentSearch(search)); run(() => { requestHeading(h.target); onOpenNote(h.note.id); }); }}
                 >
-                  {h.kind === "heading" ? <Heading className="w-4 h-4 mr-2 text-muted-foreground" /> : <Hash className="w-4 h-4 mr-2 text-muted-foreground" />}
+                  {h.kind === "heading" ? <Heading className="size-4 mr-2 text-muted-foreground" /> : <Hash className="size-4 mr-2 text-muted-foreground" />}
                   <span className="truncate">{h.text}</span>
                   <span className="ml-2 truncate text-xs text-muted-foreground">{h.note.title || "(bez tytułu)"}</span>
                 </CommandItem>
@@ -601,7 +601,7 @@ export function CommandPalette({
             <CommandGroup heading="Terminy" forceMount>
               {dueHits.slice(0, 8).map((n) => (
                 <CommandItem key={`due-${n.id}`} forceMount value={`termin-${n.id}`} onSelect={() => { setRecent(saveRecentSearch(search)); run(() => onOpenNote(n.id)); }}>
-                  <Bell className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <Bell className="size-4 mr-2 text-muted-foreground" />
                   <span className="truncate">{n.title || n.content.slice(0, 60) || "(bez tytułu)"}</span>
                   <span className="ml-auto shrink-0 pl-2 font-mono text-xs tabular-nums text-muted-foreground">{formatReminderShort(n.reminder!)}</span>
                 </CommandItem>
@@ -616,7 +616,7 @@ export function CommandPalette({
             <CommandGroup heading="Ustawienia" forceMount>
               {settingsHits.map((e) => (
                 <CommandItem key={`set-${e.title}`} forceMount value={`ustawienie-${e.title}`} onSelect={() => run(() => { requestSettingsSection(e.tab, e.title, e.expand); onOpenSettings(); })}>
-                  <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <Settings className="size-4 mr-2 text-muted-foreground" />
                   <span className="truncate">{e.title}</span>
                 </CommandItem>
               ))}
@@ -636,7 +636,7 @@ export function CommandPalette({
             >
               {noteHits.slice(0, NOTE_LIMIT).map((n) => (
                 <CommandItem key={n.id} forceMount value={`note-${n.id}`} onSelect={() => { setRecent(saveRecentSearch(search)); run(() => onOpenNote(n.id)); }}>
-                  <StickyNote className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <StickyNote className="size-4 mr-2 text-muted-foreground" />
                   <span className="truncate">{n.title || n.content.slice(0, 60) || "(bez tytułu)"}</span>
                 </CommandItem>
               ))}
@@ -655,9 +655,9 @@ function WorkHitItem({ hit, search, run }: { hit: WorkHit; search: string; run: 
   return (
     // `value` z bieżącym zapytaniem: trafienie policzył MiniSearch, filtr cmdk go nie rusza.
     <CommandItem value={`${hit.key} ${search}`} onSelect={() => run(() => navigate(hit.siteId ? siteCardUrl(hit.siteId) : "/praca"))}>
-      <Icon className="w-4 h-4 mr-2 text-muted-foreground" aria-hidden />
+      <Icon className="size-4 mr-2 text-muted-foreground" aria-hidden />
       <span className="truncate">{hit.title}</span>
-      {hit.hasPhotos && <Camera className="ml-1.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label="ze zdjęciem" />}
+      {hit.hasPhotos && <Camera className="ml-1.5 size-3.5 shrink-0 text-muted-foreground" aria-label="ze zdjęciem" />}
       {hit.siteName && <span className="ml-auto shrink-0 pl-3 text-xs text-muted-foreground">{hit.siteName}</span>}
     </CommandItem>
   );

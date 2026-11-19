@@ -109,7 +109,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
               {presets.map((p) => (
                 <button key={p.id} type="button" onClick={() => { setDraft({ ...p }); setRate(""); }}
                   className="pressable flex items-center gap-1.5 h-8 coarse:h-11 px-2.5 rounded-field border border-border/60 bg-card hover:bg-muted text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                  <span aria-hidden className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+                  <span aria-hidden className="size-2.5 rounded-full" style={{ backgroundColor: p.color }} />
                   {p.name}
                   <span className="text-muted-foreground tabular-nums">{p.kind === "absence" ? "nieobecność" : `${p.start}–${p.end}`}</span>
                 </button>
@@ -206,7 +206,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
           <div className="flex gap-2 flex-wrap pt-1">
             {(type ? SHIFT_COLORS : NEW_SHIFT_COLORS).map((c) => (
               <button key={c} type="button" onClick={() => patch({ color: c })} aria-label={SHIFT_COLOR_NAMES[c]} aria-pressed={draft.color === c}
-                className={cn("pressable w-8 h-8 coarse:w-10 coarse:h-10 rounded-full outline-hidden focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background",
+                className={cn("pressable size-8 coarse:w-10 coarse:h-10 rounded-full outline-hidden focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background",
                   draft.color === c && "ring-2 ring-foreground")}
                 style={{ backgroundColor: c }} />
             ))}

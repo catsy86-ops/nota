@@ -98,7 +98,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       <DialogContent className="h-dvh max-h-none max-sm:max-w-none rounded-none border-0 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:h-[min(88dvh,44rem)] sm:max-w-2xl sm:rounded-card sm:border sm:py-6 overflow-hidden flex flex-col">
         <DialogHeader className="text-left">
           <DialogTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-primary-ink" />
+            <Settings className="size-5 text-primary-ink" />
             Ustawienia
           </DialogTitle>
           <DialogDescription>Zmiany zapisują się od razu w tej przeglądarce. Sync i kopia przenoszą dane na inne urządzenia.</DialogDescription>
@@ -107,11 +107,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         <Tabs value={activeTab} onValueChange={chooseTab} className="flex-1 flex flex-col min-h-0">
           {/* Na telefonie same nazwy (ikona bez podpisu nie mówi, co jest w zakładce). */}
           <TabsList className="mb-3 grid grid-cols-4 w-full h-auto">
-            <TabsTrigger value="appearance" className="gap-1.5 max-sm:text-xs"><LayoutGrid className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Wygląd</span></TabsTrigger>
-            <TabsTrigger value="general" className="gap-1.5 max-sm:text-xs"><Pencil className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Ogólne</span></TabsTrigger>
+            <TabsTrigger value="appearance" className="gap-1.5 max-sm:text-xs"><LayoutGrid className="hidden sm:block size-3.5" aria-hidden /><span>Wygląd</span></TabsTrigger>
+            <TabsTrigger value="general" className="gap-1.5 max-sm:text-xs"><Pencil className="hidden sm:block size-3.5" aria-hidden /><span>Ogólne</span></TabsTrigger>
             {/* „Kopia i dane” może się zawinąć na wąskim ekranie — zakładka nie ma mieć stałej wysokości na jeden wiersz. */}
-            <TabsTrigger value="backup" className="gap-1.5 max-sm:text-xs"><Database className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Kopia i dane</span></TabsTrigger>
-            <TabsTrigger value="sync" className="gap-1.5 max-sm:text-xs"><Wifi className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Sync</span></TabsTrigger>
+            <TabsTrigger value="backup" className="gap-1.5 max-sm:text-xs"><Database className="hidden sm:block size-3.5" aria-hidden /><span>Kopia i dane</span></TabsTrigger>
+            <TabsTrigger value="sync" className="gap-1.5 max-sm:text-xs"><Wifi className="hidden sm:block size-3.5" aria-hidden /><span>Sync</span></TabsTrigger>
           </TabsList>
 
           {/* -mx-1 px-1: pierścień zaznaczenia przy lewej krawędzi nie jest przycinany. Odstęp od kart jest nad

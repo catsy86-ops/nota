@@ -40,7 +40,7 @@ export function DebtPlans({ person, hidden }: { person: PersonDebts; hidden: boo
       {mine.map(({ plan, state }) => state && (
         <div key={plan.id} className="rounded-card border border-border/70 p-3 text-sm">
           <p className="flex items-center gap-2 font-medium">
-            <CalendarClock className="h-4 w-4 text-muted-foreground" aria-hidden />
+            <CalendarClock className="size-4 text-muted-foreground" aria-hidden />
             {state.finished
               ? `Raty spłacone (${plan.count} z ${plan.count})`
               : <span data-testid="debt-plan-next">Rata {state.next!.k} z {plan.count} · {amountText(state.next!.amount, hidden)} · do {plDay(state.next!.due)}</span>}

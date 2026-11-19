@@ -16,7 +16,7 @@ export function DailyQuote() {
       data-visual-mask=""
       className="fade-quiet max-w-xl mx-auto pt-6 flex items-start justify-center gap-2 text-center"
     >
-      <Quote className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" aria-hidden />
+      <Quote className="size-3.5 text-muted-foreground shrink-0 mt-0.5" aria-hidden />
       <div className="min-w-0">
         <blockquote className="text-sm italic text-muted-foreground leading-snug">„{quote.text}”</blockquote>
         <figcaption className="text-xs text-muted-foreground mt-1">— {quote.author}</figcaption>

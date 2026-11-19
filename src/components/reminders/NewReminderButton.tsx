@@ -28,7 +28,7 @@ export default function NewReminderButton({ notes, onCreateNote, onAttachReminde
         onClick={() => { setDay(new Date()); setOpen(true); }}
         className="coarse:min-h-11"
       >
-        <Plus className="w-3.5 h-3.5 mr-1" aria-hidden />
+        <Plus className="size-3.5 mr-1" aria-hidden />
         Nowy termin
       </Button>
       {open && (

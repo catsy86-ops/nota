@@ -70,7 +70,7 @@ export function PricingManager({ pricing, onUpdate }: PricingManagerProps) {
       </div>
 
       <Button onClick={add} size="sm" className="w-full coarse:h-11">
-        <Plus className="mr-1 h-4 w-4" aria-hidden />
+        <Plus className="mr-1 size-4" aria-hidden />
         Dodaj pozycję
       </Button>
 
@@ -87,7 +87,7 @@ export function PricingManager({ pricing, onUpdate }: PricingManagerProps) {
                 onClick={() => remove(item.id)}
                 className="text-muted-foreground hover:text-destructive"
               >
-                <Trash2 className="h-4 w-4" aria-hidden />
+                <Trash2 className="size-4" aria-hidden />
               </button>
             </li>
           ))}

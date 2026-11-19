@@ -97,7 +97,7 @@ function SidebarHeading({ label, icon, collapsed, onToggle, action }: {
         className="section-caps flex min-w-0 flex-1 items-center justify-between gap-1.5 rounded-control px-3 py-1 hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="flex min-w-0 items-center gap-1.5">{icon}{label}</span>
-        <ChevronDown className={cn("w-3 h-3 shrink-0 transition-transform motion-reduce:transition-none", collapsed && "-rotate-90")} aria-hidden />
+        <ChevronDown className={cn("size-3 shrink-0 transition-transform motion-reduce:transition-none", collapsed && "-rotate-90")} aria-hidden />
       </button>
       {action}
     </div>
@@ -279,7 +279,7 @@ export function AppSidebar({
                 <button
                   type="button"
                   onClick={onLogoClick}
-                  className="pressable relative shrink-0 grid place-items-center w-12 h-12 rounded-card bg-linear-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
+                  className="pressable relative shrink-0 grid place-items-center size-12 rounded-card bg-linear-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
                   aria-label={APP_NAME}
                 >
                   <div className="absolute inset-0 rounded-card bg-primary/20 blur-lg opacity-70 -z-raised" />
@@ -321,7 +321,7 @@ export function AppSidebar({
               {favorites.length > 0 && (
                 <div className="pt-5">
                   <p className="section-caps px-3 mb-2 flex items-center gap-1.5">
-                    <Star className="w-3 h-3" />
+                    <Star className="size-3" />
                     Ulubione
                   </p>
                   <div className="space-y-0.5" data-favorites>
@@ -343,7 +343,7 @@ export function AppSidebar({
 
               {hasRecent && (
                 <div className="pt-5" data-sidebar-recent>
-                  <SidebarHeading label="Ostatnie" icon={<RotateCcwClock className="w-3 h-3" />} collapsed={recentCollapsed}
+                  <SidebarHeading label="Ostatnie" icon={<RotateCcwClock className="size-3" />} collapsed={recentCollapsed}
                     onToggle={() => setGroupCollapsed("ostatnie", !recentCollapsed)} />
                   {!recentCollapsed && (
                     <div className="space-y-0.5">
@@ -364,7 +364,7 @@ export function AppSidebar({
               {filters.length > 0 && (
                 <div className="pt-5">
                   <p className="section-caps px-3 mb-2 flex items-center gap-1.5">
-                    <Funnel className="w-3 h-3" />
+                    <Funnel className="size-3" />
                     Filtry
                   </p>
                   <div className="space-y-0.5" data-saved-filters>
@@ -386,7 +386,7 @@ export function AppSidebar({
 
               {/* Zapisane widoki (nowy plan 6.1): źródło, zapytanie, układ, sortowanie i filtry pod nazwą; w Yjs. */}
               <div className="pt-5" data-saved-views>
-                <SidebarHeading label="Widoki" icon={<LayoutDashboard className="w-3 h-3" />} collapsed={viewsCollapsed}
+                <SidebarHeading label="Widoki" icon={<LayoutDashboard className="size-3" />} collapsed={viewsCollapsed}
                   onToggle={() => setGroupCollapsed("widoki", !viewsCollapsed)}
                   action={<SidebarAddFolderButton kind="view" disabled={!viewSource} onAdd={(name) => {
                     if (!viewSource) return;
@@ -418,7 +418,7 @@ export function AppSidebar({
 
               {allLabels.length > 0 && (
                 <div className="pt-5">
-                  <SidebarHeading label="Etykiety" icon={<Tag className="w-3 h-3" />} collapsed={labelsCollapsed}
+                  <SidebarHeading label="Etykiety" icon={<Tag className="size-3" />} collapsed={labelsCollapsed}
                     onToggle={() => setGroupCollapsed("etykiety", !labelsCollapsed)} />
                   <div className="space-y-0.5" hidden={labelsCollapsed}>
                     {buildLabelRows(allLabels).map((row) => (
@@ -438,7 +438,7 @@ export function AppSidebar({
               )}
 
               <div className="pt-5">
-                <SidebarHeading label="Foldery" icon={<FolderOpen className="w-3 h-3" />} collapsed={foldersCollapsed}
+                <SidebarHeading label="Foldery" icon={<FolderOpen className="size-3" />} collapsed={foldersCollapsed}
                   onToggle={() => setGroupCollapsed("foldery", !foldersCollapsed)}
                   action={<SidebarAddFolderButton onAdd={(name) => addFolder(name)} />} />
                 <div className="space-y-0.5" hidden={foldersCollapsed}>
@@ -482,7 +482,7 @@ export function AppSidebar({
                   label="Narzędzia"
                   onClick={() => setMoreOpen((v) => !v)}
                   buttonProps={{ "aria-expanded": moreOpen }}
-                  trailing={<ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform duration-(--dur-fast)", moreOpen && "rotate-180")} />}
+                  trailing={<ChevronDown className={cn("size-4 shrink-0 transition-transform duration-(--dur-fast)", moreOpen && "rotate-180")} />}
                 />
                 {moreOpen && (
                   <div className="space-y-0.5 pl-2">
@@ -494,7 +494,7 @@ export function AppSidebar({
                       icon={<BrainCircuit className="w-[18px] h-[18px]" />}
                       label="Trening mózgu"
                       onClick={() => window.open(NEUROKLIK_URL, "_blank", "noopener,noreferrer")}
-                      trailing={<ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" aria-hidden />}
+                      trailing={<ExternalLink className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />}
                       buttonProps={{ "aria-label": "Trening mózgu (otwiera się w nowej karcie)" }}
                     />
                     <InstallAppButton />

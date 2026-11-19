@@ -20,22 +20,22 @@ export function ShiftExportMenu({ onCsv, onSiteCsv, onIcs, onImage }: ShiftExpor
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button type="button" className={TOOLBAR_BTN}>
-          <Share2 className="w-4 h-4" /> Udostępnij
+          <Share2 className="size-4" /> Udostępnij
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuItem onSelect={() => onCsv()}>
-          <FileSpreadsheet className="w-4 h-4 mr-2" aria-hidden /> Karta czasu (.csv)
+          <FileSpreadsheet className="size-4 mr-2" aria-hidden /> Karta czasu (.csv)
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => onSiteCsv()}>
-          <FileSpreadsheet className="w-4 h-4 mr-2" aria-hidden /> Godziny na budowach (.csv)
+          <FileSpreadsheet className="size-4 mr-2" aria-hidden /> Godziny na budowach (.csv)
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => onIcs()}>
-          <CalendarArrowDown className="w-4 h-4 mr-2" aria-hidden /> Do kalendarza (.ics)
+          <CalendarArrowDown className="size-4 mr-2" aria-hidden /> Do kalendarza (.ics)
         </DropdownMenuItem>
         {(["light", "dark", "style"] as const).map((t) => (
           <DropdownMenuItem key={t} onSelect={() => { onImage(t); }}>
-            <ImageIcon className="w-4 h-4 mr-2" aria-hidden /> Obraz miesiąca — {IMAGE_THEME_LABEL[t]} (.png)
+            <ImageIcon className="size-4 mr-2" aria-hidden /> Obraz miesiąca — {IMAGE_THEME_LABEL[t]} (.png)
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -49,15 +49,15 @@ export function ShiftExportToolbar({ imageTheme, onImageTheme, onCsv, onSiteCsv,
     <>
       <button type="button" onClick={onCsv}
         className={TOOLBAR_BTN}>
-        <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)
+        <FileSpreadsheet className="size-4" /> Karta czasu (.csv)
       </button>
       <button type="button" onClick={onSiteCsv}
         className={TOOLBAR_BTN}>
-        <FileSpreadsheet className="w-4 h-4" /> Godziny na budowach (.csv)
+        <FileSpreadsheet className="size-4" /> Godziny na budowach (.csv)
       </button>
       <button type="button" onClick={onIcs}
         className={TOOLBAR_BTN}>
-        <CalendarArrowDown className="w-4 h-4" /> Do kalendarza (.ics)
+        <CalendarArrowDown className="size-4" /> Do kalendarza (.ics)
       </button>
       <select aria-label="Motyw obrazu miesiąca" value={imageTheme} onChange={(e) => onImageTheme(e.target.value as ImageTheme)}
         className="h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm">
@@ -65,7 +65,7 @@ export function ShiftExportToolbar({ imageTheme, onImageTheme, onCsv, onSiteCsv,
       </select>
       <button type="button" onClick={() => onImage()}
         className={TOOLBAR_BTN}>
-        <ImageIcon className="w-4 h-4" /> Obraz miesiąca (.png)
+        <ImageIcon className="size-4" /> Obraz miesiąca (.png)
       </button>
     </>
   );

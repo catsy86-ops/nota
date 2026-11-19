@@ -66,7 +66,7 @@ export function PointsEstimate({ site, points }: { site: SiteInfo; points: reado
         )}
         <p className="text-2xs text-muted-foreground">Szacunek na podejścia — piony i rozprowadzenie policz osobno.</p>
         <Button type="button" size="sm" variant="outline" onClick={addToShortages} disabled={empty} className="coarse:h-11">
-          <PackagePlus className="h-4 w-4" aria-hidden />Dodaj do braków
+          <PackagePlus className="size-4" aria-hidden />Dodaj do braków
         </Button>
       </div>
     </details>

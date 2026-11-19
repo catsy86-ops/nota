@@ -75,13 +75,13 @@ export function SiteServicePanel({ site }: { site: SiteInfo }) {
     <section aria-label="Serwis i gwarancja" data-testid="site-service" className={`${cardClass} space-y-2 p-3`}>
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 section-caps">
-          <Wrench className="h-3.5 w-3.5" aria-hidden />Serwis i gwarancja
+          <Wrench className="size-3.5" aria-hidden />Serwis i gwarancja
         </h3>
         {open.length > 0 && <span className="font-mono text-xs tabular-nums text-muted-foreground" data-testid="site-service-open">otwarte: {open.length}</span>}
       </div>
 
       <label className="flex flex-wrap items-center gap-2 text-sm">
-        <ShieldCheck className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+        <ShieldCheck className="size-4 shrink-0 text-primary-ink" aria-hidden />
         <span>Gwarancja do</span>
         <input
           type="date"
@@ -113,11 +113,11 @@ export function SiteServicePanel({ site }: { site: SiteInfo }) {
                   </span>
                   <Button type="button" variant="outline" size="sm" className="pressable shrink-0 coarse:h-11"
                     onClick={() => { setClosing(closing === c.id ? null : c.id); setSolution(""); }} aria-expanded={closing === c.id}>
-                    <Check className="mr-1 h-3.5 w-3.5" aria-hidden />Załatwione
+                    <Check className="mr-1 size-3.5" aria-hidden />Załatwione
                   </Button>
                   <Button type="button" variant="ghost" size="sm" className="shrink-0 px-2 text-muted-foreground hover:text-destructive-ink coarse:h-11"
                     onClick={() => remove(c)} aria-label={`Usuń zgłoszenie: ${c.text}`}>
-                    <X className="h-4 w-4" aria-hidden />
+                    <X className="size-4" aria-hidden />
                   </Button>
                 </div>
                 {closing === c.id && (
@@ -180,7 +180,7 @@ export function SiteServicePanel({ site }: { site: SiteInfo }) {
                   </span>
                   <Button type="button" variant="ghost" size="sm" className="shrink-0 px-2 coarse:h-11"
                     onClick={() => setSiteService(site.id, reopenServiceCall(calls, c.id), calls)} aria-label={`Otwórz ponownie: ${c.text}`}>
-                    <RotateCcw className="h-4 w-4" aria-hidden />
+                    <RotateCcw className="size-4" aria-hidden />
                   </Button>
                 </li>
               ))}

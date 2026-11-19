@@ -102,7 +102,7 @@ function EntryRow({ entry }: { entry: TrainingEntry }) {
         {entry.note && <p className="ui-hint">{entry.note}</p>}
       </div>
       <Button variant="ghost" size="sm" className="coarse:h-11" aria-label={`Usuń wpis: ${name}`} onClick={() => deleteEntryWithUndo(entry)}>
-        <Trash className="h-4 w-4" aria-hidden />
+        <Trash className="size-4" aria-hidden />
       </Button>
     </li>
   );
@@ -136,7 +136,7 @@ function PlanList({ plans }: { plans: PlanDay[] }) {
                 if (prev) toastWithUndo("Usunięto dzień planu", () => restorePlanDay(prev), { description: prev.name });
               }}
             >
-              <Trash className="h-4 w-4" aria-hidden />
+              <Trash className="size-4" aria-hidden />
             </Button>
           </li>
         ))}

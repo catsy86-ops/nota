@@ -227,11 +227,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
           <div className="flex shrink-0 gap-2">
             {study.journal.length > 0 && (
               <Button variant="outline" onClick={() => { setReportSite(null); setReportRequest(null); setReport(true); }} className="max-sm:w-9 max-sm:px-0 coarse:h-11 max-sm:coarse:w-11" title="Raport dnia albo okresu dla budowy">
-                <FileText className="h-4 w-4 sm:mr-1" aria-hidden /><span className="max-sm:sr-only">Raport</span>
+                <FileText className="size-4 sm:mr-1" aria-hidden /><span className="max-sm:sr-only">Raport</span>
               </Button>
             )}
             <Button onClick={newEntry} className="coarse:h-11">
-              <Plus className="mr-1 h-4 w-4" aria-hidden />{hasDraft ? "Dokończ wpis" : "Wpis"}
+              <Plus className="mr-1 size-4" aria-hidden />{hasDraft ? "Dokończ wpis" : "Wpis"}
             </Button>
           </div>
         </header>
@@ -258,7 +258,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             art={<EmptySketch paths={JOURNAL_GLYPH} className="relative mx-auto mb-3 h-20 w-28 text-primary-ink" />}
             title="Brak wpisów"
             description="Zapisz, co robisz na budowie — dziennik połączy to z tematami, które przerabiasz."
-            actions={<div className="flex flex-wrap justify-center gap-2"><Button size="sm" className="coarse:h-11" onClick={() => openJournalSheet()}><Plus className="h-4 w-4" aria-hidden />Dodaj wpis</Button><Button size="sm" variant="outline" className="coarse:h-11" onClick={() => setNewSiteOpen(true)}>Nowa budowa</Button>{/* Auto i kilometrówka nie zależą od wpisów dziennika — nie znikają przy pustym dzienniku. */}<Button size="sm" variant="outline" className="coarse:h-11" onClick={() => setVanOpen(true)} data-testid="van-open-empty">Auto</Button><Button size="sm" variant="outline" className="coarse:h-11" onClick={() => setMileageOpen(true)} data-testid="mileage-open-empty">Kilometrówka</Button></div>}
+            actions={<div className="flex flex-wrap justify-center gap-2"><Button size="sm" className="coarse:h-11" onClick={() => openJournalSheet()}><Plus className="size-4" aria-hidden />Dodaj wpis</Button><Button size="sm" variant="outline" className="coarse:h-11" onClick={() => setNewSiteOpen(true)}>Nowa budowa</Button>{/* Auto i kilometrówka nie zależą od wpisów dziennika — nie znikają przy pustym dzienniku. */}<Button size="sm" variant="outline" className="coarse:h-11" onClick={() => setVanOpen(true)} data-testid="van-open-empty">Auto</Button><Button size="sm" variant="outline" className="coarse:h-11" onClick={() => setMileageOpen(true)} data-testid="mileage-open-empty">Kilometrówka</Button></div>}
             className="xl:col-start-1"
           />
         ) : (
@@ -267,7 +267,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
               <h4 className="hidden xl:block section-caps">Filtry</h4>
               <label className="relative block">
                 <span className="sr-only">Szukaj w dzienniku</span>
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
                 <input
                   type="search"
                   value={filter.query}
@@ -315,7 +315,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                           on ? "border-primary bg-primary/10 font-medium text-primary-ink" : "border-border text-muted-foreground hover:text-foreground",
                         )}
                       >
-                        {s && (id && jobs.has(id) ? <Wrench className="h-3.5 w-3.5 shrink-0" aria-label="Zlecenie własne" /> : <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />)}
+                        {s && (id && jobs.has(id) ? <Wrench className="size-3.5 shrink-0" aria-label="Zlecenie własne" /> : <MapPin className="size-3.5 shrink-0" aria-hidden />)}
                         <span className="truncate">{s === null ? "Wszystkie budowy" : s || "Bez budowy"}</span>
                       </button>
                     );
@@ -333,7 +333,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                     data-testid="jobs-open"
                     className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
                   >
-                    <Wrench className="h-3.5 w-3.5 shrink-0" aria-hidden />Zlecenia{jobs.size > 0 && ` (${jobs.size})`}
+                    <Wrench className="size-3.5 shrink-0" aria-hidden />Zlecenia{jobs.size > 0 && ` (${jobs.size})`}
                     {unpaid > 0 && <span className="font-mono tabular-nums text-primary-ink">· {money(unpaid)}</span>}
                   </button>
                   <button
@@ -342,7 +342,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                     data-testid="van-open"
                     className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
                   >
-                    <Truck className="h-3.5 w-3.5 shrink-0" aria-hidden />Auto{vanBuy.length > 0 && <span className="text-warning-ink"> · dokupić {vanBuy.length}</span>}
+                    <Truck className="size-3.5 shrink-0" aria-hidden />Auto{vanBuy.length > 0 && <span className="text-warning-ink"> · dokupić {vanBuy.length}</span>}
                   </button>
                   <button
                     type="button"
@@ -351,7 +351,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                     title="Zdjęcia z galerii jako wpisy z godziną zrobienia"
                     className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
                   >
-                    <Images className="h-3.5 w-3.5 shrink-0" aria-hidden />Zdjęcia z dnia
+                    <Images className="size-3.5 shrink-0" aria-hidden />Zdjęcia z dnia
                   </button>
                   <button
                     type="button"
@@ -359,7 +359,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                     data-testid="end-day-open"
                     className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
                   >
-                    <Flag className="h-3.5 w-3.5 shrink-0" aria-hidden />Zakończ dzień
+                    <Flag className="size-3.5 shrink-0" aria-hidden />Zakończ dzień
                   </button>
                   <button
                     type="button"
@@ -367,7 +367,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                     data-testid="mileage-open"
                     className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
                   >
-                    <Car className="h-3.5 w-3.5 shrink-0" aria-hidden />Kilometrówka
+                    <Car className="size-3.5 shrink-0" aria-hidden />Kilometrówka
                   </button>
                   {wholesaleCount > 0 && (
                     <button
@@ -376,7 +376,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                       data-testid="wholesale-open"
                       className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
                     >
-                      <PackageCheck className="h-3.5 w-3.5 shrink-0" aria-hidden />Do hurtowni ({wholesaleCount})
+                      <PackageCheck className="size-3.5 shrink-0" aria-hidden />Do hurtowni ({wholesaleCount})
                     </button>
                   )}
                   {archivedCount > 0 && (
@@ -389,7 +389,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                         showArchived ? "border-primary text-primary-ink" : "border-border text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      <Archive className="h-3.5 w-3.5 shrink-0" aria-hidden />Archiwum ({archivedCount})
+                      <Archive className="size-3.5 shrink-0" aria-hidden />Archiwum ({archivedCount})
                     </button>
                   )}
                 </div>
@@ -410,11 +410,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   <span className="font-mono tabular-nums">Pasuje: {entriesPl(view.shown)}</span>
                   {filter.site && (
                     <button type="button" onClick={() => setCard(filter.site)} className="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-muted hover:text-foreground coarse:min-h-11">
-                      <MapPin className="h-3.5 w-3.5" aria-hidden />Karta budowy
+                      <MapPin className="size-3.5" aria-hidden />Karta budowy
                     </button>
                   )}
                   <button type="button" onClick={() => setFilter(NO_FILTER)} className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-muted hover:text-foreground coarse:min-h-11">
-                    <X className="h-3.5 w-3.5" aria-hidden />Wyczyść filtry
+                    <X className="size-3.5" aria-hidden />Wyczyść filtry
                   </button>
                 </p>
               )}
@@ -463,7 +463,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                               aria-label={unsplit ? `${d.label}: podziel godziny między budowy` : `${d.label}: godziny na budowach`}
                               data-day-hours={d.key}
                             >
-                              <Clock className="h-3.5 w-3.5" aria-hidden />
+                              <Clock className="size-3.5" aria-hidden />
                               {unsplit
                                 ? "podziel godziny"
                                 : detailed
@@ -487,9 +487,9 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                                 className="-mx-1 flex min-w-0 max-w-full items-center gap-1 rounded px-1 py-0.5 text-xs font-medium text-foreground/80 hover:bg-muted hover:text-foreground coarse:min-h-11"
                                 data-journal-site={g.site}
                               >
-                                <MapPin className="h-3.5 w-3.5 shrink-0 text-primary-ink" aria-hidden />
+                                <MapPin className="size-3.5 shrink-0 text-primary-ink" aria-hidden />
                                 <span className="truncate">{g.site}</span>
-                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                                <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                               </button>
                               {(() => {
                                 const hd = hoursByDay.get(d.key);
@@ -509,7 +509,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                             </div>
                           ) : d.sites.length > 1 && (
                             <p className="mb-1.5 flex items-center gap-1 text-xs font-medium text-foreground/80" data-journal-site="">
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-primary-ink" aria-hidden />
+                              <MapPin className="size-3.5 shrink-0 text-primary-ink" aria-hidden />
                               <span className="truncate">Bez budowy</span>
                             </p>
                           )}

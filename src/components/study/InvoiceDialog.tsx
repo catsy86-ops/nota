@@ -259,7 +259,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
         )}
 
         <Button type="button" onClick={() => void issue()} disabled={busy || lines.length === 0} className="w-full coarse:h-11" data-testid="invoice-issue">
-          <FileCode2 className="h-4 w-4" aria-hidden />Wystaw fakturę{quickProblems > 0 && " (uzupełnij dane)"}
+          <FileCode2 className="size-4" aria-hidden />Wystaw fakturę{quickProblems > 0 && " (uzupełnij dane)"}
         </Button>
 
         {mine.length > 0 && (
@@ -277,13 +277,13 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
                   <span className="shrink-0 font-mono tabular-nums">{fromGrosze(computeInvoice(r.invoice).gross)}</span>
                   <Button type="button" variant="ghost" size="sm" onClick={() => void check(r)} className="coarse:h-11">Sprawdź</Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => setCorrecting(r)} className="coarse:h-11" aria-label={`Koryguj fakturę ${r.number}`} data-testid="invoice-correct">
-                    <FilePen className="h-4 w-4" aria-hidden />Koryguj
+                    <FilePen className="size-4" aria-hidden />Koryguj
                   </Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => void downloadPdf(r)} className="coarse:h-11" aria-label={`Pobierz PDF faktury ${r.number}`}>
-                    <FileText className="h-4 w-4" aria-hidden />PDF
+                    <FileText className="size-4" aria-hidden />PDF
                   </Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => download(r)} className="coarse:h-11" aria-label={`Pobierz XML faktury ${r.number}`}>
-                    <Download className="h-4 w-4" aria-hidden />XML
+                    <Download className="size-4" aria-hidden />XML
                   </Button>
                 </li>
               ))}

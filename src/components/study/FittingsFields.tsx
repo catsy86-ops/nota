@@ -62,7 +62,7 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
         dictation.listening ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-muted",
       )}
     >
-      <Mic className={cn("h-4 w-4", dictation.listening && "animate-pulse")} aria-hidden />
+      <Mic className={cn("size-4", dictation.listening && "animate-pulse")} aria-hidden />
       {dictation.listening ? "Słucham…" : "Dyktuj"}
     </button>
   );
@@ -70,7 +70,7 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
   return (
     <fieldset className="min-w-0 space-y-2 rounded-card border border-border p-3" data-testid="fittings">
       <legend className="sr-only">Kształtki</legend>
-      <p className="flex items-center gap-2 text-sm font-medium"><Package className="h-4 w-4 text-primary-ink" aria-hidden />Kształtki</p>
+      <p className="flex items-center gap-2 text-sm font-medium"><Package className="size-4 text-primary-ink" aria-hidden />Kształtki</p>
       <datalist id={listId}>{names.map((n) => <option key={n} value={n} />)}</datalist>
       {value.length > 0 && <ul className="space-y-2">
         {value.map((f, i) => (
@@ -91,11 +91,11 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
               aria-label={f.qty <= 1 ? `Usuń kształtkę ${f.name || i + 1}` : `${f.name || "Kształtka"}: mniej`}
               className="pressable grid size-10 shrink-0 place-items-center rounded-field border border-border text-muted-foreground coarse:size-11"
             >
-              {f.qty <= 1 ? <Trash className="h-4 w-4" aria-hidden /> : <Minus className="h-4 w-4" aria-hidden />}
+              {f.qty <= 1 ? <Trash className="size-4" aria-hidden /> : <Minus className="size-4" aria-hidden />}
             </button>
             <span className="w-8 shrink-0 text-center font-mono text-base font-semibold tabular-nums" aria-label={`${f.qty} szt.`} data-testid="fitting-qty">{f.qty}</span>
             <button type="button" onClick={() => setRow(i, { qty: Math.min(FITTING_QTY_MAX, f.qty + 1) })} aria-label={`${f.name || "Kształtka"}: więcej`} className="pressable grid size-10 shrink-0 place-items-center rounded-field border border-border text-muted-foreground coarse:size-11">
-              <Plus className="h-4 w-4" aria-hidden />
+              <Plus className="size-4" aria-hidden />
             </button>
           </li>
         ))}
@@ -119,7 +119,7 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
               </button>
             ))}
             <button type="button" onClick={() => add()} className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted coarse:min-h-11 coarse:px-3 coarse:text-sm">
-              <Plus className="h-3.5 w-3.5" aria-hidden />Inna
+              <Plus className="size-3.5" aria-hidden />Inna
             </button>
             {mic}
           </div>

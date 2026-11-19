@@ -117,7 +117,7 @@ export function QuoteDocPanel({ siteId, job, signed, onSign }: {
           <span className="ml-auto font-mono text-xs tabular-nums" data-testid="quote-number">{doc.number}{doc.issued ? ` · ${dmyKey(doc.issued)}` : ""}</span>
         ) : (
           <Button type="button" variant="outline" size="sm" onClick={giveNumber} className="ml-auto coarse:h-11" data-testid="quote-give-number">
-            <Hash className="h-4 w-4" aria-hidden />Nadaj numer
+            <Hash className="size-4" aria-hidden />Nadaj numer
           </Button>
         )}
       </div>
@@ -222,7 +222,7 @@ export function QuoteDocPanel({ siteId, job, signed, onSign }: {
       {job.items.length > 0 && (
         <div className="flex flex-wrap items-center gap-2" data-testid="quote-actions">
           <Button type="button" variant="outline" size="sm" onClick={sign} className="coarse:h-11" data-testid="quote-sign">
-            <PenLine className="h-4 w-4" aria-hidden />{signed ? "Podpisana przez klienta" : "Podpis klienta"}
+            <PenLine className="size-4" aria-hidden />{signed ? "Podpisana przez klienta" : "Podpis klienta"}
           </Button>
           {state !== "accepted" && (
             <Button type="button" variant="outline" size="sm" onClick={() => mark({ acceptedAt: Date.now() })} className="coarse:h-11" data-testid="quote-accept">

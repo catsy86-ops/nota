@@ -33,8 +33,8 @@ export function SidebarLabelItem({ label, displayName = label, depth = 1, isActi
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setName(label); setEditing(false); } }}
           className="flex-1 text-sm bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground min-w-0" />
-        <IconButton size="sm" tone="active" onClick={save} aria-label="Zapisz nazwę etykiety"><Check className="w-3.5 h-3.5" /></IconButton>
-        <IconButton size="sm" onClick={() => { setName(label); setEditing(false); }} aria-label="Anuluj edycję etykiety"><X className="w-3.5 h-3.5" /></IconButton>
+        <IconButton size="sm" tone="active" onClick={save} aria-label="Zapisz nazwę etykiety"><Check className="size-3.5" /></IconButton>
+        <IconButton size="sm" onClick={() => { setName(label); setEditing(false); }} aria-label="Anuluj edycję etykiety"><X className="size-3.5" /></IconButton>
       </div>
     );
   }
@@ -42,18 +42,18 @@ export function SidebarLabelItem({ label, displayName = label, depth = 1, isActi
   return (
     <div style={{ paddingLeft: (depth - 1) * 12 }} title={label}>
     <SidebarRow
-      icon={<Tag className="w-3.5 h-3.5" />}
+      icon={<Tag className="size-3.5" />}
       label={displayName}
       active={isActive}
       onClick={onSelect}
       actions={
         <SidebarRowMenu label={`etykiety ${label}`} onCloseAutoFocus={keepInputFocus}>
           <DropdownMenuItem onSelect={() => { focusInput.current = true; setEditing(true); }}>
-            <Pencil className="w-4 h-4 mr-2" />Zmień nazwę
+            <Pencil className="size-4 mr-2" />Zmień nazwę
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={onDelete} className="text-destructive-ink focus:text-destructive-ink focus:bg-destructive/10">
-            <Trash className="w-4 h-4 mr-2" />Usuń etykietę
+            <Trash className="size-4 mr-2" />Usuń etykietę
           </DropdownMenuItem>
         </SidebarRowMenu>
       }

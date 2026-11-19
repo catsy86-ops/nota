@@ -37,7 +37,7 @@ export function ReminderListGroups({ groups, onOpen, onUpdate }: ReminderListGro
         <section key={g.key} data-reminders-list-group={g.key} aria-label={g.label}>
           <h2 className={cn("mb-1.5 flex items-center gap-1.5 text-xs font-medium", g.tone === "alert" ? "text-destructive-ink" : "text-muted-foreground")}>
             <span className={cn("size-1.5 shrink-0 rounded-full", dotClass(g))} aria-hidden />
-            {(() => { const Icon = GROUP_ICON[g.key] ?? CalendarClock; return <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />; })()}
+            {(() => { const Icon = GROUP_ICON[g.key] ?? CalendarClock; return <Icon className="size-3.5 shrink-0" aria-hidden />; })()}
             {g.label}
             <span className="stamp-tag tabular-nums normal-case tracking-normal">{g.notes.length}</span>
           </h2>
@@ -48,7 +48,7 @@ export function ReminderListGroups({ groups, onOpen, onUpdate }: ReminderListGro
                   <span className="min-w-0 flex-1 truncate text-sm">{noteListTitle(n)}</span>
                   {ruleOf(n).kind !== "none" && (
                     <span className="inline-flex shrink-0 items-center gap-1 text-2xs text-muted-foreground" title={REPEAT_KIND_LABELS[ruleOf(n).kind]}>
-                      <Repeat className="h-3 w-3" aria-hidden />
+                      <Repeat className="size-3" aria-hidden />
                       <span className="sr-only">Seria: {REPEAT_KIND_LABELS[ruleOf(n).kind].toLowerCase()}</span>
                     </span>
                   )}

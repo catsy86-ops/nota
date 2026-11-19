@@ -92,7 +92,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
         )}
         <button type="button" onClick={() => setYearOpen(true)} aria-label="Podsumowanie roku"
           className="pressable shrink-0 flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-card border border-border/60 bg-background hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-          <CalendarRange className="w-4 h-4" aria-hidden /> Rok
+          <CalendarRange className="size-4" aria-hidden /> Rok
         </button>
       </div>
       <Suspense fallback={null}><SiteMonthEarnings monthKey={monthKey} base={grossTotal} /></Suspense>
@@ -138,7 +138,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
 
       {summary.shortRests.length > 0 && (
         <div role="note" className="flex gap-2.5 rounded-card bg-destructive/10 px-3 py-2.5 text-sm">
-          <TriangleAlert className="w-4 h-4 text-destructive-ink shrink-0 mt-0.5" aria-hidden />
+          <TriangleAlert className="size-4 text-destructive-ink shrink-0 mt-0.5" aria-hidden />
           <p>
             <span className="font-semibold">Za krótki odpoczynek</span>{" "}
             <span className="text-muted-foreground">(mniej niż 11 h przed zmianą): </span>
@@ -161,7 +161,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
 
       {summary.weeklyRestShort.length > 0 && (
         <div role="note" className="flex gap-2.5 rounded-card bg-destructive/10 px-3 py-2.5 text-sm">
-          <TriangleAlert className="w-4 h-4 text-destructive-ink shrink-0 mt-0.5" aria-hidden />
+          <TriangleAlert className="size-4 text-destructive-ink shrink-0 mt-0.5" aria-hidden />
           <p>
             <span className="font-semibold">Brak 35 h odpoczynku w tygodniu</span>{" "}
             <span className="text-muted-foreground">(art. 133 KP): </span>
@@ -215,7 +215,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
           ].join(" · ")}
         </span>
         <span className="shrink-0 flex items-center gap-1.5 font-medium text-foreground">
-          <Settings2 className="w-4 h-4" aria-hidden /> Zmień
+          <Settings2 className="size-4" aria-hidden /> Zmień
         </span>
       </button>
 
@@ -243,7 +243,7 @@ function PhoneFold({ label, summary, children }: { label: string; summary?: stri
         <span className="font-medium">{label}</span>
         <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
           {summary && <span className="truncate tabular-nums">{summary}</span>}
-          <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden />
+          <ChevronDown className={cn("size-4 shrink-0 transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden />
         </span>
       </button>
       {open && children}
@@ -328,7 +328,7 @@ function Receipt({ summary, hourlyRate, monthLabel, estimate, includeEstimate, o
         {lines.map((l) => (
           <ReceiptLine key={l.key} label={
             <span className="flex items-center gap-1.5 min-w-0">
-              <span aria-hidden className={cn("w-2 h-2 rounded-full shrink-0", l.absence && "ring-[1.5px] ring-inset bg-transparent")}
+              <span aria-hidden className={cn("size-2 rounded-full shrink-0", l.absence && "ring-[1.5px] ring-inset bg-transparent")}
                 style={l.absence ? { ["--tw-ring-color" as string]: l.type.color } : { backgroundColor: l.type.color }} />
               <span className="truncate font-body font-medium">{l.type.name}</span>
               <span className="text-muted-foreground shrink-0">{l.qty}</span>
@@ -414,7 +414,7 @@ function BonusPanel({ monthKey, bonuses }: { monthKey: string; bonuses: ShiftBon
               <span className="min-w-0 flex-1 truncate text-sm">{b.name}</span>
               <span className="shrink-0 font-mono text-sm tabular-nums">{formatMoney(b.amount)}</span>
               <Button variant="ghost" size="sm" className="coarse:h-11" aria-label={`Usuń premię: ${b.name}`} onClick={() => remove(b)}>
-                <Trash className="h-4 w-4" aria-hidden />
+                <Trash className="size-4" aria-hidden />
               </Button>
             </li>
           ))}

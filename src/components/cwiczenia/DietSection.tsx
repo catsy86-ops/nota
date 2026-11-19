@@ -87,7 +87,7 @@ function MealRow({ meal }: { meal: Meal }) {
         {details && <p className="ui-hint">{details}</p>}
       </div>
       <Button variant="ghost" size="sm" className="coarse:h-11" aria-label={`Usuń posiłek: ${meal.text}`} onClick={() => deleteWithUndo(meal)}>
-        <Trash className="h-4 w-4" aria-hidden />
+        <Trash className="size-4" aria-hidden />
       </Button>
     </li>
   );

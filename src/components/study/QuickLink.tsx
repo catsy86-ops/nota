@@ -8,7 +8,7 @@ export function QuickLink({ href, icon: Icon, children, label, className }: { hr
   return (
     <Button asChild variant="outline" size="sm" className={cn("pressable h-10 min-w-0 justify-start gap-1.5 coarse:h-11", className)}>
       <a href={href} aria-label={label} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
-        <Icon className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+        <Icon className="size-4 shrink-0 text-primary-ink" aria-hidden />
         <span className="truncate">{children}</span>
       </a>
     </Button>

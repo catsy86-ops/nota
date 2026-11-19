@@ -23,10 +23,10 @@ const iconButtonVariants = cva(
       },
       size: {
         /** Gęste paski narzędzi (composer, zaznaczenie). */
-        sm: "h-7 w-7 coarse:h-9 coarse:w-9",
+        sm: "size-7 coarse:h-9 coarse:w-9",
         /** Nagłówek i kontrolki widoku. Na dotyku 36 px widoczne + niewidzialny obszar `after` do 44 px:
          *  pięć przycisków musi zmieścić się w nagłówku 320 px. */
-        md: "h-8 w-8 sm:h-9 sm:w-9 coarse:h-9 coarse:w-9",
+        md: "size-8 sm:h-9 sm:w-9 coarse:h-9 coarse:w-9",
       },
     },
     defaultVariants: {

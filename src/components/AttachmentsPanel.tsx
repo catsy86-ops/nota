@@ -160,7 +160,7 @@ export const AttachmentsPanel = forwardRef<AttachmentsPanelHandle, Props>(functi
           className="pressable inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
           title={`Maks. ${formatFileSize(MAX_ATTACHMENT_BYTES)} na plik`}
         >
-          <Paperclip className="w-3.5 h-3.5" aria-hidden />
+          <Paperclip className="size-3.5" aria-hidden />
           {busy ? "Dodawanie…" : "Dodaj plik"}
         </button>
       )}
@@ -172,7 +172,7 @@ export const AttachmentsPanel = forwardRef<AttachmentsPanelHandle, Props>(functi
           className="pressable ml-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
           title="Notatka głosowa, do 3 minut"
         >
-          <Mic className="w-3.5 h-3.5" aria-hidden />
+          <Mic className="size-3.5" aria-hidden />
           Nagraj
         </button>
       )}

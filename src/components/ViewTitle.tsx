@@ -70,12 +70,12 @@ export function ViewTitle({ view, title, count, lead, crumbs, className }: {
             {crumbs.map((c, i) => (
               <li key={i} className="flex items-center gap-1">
                 <button type="button" onClick={c.onClick} className="rounded-control underline-offset-2 hover:text-foreground hover:underline outline-hidden focus-visible:ring-2 focus-visible:ring-ring">{c.label}</button>
-                <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                <ChevronRight className="size-3.5" aria-hidden />
               </li>
             ))}
           </ol>
           <button type="button" onClick={crumbs[crumbs.length - 1].onClick} className="-ml-1 inline-flex min-h-11 items-center gap-0.5 rounded-control pr-2 hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring sm:hidden">
-            <ChevronLeft className="h-4 w-4" aria-hidden />{crumbs[crumbs.length - 1].label}
+            <ChevronLeft className="size-4" aria-hidden />{crumbs[crumbs.length - 1].label}
           </button>
         </nav>
       )}

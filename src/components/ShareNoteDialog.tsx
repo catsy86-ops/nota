@@ -79,21 +79,21 @@ export default function ShareNoteDialog({ note, open, onOpenChange }: ShareNoteD
         </DialogHeader>
         <div className="space-y-3 pt-2">
           <Button variant="outline" className="w-full justify-start gap-3" onClick={copyText}>
-            {copied ? <Check className="w-4 h-4 text-primary-ink" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="size-4 text-primary-ink" /> : <Copy className="size-4" />}
             Kopiuj tekst
           </Button>
           <Button variant="outline" className="w-full justify-start gap-3" onClick={copyLink}>
-            <Share2 className="w-4 h-4" />
+            <Share2 className="size-4" />
             Kopiuj link
           </Button>
           {typeof navigator.share === "function" && (
             <Button variant="outline" className="w-full justify-start gap-3" onClick={shareNative}>
-              <Share2 className="w-4 h-4" />
+              <Share2 className="size-4" />
               Udostępnij...
             </Button>
           )}
           <Button variant="outline" className="w-full justify-start gap-3" onClick={downloadAsFile}>
-            <Download className="w-4 h-4" />
+            <Download className="size-4" />
             Pobierz jako .md
           </Button>
         </div>

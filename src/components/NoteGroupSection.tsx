@@ -36,11 +36,11 @@ export function NoteGroupSection({ groupKey, label, icon: Icon, count, collapsib
     <>
       {collapsible && (
         <ChevronDown
-          className={cn("w-3.5 h-3.5 shrink-0 transition-transform duration-fast", collapsed && "-rotate-90")}
+          className={cn("size-3.5 shrink-0 transition-transform duration-fast", collapsed && "-rotate-90")}
           aria-hidden
         />
       )}
-      {Icon && <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
+      {Icon && <Icon className="size-3.5 shrink-0" aria-hidden />}
       <span className="truncate">{label}</span>
       <span className="stamp-tag tabular-nums normal-case tracking-normal">{count}</span>
       <span className="flex-1 h-px bg-border/70 ml-1" aria-hidden />

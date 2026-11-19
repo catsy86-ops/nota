@@ -26,7 +26,7 @@ export function NoteImage({ imageRef, className, placeholderClassName, loading =
       title={url === null ? "Obraz jeszcze nie dotarł na to urządzenie" : undefined}
       className={cn("flex items-center justify-center bg-muted/60 text-muted-foreground", className, placeholderClassName)}
     >
-      {url === null && <ImageOff className="w-5 h-5 opacity-60" aria-hidden />}
+      {url === null && <ImageOff className="size-5 opacity-60" aria-hidden />}
     </div>
   );
 }

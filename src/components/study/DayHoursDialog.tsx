@@ -108,7 +108,7 @@ function DayHoursBody({ day, label, siteId, onOpenChange }: { day: string; label
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-sm" data-testid="day-hours">
         <div className="space-y-1 border-b border-border px-5 pb-4 pt-5 pr-12">
           <DialogTitle className="flex items-center gap-1.5 font-display text-lg">
-            <Clock className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />Godziny na budowach
+            <Clock className="size-5 shrink-0 text-primary-ink" aria-hidden />Godziny na budowach
           </DialogTitle>
           <DialogDescription className="text-xs">
             {shownLabel}

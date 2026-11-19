@@ -98,7 +98,7 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
           className="tap-target shrink-0 gap-1.5 coarse:h-11"
           onClick={() => { setHideAmounts(!hidden); haptic("tap"); }}
         >
-          {hidden ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+          {hidden ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
           {hidden ? "Pokaż kwoty" : "Ukryj kwoty"}
         </Button>
       </PageActions>
@@ -109,7 +109,7 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
       {(entries.length > 0 || formOpen) && (
         <div className="mt-4">
           <Button variant="outline" className="h-11 w-full gap-2 sm:w-auto" aria-expanded={formOpen} aria-controls={formId} onClick={() => { formOpenStore.set(!formOpen); haptic("tap"); }}>
-            {formOpen ? <ChevronDown className="h-4 w-4 rotate-180" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
+            {formOpen ? <ChevronDown className="size-4 rotate-180" aria-hidden /> : <Plus className="size-4" aria-hidden />}
             {formOpen ? "Zwiń formularz" : "Nowy wpis"}
           </Button>
         </div>
@@ -126,7 +126,7 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
             downloadBlob(new Blob([debtsCsv(entries)], { type: "text/csv;charset=utf-8" }), `notki-dlugi-${localDayKey()}.csv`);
             toast.success("Zapisano plik CSV z długami");
           }}>
-            <Download className="h-4 w-4" aria-hidden />Eksport CSV
+            <Download className="size-4" aria-hidden />Eksport CSV
           </Button>
         </div>
       )}
@@ -172,7 +172,7 @@ function KindPicker({ value, onChange }: { value: DebtKind; onChange: (k: DebtKi
         const Icon = KIND_SIGN[k] > 0 ? ArrowUpRight : ArrowDownLeft;
         return (
           <ToggleGroupItem key={k} value={k} className="flex items-center justify-center gap-1.5 whitespace-nowrap">
-            <Icon className="h-4 w-4" aria-hidden />
+            <Icon className="size-4" aria-hidden />
             {DEBT_KIND_LABEL[k]}
           </ToggleGroupItem>
         );
@@ -306,7 +306,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
 
       {hasDue(kind) && (
         <label className="flex items-center gap-2 text-sm coarse:min-h-11">
-          <input type="checkbox" className="h-4 w-4" checked={inRates} onChange={(e) => { setInRates(e.target.checked); setError(null); }} />
+          <input type="checkbox" className="size-4" checked={inRates} onChange={(e) => { setInRates(e.target.checked); setError(null); }} />
           W ratach (co miesiąc)
         </label>
       )}
@@ -346,7 +346,7 @@ function AddForm({ entries, addReminderNote, hidden, initialPerson, focusAmount,
       {error && <p id={`${uid}-err`} role="alert" className="text-sm text-destructive-ink">{error.text}</p>}
 
       <Button type="submit" className="w-full h-11 gap-2">
-        <HandCoins className="h-4 w-4" aria-hidden />
+        <HandCoins className="size-4" aria-hidden />
         Zapisz wpis
       </Button>
     </form>
@@ -364,7 +364,7 @@ function People({ people, onOpen, hidden, onStart }: { people: PersonDebts[]; on
         <StatusPanel size="inline" art={<EmptySketch />} className="p-8"
           title="Jeszcze nikogo tu nie ma"
           description="Zapisz pierwszą pożyczkę — od razu zobaczysz, kto ile jest winien."
-          actions={onStart && <Button className="h-11 gap-2" onClick={onStart}><Plus className="h-4 w-4" aria-hidden />Dodaj pierwszy wpis</Button>} />
+          actions={onStart && <Button className="h-11 gap-2" onClick={onStart}><Plus className="size-4" aria-hidden />Dodaj pierwszy wpis</Button>} />
       </div>
     );
   }
@@ -378,7 +378,7 @@ function People({ people, onOpen, hidden, onStart }: { people: PersonDebts[]; on
       {people.length > SEARCH_FROM && (
         <label className="relative block">
           <span className="sr-only">Szukaj osoby</span>
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input type="search" enterKeyHint="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Szukaj osoby" className="h-11 pl-9" />
         </label>
       )}
@@ -396,7 +396,7 @@ function People({ people, onOpen, hidden, onStart }: { people: PersonDebts[]; on
             onClick={() => setShowSettled((v) => !v)}
             className="pressable inline-flex items-center gap-1.5 rounded-field px-2 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground coarse:min-h-11"
           >
-            <ChevronDown className={cn("h-4 w-4 transition-transform motion-reduce:transition-none", showSettled && "rotate-180")} aria-hidden />
+            <ChevronDown className={cn("size-4 transition-transform motion-reduce:transition-none", showSettled && "rotate-180")} aria-hidden />
             Rozliczeni ({settled.length})
           </button>
           <div id={settledId} hidden={!showSettled} className="mt-2">
@@ -551,7 +551,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
       {twice && (
         // 1.6: „Oddał całość” na dwóch telefonach naraz — saldo przeskoczyło na drugą stronę.
         <div role="status" className="mt-4 flex flex-wrap items-center gap-3 rounded-card border border-warning/50 bg-warning/10 p-3 text-sm" data-testid="debts-double-settle">
-          <TriangleAlert className="h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+          <TriangleAlert className="size-4 shrink-0 text-warning-ink" aria-hidden />
           <span className="min-w-0 flex-1">Rozliczono dwa razy — usunąć drugi wpis?</span>
           <Button size="sm" variant="outline" className="h-11" onClick={() => remove(twice, false)}>Usuń drugi wpis</Button>
         </div>
@@ -566,7 +566,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
 
       {onNewEntry && (
         <Button variant="outline" className="mt-2 w-full h-11 gap-2" onClick={() => onNewEntry(person.name)}>
-          <Plus className="h-4 w-4" aria-hidden />
+          <Plus className="size-4" aria-hidden />
           Wpis z {person.name}
         </Button>
       )}
@@ -583,8 +583,8 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
                   </li>
                 ) : (
                   <li key={e.id} className="flex items-center gap-3 rounded-card border border-border/60 bg-background p-3">
-                    <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-success/15 text-success-ink" : "bg-warning/15 text-warning-ink")} aria-hidden>
-                      {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
+                    <span className={cn("grid size-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-success/15 text-success-ink" : "bg-warning/15 text-warning-ink")} aria-hidden>
+                      {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="size-4" /> : <ArrowDownLeft className="size-4" />}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{DEBT_KIND_LABEL[e.kind]} · <span className="tabular-nums">{amountText(e.amount, hidden)}</span></p>
@@ -597,10 +597,10 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
                     </div>
                     {proofs.has(e.id) && <DebtProofThumb proofRef={proofs.get(e.id)!.ref} hidden={hidden} label={`${DEBT_KIND_LABEL[e.kind]}, ${formatDay(e.at)}`} />}
                     <Button variant="ghost" size="icon" aria-label={`Edytuj wpis: ${DEBT_KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => setEditingId(e.id)}>
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="size-4" />
                     </Button>
                     <Button variant="ghost" size="icon" aria-label={`Usuń wpis: ${DEBT_KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => requestRemove(e)}>
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="size-4" />
                     </Button>
                   </li>
                 ),
@@ -610,7 +610,7 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
         ))}
       </div>
       <p className="ui-hint mt-4 flex items-center gap-1.5">
-        <Undo2 className="h-3.5 w-3.5" aria-hidden />
+        <Undo2 className="size-3.5" aria-hidden />
         Usunięty wpis można cofnąć z komunikatu na dole ekranu.
       </p>
       <AlertDialog open={!!askRemove} onOpenChange={(o) => !o && setAskRemove(null)}>
@@ -791,14 +791,14 @@ function PersonTools({ person, others, onRekey }: { person: PersonDebts; others:
     <div className="mt-3 space-y-2">
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" className="tap-target gap-1.5" onClick={() => void send()}>
-          <Send className="h-4 w-4" aria-hidden />Wyślij
+          <Send className="size-4" aria-hidden />Wyślij
         </Button>
         <Button variant="outline" size="sm" className="tap-target gap-1.5" aria-expanded={renaming} onClick={() => { setName(person.name); setRenaming((v) => !v); }}>
-          <Pencil className="h-4 w-4" aria-hidden />Zmień nazwę
+          <Pencil className="size-4" aria-hidden />Zmień nazwę
         </Button>
         {candidates.length > 0 && (
           <label className="inline-flex items-center gap-1.5">
-            <Combine className="h-4 w-4 text-muted-foreground" aria-hidden />
+            <Combine className="size-4 text-muted-foreground" aria-hidden />
             <span className="sr-only">Połącz z inną osobą</span>
             <select
               value=""

@@ -264,25 +264,25 @@ export function JournalReportDialog({
                   {boss && (
                     // Na telefonie sam „Szefowi” — imię nie mieści się obok drugiego przycisku; zostaje w nazwie dla czytnika.
                     <Button onClick={sendToBoss} disabled={empty} aria-label={`Szefowi${boss.name ? ` (${boss.name})` : ""}`} className="min-w-0 flex-1 coarse:h-11 sm:flex-none">
-                      <MessageCircle className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                      <MessageCircle className="mr-1.5 size-4 shrink-0" aria-hidden />
                       <span className="truncate">Szefowi{boss.name && <span className="max-sm:hidden"> ({boss.name})</span>}</span>
                     </Button>
                   )}
                   {group && (
                     <Button variant={boss ? "outline" : "default"} onClick={sendToGroup} disabled={empty} aria-label={`Do grupy „${group.name}”`} className="min-w-0 flex-1 coarse:h-11 sm:flex-none">
-                      <Users className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                      <Users className="mr-1.5 size-4 shrink-0" aria-hidden />
                       <span className="truncate">Do grupy<span className={cn(boss && "max-sm:hidden")}> „{group.name}”</span></span>
                     </Button>
                   )}
                   {!bossEdit && (
                     <Button variant="ghost" size="sm" onClick={() => setBossEdit(true)} aria-label="Odbiorcy" title="Odbiorcy" className="shrink-0 text-muted-foreground coarse:h-11 coarse:w-11 max-sm:px-0">
-                      <UserPen className="h-4 w-4 sm:mr-1.5" aria-hidden /><span className="max-sm:hidden">Odbiorcy</span>
+                      <UserPen className="size-4 sm:mr-1.5" aria-hidden /><span className="max-sm:hidden">Odbiorcy</span>
                     </Button>
                   )}
                 </>
               ) : (
                 <Button onClick={() => setBossEdit(true)} className="min-w-0 flex-1 coarse:h-11 sm:flex-none">
-                  <MessageCircle className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                  <MessageCircle className="mr-1.5 size-4 shrink-0" aria-hidden />
                   <span className="truncate">WhatsApp: dodaj szefa lub grupę</span>
                 </Button>
               )}
@@ -290,27 +290,27 @@ export function JournalReportDialog({
             <div className="flex gap-2">
               {canShare && (
                 <Button variant="outline" onClick={share} disabled={empty} className="min-w-0 flex-1 coarse:h-11 sm:flex-none">
-                  <Share2 className="mr-1.5 h-4 w-4" aria-hidden />Udostępnij{files.length > 0 ? ` (${files.length} zdj.)` : ""}
+                  <Share2 className="mr-1.5 size-4" aria-hidden />Udostępnij{files.length > 0 ? ` (${files.length} zdj.)` : ""}
                 </Button>
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" disabled={empty} className={cn("coarse:h-11", !canShare && "flex-1 sm:flex-none")}>
-                    <Ellipsis className="mr-1.5 h-4 w-4" aria-hidden />Więcej
+                    <Ellipsis className="mr-1.5 size-4" aria-hidden />Więcej
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" side="top" className="min-w-48">
                   <DropdownMenuItem onSelect={() => void copy()} className="coarse:min-h-11">
-                    <Copy className="mr-2 h-4 w-4" aria-hidden />Kopiuj tekst
+                    <Copy className="mr-2 size-4" aria-hidden />Kopiuj tekst
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={toNote} className="coarse:min-h-11">
-                    <FilePlusCorner className="mr-2 h-4 w-4" aria-hidden />Do notatki
+                    <FilePlusCorner className="mr-2 size-4" aria-hidden />Do notatki
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setPrinting(true)} className="coarse:min-h-11">
-                    <Printer className="mr-2 h-4 w-4" aria-hidden />Drukuj / PDF
+                    <Printer className="mr-2 size-4" aria-hidden />Drukuj / PDF
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => void pdf()} className="coarse:min-h-11">
-                    <FileDown className="mr-2 h-4 w-4" aria-hidden />PDF raportu (plik)
+                    <FileDown className="mr-2 size-4" aria-hidden />PDF raportu (plik)
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

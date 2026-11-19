@@ -190,12 +190,12 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
     <section aria-label="Zlecenie własne" data-testid="site-job" className="rounded-card border border-primary/40 bg-card">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls={`job-${site.id}`}
         className="pressable flex w-full items-center gap-2 px-3 py-2.5 text-left coarse:min-h-11">
-        <Wrench className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+        <Wrench className="size-4 shrink-0 text-primary-ink" aria-hidden />
         <span className="text-sm font-semibold">Zlecenie własne</span>
         <span className="min-w-0 flex-1 truncate text-right text-xs text-muted-foreground" data-testid="site-job-summary">
           {JOB_STATUS_LABEL[job.status]}{sum.payable > 0 && ` · ${money(sum.payable)}`}
         </span>
-        <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", !open && "-rotate-90")} aria-hidden />
+        <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", !open && "-rotate-90")} aria-hidden />
       </button>
 
       {open && (
@@ -250,7 +250,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
                   <span className="w-20 shrink-0 text-right font-mono text-xs font-semibold tabular-nums">{money(itemClientTotal(i, job.margin))}</span>
                   <button type="button" onClick={() => dropItem(i.id)} aria-label={`Usuń pozycję ${i.name}`}
                     className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
-                    <X className="h-4 w-4" aria-hidden />
+                    <X className="size-4" aria-hidden />
                   </button>
                 </li>
               ))}
@@ -306,7 +306,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
                 placeholder="cena" className={cn(fieldCls, "min-w-0 flex-1 text-right font-mono tabular-nums")} />
               <span className="text-xs text-muted-foreground">zł</span>
               <Button type="submit" size="sm" variant="outline" disabled={!name.trim()} className="shrink-0 coarse:h-11">
-                <Plus className="h-4 w-4" aria-hidden />Dodaj
+                <Plus className="size-4" aria-hidden />Dodaj
               </Button>
             </div>
           </form>
@@ -358,12 +358,12 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
           {(job.status === "done" || job.status === "paid") && (
             <div className="flex flex-wrap items-center gap-2 rounded-field bg-muted/40 p-2" data-testid="job-done">
               <Button type="button" variant="outline" size="sm" onClick={onSign} className="coarse:h-11" data-testid="job-sign">
-                <PenLine className="h-4 w-4" aria-hidden />{signed ? "Podpisane" : site.signature ? "Podpisz ponownie" : "Podpis klienta"}
+                <PenLine className="size-4" aria-hidden />{signed ? "Podpisane" : site.signature ? "Podpisz ponownie" : "Podpis klienta"}
               </Button>
-              <Button type="button" size="sm" onClick={sendDonePdf} className="coarse:h-11"><FileCheck className="h-4 w-4" aria-hidden />Potwierdzenie wykonania</Button>
+              <Button type="button" size="sm" onClick={sendDonePdf} className="coarse:h-11"><FileCheck className="size-4" aria-hidden />Potwierdzenie wykonania</Button>
               {job.items.length > 0 && (
                 <Button type="button" variant="outline" size="sm" onClick={() => setInvoiceOpen(true)} className="coarse:h-11" data-testid="job-invoice">
-                  <FileCode2 className="h-4 w-4" aria-hidden />Faktura
+                  <FileCode2 className="size-4" aria-hidden />Faktura
                 </Button>
               )}
             </div>
@@ -372,8 +372,8 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={sendPdf} className="coarse:h-11"><FileText className="h-4 w-4" aria-hidden />PDF wyceny</Button>
-              <Button type="button" variant="outline" size="sm" onClick={duplicate} className="coarse:h-11" data-testid="job-duplicate"><Copy className="h-4 w-4" aria-hidden />Duplikuj</Button>
+              <Button type="button" variant="outline" size="sm" onClick={sendPdf} className="coarse:h-11"><FileText className="size-4" aria-hidden />PDF wyceny</Button>
+              <Button type="button" variant="outline" size="sm" onClick={duplicate} className="coarse:h-11" data-testid="job-duplicate"><Copy className="size-4" aria-hidden />Duplikuj</Button>
             </div>
             <button type="button" onClick={unmark} className="pressable text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline coarse:min-h-11">
               To nie jest fucha

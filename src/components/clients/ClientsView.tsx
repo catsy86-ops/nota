@@ -102,7 +102,7 @@ function ImportDialog({ open, onOpenChange, proposals }: { open: boolean; onOpen
           {proposals.map((p) => (
             <li key={p.key}>
               <label className="flex cursor-pointer items-start gap-3 rounded-field border border-border px-3 py-2 coarse:min-h-11">
-                <input type="checkbox" checked={!off.has(p.key)} onChange={() => toggle(p.key)} className="mt-1 h-4 w-4 shrink-0" />
+                <input type="checkbox" checked={!off.has(p.key)} onChange={() => toggle(p.key)} className="mt-1 size-4 shrink-0" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{p.name}</span>
                   <span className="block truncate text-xs text-muted-foreground">
@@ -167,11 +167,11 @@ export default function ClientsView({ onOpenSite, onOpenDebts, requestedId, onRe
     <section className="space-y-4" aria-label="Klienci" data-testid="clients-view">
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-0 flex-1 basis-56">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <input type="search" enterKeyHint="search" aria-label="Szukaj klienta" placeholder="Nazwa, telefon, NIP, adres" value={query} onChange={(e) => setQuery(e.target.value)}
             className={cn(fieldCls, "pl-8")} data-testid="clients-search" />
         </div>
-        <Button type="button" onClick={() => setNewOpen(true)} className="coarse:h-11" data-testid="client-new"><Plus className="h-4 w-4" aria-hidden />Nowy klient</Button>
+        <Button type="button" onClick={() => setNewOpen(true)} className="coarse:h-11" data-testid="client-new"><Plus className="size-4" aria-hidden />Nowy klient</Button>
       </div>
 
       {showImport && (
@@ -186,7 +186,7 @@ export default function ClientsView({ onOpenSite, onOpenDebts, requestedId, onRe
 
       {clients.length === 0 ? (
         <div className="rounded-card border border-dashed border-border px-4 py-8 text-center" data-testid="clients-empty">
-          <UserRound className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden />
+          <UserRound className="mx-auto size-8 text-muted-foreground" aria-hidden />
           <p className="mt-2 font-medium">Nie masz jeszcze klientów</p>
           <p className="ui-hint mt-1">Z kartoteki wybierzesz inwestora przy nowej budowie, a dane do faktury wypełnią się same.</p>
         </div>
@@ -201,7 +201,7 @@ export default function ClientsView({ onOpenSite, onOpenDebts, requestedId, onRe
               <li key={c.id}>
                 <button type="button" onClick={() => setOpenId(c.id)} data-testid="client-row"
                   className={cn("pressable flex w-full items-center gap-3 rounded-field border border-border px-3 py-2 text-left hover:bg-muted coarse:min-h-11", c.archived && "opacity-60")}>
-                  <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                  <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{c.name}</span>
                     <span className="block truncate text-xs text-muted-foreground">

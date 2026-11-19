@@ -22,7 +22,7 @@ export function PriorityPicker({ priority, onSet }: PriorityPickerProps) {
           )}
           title="Priorytet"
         >
-          <Flag className={cn("w-4 h-4", priority !== "none" && "fill-current")} />
+          <Flag className={cn("size-4", priority !== "none" && "fill-current")} />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-44 p-2 space-y-1" align="start" onClick={(e) => e.stopPropagation()}>
@@ -36,7 +36,7 @@ export function PriorityPicker({ priority, onSet }: PriorityPickerProps) {
               priority === p ? "bg-primary/10 font-semibold" : "hover:bg-muted"
             )}
           >
-            <Flag className={cn("w-3.5 h-3.5", p !== "none" ? PRIORITY_COLOR_CLASS[p] : "text-muted-foreground", p !== "none" && "fill-current")} />
+            <Flag className={cn("size-3.5", p !== "none" ? PRIORITY_COLOR_CLASS[p] : "text-muted-foreground", p !== "none" && "fill-current")} />
             {PRIORITY_LABELS[p]}
           </button>
         ))}
@@ -49,7 +49,7 @@ export function PriorityBadge({ priority }: { priority: NotePriority }) {
   if (priority === "none") return null;
   return (
     <div title={`Priorytet: ${PRIORITY_LABELS[priority].toLowerCase()}`} className={cn("flex items-center gap-1 text-2xs mt-2 px-2 py-0.5 max-sm:py-1 rounded-full w-fit bg-foreground/5", PRIORITY_COLOR_CLASS[priority])}>
-      <Flag className="w-2.5 h-2.5 fill-current" aria-hidden />
+      <Flag className="size-2.5 fill-current" aria-hidden />
       {/* Na telefonie sama flaga w kolorze priorytetu — z nazwą nie mieściła się obok przypomnienia. */}
       <span className="max-sm:sr-only">{PRIORITY_LABELS[priority]}</span>
     </div>

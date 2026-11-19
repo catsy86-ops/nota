@@ -44,7 +44,7 @@ function SideBySide({ version, current, onRestore }: { version: string; current:
           </div>
           {onRestore && (
             <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs coarse:h-11" onClick={() => onRestore(restoreHunk(hunks, i))}>
-              <RotateCcw className="w-3 h-3" aria-hidden />Przywróć tylko ten akapit
+              <RotateCcw className="size-3" aria-hidden />Przywróć tylko ten akapit
             </Button>
           )}
         </div>
@@ -79,7 +79,7 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
       <DialogContent className="sm:max-w-lg max-h-[80dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
-            <RotateCcwClock className="w-5 h-5" />
+            <RotateCcwClock className="size-5" />
             Historia wersji
           </DialogTitle>
         </DialogHeader>
@@ -117,7 +117,7 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
-                  {expandedId === v.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  {expandedId === v.id ? <ChevronUp className="size-4 text-muted-foreground" /> : <ChevronDown className="size-4 text-muted-foreground" />}
                 </div>
               </button>
               <AnimatePresence>
@@ -153,7 +153,7 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
                         className="w-full gap-2 text-xs"
                         onClick={(e) => { e.stopPropagation(); onRestore(v); onOpenChange(false); }}
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
+                        <RotateCcw className="size-3.5" />
                         Przywróć tę wersję
                       </Button>
                     </div>

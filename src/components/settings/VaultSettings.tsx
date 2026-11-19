@@ -36,7 +36,7 @@ export function VaultSettings() {
     <Section title="Prywatne notatki">
       <div className="rounded-card border border-border/60 bg-muted/30 px-4 py-3 space-y-3">
         <p role="status" className="ui-hint flex items-start gap-2" data-testid="vault-status">
-          <ShieldCheck className="w-4 h-4 shrink-0 text-primary-ink" aria-hidden />
+          <ShieldCheck className="size-4 shrink-0 text-primary-ink" aria-hidden />
           <span>{vault.corrupt ? STATUS.corrupt : STATUS[vault.phase]}</span>
         </p>
 
@@ -45,17 +45,17 @@ export function VaultSettings() {
         <div className="flex flex-wrap gap-2">
           {vault.phase === "none" && !vault.corrupt && (
             <Button type="button" size="sm" variant="outline" onClick={() => vaultUi.open("setup")}>
-              <KeyRound className="w-3.5 h-3.5 mr-1.5" />Ustaw hasło skarbca
+              <KeyRound className="size-3.5 mr-1.5" />Ustaw hasło skarbca
             </Button>
           )}
           {vault.phase === "locked" && (
             <Button type="button" size="sm" variant="outline" onClick={() => vaultUi.open("unlock")}>
-              <KeyRound className="w-3.5 h-3.5 mr-1.5" />Odblokuj
+              <KeyRound className="size-3.5 mr-1.5" />Odblokuj
             </Button>
           )}
           {vault.phase === "unlocked" && (
             <Button type="button" size="sm" variant="outline" onClick={() => void lockEverywhere(privateNotes)}>
-              <Lock className="w-3.5 h-3.5 mr-1.5" />Zablokuj teraz
+              <Lock className="size-3.5 mr-1.5" />Zablokuj teraz
             </Button>
           )}
           {has && (
@@ -146,7 +146,7 @@ function VaultState() {
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {unlocked && (
             <Button type="button" size="sm" variant="outline" onClick={() => vaultUi.open("checkRecovery")}>
-              <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />Sprawdź kod awaryjny
+              <ShieldCheck className="size-3.5 mr-1.5" />Sprawdź kod awaryjny
             </Button>
           )}
           <label className="flex items-center gap-2 text-sm">

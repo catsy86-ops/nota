@@ -159,7 +159,7 @@ export function NoteEditor({
           title="Wyodrębnij zaznaczenie do nowej notatki"
           aria-label="Wyodrębnij zaznaczenie do nowej notatki"
         >
-          <Scissors className="w-3.5 h-3.5" />
+          <Scissors className="size-3.5" />
         </button>
         <button
           onClick={() => setShowPreview(!showPreview)}
@@ -167,7 +167,7 @@ export function NoteEditor({
           title={showPreview ? "Ukryj podgląd" : "Podgląd Markdown"}
           aria-label={showPreview ? "Ukryj podgląd" : "Podgląd Markdown"}
         >
-          {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+          {showPreview ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
         </button>
         <button
           onClick={() => setFullEditor(!full)}
@@ -176,7 +176,7 @@ export function NoteEditor({
           title={full ? "Wróć do kafla" : "Pełny ekran"}
           aria-label={full ? "Wróć do kafla" : "Pełny ekran"}
         >
-          {full ? <Minimize2 className="w-3.5 h-3.5" /> : <Expand className="w-3.5 h-3.5" />}
+          {full ? <Minimize2 className="size-3.5" /> : <Expand className="size-3.5" />}
         </button>
       </div>
       </div>
@@ -221,7 +221,7 @@ export function NoteEditor({
           onClick={() => setShowChecklist(!showChecklist)}
           className={cn("flex items-center gap-1.5 text-xs transition-colors", showChecklist ? "text-primary-ink" : "text-muted-foreground hover:text-foreground")}
         >
-          <ListChecks className="w-3.5 h-3.5" />
+          <ListChecks className="size-3.5" />
           {showChecklist ? "Lista zadań" : "Dodaj listę"}
         </button>
         <ChecklistConvertButtons
@@ -240,7 +240,7 @@ export function NoteEditor({
       {/* Terminy 3.4: data w treści jako podpowiedź — nic nie ustawia się samo. */}
       {!note.locked && !note.trashed && note.reminder === null && onUpdate && dateHint && dismissedHint !== dateHint.phrase && (
         <div data-testid="date-hint" className="flex flex-wrap items-center gap-2 rounded-control border border-border/60 bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground">
-          <Bell className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          <Bell className="size-3.5 shrink-0" aria-hidden />
           <span className="min-w-0 flex-1">
             W treści jest termin: „{dateHint.phrase}” — <span className="font-mono tabular-nums text-foreground">{formatReminderShort(dateHint.date.getTime())}</span>
           </span>
@@ -254,7 +254,7 @@ export function NoteEditor({
           </Button>
           <button type="button" onClick={() => setDismissedHint(dateHint.phrase)} aria-label="Ukryj podpowiedź terminu"
             className="grid size-7 place-items-center rounded-control hover:bg-muted coarse:size-11">
-            <X className="h-3.5 w-3.5" aria-hidden />
+            <X className="size-3.5" aria-hidden />
           </button>
         </div>
       )}
@@ -263,7 +263,7 @@ export function NoteEditor({
 
       <div className="flex items-center justify-between">
         <span className="text-2xs text-muted-foreground flex items-center gap-1 whitespace-nowrap min-w-0 truncate">
-          <Type className="w-3 h-3 shrink-0" />
+          <Type className="size-3 shrink-0" />
           <EditorStats textareaRef={textareaRef} value={editContent} />
         </span>
         <button onClick={handleSave} className="text-sm font-medium text-primary-ink hover:bg-primary/10 px-3 py-1 rounded-field transition-colors">Zapisz</button>

@@ -71,7 +71,7 @@ function FolderMenu({ note, folders, onMove }: { note: Note; folders: Folder[]; 
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button type="button" aria-label="Przenieś do folderu" title="Przenieś do folderu" className={rowBtn}>
-          <FolderInput className="w-4 h-4" />
+          <FolderInput className="size-4" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-2 max-h-72 overflow-y-auto">
@@ -103,7 +103,7 @@ function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions
   return (
     <section aria-label={cat.label} data-review-category={cat.key} className="min-w-0">
       <h3 className="flex items-center gap-2 section-caps">
-        <Icon className="w-3.5 h-3.5" aria-hidden />
+        <Icon className="size-3.5" aria-hidden />
         {cat.label}
         <span className="stamp-tag text-2xs normal-case text-primary-ink" data-testid="review-count">{cat.count}</span>
       </h3>
@@ -116,7 +116,7 @@ function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions
             </div>
             <div className="flex items-center shrink-0">
               <button type="button" aria-label="Otwórz" title="Otwórz" className={rowBtn} onClick={() => a.onOpen(n.id)}>
-                <ExternalLink className="w-4 h-4" />
+                <ExternalLink className="size-4" />
               </button>
               <button
                 type="button"
@@ -129,10 +129,10 @@ function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions
                   toastWithUndo(was ? "Odpięto" : "Przypięto", () => a.onTogglePin(n.id), { description: noteName(n), icon: "📌" });
                 }}
               >
-                {n.pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                {n.pinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
               </button>
               <button type="button" aria-label="Archiwizuj" title="Archiwizuj" className={rowBtn} onClick={() => a.onArchive(n.id)}>
-                <Archive className="w-4 h-4" />
+                <Archive className="size-4" />
               </button>
               <FolderMenu
                 note={n}
@@ -203,7 +203,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
         )}
       >
         <header className="flex flex-wrap items-start gap-x-3 gap-y-2">
-          <span className="w-9 h-9 shrink-0 rounded-card bg-primary/15 text-primary-ink grid place-items-center" aria-hidden>
+          <span className="size-9 shrink-0 rounded-card bg-primary/15 text-primary-ink grid place-items-center" aria-hidden>
             <Sparkles className="w-[18px] h-[18px]" />
           </span>
           <div className="min-w-0 flex-1">

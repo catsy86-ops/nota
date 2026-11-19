@@ -73,12 +73,12 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
         <button
           onClick={(e) => { e.stopPropagation(); onToggleSelect(note.id, e.shiftKey); }}
           className={cn(
-            "absolute top-2 right-2 z-sticky w-6 h-6 rounded-control border-2 flex items-center justify-center transition-colors",
+            "absolute top-2 right-2 z-sticky size-6 rounded-control border-2 flex items-center justify-center transition-colors",
             selected ? "bg-primary border-primary text-primary-foreground" : "bg-background/80 border-border hover:border-primary",
           )}
           aria-label={selected ? "Odznacz notatkę" : "Zaznacz notatkę"}
         >
-          {selected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+          {selected && <Check className="size-3.5" strokeWidth={3} />}
         </button>
       )}
 
@@ -104,8 +104,8 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); unlock(); } }}
       >
         <div className="flex items-center gap-2 text-foreground">
-          <span className="grid place-items-center w-7 h-7 rounded-full bg-foreground/[0.07]" aria-hidden>
-            <Lock className="w-3.5 h-3.5" />
+          <span className="grid place-items-center size-7 rounded-full bg-foreground/[0.07]" aria-hidden>
+            <Lock className="size-3.5" />
           </span>
           <h3 className="font-display font-semibold text-base leading-tight">Notatka prywatna</h3>
         </div>
@@ -126,14 +126,14 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
                 onClick={stop(() => downloadCiphertext(note.id))}
                 className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-foreground/10 coarse:min-h-11"
               >
-                <Download className="w-3 h-3" aria-hidden />Pobierz szyfrogram
+                <Download className="size-3" aria-hidden />Pobierz szyfrogram
               </button>
             </>
           ) : noVault ? (
             <span className="text-2xs text-muted-foreground">Skarbiec nie jest ustawiony na tym urządzeniu.</span>
           ) : (
             <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium", busy ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary-ink")}>
-              <KeyRound className="w-3 h-3" />
+              <KeyRound className="size-3" />
               {phase === "locking" ? "Blokuję…" : busy ? "Odszyfrowuję…" : "Odblokuj"}
             </span>
           )}
@@ -148,18 +148,18 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
       <div className="flex items-center gap-0.5 px-2 pb-2 flex-wrap">
         {!isArchived && onTogglePin && (
           <TileBtn title={note.pinned ? "Odepnij" : "Przypnij"} onClick={stop(() => onTogglePin(note.id))}>
-            <Pin className={cn("w-4 h-4", note.pinned && "fill-current")} />
+            <Pin className={cn("size-4", note.pinned && "fill-current")} />
           </TileBtn>
         )}
         {isArchived && onUnarchive ? (
           <TileBtn title="Przywróć" onClick={stop(() => onUnarchive(note.id))}>
-            {note.trashed ? <RotateCcw className="w-4 h-4" /> : <ArchiveRestore className="w-4 h-4" />}
+            {note.trashed ? <RotateCcw className="size-4" /> : <ArchiveRestore className="size-4" />}
           </TileBtn>
         ) : onArchive ? (
-          <TileBtn title="Archiwizuj" onClick={stop(() => onArchive(note.id))}><Archive className="w-4 h-4" /></TileBtn>
+          <TileBtn title="Archiwizuj" onClick={stop(() => onArchive(note.id))}><Archive className="size-4" /></TileBtn>
         ) : null}
         <TileBtn title="Usuń" className="hover:text-destructive-ink" onClick={stop(() => onDelete(note.id))}>
-          <Trash className="w-4 h-4" />
+          <Trash className="size-4" />
         </TileBtn>
       </div>
     </motion.div>

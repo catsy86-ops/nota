@@ -17,7 +17,7 @@ export function NewCodeBanner({ onOpenSync }: { onOpenSync: () => void }) {
 
   return (
     <div role="status" data-testid="new-code-banner" className="flex items-start gap-2 rounded-card border border-warning/50 bg-warning/10 px-3 py-2 text-sm">
-      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
       <p className="min-w-0 flex-1">
         {rekeyed
           ? "Kod synchronizacji został zmieniony na innym urządzeniu. To urządzenie przestało wysyłać i odbierać zmiany."
@@ -29,7 +29,7 @@ export function NewCodeBanner({ onOpenSync }: { onOpenSync: () => void }) {
       {!rekeyed && (
         <button type="button" onClick={dismissNewCodeHint} aria-label="Nie teraz — ukryj propozycję nowego kodu"
           className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted coarse:size-11">
-          <X className="h-4 w-4" aria-hidden />
+          <X className="size-4" aria-hidden />
         </button>
       )}
     </div>

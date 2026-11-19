@@ -113,7 +113,7 @@ export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h4 className="flex items-center gap-1.5 font-display text-base leading-tight">
-            <HardHat className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />Przed wejściem
+            <HardHat className="size-4 shrink-0 text-primary-ink" aria-hidden />Przed wejściem
           </h4>
           {choices.length > 1 ? (
             <div className="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Wybór budowy na dziś">
@@ -133,7 +133,7 @@ export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) 
               ))}
             </div>
           ) : (
-            <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground"><MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />{site.name}</p>
+            <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground"><MapPin className="size-3.5 shrink-0" aria-hidden />{site.name}</p>
           )}
         </div>
         {status.entered && (
@@ -162,20 +162,20 @@ export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) 
 
       {todo && (
         <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="entry-check-points">
-          <Droplets className="h-3.5 w-3.5 shrink-0 text-primary-ink" aria-hidden />Punkty: {todo}
+          <Droplets className="size-3.5 shrink-0 text-primary-ink" aria-hidden />Punkty: {todo}
         </p>
       )}
 
       <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={`Szybkie akcje: ${site.name}`} data-testid="entry-check-actions">
         {status.entered && status.leftAt === undefined && (
           <Button size="sm" onClick={leave} className="pressable h-10 gap-1.5 coarse:h-11" data-testid="entry-check-leave">
-            <DoorOpen className="h-4 w-4 shrink-0" aria-hidden />Wychodzę
+            <DoorOpen className="size-4 shrink-0" aria-hidden />Wychodzę
           </Button>
         )}
         {nav && <QuickLink href={nav} icon={Navigation}>Nawiguj</QuickLink>}
         {call && <QuickLink href={call.href} icon={Phone} label={call.label}>Zadzwoń</QuickLink>}
         <Button size="sm" variant="outline" onClick={() => onNewEntry(site.name)} className="pressable h-10 gap-1.5 coarse:h-11">
-          <Plus className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />Wpis tutaj
+          <Plus className="size-4 shrink-0 text-primary-ink" aria-hidden />Wpis tutaj
         </Button>
       </div>
 
@@ -226,7 +226,7 @@ function CheckRow({ item, done, onToggle, note }: { item: CheckItem; done: boole
             done ? "border-primary bg-primary text-primary-foreground" : "border-foreground/30 bg-background",
           )}
         >
-          {done && <Check className="h-4.5 w-4.5" strokeWidth={3} />}
+          {done && <Check className="size-4.5" strokeWidth={3} />}
         </span>
         <span className={cn("min-w-0 flex-1 text-base sm:text-sm", note && "font-medium", done && "text-muted-foreground")}>{item.text}</span>
       </button>
@@ -270,7 +270,7 @@ function EntryCheckDialog({ site, today, onEntered, onOpenChange }: {
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-md" data-testid="entry-check-dialog">
         <div className="space-y-1 border-b border-border px-5 pb-4 pt-5 pr-12">
           <DialogTitle className="flex items-center gap-1.5 font-display text-lg">
-            <HardHat className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />Przed wejściem: {site.name}
+            <HardHat className="size-5 shrink-0 text-primary-ink" aria-hidden />Przed wejściem: {site.name}
           </DialogTitle>
           <DialogDescription className="text-xs first-letter:uppercase">{dateLabel}</DialogDescription>
         </div>
@@ -293,7 +293,7 @@ function EntryCheckDialog({ site, today, onEntered, onOpenChange }: {
                   onClick={() => setEditing(true)}
                   className="pressable inline-flex items-center gap-1 rounded-control px-1.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
                 >
-                  <Pencil className="h-3.5 w-3.5" aria-hidden />Zmień listę
+                  <Pencil className="size-3.5" aria-hidden />Zmień listę
                 </button>
               </div>
               <ul>{items.map((i) => <CheckRow key={i.id} item={i} done={done.has(i.id)} onToggle={() => toggle(i.id)} />)}</ul>
@@ -311,11 +311,11 @@ function EntryCheckDialog({ site, today, onEntered, onOpenChange }: {
                 </span>
                 {status.leftAt !== undefined ? (
                   <Button variant="outline" onClick={() => { unleaveEntryCheck(site.id, today); haptic("tap"); }} className="coarse:h-11">
-                    <RotateCcw className="h-4 w-4" aria-hidden />Cofnij wyjście
+                    <RotateCcw className="size-4" aria-hidden />Cofnij wyjście
                   </Button>
                 ) : (
                   <Button variant="outline" onClick={() => { reopenEntryCheck(site.id, today); haptic("tap"); }} className="coarse:h-11">
-                    <RotateCcw className="h-4 w-4" aria-hidden />Cofnij wejście
+                    <RotateCcw className="size-4" aria-hidden />Cofnij wejście
                   </Button>
                 )}
               </div>
@@ -371,7 +371,7 @@ function ItemsEditor({ items, custom, onDone }: { items: readonly CheckItem[]; c
               aria-label={`Usuń punkt: ${item.text || idx + 1}`}
               className="pressable grid size-10 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
             >
-              <X className="h-4 w-4" aria-hidden />
+              <X className="size-4" aria-hidden />
             </button>
           </li>
         ))}
@@ -388,7 +388,7 @@ function ItemsEditor({ items, custom, onDone }: { items: readonly CheckItem[]; c
             className="h-10 min-w-0 flex-1 rounded-field border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
           />
           <Button type="submit" variant="outline" disabled={!text.trim()} className="shrink-0 coarse:h-11">
-            <Plus className="h-4 w-4" aria-hidden />Dodaj
+            <Plus className="size-4" aria-hidden />Dodaj
           </Button>
         </form>
       )}

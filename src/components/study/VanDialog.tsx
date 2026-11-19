@@ -117,10 +117,10 @@ export function VanDialog({ open, onOpenChange, journal }: { open: boolean; onOp
 
         <div className="flex flex-wrap gap-2" role="group" aria-label="Skanuj kod z opakowania">
           <Button type="button" variant="outline" size="sm" onClick={() => { setScan("in"); setNewCode(null); }} className="coarse:h-11" data-testid="van-scan-in">
-            <ScanLine className="h-4 w-4" aria-hidden />Skanuj przyjęcie
+            <ScanLine className="size-4" aria-hidden />Skanuj przyjęcie
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={() => { setScan("count"); setNewCode(null); }} className="coarse:h-11" data-testid="van-scan-count">
-            <ScanLine className="h-4 w-4" aria-hidden />Skanuj do liczenia
+            <ScanLine className="size-4" aria-hidden />Skanuj do liczenia
           </Button>
         </div>
 
@@ -172,7 +172,7 @@ export function VanDialog({ open, onOpenChange, journal }: { open: boolean; onOp
                   </span>
                   <button type="button" onClick={() => drop(s.item.id)} aria-label={`Usuń ${s.item.name}`}
                     className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
-                    <Trash2 className="h-4 w-4" aria-hidden />
+                    <Trash2 className="size-4" aria-hidden />
                   </button>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
@@ -212,7 +212,7 @@ export function VanDialog({ open, onOpenChange, journal }: { open: boolean; onOp
             </div>
             <input value={start} onChange={(e) => setStart(e.target.value)} inputMode="decimal" aria-label="Stan teraz" placeholder="stan" className={cn(fieldCls, "w-16 text-right font-mono")} />
             <input value={min} onChange={(e) => setMin(e.target.value)} inputMode="decimal" aria-label="Minimum" placeholder="min." className={cn(fieldCls, "w-16 text-right font-mono")} />
-            <Button type="submit" size="sm" variant="outline" disabled={!name.trim()} className="ml-auto coarse:h-11"><Plus className="h-4 w-4" aria-hidden />Dodaj</Button>
+            <Button type="submit" size="sm" variant="outline" disabled={!name.trim()} className="ml-auto coarse:h-11"><Plus className="size-4" aria-hidden />Dodaj</Button>
           </div>
         </form>
       </ResponsiveDialogContent>

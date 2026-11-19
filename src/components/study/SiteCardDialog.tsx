@@ -270,7 +270,7 @@ export function SiteCardDialog({
                 </div>
               ) : (
                 <DialogTitle className="flex items-center gap-1.5 font-display text-lg">
-                  <MapPin className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />
+                  <MapPin className="size-5 shrink-0 text-primary-ink" aria-hidden />
                   <span className="truncate">{site.name}</span>
                 </DialogTitle>
               )}
@@ -286,7 +286,7 @@ export function SiteCardDialog({
               <div className="flex items-start justify-between gap-2">
               {hours && (hours.total.minutes > 0 || hours.total.unsplit > 0) ? (
                 <p className="ui-meta min-w-0 pt-0.5 font-mono" data-testid="site-card-hours">
-                  <Clock className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-primary-ink" aria-hidden />
+                  <Clock className="mr-1.5 inline size-3.5 align-[-2px] text-primary-ink" aria-hidden />
                   <span className="text-foreground">{formatHoursShort(hours.total.minutes)} h</span> łącznie
                   {" · "}<span className="text-foreground">{formatHoursShort(hours.month.minutes)} h</span> w tym miesiącu
                   {hours.total.unsplit > 0 && (
@@ -301,7 +301,7 @@ export function SiteCardDialog({
                   onClick={() => setHoursOpen(true)}
                   className="pressable -my-1 inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11"
                 >
-                  <Clock className="h-3.5 w-3.5" aria-hidden />Wpisz godziny
+                  <Clock className="size-3.5" aria-hidden />Wpisz godziny
                 </button>
               </div>
             </div>
@@ -318,7 +318,7 @@ export function SiteCardDialog({
                 )}
                 {site.access && (
                   <p className="flex items-start gap-2 rounded-field bg-warning/10 px-3 py-2 text-sm text-foreground" data-testid="site-access">
-                    <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+                    <KeyRound className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
                     <span className="min-w-0 whitespace-pre-line break-words"><span className="sr-only">Dostęp: </span>{site.access}</span>
                   </p>
                 )}
@@ -330,19 +330,19 @@ export function SiteCardDialog({
               <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void addPhotoEntry(file); }} />
               <div className="flex gap-2 max-sm:hidden">
                 <Button onClick={() => leaveTo(onNewEntry)} className="min-w-0 flex-1 coarse:h-11">
-                  <Plus className="mr-1.5 h-4 w-4" aria-hidden />Wpis tutaj
+                  <Plus className="mr-1.5 size-4" aria-hidden />Wpis tutaj
                 </Button>
                 <Button variant="outline" onClick={() => photoInput.current?.click()} disabled={photoBusy} aria-label={photoBusy ? "Zapisuję zdjęcie" : "Zdjęcie do wpisu"} className="shrink-0 coarse:h-11">
-                  <Camera className="h-4 w-4" aria-hidden />{photoBusy ? "…" : <span className="max-[380px]:sr-only">Zdjęcie</span>}
+                  <Camera className="size-4" aria-hidden />{photoBusy ? "…" : <span className="max-[380px]:sr-only">Zdjęcie</span>}
                 </Button>
               </div>
               {/* Najczęstsze skróty zostają nad segmentami: wpisy tej budowy i raport dla szefa. */}
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" onClick={() => leaveTo(onShowEntries)} disabled={site.count === 0} className="coarse:h-11">
-                  <ListFilter className="mr-1.5 h-4 w-4" aria-hidden />Pokaż wpisy
+                  <ListFilter className="mr-1.5 size-4" aria-hidden />Pokaż wpisy
                 </Button>
                 <Button variant="outline" onClick={() => leaveTo(onReport)} disabled={site.count === 0} className="coarse:h-11">
-                  <FileText className="mr-1.5 h-4 w-4" aria-hidden />Raport
+                  <FileText className="mr-1.5 size-4" aria-hidden />Raport
                 </Button>
               </div>
               {tally && <SiteTallyBar tally={tally} points={sitePointsProgress} onSelect={(id) => { const sec = sectionOfPanel(id); if (sec && sections.includes(sec)) pickSection(sec); }} />}
@@ -394,12 +394,12 @@ export function SiteCardDialog({
                   aria-controls="site-card-recipients"
                   className="pressable flex w-full items-center gap-2 rounded-card px-3 py-2.5 text-left coarse:min-h-11"
                 >
-                  <Send className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                  <Send className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="shrink-0 section-caps">Odbiorcy raportu</span>
                   <span className={cn("min-w-0 flex-1 truncate text-sm", !recipients && "text-muted-foreground")}>
                     {recipientsOpen ? "" : recipients || "nie ustawieni"}
                   </span>
-                  <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", recipientsOpen && "rotate-180")} aria-hidden />
+                  <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", recipientsOpen && "rotate-180")} aria-hidden />
                 </button>
                 {recipientsOpen && (
                   <div id="site-card-recipients" className="border-t border-border px-3 py-3">
@@ -421,7 +421,7 @@ export function SiteCardDialog({
                   title="Raport i zdjęcia całej budowy w jednym pliku ZIP"
                   className="col-span-2 coarse:h-11"
                 >
-                  <Package className="mr-1.5 h-4 w-4" aria-hidden />{zipping ? "Pakuję…" : "Paczka ZIP"}
+                  <Package className="mr-1.5 size-4" aria-hidden />{zipping ? "Pakuję…" : "Paczka ZIP"}
                 </Button>
                 <SiteStorageLine site={site} journal={study.journal} />
                 <Button
@@ -431,7 +431,7 @@ export function SiteCardDialog({
                   title="Etapy, próby szczelności, uwagi i zdjęcia na jednej kartce z miejscem na podpisy — wydruk albo PDF"
                   className="coarse:h-11"
                 >
-                  <ClipboardCheck className="mr-1.5 h-4 w-4" aria-hidden />Protokół odbioru
+                  <ClipboardCheck className="mr-1.5 size-4" aria-hidden />Protokół odbioru
                 </Button>
                 <Button
                   variant="outline"
@@ -440,7 +440,7 @@ export function SiteCardDialog({
                   title="Ten sam protokół jako tekst — do wiadomości dla inwestora albo szefa"
                   className="coarse:h-11"
                 >
-                  <Share2 className="mr-1.5 h-4 w-4" aria-hidden />Tekst protokołu
+                  <Share2 className="mr-1.5 size-4" aria-hidden />Tekst protokołu
                 </Button>
                 <Button
                   variant="outline"
@@ -449,7 +449,7 @@ export function SiteCardDialog({
                   title="Protokół jako plik PDF z nagłówkiem firmy, zdjęciami i numerami stron — do wysłania albo wydruku"
                   className="coarse:h-11"
                 >
-                  <FileText className="mr-1.5 h-4 w-4" aria-hidden />{pdfBusy ? "Przygotowuję…" : "PDF protokołu"}
+                  <FileText className="mr-1.5 size-4" aria-hidden />{pdfBusy ? "Przygotowuję…" : "PDF protokołu"}
                 </Button>
                 <Button
                   variant="outline"
@@ -458,7 +458,7 @@ export function SiteCardDialog({
                   className="coarse:h-11"
                   data-testid="site-signature-open"
                 >
-                  <PenLine className="mr-1.5 h-4 w-4" aria-hidden />{site.signature ? "Podpisany" : "Podpis klienta"}
+                  <PenLine className="mr-1.5 size-4" aria-hidden />{site.signature ? "Podpisany" : "Podpis klienta"}
                 </Button>
                 <Button
                   variant="outline"
@@ -467,18 +467,18 @@ export function SiteCardDialog({
                   className="col-span-2 coarse:h-11"
                   data-testid="site-package-open"
                 >
-                  <Send className="mr-1.5 h-4 w-4" aria-hidden />Wyślij budowę pomocnikowi
+                  <Send className="mr-1.5 size-4" aria-hidden />Wyślij budowę pomocnikowi
                 </Button>
                 {!job && (
                   <Button variant="ghost" onClick={() => { setJobMeta(site.id, {}); toastWithUndo(`„${site.name}” to teraz zlecenie własne`, () => { removeJob(site.id); }); }} className="col-span-2 text-muted-foreground coarse:h-11"
                     title="Twoje zlecenie, nie budowa szefa: wycena, status, termin i PDF dla klienta">
-                    <Wrench className="mr-1.5 h-4 w-4" aria-hidden />To zlecenie własne (fucha)
+                    <Wrench className="mr-1.5 size-4" aria-hidden />To zlecenie własne (fucha)
                   </Button>
                 )}
                 <Button variant="ghost" onClick={toggleArchive} className="col-span-2 text-muted-foreground coarse:h-11">
                   {site.archived === undefined
-                    ? <><Archive className="mr-1.5 h-4 w-4" aria-hidden />Do archiwum</>
-                    : <><ArchiveRestore className="mr-1.5 h-4 w-4" aria-hidden />Przywróć z archiwum</>}
+                    ? <><Archive className="mr-1.5 size-4" aria-hidden />Do archiwum</>
+                    : <><ArchiveRestore className="mr-1.5 size-4" aria-hidden />Przywróć z archiwum</>}
                 </Button>
                 <AlertDialog open={archiveAsk} onOpenChange={(o) => { if (!archiving) setArchiveAsk(o); }}>
                   <AlertDialogContent>
@@ -519,7 +519,7 @@ export function SiteCardDialog({
                     b.primary ? "border-transparent bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:bg-muted",
                   )}
                 >
-                  <b.icon className="h-5 w-5" aria-hidden />{b.label}
+                  <b.icon className="size-5" aria-hidden />{b.label}
                 </button>
               ))}
             </div>

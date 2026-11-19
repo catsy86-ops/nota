@@ -54,6 +54,8 @@ const LIMITS = {
   // W2.5: interlinia idzie z roli i rozmiaru. Zostają wyjątki: pigułki i znaczki (`leading-4/5/none`),
   // tytuły display (`tight/snug`), czytana treść (`relaxed`). Próg = stan z 2026-11-19 po przeglądzie.
   manualLeading: { pattern: /(?<![\w-])leading-(?:none|tight|snug|normal|relaxed|loose|\d+)(?![\w-])/g, max: 91, token: "rola tekstu (title-*, ui-*, text-sm)" },
+  // W4.1: kwadrat to `size-N`, nie para `h-N w-N` (zamienione mechanicznie 2026-11-19, 1103 miejsca).
+  squarePair: { pattern: /(?<![\w:\-[])(?:h-(\d+(?:\.5)?) w-\1|w-(\d+(?:\.5)?) h-\2)(?![\w.-])/g, max: 0, token: "size-3.5 / size-4 / size-5" },
   disabledOpacity: { pattern: /(?<![\w-])disabled:opacity-\d+/g, max: 30, token: "disabled:text-muted-foreground / Button" },
 } as const;
 

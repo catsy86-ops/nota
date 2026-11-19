@@ -192,7 +192,7 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
                 placeholder="np. 35 cm od narożnika"
                 className="min-w-0 flex-1 rounded-field border border-input bg-background px-3 py-2 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
               />
-              <Button type="submit" size="sm" disabled={!text.trim()} className="coarse:h-11" aria-label="Dodaj wymiar"><Check className="h-4 w-4" aria-hidden /></Button>
+              <Button type="submit" size="sm" disabled={!text.trim()} className="coarse:h-11" aria-label="Dodaj wymiar"><Check className="size-4" aria-hidden /></Button>
               <Button type="button" size="sm" variant="ghost" onClick={cancelPending} className="coarse:h-11">Anuluj</Button>
             </form>
           )}
@@ -207,8 +207,8 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
                 <li key={i} className="flex items-center justify-between gap-2 rounded-card bg-muted px-3 py-1.5 text-sm" data-testid="dimension-item">
                   <span className="min-w-0 truncate">{d.text}</span>
                   <button type="button" onClick={() => setList((l) => l.filter((_, j) => j !== i))} aria-label={`Usuń wymiar ${d.text}`}
-                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
-                    <Trash2 className="h-4 w-4" aria-hidden />
+                    className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
+                    <Trash2 className="size-4" aria-hidden />
                   </button>
                 </li>
               ))}

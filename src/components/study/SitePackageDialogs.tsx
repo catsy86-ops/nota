@@ -58,7 +58,7 @@ export function SitePackageExportDialog({ site, open, onOpenChange }: { site: Si
           <span>Dostęp do budowy<span className="block text-xs text-muted-foreground">Kod do bramy, gdzie klucze — tylko gdy pomocnik ich potrzebuje.</span></span>
         </label>
         <p className="rounded-field bg-warning/10 px-3 py-2 text-xs" role="note">Plik zawiera adres i zdjęcia z wnętrza — wysyłaj tylko pomocnikowi, nie na grupy.</p>
-        <Button onClick={send} disabled={busy} className="coarse:h-11"><Send className="h-4 w-4" aria-hidden />{busy ? "Przygotowuję…" : "Wyślij plik"}</Button>
+        <Button onClick={send} disabled={busy} className="coarse:h-11"><Send className="size-4" aria-hidden />{busy ? "Przygotowuję…" : "Wyślij plik"}</Button>
       </DialogContent>
     </Dialog>
   );
@@ -128,7 +128,7 @@ export function SitePackageImportDialog({ pkg, onClose, onDone }: { pkg: SitePac
         <p className="text-sm" data-testid="site-package-summary">{parts.length ? `Dojdzie: ${parts.join(", ")}.` : "Nic nowego — wszystko z pliku już jest."}</p>
         {c && c.dropped > 0 && <p className="text-xs text-warning-ink">Pominięte ponad limity (np. najstarsze wpisy, gdy plik ma ich ponad 500): {c.dropped}.</p>}
         <p className="ui-hint">Pozycje z pliku są podpisane „z pliku”. Usunięcia nie przechodzą — co usunąłeś u siebie, a jest w pliku, wróci.</p>
-        <Button onClick={apply} disabled={busy || !parts.length} className="coarse:h-11"><Upload className="h-4 w-4" aria-hidden />{busy ? "Wczytuję…" : "Wczytaj"}</Button>
+        <Button onClick={apply} disabled={busy || !parts.length} className="coarse:h-11"><Upload className="size-4" aria-hidden />{busy ? "Wczytuję…" : "Wczytaj"}</Button>
       </DialogContent>
     </Dialog>
   );

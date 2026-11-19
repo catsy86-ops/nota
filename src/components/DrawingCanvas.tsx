@@ -307,25 +307,25 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
             <ToolBtn
               active={tool === "pen"}
               onClick={() => setTool("pen")}
-              icon={<Pen className="w-4 h-4" />}
+              icon={<Pen className="size-4" />}
               title="Długopis"
             />
             <ToolBtn
               active={tool === "pencil"}
               onClick={() => setTool("pencil")}
-              icon={<Pencil className="w-4 h-4" />}
+              icon={<Pencil className="size-4" />}
               title="Ołówek"
             />
             <ToolBtn
               active={tool === "marker"}
               onClick={() => setTool("marker")}
-              icon={<Highlighter className="w-4 h-4" />}
+              icon={<Highlighter className="size-4" />}
               title="Zakreślacz"
             />
             <ToolBtn
               active={tool === "eraser"}
               onClick={() => setTool("eraser")}
-              icon={<Eraser className="w-4 h-4" />}
+              icon={<Eraser className="size-4" />}
               title="Gumka"
             />
           </div>
@@ -342,7 +342,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
                 aria-pressed={color === c && tool !== "eraser"}
                 onClick={() => { setColor(c); if (tool === "eraser") setTool("pen"); }}
                 className={cn(
-                  "pressable w-6 h-6 rounded-full border-2 transition-all",
+                  "pressable size-6 rounded-full border-2 transition-all",
                   color === c && tool !== "eraser" ? "border-primary ring-2 ring-primary/30 scale-110" : "border-border hover:border-muted-foreground/40"
                 )}
                 style={{ backgroundColor: c }}
@@ -354,7 +354,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
 
           {/* Stroke width */}
           <div className="flex items-center gap-2 min-w-[120px]">
-            <Minus className="w-3 h-3 text-muted-foreground" />
+            <Minus className="size-3 text-muted-foreground" />
             <Slider
               value={[strokeWidth]}
               onValueChange={([v]) => setStrokeWidth(v)}
@@ -363,7 +363,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
               step={1}
               className="w-20"
             />
-            <Plus className="w-3 h-3 text-muted-foreground" />
+            <Plus className="size-3 text-muted-foreground" />
             <span className="text-xs text-muted-foreground w-6 text-center">{strokeWidth}</span>
           </div>
 
@@ -374,19 +374,19 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
             <ToolBtn
               active={grid}
               onClick={() => setGrid((g) => !g)}
-              icon={<Grid3x3 className="w-4 h-4" />}
+              icon={<Grid3x3 className="size-4" />}
               title="Kratka"
               disabled={!!bg}
             />
             <ToolBtn
               onClick={undo}
-              icon={<Undo2 className="w-4 h-4" />}
+              icon={<Undo2 className="size-4" />}
               title="Cofnij"
               disabled={strokes.length === 0}
             />
             <ToolBtn
               onClick={clearAll}
-              icon={<Trash className="w-4 h-4" />}
+              icon={<Trash className="size-4" />}
               title="Wyczyść"
               disabled={strokes.length === 0}
               className="hover:text-destructive-ink"
@@ -396,7 +396,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
           <div className="flex-1" />
 
           <Button size="sm" onClick={handleSave} className="gap-1.5" disabled={strokes.length === 0}>
-            <Save className="w-4 h-4" />
+            <Save className="size-4" />
             Zapisz rysunek
           </Button>
         </div>

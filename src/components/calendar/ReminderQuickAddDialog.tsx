@@ -219,7 +219,7 @@ export function ReminderQuickAddDialog({
       >
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
-            <Bell className="w-4 h-4 text-primary-ink" />
+            <Bell className="size-4 text-primary-ink" />
             {isEdit ? "Termin przypomnienia" : "Nowy termin"}
           </DialogTitle>
           <DialogDescription className="first-letter:uppercase">
@@ -281,7 +281,7 @@ export function ReminderQuickAddDialog({
           </label>
           )}
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Repeat className="w-3 h-3" />
+            <Repeat className="size-3" />
             <span className="sr-only">Powtarzanie</span>
             <RepeatRuleSelect
               id="quick-add-repeat"
@@ -309,7 +309,7 @@ export function ReminderQuickAddDialog({
             />
             {untilText && (
               <button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" className="p-1 rounded text-muted-foreground hover:text-foreground">
-                <X className="w-3 h-3" />
+                <X className="size-3" />
               </button>
             )}
           </div>
@@ -358,7 +358,7 @@ export function ReminderQuickAddDialog({
             <div className="flex flex-col sm:flex-row gap-2">
               {edit?.isSeries && (
                 <Button size="sm" variant="outline" onClick={handleSkip} className="flex-1">
-                  <SkipForward className="w-3.5 h-3.5 mr-1" />
+                  <SkipForward className="size-3.5 mr-1" />
                   Pomiń to wystąpienie
                 </Button>
               )}
@@ -368,7 +368,7 @@ export function ReminderQuickAddDialog({
                 onClick={handleDelete}
                 className="flex-1 text-destructive-ink hover:text-destructive-ink"
               >
-                <Trash className="w-3.5 h-3.5 mr-1" />
+                <Trash className="size-3.5 mr-1" />
                 {edit?.isSeries ? "Usuń całą serię" : "Usuń termin"}
               </Button>
             </div>
@@ -376,7 +376,7 @@ export function ReminderQuickAddDialog({
         ) : (
           <>
             <Button size="sm" onClick={handleCreate} disabled={timestamp === null || !title || untilTooEarly} className="w-full coarse:h-11" aria-keyshortcuts="Control+Enter Meta+Enter">
-              <Plus className="w-3.5 h-3.5 mr-1" />
+              <Plus className="size-3.5 mr-1" />
               Utwórz notatkę z terminem
             </Button>
 
@@ -396,7 +396,7 @@ export function ReminderQuickAddDialog({
                           "hover:bg-muted/60 transition-colors disabled:opacity-50 outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                         )}
                       >
-                        <StickyNote className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                        <StickyNote className="size-3.5 shrink-0 text-muted-foreground" />
                         <span className="truncate">{n.locked ? "Notatka prywatna" : n.title.trim() || n.content.slice(0, 40) || "Bez tytułu"}</span>
                         {n.reminder && (
                           <span className="ml-auto shrink-0 text-2xs text-muted-foreground">

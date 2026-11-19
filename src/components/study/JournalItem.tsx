@@ -66,22 +66,22 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
         {new Date(e.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}
       </time>
       <div className="flex min-w-0 items-start gap-2.5">
-        {resolved ? <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
+        {resolved ? <CircleCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
         <div className="min-w-0 flex-1">
           <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{entryHeadline(e)}</p>
           {e.fittings && e.fittings.length > 0 && (
             <p className="ui-hint mt-1 inline-flex items-start gap-1.5" data-testid="journal-fittings">
-              <Package className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{fittingsLine(e.fittings)}
+              <Package className="mt-px size-3.5 shrink-0" aria-hidden />{fittingsLine(e.fittings)}
             </p>
           )}
           {e.pipes && e.pipes.length > 0 && (
             <p className="ui-hint mt-1 flex items-start gap-1.5" data-testid="journal-pipes">
-              <Cylinder className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{pipesLine(e.pipes)}
+              <Cylinder className="mt-px size-3.5 shrink-0" aria-hidden />{pipesLine(e.pipes)}
             </p>
           )}
           {e.test && (
             <p className={cn("mt-1 inline-flex items-start gap-1.5 text-xs font-medium", e.test.ok ? "text-success-ink" : "text-destructive-ink")} data-testid="journal-test">
-              <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(e.test)}
+              <Gauge className="mt-px size-3.5 shrink-0" aria-hidden />{testLine(e.test)}
             </p>
           )}
           {e.test && readingsLine(e.test) && (
@@ -89,7 +89,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
           )}
           {(e.level !== undefined || e.barcode || dimensionCount > 0) && (
             <p className="ui-hint mt-1 flex items-start gap-1.5" data-testid="journal-sensors">
-              <Ruler className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+              <Ruler className="mt-px size-3.5 shrink-0" aria-hidden />
               <span className="min-w-0 break-words">{[
                 e.level !== undefined && `Spadek ${slopeLabel(e.level)}`,
                 e.barcode && `Kod: ${e.barcode}`,
@@ -108,13 +108,13 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
             )}
             {stage && (
               <span className={cn("inline-flex items-center gap-1", CHIP_ACCENT)} data-testid="journal-entry-stage">
-                <Flag className="h-3 w-3" aria-hidden />Etap: {stage}
+                <Flag className="size-3" aria-hidden />Etap: {stage}
               </span>
             )}
             {e.geo && (
               // „Tu jestem” — gdzie zapisano wpis; link do map, tylko w aplikacji (raport tego nie zawiera).
               <a href={mapsUrl(e.geo)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground hover:underline coarse:min-h-11 coarse:items-center" data-testid="journal-entry-geo">
-                <MapPin className="h-3 w-3" aria-hidden />Mapa
+                <MapPin className="size-3" aria-hidden />Mapa
               </a>
             )}
             {e.topic && (
@@ -141,7 +141,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
                   resolved ? "border-border text-muted-foreground hover:text-foreground" : "border-warning/60 bg-warning/10 font-medium text-foreground hover:bg-warning/20",
                 )}
               >
-                <Check className="h-3.5 w-3.5" aria-hidden />
+                <Check className="size-3.5" aria-hidden />
                 {resolved ? "Otwórz ponownie" : "Oznacz jako rozwiązany"}
               </button>
               {/* Rozwiązany problem z opisem i sposobem naprawy: szkic własnego pytania (§4.2). */}
@@ -162,7 +162,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
                   aria-label={`Ćwicz teraz: ${topicTitle(e.topic)}`}
                   className="pressable inline-flex items-center gap-1.5 rounded-full border border-primary/40 px-2.5 py-1 text-xs font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11 coarse:px-3.5 coarse:text-sm"
                 >
-                  <Play className="h-3.5 w-3.5" aria-hidden />Ćwicz teraz
+                  <Play className="size-3.5" aria-hidden />Ćwicz teraz
                 </button>
               )}
             </div>
@@ -172,7 +172,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
             <ul className="mt-2 space-y-2" aria-label="Nagrania wpisu">
               {e.recordings.map((a) => (
                 <li key={a.hash} className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Mic className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <Mic className="size-3.5 shrink-0" aria-hidden />
                   <span className="min-w-0 flex-1 truncate">{a.name}</span>
                   <Suspense fallback={null}><AudioPreview attachment={a} /></Suspense>
                 </li>
@@ -184,7 +184,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
               {e.images.map((ref, i) => (
                 <li key={ref}>
                   <button type="button" onClick={() => onZoom(e.images, i)} aria-label={`Powiększ zdjęcie ${i + 1} z ${e.images.length}`} className="relative block overflow-hidden rounded-field">
-                    <NoteImage thumb imageRef={ref} alt="" className="h-16 w-16 object-cover" placeholderClassName="h-16 w-16" />
+                    <NoteImage thumb imageRef={ref} alt="" className="size-16 object-cover" placeholderClassName="size-16" />
                     {/* Numer zdjęcia na miniaturze (§D3): od razu widać, które z kolei jest w galerii. */}
                     {e.images.length > 1 && <span aria-hidden className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 font-mono text-2xs leading-4 text-white tabular-nums">{i + 1}</span>}
                   </button>
@@ -231,7 +231,7 @@ function SolutionLine({ entry: e, editing, onEditing }: { entry: JournalEntry; e
   if (e.solution) {
     return (
       <p className="mt-1.5 flex items-start gap-1.5 text-xs text-foreground/80" data-testid="journal-solution">
-        <Wrench className="mt-px h-3.5 w-3.5 shrink-0 text-success-ink" aria-hidden />
+        <Wrench className="mt-px size-3.5 shrink-0 text-success-ink" aria-hidden />
         <span className="min-w-0"><span className="font-medium">Rozwiązanie:</span> {e.solution}</span>
         <button type="button" onClick={() => onEditing(true)} className="shrink-0 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline coarse:min-h-11">Zmień</button>
       </p>
@@ -243,7 +243,7 @@ function SolutionLine({ entry: e, editing, onEditing }: { entry: JournalEntry; e
       onClick={() => onEditing(true)}
       className="pressable mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
     >
-      <Wrench className="h-3.5 w-3.5" aria-hidden />Jak rozwiązane?
+      <Wrench className="size-3.5" aria-hidden />Jak rozwiązane?
     </button>
   );
 }

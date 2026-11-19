@@ -336,7 +336,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                     <button type="button" onClick={() => onShow(c.id, mode)} className="max-w-40 truncate hover:text-foreground hover:underline">
                       {c.title.trim() || "Bez tytułu"}
                     </button>
-                    <ChevronRight className="w-3 h-3 shrink-0" aria-hidden />
+                    <ChevronRight className="size-3 shrink-0" aria-hidden />
                   </span>
                 ))}
               </nav>
@@ -354,49 +354,49 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
           <div className="flex items-center gap-0.5 shrink-0">
             {present && (
               <>
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setZoom((z) => Math.max(0.7, z - 0.1))} title="Mniejsza czcionka (-)" aria-label="Mniejsza czcionka">
-                  <Minus className="w-4 h-4" />
+                <Button size="icon" variant="ghost" className="size-8" onClick={() => setZoom((z) => Math.max(0.7, z - 0.1))} title="Mniejsza czcionka (-)" aria-label="Mniejsza czcionka">
+                  <Minus className="size-4" />
                 </Button>
                 <span className="text-xs font-mono w-10 text-center text-muted-foreground tabular-nums">{Math.round(zoom * 100)}%</span>
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setZoom((z) => Math.min(2.4, z + 0.1))} title="Większa czcionka (+)" aria-label="Większa czcionka">
-                  <Plus className="w-4 h-4" />
+                <Button size="icon" variant="ghost" className="size-8" onClick={() => setZoom((z) => Math.min(2.4, z + 0.1))} title="Większa czcionka (+)" aria-label="Większa czcionka">
+                  <Plus className="size-4" />
                 </Button>
               </>
             )}
             {/* Na telefonie Kopiuj, Edytuj i kroki przechodzą do dolnego paska — tytuł ma miejsce. */}
             <Button
-              size="icon" variant="ghost" className="h-8 w-8 phone:hidden"
+              size="icon" variant="ghost" className="size-8 phone:hidden"
               onClick={(e) => { void copyNoteToClipboard(note, e.shiftKey ? "text" : "markdown"); }}
               title="Kopiuj jako Markdown (Shift — jako tekst)"
               aria-label="Kopiuj jako Markdown"
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="size-4" />
             </Button>
             {canEdit && (
               <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs phone:hidden" onClick={() => onEdit(note.id)} title="Edytuj (Enter)">
-                <Pencil className="w-3.5 h-3.5" /> Edytuj
+                <Pencil className="size-3.5" /> Edytuj
               </Button>
             )}
             {onStep && (
               <>
-                <Button size="icon" variant="ghost" className="h-8 w-8 phone:hidden" onClick={() => onStep(-1)} disabled={!canPrev} title="Poprzednia notatka (←)" aria-label="Poprzednia notatka">
-                  <ChevronLeft className="w-4 h-4" />
+                <Button size="icon" variant="ghost" className="size-8 phone:hidden" onClick={() => onStep(-1)} disabled={!canPrev} title="Poprzednia notatka (←)" aria-label="Poprzednia notatka">
+                  <ChevronLeft className="size-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8 phone:hidden" onClick={() => onStep(1)} disabled={!canNext} title="Następna notatka (→)" aria-label="Następna notatka">
-                  <ChevronRight className="w-4 h-4" />
+                <Button size="icon" variant="ghost" className="size-8 phone:hidden" onClick={() => onStep(1)} disabled={!canNext} title="Następna notatka (→)" aria-label="Następna notatka">
+                  <ChevronRight className="size-4" />
                 </Button>
               </>
             )}
             <Button
-              size="icon" variant="ghost" className="h-8 w-8"
+              size="icon" variant="ghost" className="size-8"
               onClick={() => onShow(note.id, present ? "preview" : "present")}
               title={present ? "Zwiń do podglądu" : "Pełny ekran"}
               aria-label={present ? "Zwiń do podglądu" : "Pełny ekran"}
             >
-              {present ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              {present ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onClose} title="Zamknij (Esc)" aria-label="Zamknij">
-              <X className="w-4 h-4" />
+            <Button size="icon" variant="ghost" className="size-8" onClick={onClose} title="Zamknij (Esc)" aria-label="Zamknij">
+              <X className="size-4" />
             </Button>
           </div>
         </div>
@@ -547,7 +547,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                           onClick={() => onShow(s.id, mode)}
                           className="flex w-full items-center gap-2 rounded-field bg-muted/30 px-2.5 py-1.5 text-left text-sm hover:bg-muted/60"
                         >
-                          <CornerDownRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                          <CornerDownRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                           <span className="truncate">{s.icon ? `${s.icon} ` : ""}{s.title.trim() || "Bez tytułu"}</span>
                           {s.trashed && <span className="ml-auto text-2xs text-muted-foreground">w koszu</span>}
                         </button>
@@ -562,7 +562,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                     className="mt-2 h-8 gap-1.5 px-2 text-xs"
                     onClick={() => { const id = addSubpage(note.id); if (id) onEdit(id); }}
                   >
-                    <FilePlusCorner className="w-3.5 h-3.5" />Dodaj podstronę
+                    <FilePlusCorner className="size-3.5" />Dodaj podstronę
                   </Button>
                 )}
                 {canEdit && !note.locked && !present && (parentOptions.length > 0 || currentParent) && (
@@ -606,7 +606,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                       </div>
                       {canEdit && (
                         <Button size="sm" variant="ghost" className="h-7 shrink-0 gap-1 px-2 text-xs" onClick={() => linkMention(m)} title={`Zamień pierwsze wystąpienie na [[${note.title.trim()}]]`}>
-                          <Link2 className="h-3 w-3" aria-hidden /> Połącz
+                          <Link2 className="size-3" aria-hidden /> Połącz
                         </Button>
                       )}
                     </li>
@@ -659,8 +659,8 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                       {splitNote.title.trim() || "Bez tytułu"}
                     </button>
                     {onSplit && (
-                      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => onSplit(null)} aria-label="Zamknij panel obok" title="Zamknij panel obok">
-                        <X className="w-3.5 h-3.5" />
+                      <Button size="icon" variant="ghost" className="size-7 shrink-0" onClick={() => onSplit(null)} aria-label="Zamknij panel obok" title="Zamknij panel obok">
+                        <X className="size-3.5" />
                       </Button>
                     )}
                   </div>
@@ -680,20 +680,20 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
         <div className="hidden phone:flex items-stretch gap-1 border-t border-border/40 px-2 py-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))]">
           {onStep && (
             <Button variant="ghost" className="h-11 flex-1 gap-1 text-xs" onClick={() => onStep(-1)} disabled={!canPrev} aria-label="Poprzednia notatka">
-              <ChevronLeft className="w-4 h-4" /> Poprzednia
+              <ChevronLeft className="size-4" /> Poprzednia
             </Button>
           )}
           <Button variant="ghost" className="h-11 flex-1 gap-1 text-xs" onClick={() => { void copyNoteToClipboard(note, "markdown"); }} aria-label="Kopiuj jako Markdown">
-            <Copy className="w-4 h-4" /> Kopiuj
+            <Copy className="size-4" /> Kopiuj
           </Button>
           {canEdit && (
             <Button variant="ghost" className="h-11 flex-1 gap-1 text-xs" onClick={() => onEdit(note.id)} aria-label="Edytuj">
-              <Pencil className="w-4 h-4" /> Edytuj
+              <Pencil className="size-4" /> Edytuj
             </Button>
           )}
           {onStep && (
             <Button variant="ghost" className="h-11 flex-1 gap-1 text-xs" onClick={() => onStep(1)} disabled={!canNext} aria-label="Następna notatka">
-              Następna <ChevronRight className="w-4 h-4" />
+              Następna <ChevronRight className="size-4" />
             </Button>
           )}
         </div>

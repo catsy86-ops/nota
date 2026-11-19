@@ -85,7 +85,7 @@ export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDE
       onDrop={(e) => { setDragging(false); if (takeFiles(e.dataTransfer.files)) e.preventDefault(); }}
     >
       <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-card bg-primary/12 text-primary-ink ring-1 ring-primary/20">
-        <Inbox className="h-4 w-4" />
+        <Inbox className="size-4" />
       </span>
       <textarea
         rows={1}
@@ -115,7 +115,7 @@ export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDE
             dictation.listening ? "bg-destructive/10 text-destructive-ink" : "text-muted-foreground hover:bg-muted hover:text-foreground",
           )}
         >
-          {dictation.listening ? <MicOff className="h-4 w-4" aria-hidden /> : <Mic className="h-4 w-4" aria-hidden />}
+          {dictation.listening ? <MicOff className="size-4" aria-hidden /> : <Mic className="size-4" aria-hidden />}
         </button>
       )}
       {hasText && (
@@ -124,7 +124,7 @@ export function InboxCapture({ onCapture, labels = NO_LABELS, folders = NO_FOLDE
           aria-label="Zapisz do skrzynki"
           className="pressable mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 coarse:size-11"
         >
-          <ArrowUp className="h-4 w-4" aria-hidden />
+          <ArrowUp className="size-4" aria-hidden />
         </button>
       )}
     </form>

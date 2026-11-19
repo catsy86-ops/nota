@@ -30,7 +30,7 @@ export function VersionHistory({ versions, onRestore, current, onRestoreContent 
             aria-label="Historia wersji"
             className="pressable p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
           >
-            <RotateCcwClock className="w-4 h-4" />
+            <RotateCcwClock className="size-4" />
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">Historia wersji ({versions.length})</TooltipContent>

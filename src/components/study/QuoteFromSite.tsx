@@ -55,12 +55,12 @@ export function QuoteFromSite({ site, job }: { site: SiteInfo; job: Job }) {
     <div className="flex flex-wrap gap-1.5" data-testid="quote-from-site">
       {pointsAvailable && (
         <Button type="button" size="sm" variant="outline" onClick={() => add(fromPoints, "punktów")} className="coarse:h-11" data-testid="quote-from-points">
-          <Hammer className="h-4 w-4" aria-hidden />Z punktów{fromPoints.items.length > 0 ? ` (${fromPoints.items.length})` : ""}
+          <Hammer className="size-4" aria-hidden />Z punktów{fromPoints.items.length > 0 ? ` (${fromPoints.items.length})` : ""}
         </Button>
       )}
       {usageAvailable && (
         <Button type="button" size="sm" variant="outline" onClick={() => add(fromUsage, "materiału")} className="coarse:h-11" data-testid="quote-from-usage">
-          <Package2 className="h-4 w-4" aria-hidden />Z zużytego materiału{fromUsage.items.length > 0 ? ` (${fromUsage.items.length})` : ""}
+          <Package2 className="size-4" aria-hidden />Z zużytego materiału{fromUsage.items.length > 0 ? ` (${fromUsage.items.length})` : ""}
         </Button>
       )}
     </div>

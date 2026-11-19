@@ -29,7 +29,7 @@ export function WidgetPanel({ notes, onOpen, onOpenToday, onNew, onUpdate }: {
         <h2 className="title-section">Na dziś</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onNew} className="coarse:h-11">
-            <Plus className="mr-1 h-4 w-4" aria-hidden />Nowa notatka
+            <Plus className="mr-1 size-4" aria-hidden />Nowa notatka
           </Button>
           <Button variant="ghost" size="sm" onClick={onOpenToday} className="coarse:h-11">Cały dzień</Button>
         </div>

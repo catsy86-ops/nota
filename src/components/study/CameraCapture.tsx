@@ -109,7 +109,7 @@ export function CameraCapture({ open, onOpenChange, onCapture, count, max, point
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-sm" data-testid="camera-capture">
         <div className="border-b border-border px-5 pb-4 pt-5">
           <DialogTitle className="flex items-center gap-2 font-display text-lg">
-            <Camera className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />
+            <Camera className="size-5 shrink-0 text-primary-ink" aria-hidden />
             Aparat
           </DialogTitle>
           <DialogDescription className="text-xs">Rób zdjęcia jedno po drugim, okno zostaje otwarte. Latarka, gdy telefon ją daje.</DialogDescription>
@@ -118,7 +118,7 @@ export function CameraCapture({ open, onOpenChange, onCapture, count, max, point
         <div className="space-y-3 px-5 py-4">
           {problem ? (
             <div className="flex gap-3 rounded-card border border-warning bg-warning/5 p-3" role="status" data-testid="camera-problem">
-              <AlertCircle className="h-5 w-5 shrink-0 text-warning-ink" aria-hidden />
+              <AlertCircle className="size-5 shrink-0 text-warning-ink" aria-hidden />
               <p className="text-sm">{PROBLEM[problem]}</p>
             </div>
           ) : (
@@ -131,11 +131,11 @@ export function CameraCapture({ open, onOpenChange, onCapture, count, max, point
                 {torchOk && (
                   <Button type="button" variant="outline" size="sm" onClick={() => void toggleTorch()} aria-pressed={torchOn} data-testid="camera-torch"
                     className={cn("flex-1 coarse:h-11", torchOn && "border-primary bg-primary/10")}>
-                    <Zap className="h-4 w-4" aria-hidden />Latarka
+                    <Zap className="size-4" aria-hidden />Latarka
                   </Button>
                 )}
                 <Button type="button" variant="outline" size="sm" onClick={() => setFacing((f) => (f === "environment" ? "user" : "environment"))} className="flex-1 coarse:h-11" data-testid="camera-flip">
-                  <FlipHorizontal2 className="h-4 w-4" aria-hidden />Zmień kamerę
+                  <FlipHorizontal2 className="size-4" aria-hidden />Zmień kamerę
                 </Button>
               </div>
               {points.length > 0 && onPoint && (

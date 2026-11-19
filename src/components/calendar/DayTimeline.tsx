@@ -50,7 +50,7 @@ function TimelineItem({ occ, title, onEdit, onMoveByDays, onOpenSeriesSource }: 
         className={itemClass}
       >
         <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
-        <ArrowRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
+        <ArrowRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
       </button>
     );
   }
@@ -69,7 +69,7 @@ function TimelineItem({ occ, title, onEdit, onMoveByDays, onOpenSeriesSource }: 
       className={itemClass}
     >
       <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
-      <Pencil className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
+      <Pencil className="size-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
     </button>
   );
 }

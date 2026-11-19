@@ -108,18 +108,18 @@ export function PhotoGalleryDialog({ zoom, onIndex, onClose, label = "Zdjęcie z
             {onAnnotate && (
               <button type="button" onClick={() => onAnnotate(zoom.refs[zoom.index])}
                 className="pressable absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 inline-flex h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-white/15 px-4 text-sm font-medium text-white">
-                <PenTool className="h-4 w-4" aria-hidden />Opisz na zdjęciu
+                <PenTool className="size-4" aria-hidden />Opisz na zdjęciu
               </button>
             )}
             {count > 1 && (
               <>
                 <button type="button" onClick={() => go(-1)} aria-label="Poprzednie zdjęcie"
                   className="pressable absolute left-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-white">
-                  <ChevronLeft className="h-5 w-5" aria-hidden />
+                  <ChevronLeft className="size-5" aria-hidden />
                 </button>
                 <button type="button" onClick={() => go(1)} aria-label="Następne zdjęcie"
                   className="pressable absolute right-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-white/15 text-white">
-                  <ChevronRight className="h-5 w-5" aria-hidden />
+                  <ChevronRight className="size-5" aria-hidden />
                 </button>
                 <p className="absolute top-3 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-2.5 py-0.5 font-mono text-xs tabular-nums text-white" aria-live="polite" data-testid="journal-photo-counter">
                   {zoom.index + 1}/{count}

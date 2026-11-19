@@ -434,7 +434,7 @@ export function AppearanceSettings() {
                 key={c}
                 onClick={() => changeView(() => { setViewPref("autoColumns", false); setViewPref("columns", c); })}
                 aria-pressed={!prefs.autoColumns && prefs.columns === c}
-                className={cn("w-10 h-10 coarse:size-11 rounded-card border text-sm font-bold",
+                className={cn("size-10 coarse:size-11 rounded-card border text-sm font-bold",
                   !prefs.autoColumns && prefs.columns === c ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
               >{c}</button>
             ))}

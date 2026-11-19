@@ -125,11 +125,11 @@ function WebPushSettings() {
               {prefs.enabled ? (
                 <Button type="button" variant="outline" className="pressable shrink-0 sm:self-start" disabled={busy !== null}
                   onClick={() => void run("off", disablePush, "Powiadomienia przy zamkniętej aplikacji wyłączone")}>
-                  {spinOff && <Loader2 className="w-4 h-4 animate-spin" />}Wyłącz
+                  {spinOff && <Loader2 className="size-4 animate-spin" />}Wyłącz
                 </Button>
               ) : (
                 <Button type="button" className="pressable shrink-0 sm:self-start" disabled={busy !== null || !server.trim() || !token.trim()} onClick={onEnable}>
-                  {spinOn && <Loader2 className="w-4 h-4 animate-spin" />}Włącz
+                  {spinOn && <Loader2 className="size-4 animate-spin" />}Włącz
                 </Button>
               )}
             </div>
@@ -144,7 +144,7 @@ function WebPushSettings() {
               {prefs.enabled && (
                 <Button type="button" size="sm" variant="outline" className="pressable gap-1.5" disabled={busy !== null}
                   onClick={() => void run("test", sendTestPush, "Wysłano próbne powiadomienie")}>
-                  {busy === "test" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BellRing className="w-3.5 h-3.5" />}Wyślij próbne
+                  {busy === "test" ? <Loader2 className="size-3.5 animate-spin" /> : <BellRing className="size-3.5" />}Wyślij próbne
                 </Button>
               )}
             </div>
@@ -216,7 +216,7 @@ function NativeAlarmSettings() {
           {alarms.enabled && (
             <Button type="button" size="sm" variant="outline" className="pressable gap-1.5" disabled={busy}
               onClick={() => void run((m) => m.scheduleTestAlarm(), "Próbny alarm przyjdzie za minutę — możesz zamknąć aplikację")}>
-              <BellRing className="w-3.5 h-3.5" />Próbny alarm za minutę
+              <BellRing className="size-3.5" />Próbny alarm za minutę
             </Button>
           )}
         </div>

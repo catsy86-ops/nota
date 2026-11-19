@@ -37,7 +37,7 @@ export function AliasPicker({ title, aliases, onSave }: AliasPickerProps) {
           title="Aliasy"
           aria-label="Aliasy"
         >
-          <Link2 className="w-4 h-4" />
+          <Link2 className="size-4" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>

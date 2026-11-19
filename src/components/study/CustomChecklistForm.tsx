@@ -77,7 +77,7 @@ export function CustomChecklistSection() {
             {error && <p id="custom-item-error" role="alert" className="mt-1 text-xs text-destructive-ink">{error}</p>}
           </div>
           <Button type="submit" variant="outline" className="coarse:h-11">
-            <Plus className="mr-1.5 h-4 w-4" aria-hidden />Dodaj punkt
+            <Plus className="mr-1.5 size-4" aria-hidden />Dodaj punkt
           </Button>
         </form>
 
@@ -101,7 +101,7 @@ export function CustomChecklistSection() {
                     onClick={() => deleteCustom(e, e.text)}
                     className="coarse:h-11"
                   >
-                    <Trash2 className="h-4 w-4" aria-hidden />
+                    <Trash2 className="size-4" aria-hidden />
                   </Button>
                 </li>
               );

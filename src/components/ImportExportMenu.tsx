@@ -28,15 +28,15 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="w-60">
         <DropdownMenuItem onClick={run(() => { void loadExport().then((m) => m.exportToJSON(all())).then(markBackup); })}>
-          <FileBraces className="w-4 h-4 mr-2" />
+          <FileBraces className="size-4 mr-2" />
           Eksportuj jako JSON
         </DropdownMenuItem>
         <DropdownMenuItem onClick={run(() => { import("@/lib/exportPdf").then((m) => m.exportToPDF(all())); })}>
-          <FileText className="w-4 h-4 mr-2" />
+          <FileText className="size-4 mr-2" />
           Eksportuj jako PDF
         </DropdownMenuItem>
         <DropdownMenuItem onClick={run(() => { void loadExport().then((m) => m.exportToMarkdown(all(), propDefs)); })}>
-          <FileText className="w-4 h-4 mr-2" />
+          <FileText className="size-4 mr-2" />
           Eksportuj jako Markdown
         </DropdownMenuItem>
         <DropdownMenuItem onClick={run(() => {
@@ -45,20 +45,20 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
             description: zip.skippedPrivate ? `Pominięto ${zip.skippedPrivate} prywatnych — ich treść jest zaszyfrowana.` : "Foldery jako katalogi; bez obrazów i załączników.",
           });
         })}>
-          <FileText className="w-4 h-4 mr-2" />
+          <FileText className="size-4 mr-2" />
           Eksportuj jako ZIP z plikami .md
         </DropdownMenuItem>
         <DropdownMenuItem onClick={run(() => { void loadExport().then((m) => m.exportToHTML(all())); })}>
-          <FileText className="w-4 h-4 mr-2" />
+          <FileText className="size-4 mr-2" />
           Eksportuj jako HTML
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={run(onImport)}>
-          <Upload className="w-4 h-4 mr-2" />
+          <Upload className="size-4 mr-2" />
           Importuj z JSON
         </DropdownMenuItem>
         <DropdownMenuItem onClick={run(() => window.dispatchEvent(new Event(OPEN_EXTERNAL_IMPORT_EVENT)))}>
-          <NotebookPen className="w-4 h-4 mr-2" />
+          <NotebookPen className="size-4 mr-2" />
           Z Google Keep / Markdown
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -109,9 +109,9 @@ export function SidebarRowMenu({ label, children, onCloseAutoFocus }: {
           type="button"
           aria-label={`Akcje ${label}`}
           onClick={(e) => e.stopPropagation()}
-          className="pressable relative grid h-7 w-7 coarse:h-9 coarse:w-9 place-items-center rounded-control coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-foreground/10"
+          className="pressable relative grid size-7 coarse:h-9 coarse:w-9 place-items-center rounded-control coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-foreground/10"
         >
-          <Ellipsis className="h-4 w-4" />
+          <Ellipsis className="size-4" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48" onCloseAutoFocus={onCloseAutoFocus}>

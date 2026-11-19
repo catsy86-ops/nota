@@ -62,17 +62,17 @@ function RecordingBar({ since, onStop, onTranscript }: { since: number; onStop: 
   }, []);
   return (
     <div role="status" data-testid="voice-recording" className="flex items-center gap-2 rounded-field border border-destructive/40 px-2.5 py-1.5 text-xs">
-      <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-destructive" aria-hidden />
+      <span className="size-2 shrink-0 animate-pulse rounded-full bg-destructive" aria-hidden />
       <span className="flex-1 font-mono tabular-nums">Nagrywanie {clock(Math.max(0, now - since))} / 3:00</span>
       {live.available && (
         <button type="button" onClick={live.toggle} aria-pressed={live.on} data-testid="voice-live-text"
           title="Rozpoznaje mowę podczas nagrania i dopisuje tekst do wpisu"
           className={`pressable inline-flex items-center gap-1 rounded-control px-2 py-1 coarse:min-h-11 ${live.on ? "bg-primary/10 font-medium text-primary-ink" : "text-muted-foreground hover:bg-muted"}`}>
-          <Captions className="h-3.5 w-3.5" aria-hidden />Tekst na żywo
+          <Captions className="size-3.5" aria-hidden />Tekst na żywo
         </button>
       )}
       <button type="button" onClick={onStop} className="pressable inline-flex items-center gap-1 rounded-control px-2 py-1 font-medium text-destructive-ink hover:bg-destructive/10 coarse:min-h-11">
-        <Square className="h-3 w-3 fill-current" aria-hidden /> Zatrzymaj
+        <Square className="size-3 fill-current" aria-hidden /> Zatrzymaj
       </button>
     </div>
   );

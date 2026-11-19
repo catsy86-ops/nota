@@ -72,7 +72,7 @@ export function JobsDialog({ open, onOpenChange, jobs, dir, onOpen, onNew }: {
                 <li key={r.id}>
                   <button type="button" onClick={() => onOpen(r.id)}
                     className="pressable flex w-full items-center gap-2 rounded-field border border-border px-3 py-2 text-left hover:bg-muted coarse:min-h-11">
-                    <Wrench className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                    <Wrench className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">{r.site!.name}</span>
                       <span className="block truncate text-xs text-muted-foreground">
@@ -92,7 +92,7 @@ export function JobsDialog({ open, onOpenChange, jobs, dir, onOpen, onNew }: {
             })}
           </ul>
         )}
-        <Button type="button" variant="outline" onClick={onNew} className="coarse:h-11"><Plus className="h-4 w-4" aria-hidden />Nowe zlecenie</Button>
+        <Button type="button" variant="outline" onClick={onNew} className="coarse:h-11"><Plus className="size-4" aria-hidden />Nowe zlecenie</Button>
       </DialogContent>
     </Dialog>
   );

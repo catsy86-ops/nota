@@ -62,14 +62,14 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
           className="pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-elevation-3 px-3 py-2 *:shrink-0 max-sm:flex-wrap max-sm:justify-center max-sm:overflow-visible max-sm:px-2"
         >
           <IconButton onClick={onClear} title="Wyczyść zaznaczenie" aria-label="Wyczyść zaznaczenie">
-            <X className="w-4 h-4" />
+            <X className="size-4" />
           </IconButton>
           <span className="text-sm font-medium px-2 select-none">
             {count} <span className="text-muted-foreground max-sm:sr-only">zaznaczono</span>
           </span>
           <div className="w-px h-5 bg-border mx-1 max-sm:hidden" />
           <button onClick={onSelectAll} className="pressable text-xs font-medium px-2 py-1 coarse:py-2 rounded-field text-muted-foreground hover:bg-muted hover:text-foreground" title="Zaznacz wszystko">
-            <SquareCheckBig className="w-3.5 h-3.5 inline mr-1" />
+            <SquareCheckBig className="size-3.5 inline mr-1" />
             <span className="max-sm:sr-only">Wszystko </span>({totalVisible})
           </button>
           <div className="w-px h-5 bg-border mx-1 max-sm:hidden" />
@@ -77,7 +77,7 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
             <Popover>
               <PopoverTrigger asChild>
                 <IconButton title="Zmień kolor" aria-label="Zmień kolor">
-                  <Palette className="w-4 h-4" />
+                  <Palette className="size-4" />
                 </IconButton>
               </PopoverTrigger>
               <PopoverContent side="top" className="w-auto p-2">
@@ -87,30 +87,30 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
           )}
           {!inTrash && !inArchive && onFavorite && (
             <IconButton onClick={onFavorite} title="Ulubione: dodaj albo zdejmij zaznaczone" aria-label="Ulubione zaznaczone">
-              <Star className="w-4 h-4" />
+              <Star className="size-4" />
             </IconButton>
           )}
           {!inTrash && !inArchive && onPriority && <PriorityPicker priority="none" onSet={onPriority} />}
           {onExportHtml && (
             <IconButton onClick={onExportHtml} title="Eksport zaznaczonych do HTML" aria-label="Eksport zaznaczonych do HTML">
-              <FileText className="w-4 h-4" />
+              <FileText className="size-4" />
             </IconButton>
           )}
           {onExportPdf && (
             <IconButton onClick={onExportPdf} title="Eksport zaznaczonych do PDF" aria-label="Eksport zaznaczonych do PDF">
-              <FileDown className="w-4 h-4" />
+              <FileDown className="size-4" />
             </IconButton>
           )}
           {!inTrash && !inArchive && onPin && (
             <IconButton onClick={onPin} title="Przypnij / odepnij zaznaczone" aria-label="Przypnij zaznaczone">
-              <Pin className="w-4 h-4" />
+              <Pin className="size-4" />
             </IconButton>
           )}
           {!inTrash && !inArchive && onMoveToFolder && (
             <Popover>
               <PopoverTrigger asChild>
                 <IconButton title="Przenieś do folderu" aria-label="Przenieś do folderu">
-                  <FolderInput className="w-4 h-4" />
+                  <FolderInput className="size-4" />
                 </IconButton>
               </PopoverTrigger>
               <PopoverContent side="top" className="w-56 p-1 max-h-64 overflow-y-auto">
@@ -129,7 +129,7 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
             <Popover>
               <PopoverTrigger asChild>
                 <IconButton title="Dodaj etykietę" aria-label="Dodaj etykietę">
-                  <Tag className="w-4 h-4" />
+                  <Tag className="size-4" />
                 </IconButton>
               </PopoverTrigger>
               <PopoverContent side="top" className="w-56 p-1">
@@ -157,31 +157,31 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
           )}
           {!inTrash && !inArchive && onMerge && (
             <IconButton onClick={onMerge} title="Scal zaznaczone w jedną notatkę" aria-label="Scal zaznaczone w jedną notatkę">
-              <Combine className="w-4 h-4" />
+              <Combine className="size-4" />
             </IconButton>
           )}
           {(inTrash || inArchive) && onRestore && (
             <IconButton onClick={onRestore} title={inTrash ? "Przywróć z kosza" : "Przywróć z archiwum"} aria-label={inTrash ? "Przywróć z kosza" : "Przywróć z archiwum"}>
-              {inTrash ? <Undo2 className="w-4 h-4" /> : <ArchiveRestore className="w-4 h-4" />}
+              {inTrash ? <Undo2 className="size-4" /> : <ArchiveRestore className="size-4" />}
             </IconButton>
           )}
           {onExport && (
             <IconButton onClick={onExport} title="Eksportuj zaznaczone (ZIP z plikami .md)" aria-label="Eksportuj zaznaczone">
-              <Download className="w-4 h-4" />
+              <Download className="size-4" />
             </IconButton>
           )}
           {!inTrash && !inArchive && (
             <IconButton onClick={onArchive} title="Archiwizuj" aria-label="Archiwizuj">
-              <Archive className="w-4 h-4" />
+              <Archive className="size-4" />
             </IconButton>
           )}
           {inTrash ? (
             <IconButton tone="destructive" onClick={onDeleteForever} title="Usuń trwale" aria-label="Usuń trwale">
-              <Trash className="w-4 h-4" />
+              <Trash className="size-4" />
             </IconButton>
           ) : (
             <IconButton tone="destructive" onClick={onTrash} title="Przenieś do kosza" aria-label="Przenieś do kosza">
-              <Trash className="w-4 h-4" />
+              <Trash className="size-4" />
             </IconButton>
           )}
         </motion.div>

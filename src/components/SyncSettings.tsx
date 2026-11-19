@@ -189,11 +189,11 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
       <div className="flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
         <div className="flex items-start gap-3 min-w-0">
           {syncState.status === "rekeyed" ? (
-            <WifiOff className="w-5 h-5 text-warning-ink shrink-0 mt-0.5" />
+            <WifiOff className="size-5 text-warning-ink shrink-0 mt-0.5" />
           ) : syncState.status !== "disabled" ? (
-            <Wifi className="w-5 h-5 text-primary-ink shrink-0 mt-0.5" />
+            <Wifi className="size-5 text-primary-ink shrink-0 mt-0.5" />
           ) : (
-            <WifiOff className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+            <WifiOff className="size-5 text-muted-foreground shrink-0 mt-0.5" />
           )}
           <div className="min-w-0">
             <p className="text-sm font-semibold">Synchronizacja między urządzeniami</p>
@@ -238,7 +238,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
           <ul className="space-y-1 text-sm" aria-label="Połączone urządzenia">
             {syncState.devices.map((d) => (
               <li key={d.id} className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-success shrink-0" aria-hidden="true" />
+                <span className="size-2 rounded-full bg-success shrink-0" aria-hidden="true" />
                 {d.name}
                 {d.version && <span className="text-xs text-muted-foreground">· wersja {d.version}</span>}
               </li>
@@ -253,7 +253,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
             <ul className="mt-1 space-y-1 text-sm" aria-label="Ostatnio widziane urządzenia">
               {offline.slice(0, 6).map((d) => (
                 <li key={d.name} className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-muted-foreground/40 shrink-0" aria-hidden="true" />
+                  <span className="size-2 rounded-full bg-muted-foreground/40 shrink-0" aria-hidden="true" />
                   {d.name}
                   <span className="text-xs text-muted-foreground">· {formatDistanceToNow(d.at, { addSuffix: true, locale: pl })}</span>
                 </li>
@@ -289,7 +289,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
           <div className="flex items-center justify-center gap-2">
             <GroupedCode code={syncState.code} />
             <Button type="button" size="sm" variant="ghost" onClick={handleCopy} aria-label="Kopiuj kod" className="h-7 px-2 coarse:h-11 coarse:px-3">
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
             </Button>
           </div>
           <div className="flex flex-wrap justify-center gap-x-2">
@@ -299,7 +299,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
               </Button>
             )}
             <Button type="button" variant="ghost" size="sm" onClick={() => setForgetOpen(true)} className="text-muted-foreground hover:text-destructive-ink gap-1.5 coarse:h-11">
-              <LogOut className="w-3.5 h-3.5" /> Odłącz to urządzenie
+              <LogOut className="size-3.5" /> Odłącz to urządzenie
             </Button>
           </div>
           <AlertDialog open={shortOpen} onOpenChange={setShortOpen}>

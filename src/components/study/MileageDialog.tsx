@@ -149,12 +149,12 @@ export function MileageDialog({ open, onOpenChange, dir }: {
 
         <section aria-label="Zestawienie miesiąca" className="space-y-2 border-t border-dashed border-border pt-2.5">
           <div className="flex items-center justify-between gap-2">
-            <button type="button" onClick={() => shiftMonth(-1)} aria-label="Poprzedni miesiąc" className="pressable grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
-              <ChevronLeft className="h-4 w-4" aria-hidden />
+            <button type="button" onClick={() => shiftMonth(-1)} aria-label="Poprzedni miesiąc" className="pressable grid size-8 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
+              <ChevronLeft className="size-4" aria-hidden />
             </button>
             <h3 className="text-sm font-semibold capitalize" aria-live="polite">{monthLabel(view.y, view.m)}</h3>
-            <button type="button" onClick={() => shiftMonth(1)} aria-label="Następny miesiąc" className="pressable grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
-              <ChevronRight className="h-4 w-4" aria-hidden />
+            <button type="button" onClick={() => shiftMonth(1)} aria-label="Następny miesiąc" className="pressable grid size-8 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
+              <ChevronRight className="size-4" aria-hidden />
             </button>
           </div>
 
@@ -170,8 +170,8 @@ export function MileageDialog({ open, onOpenChange, dir }: {
                   </span>
                   <span className="shrink-0 text-right font-mono tabular-nums">{num(e.distance)} km<span className="block text-2xs text-muted-foreground">{money(mileageCost(e.distance, e.rate))}</span></span>
                   <button type="button" onClick={() => remove(e)} aria-label={`Usuń przejazd ${num(e.distance)} km z ${dayLabel(e.date)}`}
-                    className="pressable -mr-1 grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
-                    <X className="h-4 w-4" aria-hidden />
+                    className="pressable -mr-1 grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
+                    <X className="size-4" aria-hidden />
                   </button>
                 </li>
               ))}
@@ -183,7 +183,7 @@ export function MileageDialog({ open, onOpenChange, dir }: {
             <span className="border-b-[3px] border-double border-primary pb-0.5 font-mono text-base font-bold tabular-nums">{num(totals.km)} km · {money(totals.cost)}</span>
           </p>
           <Button type="button" variant="outline" size="sm" onClick={csv} disabled={entries.length === 0} className="w-full coarse:h-11">
-            <FileSpreadsheet className="h-4 w-4" aria-hidden />Pobierz CSV
+            <FileSpreadsheet className="size-4" aria-hidden />Pobierz CSV
           </Button>
         </section>
       </DialogContent>

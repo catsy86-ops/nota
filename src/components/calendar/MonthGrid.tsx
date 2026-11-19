@@ -15,7 +15,7 @@ import { weekdayHeadClass } from "./dayCellStyles";
 /**
  * Siatka miesiąca — własna, nie `react-day-picker`.
  *
- * Komórka day-pickera to sztywny `h-9 w-9` `<button>`, więc chipy z terminami
+ * Komórka day-pickera to sztywny `size-9` `<button>`, więc chipy z terminami
  * byłyby klikalnymi elementami wewnątrz przycisku: niepoprawny HTML i zepsuta
  * obsługa klawiaturą. Własna siatka daje też miejsce na `useDroppable`
  * w etapie przeciągania terminów. `ui/calendar.tsx` zostaje nietknięte i

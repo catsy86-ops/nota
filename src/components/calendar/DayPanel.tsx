@@ -78,7 +78,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
   }
   const emptyHint = (
     <p className="text-sm text-muted-foreground flex items-center gap-2">
-      <CalendarPlus className="w-4 h-4 shrink-0 text-faint" />
+      <CalendarPlus className="size-4 shrink-0 text-faint" />
       Brak terminów tego dnia.
     </p>
   );
@@ -92,7 +92,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
           onClick={onAdd}
           className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="size-3.5" />
           Dodaj termin
         </button>
       </div>
@@ -100,18 +100,18 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
       {/* Ten sam przełącznik segmentowy co reszta trybów widoku (nowy plan 2.2). */}
       <ToggleGroup value={view} onValueChange={(v) => setView(v as DayView)} aria-label="Widok terminów dnia" className="mb-3 inline-grid">
         <ToggleGroupItem value="list" className="inline-flex items-center justify-center gap-1 px-3">
-          <List className="w-3.5 h-3.5" aria-hidden />
+          <List className="size-3.5" aria-hidden />
           Lista
         </ToggleGroupItem>
         <ToggleGroupItem value="axis" className="inline-flex items-center justify-center gap-1 px-3">
-          <Clock className="w-3.5 h-3.5" aria-hidden />
+          <Clock className="size-3.5" aria-hidden />
           Oś godzin
         </ToggleGroupItem>
       </ToggleGroup>
 
       {studySummary(study) && (
         <p className="flex items-center gap-2 text-sm mb-3">
-          <HardHat className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden />
+          <HardHat className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           <span>{studySummary(study)}</span>
         </p>
       )}
@@ -136,7 +136,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
               title="Zmień rodzaj zmiany i godziny tego dnia (Z)"
               className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Clock className="w-3.5 h-3.5" aria-hidden />
+              <Clock className="size-3.5" aria-hidden />
               Zmień godziny
             </button>
           )}
@@ -151,7 +151,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
             title="Wpisz zmianę z Grafiku w tym dniu (Z)"
             className="inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Clock className="w-3.5 h-3.5" aria-hidden />
+            <Clock className="size-3.5" aria-hidden />
             Dodaj zmianę
           </button>
           {onCopyPrevShift && (
@@ -160,7 +160,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
               onClick={onCopyPrevShift}
               className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Copy className="w-3.5 h-3.5" aria-hidden />
+              <Copy className="size-3.5" aria-hidden />
               Jak poprzedni dzień
             </button>
           )}
@@ -199,7 +199,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
                       className="group w-full flex items-center gap-2 rounded-field hover:bg-muted/60 transition-colors p-1 -m-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
-                      <ArrowRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
+                      <ArrowRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
                     </button>
                     <p className="text-2xs text-muted-foreground pl-2 mt-0.5">
                       Prognoza serii — zapisany jest tylko najbliższy termin.
@@ -220,7 +220,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
                     className="group w-full flex items-center gap-2 rounded-field hover:bg-muted/60 transition-colors p-1 -m-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
-                    <Pencil className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
+                    <Pencil className="size-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
                   </button>
                   {onOpenNote && (
                     <button
@@ -229,7 +229,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
                       title="Otwórz notatkę"
                       className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <StickyNote className="w-3.5 h-3.5" aria-hidden />
+                      <StickyNote className="size-3.5" aria-hidden />
                     </button>
                   )}
                   <button
@@ -238,7 +238,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
                     title="Pobierz .ics — dodaj do kalendarza Google, Apple lub Outlook"
                     className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <Download className="w-3.5 h-3.5" />
+                    <Download className="size-3.5" />
                   </button>
                   {/* Pominięcie bez wchodzenia w edycję — w wierszu serii, a nie tylko w dialogu (2b planu). */}
                   {onSkip && occ.repeat.kind !== "none" && (
@@ -248,7 +248,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
                       title="Pomiń to wystąpienie — seria przesunie się na następne"
                       className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <SkipForward className="w-3.5 h-3.5" />
+                      <SkipForward className="size-3.5" />
                     </button>
                   )}
                   {/* Akcje tylko przy aktualnym terminie notatki — odłożenie zawsze dotyczy `note.reminder`. */}

@@ -51,7 +51,7 @@ export function SiteTimePanel({ site, today, monthLabel, monthDays }: {
 
   return (
     <section aria-label="Czas na budowie" data-testid="site-time" className="space-y-2.5 rounded-card border border-border/60 bg-card p-3">
-      <h3 className="flex items-center gap-1.5 text-sm font-semibold"><Clock className="h-4 w-4" aria-hidden />Czas na budowie</h3>
+      <h3 className="flex items-center gap-1.5 text-sm font-semibold"><Clock className="size-4" aria-hidden />Czas na budowie</h3>
       {live !== null && record?.at && (
         <p className="text-sm" aria-live="polite">
           Na budowie od <span className="font-mono tabular-nums">{new Date(record.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}</span>
@@ -71,7 +71,7 @@ export function SiteTimePanel({ site, today, monthLabel, monthDays }: {
         </p>
       </div>
       <Button type="button" variant="outline" size="sm" onClick={csv} disabled={monthDays.length === 0} className="coarse:h-11">
-        <FileSpreadsheet className="mr-1.5 h-4 w-4" aria-hidden />CSV miesiąca
+        <FileSpreadsheet className="mr-1.5 size-4" aria-hidden />CSV miesiąca
       </Button>
     </section>
   );

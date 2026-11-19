@@ -85,7 +85,7 @@ export function AppHeader({
                 aria-label={sidebarOpen ? "Schowaj panel" : "Pokaż panel"}
                 aria-pressed={sidebarOpen}
               >
-                {sidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
+                {sidebarOpen ? <PanelLeftClose className="size-5" /> : <PanelLeftOpen className="size-5" />}
               </IconButton>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-xs">
@@ -101,7 +101,7 @@ export function AppHeader({
               className={view === "notes" ? undefined : "flex sm:block max-[359px]:hidden"}
             >
               <span className="logo-intro flex items-center gap-1">
-                <NMonogramLogo className="w-6 h-6" />
+                <NMonogramLogo className="size-6" />
                 {view === "notes" ? <NotkiLogo size="sm" /> : <span className="max-sm:hidden"><NotkiLogo size="sm" /></span>}
               </span>
             </motion.div>
@@ -113,13 +113,13 @@ export function AppHeader({
             <p aria-hidden className="app-title truncate text-lg font-display leading-tight tracking-tight text-foreground opacity-0 transition-opacity duration-base in-data-head-out:opacity-100 motion-reduce:transition-none">
               {view === "folder" && (
                 <span className="flex items-center gap-1.5">
-                  <FolderOpen className="w-4 h-4 text-primary-ink" />
+                  <FolderOpen className="size-4 text-primary-ink" />
                   {folders.find((f) => f.id === activeFolder)?.name || "Folder"}
                 </span>
               )}
               {view === "label" && (
                 <span className="flex items-center gap-1.5">
-                  <Tag className="w-4 h-4 text-primary-ink" />
+                  <Tag className="size-4 text-primary-ink" />
                   {activeLabel}
                 </span>
               )}
@@ -135,7 +135,7 @@ export function AppHeader({
         {!viewSearches && onOpenPalette && (
           <button type="button" onClick={onOpenPalette} aria-keyshortcuts="Control+K"
             className="hidden sm:flex w-full max-w-md items-center gap-2 rounded-card border border-border bg-muted/60 py-2.5 pl-3 pr-2 text-sm text-muted-foreground transition-colors duration-fast hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-            <Search className="h-4 w-4" aria-hidden />
+            <Search className="size-4" aria-hidden />
             <span className="flex-1 truncate text-left">Szukaj i polecenia…</span>
             <kbd className="rounded-field border border-border bg-background px-1.5 py-0.5 font-mono text-2xs">Ctrl+K</kbd>
           </button>
@@ -146,7 +146,7 @@ export function AppHeader({
           {!viewSearches && onOpenPalette && (
             <IconButton asChild className="sm:hidden">
               <motion.button onClick={onOpenPalette} aria-label="Szukaj i polecenia">
-                <Search className="w-5 h-5" />
+                <Search className="size-5" />
               </motion.button>
             </IconButton>
           )}
@@ -172,7 +172,7 @@ export function AppHeader({
                     transition={tween.enter}
                     className="inline-flex"
                   >
-                    {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
                   </motion.span>
                 </AnimatePresence>
               </motion.button>
@@ -184,7 +184,7 @@ export function AppHeader({
           <VaultStatusButton />
           <ImportExportMenu onImport={onImport}>
             <IconButton aria-label="Import / Eksport" title="Import / Eksport" className="hidden sm:inline-flex">
-              <FileDown className="w-5 h-5" />
+              <FileDown className="size-5" />
             </IconButton>
           </ImportExportMenu>
 

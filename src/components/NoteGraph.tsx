@@ -258,13 +258,13 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
       {phone && (
         <div className="mb-2 flex items-center gap-1.5" role="group" aria-label="Powiększenie grafu">
           <Button variant="outline" size="icon" className="coarse:h-11 coarse:w-11" onClick={() => setView((v) => zoomView(v, 1.5))} disabled={view.scale >= 3} aria-label="Przybliż graf">
-            <ZoomIn className="h-4 w-4" aria-hidden />
+            <ZoomIn className="size-4" aria-hidden />
           </Button>
           <Button variant="outline" size="icon" className="coarse:h-11 coarse:w-11" onClick={() => setView((v) => zoomView(v, 1 / 1.5))} disabled={view.scale <= 1} aria-label="Oddal graf">
-            <ZoomOut className="h-4 w-4" aria-hidden />
+            <ZoomOut className="size-4" aria-hidden />
           </Button>
           <Button variant="outline" size="icon" className="coarse:h-11 coarse:w-11" onClick={() => setView(GRAPH_VIEW_RESET)} disabled={view.scale === 1} aria-label="Cały graf">
-            <Maximize2 className="h-4 w-4" aria-hidden />
+            <Maximize2 className="size-4" aria-hidden />
           </Button>
           <span className="ml-1 text-xs tabular-nums text-muted-foreground" aria-hidden>{Math.round(view.scale * 100)}%</span>
         </div>

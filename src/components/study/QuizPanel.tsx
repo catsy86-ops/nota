@@ -233,7 +233,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
             <ul className="space-y-1.5">
               {result.missed.map((id) => (
                 <li key={id} className="flex items-center gap-2 text-sm">
-                  <X className="w-4 h-4 text-destructive-ink shrink-0" aria-hidden />
+                  <X className="size-4 text-destructive-ink shrink-0" aria-hidden />
                   {topicName(id)}
                 </li>
               ))}
@@ -243,7 +243,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           <p className="text-sm text-muted-foreground">Wszystkie tematy z tej rundy zaliczone.</p>
         )}
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => start(scope)}><RotateCcw className="w-4 h-4 mr-1.5" />Jeszcze raz</Button>
+          <Button onClick={() => start(scope)}><RotateCcw className="size-4 mr-1.5" />Jeszcze raz</Button>
           {scope.kind !== "all" && <Button variant="outline" onClick={() => { onScopeChange?.({ kind: "all" }); setRound(null); setResult(null); }}>Wróć do wszystkich</Button>}
           {scope.kind !== "due" && due.length > 0 && (
             <Button variant="outline" onClick={() => onScopeChange?.({ kind: "due" })}>Na dziś: {due.length}</Button>
@@ -377,8 +377,8 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
                 examMode && answered && isPicked && "border-primary bg-primary/10",
               )}
             >
-              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-control border border-border font-mono text-2xs text-muted-foreground">
-                {reveal && isCorrect ? <Check className="w-3.5 h-3.5 text-success-ink" role="img" aria-label="Poprawna" /> : reveal && isPicked ? <X className="w-3.5 h-3.5 text-destructive-ink" role="img" aria-label="Błędna" /> : LETTERS[i]}
+              <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-control border border-border font-mono text-2xs text-muted-foreground">
+                {reveal && isCorrect ? <Check className="size-3.5 text-success-ink" role="img" aria-label="Poprawna" /> : reveal && isPicked ? <X className="size-3.5 text-destructive-ink" role="img" aria-label="Błędna" /> : LETTERS[i]}
               </span>
               <span className="flex-1">{opt}</span>
             </button>
@@ -415,7 +415,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
         <div data-sticky-action className="phone:sticky phone:bottom-[calc(5.5rem+env(safe-area-inset-bottom))] phone:z-raised phone:-mx-5 phone:bg-card/95 phone:px-5 phone:py-2 phone:backdrop-blur-sm">
           <Button ref={nextBtnRef} onClick={next} className="phone:h-12 phone:w-full phone:text-base">
             {index < round.length - 1 ? "Dalej" : "Zobacz wynik"}
-            <ArrowRight className="w-4 h-4 ml-1.5" />
+            <ArrowRight className="size-4 ml-1.5" />
           </Button>
         </div>
       )}

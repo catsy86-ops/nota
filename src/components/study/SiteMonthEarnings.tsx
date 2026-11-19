@@ -151,7 +151,7 @@ export function SiteMonthEarnings({ monthKey, base }: {
         </p>
       )}
       <Button type="button" variant="outline" size="sm" onClick={csv} className="mt-2 w-full coarse:h-11" data-testid="month-csv">
-        <FileSpreadsheet className="h-4 w-4" aria-hidden />Pobierz zestawienie (CSV)
+        <FileSpreadsheet className="size-4" aria-hidden />Pobierz zestawienie (CSV)
       </Button>
     </details>
     {ownLine}

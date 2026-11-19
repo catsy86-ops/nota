@@ -37,10 +37,10 @@ export function OwnTopics({ topics, onPractice }: { topics: readonly CustomTopic
             <li key={t.id} className="flex items-center gap-2">
               <span className="min-w-0 flex-1 truncate text-sm">{t.title}</span>
               <Button variant="outline" size="sm" onClick={() => onPractice(t.id)} aria-label={`Ćwicz temat: ${t.title}`} className="coarse:min-h-11">
-                <BookOpen className="mr-1 h-4 w-4" aria-hidden />Ćwicz
+                <BookOpen className="mr-1 size-4" aria-hidden />Ćwicz
               </Button>
               <Button variant="ghost" size="sm" onClick={() => remove(t)} aria-label={`Usuń temat: ${t.title}`} className="coarse:min-h-11">
-                <Trash2 className="h-4 w-4" aria-hidden />
+                <Trash2 className="size-4" aria-hidden />
               </Button>
             </li>
           ))}

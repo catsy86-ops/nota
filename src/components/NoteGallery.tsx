@@ -22,7 +22,7 @@ function Cover({ note }: { note: Note }) {
   }
   return (
     <span className="flex size-full items-center justify-center bg-muted/50 text-muted-foreground" aria-hidden>
-      {note.icon ? <span className="text-3xl">{note.icon}</span> : <ImageOff className="h-6 w-6 opacity-50" />}
+      {note.icon ? <span className="text-3xl">{note.icon}</span> : <ImageOff className="size-6 opacity-50" />}
     </span>
   );
 }
@@ -68,7 +68,7 @@ export function NoteGallery({ notes, onOpen, selectedIds, propDefs = [] }: NoteG
               <div className="aspect-4/3 w-full overflow-hidden bg-muted/30"><Cover note={n} /></div>
               <div className="min-w-0 space-y-0.5 p-2.5">
                 <p className="flex items-center gap-1 text-sm font-medium">
-                  {n.pinned && <Pin className="h-3 w-3 shrink-0 text-primary-ink" aria-label="Przypięta" />}
+                  {n.pinned && <Pin className="size-3 shrink-0 text-primary-ink" aria-label="Przypięta" />}
                   <span className="truncate">{noteLabel(n)}</span>
                 </p>
                 {fields.map(([name, text]) => (

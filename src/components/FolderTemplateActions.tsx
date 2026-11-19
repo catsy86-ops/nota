@@ -28,7 +28,7 @@ export function FolderTemplateActions({ folder, onSetTemplate, onCreate }: {
     <PageActions>
       {current && (
         <Button size="sm" onClick={() => onCreate(current)} className="gap-1.5 coarse:h-11" data-testid="folder-template-new">
-          <FilePlus2 className="h-4 w-4" aria-hidden />Nowa: {current.label}
+          <FilePlus2 className="size-4" aria-hidden />Nowa: {current.label}
         </Button>
       )}
       <DropdownMenu>
@@ -36,7 +36,7 @@ export function FolderTemplateActions({ folder, onSetTemplate, onCreate }: {
           <Button size="sm" variant="outline" className="gap-1 coarse:h-11" aria-label={`Domyślny szablon folderu: ${current?.label ?? "brak"}`}>
             {current ? <span aria-hidden>{current.emoji}</span> : null}
             {current ? "Szablon" : "Domyślny szablon"}
-            <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+            <ChevronDown className="size-3.5" aria-hidden />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-60">

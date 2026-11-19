@@ -24,7 +24,7 @@ export function ShareNote({ note }: ShareNoteProps) {
             aria-label="Udostępnij"
             className="pressable p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="size-4" />
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">Udostępnij</TooltipContent>

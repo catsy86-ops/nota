@@ -139,7 +139,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply, ove
                     </span>
                   </button>
                   <Button type="button" variant="ghost" size="icon" aria-label={`Usuń cykl ${p.name}`} onClick={() => { deletePattern(p.id); toastWithUndo(`Usunięto cykl „${p.name}”`, () => savePattern(p)); }}>
-                    <Trash className="w-4 h-4" />
+                    <Trash className="size-4" />
                   </Button>
                 </li>
               ))}
@@ -154,7 +154,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply, ove
             {steps.map((s, i) => {
               const t = s ? typesById.get(s) : undefined;
               return (
-                <span key={i} className={cn("w-7 h-7 rounded-field flex items-center justify-center text-xs font-bold font-display", !t && "border border-dashed border-border text-muted-foreground")}
+                <span key={i} className={cn("size-7 rounded-field flex items-center justify-center text-xs font-bold font-display", !t && "border border-dashed border-border text-muted-foreground")}
                   style={t ? { backgroundColor: t.color, color: shiftInk(t.color) } : undefined}>
                   {t?.short ?? "–"}
                 </span>
@@ -175,7 +175,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply, ove
             </button>
             <button type="button" onClick={() => setSteps((s) => s.slice(0, -1))} disabled={!steps.length} aria-label="Usuń ostatni dzień cyklu"
               className="pressable h-9 coarse:h-11 px-3 rounded-card text-muted-foreground hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-              <Delete className="w-4 h-4" />
+              <Delete className="size-4" />
             </button>
           </div>
         </fieldset>

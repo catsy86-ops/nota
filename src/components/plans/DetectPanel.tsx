@@ -39,13 +39,13 @@ export function DetectSection({ picking, onPick, color, tolerance, onTolerance, 
 }) {
   return (
     <section className={sectionCls} aria-label="Propozycje tras" data-testid="plan-detect">
-      <h3 className={cn(h3, "flex items-center gap-1.5")}><Sparkles className="h-3.5 w-3.5" aria-hidden />Propozycje tras <span className="rounded-full bg-muted px-1.5 py-0.5 text-2xs normal-case tracking-normal">eksperymentalne</span></h3>
+      <h3 className={cn(h3, "flex items-center gap-1.5")}><Sparkles className="size-3.5" aria-hidden />Propozycje tras <span className="rounded-full bg-muted px-1.5 py-0.5 text-2xs normal-case tracking-normal">eksperymentalne</span></h3>
       <p className="ui-hint">Wskaż pipetą kolor rury — program znajdzie linie w tym kolorze, inne pominie.</p>
       <div className="flex items-center gap-2">
         <Button type="button" variant={picking ? "default" : "outline"} onClick={() => onPick(!picking)} aria-pressed={picking} className="pressable flex-1 coarse:h-11">
-          <Pipette className="mr-1.5 h-4 w-4" aria-hidden />{picking ? "Stuknij rurę na planie" : color ? "Zmień kolor" : "Wskaż kolor rury"}
+          <Pipette className="mr-1.5 size-4" aria-hidden />{picking ? "Stuknij rurę na planie" : color ? "Zmień kolor" : "Wskaż kolor rury"}
         </Button>
-        {color && <span className="h-9 w-9 shrink-0 rounded-control border border-border" style={{ backgroundColor: color }} title={color} data-testid="plan-detect-color" />}
+        {color && <span className="size-9 shrink-0 rounded-control border border-border" style={{ backgroundColor: color }} title={color} data-testid="plan-detect-color" />}
       </div>
       {color && (
         <>
@@ -59,7 +59,7 @@ export function DetectSection({ picking, onPick, color, tolerance, onTolerance, 
           </label>
           {run.state === "running" ? (
             <div className="grid grid-cols-[1fr_auto] gap-2" role="status" aria-live="polite">
-              <p className="flex items-center gap-2 text-sm"><LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />Szukam tras…</p>
+              <p className="flex items-center gap-2 text-sm"><LoaderCircle className="size-4 animate-spin" aria-hidden />Szukam tras…</p>
               <Button type="button" variant="outline" onClick={onCancel} className="pressable coarse:h-11">Anuluj</Button>
             </div>
           ) : (
@@ -83,12 +83,12 @@ export function DetectSection({ picking, onPick, color, tolerance, onTolerance, 
                   <span className="text-xs text-muted-foreground"> · pewność {pct(p.confidence)}</span>
                 </span>
                 <button type="button" onClick={() => onAdd(p)} aria-label={`Dodaj propozycję ${i + 1}`}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
-                  <Plus className="h-4 w-4" aria-hidden />
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                  <Plus className="size-4" aria-hidden />
                 </button>
                 <button type="button" onClick={() => onReject(p.id)} aria-label={`Odrzuć propozycję ${i + 1}`}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
-                  <X className="h-4 w-4" aria-hidden />
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                  <X className="size-4" aria-hidden />
                 </button>
               </li>
             ))}

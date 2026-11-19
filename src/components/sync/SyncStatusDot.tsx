@@ -31,7 +31,7 @@ export function SyncStatusDot({ onOpenSync }: { onOpenSync: () => void }) {
 
   return (
     <button type="button" onClick={onOpenSync} aria-label={label} title={label} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-      <span className={cn("h-2.5 w-2.5 rounded-full", color)} aria-hidden />
+      <span className={cn("size-2.5 rounded-full", color)} aria-hidden />
     </button>
   );
 }

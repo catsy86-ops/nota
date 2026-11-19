@@ -47,10 +47,10 @@ export function MaterialsPanel({ plan, highlight, onHighlight }: { plan: PlanDat
           <p className="rounded-control bg-muted/60 p-2 text-xs" role="note">Plan bez skali — rury są w pikselach, nie w metrach. Ustaw skalę (narzędzie „Skala”), żeby policzyć metry.</p>
         )}
         <div className="grid grid-cols-2 gap-2">
-          <Button type="button" variant="outline" onClick={exportCsv} className="pressable coarse:h-11"><Download className="mr-1.5 h-4 w-4" aria-hidden />CSV</Button>
+          <Button type="button" variant="outline" onClick={exportCsv} className="pressable coarse:h-11"><Download className="mr-1.5 size-4" aria-hidden />CSV</Button>
           <Button type="button" variant="outline" onClick={() => setSending(true)} disabled={certain.length === 0} className="pressable coarse:h-11"
             title={certain.length ? "Pewne pozycje jako braki wybranej budowy" : "Brak pewnych pozycji: zatwierdź trasy i ustaw skalę"}>
-            <Send className="mr-1.5 h-4 w-4" aria-hidden />Do braków
+            <Send className="mr-1.5 size-4" aria-hidden />Do braków
           </Button>
         </div>
       </section>
@@ -62,7 +62,7 @@ export function MaterialsPanel({ plan, highlight, onHighlight }: { plan: PlanDat
             {summary.pipes[status].map((r) => (
               <li key={r.key}>
                 <button type="button" aria-pressed={highlight === r.key} onClick={() => onHighlight(highlight === r.key ? null : r.key, r.routeIds)} className={cn(rowBtn, highlight === r.key && "bg-primary/10")}>
-                  <span aria-hidden className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: SYSTEM_META[r.system].color }} />
+                  <span aria-hidden className="size-3 shrink-0 rounded-full" style={{ backgroundColor: SYSTEM_META[r.system].color }} />
                   <span className="min-w-0 flex-1 truncate">{pipeLabel(r)}<span className="text-xs text-muted-foreground"> · {r.routeIds.length} {pluralPl(r.routeIds.length, ["trasa", "trasy", "tras"])}</span></span>
                   <span className="font-mono text-sm tabular-nums">{r.meters === null ? `${Math.round(r.pixels)} px` : `${metersText(r.meters)} m`}</span>
                 </button>
@@ -124,8 +124,8 @@ function ManualItems({ pid, items }: { pid: string; items: readonly MaterialItem
               <span className="min-w-0 flex-1 truncate">{i.description}</span>
               <span className="font-mono tabular-nums">{i.quantity.toLocaleString("pl-PL")} {i.unit === "szt" ? "szt." : "m"}</span>
               <button type="button" aria-label={`Usuń pozycję ${i.description}`} onClick={() => { stopPlansCapture(); const r = removePlanEntity("i", pid, i.id); if (r) toastWithUndo("Usunięto pozycję", () => savePlanEntity("i", pid, r)); }}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
-                <Trash className="h-4 w-4" aria-hidden />
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                <Trash className="size-4" aria-hidden />
               </button>
             </li>
           ))}
@@ -139,7 +139,7 @@ function ManualItems({ pid, items }: { pid: string; items: readonly MaterialItem
             <option value="szt">szt.</option>
             <option value="m">m</option>
           </select>
-          <Button type="submit" disabled={!valid} className="pressable coarse:h-11" aria-label="Dodaj pozycję"><Plus className="h-4 w-4" aria-hidden /></Button>
+          <Button type="submit" disabled={!valid} className="pressable coarse:h-11" aria-label="Dodaj pozycję"><Plus className="size-4" aria-hidden /></Button>
         </form>
       )}
     </section>

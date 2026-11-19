@@ -85,7 +85,7 @@ export function GuideDialog({ open, label, steps, step, onStep, onClose, extra, 
           {first ? (
             <Button variant="ghost" className="flex-1" onClick={() => onClose(false)}>Pomiń</Button>
           ) : (
-            <Button variant="ghost" className="flex-1" onClick={() => go(step - 1)}><ChevronLeft className="h-4 w-4" aria-hidden />Wstecz</Button>
+            <Button variant="ghost" className="flex-1" onClick={() => go(step - 1)}><ChevronLeft className="size-4" aria-hidden />Wstecz</Button>
           )}
           <Button ref={nextRef} className="flex-1" onClick={next}>{last ? doneLabel : "Dalej"}</Button>
         </div>

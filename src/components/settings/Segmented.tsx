@@ -55,7 +55,7 @@ export function Segmented<T extends string>({ options, value, onChange, disabled
                 aria-hidden
               />
             )}
-            <Icon className="relative w-4 h-4" aria-hidden />
+            <Icon className="relative size-4" aria-hidden />
             <span className="relative">{l}</span>
           </ToggleGroupItem>
         ))}

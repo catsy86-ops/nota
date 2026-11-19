@@ -295,12 +295,12 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
                 )}
                 {newFolder && (
                   <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => chooseNewFolder(newFolder)}>
-                    <Plus className="h-4 w-4" aria-hidden /> Nowy folder „{newFolder}”
+                    <Plus className="size-4" aria-hidden /> Nowy folder „{newFolder}”
                   </Button>
                 )}
                 {newLabel && (
                   <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => chooseNewLabel(newLabel)}>
-                    <Plus className="h-4 w-4" aria-hidden /> Nowa etykieta #{newLabel}
+                    <Plus className="size-4" aria-hidden /> Nowa etykieta #{newLabel}
                   </Button>
                 )}
               </div>
@@ -308,30 +308,30 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
 
             <div className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={archive}>
-                <Archive className="h-4 w-4" aria-hidden /> Archiwizuj
+                <Archive className="size-4" aria-hidden /> Archiwizuj
               </Button>
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5 text-destructive-ink" onClick={trash}>
-                <Trash className="h-4 w-4" aria-hidden /> Kosz
+                <Trash className="size-4" aria-hidden /> Kosz
               </Button>
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => snooze(1)}>
-                <Clock className="h-4 w-4" aria-hidden /> Jutro
+                <Clock className="size-4" aria-hidden /> Jutro
               </Button>
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => snooze(7)}>
-                <Clock className="h-4 w-4" aria-hidden /> Za tydzień
+                <Clock className="size-4" aria-hidden /> Za tydzień
               </Button>
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" aria-expanded={reminderOpen} onClick={() => setReminderOpen((o) => !o)}>
-                <Bell className="h-4 w-4" aria-hidden /> Przypomnij…
+                <Bell className="size-4" aria-hidden /> Przypomnij…
               </Button>
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={leave}>
                 Zostaw w skrzynce
               </Button>
               {onOpenNote && (
                 <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => { const id = current.id; onOpenChange(false); onOpenNote(id); }}>
-                  <PencilLine className="h-4 w-4" aria-hidden /> Otwórz notatkę
+                  <PencilLine className="size-4" aria-hidden /> Otwórz notatkę
                 </Button>
               )}
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5 ml-auto" onClick={undo} disabled={undoStack.length === 0}>
-                <RotateCcw className="h-4 w-4" aria-hidden /> Cofnij
+                <RotateCcw className="size-4" aria-hidden /> Cofnij
               </Button>
             </div>
             {reminderOpen && (
@@ -355,7 +355,7 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
             <p className="text-sm text-muted-foreground">Wszystko, co było w skrzynce, ma już folder, etykietę albo zostało zarchiwizowane.</p>
             {undoStack.length > 0 && (
               <Button type="button" variant="outline" size="sm" className="coarse:h-11 gap-1.5" onClick={undo}>
-                <RotateCcw className="h-4 w-4" aria-hidden /> Cofnij ostatnią akcję
+                <RotateCcw className="size-4" aria-hidden /> Cofnij ostatnią akcję
               </Button>
             )}
           </div>

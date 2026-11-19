@@ -50,29 +50,29 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
         <div className="mt-4 space-y-2">
           <div className="flex items-center gap-3 rounded-card bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
             {offline ? (
-              <CloudOff className="h-4 w-4 shrink-0 text-destructive-ink" />
+              <CloudOff className="size-4 shrink-0 text-destructive-ink" />
             ) : (
-              <Wifi className="h-4 w-4 shrink-0 text-primary-ink" />
+              <Wifi className="size-4 shrink-0 text-primary-ink" />
             )}
             <span className="flex-1">{offline ? "Brak połączenia z internetem" : "Połączenie z internetem jest aktywne"}</span>
           </div>
 
           <div className="flex items-center gap-3 rounded-card bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
-            <HardDrive className="h-4 w-4 shrink-0 text-primary-ink" />
+            <HardDrive className="size-4 shrink-0 text-primary-ink" />
             <span className="flex-1">
               Notatki są zapisywane lokalnie natychmiast
               <span className="block text-xs text-muted-foreground">Działa też offline — nic nie czeka w kolejce.</span>
             </span>
-            <Check className="h-4 w-4 shrink-0 text-primary-ink" />
+            <Check className="size-4 shrink-0 text-primary-ink" />
           </div>
 
           <div className="flex items-center gap-3 rounded-card bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
             {syncState.status === "connecting" ? (
-              <DelayedSpinner active className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <DelayedSpinner active className="size-4 shrink-0 text-muted-foreground" />
             ) : syncState.status === "connected" ? (
-              <Wifi className="h-4 w-4 shrink-0 text-primary-ink" />
+              <Wifi className="size-4 shrink-0 text-primary-ink" />
             ) : (
-              <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <WifiOff className="size-4 shrink-0 text-muted-foreground" />
             )}
             <span className="flex-1">
               Synchronizacja między urządzeniami

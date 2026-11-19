@@ -158,13 +158,13 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
               <Label id="extra-label">Dłużej / krócej niż w planie</Label>
               <div className="flex items-center gap-2" role="group" aria-labelledby="extra-label">
                 <Button type="button" variant="outline" size="icon" aria-label={`Odejmij ${STEP} minut`} onClick={() => setExtra((x) => x - STEP)}>
-                  <Minus className="w-4 h-4" />
+                  <Minus className="size-4" />
                 </Button>
                 <output aria-live="polite" className={cn("flex-1 text-center font-semibold tabular-nums", extra > 0 && "text-primary-ink", extra < 0 && "text-muted-foreground")}>
                   {extra === 0 ? "zgodnie z planem" : `${extra > 0 ? "+" : ""}${formatDuration(extra)}`}
                 </output>
                 <Button type="button" variant="outline" size="icon" aria-label={`Dodaj ${STEP} minut`} onClick={() => setExtra((x) => x + STEP)}>
-                  <Plus className="w-4 h-4" />
+                  <Plus className="size-4" />
                 </Button>
               </div>
               <p className="ui-hint">

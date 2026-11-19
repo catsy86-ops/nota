@@ -311,7 +311,7 @@ export function GeneralSettings() {
                 aria-label={`Kolor ${COLOR_LABEL[c]}`}
                 aria-pressed={prefs.defaultNoteColor === c}
                 className={cn(
-                  "w-9 h-9 coarse:size-11 rounded-full border-2 transition-transform",
+                  "size-9 coarse:size-11 rounded-full border-2 transition-transform",
                   colorClasses[c],
                   prefs.defaultNoteColor === c ? "border-primary scale-110 ring-2 ring-primary/30" : "border-border/60 hover:scale-105"
                 )}

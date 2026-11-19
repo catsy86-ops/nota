@@ -51,7 +51,7 @@ export function NFCReader({ open, onOpenChange, onDetected }: NFCReaderProps) {
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-sm" data-testid="nfc-reader">
         <div className="border-b border-border px-5 pb-4 pt-5">
           <DialogTitle className="flex items-center gap-2 font-display text-lg">
-            <Radio className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />
+            <Radio className="size-5 shrink-0 text-primary-ink" aria-hidden />
             Odczytaj NFC
           </DialogTitle>
           <DialogDescription className="text-xs">Przyłóż telefon do naklejki NFC (w aucie, na budowie, na pudełku).</DialogDescription>
@@ -60,13 +60,13 @@ export function NFCReader({ open, onOpenChange, onDetected }: NFCReaderProps) {
         <div className="space-y-4 px-5 py-4 min-h-24">
           {!supported ? (
             <div className="flex gap-3 rounded-card border border-warning bg-warning/5 p-3">
-              <AlertCircle className="h-5 w-5 shrink-0 text-warning-ink" aria-hidden />
+              <AlertCircle className="size-5 shrink-0 text-warning-ink" aria-hidden />
               <div className="text-sm" data-testid="nfc-unsupported">Ta przeglądarka nie obsługuje NFC (działa w Chrome na Androidzie).</div>
             </div>
           ) : reading ? (
             <div className="flex flex-col items-center justify-center py-6 gap-2" role="status">
               <div className="animate-pulse">
-                <Radio className="h-8 w-8 text-primary" aria-hidden />
+                <Radio className="size-8 text-primary" aria-hidden />
               </div>
               <p className="text-sm text-muted-foreground">Przytrzymaj tag przy telefonie…</p>
             </div>
@@ -85,7 +85,7 @@ export function NFCReader({ open, onOpenChange, onDetected }: NFCReaderProps) {
 
         <ResponsiveDialogFooter className="grid grid-cols-2 gap-2 border-t border-border px-5 pb-5 pt-4">
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="coarse:h-11">
-            <X className="mr-1 h-4 w-4" aria-hidden />
+            <X className="mr-1 size-4" aria-hidden />
             Zamknij
           </Button>
           <Button type="button" onClick={use} disabled={!tag || !supported} className="coarse:h-11">

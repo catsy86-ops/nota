@@ -77,7 +77,7 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
                 style={{ backgroundColor: p.bg, color: p.ink }}
               >
                 <span className="absolute left-2.5 top-1.5 text-xl leading-none" style={{ fontFamily: meta.font, fontWeight: 600 }}>Aa</span>
-                {!active && <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: accent, boxShadow: `0 0 10px ${accent}` }} />}
+                {!active && <span className="absolute right-2.5 top-2.5 size-2.5 rounded-full" style={{ backgroundColor: accent, boxShadow: `0 0 10px ${accent}` }} />}
                 <span className="absolute inset-x-2.5 bottom-2 rounded-control px-2 py-1.5 shadow-elevation-1" style={{ backgroundColor: p.card }}>
                   <span className="block h-1.5 w-3/5 rounded-full" style={{ backgroundColor: p.ink, opacity: 0.85 }} />
                   <span className="mt-1 block h-1 w-4/5 rounded-full" style={{ backgroundColor: p.muted, opacity: 0.8 }} />
@@ -89,10 +89,10 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
                     initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={spring.snap}
-                    className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full shadow-elevation-1"
+                    className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full shadow-elevation-1"
                     style={{ backgroundColor: accent, color: p.bg }}
                   >
-                    <Check className="h-3 w-3" strokeWidth={3} />
+                    <Check className="size-3" strokeWidth={3} />
                   </motion.span>
                 )}
               </span>

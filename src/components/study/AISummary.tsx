@@ -63,7 +63,7 @@ export function AISummary({ open, onOpenChange, text, onSelect }: AISummaryProps
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-sm" data-testid="ai-summary">
         <div className="border-b border-border px-5 pb-4 pt-5">
           <DialogTitle className="flex items-center gap-2 font-display text-lg">
-            <Sparkles className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />
+            <Sparkles className="size-5 shrink-0 text-primary-ink" aria-hidden />
             Streszczenie AI
           </DialogTitle>
           <DialogDescription className="text-xs">Chrome Built-in Model, offline (B3.6)</DialogDescription>
@@ -72,7 +72,7 @@ export function AISummary({ open, onOpenChange, text, onSelect }: AISummaryProps
         <div className="space-y-3 px-5 py-4 min-h-24">
           {!supported ? (
             <div className="flex gap-3 rounded-card border border-warning bg-warning/5 p-3">
-              <AlertCircle className="h-5 w-5 shrink-0 text-warning-ink" aria-hidden />
+              <AlertCircle className="size-5 shrink-0 text-warning-ink" aria-hidden />
               <div className="text-sm">AI Model niedostępny. Dostępny na Chrome 131+ na Android.</div>
             </div>
           ) : loading ? (
@@ -85,12 +85,12 @@ export function AISummary({ open, onOpenChange, text, onSelect }: AISummaryProps
               <Button type="button" size="sm" variant="ghost" onClick={copy} className="mt-2 h-8 gap-1">
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5" aria-hidden />
+                    <Check className="size-3.5" aria-hidden />
                     Skopiowano
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3.5 w-3.5" aria-hidden />
+                    <Copy className="size-3.5" aria-hidden />
                     Kopiuj
                   </>
                 )}

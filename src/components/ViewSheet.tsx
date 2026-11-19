@@ -113,14 +113,14 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
                     on ? "bg-primary/10" : "hover:bg-muted/60",
                   )}
                 >
-                  <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-field", on ? "bg-primary/15 text-primary-ink" : "bg-muted text-muted-foreground")}>
-                    <l.icon className="h-4.5 w-4.5" aria-hidden />
+                  <span className={cn("grid size-9 shrink-0 place-items-center rounded-field", on ? "bg-primary/15 text-primary-ink" : "bg-muted text-muted-foreground")}>
+                    <l.icon className="size-4.5" aria-hidden />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className={cn("block text-sm", on ? "font-semibold text-foreground" : "font-medium")}>{l.label}</span>
                     <span className="block text-xs text-muted-foreground">{l.hint}</span>
                   </span>
-                  {on && <Check className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />}
+                  {on && <Check className="size-4 shrink-0 text-primary-ink" aria-hidden />}
                 </ToggleGroupItem>
               );
             })}

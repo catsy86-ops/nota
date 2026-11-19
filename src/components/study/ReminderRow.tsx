@@ -38,7 +38,7 @@ export function ReminderRow({ reminder: r, onShow, coverPhotos = 0 }: { reminder
   const Icon = REMINDER_ICON[r.kind] ?? TriangleAlert;
   return (
     <li className="flex items-start gap-2.5 rounded-card border border-warning/50 bg-warning/10 p-3 text-sm" data-reminder={r.kind}>
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+      <Icon className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
       <div className="min-w-0 flex-1 space-y-1.5">
         <p className="leading-snug">{text}</p>
         {r.kind === "pre-cover-test" && (

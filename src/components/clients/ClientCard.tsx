@@ -127,17 +127,17 @@ export function ClientCard({ client, siteIds, onClose, onOpenSite, onOpenDebts }
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <ResponsiveDialogContent className="sm:max-w-md" data-testid="client-card">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-display"><UserRound className="h-5 w-5 shrink-0" aria-hidden /><span className="min-w-0 truncate">{c.name}</span></DialogTitle>
+          <DialogTitle className="flex items-center gap-2 font-display"><UserRound className="size-5 shrink-0" aria-hidden /><span className="min-w-0 truncate">{c.name}</span></DialogTitle>
           <DialogDescription>{CLIENT_KIND_LABEL[c.kind]}{c.archived ? " · w archiwum" : ""}{siteIds.length > 0 ? ` · budowy: ${siteIds.length}` : ""}</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-wrap gap-2" data-testid="client-actions">
-          {tel && <a href={tel} className={ACTION}><Phone className="h-4 w-4" aria-hidden />Zadzwoń</a>}
-          {sms && <a href={sms} className={ACTION}><MessageSquare className="h-4 w-4" aria-hidden />SMS</a>}
-          {maps && <a href={maps} target="_blank" rel="noopener noreferrer" className={ACTION}><MapPin className="h-4 w-4" aria-hidden />Nawiguj</a>}
+          {tel && <a href={tel} className={ACTION}><Phone className="size-4" aria-hidden />Zadzwoń</a>}
+          {sms && <a href={sms} className={ACTION}><MessageSquare className="size-4" aria-hidden />SMS</a>}
+          {maps && <a href={maps} target="_blank" rel="noopener noreferrer" className={ACTION}><MapPin className="size-4" aria-hidden />Nawiguj</a>}
           {!c.archived && (
             <button type="button" onClick={newQuote} className={cn(ACTION, "border-primary/50 bg-primary/10 font-medium text-primary-ink")} data-testid="client-new-quote">
-              <FilePlus2 className="h-4 w-4" aria-hidden />Nowa wycena
+              <FilePlus2 className="size-4" aria-hidden />Nowa wycena
             </button>
           )}
           {!tel && !maps && <p className="ui-hint">Dodaj telefon albo adres, a pojawią się tu skróty „Zadzwoń” i „Nawiguj”.</p>}
@@ -190,11 +190,11 @@ export function ClientCard({ client, siteIds, onClose, onOpenSite, onOpenDebts }
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
           <Button type="button" variant="outline" size="sm" onClick={() => archiveClient(c.id, !c.archived)} className="coarse:h-11">
-            {c.archived ? <ArchiveRestore className="h-4 w-4" aria-hidden /> : <Archive className="h-4 w-4" aria-hidden />}
+            {c.archived ? <ArchiveRestore className="size-4" aria-hidden /> : <Archive className="size-4" aria-hidden />}
             {c.archived ? "Przywróć z archiwum" : "Do archiwum"}
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={remove} className="text-destructive coarse:h-11" data-testid="client-remove">
-            <Trash2 className="h-4 w-4" aria-hidden />Usuń
+            <Trash2 className="size-4" aria-hidden />Usuń
           </Button>
         </div>
         <p className="ui-hint">Dane klienta są tylko u Ciebie i na Twoich urządzeniach — nie trafiają do raportu dla szefa ani do paczki budowy.</p>

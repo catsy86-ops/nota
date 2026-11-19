@@ -6602,7 +6602,7 @@ W1.1–W1.4: 974281cc, 2026-11-19.
 
 W2.1, WZ-1, 2026-11-19 — commit po tym wpisie.
 
-## Wygląd — odmiany karty i wiersz listy (W3.1, W3.4, 2026-11-19)
+## Wygląd — odmiany karty, wiersz listy i rozmiary ikon (W3.1, W3.4, W4.1 częściowo, 2026-11-19)
 
 ### Co robi
 
@@ -6622,10 +6622,11 @@ W2.1, WZ-1, 2026-11-19 — commit po tym wpisie.
 ### Ograniczenia i pułapki
 
 - Brak tokenu `--space-card`: dopełnienie dalej w miejscu użycia. Istniejące karty i listy nie są jeszcze przeniesione — to W3.2, działami. `ListRow` ma tylko jedną linijkę opisu (`truncate`).
+- W4.1 (część): 1103 pary `h-N w-N` / `w-N h-N` w 242 plikach zamienione na `size-N` (bez zmiany wyglądu); strażnik `squarePair` (próg 0). Skala ikon 14/16/20 = `size-3.5/4/5`; nie przejrzane jeszcze 66 × `size-3` i 25 × `size-6` (część to kropki i awatary, nie ikony).
 
 ### Testy
 
-- `src/components/ui/card.test.tsx`, `src/components/ui/list-row.test.tsx`.
+- `src/components/ui/card.test.tsx`, `src/components/ui/list-row.test.tsx`; `src/test/designTokens.test.ts` (`squarePair`).
 
 ### Commit
 

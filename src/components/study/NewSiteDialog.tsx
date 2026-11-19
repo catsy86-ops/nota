@@ -132,7 +132,7 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
                     <Input id="new-job-phone" value={form.phone} maxLength={SITE_PHONE_MAX} onChange={field("phone")} type="tel" inputMode="tel" autoComplete="off" className="flex-1" />
                     {hasContactPicker() && (
                       <Button type="button" size="sm" variant="outline" onClick={async () => { const c = await pickContact(); if (c) setForm((f) => ({ ...f, phone: c.tel, client: f.client || c.name || "" })); }} className="coarse:h-10 coarse:w-11" title="Z kontaktów" aria-label="Wybierz klienta z kontaktów" data-testid="pick-contact">
-                        <Contact className="h-4 w-4" aria-hidden />
+                        <Contact className="size-4" aria-hidden />
                       </Button>
                     )}
                   </div>
@@ -155,7 +155,7 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
               <>
                 <input ref={fileRef} type="file" accept=".budowa,application/json" className="hidden" onChange={(e) => void pickPackage(e)} data-testid="site-package-file" />
                 <Button type="button" variant="ghost" className="mr-auto text-muted-foreground" onClick={() => fileRef.current?.click()} title="Plik .budowa od szefa albo pomocnika">
-                  <FileUp className="mr-1.5 h-4 w-4" aria-hidden />Z pliku
+                  <FileUp className="mr-1.5 size-4" aria-hidden />Z pliku
                 </Button>
               </>
             )}

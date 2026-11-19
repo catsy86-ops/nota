@@ -50,7 +50,7 @@ export function QuickReminderInput({ onParsed, onPreview }: QuickReminderInputPr
           )}
         />
         <Button size="sm" variant="outline" className="px-2" onClick={handleParse} title="Rozpoznaj datę">
-          <WandSparkles className="w-3.5 h-3.5" />
+          <WandSparkles className="size-3.5" />
         </Button>
       </div>
       {error && (

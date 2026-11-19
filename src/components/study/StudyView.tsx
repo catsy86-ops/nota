@@ -99,7 +99,7 @@ function DueTodayChip({ onClick }: { onClick: () => void }) {
       data-testid="due-chip"
       className="pressable inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary-ink coarse:min-h-11"
     >
-      <RotateCcw className="h-4 w-4" aria-hidden />
+      <RotateCcw className="size-4" aria-hidden />
       <span className="tabular-nums">Na dziś: {n}</span>
       <span className="font-normal text-muted-foreground">{pluralPl(n, ["powtórka", "powtórki", "powtórek"])}</span>
     </button>
@@ -129,13 +129,13 @@ function StudyTools({ onStats, className }: { onStats?: () => void; className?: 
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       {onStats && (
         <button type="button" onClick={onStats} className={TOOL_PILL}>
-          <ChartColumn className="h-4 w-4" aria-hidden />Statystyki
+          <ChartColumn className="size-4" aria-hidden />Statystyki
         </button>
       )}
       <HeightsButton />
       <CalculatorsButton />
       <button type="button" onClick={() => openGuide("work")} aria-label="Przewodnik po Pracy" className={TOOL_PILL}>
-        <CircleQuestionMark className="h-4 w-4" aria-hidden />Przewodnik
+        <CircleQuestionMark className="size-4" aria-hidden />Przewodnik
       </button>
     </div>
   );

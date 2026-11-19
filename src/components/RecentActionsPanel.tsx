@@ -68,7 +68,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
       <SheetContent side="right" className="w-full sm:max-w-md flex flex-col pb-[env(safe-area-inset-bottom)]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 font-display">
-            <RotateCcwClock className="w-4 h-4 text-primary-ink" />
+            <RotateCcwClock className="size-4 text-primary-ink" />
             Ostatnie akcje
           </SheetTitle>
           <SheetDescription>
@@ -80,7 +80,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
 
         <div className="mt-3 space-y-2">
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -121,7 +121,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
                   exit={{ opacity: 0, x: 20 }}
                   className="flex items-start gap-3 rounded-card border border-border/60 bg-card/60 px-3 py-2.5"
                 >
-                  <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${meta.tone}`} />
+                  <Icon className={`size-4 shrink-0 mt-0.5 ${meta.tone}`} />
                   <div
                     className="min-w-0 flex-1 cursor-pointer"
                     role="button"
@@ -143,12 +143,12 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="shrink-0 h-8 w-8 p-0"
+                      className="shrink-0 size-8 p-0"
                       title="Pokaż notatkę"
                       aria-label="Pokaż notatkę"
                       onClick={() => showNote(e.noteIds)}
                     >
-                      <ArrowUpRight className="w-3.5 h-3.5" />
+                      <ArrowUpRight className="size-3.5" />
                     </Button>
                   )}
                   {!canUndo(e) ? (
@@ -164,7 +164,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
                         if (undoAction(e.id)) toast.success("Cofnięto");
                       }}
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
+                      <RotateCcw className="size-3.5" />
                       Cofnij
                     </Button>
                   )}

@@ -102,7 +102,7 @@ export function BarcodeScanner({ open, onOpenChange, onDetected, autoUse = false
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-sm" data-testid="barcode-scanner">
         <div className="border-b border-border px-5 pb-4 pt-5">
           <DialogTitle className="flex items-center gap-2 font-display text-lg">
-            <Camera className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />
+            <Camera className="size-5 shrink-0 text-primary-ink" aria-hidden />
             {title}
           </DialogTitle>
           <DialogDescription className="text-xs">{hint ?? "EAN z opakowania, QR albo kod kreskowy."}</DialogDescription>
@@ -111,7 +111,7 @@ export function BarcodeScanner({ open, onOpenChange, onDetected, autoUse = false
         <div className="space-y-3 px-5 py-4">
           {noCamera ? (
             <div className="flex gap-3 rounded-card border border-warning bg-warning/5 p-3" role="status" data-testid="scanner-fallback">
-              <AlertCircle className="h-5 w-5 shrink-0 text-warning-ink" aria-hidden />
+              <AlertCircle className="size-5 shrink-0 text-warning-ink" aria-hidden />
               <p className="text-sm">
                 {camera === "denied" ? "Brak dostępu do kamery. Zezwól na nią w ustawieniach przeglądarki albo wpisz kod poniżej." : "Ta przeglądarka nie ma skanera kodów. Wpisz kod z opakowania poniżej."}
               </p>
@@ -142,7 +142,7 @@ export function BarcodeScanner({ open, onOpenChange, onDetected, autoUse = false
 
         <ResponsiveDialogFooter className="grid grid-cols-2 gap-2 border-t border-border px-5 pb-5 pt-4">
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className={autoUse ? "col-span-2 coarse:h-11" : "coarse:h-11"}>
-            <X className="mr-1 h-4 w-4" aria-hidden />
+            <X className="mr-1 size-4" aria-hidden />
             Zamknij
           </Button>
           {!autoUse && (

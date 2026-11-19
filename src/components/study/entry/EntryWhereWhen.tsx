@@ -59,18 +59,18 @@ export function EntryWhereWhen(p: {
           aria-label={site ? `Budowa: ${site}. Zmień` : "Dodaj budowę"}
           className="pressable inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm coarse:min-h-11"
         >
-          <MapPin className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+          <MapPin className="size-4 shrink-0 text-primary-ink" aria-hidden />
           <span className={cn("truncate", !site && "text-muted-foreground")}>{site || "Dodaj budowę"}</span>
-          <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <Pencil className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
         </button>
       )}
       {editingSite && p.siteChipsRow}
       {!editingSite && (geo ? (
         <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-muted/50 pl-3 text-sm coarse:min-h-11" data-testid="journal-geo">
-          <LocateFixed className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+          <LocateFixed className="size-4 shrink-0 text-primary-ink" aria-hidden />
           <a href={mapsUrl(geo)} target="_blank" rel="noopener noreferrer" className="truncate underline-offset-2 hover:underline">Tu ({accuracyLabel(geo)})</a>
           <button type="button" onClick={p.onClearGeo} aria-label="Usuń lokalizację wpisu" className="pressable rounded-full p-1.5 text-muted-foreground hover:text-foreground coarse:-my-2.5 coarse:-mr-1 coarse:inline-flex coarse:size-11 coarse:items-center coarse:justify-center">
-            <X className="h-3.5 w-3.5" aria-hidden />
+            <X className="size-3.5" aria-hidden />
           </button>
         </span>
       ) : (
@@ -80,21 +80,21 @@ export function EntryWhereWhen(p: {
           disabled={p.locating}
           className="pressable inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground hover:border-primary hover:text-foreground disabled:opacity-60 coarse:min-h-11"
         >
-          {p.locating ? <DelayedSpinner active className="h-4 w-4" /> : <LocateFixed className="h-4 w-4" aria-hidden />}
+          {p.locating ? <DelayedSpinner active className="size-4" /> : <LocateFixed className="size-4" aria-hidden />}
           {p.locating ? "Szukam…" : "Tu jestem"}
         </button>
       ))}
       {/* Lokalizacja wpisu obok zapisanej budowy: jeden dotyk zamiast wybierania. */}
       {!editingSite && p.nearbyName && p.nearbyName !== site && (
         <button type="button" onClick={() => p.onPickSite(p.nearbyName!)} data-testid="journal-nearby-site" className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-primary/40 px-3 py-1.5 text-sm text-primary-ink hover:bg-primary/10 coarse:min-h-11">
-          <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+          <MapPin className="size-4 shrink-0" aria-hidden />
           <span className="truncate">Budowa obok: {p.nearbyName}</span>
         </button>
       )}
       {/* Pierwszy raz na tej budowie: zapisz jej lokalizację, następne wpisy podpowiedzą ją same. */}
       {!editingSite && geo && p.saveSiteGeoFor && (
         <button type="button" onClick={p.onSaveSiteGeo} data-testid="journal-save-site-geo" className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-dashed border-primary/40 px-3 py-1.5 text-sm text-primary-ink hover:bg-primary/10 coarse:min-h-11">
-          <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+          <MapPin className="size-4 shrink-0" aria-hidden />
           <span className="truncate">Zapisz jako lokalizację budowy</span>
         </button>
       )}
@@ -122,9 +122,9 @@ export function EntryWhereWhen(p: {
           aria-label={`Kiedy: ${at === null ? "teraz" : whenLabel(at)}. Zmień`}
           className="pressable inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm coarse:min-h-11"
         >
-          <Clock className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+          <Clock className="size-4 shrink-0 text-primary-ink" aria-hidden />
           <span className={cn("truncate tabular-nums", at === null && "text-muted-foreground")}>{at === null ? "Teraz" : whenLabel(at)}</span>
-          <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <Pencil className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
         </button>
       )}
       {!editingSite && p.siteChipsRow}

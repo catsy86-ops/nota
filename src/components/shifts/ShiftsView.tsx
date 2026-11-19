@@ -383,7 +383,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
             <button type="button" aria-expanded={switcherOpen} aria-controls="shift-schedules" onClick={() => setSwitcherOpen((o) => !o)}
               className="sm:hidden pressable flex min-w-0 flex-1 items-center justify-between gap-2 h-10 coarse:h-11 px-3 rounded-control border border-border/60 bg-card text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               <span className="min-w-0 truncate">Grafik: {activeScheduleName}{effectiveOverlay ? ` · nakładka: ${overlayScheduleName}` : ""}</span>
-              <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform", switcherOpen && "rotate-180")} aria-hidden />
+              <ChevronDown className={cn("size-4 shrink-0 transition-transform", switcherOpen && "rotate-180")} aria-hidden />
             </button>
             <div className="sm:hidden shrink-0">{viewToggle}</div>
           </div>
@@ -407,10 +407,10 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
               )}
               <button type="button" onClick={copyWeek}
                 className={TOOLBAR_BTN}>
-                <CalendarRange className="w-4 h-4" /> Skopiuj ten tydzień na następny
+                <CalendarRange className="size-4" /> Skopiuj ten tydzień na następny
               </button>
               <button type="button" onClick={() => setRangeOpen(true)} className={TOOLBAR_BTN}>
-                <CalendarRange className="w-4 h-4" /> Kopiuj zakres dni
+                <CalendarRange className="size-4" /> Kopiuj zakres dni
               </button>
             </div>
           )}

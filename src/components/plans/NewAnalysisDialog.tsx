@@ -86,7 +86,7 @@ export function NewAnalysisDialog({ open, onOpenChange, onCreated }: { open: boo
                 over ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50",
               )}
             >
-              {busy ? <LoaderCircle className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden /> : <ImageUp className="h-6 w-6 text-muted-foreground" aria-hidden />}
+              {busy ? <LoaderCircle className="size-6 animate-spin text-muted-foreground" aria-hidden /> : <ImageUp className="size-6 text-muted-foreground" aria-hidden />}
               <span className="font-medium">{busy ? "Wczytuję obraz…" : "Wybierz zrzut planu albo przeciągnij go tutaj"}</span>
               <span className="text-xs text-muted-foreground">Im większa rozdzielczość, tym dokładniejsze pomiary i odczyt opisów.</span>
               <input ref={input} type="file" accept={ACCEPT} className="sr-only" onChange={(e) => void take(e.target.files?.[0])} data-testid="plan-file" />

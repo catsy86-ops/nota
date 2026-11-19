@@ -61,10 +61,10 @@ export function TodayTimeline({ notes, onOpen }: { notes: Note[]; onOpen: (id: s
     <section aria-label="Oś dnia" data-testid="today-timeline" className={`${cardClass} p-4 sm:p-5`}>
       <button type="button" onClick={toggle} aria-expanded={open} aria-controls="today-timeline-body"
         className="pressable flex w-full items-center justify-between gap-2 text-left coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-field">
-        <span className="section-label gap-2"><Clock3 className="h-3.5 w-3.5" aria-hidden />Oś dnia
+        <span className="section-label gap-2"><Clock3 className="size-3.5" aria-hidden />Oś dnia
           <span className="font-mono text-xs font-normal tabular-nums text-muted-foreground">{occurrences.length > 0 ? `${occurrences.length} w godzinach` : "bez terminów"}</span>
         </span>
-        <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform motion-reduce:transition-none", !open && "-rotate-90")} aria-hidden />
+        <ChevronDown className={cn("size-4 text-muted-foreground transition-transform motion-reduce:transition-none", !open && "-rotate-90")} aria-hidden />
       </button>
       {open && (
         <div id="today-timeline-body" ref={bodyRef} className="mt-3 max-h-96 overflow-y-auto scrollbar-thin">

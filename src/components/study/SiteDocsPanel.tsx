@@ -100,7 +100,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
     <section aria-label="Plany i dokumenty" data-testid="site-docs" className={`${cardClass} space-y-2 p-3`}>
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 section-caps">
-          <FolderOpen className="h-3.5 w-3.5" aria-hidden />Plany i dokumenty
+          <FolderOpen className="size-3.5" aria-hidden />Plany i dokumenty
         </h3>
         {docs.length > 0 && <span className="font-mono text-xs tabular-nums text-muted-foreground">{docs.length}</span>}
       </div>
@@ -126,17 +126,17 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
                 type="button"
                 onClick={() => void startMarking(d)}
                 aria-label={`Zaznacz na planie: ${docLabel(d)}`}
-                className="absolute bottom-7 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-elevation-1 hover:text-foreground coarse:h-11 coarse:w-11"
+                className="absolute bottom-7 right-1 flex size-7 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-elevation-1 hover:text-foreground coarse:h-11 coarse:w-11"
               >
-                <Pencil className="h-3.5 w-3.5" aria-hidden />
+                <Pencil className="size-3.5" aria-hidden />
               </button>
               <button
                 type="button"
                 onClick={() => remove(d)}
                 aria-label={`Usuń: ${docLabel(d)}`}
-                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-elevation-1 hover:text-destructive-ink coarse:h-11 coarse:w-11"
+                className="absolute right-1 top-1 flex size-7 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-elevation-1 hover:text-destructive-ink coarse:h-11 coarse:w-11"
               >
-                <X className="h-3.5 w-3.5" aria-hidden />
+                <X className="size-3.5" aria-hidden />
               </button>
             </li>
           ))}
@@ -147,7 +147,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
         <ul className="divide-y divide-border/60">
           {files.map((d) => (
             <li key={d.id} className="flex items-center gap-2 py-1.5">
-              <FileText className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+              <FileText className="size-4 shrink-0 text-primary-ink" aria-hidden />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm">{docLabel(d)}</span>
                 <span className="font-mono text-2xs tabular-nums text-muted-foreground">PDF · {formatFileSize(d.size)}</span>
@@ -156,7 +156,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
                 Otwórz
               </Button>
               <Button type="button" variant="ghost" size="sm" className="shrink-0 px-2 text-muted-foreground hover:text-destructive-ink coarse:h-11" onClick={() => remove(d)} aria-label={`Usuń: ${docLabel(d)}`}>
-                <X className="h-4 w-4" aria-hidden />
+                <X className="size-4" aria-hidden />
               </Button>
             </li>
           ))}
@@ -179,7 +179,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
         disabled={busy || docs.length >= SITE_DOCS_MAX}
         onClick={() => input.current?.click()}
       >
-        <Plus className="mr-1.5 h-4 w-4" aria-hidden />{busy ? "Dodaję…" : "Dodaj plan lub dokument"}
+        <Plus className="mr-1.5 size-4" aria-hidden />{busy ? "Dodaję…" : "Dodaj plan lub dokument"}
       </Button>
 
       <Dialog open={!!zoom} onOpenChange={(o) => { if (!o) setZoom(null); }}>
@@ -196,7 +196,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
             </div>
           )}
           <Button type="button" variant="outline" size="sm" className="pressable self-start coarse:h-11" onClick={() => setActual((v) => !v)}>
-            {actual ? <><Minimize2 className="mr-1.5 h-4 w-4" aria-hidden />Dopasuj</> : <><Maximize2 className="mr-1.5 h-4 w-4" aria-hidden />100%</>}
+            {actual ? <><Minimize2 className="mr-1.5 size-4" aria-hidden />Dopasuj</> : <><Maximize2 className="mr-1.5 size-4" aria-hidden />100%</>}
           </Button>
         </DialogContent>
       </Dialog>

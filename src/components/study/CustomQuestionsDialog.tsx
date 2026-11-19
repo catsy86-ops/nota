@@ -173,7 +173,7 @@ export function CustomQuestionsDialog({ open, onOpenChange, prefill }: { open: b
                     <span className="block text-xs text-muted-foreground">{TOPICS.find((t) => t.id === q.topic)?.title ?? ownTopicTitle(study.custom, q.topic) ?? q.topic}</span>
                   </span>
                   <Button variant="ghost" size="sm" aria-label={`Edytuj pytanie: ${q.question}`} onClick={() => startEdit(q)} className="coarse:h-11">
-                    <Pencil className="h-4 w-4" aria-hidden />
+                    <Pencil className="size-4" aria-hidden />
                   </Button>
                   <Button
                     variant="ghost"
@@ -182,7 +182,7 @@ export function CustomQuestionsDialog({ open, onOpenChange, prefill }: { open: b
                     onClick={() => deleteCustom(q, q.question)}
                     className="coarse:h-11"
                   >
-                    <Trash2 className="h-4 w-4" aria-hidden />
+                    <Trash2 className="size-4" aria-hidden />
                   </Button>
                 </li>
               ))}

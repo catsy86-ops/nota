@@ -101,8 +101,8 @@ export function SiteBillingDues({ site, billing, hours, points }: {
             <span className="min-w-0 flex-1 truncate"><span className="font-mono text-xs tabular-nums">{dmy(p.day)}</span>{p.note && <span className="text-muted-foreground"> · {p.note}</span>}</span>
             <span className="shrink-0 font-mono tabular-nums">−{money(p.amount)}</span>
             <button type="button" onClick={() => remove(p.id)} aria-label={`Usuń wpłatę ${money(p.amount)} z ${dmy(p.day)}`}
-              className="pressable -mr-1 grid h-8 w-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
-              <X className="h-4 w-4" aria-hidden />
+              className="pressable -mr-1 grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
+              <X className="size-4" aria-hidden />
             </button>
           </li>
         ))}
@@ -117,7 +117,7 @@ export function SiteBillingDues({ site, billing, hours, points }: {
           <Button type="submit" size="sm">Zapisz wpłatę</Button>
         </form>
       ) : (
-        <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)} className="w-full"><Plus className="h-4 w-4" aria-hidden />Wpłata (zaliczka)</Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => setAdding(true)} className="w-full"><Plus className="size-4" aria-hidden />Wpłata (zaliczka)</Button>
       )}
 
       {/* Suma jak w zeszycie: podwójna kreska pod kwotą. */}
@@ -145,9 +145,9 @@ export function SiteBillingDues({ site, billing, hours, points }: {
       )}
 
       <div className="grid grid-cols-3 gap-1.5 pt-1" role="group" aria-label="Wyślij rozliczenie">
-        <Button type="button" variant="outline" size="sm" onClick={sendText}><MessageCircle className="h-4 w-4" aria-hidden />Tekst</Button>
-        <Button type="button" variant="outline" size="sm" onClick={sendPdf}><FileText className="h-4 w-4" aria-hidden />PDF</Button>
-        <Button type="button" variant="outline" size="sm" onClick={csv}><FileSpreadsheet className="h-4 w-4" aria-hidden />CSV</Button>
+        <Button type="button" variant="outline" size="sm" onClick={sendText}><MessageCircle className="size-4" aria-hidden />Tekst</Button>
+        <Button type="button" variant="outline" size="sm" onClick={sendPdf}><FileText className="size-4" aria-hidden />PDF</Button>
+        <Button type="button" variant="outline" size="sm" onClick={csv}><FileSpreadsheet className="size-4" aria-hidden />CSV</Button>
       </div>
     </div>
   );

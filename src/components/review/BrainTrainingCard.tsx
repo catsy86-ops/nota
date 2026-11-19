@@ -23,7 +23,7 @@ export function BrainTrainingCard({ onRemind, hasReminder }: { onRemind: (at: nu
       action={<>
           {plan.remindAt !== null && hasReminder?.(plan.remindAt, plan.remindLabel ?? plan.title) ? (
             <Button variant="outline" size="sm" className="coarse:h-11" disabled>
-              <BellRing className="mr-1.5 h-4 w-4" aria-hidden />Przypomnienie ustawione
+              <BellRing className="mr-1.5 size-4" aria-hidden />Przypomnienie ustawione
             </Button>
           ) : plan.remindAt !== null && (
             <Button
@@ -35,11 +35,11 @@ export function BrainTrainingCard({ onRemind, hasReminder }: { onRemind: (at: nu
                 toast.success("Ustawiono przypomnienie", { description: plan.remindLabel ?? undefined });
               }}
             >
-              <BellRing className="mr-1.5 h-4 w-4" aria-hidden />Przypomnij
+              <BellRing className="mr-1.5 size-4" aria-hidden />Przypomnij
             </Button>
           )}
           <Button size="sm" className="coarse:h-11" onClick={() => window.open(NEUROKLIK_URL, "_blank", "noopener,noreferrer")}>
-            <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden />Otwórz trening
+            <ExternalLink className="mr-1.5 size-4" aria-hidden />Otwórz trening
           </Button>
       </>} />
   );

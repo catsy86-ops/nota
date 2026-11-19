@@ -48,9 +48,9 @@ export function JournalPhotoButton({ siteName, onNoSite }: { siteName: string | 
         aria-label={label}
         title={label}
         onClick={() => (siteName ? input.current?.click() : onNoSite())}
-        className="pressable fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+96px)] z-raised flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-primary-ink shadow-elevation-2 disabled:opacity-60 coarse:h-14 coarse:w-14 md:hidden"
+        className="pressable fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+96px)] z-raised flex size-12 items-center justify-center rounded-full border border-border bg-card text-primary-ink shadow-elevation-2 disabled:opacity-60 coarse:h-14 coarse:w-14 md:hidden"
       >
-        <Camera className="h-5 w-5" aria-hidden />
+        <Camera className="size-5" aria-hidden />
       </button>
     </>
   );

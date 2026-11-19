@@ -41,7 +41,7 @@ export function WeightSection() {
   return (
     <section aria-labelledby="weight-title" className={`${cardClass} space-y-3 p-4`}>
       <h3 id="weight-title" className="flex items-center gap-2 font-display text-base">
-        <Scale className="h-4 w-4 text-primary-ink" aria-hidden />Masa ciała
+        <Scale className="size-4 text-primary-ink" aria-hidden />Masa ciała
       </h3>
 
       <form onSubmit={save} className="flex flex-wrap items-end gap-2">
@@ -76,8 +76,8 @@ export function WeightSection() {
                 <span className="tabular-nums">{w.day}</span>
                 <span className="flex items-center gap-2">
                   <span className="font-mono tabular-nums">{w.kg.toFixed(1)} kg</span>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 coarse:h-11 coarse:w-11" onClick={() => remove(w.day)} aria-label={`Usuń ważenie z ${w.day}`}>
-                    <Trash className="h-3.5 w-3.5" aria-hidden />
+                  <Button variant="ghost" size="icon" className="size-8 coarse:h-11 coarse:w-11" onClick={() => remove(w.day)} aria-label={`Usuń ważenie z ${w.day}`}>
+                    <Trash className="size-3.5" aria-hidden />
                   </Button>
                 </span>
               </li>

@@ -27,7 +27,7 @@ export function EntryStageSection(p: {
     <>
       {entryStage && (
         <div className="flex items-center gap-2 rounded-card border border-success-ink/40 bg-success/10 px-3 py-1.5 text-sm" data-testid="journal-entry-stage">
-          <ListChecks className="h-4 w-4 shrink-0 text-success-ink" aria-hidden />
+          <ListChecks className="size-4 shrink-0 text-success-ink" aria-hidden />
           <span className="min-w-0 flex-1 truncate">Etap: <span className="font-medium">{entryStage.name}</span></span>
           <button
             type="button"
@@ -36,7 +36,7 @@ export function EntryStageSection(p: {
             title="Odepnij od etapu (etap zostaje odhaczony w karcie)"
             className="pressable grid size-7 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
           >
-            <X className="h-3.5 w-3.5" aria-hidden />
+            <X className="size-3.5" aria-hidden />
           </button>
         </div>
       )}
@@ -59,7 +59,7 @@ export function EntryStageSection(p: {
             })}
           </div>
           <p className="ui-hint flex items-start gap-1.5">
-            <Camera className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            <Camera className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             <span>Zdjęcia: {tpl.photos.join(" · ")}</span>
           </p>
         </div>
@@ -77,7 +77,7 @@ export function EntryStageSection(p: {
                 aria-label={`Odhacz etap: ${s.name}`}
                 className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-success-ink/40 px-2.5 py-1 text-xs text-success-ink hover:bg-success/10 coarse:min-h-11 coarse:px-3 coarse:text-sm"
               >
-                <ListChecks className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <ListChecks className="size-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{s.name}</span>
               </button>
             ))}
@@ -88,7 +88,7 @@ export function EntryStageSection(p: {
       {p.isEdit && !entryStage && p.siteCard && (
         // Zapisany wpis (np. zdjęcia „przed zakryciem” sprzed odhaczenia) — przypięcie bez ruszania stanu etapu w karcie.
         <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          <ListChecks className="h-4 w-4 shrink-0" aria-hidden />
+          <ListChecks className="size-4 shrink-0" aria-hidden />
           <span className="shrink-0">Zdjęcia do protokołu przy etapie:</span>
           <select
             value=""

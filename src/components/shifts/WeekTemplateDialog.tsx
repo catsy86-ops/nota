@@ -70,7 +70,7 @@ export function WeekTemplateDialog({ open, onOpenChange, types, templates, weekS
                         {p.steps.map((s, i) => {
                           const t = s ? typesById.get(s) : undefined;
                           return (
-                            <span key={i} title={WEEKDAYS[i]} className="w-6 h-6 rounded-field flex items-center justify-center text-2xs font-bold font-display"
+                            <span key={i} title={WEEKDAYS[i]} className="size-6 rounded-field flex items-center justify-center text-2xs font-bold font-display"
                               style={t ? { backgroundColor: t.color, color: shiftInk(t.color) } : undefined}>
                               {t ? t.short : <span className="text-muted-foreground">–</span>}
                             </span>
@@ -80,7 +80,7 @@ export function WeekTemplateDialog({ open, onOpenChange, types, templates, weekS
                       <span className="block text-2xs text-muted-foreground mt-1">{overlapSummary(overlap, true)}</span>
                     </button>
                     <Button type="button" variant="ghost" size="icon" aria-label={`Usuń szablon ${p.name}`} onClick={() => { deletePattern(p.id); toastWithUndo(`Usunięto szablon „${p.name}”`, () => savePattern(p)); }}>
-                      <Trash className="w-4 h-4" />
+                      <Trash className="size-4" />
                     </Button>
                   </li>
                 );
@@ -99,7 +99,7 @@ export function WeekTemplateDialog({ open, onOpenChange, types, templates, weekS
               {weekSteps.map((s, i) => {
                 const t = s ? typesById.get(s) : undefined;
                 return (
-                  <span key={i} className="w-7 h-7 rounded-field flex items-center justify-center text-xs font-bold font-display"
+                  <span key={i} className="size-7 rounded-field flex items-center justify-center text-xs font-bold font-display"
                     style={t ? { backgroundColor: t.color, color: shiftInk(t.color) } : undefined}>
                     {t ? t.short : <span className="text-muted-foreground">–</span>}
                   </span>

@@ -51,7 +51,7 @@ export function CoverPhotoButton({ siteName }: { siteName: string }) {
         onClick={() => input.current?.click()}
         className="shrink-0 coarse:min-h-11"
       >
-        <Camera className="mr-1.5 h-4 w-4" aria-hidden />{busy ? "…" : "Zrób zdjęcia"}
+        <Camera className="mr-1.5 size-4" aria-hidden />{busy ? "…" : "Zrób zdjęcia"}
       </Button>
     </>
   );

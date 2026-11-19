@@ -32,13 +32,13 @@ export function AccentPicker({ skin }: { skin: Skin }) {
               onClick={() => pick(i)}
               onKeyDown={(e) => moveRadio(e, indexes, value, pick)}
               className={cn(
-                "pressable grid h-11 w-11 place-items-center rounded-full outline-hidden ring-offset-2 ring-offset-background transition-shadow duration-fast",
+                "pressable grid size-11 place-items-center rounded-full outline-hidden ring-offset-2 ring-offset-background transition-shadow duration-fast",
                 "focus-visible:ring-2 focus-visible:ring-ring",
                 active && "ring-2 ring-foreground/70",
               )}
             >
-              <span aria-hidden className="grid h-8 w-8 place-items-center rounded-full shadow-elevation-1 ring-1 ring-foreground/15" style={{ backgroundColor: o.swatch }}>
-                {active && <Check className="h-4 w-4 text-black/75" strokeWidth={3} />}
+              <span aria-hidden className="grid size-8 place-items-center rounded-full shadow-elevation-1 ring-1 ring-foreground/15" style={{ backgroundColor: o.swatch }}>
+                {active && <Check className="size-4 text-black/75" strokeWidth={3} />}
               </span>
             </button>
           );

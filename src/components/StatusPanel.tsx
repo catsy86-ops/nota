@@ -77,7 +77,7 @@ export function StatusPanel({
           className,
         )}
       >
-        {art ?? (Icon && <Icon aria-hidden data-status-tone={tone} strokeWidth={1.5} className={cn("mx-auto mb-2 h-6 w-6 -rotate-6", TONE_INK[tone])} />)}
+        {art ?? (Icon && <Icon aria-hidden data-status-tone={tone} strokeWidth={1.5} className={cn("mx-auto mb-2 size-6 -rotate-6", TONE_INK[tone])} />)}
         <p className={cn(description ? "font-medium text-foreground" : "text-muted-foreground")}>{title}</p>
         {description && <p className="mt-1 text-muted-foreground">{description}</p>}
         {actions && <div className="mt-3 flex flex-wrap items-center justify-center gap-2">{actions}</div>}
@@ -102,7 +102,7 @@ export function StatusPanel({
         <Icon
           aria-hidden
           strokeWidth={1.1}
-          className={cn("mx-auto -rotate-6", tone === "empty" ? "mb-5 h-20 w-20" : "mb-4 h-14 w-14", TONE_INK[tone])}
+          className={cn("mx-auto -rotate-6", tone === "empty" ? "mb-5 size-20" : "mb-4 size-14", TONE_INK[tone])}
         />
       ))}
       <Heading className={cn("font-display font-bold text-foreground", tone === "empty" ? "mb-2 text-2xl" : "mb-1 text-lg")}>

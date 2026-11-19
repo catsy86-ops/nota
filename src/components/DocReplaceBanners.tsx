@@ -52,7 +52,7 @@ export function DocReplaceNotice({ onOpenSync }: { onOpenSync: () => void }) {
   if (!result.ok) {
     return (
       <div role="alert" data-testid="doc-replace-result" className={`${box} border-warning/50 bg-warning/10`}>
-        <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
         <p className="min-w-0 flex-1">Nie przywrócono danych: {result.reason}. Dane na tym urządzeniu są bez zmian.</p>
         <Button type="button" variant="ghost" size="sm" onClick={close} className="coarse:h-11">Zamknij</Button>
       </div>
@@ -61,7 +61,7 @@ export function DocReplaceNotice({ onOpenSync }: { onOpenSync: () => void }) {
 
   return (
     <div role="status" data-testid="doc-replace-result" className={`${box} border-border/60 bg-muted/30`}>
-      <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+      <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
       <p className="min-w-0 flex-1">
         {intent.kind === "snapshot"
           ? <>Przywrócono dane z {when(intent.createdAt)}. Kopia danych sprzed przywrócenia jest w Ustawieniach → Kopia i dane przez 30 dni.</>
@@ -124,7 +124,7 @@ export function DataLossBanner({ onOpenBackup }: { onOpenBackup: () => void }) {
 
   return (
     <div role="alert" data-testid="data-loss" className={`${box} border-warning/50 bg-warning/10`}>
-      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
       <p className="min-w-0 flex-1">
         Wygląda na to, że dane zniknęły. Jest kopia z {format(last.date, "dd.MM")} ({last.notes} {pluralPl(last.notes, ["notatka", "notatki", "notatek"])}).
       </p>

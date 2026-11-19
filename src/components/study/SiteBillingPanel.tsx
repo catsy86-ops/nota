@@ -77,10 +77,10 @@ export function SiteBillingPanel({ site, hours }: { site: SiteInfo; /** Godziny 
     <section aria-label="Rozliczenie" data-testid="site-billing" className="rounded-card border border-border/60 bg-card">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls={`billing-${site.id}`}
         className="pressable flex w-full items-center gap-2 px-3 py-2.5 text-left coarse:min-h-11">
-        <Wallet className="h-4 w-4 shrink-0" aria-hidden />
+        <Wallet className="size-4 shrink-0" aria-hidden />
         <span className="text-sm font-semibold">Rozliczenie</span>
         <span className="min-w-0 flex-1 truncate text-right text-xs text-muted-foreground" data-testid="site-billing-summary">{billingSummary(billing, site.rate)}</span>
-        <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", !open && "-rotate-90")} aria-hidden />
+        <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", !open && "-rotate-90")} aria-hidden />
       </button>
 
       {open && (

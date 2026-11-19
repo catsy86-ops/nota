@@ -376,7 +376,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     <section ref={sectionRef} aria-label={`Analiza: ${project.name}`} className="sm:scroll-mt-24 flex flex-col overflow-hidden bg-card max-sm:fixed max-sm:inset-0 max-sm:z-overlay max-sm:pt-[env(safe-area-inset-top)] max-sm:pb-[env(safe-area-inset-bottom)] sm:h-[calc(100dvh-7rem)] sm:min-h-[28rem] sm:rounded-card sm:border sm:border-border/60" data-testid="plan-editor">
       <div className="flex flex-wrap items-center gap-1 border-b border-border/60 px-1.5 py-1">
         <button type="button" onClick={onBack} className={toolBtn} aria-label="Wróć do listy analiz">
-          <ArrowLeft className="h-4 w-4" aria-hidden /><span className="hidden sm:inline">Analizy</span>
+          <ArrowLeft className="size-4" aria-hidden /><span className="hidden sm:inline">Analizy</span>
         </button>
         {renaming ? (
           <form className="min-w-0 flex-1" onSubmit={(e) => { e.preventDefault(); setRenaming(false); }}>
@@ -391,18 +391,18 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
           <h2 className="flex min-w-0 flex-1 items-center gap-1 px-1 font-display text-base">
             <span className="truncate">{project.name}</span>
             <button type="button" onClick={() => setRenaming(true)} className={cn(toolBtn, "h-8 min-w-8 px-1 text-muted-foreground")} aria-label="Zmień nazwę analizy">
-              <Pencil className="h-3.5 w-3.5" aria-hidden />
+              <Pencil className="size-3.5" aria-hidden />
             </button>
           </h2>
         )}
-        <button type="button" onClick={undoPlans} disabled={!undo.undo} className={toolBtn} aria-label="Cofnij" title={`Cofnij (${modShortcut("Z")})`}><Undo2 className="h-4 w-4" aria-hidden /></button>
-        <button type="button" onClick={redoPlans} disabled={!undo.redo} className={toolBtn} aria-label="Ponów" title={`Ponów (${modShortcut("Y")})`}><Redo2 className="h-4 w-4" aria-hidden /></button>
+        <button type="button" onClick={undoPlans} disabled={!undo.undo} className={toolBtn} aria-label="Cofnij" title={`Cofnij (${modShortcut("Z")})`}><Undo2 className="size-4" aria-hidden /></button>
+        <button type="button" onClick={redoPlans} disabled={!undo.redo} className={toolBtn} aria-label="Ponów" title={`Ponów (${modShortcut("Y")})`}><Redo2 className="size-4" aria-hidden /></button>
         <span aria-hidden className="mx-0.5 hidden h-6 w-px bg-border sm:block" />
         {/* Na telefonie przybliża szczypanie — pasek zostawia miejsce na nazwę analizy. */}
-        <button type="button" onClick={() => canvas.current?.zoomBy(0.8)} className={cn(toolBtn, "hidden sm:inline-flex")} aria-label="Oddal"><Minus className="h-4 w-4" aria-hidden /></button>
-        <button type="button" onClick={() => canvas.current?.zoomBy(1.25)} className={cn(toolBtn, "hidden sm:inline-flex")} aria-label="Przybliż"><Plus className="h-4 w-4" aria-hidden /></button>
+        <button type="button" onClick={() => canvas.current?.zoomBy(0.8)} className={cn(toolBtn, "hidden sm:inline-flex")} aria-label="Oddal"><Minus className="size-4" aria-hidden /></button>
+        <button type="button" onClick={() => canvas.current?.zoomBy(1.25)} className={cn(toolBtn, "hidden sm:inline-flex")} aria-label="Przybliż"><Plus className="size-4" aria-hidden /></button>
         <button type="button" onClick={() => canvas.current?.fit()} className={toolBtn} aria-label="Dopasuj do ekranu" title="Dopasuj do ekranu (0)">
-          <Maximize className="h-4 w-4" aria-hidden />
+          <Maximize className="size-4" aria-hidden />
         </button>
       </div>
 
@@ -410,13 +410,13 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
         {MODES.map(({ id, label, Icon }) => (
           <button key={id} type="button" aria-pressed={mode === id} onClick={() => switchMode(id)}
             className={cn(toolBtn, "flex-1 sm:flex-none", mode === id && "bg-primary text-primary-foreground hover:bg-primary")}>
-            <Icon className="h-4 w-4" aria-hidden />{label}
+            <Icon className="size-4" aria-hidden />{label}
           </button>
         ))}
         <p className="ml-2 hidden min-w-0 flex-1 truncate text-xs text-muted-foreground md:block" aria-live="polite">{hint}</p>
         <button type="button" aria-pressed={showSummary} onClick={() => { setShowSummary((v) => !v); setHighlight(null); }}
           className={cn(toolBtn, "ml-auto shrink-0", showSummary && "bg-primary text-primary-foreground hover:bg-primary")}>
-          <ClipboardList className="h-4 w-4" aria-hidden /><span className="hidden sm:inline">Zestawienie</span>
+          <ClipboardList className="size-4" aria-hidden /><span className="hidden sm:inline">Zestawienie</span>
         </button>
       </div>
 
@@ -424,10 +424,10 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
         <div className="relative min-h-0 flex-1">
           {rotateHint && (
             <p className="absolute inset-x-2 top-2 z-raised flex items-center gap-2 rounded-card border border-border/60 bg-card/95 px-3 py-2 text-xs shadow-elevation-2 sm:hidden" role="status">
-              <RotateCw className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+              <RotateCw className="size-4 shrink-0 text-primary-ink" aria-hidden />
               <span className="min-w-0 flex-1">Plan jest poziomy — obróć telefon, będzie większy.</span>
               <button type="button" onClick={() => { dismissRotateHint(); setRotateHint(false); }} className={cn(toolBtn, "h-8 min-w-8 px-1")} aria-label="Zamknij podpowiedź">
-                <X className="h-4 w-4" aria-hidden />
+                <X className="size-4" aria-hidden />
               </button>
             </p>
           )}

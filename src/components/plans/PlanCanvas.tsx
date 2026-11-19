@@ -194,7 +194,7 @@ export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanva
         </svg>
       )}
       {crosshair && (
-        <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 hidden h-7 w-7 -translate-x-1/2 -translate-y-1/2 [.plan-canvas:focus-visible_&]:block">
+        <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 hidden size-7 -translate-x-1/2 -translate-y-1/2 [.plan-canvas:focus-visible_&]:block">
           <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-foreground/70" />
           <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-foreground/70" />
         </span>

@@ -57,7 +57,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
       {isMobile ? (
         <>
           <IconButton tone="segment" aria-label="Widok i kolumny" aria-haspopup="dialog" onClick={() => setViewSheetOpen(true)}>
-            <LayoutIcon className="w-5 h-5" />
+            <LayoutIcon className="size-5" />
           </IconButton>
           <ViewSheet open={viewSheetOpen} onOpenChange={setViewSheetOpen} groupable={sortable} />
         </>
@@ -67,7 +67,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <IconButton ref={layoutTriggerRef} tone="segment" aria-label="Widok i kolumny">
-                <LayoutIcon className="w-5 h-5" />
+                <LayoutIcon className="size-5" />
               </IconButton>
             </DropdownMenuTrigger>
           </TooltipTrigger>
@@ -80,7 +80,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <DropdownMenuRadioGroup value={prefs.layout} onValueChange={(v) => changeView(() => setViewPref("layout", v as Layout))}>
             {LAYOUTS.map((l) => (
               <DropdownMenuRadioItem key={l.v} value={l.v}>
-                <l.icon className="w-3.5 h-3.5 mr-2" /> {l.label}
+                <l.icon className="size-3.5 mr-2" /> {l.label}
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
@@ -129,7 +129,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <IconButton tone="segment" aria-label="Sortowanie">
-                {prefs.sortDir === "asc" ? <ArrowUpAZ className="w-5 h-5" /> : <ArrowDownAZ className="w-5 h-5" />}
+                {prefs.sortDir === "asc" ? <ArrowUpAZ className="size-5" /> : <ArrowDownAZ className="size-5" />}
               </IconButton>
             </DropdownMenuTrigger>
           </TooltipTrigger>
@@ -168,9 +168,9 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <IconButton tone={filtersActive ? "active" : "segment"} aria-label="Filtry">
-                <Funnel className="w-5 h-5" />
+                <Funnel className="size-5" />
                 {filtersActive && (
-                  <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary" />
+                  <span className="absolute top-1 right-1 size-1.5 rounded-full bg-primary" />
                 )}
               </IconButton>
             </DropdownMenuTrigger>
@@ -192,7 +192,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                 onClick={() => setViewPref("filterColor", c)}
                 data-swatch={c}
                 className={cn(
-                  "w-6 h-6 rounded-full border-2 transition-all",
+                  "size-6 rounded-full border-2 transition-all",
                   colorClasses[c],
                   prefs.filterColor === c ? "border-primary scale-110 ring-2 ring-primary/20" : "border-border/50 hover:scale-105"
                 )}
@@ -232,7 +232,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                   prefs.filterPriority === p ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground"
                 )}
               >
-                {p !== "none" && <Flag className={cn("w-2.5 h-2.5 fill-current", PRIORITY_COLOR_CLASS[p])} />}
+                {p !== "none" && <Flag className={cn("size-2.5 fill-current", PRIORITY_COLOR_CLASS[p])} />}
                 {PRIORITY_LABELS[p]}
               </button>
             ))}
@@ -255,7 +255,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                   setViewPref("filterPriority", "all");
                 }}
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 mr-2" /> Wyczyść filtry
+                <SlidersHorizontal className="size-3.5 mr-2" /> Wyczyść filtry
               </DropdownMenuItem>
             </>
           )}

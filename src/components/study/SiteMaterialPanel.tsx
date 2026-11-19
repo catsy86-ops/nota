@@ -52,10 +52,10 @@ export function SiteMaterialPanel({ site, journal }: { site: SiteInfo; journal: 
     <section aria-label="Zużycie materiału" data-testid="site-material" className="rounded-card border border-border/60 bg-card">
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-controls="site-material-body"
         className="pressable flex w-full items-center gap-2 px-3 py-2.5 text-left coarse:min-h-11">
-        <Package2 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        <Package2 className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         <span className="flex-1 text-sm font-semibold">Zużycie materiału</span>
         <span className="text-xs tabular-nums text-muted-foreground">{amount}{usage.cost !== null ? ` · ${zl(usage.cost)}` : ""}</span>
-        <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden />
+        <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden />
       </button>
       {open && (
         <div id="site-material-body" className="space-y-3 border-t border-border px-3 py-3">
@@ -98,8 +98,8 @@ export function SiteMaterialPanel({ site, journal }: { site: SiteInfo; journal: 
           ))}
           <p className="text-2xs text-muted-foreground">Ceny są wspólne dla wszystkich budów i zostają na tym urządzeniu.</p>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => void copy()} className="coarse:h-11"><Copy className="mr-1.5 h-4 w-4" aria-hidden />Kopiuj</Button>
-            <Button type="button" variant="outline" size="sm" onClick={csv} className="coarse:h-11"><FileSpreadsheet className="mr-1.5 h-4 w-4" aria-hidden />CSV</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => void copy()} className="coarse:h-11"><Copy className="mr-1.5 size-4" aria-hidden />Kopiuj</Button>
+            <Button type="button" variant="outline" size="sm" onClick={csv} className="coarse:h-11"><FileSpreadsheet className="mr-1.5 size-4" aria-hidden />CSV</Button>
           </div>
         </div>
       )}

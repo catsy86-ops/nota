@@ -54,9 +54,9 @@ export function ViewSkeleton({ view }: { view: SkeletonView }) {
         {/* Pasek nawigacji miesiąca */}
         {month && (
           <div className="flex items-center gap-2">
-            <Bone className="h-9 w-9 rounded-full" />
+            <Bone className="size-9 rounded-full" />
             <Bone className="h-6 w-40" />
-            <Bone className="h-9 w-9 rounded-full" />
+            <Bone className="size-9 rounded-full" />
             <Bone className="ml-auto h-9 w-24 rounded-full" />
           </div>
         )}

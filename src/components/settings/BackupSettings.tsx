@@ -59,9 +59,9 @@ function StoragePersistenceStatus() {
       <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
         <div className="flex items-center gap-2">
           {info.persisted ? (
-            <ShieldCheck className="w-4 h-4 text-success-ink shrink-0" />
+            <ShieldCheck className="size-4 text-success-ink shrink-0" />
           ) : (
-            <ShieldAlert className="w-4 h-4 text-warning-ink shrink-0" />
+            <ShieldAlert className="size-4 text-warning-ink shrink-0" />
           )}
           <p className="text-foreground">
             {info.persisted
@@ -220,7 +220,7 @@ function BackupFileTarget() {
     <Section title="Miejsce zapisu backupu">
       <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
         <div className="flex items-center gap-2">
-          <FileCog className="w-4 h-4 text-muted-foreground shrink-0" />
+          <FileCog className="size-4 text-muted-foreground shrink-0" />
           <p className="text-foreground">
             {fileName
               ? <>Kopie nadpisują <span className="font-semibold">{fileName}</span> zamiast pobierać nowy plik. Każdy kolejny backup, także automatyczny, zastępuje poprzedni — starszych kopii w tym pliku nie będzie.</>
@@ -362,7 +362,7 @@ function RestoreBackup() {
   return (
     <>
       <Button onClick={pick} variant="outline" className="w-full gap-2">
-        <Database className="w-4 h-4" /> Przywróć z pliku backupu
+        <Database className="size-4" /> Przywróć z pliku backupu
       </Button>
       <AlertDialog open={!!backup} onOpenChange={(o) => { if (!o && !busy) setBackup(null); }}>
         <AlertDialogContent>
@@ -558,11 +558,11 @@ export function BackupSettings() {
       </label>
 
       <Button onClick={() => exportNow(askSkip)} className="w-full gap-2">
-        <Download className="w-4 h-4" /> Pobierz pełny backup teraz
+        <Download className="size-4" /> Pobierz pełny backup teraz
       </Button>
       {canShareBackupFile() && (
         <Button variant="outline" onClick={() => shareNow(askSkip)} className="w-full gap-2">
-          <Share2 className="w-4 h-4" /> Wyślij kopię
+          <Share2 className="size-4" /> Wyślij kopię
         </Button>
       )}
       <AlertDialog open={!!skipPrompt} onOpenChange={(o) => { if (!o) skipPrompt?.resolve(false); }}>
@@ -605,7 +605,7 @@ export function BackupSettings() {
             </p>
           </div>
           <Button type="button" size="sm" variant="outline" onClick={handleDownloadReport} className="shrink-0 gap-1.5">
-            <FileDown className="w-3.5 h-3.5" />Pobierz
+            <FileDown className="size-3.5" />Pobierz
           </Button>
         </div>
         <DocFormatOverride />

@@ -21,7 +21,7 @@ export function NoteLookPicker({ icon, cover, onChange }: NoteLookPickerProps) {
           data-tip="Ikona i okładka"
           className={cn("card-action", icon || cover ? "text-primary-ink" : "text-muted-foreground")}
         >
-          {icon ? <span className="text-base leading-none" aria-hidden>{icon}</span> : <FaceSlightlySmiling className="w-4 h-4" />}
+          {icon ? <span className="text-base leading-none" aria-hidden>{icon}</span> : <FaceSlightlySmiling className="size-4" />}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
@@ -43,7 +43,7 @@ export function NoteLookPicker({ icon, cover, onChange }: NoteLookPickerProps) {
                 aria-pressed={icon === e}
                 aria-label={`Ustaw ikonę: ${e}`}
                 className={cn(
-                  "pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-control text-sm flex items-center justify-center outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                  "pressable size-7 coarse:w-9 coarse:h-9 rounded-control text-sm flex items-center justify-center outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                   icon === e ? "bg-primary/10 ring-1 ring-primary" : "hover:bg-muted/80",
                 )}
               >

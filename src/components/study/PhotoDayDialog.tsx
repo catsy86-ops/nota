@@ -163,7 +163,7 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
         <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => void pick(e)} data-testid="photo-day-file" />
         {groups.length === 0 ? (
           <Button onClick={() => inputRef.current?.click()} disabled={!!busy} className="coarse:h-11">
-            <ImagePlus className="h-4 w-4" aria-hidden />{busy ?? "Wybierz zdjęcia"}
+            <ImagePlus className="size-4" aria-hidden />{busy ?? "Wybierz zdjęcia"}
           </Button>
         ) : (
           <>
@@ -192,7 +192,7 @@ export function PhotoDayDialog({ open, onOpenChange }: { open: boolean; onOpenCh
                         <span className="text-xs text-muted-foreground">{g.keys.length} {pluralPl(g.keys.length, ["zdjęcie", "zdjęcia", "zdjęć"])}</span>
                       </div>
                       <div className="my-2 flex gap-1.5 overflow-hidden">
-                        {g.keys.slice(0, 5).map((k) => <img key={k} src={urls[k]} alt="" className="h-12 w-12 shrink-0 rounded-field object-cover" />)}
+                        {g.keys.slice(0, 5).map((k) => <img key={k} src={urls[k]} alt="" className="size-12 shrink-0 rounded-field object-cover" />)}
                       </div>
                       <select
                         aria-label={`Budowa wpisu ${time(g.start)}`}

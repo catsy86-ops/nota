@@ -35,7 +35,7 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
           data-tip-keys="L"
           aria-label="Etykiety"
         >
-          <Tag className="w-4 h-4" />
+          <Tag className="size-4" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
@@ -73,7 +73,7 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
             title="Dodaj etykietę"
             className="pressable p-1.5 rounded-field bg-primary text-primary-foreground coarse:min-h-11 coarse:min-w-11"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="size-3" />
           </button>
         </div>
       </PopoverContent>
@@ -104,7 +104,7 @@ export function LabelBadges({ labels, onRemove }: LabelBadgesProps) {
           {label}
           {onRemove && (
             <button onClick={(e) => { e.stopPropagation(); onRemove(label); }}>
-              <X className="w-2.5 h-2.5" />
+              <X className="size-2.5" />
             </button>
           )}
         </Badge>

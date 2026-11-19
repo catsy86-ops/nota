@@ -193,10 +193,10 @@ function StatsBody() {
         <ExperienceRows card={s.card} />
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => copyCard(cardText)} className="coarse:h-11">
-            <Copy className="mr-1.5 h-4 w-4" aria-hidden />Kopiuj
+            <Copy className="mr-1.5 size-4" aria-hidden />Kopiuj
           </Button>
           <Button variant="outline" onClick={() => downloadCard(cardText, today)} className="coarse:h-11">
-            <Download className="mr-1.5 h-4 w-4" aria-hidden />Pobierz .md
+            <Download className="mr-1.5 size-4" aria-hidden />Pobierz .md
           </Button>
         </div>
       </Section>
@@ -262,7 +262,7 @@ function Tile({ label, value, hint, ring }: { label: string; value: string; hint
       <dd className="mt-0.5 flex items-center justify-between gap-2">
         <span className="num-lg">{value}</span>
         {ring !== undefined && (
-          <svg viewBox="0 0 36 36" className="h-9 w-9 shrink-0 -rotate-90" aria-hidden>
+          <svg viewBox="0 0 36 36" className="size-9 shrink-0 -rotate-90" aria-hidden>
             <circle cx="18" cy="18" r={r} fill="none" stroke="var(--muted)" strokeWidth="4" />
             <circle cx="18" cy="18" r={r} fill="none" stroke="var(--primary)" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${c * ring} ${c}`} />
           </svg>

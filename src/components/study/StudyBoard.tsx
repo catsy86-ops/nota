@@ -22,7 +22,7 @@ const COLUMN_HINT: Record<Column, string> = {
 const actionClass =
   "pressable inline-flex h-7 items-center gap-1 rounded-control border border-border px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground coarse:h-11 coarse:px-3 coarse:text-sm";
 const moveClass =
-  "grid h-7 w-7 place-items-center rounded-control border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30 coarse:h-11 coarse:w-11";
+  "grid size-7 place-items-center rounded-control border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30 coarse:h-11 coarse:w-11";
 const moduleLabel = (id: StudyTopic["module"]) => MODULES.find((m) => m.id === id)?.label ?? id;
 
 /**
@@ -81,7 +81,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
           <p className="section-caps">{moduleLabel(topic.module)}</p>
           <h4 className="mt-0.5 font-medium leading-snug">
             {topic.title}
-            {critical && <span className="ml-1.5 inline-flex align-[-2px]" role="img" title="Zawiera punkty krytyczne" aria-label="Zawiera punkty krytyczne"><TriangleAlert className="h-3.5 w-3.5 text-warning-ink" aria-hidden /></span>}
+            {critical && <span className="ml-1.5 inline-flex align-[-2px]" role="img" title="Zawiera punkty krytyczne" aria-label="Zawiera punkty krytyczne"><TriangleAlert className="size-3.5 text-warning-ink" aria-hidden /></span>}
           </h4>
         </div>
         {/* Strzałki przy tytule: przesunięcie tematu to decyzja o nim, nie akcja z listy. */}
@@ -94,7 +94,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
             title={at > 0 ? `Do „${COLUMN_LABEL[COLUMNS[at - 1]]}”` : undefined}
             className={moveClass}
           >
-            <ChevronLeft className="h-4 w-4" aria-hidden />
+            <ChevronLeft className="size-4" aria-hidden />
           </button>
           <button
             type="button"
@@ -104,7 +104,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
             title={at < COLUMNS.length - 1 ? `Do „${COLUMN_LABEL[COLUMNS[at + 1]]}”` : undefined}
             className={moveClass}
           >
-            <ChevronRight className="h-4 w-4" aria-hidden />
+            <ChevronRight className="size-4" aria-hidden />
           </button>
         </div>
       </div>
@@ -122,7 +122,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
           )}
           data-topic-problem={practice.lastProblem.resolved === undefined ? "open" : "resolved"}
         >
-          <TriangleAlert className="mt-px h-3.5 w-3.5 shrink-0 text-warning-ink" aria-hidden />
+          <TriangleAlert className="mt-px size-3.5 shrink-0 text-warning-ink" aria-hidden />
           <span className="min-w-0">
             <span className="font-medium">{practice.lastProblem.resolved === undefined ? "Problem na budowie" : "Rozwiązany problem"}</span>
             {" "}({new Date(practice.lastProblem.at).toLocaleDateString("pl-PL", { day: "numeric", month: "numeric" })}): {practice.lastProblem.text.trim().split("\n")[0] || "bez opisu"}
@@ -169,7 +169,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
             aria-label={`${topic.title}: ćwicz pytania${due > 0 ? `, ${due} na dziś` : ""}`}
             className={cn(actionClass, "border-primary/50 bg-primary/10 font-medium text-primary-ink hover:bg-primary/20 hover:text-primary-ink", due > 0 && "border-primary")}
           >
-            <Play className="h-3.5 w-3.5 shrink-0" aria-hidden />Ćwicz
+            <Play className="size-3.5 shrink-0" aria-hidden />Ćwicz
             {due > 0 && <span className="ml-0.5 stamp-tag text-2xs text-primary-ink tabular-nums" data-testid="topic-due">{due} na dziś</span>}
           </button>
           <button
@@ -178,7 +178,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
             aria-label={`${topic.title}: wpis z budowy`}
             className={actionClass}
           >
-            <NotebookPen className="h-3.5 w-3.5 shrink-0" aria-hidden />Wpis z budowy
+            <NotebookPen className="size-3.5 shrink-0" aria-hidden />Wpis z budowy
           </button>
           <button
             type="button"
@@ -196,7 +196,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
             title="Notatka z listą kontrolną tematu"
             className={actionClass}
           >
-            <FilePlusCorner className="h-3.5 w-3.5 shrink-0" aria-hidden />Do notatki
+            <FilePlusCorner className="size-3.5 shrink-0" aria-hidden />Do notatki
           </button>
         </div>
       </div>

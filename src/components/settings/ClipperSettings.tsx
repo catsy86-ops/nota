@@ -39,7 +39,7 @@ export function ClipperSettings() {
             );
           }}
         >
-          <Copy className="w-4 h-4 mr-1.5" />Kopiuj kod
+          <Copy className="size-4 mr-1.5" />Kopiuj kod
         </Button>
       </div>
     </Section>

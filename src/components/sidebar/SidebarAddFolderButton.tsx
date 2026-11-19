@@ -26,15 +26,15 @@ export function SidebarAddFolderButton({ onAdd, kind = "folder", disabled }: { o
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") { setName(""); setAdding(false); } }}
           className="text-xs bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground w-24" placeholder="Nazwa..." />
-        <IconButton size="sm" tone="active" onClick={submit} aria-label={t.confirm}><Check className="w-3.5 h-3.5" /></IconButton>
-        <IconButton size="sm" onClick={() => { setName(""); setAdding(false); }} aria-label={t.cancel}><X className="w-3.5 h-3.5" /></IconButton>
+        <IconButton size="sm" tone="active" onClick={submit} aria-label={t.confirm}><Check className="size-3.5" /></IconButton>
+        <IconButton size="sm" onClick={() => { setName(""); setAdding(false); }} aria-label={t.cancel}><X className="size-3.5" /></IconButton>
       </div>
     );
   }
 
   return (
     <IconButton size="sm" onClick={() => setAdding(true)} aria-label={t.open} title={t.open} disabled={disabled}>
-      <t.Icon className="w-3.5 h-3.5" />
+      <t.Icon className="size-3.5" />
     </IconButton>
   );
 }

@@ -62,7 +62,7 @@ export function ClientHistory({ client, siteIds, onOpenSite, onOpenDebts }: {
                     <span className="block truncate text-sm font-medium">{r.name}</span>
                     {bits && <span className="block truncate text-xs text-muted-foreground">{bits}</span>}
                   </span>
-                  {onOpenSite && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}
+                  {onOpenSite && <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
                 </>
               );
               const cls = "flex w-full items-center gap-2 rounded-field border border-border px-3 py-2 text-left";
@@ -79,7 +79,7 @@ export function ClientHistory({ client, siteIds, onOpenSite, onOpenDebts }: {
       )}
       {person && (
         <div className="flex flex-wrap items-center gap-2 rounded-field bg-muted/60 px-3 py-2 text-sm" data-testid="client-debt">
-          <HandCoins className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <HandCoins className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           <span className="min-w-0 flex-1">
             {person.balance > 0 ? <>W Długach winien Ci <span className="font-mono font-semibold tabular-nums">{formatAmount(person.balance)}</span></>
               : person.balance < 0 ? <>W Długach jesteś winien <span className="font-mono font-semibold tabular-nums">{formatAmount(-person.balance)}</span></>

@@ -109,7 +109,7 @@ function StrengthMeter({ password }: { password: string }) {
 function NoRecoveryWarning() {
   return (
     <div role="note" className="flex gap-2 rounded-field border border-destructive/40 bg-destructive/5 p-3 text-xs leading-relaxed">
-      <TriangleAlert className="w-4 h-4 shrink-0 text-destructive-ink mt-0.5" aria-hidden />
+      <TriangleAlert className="size-4 shrink-0 text-destructive-ink mt-0.5" aria-hidden />
       <p>
         <strong>Zapomnianego hasła nie da się odzyskać.</strong> Nie ma resetu ani konta, które mogłoby to zrobić — treść jest
         szyfrowana tylko na Twoich urządzeniach. Bez hasła (albo kodu awaryjnego) zablokowane notatki są nie do odczytania.
@@ -211,7 +211,7 @@ function UnlockForm({ onUnlocked, onRecover }: { onUnlocked: () => void; onRecov
           <Button type="button" variant="outline" disabled={busy || wait > 0} onClick={() => void biometric()}>Odblokuj biometrią</Button>
         )}
         <Button type="submit" disabled={busy || !password || wait > 0}>
-          <KeyRound className="w-4 h-4 mr-1.5" />{busy ? "Sprawdzam…" : "Odblokuj"}
+          <KeyRound className="size-4 mr-1.5" />{busy ? "Sprawdzam…" : "Odblokuj"}
         </Button>
       </ResponsiveDialogFooter>
     </form>
@@ -463,9 +463,9 @@ function RecoveryCodeStep({ code, onClose }: { code: string; onClose: () => void
         ))}
       </p>
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={copy}><Copy className="w-3.5 h-3.5 mr-1.5" />Kopiuj</Button>
-        <Button type="button" variant="outline" size="sm" onClick={download}><Download className="w-3.5 h-3.5 mr-1.5" />Pobierz .txt</Button>
-        <Button type="button" variant="outline" size="sm" onClick={() => printRecoveryCode(code)}><Printer className="w-3.5 h-3.5 mr-1.5" />Drukuj</Button>
+        <Button type="button" variant="outline" size="sm" onClick={copy}><Copy className="size-3.5 mr-1.5" />Kopiuj</Button>
+        <Button type="button" variant="outline" size="sm" onClick={download}><Download className="size-3.5 mr-1.5" />Pobierz .txt</Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => printRecoveryCode(code)}><Printer className="size-3.5 mr-1.5" />Drukuj</Button>
       </div>
       <label className="flex items-start gap-2 text-sm">
         <Checkbox className="mt-0.5 coarse:h-6 coarse:w-6" checked={saved} onCheckedChange={(v) => setSaved(v === true)} />

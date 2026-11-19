@@ -43,7 +43,7 @@ export function StudyChecklist() {
             onlyCritical ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:bg-muted",
           )}
         >
-          <TriangleAlert className="mr-1 inline h-3.5 w-3.5 align-[-2px] text-warning-ink" aria-hidden />Tylko punkty krytyczne
+          <TriangleAlert className="mr-1 inline size-3.5 align-[-2px] text-warning-ink" aria-hidden />Tylko punkty krytyczne
         </button>
         {done > 0 && (
           <Button
@@ -56,14 +56,14 @@ export function StudyChecklist() {
             }}
             className="ml-auto coarse:h-11"
           >
-            <RotateCcw className="w-4 h-4 mr-1.5" />Wyczyść odhaczenia
+            <RotateCcw className="size-4 mr-1.5" />Wyczyść odhaczenia
           </Button>
         )}
       </div>
 
       <label className="relative block max-w-md">
         <span className="sr-only">Szukaj na liście kontrolnej</span>
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
         <input
           type="search"
           value={query}
@@ -103,7 +103,7 @@ export function StudyChecklist() {
                           className="mt-0.5"
                         />
                         <label htmlFor={`study-${item.id}`} className={cn("text-sm leading-snug cursor-pointer", on && "text-muted-foreground line-through decoration-muted-foreground/40")}>
-                          {item.critical && <span className="mr-1 inline-flex align-[-2px]" role="img" aria-label="Punkt krytyczny"><TriangleAlert className="h-3.5 w-3.5 text-warning-ink" aria-hidden /></span>}
+                          {item.critical && <span className="mr-1 inline-flex align-[-2px]" role="img" aria-label="Punkt krytyczny"><TriangleAlert className="size-3.5 text-warning-ink" aria-hidden /></span>}
                           {item.text}
                           {isCustomId(item.id) && <span className="ml-1.5 align-[1px] rounded-full bg-muted px-1.5 py-px text-2xs text-muted-foreground no-underline">własny</span>}
                           {item.risk && <span className="mt-0.5 block text-xs text-muted-foreground no-underline">Ryzyko: {item.risk.replace(/^[^=]*= ?/, "")}</span>}

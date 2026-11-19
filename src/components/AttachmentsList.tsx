@@ -39,7 +39,7 @@ export function AttachmentsBadge({ attachments, className }: { attachments?: Att
       aria-label={`Załączniki: ${n}`}
       className={cn("inline-flex items-center gap-1 rounded-full bg-foreground/5 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground", className)}
     >
-      <Paperclip className="w-3 h-3" aria-hidden />
+      <Paperclip className="size-3" aria-hidden />
       {n}
     </span>
   );
@@ -82,7 +82,7 @@ export function AttachmentRow({ attachment: a, onRemove, children }: RowProps) {
   return (
     <li data-testid="attachment-row" data-attachment-name={a.name} className="rounded-field border border-border/60 bg-background/50 px-2 py-1.5">
       <div className="flex items-center gap-2">
-      <Icon className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden />
+      <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-medium text-foreground" title={a.name}>{a.name}</p>
         <p className="truncate text-2xs text-muted-foreground">
@@ -98,7 +98,7 @@ export function AttachmentRow({ attachment: a, onRemove, children }: RowProps) {
           title="Otwórz w nowej karcie"
           aria-label={`Otwórz ${a.name}`}
         >
-          <ExternalLink className="w-3.5 h-3.5" />
+          <ExternalLink className="size-3.5" />
         </IconButton>
       )}
       <IconButton
@@ -108,7 +108,7 @@ export function AttachmentRow({ attachment: a, onRemove, children }: RowProps) {
         title="Pobierz"
         aria-label={`Pobierz ${a.name}`}
       >
-        <Download className="w-3.5 h-3.5" />
+        <Download className="size-3.5" />
       </IconButton>
       {onRemove && (
         <IconButton
@@ -118,7 +118,7 @@ export function AttachmentRow({ attachment: a, onRemove, children }: RowProps) {
           title="Usuń"
           aria-label={`Usuń ${a.name}`}
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="size-3.5" />
         </IconButton>
       )}
       </div>
@@ -196,7 +196,7 @@ export function AttachmentsReadOnlyList({ attachments, className }: { attachment
   return (
     <section aria-label="Załączniki" className={cn("mt-6", className)}>
       <p className="ui-hint mb-2 flex items-center gap-1 font-semibold">
-        <Paperclip className="w-3 h-3" aria-hidden /> Załączniki ({attachments.length})
+        <Paperclip className="size-3" aria-hidden /> Załączniki ({attachments.length})
       </p>
       <ul className="space-y-1.5">
         {attachments.map((a) => (

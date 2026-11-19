@@ -29,7 +29,7 @@ export function HeightsButton({ variant = "pill", className }: { variant?: "pill
           className,
         )}
       >
-        <Ruler className="h-4 w-4" aria-hidden />
+        <Ruler className="size-4" aria-hidden />
         {variant !== "icon" && "Wysokości"}
       </button>
       <Dialog open={open} onOpenChange={setOpen}>

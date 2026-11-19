@@ -40,7 +40,7 @@ export function EntryTopicPanel({ topic, current, items, checked, onTopic, onTog
           <div className="flex flex-wrap items-start justify-between gap-2">
             <p className="text-sm leading-snug text-muted-foreground">{current.summary}</p>
             <Button type="button" variant="outline" size="sm" onClick={() => onPractice(current.id)}>
-              <Play className="mr-1.5 h-3.5 w-3.5" />Ćwicz pytania
+              <Play className="mr-1.5 size-3.5" />Ćwicz pytania
             </Button>
           </div>
           <p className="text-xs font-medium text-foreground">Sprawdź przed przejściem dalej</p>
@@ -49,7 +49,7 @@ export function EntryTopicPanel({ topic, current, items, checked, onTopic, onTog
               <li key={item.id} className="flex items-start gap-2.5">
                 <Checkbox id={`journal-${item.id}`} checked={checked.has(item.id)} onCheckedChange={() => onToggle(item.id)} className="mt-0.5" />
                 <label htmlFor={`journal-${item.id}`} className="cursor-pointer text-sm leading-snug">
-                  {item.critical && <span className="mr-1 inline-flex align-[-2px]" role="img" aria-label="Punkt krytyczny"><TriangleAlert className="h-3.5 w-3.5 text-warning-ink" aria-hidden /></span>}
+                  {item.critical && <span className="mr-1 inline-flex align-[-2px]" role="img" aria-label="Punkt krytyczny"><TriangleAlert className="size-3.5 text-warning-ink" aria-hidden /></span>}
                   {item.text}
                   {item.risk && <span className="mt-0.5 block text-xs text-muted-foreground">Ryzyko: {item.risk.replace(/^[^=]*= ?/, "")}</span>}
                 </label>

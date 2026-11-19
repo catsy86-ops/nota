@@ -51,7 +51,7 @@ export function SitePlan({ site }: { site: SiteInfo }) {
               <Checkbox checked={i.doneAt !== undefined} onCheckedChange={(v) => toggle(i.id, v === true)} aria-label={`Zrobione: ${i.text}`} className="coarse:h-6 coarse:w-6" />
               <span className={i.doneAt !== undefined ? "min-w-0 flex-1 truncate text-sm line-through text-muted-foreground" : "min-w-0 flex-1 truncate text-sm"}>{i.text}</span>
               <Button variant="ghost" size="icon" onClick={() => remove(i.id)} aria-label={`Usuń: ${i.text}`} className="coarse:h-11 coarse:w-11">
-                <Trash2 className="h-4 w-4" aria-hidden />
+                <Trash2 className="size-4" aria-hidden />
               </Button>
             </li>
           ))}

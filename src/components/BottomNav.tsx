@@ -177,8 +177,8 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
           <ul className={cn("relative grid items-end h-[64px] max-w-md mx-auto px-2", showPaletteSlot ? "grid-cols-6" : "grid-cols-5")}>
             {slots.map(({ key, label, Icon }) => (
               <NavItem key={key} active={view === key} label={label} onClick={() => (key === "notes" && view === "notes" ? focusSearch() : onGo(key))}>
-                <Icon className={cn("nav-lucide w-5 h-5", sectionIconClass(key))} />
-                <FittingIcon variant={key === "notes" ? "elbow" : key === "today" ? "tee" : "valve"} className={cn("hydro-fitting w-5 h-5", sectionIconClass(key))} />
+                <Icon className={cn("nav-lucide size-5", sectionIconClass(key))} />
+                <FittingIcon variant={key === "notes" ? "elbow" : key === "today" ? "tee" : "valve"} className={cn("hydro-fitting size-5", sectionIconClass(key))} />
               </NavItem>
             ))}
 
@@ -208,7 +208,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
                 }}
                 aria-label={view === "study" ? "Nowy wpis z budowy" : "Nowa notatka"}
                 title={view === "study" ? "Nowy wpis z budowy (przytrzymaj: nowa notatka)" : "Nowa notatka (przytrzymaj po więcej)"}
-                className="fab-brand relative w-14 h-14 rounded-full flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                className="fab-brand relative size-14 rounded-full flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 {/* Pierścień postępu (F1.1): rośnie przez 420 ms przytrzymania, zanika przy zwolnieniu. */}
                 <svg aria-hidden viewBox="0 0 68 68" className="pointer-events-none absolute -inset-1.5 size-[calc(100%+12px)] -rotate-90">
@@ -226,27 +226,27 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
                   animate={{ rotate: reduced ? 0 : quarterTurns * 90 }}
                   transition={spring.snap}
                 >
-                  <Plus className="w-6 h-6" />
+                  <Plus className="size-6" />
                 </motion.span>
               </motion.button>
             </motion.li>
 
             {[{ key: bottomSlot as View, ...SLOT_META[bottomSlot] }].map(({ key, label, Icon }) => (
               <NavItem key={key} active={view === key} label={label} onClick={() => onGo(key)}>
-                <Icon className="nav-lucide w-5 h-5" />
-                <FittingIcon variant="valve" className="hydro-fitting w-5 h-5" />
+                <Icon className="nav-lucide size-5" />
+                <FittingIcon variant="valve" className="hydro-fitting size-5" />
               </NavItem>
             ))}
 
             {showPaletteSlot && (
               <NavItem active={false} current={false} label="Szukaj" onClick={onOpenPalette}>
-                <Search className="w-5 h-5" />
+                <Search className="size-5" />
               </NavItem>
             )}
             {/* W dziale z „Więcej” przycisk mówi, gdzie jesteś („Plany”), a stuknięcie dalej otwiera arkusz. */}
             <NavItem active={isMoreActive || moreOpen} current={false} label={moreCurrent?.label ?? "Więcej"} onClick={() => setMoreOpen(true)}
               buttonProps={{ "aria-haspopup": "dialog", "aria-expanded": moreOpen, "aria-label": moreCurrent ? `Więcej: ${moreCurrent.label}` : undefined }}>
-              {moreCurrent ? <moreCurrent.Icon className="w-5 h-5" /> : <Ellipsis className="w-5 h-5" />}
+              {moreCurrent ? <moreCurrent.Icon className="size-5" /> : <Ellipsis className="size-5" />}
             </NavItem>
           </ul>
         </LayoutGroup>
@@ -426,8 +426,8 @@ function QuickTile({ Icon, title, hint, tone, recent = false, index = 0, onClick
       className={cn("tile-enter pressable group relative flex items-center gap-3 overflow-hidden rounded-card border bg-card py-2.5 pl-4 pr-3 coarse:min-h-14 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring", recent ? "border-primary/50 bg-primary/5" : "border-border/60")}
     >
       <span aria-hidden className={cn("absolute inset-y-0 left-0 w-1", QUICK_STRIPE[tone])} />
-      <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-card transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
-        <Icon className="h-5 w-5" />
+      <span className={cn("grid size-11 shrink-0 place-items-center rounded-card transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
+        <Icon className="size-5" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
@@ -455,8 +455,8 @@ const SheetTile = forwardRef<HTMLButtonElement, SheetTileProps>(function SheetTi
         active ? "bg-primary/10 border-primary/40" : "bg-muted/50 hover:bg-muted border-border/50",
       )}
     >
-      <span className="w-10 h-10 rounded-card bg-background flex items-center justify-center text-primary-ink">
-        <Icon className="w-5 h-5" />
+      <span className="size-10 rounded-card bg-background flex items-center justify-center text-primary-ink">
+        <Icon className="size-5" />
       </span>
       <span className="text-xs font-medium font-display leading-tight text-center text-foreground">{label}</span>
       {badge !== undefined && (

@@ -191,7 +191,7 @@ export function RouteSection({ route, mpp, onChange, onDelete, suggestions, onFo
         <Checkbox checked={!!route.estimate} onCheckedChange={(v) => { const { estimate: _e, ...rest } = route; onChange(v === true ? { ...rest, estimate: true } : rest); }} />
         Długość szacunkowa
       </label>
-      <Button type="button" variant="outline" onClick={onDelete} className="pressable w-full text-destructive-ink coarse:h-11"><Trash className="mr-1.5 h-4 w-4" aria-hidden />Usuń trasę</Button>
+      <Button type="button" variant="outline" onClick={onDelete} className="pressable w-full text-destructive-ink coarse:h-11"><Trash className="mr-1.5 size-4" aria-hidden />Usuń trasę</Button>
     </section>
   );
 }
@@ -209,7 +209,7 @@ export function RoutesList({ routes, mpp, selectedId, onSelect }: { routes: read
             <li key={r.id}>
               <button type="button" onClick={() => onSelect(r.id)} aria-pressed={r.id === selectedId}
                 className={cn("flex min-h-10 w-full items-center gap-2 rounded-control px-2 text-left text-sm hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11", r.id === selectedId && "bg-muted")}>
-                <span aria-hidden className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: SYSTEM_META[r.system].color }} />
+                <span aria-hidden className="size-3 shrink-0 rounded-full" style={{ backgroundColor: SYSTEM_META[r.system].color }} />
                 <span className="min-w-0 flex-1 truncate">{r.label || `${SYSTEM_META[r.system].short} ${i + 1}`}{r.diameterMm ? ` · Ø${String(r.diameterMm).replace(".", ",")}` : ""}</span>
                 <span className="font-mono text-xs tabular-nums text-muted-foreground">{lengthLabel(measureRoute(r, mpp)).replace(" (bez skali)", "")}</span>
               </button>

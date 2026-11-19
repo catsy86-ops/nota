@@ -53,7 +53,7 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
   return (
     <section aria-label="Do zamówienia" data-testid="site-order" className={`${cardClass} space-y-2 p-3`}>
       <h3 className="flex items-center gap-2 section-caps">
-        <PackageCheck className="h-3.5 w-3.5" aria-hidden />
+        <PackageCheck className="size-3.5" aria-hidden />
         Do zamówienia
       </h3>
       {missing > 0 && (
@@ -83,13 +83,13 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
       <p className="text-2xs text-muted-foreground">Liczone {since}{order.entries > 0 && ` · ${order.entries} ${order.entries === 1 ? "wpis" : "wpisów"}`}.</p>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" onClick={copy} disabled={empty} className="coarse:h-11">
-          <Copy className="mr-1.5 h-4 w-4" aria-hidden />Kopiuj listę
+          <Copy className="mr-1.5 size-4" aria-hidden />Kopiuj listę
         </Button>
         <Button variant="outline" size="sm" onClick={sendWhatsApp} disabled={empty} className="coarse:h-11">
-          <MessageCircle className="mr-1.5 h-4 w-4" aria-hidden />WhatsApp
+          <MessageCircle className="mr-1.5 size-4" aria-hidden />WhatsApp
         </Button>
         <Button size="sm" onClick={markOrdered} disabled={empty} className="coarse:h-11">
-          <Check className="mr-1.5 h-4 w-4" aria-hidden />Oznacz jako zamówione
+          <Check className="mr-1.5 size-4" aria-hidden />Oznacz jako zamówione
         </Button>
       </div>
       {site.orders && site.orders.length > 0 && (

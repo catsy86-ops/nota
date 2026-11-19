@@ -48,30 +48,30 @@ export function JournalItemMenu({ entry: e, resolved, onToggleResolved }: {
           type="button"
           aria-label="Opcje wpisu"
           title="Edytuj, kopiuj, usuń"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground data-[state=open]:bg-muted coarse:h-11 coarse:w-11"
+          className="grid size-8 shrink-0 place-items-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground data-[state=open]:bg-muted coarse:h-11 coarse:w-11"
         >
-          <Ellipsis className="h-4 w-4" aria-hidden />
+          <Ellipsis className="size-4" aria-hidden />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">
         <DropdownMenuItem onSelect={() => openJournalEdit(e)} className={item}>
-          <Pencil className="h-4 w-4" aria-hidden />Edytuj wpis
+          <Pencil className="size-4" aria-hidden />Edytuj wpis
         </DropdownMenuItem>
         {e.kind === "problem" && (
           <DropdownMenuItem onSelect={onToggleResolved} className={item}>
-            {resolved ? <RotateCcw className="h-4 w-4" aria-hidden /> : <CircleCheck className="h-4 w-4" aria-hidden />}
+            {resolved ? <RotateCcw className="size-4" aria-hidden /> : <CircleCheck className="size-4" aria-hidden />}
             {resolved ? "Otwórz problem ponownie" : "Oznacz jako rozwiązany"}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem onSelect={() => void copy()} className={item}>
-          <Copy className="h-4 w-4" aria-hidden />Kopiuj tekst
+          <Copy className="size-4" aria-hidden />Kopiuj tekst
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void share()} className={item}>
-          <Share2 className="h-4 w-4" aria-hidden />Udostępnij
+          <Share2 className="size-4" aria-hidden />Udostępnij
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={remove} className={`${item} text-destructive-ink focus:text-destructive-ink`}>
-          <Trash2 className="h-4 w-4" aria-hidden />Usuń wpis
+          <Trash2 className="size-4" aria-hidden />Usuń wpis
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

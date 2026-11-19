@@ -27,7 +27,7 @@ export function OfflineStatus() {
     const goOnline = () => {
       setOffline(false);
       if (wasOfflineRef.current) {
-        toast("Połączenie wróciło", { icon: <Wifi className="h-4 w-4" /> });
+        toast("Połączenie wróciło", { icon: <Wifi className="size-4" /> });
       }
       wasOfflineRef.current = false;
     };
@@ -37,7 +37,7 @@ export function OfflineStatus() {
       wasOfflineRef.current = true;
       toast("Jesteś offline", {
         description: "Notatki nadal zapisują się lokalnie.",
-        icon: <CloudOff className="h-4 w-4" />,
+        icon: <CloudOff className="size-4" />,
         duration: 6000,
       });
     };
@@ -99,13 +99,13 @@ export function OfflineStatus() {
         className={`save-status glass-strong fixed bottom-24 left-1/2 z-modal flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 coarse:min-h-11 text-xs text-muted-foreground shadow-elevation-3 transition-colors hover:text-foreground sm:bottom-6 ${passive ? "pointer-events-none max-sm:in-data-plan-full:hidden" : "cursor-pointer"}`}
       >
         {saveFailed ? (
-          <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-destructive-ink" />
+          <TriangleAlert className="size-3.5 shrink-0 text-destructive-ink" />
         ) : offline ? (
-          <CloudOff className="h-3.5 w-3.5 shrink-0 text-destructive-ink" />
+          <CloudOff className="size-3.5 shrink-0 text-destructive-ink" />
         ) : saved && !saving ? (
-          <Check className="h-3.5 w-3.5 shrink-0 text-primary-ink" />
+          <Check className="size-3.5 shrink-0 text-primary-ink" />
         ) : (
-          <DelayedSpinner active className="h-3.5 w-3.5 shrink-0" />
+          <DelayedSpinner active className="size-3.5 shrink-0" />
         )}
         <span className="truncate">
           {label}

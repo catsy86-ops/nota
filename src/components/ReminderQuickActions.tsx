@@ -109,7 +109,7 @@ export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuic
             aria-label="Więcej sposobów odłożenia"
             className="pressable inline-flex items-center rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:min-w-11 justify-center text-2xs font-medium text-muted-foreground hover:text-foreground"
           >
-            <MoreHorizontal className="w-3 h-3" aria-hidden />
+            <MoreHorizontal className="size-3" aria-hidden />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

@@ -66,7 +66,7 @@ export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journa
     <section aria-label="Etapy budowy" data-testid="site-stages" className={`${cardClass} space-y-2 p-3`}>
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 section-caps">
-          <ListChecks className="h-3.5 w-3.5" aria-hidden />Etapy
+          <ListChecks className="size-3.5" aria-hidden />Etapy
         </h3>
         <span className="font-mono text-xs tabular-nums text-muted-foreground" data-testid="site-stages-progress">{done}/{total}</span>
       </div>
@@ -102,7 +102,7 @@ export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journa
                     isDone ? "border-success bg-success text-success-foreground" : "border-border bg-background",
                   )}
                 >
-                  {isDone && <Check className="h-3.5 w-3.5" />}
+                  {isDone && <Check className="size-3.5" />}
                 </span>
                 <span className={cn("min-w-0 flex-1 truncate", isDone && "text-muted-foreground line-through decoration-muted-foreground/50")}>{s.name}</span>
                 {isDone && <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground">{shortDate(s.done!)}</span>}
@@ -113,7 +113,7 @@ export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journa
                 aria-label={`Usuń etap: ${s.name}`}
                 className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
               >
-                <X className="h-3.5 w-3.5" aria-hidden />
+                <X className="size-3.5" aria-hidden />
               </button>
             </li>
             {s.id === COVER_STAGE_ID && !isDone && (
@@ -145,7 +145,7 @@ export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journa
             disabled={!name.trim()}
             className="pressable inline-flex shrink-0 items-center gap-1 rounded-field border border-border px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50 coarse:min-h-11"
           >
-            <Plus className="h-4 w-4" aria-hidden />Dodaj
+            <Plus className="size-4" aria-hidden />Dodaj
           </button>
         </form>
       )}

@@ -87,7 +87,7 @@ export function PropCell({ def, note, onUpdate }: { def: PropDef; note: Note; on
         onClick={stop}
         onKeyDown={stop}
         onChange={(e) => save(e.target.checked ? 1 : null)}
-        className="h-5 w-5 accent-primary coarse:h-6 coarse:w-6"
+        className="size-5 accent-primary coarse:h-6 coarse:w-6"
       />
     );
   }
@@ -99,7 +99,7 @@ export function PropCell({ def, note, onUpdate }: { def: PropDef; note: Note; on
         <DropdownMenuTrigger asChild>
           <button type="button" aria-label={label} onClick={stop} onKeyDown={stop} className={cn(CELL_INPUT, "flex items-center justify-between gap-1 text-left", !current && "text-muted-foreground")}>
             <span className="truncate">{current || "—"}</span>
-            <ChevronDown className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <ChevronDown className="size-3.5 shrink-0" aria-hidden />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" onClick={stop}>
@@ -205,7 +205,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="gap-1.5 coarse:h-11" data-testid="table-columns">
-            <Columns3 className="h-3.5 w-3.5" aria-hidden />Kolumny
+            <Columns3 className="size-3.5" aria-hidden />Kolumny
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
@@ -244,7 +244,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                       className="inline-flex items-center gap-1 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
                     >
                       {c.label}
-                      {active && (sortDir === "asc" ? <ArrowUp className="w-3 h-3" aria-hidden /> : <ArrowDown className="w-3 h-3" aria-hidden />)}
+                      {active && (sortDir === "asc" ? <ArrowUp className="size-3" aria-hidden /> : <ArrowDown className="size-3" aria-hidden />)}
                     </button>
                   ) : c.label}
                 </th>
@@ -277,7 +277,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
               {/* Telefon: tytuł bierze resztę szerokości i się skraca — wcześniej 18rem wypychało datę poza ekran. */}
               <td className="px-3 py-2 coarse:py-3 w-full max-w-0 sm:w-auto sm:max-w-[18rem]">
                 <span className="flex items-center gap-1.5">
-                  {n.pinned && <Pin className="w-3 h-3 shrink-0 text-primary-ink" aria-label="Przypięta" />}
+                  {n.pinned && <Pin className="size-3 shrink-0 text-primary-ink" aria-label="Przypięta" />}
                   {n.icon && <span aria-hidden>{n.icon}</span>}
                   <span className="truncate font-medium">{noteLabel(n)}</span>
                 </span>
@@ -300,7 +300,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
               <td className="hidden sm:table-cell px-3 py-2">
                 {n.priority !== "none" && (
                   <span className="inline-flex items-center gap-1 text-xs">
-                    <Flag className={cn("w-3 h-3 fill-current", PRIORITY_COLOR_CLASS[n.priority])} aria-hidden />
+                    <Flag className={cn("size-3 fill-current", PRIORITY_COLOR_CLASS[n.priority])} aria-hidden />
                     {PRIORITY_LABELS[n.priority]}
                   </span>
                 )}
@@ -308,7 +308,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
               <td className="hidden sm:table-cell px-3 py-2 whitespace-nowrap text-xs text-muted-foreground">
                 {n.reminder !== null && (
                   <span className="inline-flex items-center gap-1">
-                    <Bell className="w-3 h-3" aria-hidden />
+                    <Bell className="size-3" aria-hidden />
                     {format(n.reminder, "d MMM, HH:mm", { locale: pl })}
                   </span>
                 )}

@@ -109,7 +109,7 @@ function EndDayBody({ onOpenChange, journal, wholesaleCount, onHours, onReport, 
       <ResponsiveDialogContent className="gap-0 p-0 sm:max-w-sm" data-testid="end-day">
         <div className="space-y-1 border-b border-border px-5 pb-4 pt-5 pr-12">
           <DialogTitle className="flex items-center gap-1.5 font-display text-lg">
-            <Icon className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />{step.title}
+            <Icon className="size-5 shrink-0 text-primary-ink" aria-hidden />{step.title}
           </DialogTitle>
           <DialogDescription className="text-xs" data-testid="end-day-step">
             Zakończ dzień · krok {index + 1} z {STEPS.length}
@@ -119,7 +119,7 @@ function EndDayBody({ onOpenChange, journal, wholesaleCount, onHours, onReport, 
           <p className="text-sm" data-testid="end-day-text">{cur.text}</p>
           {speechAvailable() && (
             <Button type="button" variant="ghost" size="sm" onClick={toggleReading} aria-pressed={reading} data-testid="end-day-read" className="pressable coarse:h-11">
-              {reading ? <Square className="mr-1.5 h-4 w-4" aria-hidden /> : <Volume2 className="mr-1.5 h-4 w-4" aria-hidden />}
+              {reading ? <Square className="mr-1.5 size-4" aria-hidden /> : <Volume2 className="mr-1.5 size-4" aria-hidden />}
               {reading ? "Przerwij czytanie" : "Przeczytaj na głos"}
             </Button>
           )}

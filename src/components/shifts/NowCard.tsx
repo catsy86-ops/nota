@@ -52,13 +52,13 @@ export function NowCard({ data }: { data: ShiftData }) {
   return (
     <section aria-label="Bieżąca zmiana" className="relative overflow-hidden rounded-card border border-border/60 bg-card p-4 flex items-center gap-4">
       <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: main.type.color }} />
-      <span className="w-12 h-12 shrink-0 rounded-card flex items-center justify-center font-display font-bold text-lg" style={{ backgroundColor: main.type.color, color: shiftInk(main.type.color) }}>
+      <span className="size-12 shrink-0 rounded-card flex items-center justify-center font-display font-bold text-lg" style={{ backgroundColor: main.type.color, color: shiftInk(main.type.color) }}>
         {main.type.short}
       </span>
       <div className="min-w-0 flex-1">
         <p className="ui-hint flex items-center gap-1.5 font-semibold">
           {/* Pulsujący punkt „trwa teraz” — czysty CSS, bez zegara klatek. */}
-          {current && <span aria-hidden className="now-dot w-1.5 h-1.5 rounded-full" style={{ backgroundColor: main.type.color }} />}
+          {current && <span aria-hidden className="now-dot size-1.5 rounded-full" style={{ backgroundColor: main.type.color }} />}
           {current ? "Teraz w pracy" : "Następna zmiana"}
         </p>
         <p className="font-display font-bold line-clamp-2 wrap-anywhere">

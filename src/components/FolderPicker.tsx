@@ -43,7 +43,7 @@ function FolderTreeItem({ folder, folders, currentFolderId, onSelect, depth = 0 
       >
         {children.length > 0 && (
           <ChevronRight
-            className={cn("w-3 h-3 shrink-0 transition-transform", expanded && "rotate-90")}
+            className={cn("size-3 shrink-0 transition-transform", expanded && "rotate-90")}
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
           />
         )}
@@ -51,10 +51,10 @@ function FolderTreeItem({ folder, folders, currentFolderId, onSelect, depth = 0 
         {folder.emoji ? (
           <span className="text-sm shrink-0">{folder.emoji}</span>
         ) : (
-          <span data-swatch={folder.color} className={cn("w-2.5 h-2.5 rounded-full shrink-0", folderColorDot[folder.color] || folderColorDot.default)} />
+          <span data-swatch={folder.color} className={cn("size-2.5 rounded-full shrink-0", folderColorDot[folder.color] || folderColorDot.default)} />
         )}
         <span className="truncate flex-1 text-left">{folder.name}</span>
-        {isSelected && <Check className="w-3.5 h-3.5 text-primary-ink shrink-0" />}
+        {isSelected && <Check className="size-3.5 text-primary-ink shrink-0" />}
       </button>
       {expanded && children.map((child) => (
         <FolderTreeItem key={child.id} folder={child} folders={folders} currentFolderId={currentFolderId} onSelect={onSelect} depth={depth + 1} />
@@ -79,7 +79,7 @@ export function FolderPicker({ folders, currentFolderId, onSelect }: FolderPicke
               aria-label="Folder"
               className={cn("pressable p-1.5 rounded-full transition-colors", currentFolderId ? "text-primary-ink hover:bg-primary/10" : "text-muted-foreground hover:bg-foreground/5")}
             >
-              <FolderOpen className="w-4 h-4" />
+              <FolderOpen className="size-4" />
             </button>
           </PopoverTrigger>
         </TooltipTrigger>

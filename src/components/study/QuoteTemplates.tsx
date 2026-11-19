@@ -69,12 +69,12 @@ export function QuoteTemplates({ siteId, job }: { siteId: string; job: Job }) {
             {templates.map((t) => <option key={t.id} value={t.id}>{t.name} · {t.items.length} poz.</option>)}
           </select>
           <Button type="button" size="sm" variant="outline" disabled={!chosen} onClick={insert} className="shrink-0 coarse:h-11" data-testid="template-insert">
-            <FilePlus2 className="h-4 w-4" aria-hidden />Wstaw
+            <FilePlus2 className="size-4" aria-hidden />Wstaw
           </Button>
           {chosen && (
             <button type="button" onClick={drop} aria-label={`Usuń szablon ${chosen.name}`} data-testid="template-remove"
               className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
-              <Trash2 className="h-4 w-4" aria-hidden />
+              <Trash2 className="size-4" aria-hidden />
             </button>
           )}
         </div>
@@ -89,7 +89,7 @@ export function QuoteTemplates({ siteId, job }: { siteId: string; job: Job }) {
       ) : (
         <button type="button" onClick={() => setSaving(true)} data-testid="template-save-open"
           className="pressable inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline coarse:min-h-11">
-          <BookmarkPlus className="h-3.5 w-3.5" aria-hidden />Zapisz jako szablon
+          <BookmarkPlus className="size-3.5" aria-hidden />Zapisz jako szablon
         </button>
       ))}
     </div>

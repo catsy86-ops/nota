@@ -75,8 +75,8 @@ export function FindReplaceBar({ value, onChange, textareaRef, onClose }: FindRe
       <span aria-live="polite" className="text-xs text-muted-foreground tabular-nums min-w-14 text-center">
         {query ? (matches.length ? `${index + 1} z ${matches.length}` : "brak") : ""}
       </span>
-      <button type="button" className={BTN} onClick={() => go(-1)} disabled={matches.length === 0} aria-label="Poprzednie trafienie"><ChevronUp className="w-4 h-4" /></button>
-      <button type="button" className={BTN} onClick={() => go(1)} disabled={matches.length === 0} aria-label="Następne trafienie"><ChevronDown className="w-4 h-4" /></button>
+      <button type="button" className={BTN} onClick={() => go(-1)} disabled={matches.length === 0} aria-label="Poprzednie trafienie"><ChevronUp className="size-4" /></button>
+      <button type="button" className={BTN} onClick={() => go(1)} disabled={matches.length === 0} aria-label="Następne trafienie"><ChevronDown className="size-4" /></button>
       <button type="button" className={cn(BTN, matchCase && "bg-muted text-foreground")} aria-pressed={matchCase}
         onClick={() => { setMatchCase((m) => !m); setCurrent(0); }} title="Rozróżniaj wielkość liter">Aa</button>
       <input value={replacement} onChange={(e) => setReplacement(e.target.value)}
@@ -84,7 +84,7 @@ export function FindReplaceBar({ value, onChange, textareaRef, onClose }: FindRe
         placeholder="Zamień na" aria-label="Zamień na" className={FIELD} />
       <button type="button" className={BTN} onClick={replaceCurrent} disabled={index < 0}>Zamień</button>
       <button type="button" className={BTN} onClick={replaceEvery} disabled={matches.length === 0}>Zamień wszystkie</button>
-      <button type="button" className={BTN} onClick={() => { onClose(); textareaRef.current?.focus(); }} aria-label="Zamknij pasek"><X className="w-4 h-4" /></button>
+      <button type="button" className={BTN} onClick={() => { onClose(); textareaRef.current?.focus(); }} aria-label="Zamknij pasek"><X className="size-4" /></button>
     </div>
   );
 }

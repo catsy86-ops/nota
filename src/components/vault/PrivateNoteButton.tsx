@@ -17,7 +17,7 @@ export function PrivateNoteButton({ noteId, locked }: { noteId: string; locked: 
       data-tip={title}
       className="card-action text-muted-foreground"
     >
-      {locked ? <LockOpen className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+      {locked ? <LockOpen className="size-4" /> : <Lock className="size-4" />}
     </button>
   );
 }

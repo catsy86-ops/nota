@@ -102,17 +102,17 @@ export function KitsDialog({ open, onOpenChange, fittingHistory, pipeHistory }: 
                     </p>
                   </div>
                   <Button type="button" variant="ghost" size="icon" onClick={() => startEdit(kit)} aria-label={`Zmień zestaw ${kit.name}`} className="coarse:size-11">
-                    <Pencil className="h-4 w-4" aria-hidden />
+                    <Pencil className="size-4" aria-hidden />
                   </Button>
                   <Button type="button" variant="ghost" size="icon" onClick={() => remove(kit)} aria-label={`Usuń zestaw ${kit.name}`} className="coarse:size-11">
-                    <Trash2 className="h-4 w-4" aria-hidden />
+                    <Trash2 className="size-4" aria-hidden />
                   </Button>
                 </li>
               ))}
             </ul>
             {kits.length === 0 && <p className="text-sm text-muted-foreground">Nie masz zestawów. Dodaj pierwszy — np. podejście, które robisz najczęściej.</p>}
             <Button type="button" variant="outline" onClick={() => startEdit(newKit())} className="coarse:h-11">
-              <Plus className="mr-1.5 h-4 w-4" aria-hidden />Nowy zestaw
+              <Plus className="mr-1.5 size-4" aria-hidden />Nowy zestaw
             </Button>
           </>
         )}

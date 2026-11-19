@@ -26,7 +26,7 @@ export function InboxBar({ count, onTriage }: { count: number; onTriage: () => v
   if (count === 0) return sorted ? <SortedStamp className="self-start" /> : null;
   const triage = (
     <Button type="button" variant="outline" size="sm" className="ml-auto gap-1.5 coarse:h-11" aria-label={`Porządkuj skrzynkę (${count})`} onClick={onTriage}>
-      <ListChecks className="h-4 w-4" aria-hidden /> Porządkuj
+      <ListChecks className="size-4" aria-hidden /> Porządkuj
     </Button>
   );
   return (

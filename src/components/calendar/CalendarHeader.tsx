@@ -51,15 +51,15 @@ export function CalendarHeader({ month, selectedDay, showKeys, onPrev, onNext, o
         title="Skróty klawiaturowe"
         className="ml-auto hidden sm:inline-flex p-2 rounded-card text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <Keyboard className="w-4 h-4" aria-hidden />
+        <Keyboard className="size-4" aria-hidden />
       </button>
       {/* Druk i .ics są akcjami działu, więc stoją w główce (nowy plan 1.1); na telefonie jako rząd pod tytułem. */}
       <PageActions>
         <Button variant="ghost" size="sm" onClick={onPrint} aria-label="Drukuj terminy tego miesiąca" title="Drukuj terminy tego miesiąca" className="gap-1.5 coarse:min-h-11">
-          <Printer className="h-4 w-4" aria-hidden />Drukuj
+          <Printer className="size-4" aria-hidden />Drukuj
         </Button>
         <Button variant="ghost" size="sm" onClick={onExportAll} aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)" title="Eksportuj nadchodzące terminy do kalendarza (.ics)" className="gap-1.5 coarse:min-h-11">
-          <Download className="h-4 w-4" aria-hidden />.ics
+          <Download className="size-4" aria-hidden />.ics
         </Button>
       </PageActions>
     </header>

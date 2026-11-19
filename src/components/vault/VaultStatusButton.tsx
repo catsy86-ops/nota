@@ -27,7 +27,7 @@ export function VaultStatusButton() {
       title={`${label}. ${hint}`}
       className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground outline-hidden hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
     >
-      {open ? <LockOpen className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />}
+      {open ? <LockOpen className="size-4" aria-hidden /> : <Lock className="size-4" aria-hidden />}
     </button>
   );
 }

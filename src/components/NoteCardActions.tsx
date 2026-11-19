@@ -77,7 +77,7 @@ export function PrimaryActions({
     <>
       {!isArchived && (
         <ActionBtn
-          icon={<Pin className={cn("w-4 h-4", note.pinned && "fill-current")} />}
+          icon={<Pin className={cn("size-4", note.pinned && "fill-current")} />}
           onClick={(e) => {
             if (!note.pinned) {
               if (pinSparkle) markPinned(note.id);
@@ -92,7 +92,7 @@ export function PrimaryActions({
           keys={inSheet ? undefined : "P"}
         />
       )}
-      {!inSheet && <ActionBtn icon={<Palette className="w-4 h-4" />} onClick={() => onToggleColors?.()} title="Kolor" />}
+      {!inSheet && <ActionBtn icon={<Palette className="size-4" />} onClick={() => onToggleColors?.()} title="Kolor" />}
       {!isArchived && (
         <ReminderPicker
           reminder={note.reminder}
@@ -111,12 +111,12 @@ export function PrimaryActions({
         />
       )}
       {isArchived && onUnarchive ? (
-        <ActionBtn icon={<ArchiveRestore className="w-4 h-4" />} onClick={() => { onUnarchive(note.id); if (inSheet) onClose?.(); }} title="Przywróć" />
+        <ActionBtn icon={<ArchiveRestore className="size-4" />} onClick={() => { onUnarchive(note.id); if (inSheet) onClose?.(); }} title="Przywróć" />
       ) : onArchive ? (
-        <ActionBtn icon={<Archive className="w-4 h-4" />} onClick={() => { haptic("tap"); onArchive(note.id); if (inSheet) onClose?.(); }} title="Archiwizuj" keys={inSheet ? undefined : "A"} />
+        <ActionBtn icon={<Archive className="size-4" />} onClick={() => { haptic("tap"); onArchive(note.id); if (inSheet) onClose?.(); }} title="Archiwizuj" keys={inSheet ? undefined : "A"} />
       ) : null}
       <ActionBtn
-        icon={<Trash className="w-4 h-4" />}
+        icon={<Trash className="size-4" />}
         onClick={() => { if (note.trashed) onAskDeleteConfirm(); else { haptic("warn"); onDelete(note.id); } if (inSheet) onClose?.(); }}
         title="Usuń"
         keys={inSheet ? undefined : "Del"}
@@ -178,7 +178,7 @@ export function MoreActions({
       <NoteLookPicker icon={note.icon} cover={note.cover} onChange={(patch) => onUpdate?.(note.id, patch)} />
       {!isArchived && (
         <ActionBtn
-          icon={<Star className={cn("w-4 h-4", note.favorite && "fill-current")} />}
+          icon={<Star className={cn("size-4", note.favorite && "fill-current")} />}
           onClick={() => { haptic("tap"); onUpdate?.(note.id, { favorite: note.favorite ? undefined : true }); }}
           title={note.favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
           aria-pressed={!!note.favorite}
@@ -187,7 +187,7 @@ export function MoreActions({
       )}
       {!isArchived && (
         <ActionBtn
-          icon={<MoveHorizontal className="w-4 h-4" />}
+          icon={<MoveHorizontal className="size-4" />}
           onClick={() => { haptic("tap"); onUpdate?.(note.id, { wide: note.wide ? undefined : true }); }}
           title={note.wide ? "Zwiń do jednej kolumny" : "Rozciągnij na dwie kolumny"}
           aria-pressed={!!note.wide}
@@ -196,7 +196,7 @@ export function MoreActions({
       )}
       {!isArchived && (
         <ActionBtn
-          icon={<ZoomIn className="w-4 h-4" />}
+          icon={<ZoomIn className="size-4" />}
           onClick={() => { haptic("tap"); onUpdate?.(note.id, { largeText: note.largeText ? undefined : true }); }}
           title={note.largeText ? "Zwykły rozmiar tekstu" : "Większy tekst"}
           aria-pressed={!!note.largeText}
@@ -207,7 +207,7 @@ export function MoreActions({
       <MoreGroup title="Porządek">
       {!isArchived && (
         <ActionBtn
-          icon={note.readOnly ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+          icon={note.readOnly ? <Lock className="size-4" /> : <LockOpen className="size-4" />}
           onClick={() => { haptic("tap"); onUpdate?.(note.id, { readOnly: note.readOnly ? undefined : true }); }}
           title={note.readOnly ? "Odblokuj edycję" : "Zablokuj edycję"}
           aria-pressed={!!note.readOnly}
@@ -216,7 +216,7 @@ export function MoreActions({
       )}
       {!isArchived && !note.locked && (
         <ActionBtn
-          icon={<FilePlusCorner className="w-4 h-4" />}
+          icon={<FilePlusCorner className="size-4" />}
           onClick={() => {
             haptic("tap");
             const id = addSubpage(note.id);
@@ -225,8 +225,8 @@ export function MoreActions({
           title="Dodaj podstronę"
         />
       )}
-      {!note.locked && <ActionBtn icon={<ImagePlus className="w-4 h-4" />} onClick={onAddImage} title="Dodaj obrazek" />}
-      {!note.locked && <ActionBtn icon={<PenTool className="w-4 h-4" />} onClick={onDraw} title="Rysuj" />}
+      {!note.locked && <ActionBtn icon={<ImagePlus className="size-4" />} onClick={onAddImage} title="Dodaj obrazek" />}
+      {!note.locked && <ActionBtn icon={<PenTool className="size-4" />} onClick={onDraw} title="Rysuj" />}
       {!isArchived && (
         <LabelPicker allLabels={allLabels} selected={note.labels} onToggle={handleLabelToggle} onCreateLabel={onCreateLabel} />
       )}
@@ -234,7 +234,7 @@ export function MoreActions({
         <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => { const prev = note.folderId; onMoveToFolder(note.id, fId); if (prev !== fId) toastWithUndo("Przeniesiono do folderu", () => onMoveToFolder(note.id, prev), { icon: "📁" }); }} />
       )}
       {onDuplicate && (
-        <ActionBtn icon={<Copy className="w-4 h-4" />} onClick={() => onDuplicate(note.id)} title="Duplikuj" keys="D" />
+        <ActionBtn icon={<Copy className="size-4" />} onClick={() => onDuplicate(note.id)} title="Duplikuj" keys="D" />
       )}
       </MoreGroup>
       <MoreGroup title="Udostępnij">
@@ -242,13 +242,13 @@ export function MoreActions({
       {/* Prywatnej notatki nie kopiujemy: jej treść w projekcji jest pusta (szyfrogram). */}
       {!note.locked && (
         <ActionBtn
-          icon={<ClipboardCopy className="w-4 h-4" />}
+          icon={<ClipboardCopy className="size-4" />}
           onClick={() => { haptic("tap"); void copyNoteToClipboard(note, "markdown"); }}
           title="Kopiuj jako Markdown"
         />
       )}
       {!note.locked && onPresent && (
-        <ActionBtn icon={<Maximize2 className="w-4 h-4" />} onClick={() => onPresent(note.id)} title="Prezentacja" />
+        <ActionBtn icon={<Maximize2 className="size-4" />} onClick={() => onPresent(note.id)} title="Prezentacja" />
       )}
       </MoreGroup>
       <MoreGroup title="Zaawansowane">

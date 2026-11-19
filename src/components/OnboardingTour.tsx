@@ -45,7 +45,7 @@ export function OnboardingTour() {
   const choose = step === 0 && (
     <div className="flex flex-wrap justify-center gap-1.5" role="group" aria-label="Co Cię interesuje">
       <span className="inline-flex items-center gap-1 rounded-full border border-primary bg-primary/10 px-3 py-1 text-sm font-medium coarse:min-h-11">
-        <Check className="h-3.5 w-3.5" aria-hidden />Notatki
+        <Check className="size-3.5" aria-hidden />Notatki
       </span>
       {INTERESTS.map((i) => {
         const on = interests.has(i.id);
@@ -53,7 +53,7 @@ export function OnboardingTour() {
           <button key={i.id} type="button" onClick={() => flip(i.id)} aria-pressed={on}
             className={cn("pressable inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm coarse:min-h-11",
               on ? "border-primary bg-primary/10 font-medium text-foreground" : "border-border text-muted-foreground hover:text-foreground")}>
-            {on && <Check className="h-3.5 w-3.5" aria-hidden />}{i.label}
+            {on && <Check className="size-3.5" aria-hidden />}{i.label}
           </button>
         );
       })}

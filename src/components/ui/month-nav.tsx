@@ -20,7 +20,7 @@ export interface MonthNavProps {
   children?: ReactNode;
 }
 
-const ARROW = "h-10 w-10 text-muted-foreground coarse:h-11 coarse:w-11 [&_svg]:size-5";
+const ARROW = "size-10 text-muted-foreground coarse:h-11 coarse:w-11 [&_svg]:size-5";
 
 /**
  * Jedna nawigacja okresu dla Kalendarza i Grafiku (plan UI 2026-11-06, 1.4): strzałki 40 px (44 na dotyku),

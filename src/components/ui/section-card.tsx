@@ -33,7 +33,7 @@ export function SectionCard({ icon: Icon, title, meta, description, action, foot
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="min-w-0">
           <Heading id={headingId} className="title-card">
-            {Icon && <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
+            {Icon && <Icon className="size-3.5 shrink-0" aria-hidden />}
             {title}
             {meta !== undefined && meta !== null && meta !== false && (
               <span className="font-mono text-xs font-normal tabular-nums text-muted-foreground">{meta}</span>

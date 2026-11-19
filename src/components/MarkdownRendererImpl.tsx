@@ -38,7 +38,7 @@ function Callout({ kind, collapse, title, children }: { kind: CalloutKind; colla
       // Karta otwiera edytor po kliknięciu — rozwijanie bloku nie może go uruchamiać.
       <details open={collapse === "open"} onClick={(e) => e.stopPropagation()} className={cn("group rounded-field border-l-2 px-3 py-1.5 mb-1 text-sm", style.box)}>
         <summary className="flex cursor-pointer list-none items-center gap-1.5 font-medium text-foreground [&::-webkit-details-marker]:hidden">
-          <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform group-open:rotate-90" aria-hidden />
+          <ChevronRight className="size-3.5 shrink-0 transition-transform group-open:rotate-90" aria-hidden />
           <span>{title || style.label}</span>
         </summary>
         <div className="pt-1">{children}</div>
@@ -47,7 +47,7 @@ function Callout({ kind, collapse, title, children }: { kind: CalloutKind; colla
   }
   return (
     <div role="note" aria-label={title || style.label} className={cn("flex gap-2 rounded-field border-l-2 px-3 py-2 mb-1 text-sm", style.box)}>
-      <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+      <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
       <div className="min-w-0 flex-1">
         {title && <p className="font-semibold text-foreground mb-0.5">{title}</p>}
         {children}

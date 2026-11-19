@@ -30,7 +30,7 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
     <section aria-label="Analizy planów" className="space-y-3" data-testid="plans-list">
       {/* Opis działu jest w główce (`ViewTitle`), „Nowa analiza” w jej akcjach (nowy plan 1.1). */}
       <PageActions>
-        <Button size="sm" onClick={onNew} className="pressable shrink-0 coarse:h-11"><Plus className="mr-1.5 h-4 w-4" aria-hidden />Nowa analiza</Button>
+        <Button size="sm" onClick={onNew} className="pressable shrink-0 coarse:h-11"><Plus className="mr-1.5 size-4" aria-hidden />Nowa analiza</Button>
       </PageActions>
       {plans.length > 0 && (
         <p className="text-sm text-muted-foreground">{plans.length} {pluralPl(plans.length, ["analiza", "analizy", "analiz"])}</p>
@@ -44,7 +44,7 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
             {EMPTY_STEPS.map(({ Icon, title, text }, i) => (
               <li key={title} className="flex gap-3 sm:flex-col sm:gap-2">
                 <span className="grid size-9 shrink-0 place-items-center rounded-full border border-border text-muted-foreground" aria-hidden>
-                  <Icon className="h-4 w-4" />
+                  <Icon className="size-4" />
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm font-medium"><span className="font-mono text-muted-foreground">{i + 1}.</span> {title}</p>
@@ -70,8 +70,8 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
                   </span>
                 </button>
                 <button type="button" onClick={() => remove(d)} aria-label={`Usuń analizę ${d.project.name}`}
-                  className="absolute bottom-1.5 right-1.5 inline-flex h-10 w-10 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
-                  <Trash className="h-4 w-4" aria-hidden />
+                  className="absolute bottom-1.5 right-1.5 inline-flex size-10 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                  <Trash className="size-4" aria-hidden />
                 </button>
               </li>
             );
