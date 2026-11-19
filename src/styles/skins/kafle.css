@@ -38,10 +38,8 @@ html[data-skin="kafle"] {
   --note-lavender: oklch(0.9614 0.0171 301.21);
   --note-rose: oklch(0.9650 0.0155 355.05);
 
-  --elevation-1: 0 1px 0 hsl(220 30% 30% / 0.08), 0 3px 8px -4px hsl(220 30% 30% / 0.16);
-  --elevation-2: 0 1px 0 hsl(220 30% 30% / 0.07), 0 6px 14px -4px hsl(220 30% 30% / 0.16);
-  --elevation-3: 0 1px 0 hsl(220 30% 30% / 0.06), 0 14px 32px -8px hsl(220 30% 30% / 0.22);
-  --elevation-up: 0 -8px 24px -12px hsl(220 30% 30% / 0.18);
+  --shadow-tint: oklch(0.391 0.056 263.6);
+  --shadow-strength: 1.12;
   --glow-primary: 0 10px 26px -8px color-mix(in srgb, var(--primary) 45%, transparent);
 }
 
@@ -82,10 +80,8 @@ html[data-skin="kafle"].dark {
   --note-lavender: oklch(0.2692 0.0326 299.50);
   --note-rose: oklch(0.2684 0.0267 357.32);
 
-  --elevation-1: 0 1px 2px hsl(220 20% 3% / 0.45);
-  --elevation-2: 0 4px 12px -2px hsl(220 20% 3% / 0.5), 0 0 0 1px hsl(220 20% 90% / 0.04);
-  --elevation-3: 0 12px 32px -8px hsl(220 20% 3% / 0.6), 0 0 0 1px hsl(220 20% 90% / 0.05);
-  --elevation-up: 0 -8px 24px -12px hsl(220 20% 3% / 0.55);
+  --shadow-tint: oklch(0.129 0.006 262.0);
+  --shadow-strength: 1.2;
   --glow-primary: 0 10px 28px -8px color-mix(in srgb, var(--primary) 50%, transparent);
 }
 

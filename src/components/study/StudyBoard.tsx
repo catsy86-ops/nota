@@ -70,7 +70,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
       layoutId={`topic-${topic.id}`}
       transition={{ type: "spring", stiffness: 500, damping: 40 }}
       className={cn(
-        "rounded-card border bg-card p-3 text-sm shadow-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+        "rounded-card border bg-card p-3 text-sm shadow-elevation-1 outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         column === "done" ? "border-primary/40" : "border-border",
       )}
       data-topic={topic.id}

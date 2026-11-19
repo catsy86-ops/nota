@@ -43,10 +43,12 @@ html[data-skin="tablica"]:not(.dark) {
   --note-lavender: oklch(0.9614 0.0171 301.21);
   --note-rose: oklch(0.9650 0.0155 355.05);
 
-  --elevation-1: 0 1px 0 hsl(220 20% 25% / 0.08), 0 3px 8px -4px hsl(220 20% 25% / 0.16);
-  --elevation-2: 0 1px 0 hsl(220 20% 25% / 0.07), 0 6px 14px -4px hsl(220 20% 25% / 0.16);
-  --elevation-3: 0 1px 0 hsl(220 20% 25% / 0.06), 0 14px 32px -8px hsl(220 20% 25% / 0.22);
-  --elevation-up: 0 -8px 24px -12px hsl(220 20% 25% / 0.18);
+  --shadow-tint: oklch(0.354 0.032 264.0);
+  --shadow-strength: 1.12;
+  --elevation-1: var(--elev-light-1);
+  --elevation-2: var(--elev-light-2);
+  --elevation-3: var(--elev-light-3);
+  --elevation-up: var(--elev-light-up);
   --glow-primary: 0 10px 26px -8px color-mix(in srgb, var(--primary) 45%, transparent);
 }
 
@@ -91,10 +93,12 @@ html[data-skin="tablica"] {
   --note-lavender: oklch(0.3600 0.0400 300.00);
   --note-rose: oklch(0.3600 0.0400 355.00);
 
-  --elevation-1: 0 1px 2px hsl(160 40% 5% / 0.4);
-  --elevation-2: 0 4px 12px -2px hsl(160 40% 5% / 0.45), 0 0 0 1px hsl(60 30% 95% / 0.05);
-  --elevation-3: 0 12px 32px -8px hsl(160 40% 5% / 0.55), 0 0 0 1px hsl(60 30% 95% / 0.06);
-  --elevation-up: 0 -8px 24px -12px hsl(160 40% 5% / 0.5);
+  --shadow-tint: oklch(0.170 0.017 171.6);
+  --shadow-strength: 1.1;
+  --elevation-1: var(--elev-dark-1);
+  --elevation-2: var(--elev-dark-2);
+  --elevation-3: var(--elev-dark-3);
+  --elevation-up: var(--elev-dark-up);
   --glow-primary: 0 10px 28px -8px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 

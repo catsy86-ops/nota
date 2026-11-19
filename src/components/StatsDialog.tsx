@@ -88,7 +88,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
               onClick={() => setTab(id)}
               className={cn(
                 "flex flex-1 items-center justify-center gap-1.5 rounded-control px-2 py-1.5 text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-                tab === id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                tab === id ? "bg-background text-foreground shadow-elevation-1" : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className="h-3.5 w-3.5" aria-hidden /> {label}

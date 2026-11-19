@@ -57,7 +57,7 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
                 aria-label="Podpis na zdjęciu"
                 aria-pressed={captioning === ref}
                 className={cn(
-                  "absolute -bottom-1.5 -left-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-sm coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
+                  "absolute -bottom-1.5 -left-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-elevation-1 coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
                   captioning === ref && "border-primary bg-primary text-primary-foreground",
                 )}
               >
@@ -68,7 +68,7 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
                 onClick={() => onDraw(ref)}
                 aria-label="Rysuj na zdjęciu"
                 title="Strzałka, wymiar, zaznaczenie — rysunek zostaje na zdjęciu"
-                className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-sm coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
+                className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-elevation-1 coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
               >
                 <PenTool className="h-3.5 w-3.5" aria-hidden />
               </button>
@@ -92,7 +92,7 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
                   onClick={() => onUndoDrawing(ref)}
                   aria-label={`Cofnij rysunek na zdjęciu ${i + 1}`}
                   title="Przywróć zdjęcie sprzed rysowania"
-                  className="absolute -left-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full border border-primary bg-card text-foreground shadow-sm coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
+                  className="absolute -left-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full border border-primary bg-card text-foreground shadow-elevation-1 coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
                 >
                   <Undo2 className="h-3.5 w-3.5" aria-hidden />
                 </button>

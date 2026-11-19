@@ -65,7 +65,7 @@ export function CodeChangePanel() {
             <li key={s.label} className="flex items-center gap-2 text-sm">
               {done ? <Check className="h-4 w-4 text-success-ink" aria-hidden />
                 : current && running ? <Loader2 className="h-4 w-4 motion-safe:animate-spin text-muted-foreground" aria-hidden />
-                : <Circle className="h-4 w-4 text-muted-foreground/60" aria-hidden />}
+                : <Circle className="h-4 w-4 text-faint" aria-hidden />}
               <span className={done ? "" : current ? "font-medium" : "text-muted-foreground"}>{s.label}</span>
               <span className="sr-only">{done ? "— zrobione" : current ? "— w toku" : "— czeka"}</span>
             </li>

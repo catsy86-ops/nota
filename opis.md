@@ -6528,4 +6528,41 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 
 ### Commit
 
-W0.2–W0.3, 2026-11-19 — commit po tym wpisie.
+W0.2–W0.3: 6f7cc3a3, 2026-11-19.
+
+## Wygląd — trzeci poziom tekstu, cienie z barwy stylu, jedna skala cieni i warstw (W1.1–W1.4 planu warstwy wizualnej, 2026-11-19)
+
+### Co robi
+
+- Najbledszy tekst i ikony pomocnicze (podgląd w ostatnich działaniach, puste komórki w podsumowaniu roku, ikona „dodaj” w liście zadań, placeholder szybkiego przypomnienia) mają teraz kontrast co najmniej 4,5:1 w każdym stylu. Wcześniej wyciszała je przezroczystość, bez sprawdzania kontrastu.
+- Cienie kart, menu i arkuszy w każdym stylu mają barwę tego stylu, liczoną jedną formułą. Wygląd prawie się nie zmienia (Miedź, Kafle i Tablica — lekko inne natężenie w ciemnym schemacie; Zeszyt — cień paska dolnego w barwie papieru zamiast barwy tekstu).
+
+### Gdzie jest
+
+- `src/index.css` — `--faint` w `:root` (96% `--muted-foreground` z tłem) i `.dark` (84%); w kolorowych notatkach `--faint` = `--muted-foreground`. Formuły `--elev-light-1/2/3/up` i `--elev-dark-1/2/3/up` z `--shadow-tint`, `--shadow-strength`, `--shadow-edge`; `--elevation-*` wskazują formułę schematu.
+- `src/styles/skins/*.css` — style podają `--shadow-tint` (i `--shadow-strength`: Kafle i Tablica 1,12, Miedź 1,3 w jasnym; Kafle 1,2, Miedź 1,15, Tablica 1,1 w ciemnym). Własne cienie zostały jako podpis: ciemne Hydraulika, Matryca, Zorza, Neon, Plan i oba schematy Odblasku.
+- `tailwind.config.ts` — kolor `faint` (`text-faint`), komentarz z kolejnością warstw `z-raised…z-toast`.
+- Zamiana `text-muted-foreground/NN` → `text-faint`: `DayPanel`, `ChecklistEditor`, `RecentActionsPanel`, `YearSummaryDialog`, `CodeChangePanel`, `QuickReminderInput`. `shadow-sm` i `shadow` → `shadow-elevation-1` (25 miejsc).
+
+### Jak działa
+
+- `--faint` miesza `--muted-foreground` z `--background` w OKLCH. Jasne schematy mają mały zapas nad 4,5:1 (Zeszyt najwyżej 4%), więc w jasnym `--faint` różni się od `--muted-foreground` niewiele; w ciemnych wyraźniej.
+- `--elevation-*` jest liczone na `html`, tam gdzie styl ustawia `--shadow-tint`, więc formuła z `:root` bierze barwę stylu. Style o domyślnym schemacie ciemnym w bloku jasnym ustawiają wprost `--elevation-*: var(--elev-light-*)`, bo ich blok główny ma własne cienie ciemne.
+
+### Ograniczenia i pułapki
+
+- `opacity-NN` (131) zostało: prawie wszystkie są na kolorowych tłach (chipy, przyciski, `kbd` w dymkach, pola grafiku), gdzie token liczony względem tła strony byłby błędny. Wyłączony `IconButton` zostaje przy `text-muted-foreground/60`.
+- `--surface-raised` (jaśniejsza powierzchnia jako głębia w ciemnym) — niezrobione; wymaga zmian w komponentach kart.
+- `shadow-[…]` (7) to obwódki, wcięcia i poświaty, nie głębia — zostają, strażnik nie pozwala na nowe.
+- Zrzuty `@visual` nie odnowione.
+
+### Testy
+
+- `src/lib/skinContrastReport.test.ts` — `--faint` na tle, karcie i `muted` ≥ 4,5 we wszystkich 20 kombinacjach (procent czytany z `index.css`), tabela `docs/kontrast-tokenow.md`.
+- `src/lib/skinContract.test.ts` — styl ma `--shadow-tint` albo komplet `--elevation-*`.
+- `src/test/designTokens.test.ts` — `bareShadow` (`shadow`, `shadow-sm`, `shadow-xl`) 0, `arbitraryShadow` ≤ 7, `mutedAlpha` ≤ 1.
+- Sprawdzone w Chromium (serwer Vite, `getComputedStyle`): wszystkie `--elevation-*` i `--faint` rozwiązują się w 10 stylach × 2 schematach.
+
+### Commit
+
+W1.1–W1.4, 2026-11-19 — commit po tym wpisie.

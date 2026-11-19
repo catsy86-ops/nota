@@ -136,7 +136,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
                       {e.count > 1 ? ` • ${e.count} notatek` : ""}
                     </p>
                     {e.preview && (
-                      <p className="mt-1 text-xs text-muted-foreground/90 line-clamp-2">{e.preview}</p>
+                      <p className="mt-1 text-xs text-faint line-clamp-2">{e.preview}</p>
                     )}
                   </div>
                   {onOpenNote && (

@@ -51,7 +51,7 @@ export function Segmented<T extends string>({ options, value, onChange, disabled
               <motion.span
                 layoutId="segmented-active"
                 transition={spring.snap}
-                className="absolute inset-0 rounded-field border border-primary/50 bg-card shadow-sm"
+                className="absolute inset-0 rounded-field border border-primary/50 bg-card shadow-elevation-1"
                 aria-hidden
               />
             )}

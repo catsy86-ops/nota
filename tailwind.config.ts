@@ -14,6 +14,11 @@ export default {
     },
     extend: {
       // Skala warstw (plan UI/UX 1.3): nazwane zamiast wpisywanych `z-10…z-70`. Kolejność jak dotąd.
+      // W1.4: skala warstw, od dołu. raised — element uniesiony w treści (przeciągana karta, przypięty pasek
+      // w karcie); sticky — nagłówki przyklejone przy przewijaniu; dropdown — menu i podpowiedzi przy polu;
+      // overlay — tło i pasek dolny nad treścią; modal — dialog i arkusz; toast — komunikaty nad wszystkim,
+      // także nad otwartym dialogiem (60 wolne na przyszłą warstwę między nimi). Surowe `z-NN` blokuje
+      // strażnik `rawZIndex` w `designTokens.test.ts`.
       zIndex: {
         raised: "10",
         sticky: "20",
@@ -62,6 +67,8 @@ export default {
           // Tekst i ikony na tle — tło przycisku zostaje, bo biały tekst na nim ma 4.8:1.
           ink: "var(--destructive-ink)",
         },
+        // W1.1: trzeci poziom tekstu (`text-faint`) — zamiast `text-muted-foreground/NN` i `opacity-NN` na tekście.
+        faint: "var(--faint)",
         muted: {
           DEFAULT: "var(--muted)",
           foreground: "var(--muted-foreground)",

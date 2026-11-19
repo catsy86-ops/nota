@@ -78,7 +78,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
   }
   const emptyHint = (
     <p className="text-sm text-muted-foreground flex items-center gap-2">
-      <CalendarPlus className="w-4 h-4 shrink-0 text-muted-foreground/70" />
+      <CalendarPlus className="w-4 h-4 shrink-0 text-faint" />
       Brak terminów tego dnia.
     </p>
   );

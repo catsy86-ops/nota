@@ -33,7 +33,7 @@ export function Swatches<T extends string>({ label, options, value, onPick, swat
               active && "ring-2 ring-foreground/70",
             )}
           >
-            <span aria-hidden className="grid h-8 w-8 place-items-center rounded-full shadow-sm ring-1 ring-foreground/15" style={{ background: swatchOf(id) }}>
+            <span aria-hidden className="grid h-8 w-8 place-items-center rounded-full shadow-elevation-1 ring-1 ring-foreground/15" style={{ background: swatchOf(id) }}>
               {active && <Check className="h-4 w-4 text-black/75" strokeWidth={3} />}
             </span>
           </button>

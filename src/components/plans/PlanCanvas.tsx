@@ -200,12 +200,12 @@ export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanva
         </span>
       )}
       {badImage && (
-        <p role="alert" className="absolute inset-x-4 top-4 rounded-card bg-card/95 p-3 text-sm text-destructive-ink shadow">
+        <p role="alert" className="absolute inset-x-4 top-4 rounded-card bg-card/95 p-3 text-sm text-destructive-ink shadow-elevation-1">
           Obraz planu na tym urządzeniu jest uszkodzony albo niezgodny z analizą — nie został otwarty. Trasy i opisy zostają.
         </p>
       )}
       {url === null && !badImage && (
-        <p className="absolute inset-x-4 top-4 rounded-card bg-card/95 p-3 text-sm text-muted-foreground shadow">
+        <p className="absolute inset-x-4 top-4 rounded-card bg-card/95 p-3 text-sm text-muted-foreground shadow-elevation-1">
           Obraz planu jeszcze nie dotarł na to urządzenie. Otwórz analizę na urządzeniu, na którym ją utworzono, albo poczekaj na synchronizację.
         </p>
       )}

@@ -31,11 +31,22 @@ function tokens(text: string): Record<string, Oklch> {
   return out;
 }
 const altSelector = (skin: Skin) => `html[data-skin="${skin}"]${SKIN_SCHEME[skin] === "dark" ? ":not(.dark)" : ".dark"}`;
-function resolveSkin(skin: Skin, scheme: "light" | "dark") {
+/** `--faint` = `color-mix(in oklch, muted-foreground P%, background)` — P z bloku schematu w `index.css`. */
+function faintShare(scheme: "light" | "dark"): number {
+  const m = /--faint:\s*color-mix\(in oklch, var\(--muted-foreground\) (\d+)%, var\(--background\)\)/.exec(block(index, scheme === "dark" ? ".dark" : ":root"));
+  if (!m) throw new Error(`brak --faint w schemacie ${scheme}`);
+  return Number(m[1]) / 100;
+}
+/** Mieszanie w OKLCH jak w CSS: odcień koloru bez nasycenia nie bierze udziału. */
+function mixOklch(a: Oklch, b: Oklch, p: number): Oklch {
+  const hue = a[1] < 0.02 ? b[2] : b[1] < 0.02 ? a[2] : a[2] * p + b[2] * (1 - p);
+  return [a[0] * p + b[0] * (1 - p), a[1] * p + b[1] * (1 - p), hue];
+}
+function resolveSkin(skin: Skin, scheme: "light" | "dark"): Record<string, Oklch> {
   const base = tokens(block(index, scheme === "dark" ? ".dark" : ":root"));
-  if (skin === "zeszyt") return base;
-  const own = { ...base, ...tokens(block(skins, `html[data-skin="${skin}"]`)) };
-  return scheme === SKIN_SCHEME[skin] ? own : { ...own, ...tokens(block(skins, altSelector(skin))) };
+  const own = skin === "zeszyt" ? base : { ...base, ...tokens(block(skins, `html[data-skin="${skin}"]`)) };
+  const t = skin === "zeszyt" || scheme === SKIN_SCHEME[skin] ? own : { ...own, ...tokens(block(skins, altSelector(skin))) };
+  return { ...t, faint: mixOklch(t["muted-foreground"], t.background, faintShare(scheme)) };
 }
 const lum = (rgb: [number, number, number]) => {
   const [r, g, b] = rgb.map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
@@ -50,6 +61,7 @@ const ratio = (a: Oklch, b: Oklch) => {
 /** [pierwszy plan, tło, próg]. */
 const PAIRS: [string, string, number][] = [
   ["foreground", "background", 4.5], ["muted-foreground", "background", 4.5], ["muted-foreground", "card", 4.5],
+  ["faint", "background", 4.5], ["faint", "card", 4.5], ["faint", "muted", 4.5],
   ["primary-foreground", "primary", 4.5],
   ["primary", "background", 3], ["primary", "card", 3],
   ["ring", "background", 3], ["ring", "card", 3],

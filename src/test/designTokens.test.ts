@@ -39,7 +39,12 @@ const LIMITS = {
   // Goły `rounded` (0.25rem) nie idzie za kształtem motywu (`--shape`).
   bareRadius: { pattern: /(?<![\w-])rounded(?![\w-[])/g, max: 38, token: "rounded-control / rounded-field" },
   // `shadow` i `shadow-sm` to dwie nazwy na `--elevation-1`.
-  bareShadow: { pattern: /(?<![\w-])shadow(?:-sm)?(?![\w-[])/g, max: 24, token: "shadow-elevation-1" },
+  // W1.3: jedna skala cieni — `shadow`, `shadow-sm`, `shadow-xl` to tylko aliasy elewacji.
+  bareShadow: { pattern: /(?<![\w-])shadow(?:-sm|-xl)?(?![\w-[])/g, max: 0, token: "shadow-elevation-1..3" },
+  // `shadow-[…]` tylko na obwódki, wcięcia i poświaty (suwak, przycisk wciśnięty, dzień, chip, podpis) — nie na głębię.
+  arbitraryShadow: { pattern: /(?<![\w-])shadow-\[/g, max: 7, token: "shadow-elevation-1..3" },
+  // W1.1: tekst wyciszony przez przezroczystość nie ma sprawdzanego kontrastu. Został nieaktywny `IconButton`.
+  mutedAlpha: { pattern: /text-muted-foreground\/\d+/g, max: 1, token: "text-faint" },
   // Zmienna `--radius-*` nie istnieje — promienie to `--r-control/field/card`.
   missingRadiusVar: { pattern: /var\(--radius-/g, max: 0, token: "var(--r-field) itd." },
   // Blady przycisk wygląda na zepsuty (nowy plan 2.4) — nieaktywny szarzeje kolorem.

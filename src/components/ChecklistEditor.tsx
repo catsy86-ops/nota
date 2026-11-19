@@ -217,7 +217,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 tabIndex={-1}
                 aria-label={`Przeciągnij: ${item.text || "pusta"}`}
                 title="Przeciągnij, żeby zmienić kolejność (Alt+↑/↓)"
-                className="-ml-1 grid shrink-0 cursor-grab touch-none place-items-center rounded text-muted-foreground/50 opacity-0 transition-opacity hover:text-foreground group-hover/item:opacity-100 active:cursor-grabbing coarse:-ml-3 coarse:-mr-2 coarse:h-11 coarse:w-11 coarse:opacity-100"
+                className="-ml-1 grid shrink-0 cursor-grab touch-none place-items-center rounded text-faint opacity-0 transition-opacity hover:text-foreground group-hover/item:opacity-100 active:cursor-grabbing coarse:-ml-3 coarse:-mr-2 coarse:h-11 coarse:w-11 coarse:opacity-100"
               >
                 <GripVertical className="w-3.5 h-3.5" aria-hidden />
               </button>
@@ -292,7 +292,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 type="button"
                 onClick={() => removeItem(item.id)}
                 aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
-                className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                className="p-0.5 coarse:p-2 rounded text-faint hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -339,7 +339,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                   type="button"
                   onClick={() => removeItem(item.id)}
                   aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
-                  className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                  className="p-0.5 coarse:p-2 rounded text-faint hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -351,7 +351,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
 
       {!readOnly && (
         <div className="flex items-center gap-2 pt-1">
-          <Plus className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+          <Plus className="w-4 h-4 text-faint shrink-0" />
           <input
             value={newItem}
             onChange={(e) => setNewItem(e.target.value)}

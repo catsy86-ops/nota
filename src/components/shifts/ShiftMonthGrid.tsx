@@ -195,7 +195,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                         key={entry ? stampKey(entry) : undefined}
                         aria-hidden
                         // Nieobecność: jasne tło w kolorze rodzaju i cienka ramka. Przerywana ramka wyglądała jak puste miejsce do wypełnienia.
-                        className={cn("relative mt-auto rounded-field px-1 py-0.5 text-center leading-tight", absence ? "border-[1.5px]" : "shadow-sm ring-1 ring-foreground", !inMonth && "opacity-50", stamped.has(key) && "stamp-in")}
+                        className={cn("relative mt-auto rounded-field px-1 py-0.5 text-center leading-tight", absence ? "border-[1.5px]" : "shadow-elevation-1 ring-1 ring-foreground", !inMonth && "opacity-50", stamped.has(key) && "stamp-in")}
                         style={{ ...waveStyle, ...(absence
                           ? { borderColor: type.color, backgroundColor: `color-mix(in srgb, ${type.color} 16%, transparent)`, color: shiftTextOnCard(type.color), "--stamp": type.color } as React.CSSProperties
                           : { backgroundColor: type.color, color: shiftInk(type.color), "--stamp": type.color } as React.CSSProperties) }}

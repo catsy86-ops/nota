@@ -173,7 +173,7 @@ export function GuideArt({ art, chip }: { art: GuideArtId; chip?: string }) {
     >
       <svg viewBox="0 0 160 112" className="h-full w-full">{SCENES[art]}</svg>
       {chip && (
-        <span className="guide-pop absolute right-2 top-2 rounded-full bg-primary px-2 py-0.5 font-mono text-2xs font-semibold text-primary-foreground shadow-sm" style={at(0.8)}>{chip}</span>
+        <span className="guide-pop absolute right-2 top-2 rounded-full bg-primary px-2 py-0.5 font-mono text-2xs font-semibold text-primary-foreground shadow-elevation-1" style={at(0.8)}>{chip}</span>
       )}
     </div>
   );

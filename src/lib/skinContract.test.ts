@@ -29,8 +29,16 @@ const SKIN_TOKENS = [
   "--grid", "--margin",
   "--note-default", "--note-coral", "--note-peach", "--note-sand", "--note-mint",
   "--note-sage", "--note-sky", "--note-lavender", "--note-rose",
-  "--elevation-1", "--elevation-2", "--elevation-3", "--elevation-up", "--glow-primary",
+  "--glow-primary",
 ] as const;
+
+/** W1.2: głębia — barwa cienia (formuła w `index.css`) albo komplet własnych cieni (podpis stylu). */
+const ELEVATION = ["--elevation-1", "--elevation-2", "--elevation-3", "--elevation-up"] as const;
+function missing(defined: Set<string>): string[] {
+  const out: string[] = SKIN_TOKENS.filter((t) => !defined.has(t));
+  if (!defined.has("--shadow-tint")) out.push(...ELEVATION.filter((t) => !defined.has(t)));
+  return out;
+}
 
 /** Sygnatura ruchu (plan rozbudowy 1b) — każda skórka, łącznie z Zeszytem. */
 const MOTION_TOKENS = ["--sig-ease", "--sig-dur"] as const;
@@ -62,14 +70,14 @@ describe("kontrakt tokenów skórek", () => {
           ? [new Set([...own, ...tokensOf(/:root/)]), new Set([...own, ...tokensOf(/\.dark/)])]
           : [own];
       for (const defined of sets) {
-        expect(SKIN_TOKENS.filter((t) => !defined.has(t)), "brakujące tokeny").toEqual([]);
+        expect(missing(defined), "brakujące tokeny").toEqual([]);
       }
       expect(MOTION_TOKENS.filter((t) => !own.has(t)), "brakująca sygnatura ruchu").toEqual([]);
     });
     if (skin !== "zeszyt") {
       it(`${skin}: drugi schemat ma pełny komplet tokenów`, () => {
         const alt = tokensOf(altSelector(skin));
-        expect(SKIN_TOKENS.filter((t) => !alt.has(t)), "brakujące tokeny drugiego schematu").toEqual([]);
+        expect(missing(alt), "brakujące tokeny drugiego schematu").toEqual([]);
       });
     }
   }

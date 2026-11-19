@@ -407,7 +407,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
             ref={canvasRef}
             width={canvasSize.width}
             height={canvasSize.height}
-            className="rounded-card shadow-sm bg-white cursor-crosshair touch-none max-w-full max-h-full"
+            className="rounded-card shadow-elevation-1 bg-white cursor-crosshair touch-none max-w-full max-h-full"
             style={{ imageRendering: "auto" }}
             onPointerDown={startDrawing}
             onPointerMove={draw}

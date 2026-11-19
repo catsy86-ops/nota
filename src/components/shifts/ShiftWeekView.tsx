@@ -158,7 +158,7 @@ export const ShiftWeekView = memo(function ShiftWeekView({
                       <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                         <span
                           key={entry ? stampKey(entry) : undefined}
-                          className={cn("relative rounded-field px-2 py-0.5 text-center font-display font-bold text-sm leading-tight", absence ? "border-[1.5px]" : "shadow-sm", stamped.has(key) && "stamp-in")}
+                          className={cn("relative rounded-field px-2 py-0.5 text-center font-display font-bold text-sm leading-tight", absence ? "border-[1.5px]" : "shadow-elevation-1", stamped.has(key) && "stamp-in")}
                           style={absence
                             ? { borderColor: type.color, backgroundColor: `color-mix(in srgb, ${type.color} 16%, transparent)`, color: shiftTextOnCard(type.color), "--stamp": type.color } as React.CSSProperties
                             : { backgroundColor: type.color, color: shiftInk(type.color), "--stamp": type.color } as React.CSSProperties}

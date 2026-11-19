@@ -71,14 +71,14 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
                 data-thumb={s}
                 aria-hidden
                 className={cn(
-                  "skin-thumb relative block aspect-[16/10] rounded-card shadow-sm ring-1 ring-foreground/10 transition-shadow duration-base group-hover:shadow-elevation-2",
+                  "skin-thumb relative block aspect-[16/10] rounded-card shadow-elevation-1 ring-1 ring-foreground/10 transition-shadow duration-base group-hover:shadow-elevation-2",
                   i === 0 && "aspect-[16/7]",
                 )}
                 style={{ backgroundColor: p.bg, color: p.ink }}
               >
                 <span className="absolute left-2.5 top-1.5 text-xl leading-none" style={{ fontFamily: meta.font, fontWeight: 600 }}>Aa</span>
                 {!active && <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: accent, boxShadow: `0 0 10px ${accent}` }} />}
-                <span className="absolute inset-x-2.5 bottom-2 rounded-control px-2 py-1.5 shadow-sm" style={{ backgroundColor: p.card }}>
+                <span className="absolute inset-x-2.5 bottom-2 rounded-control px-2 py-1.5 shadow-elevation-1" style={{ backgroundColor: p.card }}>
                   <span className="block h-1.5 w-3/5 rounded-full" style={{ backgroundColor: p.ink, opacity: 0.85 }} />
                   <span className="mt-1 block h-1 w-4/5 rounded-full" style={{ backgroundColor: p.muted, opacity: 0.8 }} />
                   {/* Przycisk główny w akcencie: pigułka, nie kreska — widać, jak wygląda „Zapisz”. */}
@@ -89,7 +89,7 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
                     initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={spring.snap}
-                    className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full shadow-sm"
+                    className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full shadow-elevation-1"
                     style={{ backgroundColor: accent, color: p.bg }}
                   >
                     <Check className="h-3 w-3" strokeWidth={3} />

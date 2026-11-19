@@ -20,7 +20,7 @@ export const dayCellClass = (inMonth: boolean, today = false, empty = false) => 
   today && inMonth && "today-breath",
   "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
   // Dzień spoza miesiąca: szary tekst, nie przezroczystość — przy opacity czerwone święto znikało w ciemnym motywie.
-  inMonth ? "border-border/50 bg-card hover:border-primary/40 hover:shadow-sm dark:border-transparent dark:hover:border-primary/40" : "border-transparent text-muted-foreground",
+  inMonth ? "border-border/50 bg-card hover:border-primary/40 hover:shadow-elevation-1 dark:border-transparent dark:hover:border-primary/40" : "border-transparent text-muted-foreground",
   // Dzisiejszy dzień ma delikatne tło marki, nie tylko kółko przy numerze.
   today && inMonth && "bg-[color-mix(in_srgb,var(--primary)_5%,var(--card))]",
   inMonth && empty && !today && "border-dashed bg-transparent dark:border-border/40",

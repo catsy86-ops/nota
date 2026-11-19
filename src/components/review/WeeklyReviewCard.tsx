@@ -199,7 +199,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
         data-testid="weekly-review"
         className={cn(
           "relative rounded-card border border-primary/25 bg-card p-4 sm:p-5 pl-5 sm:pl-6",
-          "border-l-4 border-l-primary/50 shadow-sm",
+          "border-l-4 border-l-primary/50 shadow-elevation-1",
         )}
       >
         <header className="flex flex-wrap items-start gap-x-3 gap-y-2">
