@@ -22,7 +22,7 @@ export interface ListRowProps extends Omit<React.HTMLAttributes<HTMLElement>, "t
  */
 export const ListRow = React.forwardRef<HTMLElement, ListRowProps>(
   ({ icon, title, description, value, action, as: Tag = "div", className, ...rest }, ref) => (
-    <Tag ref={ref as never} className={cn("flex min-h-11 items-center gap-3 py-2", className)} {...rest}>
+    <Tag ref={ref as never} className={cn("flex min-h-11 items-center gap-3 py-row", className)} {...rest}>
       {icon && <span className="grid size-5 shrink-0 place-items-center text-muted-foreground">{icon}</span>}
       <span className="min-w-0 flex-1">
         <span className="ui-label block truncate text-foreground">{title}</span>

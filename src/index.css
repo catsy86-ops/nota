@@ -49,6 +49,22 @@
     interpolate-size: allow-keywords;
   }
 
+  /* W1.5: odstępy semantyczne — aliasy skali, nie nowa skala. Liczone od `--spacing`, więc idą za gęstością
+     (`html[data-ui-density]`). Tailwind: `p-card`, `px-page`, `gap-stack`, `py-row`. */
+  :root {
+    --space-page: calc(var(--spacing) * 4);
+    --space-card: calc(var(--spacing) * 4);
+    --space-stack: calc(var(--spacing) * 8);
+    --space-row: calc(var(--spacing) * 2);
+  }
+  @media (min-width: 640px) {
+    :root {
+      --space-page: calc(var(--spacing) * 6);
+      --space-card: calc(var(--spacing) * 5);
+      --space-stack: calc(var(--spacing) * 10);
+    }
+  }
+
   /* W6.6: natywne kontrolki (checkbox, radio, suwak, postęp) i zaznaczenie tekstu w akcencie stylu.
      `color-scheme` i `theme-color` ustawiają `prepaint.js` i `useTheme` przy każdej zmianie stylu. */
   :root {

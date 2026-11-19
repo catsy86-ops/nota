@@ -6664,3 +6664,32 @@ W3.1 — 573c83d1; W3.4 — commit po tym wpisie (2026-11-19).
 ### Commit
 
 W6.1 — 8f01f30c; W6.3 i W6.6 — commit po tym wpisie (2026-11-19).
+
+## Wygląd — odstępy semantyczne (W1.5, 2026-11-19)
+
+### Co robi
+
+- Margines ekranu, wnętrze karty, odstęp między sekcjami i wiersz listy mają nazwane odstępy. Wszystkie idą za ustawieniem „Gęstość interfejsu”.
+
+### Gdzie jest
+
+- `src/index.css` (`@layer base`, `:root`): `--space-page` (4 / od 640 px 6), `--space-card` (4 / 5), `--space-stack` (8 / 10), `--space-row` (2). Liczby to wielokrotności `--spacing`.
+- `tailwind.config.ts` — `spacing.page|card|stack|row`, czyli klasy `px-page`, `p-card`, `gap-stack`, `py-row`.
+- Użycia: `SectionCard` (`p-card`), `ListRow` (`py-row`), `<main>` w `src/pages/Index.tsx` (`px-page`, `gap-stack` poza widokiem Dziś).
+
+### Jak działa
+
+- Gęstość (`src/lib/uiDensity.ts`) zmienia `--spacing` na `<html>`. Aliasy są zdefiniowane na tym samym elemencie przez `calc(var(--spacing) * n)`, więc skalują się razem z nim. Przy zwykłej gęstości wartości są takie same jak wcześniej (`p-4 sm:p-5`, `px-4 sm:px-6`, `gap-8 sm:gap-10`).
+
+### Ograniczenia i pułapki
+
+- Ręczne karty (`cardClass` z `p-4` w miejscu użycia) jeszcze nie biorą `p-card`. Przejdą na nie z migracją W3.2.
+- Widok Dziś ma własny, ciaśniejszy odstęp (`gap-4 sm:gap-10`).
+
+### Testy
+
+- Brak testu wartości; build sprawdzony na wygenerowane klasy w `dist/assets/*.css`.
+
+### Commit
+
+W1.5 — commit po tym wpisie (2026-11-19).
