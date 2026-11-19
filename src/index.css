@@ -65,6 +65,18 @@
     }
   }
 
+  /* W1.6: paleta danych. Wykresy mają dziś po jednej serii (dwie w nadgodzinach roku), więc dwie barwy serii;
+     kolejne dopisywać w stałej kolejności i sprawdzać walidatorem CVD (skill dataviz). Siatka i osie wycofane,
+     podpisy w tokenie tekstu, nie w kolorze serii. */
+  :root {
+    --chart-1: var(--primary);
+    --chart-2: var(--accent);
+    --chart-grid: var(--border);
+    --chart-axis: var(--muted-foreground);
+    --positive: var(--success);
+    --negative: var(--destructive);
+  }
+
   /* W6.6: natywne kontrolki (checkbox, radio, suwak, postęp) i zaznaczenie tekstu w akcencie stylu.
      `color-scheme` i `theme-color` ustawiają `prepaint.js` i `useTheme` przy każdej zmianie stylu. */
   :root {
@@ -1519,14 +1531,16 @@ html[data-motion="reduced"]::view-transition-new(day-panel) { animation: vt-fade
 html[data-motion="reduced"]::view-transition-group(day-active) { animation-duration: 0s; }
 
 /* Wykresy roku w Grafiku (G4.3): kolory z tokenów; recharts daje klasy na grupach, kolor idzie na elementy. */
-.year-chart-grid line { stroke: var(--border); }
-.year-chart-hours .recharts-rectangle { fill: var(--primary); }
+.year-chart-grid line { stroke: var(--chart-grid); }
+.year-chart-hours .recharts-rectangle { fill: var(--chart-1); }
 .year-chart-norm .recharts-curve { stroke: var(--foreground); stroke-dasharray: 4 3; stroke-width: 1.5; }
 .year-chart-over .recharts-rectangle { fill: var(--warning); }
-.year-chart-night .recharts-rectangle { fill: var(--accent); }
+.year-chart-night .recharts-rectangle { fill: var(--chart-2); }
 
 /* Osie i dymki Recharts: cyfry o stałej szerokości, żeby wartości nie skakały (plan 5.3). */
 .recharts-wrapper { font-variant-numeric: tabular-nums; }
+/* W1.6: podpisy osi w tokenie tekstu (recharts domyślnie #666, bez kontrastu stylu). */
+.recharts-cartesian-axis-tick-value { fill: var(--chart-axis); }
 
 /* ── Animowana ramka kafla (2026-10-27) ─────────────────────────────────────────
    Obwódka w spoczynku zostaje zwykłym `border`. Przy najechaniu, fokusie klawiaturą

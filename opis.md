@@ -6693,3 +6693,32 @@ W6.1 — 8f01f30c; W6.3 i W6.6 — commit po tym wpisie (2026-11-19).
 ### Commit
 
 W1.5 — commit po tym wpisie (2026-11-19).
+
+## Wygląd — paleta danych wykresów (W1.6, 2026-11-19)
+
+### Co robi
+
+- Wykresy biorą kolory z tokenów `--chart-*`: serie, siatkę i podpisy osi. Podpisy osi recharts mają kolor wyciszonego tekstu stylu zamiast domyślnego szarego `#666`. Punkty na wykresie próby ciśnienia mają 8 px średnicy.
+
+### Gdzie jest
+
+- `src/index.css` (`@layer base`, `:root`): `--chart-1` (= `--primary`), `--chart-2` (= `--accent`), `--chart-grid` (= `--border`), `--chart-axis` (= `--muted-foreground`), `--positive` / `--negative` (= `--success` / `--destructive`). Reguły `.year-chart-*` i `.recharts-cartesian-axis-tick-value`.
+- `src/components/StatsDialog.tsx` (słupki aktywności), `src/components/study/PressureChart.tsx` (osie, podpisy, linia, punkty), `src/components/shifts/YearCharts.tsx` (przez klasy `.year-chart-*`).
+
+### Jak działa
+
+- Tokeny są aliasami tokenów stylu, więc każdy z 10 stylów i oba schematy działają bez osobnych wartości. Kolory notatek już wcześniej były tokenami (`--note-*`).
+
+### Ograniczenia i pułapki
+
+- Są tylko dwie barwy serii, bo wykresy mają jedną serię, a nadgodziny roku dwie. Plan mówił o ośmiu, ale nieużywane tokeny nie mają sensu. Kolejne trzeba dopisywać w stałej kolejności i sprawdzać walidatorem CVD ze skilla `dataviz`.
+- Para nadgodziny (`--warning`) i noc (`--chart-2`) nie była sprawdzana walidatorem, bo kolory są w OKLCH dla 10 stylów. W Zeszycie to bursztyn i granat, czyli oś niebiesko-żółta, odporna na deuteranopię i protanopię.
+- Nadgodziny zostają w kolorze ostrzeżenia celowo: to stan, nie identyfikator serii.
+
+### Testy
+
+- Brak testu wartości. Build i testy Grafiku, Pracy oraz strażników przechodzą.
+
+### Commit
+
+W1.6 — commit po tym wpisie (2026-11-19).

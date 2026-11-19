@@ -148,7 +148,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
                   // Tokeny motywu, nie domyślne białe tło Recharts (plan 5.3); liczby w osiach i dymku tabelarycznie (`.recharts-wrapper` w index.css).
                   contentStyle={{ fontSize: 12, borderRadius: 8, background: "var(--popover)", border: "1px solid var(--border)", color: "var(--popover-foreground)" }}
                 />
-                <Bar dataKey="count" fill="var(--primary)" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="count" fill="var(--chart-1)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
