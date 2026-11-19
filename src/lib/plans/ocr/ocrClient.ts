@@ -1,5 +1,6 @@
 import type { Worker as TesseractWorker } from "tesseract.js";
 import { dedupeWords, isDarkBackground, OCR_OVERLAP, OCR_TILE, tileGrid, tileToImage, type Rect } from "../tiles";
+import { PAPER } from "@/lib/paint/colors";
 
 /**
  * Klient OCR Analizatora planów (przeglądarka). Ładowany dynamicznie dopiero po „Rozpoznaj opisy” —
@@ -141,7 +142,7 @@ async function tileBlob(bitmap: ImageBitmap, r: Rect, up: number): Promise<Blob>
   canvas.width = Math.round(r.w * up);
   canvas.height = Math.round(r.h * up);
   const ctx = canvas.getContext("2d", { willReadFrequently: false })!;
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = PAPER;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.filter = darkTile(bitmap, r) ? "grayscale(1) invert(1) contrast(1.4)" : "grayscale(1) contrast(1.4)";
   ctx.imageSmoothingQuality = "high";

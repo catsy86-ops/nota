@@ -1,3 +1,4 @@
+import { PAPER } from "@/lib/paint/colors";
 /**
  * Przygotowanie obrazu do zapisu: pliki do limitu przechodzą bez zmian, większe
  * (zrzuty ekranu, zdjęcia z telefonu) są skalowane i kodowane do JPEG tak, żeby
@@ -29,7 +30,7 @@ async function encode(bitmap: ImageBitmap, maxSide: number, quality: number): Pr
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   // JPEG nie ma przezroczystości — podkład w kolorze kartki zamiast czarnego tła.
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = PAPER;
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(bitmap, 0, 0, width, height);
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));

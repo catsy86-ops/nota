@@ -1,7 +1,8 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from "react";
+import { SIGNATURE_INK } from "@/lib/paint/colors";
 
 /** Atrament: granatowy długopis, jak na papierowym protokole. Kartka pola jest biała w obu motywach. */
-const INK = "#1f2a44";
+const INK = SIGNATURE_INK;
 const PEN_WIDTH = 2.4;
 /** Margines wokół kresek w eksporcie (px płótna). */
 const EXPORT_PAD = 12;

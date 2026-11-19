@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { DIMENSION_MIN_LENGTH, DIMENSION_TEXT_MAX, MAX_DIMENSIONS_PER_IMAGE, type Dimension } from "@/lib/study/dimensions";
+import { MEASURE_ACTIVE, MEASURE_DONE, MEASURE_TEXT } from "@/lib/paint/colors";
 
 type Pt = [number, number];
 
@@ -75,17 +76,17 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
       for (const p of [a, b]) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p[0] * w, p[1] * h, 4 * unit, 0, Math.PI * 2); ctx.fill(); }
     };
     for (const d of list) {
-      line(d.from, d.to, "#f59e0b");
+      line(d.from, d.to, MEASURE_DONE);
       // Opis na jasnej tabliczce, żeby czytało się na każdym tle.
       ctx.font = `600 ${13 * unit}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       const mx = ((d.from[0] + d.to[0]) / 2) * w, my = ((d.from[1] + d.to[1]) / 2) * h;
       const tw = ctx.measureText(d.text).width + 10 * unit;
       ctx.fillStyle = "rgba(255,255,255,0.92)"; ctx.fillRect(mx - tw / 2, my - 11 * unit, tw, 22 * unit);
-      ctx.fillStyle = "#111"; ctx.fillText(d.text, mx, my);
+      ctx.fillStyle = MEASURE_TEXT; ctx.fillText(d.text, mx, my);
     }
-    if (pending) line(pending.from, pending.to, "#ef4444");
-    else if (start && live) line(start, live, "#ef4444", true);
-    else if (start) { ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(start[0] * w, start[1] * h, 6 * unit, 0, Math.PI * 2); ctx.fill(); }
+    if (pending) line(pending.from, pending.to, MEASURE_ACTIVE);
+    else if (start && live) line(start, live, MEASURE_ACTIVE, true);
+    else if (start) { ctx.fillStyle = MEASURE_ACTIVE; ctx.beginPath(); ctx.arc(start[0] * w, start[1] * h, 6 * unit, 0, Math.PI * 2); ctx.fill(); }
   }, [img, list, start, live, pending]);
 
   /**

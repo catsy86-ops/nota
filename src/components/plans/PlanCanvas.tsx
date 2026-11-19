@@ -1,6 +1,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode } from "react";
 import type { PlanPoint } from "@/lib/plans/model";
 import { clampView, fitView, panBy, pinchView, screenToImage, zoomAt, type Viewport } from "@/lib/plans/viewport";
+import { PAPER } from "@/lib/paint/colors";
 
 /** Ruch krótszy niż tyle pikseli ekranu to stuknięcie, nie przesunięcie. */
 const TAP_SLOP = 8;
@@ -187,7 +188,7 @@ export const PlanCanvas = forwardRef<PlanCanvasHandle, Props>(function PlanCanva
         <svg width={size.w} height={size.h} className="absolute inset-0" aria-hidden>
           <g transform={`translate(${view.tx} ${view.ty}) scale(${view.scale})`}>
             {/* Plan zawsze na białej kartce — zrzuty z DWG FastView mają ciemne linie na jasnym tle. */}
-            <rect width={width} height={height} fill="#ffffff" />
+            <rect width={width} height={height} fill={PAPER} />
             {url && <image href={url} width={width} height={height} preserveAspectRatio="none" style={{ imageRendering: view.scale > 2 ? "pixelated" : "auto" }} />}
             {children?.(view.scale)}
           </g>

@@ -1,3 +1,4 @@
+import { PAPER } from "@/lib/paint/colors";
 /**
  * Podpis wtopiony w zdjęcie z budowy („przed zakryciem”): pasek u dołu z tekstem
  * (pomieszczenie, miara) i datą. Wtopiony, a nie w danych wpisu — zdjęcie wysłane
@@ -71,7 +72,7 @@ export async function captionPhoto(blob: Blob, text: string): Promise<Blob | nul
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     // JPEG nie ma przezroczystości — podkład jak w `imagePrepare`, inaczej PNG wychodzi na czarnym.
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = PAPER;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(bitmap, 0, 0);
     const fontFor = (px: number) => `600 ${px}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
@@ -80,7 +81,7 @@ export async function captionPhoto(blob: Blob, text: string): Promise<Blob | nul
     // Pasek półprzezroczysty: zdjęcie pod spodem dalej widać, tekst czytelny na każdym tle.
     ctx.fillStyle = "rgba(0, 0, 0, 0.62)";
     ctx.fillRect(0, canvas.height - l.band, canvas.width, l.band);
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = PAPER;
     ctx.font = fontFor(l.font);
     ctx.textBaseline = "alphabetic";
     l.lines.forEach((line, i) => {

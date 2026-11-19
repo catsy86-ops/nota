@@ -6753,3 +6753,36 @@ W1.6 — commit po tym wpisie (2026-11-19).
 ### Commit
 
 W1.7 — commit po tym wpisie (2026-11-19).
+
+## Wygląd — kolory rysunku i eksportu w jednym module (W1.8, 2026-11-19)
+
+### Co robi
+
+- Stałe kolory rysunku na canvasie i w plikach z aplikacji są w jednym module: biały podkład pod obraz, tusz podpisu i linie wymiarów na zdjęciu. Wygląd się nie zmienia.
+- Próbki akcentów Zeszytu w Ustawieniach pokazują kolory po poprawce kontrastu z W6.1. Wcześniej pokazywały stare, jaśniejsze.
+
+### Gdzie jest
+
+- `src/lib/paint/colors.ts`: `tokenColor(name, fallback)` (odczyt tokenu stylu przez `getComputedStyle`, przeniesiony z `celebrate.ts`), `PAPER`, `SIGNATURE_INK`, `SIGNATURE_MUTED`, `MEASURE_DONE`, `MEASURE_ACTIVE`, `MEASURE_TEXT`.
+- Użycia: `celebrate.ts`, `imageThumb.ts`, `imagePrepare.ts`, `study/photoCaption.ts`, `study/photoShrink.ts`, `plans/imageImport.ts`, `plans/ocr/ocrClient.ts`, `PlanCanvas.tsx`, `SignaturePad.tsx`, `DimensionDrawer.tsx`. `SymbolPanel.tsx` bierze szary z `SYSTEM_META.unknown.color`.
+- `src/lib/accentMeta.ts` — próbki Zeszytu przeliczone z nowych wartości OKLCH: #d57a00, #4792ee, #2ca454, #e56963, #a57ce6.
+- `src/test/hexColors.test.ts` — strażnik: hex w `.ts`/`.tsx` tylko w plikach z `KNOWN` (24 pliki, 287 wystąpień), a liczba w pliku może tylko maleć.
+
+### Jak działa
+
+- Plik wychodzący z aplikacji (JPEG, PNG, PDF, druk) ma stałe kolory, bo ma wyglądać tak samo w każdym motywie i na papierze. Rysunek na ekranie (konfetti) bierze kolor stylu przez `tokenColor`.
+- Pozostałe wyjątki w `KNOWN`, według grup planu: (c) rysunek, plik i druk (`PlanOverlay`, `plans/systems.ts`, `shifts/monthImageDraw.ts`, `mermaidRender.ts`, `exportNotes.ts`, `recoveryPrint.ts`, `MatrixRain.tsx`), (d) dane i ustawienia użytkownika (kolory zmian w `shifts/model.ts` i `shifts/color.ts`, paleta `DrawingCanvas`, `frameLook`, `glowLook`, `noteLook`, `accentMeta`), kolor paska adresu (`skinList.ts`, `useTheme.ts`, `skinGallery.ts`).
+
+### Ograniczenia i pułapki
+
+- `accentMeta.ts` trzeba przeliczać ręcznie po każdej zmianie `accents.css`, bo żaden test nie porównuje próbek z CSS.
+- `SignaturePad.tsx` i `SiteSignatureDialog.tsx` mają granat podpisu także w klasach Tailwinda (`border-[#1f2a44]/35`). Klasa musi być literałem, więc stała z modułu tu nie zadziała.
+- Plan liczył 283 hex w 28 plikach. Strażnik liczy wystąpienia, nie linie: przed zmianą było ich 300, teraz jest 287.
+
+### Testy
+
+- `src/test/hexColors.test.ts`. Testy Pracy, planów i `celebrate` przechodzą. `src/lib/study/perf.test.ts` pada tylko przy równoległym przebiegu (pomiar czasu), osobno przechodzi.
+
+### Commit
+
+W1.8 — commit po tym wpisie (2026-11-19).

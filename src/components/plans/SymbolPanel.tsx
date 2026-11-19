@@ -113,7 +113,7 @@ export function FittingsSection({ proposals, symbols, routesCount, selectedId, f
             <li key={s.id}>
               <button type="button" onClick={() => onSelect(s.id)} aria-pressed={s.id === selectedId}
                 className={cn("flex min-h-10 w-full items-center gap-2 rounded-control px-2 text-left text-sm hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11", s.id === selectedId && "bg-muted")}>
-                <span aria-hidden className="size-3 shrink-0 rounded-full border-2" style={{ borderColor: s.system ? SYSTEM_META[s.system].color : "#6b7280" }} />
+                <span aria-hidden className="size-3 shrink-0 rounded-full border-2" style={{ borderColor: s.system ? SYSTEM_META[s.system].color : SYSTEM_META.unknown.color }} />
                 <span className="min-w-0 flex-1 truncate">{SYMBOL_META[s.type].label}{s.system ? ` · ${SYSTEM_META[s.system].short}` : ""}</span>
                 <span className="text-xs text-muted-foreground">{s.verified ? (s.manual ? "ręczny" : "zatwierdzony") : "do sprawdzenia"}</span>
               </button>

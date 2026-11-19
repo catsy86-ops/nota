@@ -1,6 +1,7 @@
 import { imageStore } from "@/lib/imageStore";
 import { updateJournalEntry } from "@/lib/study/store";
 import type { JournalEntry } from "@/lib/study/journalEntry";
+import { PAPER } from "@/lib/paint/colors";
 
 /** Najdłuższy bok miniatury po zakończeniu budowy (P-4, plan Pracy 3.3). */
 export const SHRINK_MAX_SIDE = 800;
@@ -25,7 +26,7 @@ export async function makeThumbnail(blob: Blob, max = SHRINK_MAX_SIDE): Promise<
   canvas.height = size.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = PAPER;
   ctx.fillRect(0, 0, size.width, size.height);
   ctx.drawImage(bitmap, 0, 0, size.width, size.height);
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85));

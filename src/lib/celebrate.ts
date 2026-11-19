@@ -1,6 +1,7 @@
 import type confettiFn from "canvas-confetti";
 import { isEffectEnabled, type EffectKey } from "./effectsSettings";
 import { isMotionReduced } from "@/lib/motionPref";
+import { tokenColor } from "@/lib/paint/colors";
 
 type Confetti = typeof confettiFn;
 let confettiLib: Confetti | null = null;
@@ -67,19 +68,13 @@ function canFire(key: EffectKey): boolean {
   return true;
 }
 
-function hslVar(name: string, fallback: string): string {
-  if (typeof window === "undefined") return fallback;
-  // Tokeny są już pełnymi kolorami (oklch po D-1), więc nie opakowujemy ich w hsl().
-  const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return raw || fallback;
-}
 
 function themeColors(): string[] {
   return [
     // Awaryjne kolory (gdy zmiennej motywu brak) to kolory marki: bursztyn, niebieski długopis, zieleń.
-    hslVar("--primary", "hsl(34 88% 55%)"),
-    hslVar("--accent", "hsl(222 57% 55%)"),
-    hslVar("--secondary", "hsl(150 60% 45%)"),
+    tokenColor("--primary", "hsl(34 88% 55%)"),
+    tokenColor("--accent", "hsl(222 57% 55%)"),
+    tokenColor("--secondary", "hsl(150 60% 45%)"),
   ];
 }
 
@@ -256,7 +251,7 @@ export function rainbow() {
 export function dayDoneReward() {
   if (typeof window === "undefined") return;
   if (!canFire("doneReward")) return;
-  const colors = [hslVar("--primary", "#f59e0b"), "#fcd34d", "#fef3c7"];
+  const colors = [tokenColor("--primary", "#f59e0b"), "#fcd34d", "#fef3c7"];
   withConfetti((confetti) => {
     const fire = (angle: number) =>
       confetti({

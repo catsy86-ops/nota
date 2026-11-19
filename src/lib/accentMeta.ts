@@ -4,11 +4,11 @@ import type { Skin } from "@/lib/skinList";
 /** Nazwy i próbki odcieni. Próbka = `--primary` z `accents.css` w jasnym schemacie, w hex (w ciemnym schemacie odcień jest jaśniejszy: np. markery Tablicy stają się kredą). Indeks = numer akcentu. */
 export const ACCENT_META: Record<Skin, { label: string; swatch: string }[]> = {
   zeszyt: [
-    { label: "Bursztyn", swatch: "#e1860e" },
-    { label: "Niebieski długopis", swatch: "#55a1fe" },
-    { label: "Zielony", swatch: "#47b968" },
-    { label: "Czerwony długopis", swatch: "#f1736c" },
-    { label: "Fiolet", swatch: "#af86f1" },
+    { label: "Bursztyn", swatch: "#d57a00" },
+    { label: "Niebieski długopis", swatch: "#4792ee" },
+    { label: "Zielony", swatch: "#2ca454" },
+    { label: "Czerwony długopis", swatch: "#e56963" },
+    { label: "Fiolet", swatch: "#a57ce6" },
   ],
   plan: [
     { label: "Błękit kalki", swatch: "#6bd2fa" },

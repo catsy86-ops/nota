@@ -3,6 +3,7 @@ import { fitWithin } from "@/lib/imagePrepare";
 import type { PlanImage } from "./model";
 import { checkPlanFile, IMPORT_ERROR_TEXT, type ImportError } from "./imageSniff";
 import { PLAN_SYNC_MAX_BYTES } from "./planRefs";
+import { PAPER } from "@/lib/paint/colors";
 
 /**
  * Import zrzutu planu (przeglądarka: `createImageBitmap`, płótno). Oryginał zapisujemy bez zmian —
@@ -48,7 +49,7 @@ async function workCopy(bitmap: ImageBitmap): Promise<Blob | null> {
     canvas.height = height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = PAPER;
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(bitmap, 0, 0, width, height);
     for (const [type, q] of [["image/png"], ["image/webp", 0.92], ["image/jpeg", 0.9]] as [string, number?][]) {
