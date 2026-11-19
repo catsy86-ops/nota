@@ -1,4 +1,5 @@
-import { cleanSchemaClaim, cleanVersionClaim, localDeviceSchema, setDeviceSource, type DeviceSchema } from "@/lib/formatSchema";
+import { cleanSchemaClaim, cleanVersionClaim, localDeviceSchema, setDeviceSource, setRegistrySource, type DeviceSchema } from "@/lib/formatSchema";
+import { activeOtherDevices, recordLocalDevice } from "@/lib/deviceRegistry";
 import { cleanDeviceName, getSeenDevices, recordSeenDevices } from "@/lib/syncSeen";
 import { clearLegacyIdle, legacyIdleExpired, markLegacyEnabled, markLegacySeen, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { useSyncExternalStore } from "react";
@@ -193,6 +194,8 @@ const SYNCED_AT_THROTTLE_MS = 5000;
 
 let state: SyncState = { ...DEFAULT_STATE, code: readPrefs().code };
 setDeviceSource(() => state.devices);
+// D4.2: rejestr w dokumencie liczy się tylko w grupie — bez kodu bramka odpowiada „tak” (przywrócona migawka mogła wnieść stare wpisy).
+setRegistrySource(() => (state.code ? activeOtherDevices(yjsStore.doc) : []));
 let providers: WebrtcProvider[] = [];
 // Bumped on every connect()/disconnectProvider() so a dynamic import("y-webrtc")
 // still in flight from a superseded call can tell it's stale and back off.
@@ -430,6 +433,12 @@ export function setDeviceName(name: string): void {
     else localStorage.removeItem(DEVICE_NAME_KEY);
   } catch (err) { logDiag("warn", "yjsSync", "cannot persist device name", err); }
   providers.forEach((p) => p.awareness.setLocalStateField("device", { name: getDeviceName(), ...localDeviceSchema() }));
+  if (state.code) recordDevice();
+}
+
+/** D4.1: wpis tego urządzenia w rejestrze dokumentu (tylko w grupie; zapis najwyżej raz na dobę albo po zmianie). */
+function recordDevice() {
+  try { recordLocalDevice(yjsStore.doc, getDeviceName()); } catch (err) { logDiag("warn", "yjsSync", "device registry write failed", err); }
 }
 
 // Id-ki awareness widziane przy poprzednim odczycie — nowe ponad to to „połączono”.
@@ -689,6 +698,8 @@ function connect(code: string) {
     // zaległe zmiany pójdą bezpośrednio do urządzeń w starym pokoju.
     await relayFirstPull();
     if (token !== connectToken || rekeyStop(code) || peerCloses.paused(Date.now())) return;
+    // Po pierwszym pobraniu: własny wpis porównany z tym, co już jest w dokumencie grupy.
+    recordDevice();
     const legacyName = roomNameFor(code);
     roomKinds = rooms.map((room, i) => (i === 0 ? "v3" : room === legacyName ? "legacy" : "v2"));
     // Kod bywał w starszych pokojach — podstawa propozycji nowego kodu po końcu okna (§2.3).

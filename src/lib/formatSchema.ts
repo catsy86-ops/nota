@@ -37,9 +37,20 @@ export function setDeviceSource(fn: () => readonly DeviceSchema[]): void {
   deviceSource = fn;
 }
 
-/** Czy można zapisać format `required` przy aktualnie widzianych urządzeniach (bez grupy: tak). */
+/** Urządzenia z rejestru w dokumencie widziane w ostatnich 30 dniach (D4.1); podpina je `yjsSync` tylko przy grupie. */
+let registrySource: () => readonly DeviceSchema[] = () => [];
+export function setRegistrySource(fn: () => readonly DeviceSchema[]): void {
+  registrySource = fn;
+}
+
+/**
+ * Czy można zapisać format `required` (D4.2): wszystkie urządzenia obecne w awareness **oraz** z rejestru widziane
+ * w ostatnich 30 dniach muszą go znać. Bez grupy synchronizacji (jedno urządzenie) odpowiedź to „tak” — oba źródła
+ * są wtedy puste. Urządzenia sprzed D4.1 nie wpisują się do rejestru, więc przez 30 dni od wdrożenia D4.1 nie
+ * podnosimy `SCHEMA_VERSION` jako bramki zapisu.
+ */
 export function writeFormatAllowed(required: number): boolean {
-  return canWriteSchema(required, deviceSource());
+  return canWriteSchema(required, [...deviceSource(), ...registrySource()]);
 }
 
 /** Numer formatu, od którego metadane notatki prywatnej (kolor, folder, rodzic, ikona) są w szyfrogramie (V-3, krok 3). */

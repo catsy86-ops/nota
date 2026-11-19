@@ -50,6 +50,7 @@ const EXEMPT: Record<string, string> = {
   syncControl: "znaczniki wymiany kodu, zapis tylko przez rekey.ts",
   blobs: "bufor transportu obrazów w osobnym dokumencie w pamięci",
   docFormat: "wymagania wersji (D1.3), wartości to liczby",
+  devices: "rejestr urządzeń (D4.1); wpis zastępuje tylko jego urządzenie, wartości czyszczone przy odczycie",
   studyMigrations: "znaczniki migracji na urządzenie",
   shiftMigrations: "znaczniki migracji Grafiku na urządzenie",
   clients: "pole na klucz (`f␁id␁pole`) — pole nowszej wersji to osobny klucz",
@@ -73,7 +74,7 @@ const TODO = [
 ];
 const TODO_MAX = 3;
 
-const CONSTS: Record<string, string> = { SYNC_CONTROL_MAP: "syncControl", PLANS_MAP: "plans", REGISTRY_MAP: "shiftSchedules", DOC_FORMAT_MAP: "docFormat", DEBT_PROOFS_MAP: "debtProofs" };
+const CONSTS: Record<string, string> = { SYNC_CONTROL_MAP: "syncControl", PLANS_MAP: "plans", REGISTRY_MAP: "shiftSchedules", DOC_FORMAT_MAP: "docFormat", DEBT_PROOFS_MAP: "debtProofs", DEVICES_MAP: "devices" };
 
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((n) => {
