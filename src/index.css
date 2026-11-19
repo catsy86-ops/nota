@@ -797,9 +797,27 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   .ui-meta {
     @apply text-xs tabular-nums text-muted-foreground;
   }
+  /* W2.1: skala ról (`docs/typografia.md`). Rozmiary w rem, więc rosną z „Rozmiarem tekstu”. Tytuły odstają od
+     tekstu interfejsu (`--text-ui`, 14 px; 15 px na telefonie — WZ-1) o co najmniej dwa stopnie. */
+  /* Tytuł ekranu poza `ViewTitle` (dialog pełnoekranowy, kreator). */
+  .title-page {
+    font-size: 1.375rem; line-height: 1.75rem; font-weight: 700;
+    @apply font-display text-foreground;
+  }
   /* Tytuł sekcji w widoku (h2 pod h1 główki), gdy nie jest kartą `SectionCard`. */
   .title-section {
-    @apply font-display text-lg font-semibold leading-tight text-foreground;
+    font-size: 1.0625rem; line-height: 1.5rem; font-weight: 650;
+    @apply font-display text-foreground;
+  }
+  /* Nagłówek karty (`SectionCard`): stopień nad tekstem interfejsu, nie ten sam rozmiar co on. */
+  .title-card {
+    font-size: calc(var(--text-ui) + 0.0625rem); line-height: 1.25rem; font-weight: 600;
+    @apply flex items-center gap-2 font-display text-foreground;
+  }
+  /* Liczba główna karty (saldo, suma godzin, wynik): największy element karty. */
+  .num-lg {
+    font-size: 1.75rem; line-height: 2rem; font-weight: 600;
+    @apply font-mono tabular-nums text-foreground;
   }
 
   /* Tabliczka rysunkowa na końcu kartki: nazwa widoku w każdym skinie. Ostatni element `<main>` (nowy plan 1.4):

@@ -111,6 +111,8 @@ export default {
       fontSize: {
         // Najmniejszy stopień w skali — tylko badge i liczniki. Niżej nie schodzimy.
         "2xs": ["0.6875rem", { lineHeight: "1rem" }],
+        // Tekst interfejsu z `--text-ui` (W2.1, WZ-1): 14 px, na telefonie 15 px (`text-size.css`).
+        sm: ["var(--text-ui, 0.875rem)", { lineHeight: "var(--text-ui-lh, 1.25rem)" }],
       },
       boxShadow: {
         "elevation-1": "var(--elevation-1)",

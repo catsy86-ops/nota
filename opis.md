@@ -6565,4 +6565,32 @@ W0.2–W0.3: 6f7cc3a3, 2026-11-19.
 
 ### Commit
 
-W1.1–W1.4, 2026-11-19 — commit po tym wpisie.
+W1.1–W1.4: 974281cc, 2026-11-19.
+
+## Wygląd — skala ról tekstu i 15 px na telefonie (W2.1–W2.2 częściowo, WZ-1, 2026-11-19)
+
+### Co robi
+
+- Na telefonie tekst interfejsu ma 15 px zamiast 14 (decyzja WZ-1 — przyjęta rekomendacja, do potwierdzenia przez właściciela); na komputerze bez zmian.
+- Nagłówki kart (`SectionCard`) są o stopień większe od tekstu i w kroju tytułów — wcześniej miały ten sam rozmiar co opis pod nimi.
+
+### Gdzie jest
+
+- `src/styles/text-size.css` — `--text-ui` / `--text-ui-lh` (14/20, telefon 15/22); cofnięcie WZ-1 = usunięcie bloku `@media`.
+- `tailwind.config.ts` — `text-sm` z `--text-ui`.
+- `src/index.css` — role `title-page`, `title-section` (17/24, 650), `title-card`, `num-lg`.
+- `src/components/ui/section-card.tsx` — nagłówek `title-card`.
+- `docs/typografia.md` — tabela ról i decyzje.
+
+### Ograniczenia i pułapki
+
+- Sprawdzone w Chromium na 390 i 1280 px (Notatki, Dziś, Kalendarz, Grafik, Praca): brak przepełnienia poziomego. Zrzuty `@visual` i e2e nie odnowione — przesunięcia tekstu na telefonie są spodziewane.
+- Nie zrobione: przegląd 12 ekranów pod element główny (reszta W2.2), `num-lg` jeszcze nieużyte, W2.3 (grubości), W2.4 `hyphens`/68ch, W2.5–W2.7.
+
+### Testy
+
+- Vitest bez zmian (4169 zielone); strażnicy tokenów i kontrastu.
+
+### Commit
+
+W2.1, WZ-1, 2026-11-19 — commit po tym wpisie.

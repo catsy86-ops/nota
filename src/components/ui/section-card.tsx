@@ -32,7 +32,7 @@ export function SectionCard({ icon: Icon, title, meta, description, action, foot
     <section aria-labelledby={rest["aria-label"] ? undefined : headingId} className={cn(cardClass, "p-4 sm:p-5", className)} {...rest}>
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <div className="min-w-0">
-          <Heading id={headingId} className="section-label gap-2">
+          <Heading id={headingId} className="title-card">
             {Icon && <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
             {title}
             {meta !== undefined && meta !== null && meta !== false && (

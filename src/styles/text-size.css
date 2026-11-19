@@ -5,4 +5,14 @@
 */
 html {
   font-size: calc(100% * var(--text-scale, 1));
+  /* Tekst interfejsu (`text-sm`, W2.1). WZ-1: na telefonie 15 px — czytany w ręku i w słońcu; na komputerze 14 px.
+     Jedna zmienna: cofnięcie decyzji to usunięcie bloku @media niżej. */
+  --text-ui: 0.875rem;
+  --text-ui-lh: 1.25rem;
+}
+@media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
+  html {
+    --text-ui: 0.9375rem;
+    --text-ui-lh: 1.375rem;
+  }
 }
