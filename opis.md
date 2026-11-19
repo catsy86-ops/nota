@@ -6607,23 +6607,26 @@ W2.1, WZ-1, 2026-11-19 — commit po tym wpisie.
 ### Co robi
 
 - Jedna definicja karty w pięciu odmianach zamiast ręcznie składanych klas: zwykła, uniesiona, wewnętrzna (grupa w karcie), klikalna i ze stanem (kolorowa lewa krawędź).
+- Jeden wiersz listy (`ListRow`) zamiast składania wiersza osobno w każdej liście.
 
 ### Gdzie jest
 
 - `src/components/ui/card.tsx` — `Card` z `variant` (`plain` | `raised` | `inset` | `interactive` | `status`) i `tone` (`info` | `success` | `warning` | `danger`); `cardVariant()` daje samą klasę dla `motion.div`, `<li>` i przycisków. `cardClass` zostaje jako `plain`.
+- `src/components/ui/list-row.tsx` — `ListRow`: ikona, tytuł (`ui-label`), opis (`ui-meta`), wartość po prawej (mono, `tabular-nums`), akcja; `as="li"` w `<ul>`. Wysokość co najmniej 44 px.
 
 ### Jak działa
 
 - `plain` = `cardClass`. `raised` dokłada `shadow-elevation-1`. `inset` ma `rounded-field` i `bg-muted/50` bez obrysu — tak ma wyglądać karta w karcie (W3.3). `interactive` ma `pressable`, hover obrysu i pierścień fokusu. `status` ma `border-l-4` w kolorze tonu.
+- `ListRow` nie rysuje separatora: rodzic daje odstęp (`space-y-*`) albo jedną linię (`divide-y divide-border`), nigdy oba. Akcja stoi poza tytułem, więc nie zagnieżdża się w przycisku.
 
 ### Ograniczenia i pułapki
 
-- Brak tokenu `--space-card`: dopełnienie dalej w miejscu użycia. Istniejące karty nie są jeszcze przeniesione — to W3.2, działami.
+- Brak tokenu `--space-card`: dopełnienie dalej w miejscu użycia. Istniejące karty i listy nie są jeszcze przeniesione — to W3.2, działami. `ListRow` ma tylko jedną linijkę opisu (`truncate`).
 
 ### Testy
 
-- `src/components/ui/card.test.tsx`.
+- `src/components/ui/card.test.tsx`, `src/components/ui/list-row.test.tsx`.
 
 ### Commit
 
-W3.1, 2026-11-19 — commit po tym wpisie.
+W3.1 — 573c83d1; W3.4 — commit po tym wpisie (2026-11-19).

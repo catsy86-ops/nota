@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { Card, cardClass, cardVariant } from "./card";
 
 describe("Card — odmiany (W3.1)", () => {
-  it("domyślna to obrys bez cienia", () => {
+  it("domyślna to obrys bez elewacji", () => {
     expect(cardVariant()).toBe(cardClass);
     const { container } = render(<Card>x</Card>);
-    expect(container.firstElementChild?.className).not.toContain("shadow");
+    expect(container.firstElementChild?.className).not.toContain("elevation");
   });
 
   it("inset nie ma obrysu — karta w karcie bez dwóch ramek", () => {
