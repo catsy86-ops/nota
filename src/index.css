@@ -814,6 +814,19 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
     font-size: calc(var(--text-ui) + 0.0625rem); line-height: 1.25rem; font-weight: 600;
     @apply flex items-center gap-2 font-display text-foreground;
   }
+  /* W2.4: role tytułów stoją też na `div`/`span`, więc równe łamanie dostają z roli, nie tylko z h1–h3. */
+  .title-page,
+  .title-section,
+  .title-card {
+    text-wrap: balance;
+  }
+  /* W2.4: treść notatki — czytana, więc wiersz najwyżej 68 znaków i dzielenie wyrazów (`lang="pl"` w `index.html`).
+     Tylko akapity i listy: tabele i bloki kodu zostają na pełnej szerokości. */
+  .prose-note :where(p, li, blockquote) {
+    max-width: 68ch;
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
   /* Liczba główna karty (saldo, suma godzin, wynik): największy element karty. */
   .num-lg {
     font-size: 1.75rem; line-height: 2rem; font-weight: 600;
