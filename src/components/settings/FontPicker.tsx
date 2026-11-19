@@ -4,6 +4,8 @@ import { APP_FONTS, APP_FONT_META, type AppFont } from "@/lib/appFont";
 import { spring } from "@/lib/motion";
 import { haptic } from "@/lib/haptics";
 import { moveRadio } from "./SettingsShared";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface FontPickerProps {
   value: AppFont;
@@ -32,7 +34,7 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
               onKeyDown={(e) => moveRadio(e, APP_FONTS, value, onChange)}
               data-font-option={f}
               onClick={() => { if (!active) { haptic("selection"); onChange(f); } }}
-              className="pressable lift-hover group relative rounded-card border border-border/60 bg-muted/30 px-3 py-2.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              className={cn(cardVariant("inset"), "pressable lift-hover group relative px-3 py-2.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring")}
             >
               {active && (
                 <motion.span

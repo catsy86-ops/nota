@@ -72,8 +72,8 @@ describe("W6.3 — `dark:` poza components/ui", () => {
 });
 
 // W3.2: karta poza `components/ui/` to `<Card variant>` albo `cardVariant()`, nie ręczne `rounded-card … border`
-// ani goły `cardClass`. Próg = stan po Długach i Pracy (2026-11-19); maleje działami (Praca, Ćwiczenia, Grafik, …).
-const MANUAL_CARD_MAX = 135;
+// ani goły `cardClass`. Próg = stan po Długach, Pracy i Ustawieniach (2026-11-19); maleje działami (Praca, Ćwiczenia, Grafik, …).
+const MANUAL_CARD_MAX = 96;
 const manualCard = /(?<![\w-])rounded-card(?![\w-])[^"'`\n]*?(?<![\w:-])border(?![\w-])|\bcardClass\b(?! =)/g;
 describe("W3.2 — ręczne karty poza components/ui", () => {
   it(`co najwyżej ${MANUAL_CARD_MAX} (zamiast tego: Card variant / cardVariant())`, () => {

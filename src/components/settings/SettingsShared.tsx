@@ -5,6 +5,8 @@ import { SectionCard } from "@/components/ui/section-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { changedViewPrefs, resetViewPrefKeys, useViewPrefs, VIEW_PREF_LABELS, type ViewPrefs } from "@/lib/viewPrefs";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 /**
  * Reset tylko ustawień z jednej sekcji (faza 3a). Potwierdzenie wymienia, co się zmieni; gdy wszystko
@@ -84,7 +86,7 @@ export function moveRadio<T>(e: KeyboardEvent<HTMLElement>, values: readonly T[]
 export function ToggleRow({ label, desc, checked, onCheck }: { label: string; desc: string; checked: boolean; onCheck: (v: boolean) => void }) {
   const labelId = useId();
   return (
-    <div className="flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
+    <div className={cn(cardVariant("inset"), "flex items-center justify-between gap-4 px-4 py-3")}>
       <div className="min-w-0">
         <p id={labelId} className="text-sm font-semibold">{label}</p>
         <p className="ui-hint mt-0.5">{desc}</p>

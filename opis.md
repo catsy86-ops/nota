@@ -6787,7 +6787,7 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
-## Wygląd — karty na odmianach: Długi i Praca (W3.2, 2026-11-19)
+## Wygląd — karty na odmianach: Długi, Praca, Ustawienia (W3.2, 2026-11-19)
 
 ### Co robi
 
@@ -6802,7 +6802,8 @@ W1.8 — commit po tym wpisie (2026-11-19).
 - `src/components/debts/DebtsView.tsx`: `Summary` (`raised`), formularz „Nowy wpis” (`plain`), osoba (`interactive`), wpis historii (`inset`), „Edycja wpisu” (`plain` + `border-primary/40`), `debts-double-settle` (`status`, `warning`).
 - `src/components/debts/DebtPlans.tsx` — rata (`inset`).
 - Praca (`src/components/study/**`, 36 plików, 57 kart). Panele budowy, quiz, statystyki, sekcje arkusza wpisu i zestawy dostały `plain` (`cardVariant()`). Ramki ostrzeżenia i sukcesu (kamera, skaner, NFC, poziomica, AI, przypomnienia, etap wpisu) dostały `status` z tonem i zachowanym tłem `bg-*/5|10`. Ramki akcentu (zlecenie własne, próba ciśnienia, zdjęcia, „na dziś” w quizie) to `status` (`info`). Odczyt licznika i poziomicy oraz „Plan na dziś” to `inset`. Karta przejścia wpisu (`EntryCheck`) to `raised`. Kafle i karta budowy w `SiteHome.tsx` to `interactive`, a nieaktywny kafel ma `text-faint` zamiast `opacity-60`.
-- `src/test/designTokens.test.ts` — strażnik „W3.2”: ręczne `rounded-card … border` i goły `cardClass` poza `components/ui/`, próg 135 (po Długach i Pracy). Nie liczy ramek przerywanych (miejsce na „dodaj”, pusty stan) ani ramek podglądu kamery i obrazu (`object-cover|contain`), bo to nie są karty. Maleje z kolejnymi działami.
+- Ustawienia i synchronizacja (`src/components/settings/**`, `SyncSettings.tsx`, `src/components/sync/**`, 19 plików, 39 miejsc). Grupy `border-border/60 bg-muted/20|30` stoją na powierzchni okna Ustawień, więc są `inset`: wyciszone tło bez ramki, tak jak wpisy w arkuszu osoby w Długach. Dotyczy to też przycisków-wierszy (`QuickPresets`, `CustomThemeControl`, kroje w `FontPicker`). Ostrzeżenia synchronizacji (nowy kod, starsze urządzenie, wstrzymane P2P, zmiana klucza, przekaźnik, format dokumentu) są `status` z tonem `warning`.
+- `src/test/designTokens.test.ts` — strażnik „W3.2”: ręczne `rounded-card … border` i goły `cardClass` poza `components/ui/`, próg 96 (po Długach, Pracy i Ustawieniach). Nie liczy ramek przerywanych (miejsce na „dodaj”, pusty stan) ani ramek podglądu kamery i obrazu (`object-cover|contain`), bo to nie są karty. Maleje z kolejnymi działami.
 
 ### Jak działa
 
@@ -6815,13 +6816,16 @@ W1.8 — commit po tym wpisie (2026-11-19).
 - Hover osoby ma obrys `foreground/25` z odmiany, a nie `primary/50` jak wcześniej.
 - W Pracy zostały nieprzeniesione: przełączniki wyboru z obrysem (`QuizPanel` odpowiedzi, `FittingsFields`, `SiteCardDialog` wysyłka), papier raportu (`ReportPaper`), pole podpisu i podgląd podpisu (`bg-white`), pasek stanu budowy (`SiteTallyBar`, `xl:` w `StudyJournal`), karta tematu w `StudyBoard`. To kontrolki albo papier, nie karty.
 - Ramki stanu mają teraz lewą krawędź 4 px zamiast pełnego kolorowego obrysu.
+- W Ustawieniach zostały nieprzeniesione: `Segmented` (tor przełącznika), przyciski wyboru stylu, gęstości i kroju (`AppearanceSettings`), zaznaczenie w `FontPicker` i `SkinPicker` (`border-2`), podgląd poświaty (`GlowPicker`, `border-transparent`). To kontrolki, nie karty.
+- Pułapka skryptu migracji: import dopisany po „ostatniej linii `import`” trafia do środka wielowierszowego `import {`. Typecheck to łapie.
 - Zrzuty `@visual` mają tylko pusty stan Długów. Wzorce `dlugi-telefon-*` są zaktualizowane i ich różnice wynikały z W2.1 (15 px) i W6.1 (bursztyn). Pozostałe wzorce `@visual` są nieaktualne po tych samych zmianach.
 
 ### Testy
 
 - `src/components/debts/DebtsView.test.tsx` (22), e2e `debts-due`, `debts-plan`, `debts-rates` (13), `@visual dlugi` (6), strażnik.
+- Ustawienia: Vitest `settings`, `sync` i strażnik (34); pełne e2e (1235): 1203 przeszło, 12 porażek — wszystkie w Notatkach i Terminach i występują też na stanie sprzed sesji (77094141), więc nie wynikają z tej zmiany.
 - Praca: Vitest `src/components/study` i strażnik (123); e2e wszystkich 97 spec z `/praca`: 602 przeszło, jedna porażka to przekroczony czas ładowania Kalendarza w `a11y.spec.ts` przy obciążeniu (powtórzona osobno — przechodzi).
 
 ### Commit
 
-W3.2 Długi — a1c616bb; Praca — commit po tym wpisie (2026-11-19).
+W3.2 Długi — a1c616bb; Praca — 69be452f; Ustawienia — commit po tym wpisie (2026-11-19).

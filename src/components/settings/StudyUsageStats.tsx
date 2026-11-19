@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { readUsage, usageRows, USAGE_KEY } from "@/lib/study/usage";
 import { Button } from "@/components/ui/button";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const LABEL: Record<string, string> = {
   "karta-budowy": "Karta budowy",
@@ -29,7 +31,7 @@ const LABEL: Record<string, string> = {
 export function StudyUsageStats() {
   const [rows, setRows] = useState(() => usageRows(readUsage()));
   return (
-    <details className="rounded-card border border-border/60 bg-muted/30 px-4 py-3">
+    <details className={cn(cardVariant("inset"), "px-4 py-3")}>
       <summary className="cursor-pointer text-sm font-semibold coarse:min-h-11">Użycie funkcji Pracy</summary>
       <p className="ui-hint mt-1">Liczone tylko na tym telefonie, bez treści wpisów. Pokazuje, co warto wysunąć, a co schować.</p>
       {rows.length === 0 ? (

@@ -24,6 +24,8 @@ import { viewLabel } from "@/lib/viewMeta";
 import { DailySnapshotRestore } from "./DailySnapshotRestore";
 import { inSyncGroup, saveCurrentLocally } from "@/lib/docReplace";
 import { listDailySnapshots, readSnapshotStatus, unpinDailySnapshot, SNAPSHOT_LAST_KEY, type SnapshotEntry } from "@/lib/dailySnapshot";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 function formatBytes(bytes: number | null): string {
   if (bytes === null) return "?";
@@ -56,7 +58,7 @@ function StoragePersistenceStatus() {
 
   return (
     <Section title="Trwałość danych w tej przeglądarce">
-      <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
+      <div className={cn(cardVariant("inset"), "p-3 text-xs space-y-2")}>
         <div className="flex items-center gap-2">
           {info.persisted ? (
             <ShieldCheck className="size-4 text-success-ink shrink-0" />
@@ -149,7 +151,7 @@ function DailySnapshots() {
       {list.length === 0 ? (
         <p className="ui-hint">Pierwsza kopia dzienna powstanie pół minuty po otwarciu aplikacji.</p>
       ) : (
-        <ul className="rounded-card border border-border/60 bg-muted/20 divide-y divide-border/60 text-xs" aria-label="Kopie dzienne">
+        <ul className={cn(cardVariant("inset"), "divide-y divide-border/60 text-xs")} aria-label="Kopie dzienne">
           {list.map((e) => (
             <li key={e.ref} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
               <span className="font-medium text-foreground tabular-nums">{new Date(e.createdAt).toLocaleDateString("pl-PL")}</span>
@@ -218,7 +220,7 @@ function BackupFileTarget() {
 
   return (
     <Section title="Miejsce zapisu backupu">
-      <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
+      <div className={cn(cardVariant("inset"), "p-3 text-xs space-y-2")}>
         <div className="flex items-center gap-2">
           <FileCog className="size-4 text-muted-foreground shrink-0" />
           <p className="text-foreground">
@@ -587,7 +589,7 @@ export function BackupSettings() {
 
       <ResetSectionButton title="kopia" keys={VIEW_PREF_GROUPS.kopia} />
 
-      <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
+      <div className={cn(cardVariant("inset"), "p-3 text-xs text-muted-foreground space-y-1")}>
         <p className="font-semibold text-foreground">💡 Wskazówka</p>
         <p>Pełny backup zawiera wszystkie notatki (w tym archiwum i kosz), etykiety, foldery, historię wersji, ustawienia oraz odznaki. Nie zawiera kodu parowania urządzeń. Przywrócenie zastąpi notatki w tej przeglądarce i odświeży aplikację.</p>
       </div>
@@ -597,7 +599,7 @@ export function BackupSettings() {
       </Section>
 
       <Section title="Diagnostyka">
-        <div className="flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
+        <div className={cn(cardVariant("inset"), "flex items-center justify-between gap-4 px-4 py-3")}>
           <div className="min-w-0">
             <p className="text-sm font-semibold">Raport diagnostyczny</p>
             <p className="ui-hint mt-0.5">
@@ -623,7 +625,7 @@ function DocFormatOverride() {
   const status = useDocFormatStatus(yjsStore.doc as never);
   if (status.tooNew.length === 0) return null;
   return (
-    <div className="flex items-center justify-between gap-4 rounded-card border border-warning/50 bg-warning/10 px-4 py-3" data-testid="doc-format-override">
+    <div className={cn(cardVariant("status", "warning"), "flex items-center justify-between gap-4 bg-warning/10 px-4 py-3")} data-testid="doc-format-override">
       <div className="min-w-0">
         <p className="text-sm font-semibold">Dane wymagają nowszej wersji</p>
         <p className="ui-hint mt-0.5">

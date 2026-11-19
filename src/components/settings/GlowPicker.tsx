@@ -2,6 +2,8 @@ import { CircleOff, Sparkles, Waves, Zap } from "lucide-react";
 import { GLOW_COLORS, GLOW_STRENGTH, setGlowColor, setGlowStrength, useGlowLook, type GlowColorId, type GlowStrength } from "@/lib/glowLook";
 import { Segmented } from "./Segmented";
 import { Swatches } from "./FrameLookPicker";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const strengthOptions: { value: GlowStrength; label: string; Icon: typeof Sparkles }[] = [
   { value: "off", label: GLOW_STRENGTH.off.label, Icon: CircleOff },
@@ -30,7 +32,7 @@ export function GlowPicker() {
           swatchOf={(id) => GLOW_COLORS[id].hex ?? "linear-gradient(135deg, var(--primary) 50%, var(--season-accent) 50%)"}
         />
       </div>
-      <div className="flex flex-wrap items-center gap-6 rounded-card border border-border/60 bg-muted/30 p-4" aria-label="Podgląd poświaty" role="group">
+      <div className={cn(cardVariant("inset"), "flex flex-wrap items-center gap-6 p-4")} aria-label="Podgląd poświaty" role="group">
         <div className="note-glow-active relative w-40 rounded-card border border-transparent bg-card p-3 text-sm text-card-foreground">
           Zaznaczona notatka
         </div>

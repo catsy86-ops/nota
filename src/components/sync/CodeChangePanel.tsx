@@ -7,6 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { canCancelRekey, canSkipMarker, type RekeyRecord, type RekeyResult, type RekeyStep, type RunOptions } from "@/lib/sync/rekey";
 import { useRekeyRecord } from "@/lib/sync/rekeyRuntime";
 import { cancelCodeChange, dismissCodeChange, markRekeyDevicePaired, prepareCodeChange, runCodeChange } from "@/lib/yjsSync";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 /** Kroki widoczne dla użytkownika (§3.7) i krok zapisu, po którym każdy jest zrobiony. */
 const STEPS: { label: string; doneAt: RekeyStep[] }[] = [
@@ -40,7 +42,7 @@ export function CodeChangePanel() {
 
   if (!record) {
     return (
-      <div className="rounded-card border border-border/60 bg-muted/20 p-4 space-y-2 text-xs" data-testid="code-change">
+      <div className={cn(cardVariant("inset"), "p-4 space-y-2 text-xs")} data-testid="code-change">
         <h3 className="font-semibold text-muted-foreground">Zmiana kodu</h3>
         <p className="text-muted-foreground">
           Nowy kod odcina urządzenia, które znają tylko stary — na przykład zgubiony telefon. Pozostałe trzeba będzie sparować ponownie.
@@ -55,7 +57,7 @@ export function CodeChangePanel() {
   if (record.step === "prepared" && !record.error) return <Confirm record={record} running={running} onConfirm={() => run({ confirmed: true })} onCancel={() => act(cancelCodeChange)} />;
 
   return (
-    <div className="rounded-card border border-border/60 bg-muted/20 p-4 space-y-3 text-xs" data-testid="code-change">
+    <div className={cn(cardVariant("inset"), "p-4 space-y-3 text-xs")} data-testid="code-change">
       <h3 className="font-semibold text-muted-foreground">Zmiana kodu</h3>
       <ol className="space-y-1" aria-label="Postęp zmiany kodu">
         {STEPS.map((s, i) => {
@@ -105,7 +107,7 @@ export function CodeChangePanel() {
 
 function Confirm({ record, running, onConfirm, onCancel }: { record: RekeyRecord; running: boolean; onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div role="region" aria-label="Potwierdzenie zmiany kodu" className="rounded-card border border-warning/50 bg-warning/10 p-4 space-y-2 text-xs" data-testid="code-change">
+    <div role="region" aria-label="Potwierdzenie zmiany kodu" className={cn(cardVariant("status", "warning"), "bg-warning/10 p-4 space-y-2 text-xs")} data-testid="code-change">
       <h3 className="font-semibold text-foreground">Zmienić kod synchronizacji?</h3>
       <p>Po zmianie kodu każde urządzenie trzeba sparować ponownie. Urządzenie, którego nie sparujesz, przestanie dostawać nowe zmiany.</p>
       <p>Zmiana kodu nie usuwa danych, które tamto urządzenie już pobrało.</p>

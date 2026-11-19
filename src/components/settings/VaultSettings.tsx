@@ -13,6 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { setRecoveryNudgeOff, useRecoveryCheck } from "@/lib/vaultRecoveryCheck";
 import { Section } from "./SettingsShared";
 import { APP_NAME } from "@/lib/appName";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const HIDDEN_LABEL = (m: number) => (m === 0 ? "Nie blokuj" : m === 1 ? "Po 1 minucie" : `Po ${m} minutach`);
 const CHOICE_LABEL = (m: number) => (m === 0 ? "Nigdy (do zamknięcia karty)" : m === 1 ? "Po 1 minucie" : `Po ${m} minutach`);
@@ -34,7 +36,7 @@ export function VaultSettings() {
 
   return (
     <Section title="Prywatne notatki">
-      <div className="rounded-card border border-border/60 bg-muted/30 px-4 py-3 space-y-3">
+      <div className={cn(cardVariant("inset"), "px-4 py-3 space-y-3")}>
         <p role="status" className="ui-hint flex items-start gap-2" data-testid="vault-status">
           <ShieldCheck className="size-4 shrink-0 text-primary-ink" aria-hidden />
           <span>{vault.corrupt ? STATUS.corrupt : STATUS[vault.phase]}</span>
@@ -88,7 +90,7 @@ export function VaultSettings() {
         <p className="text-2xs text-muted-foreground">Skarbiec blokuje się też, gdy karta jest ukryta dłużej niż wybrany czas.</p>
       </div>
 
-      <details className="disclosure rounded-card border border-border/60 px-4 py-3 text-xs leading-relaxed text-muted-foreground" data-testid="vault-howto">
+      <details className={cn(cardVariant("inset"), "disclosure px-4 py-3 text-xs leading-relaxed text-muted-foreground")} data-testid="vault-howto">
         <summary className="cursor-pointer text-sm font-semibold text-foreground">Jak to działa i czego nie robi</summary>
         <div className="mt-2 space-y-2">
           <p>

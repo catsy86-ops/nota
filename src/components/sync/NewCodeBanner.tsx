@@ -1,6 +1,8 @@
 import { TriangleAlert, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { dismissNewCodeHint, useNewCodeProposal, useSyncState } from "@/lib/yjsSync";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 /** Pierwsze zdanie propozycji — wspólne dla banera i karty w ustawieniach. */
 export const NEW_CODE_TITLE = "Zalecamy nowy kod synchronizacji.";
@@ -16,7 +18,7 @@ export function NewCodeBanner({ onOpenSync }: { onOpenSync: () => void }) {
   if (!rekeyed && (!proposal.kind || proposal.dismissed)) return null;
 
   return (
-    <div role="status" data-testid="new-code-banner" className="flex items-start gap-2 rounded-card border border-warning/50 bg-warning/10 px-3 py-2 text-sm">
+    <div role="status" data-testid="new-code-banner" className={cn(cardVariant("status", "warning"), "flex items-start gap-2 bg-warning/10 px-3 py-2 text-sm")}>
       <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
       <p className="min-w-0 flex-1">
         {rekeyed

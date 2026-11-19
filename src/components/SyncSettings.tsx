@@ -28,6 +28,8 @@ import {
   getSignalingServers, setSignalingServers, parseSignalingList, wasShortCodeDropped, getLegacyRoom, setLegacyRoom, expireLegacyRoomIfIdle,
   codeFromPaste, codeKind, parseCode, CODE_LENGTH, getDeviceName, setDeviceName, groupIsV3Only, useNewCodeProposal, restartRelay,
 } from "@/lib/yjsSync";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 /** Jedno zdanie o tym, na którym etapie synchronizacja stoi (bez żargonu). */
 function diagnosis(s: SyncState): string {
@@ -186,7 +188,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
+      <div className={cn(cardVariant("inset"), "flex items-center justify-between gap-4 px-4 py-3")}>
         <div className="flex items-start gap-3 min-w-0">
           {syncState.status === "rekeyed" ? (
             <WifiOff className="size-5 text-warning-ink shrink-0 mt-0.5" />
@@ -226,7 +228,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
         <PeerPausedCard until={syncState.p2pPausedUntil} pausesToday={syncState.p2pPausesToday} />
       )}
 
-      <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-3">
+      <div className={cn(cardVariant("inset"), "p-4 space-y-3")}>
         <h3 className="section-caps">Urządzenia w grupie</h3>
         <V2OnlyNotices />
         {olderDevices(syncState.devices).length > 0 && (
@@ -275,7 +277,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
       </div>
 
       {syncState.code && (
-        <div className="rounded-card border border-border/60 bg-muted/20 p-4 space-y-3 text-center">
+        <div className={cn(cardVariant("inset"), "p-4 space-y-3 text-center")}>
           <h3 className="section-caps">Dodaj urządzenie</h3>
           <p className="ui-hint">
             Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
@@ -345,7 +347,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
       {((syncState.code && syncState.status !== "rekeyed") || rekeyRecord) && <CodeChangePanel />}
 
       {wasShortCodeDropped() && (
-        <div role="alert" className="rounded-card border border-warning/40 bg-warning/10 p-3 text-xs space-y-2">
+        <div role="alert" className={cn(cardVariant("status", "warning"), "bg-warning/10 p-3 text-xs space-y-2")}>
           <h3 className="font-semibold text-foreground">Synchronizacja wyłączona: kod był za krótki</h3>
           <p className="text-muted-foreground">
             Kody z 8 znaków dało się odgadnąć z nazwy pokoju widocznej dla serwera sygnalizacyjnego,
@@ -362,7 +364,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
         </div>
       )}
 
-      <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-2">
+      <div className={cn(cardVariant("inset"), "p-4 space-y-2")}>
         <h3 className="section-caps">Dołącz do istniejącej grupy</h3>
         <Suspense fallback={null}>
           {scanOpen && <QrScanDialog open={scanOpen} onOpenChange={setScanOpen} onCode={(c, raw) => { fillJoin(c, pairTextIsV3(raw)); toast.success("Kod odczytany — kliknij Dołącz"); }} />}
@@ -436,7 +438,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
         </div>
       )}
 
-      <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
+      <div className={cn(cardVariant("inset"), "p-3 text-xs text-muted-foreground space-y-2")}>
         <h3 className="font-semibold text-foreground">Jak to działa</h3>
         <ul className="list-disc pl-4 space-y-1">
           <li>Urządzenia łączą się bezpośrednio, bez chmury i konta. Publiczne serwery pomagają tylko nawiązać połączenie — treść notatek przez nie nie przechodzi.</li>
@@ -483,7 +485,7 @@ function RelayServer() {
   }
 
   return (
-    <details className="disclosure group rounded-card border border-border/60 bg-muted/20 p-3 text-xs" open={saved !== "" || undefined}>
+    <details className={cn(cardVariant("inset"), "disclosure group p-3 text-xs")} open={saved !== "" || undefined}>
       <summary className="cursor-pointer font-semibold text-foreground select-none">
         Przekaźnik {saved ? "(włączony)" : "(wyłączony)"}
       </summary>
@@ -512,7 +514,7 @@ function RelayServer() {
         </p>
         {probe && <p className="text-muted-foreground" aria-live="polite">{probe}</p>}
         {view.warning && (
-          <div role="alert" className="space-y-2 rounded-card border border-warning/60 bg-warning/10 p-2 text-foreground">
+          <div role="alert" className={cn(cardVariant("status", "warning"), "space-y-2 bg-warning/10 p-2 text-foreground")}>
             <p>{RELAY_WARNING_TEXT[view.warning]}</p>
             <div className="flex justify-end">
               <Button type="button" size="sm" variant="outline" onClick={() => void acknowledgeRelayWarning()}>Rozumiem</Button>
@@ -593,7 +595,7 @@ function SignalingServers() {
   }
 
   return (
-    <details className="disclosure group rounded-card border border-border/60 bg-muted/20 p-3 text-xs" open={saved.length > 0 || undefined}>
+    <details className={cn(cardVariant("inset"), "disclosure group p-3 text-xs")} open={saved.length > 0 || undefined}>
       <summary className="cursor-pointer font-semibold text-foreground select-none">
         Serwery łączące urządzenia {saved.length > 0 ? `(własne: ${saved.length})` : "(domyślne)"}
       </summary>

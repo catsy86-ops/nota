@@ -3,6 +3,8 @@ import { TriangleAlert, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { olderDevices } from "@/lib/formatSchema";
 import { useSyncState } from "@/lib/yjsSync";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const DISMISS_KEY = "kaczy.olderDeviceBanner.v1";
 
@@ -26,7 +28,7 @@ export function OlderDeviceBanner({ onOpenSync }: { onOpenSync: () => void }) {
   }
 
   return (
-    <div role="status" data-testid="older-device-banner" className="flex items-start gap-2 rounded-card border border-warning/50 bg-warning/10 px-3 py-2 text-sm">
+    <div role="status" data-testid="older-device-banner" className={cn(cardVariant("status", "warning"), "flex items-start gap-2 bg-warning/10 px-3 py-2 text-sm")}>
       <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
       <p className="min-w-0 flex-1">
         <span className="font-medium">{older.map((d) => d.name).join(", ")}</span> {older.length === 1 ? "ma" : "mają"} starszą wersję aplikacji — część danych może być tam niewidoczna. Zaktualizuj {older.length === 1 ? "go" : "je"}.

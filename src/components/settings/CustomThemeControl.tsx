@@ -1,6 +1,8 @@
 import { baseHues, customThemeFailing, GROUP_LABEL, setCustomTheme, useCustomTheme, type Group } from "@/lib/customTheme";
 import { SKIN_META } from "@/lib/skinGallery";
 import { useSkin } from "@/lib/skins";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const GROUPS = Object.keys(GROUP_LABEL) as Group[];
 
@@ -23,7 +25,7 @@ export function CustomThemeControl() {
         <button
           type="button"
           onClick={() => setCustomTheme({ skin, hues: baseHues() })}
-          className="pressable rounded-card border border-border/60 bg-muted/30 px-3 py-2 text-sm coarse:min-h-11"
+          className={cn(cardVariant("inset"), "pressable px-3 py-2 text-sm coarse:min-h-11")}
         >
           Zrób własny styl z „{label}”
         </button>
@@ -59,7 +61,7 @@ export function CustomThemeControl() {
       <button
         type="button"
         onClick={() => setCustomTheme(null)}
-        className="pressable rounded-card border border-border/60 bg-muted/30 px-3 py-2 text-sm coarse:min-h-11"
+        className={cn(cardVariant("inset"), "pressable px-3 py-2 text-sm coarse:min-h-11")}
       >
         Przywróć styl „{label}”
       </button>

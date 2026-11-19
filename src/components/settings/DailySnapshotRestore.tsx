@@ -11,6 +11,8 @@ import { readDocState, yjsStore, type DocState } from "@/lib/yjsStore";
 import { privateNotes } from "@/lib/privateNotes";
 import { compareSnapshot, restoreSnapshotCopies, restoredFolderName, vaultDiffers, type SnapshotComparison, type SnapshotItem } from "@/lib/snapshotRestore";
 import { pluralPl } from "@/lib/plural";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const dayLabel = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" });
 const fullTime = (at: number) => {
@@ -72,7 +74,7 @@ function Group({ title, items, selected, toggle, children }: {
         <h3 className="text-sm font-semibold">{title} ({items.length})</h3>
         {children}
       </div>
-      <ul className="rounded-card border border-border/60 bg-muted/20 divide-y divide-border/60">
+      <ul className={cn(cardVariant("inset"), "divide-y divide-border/60")}>
         {items.map((i) => <Row key={i.note.id} item={i} checked={selected.has(i.note.id)} onToggle={(on) => toggle(i.note.id, on)} />)}
       </ul>
     </section>
@@ -235,7 +237,7 @@ export function DailySnapshotRestore({ snapshotRef, createdAt, open, onOpenChang
               {state.cmp.unchanged.length > 0 && (
                 <details className="text-sm">
                   <summary className="cursor-pointer text-muted-foreground">Bez zmian ({state.cmp.unchanged.length})</summary>
-                  <ul className="mt-1.5 max-h-48 overflow-auto rounded-card border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                  <ul className={cn(cardVariant("inset"), "mt-1.5 max-h-48 overflow-auto px-3 py-2 text-xs text-muted-foreground")}>
                     {state.cmp.unchanged.map((i) => <li key={i.note.id}>{titleOf(i)}</li>)}
                   </ul>
                 </details>

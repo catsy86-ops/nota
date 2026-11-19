@@ -15,6 +15,7 @@ import { loadNativeSink, nativeAlarmPrefs } from "@/lib/reminders/sink";
 import { cn } from "@/lib/utils";
 import { Section, ToggleRow } from "./SettingsShared";
 import type { PushSummary } from "@/lib/push/summary";
+import { cardVariant } from "@/components/ui/card";
 
 /**
  * Lista obcięta limitem (S1 audytu 2): odpadają najdalsze terminy, więc mówimy, do kiedy przypomnienia są zaplanowane
@@ -81,7 +82,7 @@ function WebPushSettings() {
 
   return (
     <Section title="Powiadomienia przy zamkniętej aplikacji">
-      <div className="space-y-3 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
+      <div className={cn(cardVariant("inset"), "space-y-3 px-4 py-3")}>
         <p className="ui-hint">
           Przypomnienia notatek, Grafik na jutro, raport dnia i tygodnia, problemy i materiał z budowy przyjdą o czasie także wtedy,
           gdy aplikacja jest zamknięta. Wysyła je Twój serwer powiadomień.

@@ -34,6 +34,7 @@ import { PricingManager } from "./PricingManager";
 import { FingerprintCheck } from "./FingerprintCheck";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cardVariant } from "@/components/ui/card";
 
 const PERMISSION_TEXT = {
   granted: "Włączone — przypomnienia pokażą się jako powiadomienia systemowe, gdy aplikacja jest otwarta (przy zamkniętej — patrz niżej).",
@@ -378,7 +379,7 @@ export function GeneralSettings() {
       <div id="ogolne-skroty" className="scroll-mt-14 pt-2 space-y-2 [@media(pointer:coarse)]:hidden">
         <p className="ui-hint mb-2">Lista skrótów dostępnych w aplikacji:</p>
         {SHORTCUTS.map((s) => (
-          <div key={s.keys} className="flex items-center justify-between gap-3 rounded-card border border-border/60 bg-muted/20 px-4 py-2.5">
+          <div key={s.keys} className={cn(cardVariant("inset"), "flex items-center justify-between gap-3 px-4 py-2.5")}>
             <span className="text-sm text-foreground">{s.desc}</span>
             <kbd className="font-mono text-xs bg-background border border-border/60 rounded-control px-2 py-1 text-foreground/80">{s.keys}</kbd>
           </div>

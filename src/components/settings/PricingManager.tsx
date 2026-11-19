@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import type { CompanyPricing } from "@/lib/pricing";
 import { addPricingItem, removePricingItem } from "@/lib/pricing";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface PricingManagerProps {
   pricing: CompanyPricing;
@@ -75,7 +77,7 @@ export function PricingManager({ pricing, onUpdate }: PricingManagerProps) {
       </Button>
 
       {pricing.items.length > 0 && (
-        <ul className="space-y-2 rounded-card border border-border p-2 bg-muted/30">
+        <ul className={cn(cardVariant("inset"), "space-y-2 p-2")}>
           {pricing.items.map((item) => (
             <li key={item.id} className="flex items-center justify-between rounded-card bg-background px-3 py-2 text-sm">
               <div className="flex-1">

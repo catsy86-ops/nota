@@ -58,6 +58,7 @@ const HIDEABLE_LABELS: Record<HideableView, string> = {
 };
 import { SKIN_META } from "@/lib/skinGallery";
 import { setSiteMode, useSiteMode, type SiteMode } from "@/lib/siteMode";
+import { cardVariant } from "@/components/ui/card";
 
 const themeOptions: { value: ThemeMode; label: string; Icon: typeof Sun }[] = [
   { value: "light", label: "Jasny", Icon: Sun },
@@ -237,7 +238,7 @@ export function AppearanceSettings() {
           onClick={() => setAdvanced(!advanced)}
           aria-expanded={advanced}
           aria-controls="wyglad-zaawansowane-tresc"
-          className="pressable -mt-2 flex w-full items-center justify-between gap-2 rounded-card border border-border/60 bg-muted/30 px-3 py-2 text-left text-sm coarse:min-h-11"
+          className={cn(cardVariant("inset"), "pressable -mt-2 flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm coarse:min-h-11")}
         >
           <span>{advanced ? "Zwiń" : "Pokaż"}: kształt, ramki, poświata, tło, styl na noc, pora roku, krój, kod wyglądu</span>
           <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", advanced && "rotate-180")} aria-hidden />

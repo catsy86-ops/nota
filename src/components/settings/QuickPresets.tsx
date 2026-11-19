@@ -6,6 +6,8 @@ import { applyValues, isPresetActive, PRESETS, readSlot, SLOT_COUNT, slotSummary
 import { PRESET_ICON } from "./presetIcons";
 import { toastWithUndo } from "@/lib/undoToast";
 import { QUICK_PRESETS_EVENT } from "@/lib/quickPresets";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 
 
@@ -30,7 +32,7 @@ export function QuickPresetsHost() {
     toastWithUndo(`Zestaw: ${name}`, () => applyAppearanceValues(before, { replace: true }));
   }
 
-  const row = "pressable flex w-full items-center gap-3 rounded-card border border-border/60 bg-muted/30 px-3 py-2.5 text-left hover:bg-muted/60 coarse:min-h-11";
+  const row = cn(cardVariant("inset"), "pressable flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/60 coarse:min-h-11");
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-sm rounded-card" data-testid="quick-presets">

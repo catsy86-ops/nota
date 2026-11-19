@@ -8,6 +8,8 @@ import {
 import { NEW_CODE_TITLE } from "@/components/sync/NewCodeBanner";
 import { clearV2Only, useV2Only, v2OnlyNotices } from "@/lib/sync/v2Window";
 import { continueOnOldCode, getV2Until, resumeP2p, type NewCodeProposal } from "@/lib/yjsSync";
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const day = (ms: number) => format(ms, "dd.MM");
 
@@ -24,7 +26,7 @@ function newCodeReason(kind: Exclude<NewCodeProposal, null>): string {
  */
 export function NewCodeCard({ kind }: { kind: Exclude<NewCodeProposal, null> }) {
   return (
-    <div role="status" data-testid="new-code-card" className="rounded-card border border-warning/40 bg-warning/10 p-3 text-xs space-y-1">
+    <div role="status" data-testid="new-code-card" className={cn(cardVariant("status", "warning"), "bg-warning/10 p-3 text-xs space-y-1")}>
       <h3 className="font-semibold text-foreground">{NEW_CODE_TITLE}</h3>
       <p className="text-muted-foreground">
         {newCodeReason(kind)} Nowy, dłuższy kod zamyka tę lukę. Po zmianie trzeba będzie ponownie sparować pozostałe urządzenia. Kod zmienisz w sekcji „Zmiana kodu” niżej.
@@ -36,7 +38,7 @@ export function NewCodeCard({ kind }: { kind: Exclude<NewCodeProposal, null> }) 
 /** Z-15.5: połączenie bezpośrednie wstrzymane po nieprawidłowych danych od urządzenia; przekaźnik działa dalej. */
 export function PeerPausedCard({ until, pausesToday }: { until: number; pausesToday: number }) {
   return (
-    <div role="alert" data-testid="sync-p2p-paused" className="rounded-card border border-warning/50 bg-warning/10 p-3 text-xs space-y-2">
+    <div role="alert" data-testid="sync-p2p-paused" className={cn(cardVariant("status", "warning"), "bg-warning/10 p-3 text-xs space-y-2")}>
       <h3 className="font-semibold text-foreground">Urządzenie w grupie wysyła nieprawidłowe dane.</h3>
       <p className="text-muted-foreground">
         Połączenie bezpośrednie wstrzymane do {format(until, "HH:mm")}. Serwer pośredniczący, jeśli jest ustawiony, działa dalej.
@@ -51,7 +53,7 @@ export function PeerPausedCard({ until, pausesToday }: { until: number; pausesTo
 export function RekeyedCard({ onPairAgain }: { onPairAgain: () => void }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   return (
-    <div role="alert" data-testid="sync-rekeyed" className="rounded-card border border-warning/50 bg-warning/10 p-3 text-xs space-y-2">
+    <div role="alert" data-testid="sync-rekeyed" className={cn(cardVariant("status", "warning"), "bg-warning/10 p-3 text-xs space-y-2")}>
       <h3 className="font-semibold text-foreground">Kod synchronizacji został zmieniony na innym urządzeniu.</h3>
       <p className="text-muted-foreground">
         To urządzenie przestało wysyłać i odbierać zmiany. Twoje dane są bezpieczne na tym urządzeniu. Zeskanuj nowy kod
