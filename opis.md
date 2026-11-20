@@ -6792,6 +6792,38 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — układ kart od ich szerokości (W7.2, 2026-11-20)
+
+### Co robi
+
+- **Przegląd tygodnia (Dziś):** dwie kolumny kategorii dopiero wtedy, gdy sama karta ma co najmniej 42rem. Wcześniej przełączała je szerokość okna (`lg`), a na komputerze karta stoi w połowie siatki Dziś, więc dwie kolumny wchodziły do wąskiej karty.
+- **Karta zmiany (Dziś):** większa data i nazwa zmiany od 32rem szerokości karty, nie okna.
+- **Długi, formularz wpisu i edycji:** pola obok siebie od 28rem szerokości formularza. Edycja w wąskim arkuszu osoby ma teraz pola jedno pod drugim, nawet na szerokim oknie.
+- **Kafel notatki:** pasek ikon zawija się, gdy kafel ma mniej niż 13rem, także na komputerze przy wielu kolumnach. Wcześniej działo się to tylko przy oknie do 480 px.
+
+### Gdzie jest
+
+- `src/components/review/WeeklyReviewCard.tsx` (`@container`, `@2xl:grid-cols-2`), `src/components/review/TodayShiftCard.tsx` (`@container`, `@lg:text-*`), `src/components/debts/DebtsView.tsx` (`@md:` w formularzach z `@container`).
+- `src/styles/app/features.css`: `.note-card { container: note-card / inline-size }` i `@container note-card (max-width: 13rem)` wewnątrz `@media (hover: hover)`.
+
+### Jak działa
+
+- Tailwind v4 ma progi kontenera wbudowane (`@sm` 24rem, `@md` 28rem, `@lg` 32rem, `@2xl` 42rem). Kafel notatki ma nazwany kontener w CSS, bo reguła paska akcji i tak jest w `features.css`.
+- `container-type: inline-size` nie tworzy bloku zawierającego dla `position: fixed`, więc pełnoekranowa edycja z kafla działa jak dotąd.
+
+### Ograniczenia i pułapki
+
+- Kafel z `inline-size` nie może brać szerokości od treści — w siatce i na liście ma ją z kolumny. Gdyby kiedyś stał w kontenerze „na treść” (`inline-flex`, `w-fit`), zwinąłby się do zera.
+- Odstępy wewnętrzne kart (`p-4 sm:p-5`) zostają przy oknie: to rytm strony (W7.3), nie układ karty.
+
+### Testy
+
+- Reguła kafla sprawdzona w przeglądarce (kafel 226 px — jeden wiersz bez przewijania; zwężony do 180 px — zawija). e2e kart Dziś, Długów, siatki i akcji kafla: 62 przeszło, 2 pominięte; `card-reminder-edit` nie przechodzi — stara porażka sprzed tej pracy.
+
+### Commit
+
+W7.2 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — wymiary na skali i tokenach (W7.1, 2026-11-20)
 
 ### Co robi

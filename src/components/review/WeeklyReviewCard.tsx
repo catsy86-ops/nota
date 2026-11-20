@@ -200,7 +200,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
         data-testid="weekly-review"
         className={cn(
           cardVariant("status", "info"),
-          "relative border-primary/25 shadow-elevation-1 p-4 sm:p-5 pl-5 sm:pl-6",
+          "@container relative border-primary/25 shadow-elevation-1 p-4 sm:p-5 pl-5 sm:pl-6",
         )}
       >
         <header className="flex flex-wrap items-start gap-x-3 gap-y-2">
@@ -218,7 +218,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
           </Button>
         </header>
 
-        <div className={cn("mt-4 grid gap-5", review.categories.length > 1 && "lg:grid-cols-2")}>
+        <div className={cn("mt-4 grid gap-5", review.categories.length > 1 && "@2xl:grid-cols-2")}>
           {review.categories.map((c) => <CategoryBlock key={c.key} cat={c} a={a} />)}
         </div>
 

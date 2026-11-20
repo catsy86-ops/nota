@@ -85,8 +85,8 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
   const quiet = !entry && countDueToday([...reminderNotes]) === 0;
 
   return (
-    <section aria-label="Dziś" data-testid="today-card" className={`${cardVariant()} p-4 sm:p-5`}>
-      <p className="font-display text-base font-semibold first-letter:uppercase text-foreground sm:text-lg">{dateLabel}</p>
+    <section aria-label="Dziś" data-testid="today-card" className={`${cardVariant()} @container p-4 sm:p-5`}>
+      <p className="font-display text-base font-semibold first-letter:uppercase text-foreground @lg:text-lg">{dateLabel}</p>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span aria-hidden data-testid="today-badge"
@@ -94,7 +94,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
             style={badgeStyle}>
             {badge}
           </span>
-          <p className="min-w-0 text-sm sm:text-base" data-testid="today-shift">
+          <p className="min-w-0 text-sm @lg:text-base" data-testid="today-shift">
             {quiet ? <><span className="font-display font-semibold">Wolne. Nic nie czeka.</span><span className="sr-only"> Dziś nie ma zmiany w grafiku.</span></>
               : !entry ? "Dziś nie ma zmiany w grafiku."
               : !t ? "Zaplanowana zmiana (rodzaj usunięty)."
