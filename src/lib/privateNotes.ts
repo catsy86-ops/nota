@@ -119,6 +119,9 @@ function cleanPrivateMeta(raw: unknown): PrivateMeta | undefined {
   return Object.keys(meta).length ? meta : undefined;
 }
 
+const KNOWN_CONTENT_KEYS = new Set(["title", "content", "checklist", "labels", "meta"]);
+const MAX_EXTRA_JSON = 64 * 1024;
+
 function parseContent(json: string): PrivateContent {
   const raw = JSON.parse(json) as Partial<PrivateContent> | null;
   if (!raw || typeof raw !== "object") throw new VaultError("bad-format");
@@ -128,7 +131,15 @@ function parseContent(json: string): PrivateContent {
       .map((i) => ({ id: i.id, text: typeof i.text === "string" ? i.text : "", checked: Boolean(i.checked), ...(i.indent === 1 ? { indent: 1 as const } : {}) }))
     : [];
   const meta = cleanPrivateMeta(raw.meta);
+  // C-14 (K0 cz. 2): pola z przyszłych wersji przechodzą bez zmian, żeby zapis starszej wersji ich nie skasował.
+  let extra: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(raw)) if (!KNOWN_CONTENT_KEYS.has(k) && k !== "__proto__") extra[k] = v;
+  if (Object.keys(extra).length && JSON.stringify(extra).length > MAX_EXTRA_JSON) {
+    logDiag("warn", "privateNotes", "unknown fields in a private note exceed 64 KB — dropped");
+    extra = {};
+  }
   return {
+    ...extra,
     title: typeof raw.title === "string" ? raw.title : "",
     content: typeof raw.content === "string" ? raw.content : "",
     checklist,
