@@ -6792,6 +6792,32 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — trzy rozmiary ikon (W4.1 dokończone, 2026-11-20)
+
+### Co robi
+
+- Ikony mają 14 px (przy tekście meta), 16 px (domyślnie) albo 20 px (nawigacja, akcja główna). 59 ikon 12 px (`size-3`) urosło do 14 px: dzwonek i powtarzanie przy terminie, spinacz, kłódka, pinezka, kask budowy, strzałki sortowania tabeli, ikony nagłówków paska bocznego (Ostatnie, Widoki, Etykiety, Foldery), krzyżyki „usuń” w pigułkach i wierszach.
+
+### Gdzie jest
+
+- Zamiany w komponentach (m.in. `AppSidebar.tsx`, `NoteCardBody.tsx`, `NoteTable.tsx`, `AddNoteBar.tsx`, `ChecklistEditor.tsx`, `ReminderPicker.tsx`, `AttachmentsList.tsx`, `LockedNoteTile.tsx`).
+- `src/test/designTokens.test.ts`: strażnicy `iconSize12` (1) i `iconSize24` (14).
+
+### Ograniczenia i pułapki — co zostaje poza skalą i dlaczego
+
+- 12 px: pogrubiony ✓ (`strokeWidth={3}`) w małej próbce stylu (`SkinPicker.tsx`) — pole ma 16 px.
+- 24 px (14 ikon): ilustracje i duże akcje — „+” w dolnym pasku, ikony gestu przesunięcia kafla (przypnij, archiwizuj), zastępczy obraz w galerii, wgrywanie planu, płomień passy w Statystykach, ikona `StatusPanel` w liście, kafle „Zdjęcie / Wpis głosem / Brak” na stronie budowy.
+- `size-6` na kontrolkach (próbki koloru, pole zaznaczenia kafla, plakietki na zdjęciach, dzień w szablonie tygodnia, przycisk folderu) to wymiar kontrolki, nie ikony — strażnik ich nie liczy, bo patrzy tylko na komponenty (znaczniki od wielkiej litery).
+- Strażnik nie widzi rozmiaru przekazanego przez zmienną albo `[&_svg]:size-*` rodzica.
+
+### Testy
+
+- Strażnicy zieloni; e2e `board-table`, `editing`, `calendar-agenda`, `reminders-calendar`, `mobile-layout`, `attachments`, `inbox-quick` — 50 przeszło, 2 pominięte; zrzut paska bocznego i kafla.
+
+### Commit
+
+W4.1 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — strona zasad dla nowego widoku (W9.4, 2026-11-20)
 
 ### Co robi

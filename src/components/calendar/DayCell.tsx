@@ -172,7 +172,7 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
           {/* Praca: ikona z liczbą wizyt i dostaw; osobno od terminów notatek (kropki) i zmiany z Grafiku. */}
           {work && (
             <span aria-hidden className={cn("flex items-center gap-0.5 text-2xs leading-4 text-muted-foreground", !inMonth && "opacity-50")} title={work}>
-              <HardHat className="size-3" />
+              <HardHat className="size-3.5" />
               {(study?.service ?? 0) + (study?.delivery ?? 0) + (study?.jobs ?? 0)}
             </span>
           )}

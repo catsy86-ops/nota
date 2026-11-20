@@ -336,7 +336,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                     <button type="button" onClick={() => onShow(c.id, mode)} className="max-w-40 truncate hover:text-foreground hover:underline">
                       {c.title.trim() || "Bez tytułu"}
                     </button>
-                    <ChevronRight className="size-3 shrink-0" aria-hidden />
+                    <ChevronRight className="size-3.5 shrink-0" aria-hidden />
                   </span>
                 ))}
               </nav>
@@ -606,7 +606,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                       </div>
                       {canEdit && (
                         <Button size="sm" variant="ghost" className="h-7 shrink-0 gap-1 px-2 text-xs" onClick={() => linkMention(m)} title={`Zamień pierwsze wystąpienie na [[${note.title.trim()}]]`}>
-                          <Link2 className="size-3" aria-hidden /> Połącz
+                          <Link2 className="size-3.5" aria-hidden /> Połącz
                         </Button>
                       )}
                     </li>

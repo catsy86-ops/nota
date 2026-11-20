@@ -688,7 +688,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                       </button>
                       <button type="button" onClick={() => deleteParked(p.id)} aria-label={`Usuń odłożony szkic: ${label}`}
                         className="pr-2 pl-0.5 text-muted-foreground hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11">
-                        <X className="size-3" aria-hidden />
+                        <X className="size-3.5" aria-hidden />
                       </button>
                     </span>
                   );
@@ -775,16 +775,16 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             {/* Reminder display */}
             {reminder && (
               <div className="flex items-center gap-1 text-xs text-primary-ink">
-                <Bell className="size-3" />
+                <Bell className="size-3.5" />
                 {formatReminderShort(reminder)}
-                {reminderRepeat !== "none" && <Repeat className="size-3" aria-label="Powtarzane" />}
+                {reminderRepeat !== "none" && <Repeat className="size-3.5" aria-label="Powtarzane" />}
                 <button onClick={() => { setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setReminderAllDay(false); setReminderLead(undefined); }} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground coarse:inline-flex coarse:h-11 coarse:w-11 coarse:items-center coarse:justify-center">×</button>
               </div>
             )}
 
             {isPrivate && (
               <p className="flex items-center gap-1 text-2xs text-primary-ink">
-                <Lock className="size-3" aria-hidden />
+                <Lock className="size-3.5" aria-hidden />
                 Zapisuje się zaszyfrowana hasłem skarbca, poza folderem. Obrazy, przypomnienia i odłożenie szkicu są wyłączone.
               </p>
             )}

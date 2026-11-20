@@ -108,13 +108,13 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
             )}
             {stage && (
               <span className={cn("inline-flex items-center gap-1", CHIP_ACCENT)} data-testid="journal-entry-stage">
-                <Flag className="size-3" aria-hidden />Etap: {stage}
+                <Flag className="size-3.5" aria-hidden />Etap: {stage}
               </span>
             )}
             {e.geo && (
               // „Tu jestem” — gdzie zapisano wpis; link do map, tylko w aplikacji (raport tego nie zawiera).
               <a href={mapsUrl(e.geo)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground hover:underline coarse:min-h-11 coarse:items-center" data-testid="journal-entry-geo">
-                <MapPin className="size-3" aria-hidden />Mapa
+                <MapPin className="size-3.5" aria-hidden />Mapa
               </a>
             )}
             {e.topic && (

@@ -78,7 +78,7 @@ export function UpcomingDays({ notes, titleOf, shiftOf, studyOf, onSelectDay }: 
             </span>
             {(() => { const work = studySummary(studyOf?.(key)); return work ? (
               <span className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
-                <HardHat className="size-3 shrink-0" aria-hidden />
+                <HardHat className="size-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{work}</span>
               </span>
             ) : null; })()}

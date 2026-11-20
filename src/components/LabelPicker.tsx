@@ -73,7 +73,7 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
             title="Dodaj etykietę"
             className="pressable p-1.5 rounded-field bg-primary text-primary-foreground coarse:min-h-11 coarse:min-w-11"
           >
-            <Plus className="size-3" />
+            <Plus className="size-3.5" />
           </button>
         </div>
       </PopoverContent>

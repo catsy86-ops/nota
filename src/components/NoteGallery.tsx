@@ -68,7 +68,7 @@ export function NoteGallery({ notes, onOpen, selectedIds, propDefs = [] }: NoteG
               <div className="aspect-4/3 w-full overflow-hidden bg-muted/30"><Cover note={n} /></div>
               <div className="min-w-0 space-y-0.5 p-2.5">
                 <p className="flex items-center gap-1 text-sm font-medium">
-                  {n.pinned && <Pin className="size-3 shrink-0 text-primary-ink" aria-label="Przypięta" />}
+                  {n.pinned && <Pin className="size-3.5 shrink-0 text-primary-ink" aria-label="Przypięta" />}
                   <span className="truncate">{noteLabel(n)}</span>
                 </p>
                 {fields.map(([name, text]) => (

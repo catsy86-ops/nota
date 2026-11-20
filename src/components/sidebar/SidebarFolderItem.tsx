@@ -168,7 +168,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
                   title="Usuń emoji"
                   aria-label="Usuń emoji folderu"
                 >
-                  <X className="size-3" />
+                  <X className="size-3.5" />
                 </button>
               )}
               {FOLDER_EMOJIS.map((emoji) => (

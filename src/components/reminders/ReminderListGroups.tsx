@@ -48,7 +48,7 @@ export function ReminderListGroups({ groups, onOpen, onUpdate }: ReminderListGro
                   <span className="min-w-0 flex-1 truncate text-sm">{noteListTitle(n)}</span>
                   {ruleOf(n).kind !== "none" && (
                     <span className="inline-flex shrink-0 items-center gap-1 text-2xs text-muted-foreground" title={REPEAT_KIND_LABELS[ruleOf(n).kind]}>
-                      <Repeat className="size-3" aria-hidden />
+                      <Repeat className="size-3.5" aria-hidden />
                       <span className="sr-only">Seria: {REPEAT_KIND_LABELS[ruleOf(n).kind].toLowerCase()}</span>
                     </span>
                   )}

@@ -121,7 +121,7 @@ export function WeekStrip({ day, byDay, shiftOf, titleOf, studyOf, onSelectDay }
                 {count > 0 && <span className="text-2xs font-medium tabular-nums text-primary-ink">{count}</span>}
                 {work && (
                   <span className="flex items-center gap-0.5 text-2xs leading-4 text-muted-foreground">
-                    <HardHat className="size-3" />
+                    <HardHat className="size-3.5" />
                     {(studyOf?.(key)?.service ?? 0) + (studyOf?.(key)?.delivery ?? 0)}
                   </span>
                 )}

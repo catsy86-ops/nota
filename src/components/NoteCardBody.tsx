@@ -88,7 +88,7 @@ export function NoteCardBody({
                   {note.icon && <span className="mr-1.5" aria-hidden>{note.icon}</span>}
                   {parsePastedUrl(note.content) && <ExternalLink className="inline-block size-3.5 mr-1.5 -mt-0.5 text-muted-foreground" aria-label="Zapisany link" />}
                   <Marked text={note.title} terms={searchTerms} />
-                  {note.readOnly && <Lock className="inline-block size-3 ml-1.5 -mt-0.5 text-muted-foreground" aria-label="Zablokowana do edycji" />}
+                  {note.readOnly && <Lock className="inline-block size-3.5 ml-1.5 -mt-0.5 text-muted-foreground" aria-label="Zablokowana do edycji" />}
                   <ChecklistCount items={note.checklist || []} />
                 </h3>
               )}
@@ -138,7 +138,7 @@ export function NoteCardBody({
               )}
               {backlinks.length > 0 && (
                 <div className="mt-1.5 flex items-center gap-1 min-w-0 text-2xs text-muted-foreground" title="Linkują tu">
-                  <Link2 className="size-3 shrink-0" aria-hidden />
+                  <Link2 className="size-3.5 shrink-0" aria-hidden />
                   <span className="sr-only">Linkują tu:</span>
                   {backlinks.slice(0, BACKLINKS_SHOWN).map((b) => (
                     <button
@@ -162,7 +162,7 @@ export function NoteCardBody({
                       onClick={(e) => { e.stopPropagation(); onOpenNote?.(subpage.parentId!); }}
                       className="flex min-w-0 items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary-ink transition-colors"
                     >
-                      <CornerLeftUp className="size-3 shrink-0" aria-hidden />
+                      <CornerLeftUp className="size-3.5 shrink-0" aria-hidden />
                       <span className="truncate">{subpage.parentTitle || "Bez tytułu"}</span>
                     </button>
                   )}
@@ -177,7 +177,7 @@ export function NoteCardBody({
                     "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium whitespace-nowrap",
                     trashCountdown.urgent ? "bg-destructive/15 text-destructive-ink" : "bg-muted text-muted-foreground"
                   )}>
-                    <Trash className="size-3" />
+                    <Trash className="size-3.5" />
                     {trashCountdown.label}
                   </div>
                   {onUnarchive && (
@@ -191,7 +191,7 @@ export function NoteCardBody({
                       className="pressable inline-flex items-center gap-1 px-2 py-0.5 coarse:py-2.5 rounded-full text-2xs font-medium whitespace-nowrap bg-primary/10 text-primary-ink hover:bg-primary/20 transition-colors"
                       title="Przywróć notatkę"
                     >
-                      <RotateCcw className="size-3" />
+                      <RotateCcw className="size-3.5" />
                       Przywróć
                     </button>
                   )}
@@ -204,7 +204,7 @@ export function NoteCardBody({
                   // Ile notatka czeka na posortowanie; po 14 dniach klepsydra w kolorze akcentu (dyskretny znacznik).
                   <span className={cn("inline-flex items-center gap-1 tabular-nums", inboxAgeDays(note.createdAt) >= INBOX_STALE_DAYS && "text-primary-ink")}
                     title={`Zapisano ${format(new Date(note.createdAt), "d MMM, HH:mm", { locale: pl })}`} data-inbox-age>
-                    {inboxAgeDays(note.createdAt) >= INBOX_STALE_DAYS && <><Hourglass className="size-3" aria-hidden /><span className="sr-only">Czeka długo: </span></>}
+                    {inboxAgeDays(note.createdAt) >= INBOX_STALE_DAYS && <><Hourglass className="size-3.5" aria-hidden /><span className="sr-only">Czeka długo: </span></>}
                     {inboxAgeLabel(note.createdAt)}
                   </span>
                 ) : (

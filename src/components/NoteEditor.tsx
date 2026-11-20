@@ -270,7 +270,7 @@ export function NoteEditor({
 
       <div className="flex items-center justify-between">
         <span className="text-2xs text-muted-foreground flex items-center gap-1 whitespace-nowrap min-w-0 truncate">
-          <Type className="size-3 shrink-0" />
+          <Type className="size-3.5 shrink-0" />
           <EditorStats textareaRef={textareaRef} value={editContent} />
         </span>
         <Button variant="ghost" size="sm" onClick={handleSave} className="h-8 text-primary-ink hover:bg-primary/10 hover:text-primary-ink coarse:h-11">Zapisz</Button>

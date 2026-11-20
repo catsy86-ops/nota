@@ -193,7 +193,7 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote, onPeriodNot
             aria-label={`Edytuj szablon: ${t.name}`}
             className="self-stretch px-1.5 rounded-r-lg border border-l-0 border-border/60 bg-card text-muted-foreground hover:text-primary-ink hover:bg-primary/5 transition-colors"
           >
-            <Pencil className="size-3" />
+            <Pencil className="size-3.5" />
           </button>
         </span>
       ))}

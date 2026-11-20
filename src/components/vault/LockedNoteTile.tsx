@@ -126,14 +126,14 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
                 onClick={stop(() => downloadCiphertext(note.id))}
                 className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-foreground/10 coarse:min-h-11"
               >
-                <Download className="size-3" aria-hidden />Pobierz szyfrogram
+                <Download className="size-3.5" aria-hidden />Pobierz szyfrogram
               </button>
             </>
           ) : noVault ? (
             <span className="text-2xs text-muted-foreground">Skarbiec nie jest ustawiony na tym urządzeniu.</span>
           ) : (
             <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium", busy ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary-ink")}>
-              <KeyRound className="size-3" />
+              <KeyRound className="size-3.5" />
               {phase === "locking" ? "Blokuję…" : busy ? "Odszyfrowuję…" : "Odblokuj"}
             </span>
           )}

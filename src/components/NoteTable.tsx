@@ -245,7 +245,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                       className="inline-flex items-center gap-1 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
                     >
                       {c.label}
-                      {active && (sortDir === "asc" ? <ArrowUp className="size-3" aria-hidden /> : <ArrowDown className="size-3" aria-hidden />)}
+                      {active && (sortDir === "asc" ? <ArrowUp className="size-3.5" aria-hidden /> : <ArrowDown className="size-3.5" aria-hidden />)}
                     </button>
                   ) : c.label}
                 </th>
@@ -278,7 +278,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
               {/* Telefon: tytuł bierze resztę szerokości i się skraca — wcześniej 18rem wypychało datę poza ekran. */}
               <td className="px-3 py-2 coarse:py-3 w-full max-w-0 sm:w-auto sm:max-w-72">
                 <span className="flex items-center gap-1.5">
-                  {n.pinned && <Pin className="size-3 shrink-0 text-primary-ink" aria-label="Przypięta" />}
+                  {n.pinned && <Pin className="size-3.5 shrink-0 text-primary-ink" aria-label="Przypięta" />}
                   {n.icon && <span aria-hidden>{n.icon}</span>}
                   <span className="truncate font-medium">{noteLabel(n)}</span>
                 </span>
@@ -301,7 +301,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
               <td className="hidden sm:table-cell px-3 py-2">
                 {n.priority !== "none" && (
                   <span className="inline-flex items-center gap-1 text-xs">
-                    <Flag className={cn("size-3 fill-current", PRIORITY_COLOR_CLASS[n.priority])} aria-hidden />
+                    <Flag className={cn("size-3.5 fill-current", PRIORITY_COLOR_CLASS[n.priority])} aria-hidden />
                     {PRIORITY_LABELS[n.priority]}
                   </span>
                 )}
@@ -309,7 +309,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
               <td className="hidden sm:table-cell px-3 py-2 whitespace-nowrap text-xs text-muted-foreground">
                 {n.reminder !== null && (
                   <span className="inline-flex items-center gap-1">
-                    <Bell className="size-3" aria-hidden />
+                    <Bell className="size-3.5" aria-hidden />
                     {format(n.reminder, "d MMM, HH:mm", { locale: pl })}
                   </span>
                 )}

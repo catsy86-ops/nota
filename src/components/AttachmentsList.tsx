@@ -39,7 +39,7 @@ export function AttachmentsBadge({ attachments, className }: { attachments?: Att
       aria-label={`Załączniki: ${n}`}
       className={cn("inline-flex items-center gap-1 rounded-full bg-foreground/5 px-1.5 py-0.5 text-2xs font-medium text-muted-foreground", className)}
     >
-      <Paperclip className="size-3" aria-hidden />
+      <Paperclip className="size-3.5" aria-hidden />
       {n}
     </span>
   );
@@ -196,7 +196,7 @@ export function AttachmentsReadOnlyList({ attachments, className }: { attachment
   return (
     <section aria-label="Załączniki" className={cn("mt-6", className)}>
       <p className="ui-hint mb-2 flex items-center gap-1 font-semibold">
-        <Paperclip className="size-3" aria-hidden /> Załączniki ({attachments.length})
+        <Paperclip className="size-3.5" aria-hidden /> Załączniki ({attachments.length})
       </p>
       <ul className="space-y-1.5">
         {attachments.map((a) => (

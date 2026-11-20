@@ -44,7 +44,7 @@ function SideBySide({ version, current, onRestore }: { version: string; current:
           </div>
           {onRestore && (
             <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs coarse:h-11" onClick={() => onRestore(restoreHunk(hunks, i))}>
-              <RotateCcw className="size-3" aria-hidden />Przywróć tylko ten akapit
+              <RotateCcw className="size-3.5" aria-hidden />Przywróć tylko ten akapit
             </Button>
           )}
         </div>

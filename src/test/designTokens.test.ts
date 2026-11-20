@@ -43,6 +43,10 @@ const LIMITS = {
   bareShadow: { pattern: /(?<![\w-])shadow(?:-sm|-xl)?(?![\w-[])/g, max: 0, token: "shadow-elevation-1..3" },
   // `shadow-[…]` tylko na obwódki, wcięcia i poświaty (suwak, przycisk wciśnięty, dzień, chip, podpis) — nie na głębię.
   arbitraryShadow: { pattern: /(?<![\w-])shadow-\[/g, max: 7, token: "shadow-elevation-1..3" },
+  // W4.1: ikona ma 14 (`size-3.5`, w tekście meta), 16 (`size-4`) albo 20 px (`size-5`). 12 px zostało tylko w pogrubionym ✓
+  // próbki stylu; 24 px to ilustracje i duże akcje („+” w dolnym pasku, gest przesunięcia kafla, pusty stan, kafle budowy, logo).
+  iconSize12: { pattern: /<[A-Z][\w.]* [^>]*?(?<![\w-])size-3(?![.\w])/g, max: 1, token: "size-3.5" },
+  iconSize24: { pattern: /<[A-Z][\w.]* [^>]*?(?<![\w-])size-6(?![.\w])/g, max: 14, token: "size-5 (ilustracja: uzasadnić w komentarzu)" },
   // W7.1: wymiar wpisany ręcznie omija skalę (`w-34`, `min-h-20`) i tokeny (`max-h-sheet|dialog|media`, `size-icon-nav`).
   // Zostają świadome wyjątki: kreski 2–3 px, obszary przewijane w `dvh`/`vw`, wymiary obcego kalendarza, logo w `em`.
   arbitrarySize: { pattern: /(?<![\w-])(?:min-|max-)?(?:w|h|size)-\[\d+(?:\.\d+)?(?:px|rem|vh|vw|dvh|svh|ch|em)\]/g, max: 34, token: "skala (w-34, min-h-20) / max-h-sheet|dialog|media" },

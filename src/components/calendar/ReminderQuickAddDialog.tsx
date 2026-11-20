@@ -281,7 +281,7 @@ export function ReminderQuickAddDialog({
           </label>
           )}
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Repeat className="size-3" />
+            <Repeat className="size-3.5" />
             <span className="sr-only">Powtarzanie</span>
             <RepeatRuleSelect
               id="quick-add-repeat"
@@ -309,7 +309,7 @@ export function ReminderQuickAddDialog({
             />
             {untilText && (
               <Button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" variant="ghost" size="icon-sm" className="text-muted-foreground [&_svg]:size-3">
-                <X className="size-3" />
+                <X className="size-3.5" />
               </Button>
             )}
           </div>

@@ -129,7 +129,7 @@ export function WikiLink({ title, heading = null, label = null, exists, onWikiCl
                 onClick={() => { setOpen(false); onWikiClick?.(target_); }}
                 className="pressable mt-2 inline-flex items-center gap-1 rounded-control bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
-                Otwórz <ArrowUpRight className="size-3" aria-hidden />
+                Otwórz <ArrowUpRight className="size-3.5" aria-hidden />
               </button>
             </>
           ) : (

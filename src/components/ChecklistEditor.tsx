@@ -294,7 +294,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
                 className="p-0.5 coarse:p-2 rounded text-faint hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <X className="size-3" />
+                <X className="size-3.5" />
               </button>
             )}
           </div>
@@ -341,7 +341,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                   aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
                   className="p-0.5 coarse:p-2 rounded text-faint hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <X className="size-3" />
+                  <X className="size-3.5" />
                 </button>
               )}
             </div>

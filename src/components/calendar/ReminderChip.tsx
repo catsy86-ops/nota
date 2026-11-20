@@ -65,7 +65,7 @@ export function ReminderChip({ occurrence, title, detailed = false, className, s
         {occurrence.allDay ? "cały dzień" : format(new Date(occurrence.at), "HH:mm")}
       </span>
       <span className="truncate">{title.trim() || "Bez tytułu"}</span>
-      {occurrence.isSeries && <Repeat className={cn("shrink-0", detailed ? "size-3" : "size-2.5")} />}
+      {occurrence.isSeries && <Repeat className={cn("shrink-0", detailed ? "size-3.5" : "size-2.5")} />}
     </span>
   );
 }

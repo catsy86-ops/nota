@@ -354,7 +354,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
 
           {/* Stroke width */}
           <div className="flex items-center gap-2 min-w-30">
-            <Minus className="size-3 text-muted-foreground" />
+            <Minus className="size-3.5 text-muted-foreground" />
             <Slider
               value={[strokeWidth]}
               onValueChange={([v]) => setStrokeWidth(v)}
@@ -363,7 +363,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
               step={1}
               className="w-20"
             />
-            <Plus className="size-3 text-muted-foreground" />
+            <Plus className="size-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground w-6 text-center">{strokeWidth}</span>
           </div>
 

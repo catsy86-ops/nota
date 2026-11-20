@@ -295,7 +295,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     aria-label="Usuń obrazek"
                     className="absolute top-1 right-1 p-1 coarse:p-3 rounded-full bg-foreground/60 text-background opacity-0 coarse:opacity-100 group-hover/img:opacity-100 focus-visible:opacity-100 transition-opacity"
                   >
-                    <X className="size-3" />
+                    <X className="size-3.5" />
                   </button>
                 )}
               </div>

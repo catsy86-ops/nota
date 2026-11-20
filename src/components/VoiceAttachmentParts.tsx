@@ -72,7 +72,7 @@ function RecordingBar({ since, onStop, onTranscript }: { since: number; onStop: 
         </button>
       )}
       <button type="button" onClick={onStop} className="pressable inline-flex items-center gap-1 rounded-control px-2 py-1 font-medium text-destructive-ink hover:bg-destructive/10 coarse:min-h-11">
-        <Square className="size-3 fill-current" aria-hidden /> Zatrzymaj
+        <Square className="size-3.5 fill-current" aria-hidden /> Zatrzymaj
       </button>
     </div>
   );

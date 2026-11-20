@@ -288,7 +288,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
           </div>
         )}
         <div className="flex items-center gap-2">
-          <label htmlFor={`${uid}-repeat`} className="text-xs text-muted-foreground flex items-center gap-1"><Repeat className="size-3" />Powtarzaj:</label>
+          <label htmlFor={`${uid}-repeat`} className="text-xs text-muted-foreground flex items-center gap-1"><Repeat className="size-3.5" />Powtarzaj:</label>
           <RepeatRuleSelect
             id={`${uid}-repeat`}
             value={repeat}
@@ -312,7 +312,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
             />
             {untilText && (
               <button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" className="p-1 rounded text-muted-foreground hover:text-foreground">
-                <X className="size-3" />
+                <X className="size-3.5" />
               </button>
             )}
           </div>
@@ -350,7 +350,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
           </Button>
           {reminder && (
             <Button size="sm" variant="outline" onClick={handleClear} aria-label="Usuń przypomnienie">
-              <X className="size-3" />
+              <X className="size-3.5" />
             </Button>
           )}
         </div>

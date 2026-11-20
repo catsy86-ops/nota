@@ -98,7 +98,7 @@ function SidebarHeading({ label, icon, collapsed, onToggle, action }: {
         className="section-caps flex min-w-0 flex-1 items-center justify-between gap-1.5 rounded-control px-3 py-1 hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="flex min-w-0 items-center gap-1.5">{icon}{label}</span>
-        <ChevronDown className={cn("size-3 shrink-0 transition-transform motion-reduce:transition-none", collapsed && "-rotate-90")} aria-hidden />
+        <ChevronDown className={cn("size-3.5 shrink-0 transition-transform motion-reduce:transition-none", collapsed && "-rotate-90")} aria-hidden />
       </button>
       {action}
     </div>
@@ -322,7 +322,7 @@ export function AppSidebar({
               {favorites.length > 0 && (
                 <div className="pt-5">
                   <p className="section-caps px-3 mb-2 flex items-center gap-1.5">
-                    <Star className="size-3" />
+                    <Star className="size-3.5" />
                     Ulubione
                   </p>
                   <div className="space-y-0.5" data-favorites>
@@ -344,7 +344,7 @@ export function AppSidebar({
 
               {hasRecent && (
                 <div className="pt-5" data-sidebar-recent>
-                  <SidebarHeading label="Ostatnie" icon={<RotateCcwClock className="size-3" />} collapsed={recentCollapsed}
+                  <SidebarHeading label="Ostatnie" icon={<RotateCcwClock className="size-3.5" />} collapsed={recentCollapsed}
                     onToggle={() => setGroupCollapsed("ostatnie", !recentCollapsed)} />
                   {!recentCollapsed && (
                     <div className="space-y-0.5">
@@ -365,7 +365,7 @@ export function AppSidebar({
               {filters.length > 0 && (
                 <div className="pt-5">
                   <p className="section-caps px-3 mb-2 flex items-center gap-1.5">
-                    <Funnel className="size-3" />
+                    <Funnel className="size-3.5" />
                     Filtry
                   </p>
                   <div className="space-y-0.5" data-saved-filters>
@@ -387,7 +387,7 @@ export function AppSidebar({
 
               {/* Zapisane widoki (nowy plan 6.1): źródło, zapytanie, układ, sortowanie i filtry pod nazwą; w Yjs. */}
               <div className="pt-5" data-saved-views>
-                <SidebarHeading label="Widoki" icon={<LayoutDashboard className="size-3" />} collapsed={viewsCollapsed}
+                <SidebarHeading label="Widoki" icon={<LayoutDashboard className="size-3.5" />} collapsed={viewsCollapsed}
                   onToggle={() => setGroupCollapsed("widoki", !viewsCollapsed)}
                   action={<SidebarAddFolderButton kind="view" disabled={!viewSource} onAdd={(name) => {
                     if (!viewSource) return;
@@ -419,7 +419,7 @@ export function AppSidebar({
 
               {allLabels.length > 0 && (
                 <div className="pt-5">
-                  <SidebarHeading label="Etykiety" icon={<Tag className="size-3" />} collapsed={labelsCollapsed}
+                  <SidebarHeading label="Etykiety" icon={<Tag className="size-3.5" />} collapsed={labelsCollapsed}
                     onToggle={() => setGroupCollapsed("etykiety", !labelsCollapsed)} />
                   <div className="space-y-0.5" hidden={labelsCollapsed}>
                     {buildLabelRows(allLabels).map((row) => (
@@ -439,7 +439,7 @@ export function AppSidebar({
               )}
 
               <div className="pt-5">
-                <SidebarHeading label="Foldery" icon={<FolderOpen className="size-3" />} collapsed={foldersCollapsed}
+                <SidebarHeading label="Foldery" icon={<FolderOpen className="size-3.5" />} collapsed={foldersCollapsed}
                   onToggle={() => setGroupCollapsed("foldery", !foldersCollapsed)}
                   action={<SidebarAddFolderButton onAdd={(name) => addFolder(name)} />} />
                 <div className="space-y-0.5" hidden={foldersCollapsed}>

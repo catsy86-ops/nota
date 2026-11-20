@@ -174,7 +174,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
           <div className="flex items-center justify-between">
             <p className="ui-hint font-semibold">Odznaki</p>
             <Button variant="ghost" size="sm" onClick={() => setResetAsk(true)} className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-destructive-ink">
-              <RotateCcw className="size-3" /> Resetuj
+              <RotateCcw className="size-3.5" /> Resetuj
             </Button>
           </div>
           {ACHIEVEMENTS.map((a, i) => {
