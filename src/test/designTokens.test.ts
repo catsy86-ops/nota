@@ -102,11 +102,15 @@ describe("W3.2 — ręczne karty poza components/ui", () => {
 // miniatura analizy, „Inny plik” w zdaniu, uchwyt wysokości panelu.
 // Praca (2026-11-20): przeniesione tylko przyciski-ikony. Zostały pigułki-podpowiedzi i filtry (`rounded-full`), przerywane wiersze „dodaj”,
 // wiersze-listy i kafle, linki w zdaniu, dyktowanie, wybory (`aria-pressed`, radio) — pigułka czeka na wspólny wariant (W4.4).
-const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26, review: 11, calendar: 14, debts: 3, cwiczenia: 8, clients: 8, vault: 5, sync: 1, settings: 22, sidebar: 6, plans: 10, study: 149 };
+// Główny katalog `components/` (2026-11-20): przeniesione „Znajdź i zamień”, ikona paska bocznego, zapis aliasu. Zostało 138 — długi ogon:
+// pasek edytora notatki i kafla (`card-action`), listy kontrolne, wybór koloru i rysunek, nawigacja dolna, pigułki, linki w zdaniu.
+const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26, review: 11, calendar: 14, debts: 3, cwiczenia: 8, clients: 8, vault: 5, sync: 1, settings: 22, sidebar: 6, plans: 10, study: 149, ".": 138 };
 describe("W4.5 — surowe <button> w działach", () => {
   for (const [dir, max] of Object.entries(RAW_BUTTON_MAX)) {
     it(`components/${dir}: co najwyżej ${max} (zamiast tego: Button / IconButton)`, () => {
-      const n = SOURCES.filter(({ path }) => path.replace(/\\/g, "/").includes(`/components/${dir}/`))
+      // `.` = pliki leżące wprost w `components/` (bez podkatalogów).
+      const inDir = (p: string) => (dir === "." ? /\/components\/[^/]+$/.test(p) : p.includes(`/components/${dir}/`));
+      const n = SOURCES.filter(({ path }) => inDir(path.replace(/\\/g, "/")))
         .reduce((sum, { text }) => sum + (text.match(/<button\b/g)?.length ?? 0), 0);
       expect(n).toBeLessThanOrEqual(max);
     });

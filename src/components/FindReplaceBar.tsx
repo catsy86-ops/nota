@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { findMatches, replaceAll, replaceAt } from "@/lib/findReplace";
@@ -13,6 +14,8 @@ interface FindReplaceBarProps {
 
 const FIELD = "h-8 coarse:h-10 min-w-0 flex-1 rounded-control border border-border/60 bg-background px-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 const BTN = "pressable h-8 coarse:h-10 px-2 rounded-control text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
+/** Dodatek do `<Button variant="ghost">` (W4.5); przełącznik wielkości liter zostaje na `BTN`. */
+const BTN_ACTION = "h-8 px-2 text-xs text-muted-foreground coarse:h-10";
 
 /** Pasek „Znajdź i zamień” nad treścią edytowanej notatki (Ctrl+F / Ctrl+H w polu treści). */
 export function FindReplaceBar({ value, onChange, textareaRef, onClose }: FindReplaceBarProps) {
@@ -75,16 +78,16 @@ export function FindReplaceBar({ value, onChange, textareaRef, onClose }: FindRe
       <span aria-live="polite" className="text-xs text-muted-foreground tabular-nums min-w-14 text-center">
         {query ? (matches.length ? `${index + 1} z ${matches.length}` : "brak") : ""}
       </span>
-      <button type="button" className={BTN} onClick={() => go(-1)} disabled={matches.length === 0} aria-label="Poprzednie trafienie"><ChevronUp className="size-4" /></button>
-      <button type="button" className={BTN} onClick={() => go(1)} disabled={matches.length === 0} aria-label="Następne trafienie"><ChevronDown className="size-4" /></button>
+      <Button type="button" variant="ghost" className={BTN_ACTION} onClick={() => go(-1)} disabled={matches.length === 0} aria-label="Poprzednie trafienie"><ChevronUp className="size-4" /></Button>
+      <Button type="button" variant="ghost" className={BTN_ACTION} onClick={() => go(1)} disabled={matches.length === 0} aria-label="Następne trafienie"><ChevronDown className="size-4" /></Button>
       <button type="button" className={cn(BTN, matchCase && "bg-muted text-foreground")} aria-pressed={matchCase}
         onClick={() => { setMatchCase((m) => !m); setCurrent(0); }} title="Rozróżniaj wielkość liter">Aa</button>
       <input value={replacement} onChange={(e) => setReplacement(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); replaceCurrent(); } }}
         placeholder="Zamień na" aria-label="Zamień na" className={FIELD} />
-      <button type="button" className={BTN} onClick={replaceCurrent} disabled={index < 0}>Zamień</button>
-      <button type="button" className={BTN} onClick={replaceEvery} disabled={matches.length === 0}>Zamień wszystkie</button>
-      <button type="button" className={BTN} onClick={() => { onClose(); textareaRef.current?.focus(); }} aria-label="Zamknij pasek"><X className="size-4" /></button>
+      <Button type="button" variant="ghost" className={BTN_ACTION} onClick={replaceCurrent} disabled={index < 0}>Zamień</Button>
+      <Button type="button" variant="ghost" className={BTN_ACTION} onClick={replaceEvery} disabled={matches.length === 0}>Zamień wszystkie</Button>
+      <Button type="button" variant="ghost" className={BTN_ACTION} onClick={() => { onClose(); textareaRef.current?.focus(); }} aria-label="Zamknij pasek"><X className="size-4" /></Button>
     </div>
   );
 }

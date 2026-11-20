@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { folderProgress } from "@/lib/folderProgress";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -109,16 +110,16 @@ function FooterIcon({ label, title, icon, onClick, extra }: {
   label: string; title: string; icon: React.ReactNode; onClick: () => void; extra?: React.ButtonHTMLAttributes<HTMLButtonElement>;
 }) {
   return (
-    <button
+    <Button
       type="button"
       onClick={onClick}
       aria-label={label}
       title={title}
       {...extra}
-      className="pressable grid size-10 place-items-center rounded-field text-muted-foreground hover:bg-muted/80 hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:size-11"
+      variant="ghost" size="icon" className="size-10 text-muted-foreground coarse:size-11"
     >
       {icon}
-    </button>
+    </Button>
   );
 }
 

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Link2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -56,13 +57,13 @@ export function AliasPicker({ title, aliases, onSave }: AliasPickerProps) {
           autoComplete="off"
         />
         <div className="flex justify-end">
-          <button
+          <Button
             type="button"
             onClick={handleSave}
-            className="pressable px-3 py-1.5 rounded-control text-sm font-medium bg-primary text-primary-foreground"
+            size="sm"
           >
             Zapisz aliasy
-          </button>
+          </Button>
         </div>
       </PopoverContent>
     </Popover>
