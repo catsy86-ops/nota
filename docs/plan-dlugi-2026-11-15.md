@@ -1,6 +1,6 @@
 # Plan: Długi — ulepszenie, dopracowanie, rozwój (2026-11-15)
 
-> **Status:** zapisany, realizacja nie zaczęta. Poprzedni plan (`plan-dlugi-2026-10-25.md`) ma zrobione Etapy 1–4; z niego zostają tylko QA na telefonie (Etap 5) i punkt 3.5 (decyzja D-3).
+> **Status:** realizacja w toku (2026-11-20): L2.1, L2.4, L4.3 zrobione. Poprzedni plan (`plan-dlugi-2026-10-25.md`) ma zrobione Etapy 1–4; z niego zostają tylko QA na telefonie (Etap 5) i punkt 3.5 (decyzja D-3).
 
 ## 1. Diagnoza
 
@@ -43,10 +43,10 @@ Czego nie ma (sprawdzone w `src/lib/debts/` i `DebtsView.tsx`):
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
-| L2.1 | **Raty.** Przy „Pożyczyłem” i „Pożyczyłem od” opcja „w ratach”: liczba rat i dzień miesiąca. Powstaje jedna notatka z przypomnieniem miesięcznym do daty końca (mechanizm serii już jest: `reminderRepeat`, `reminderRepeatUntil`). W arkuszu osoby: „rata 2 z 6 · 200 zł”, przycisk „Rata wpłacona” dopisuje spłatę. | M |
+| L2.1 ✅ `42f7502a` 2026-11-18 | **Raty.** Przy „Pożyczyłem” i „Pożyczyłem od” opcja „w ratach”: liczba rat i dzień miesiąca. Powstaje jedna notatka z przypomnieniem miesięcznym do daty końca (mechanizm serii już jest: `reminderRepeat`, `reminderRepeatUntil`). W arkuszu osoby: „rata 2 z 6 · 200 zł”, przycisk „Rata wpłacona” dopisuje spłatę. | M |
 | L2.2 | **Grzeczne przypomnienie.** W „Wyślij” drugi wzór wiadomości: krótkie przypomnienie z kwotą i terminem, zamiast pełnej historii. | S |
 | L2.3 | **Dane do przelewu.** Opcjonalny numer konta i telefon do BLIK-a z ustawień (dla Pracy są już w `companyPrefs.ts`; tu osobne, prywatne pole) dopisywane do wiadomości. | S |
-| L2.4 | **Zaległe na Dziś.** Termin zwrotu po dacie pokazuje się na Dziś jako „Ania: 300 zł, 5 dni po terminie” z akcjami „Oddane” i „Przypomnij”. Sprawdzić, co już daje notatka z etykietą `długi`, i nie dublować. | S |
+| L2.4 ✅ `2a2cf5d0` 2026-11-18 | **Zaległe na Dziś.** Termin zwrotu po dacie pokazuje się na Dziś jako „Ania: 300 zł, 5 dni po terminie” z akcjami „Oddane” i „Przypomnij”. Sprawdzić, co już daje notatka z etykietą `długi`, i nie dublować. | S |
 
 ## Etap 3: wspólne wydatki
 
@@ -63,7 +63,7 @@ Bez „grup wyjazdowych” i upraszczania długów między wieloma osobami — t
 |---|---|---|
 | L4.1 | **Wykres salda osoby** w arkuszu: linia z `runningBalances` (dane już są), bez nowej biblioteki — SVG jak `Sparkline` w Ćwiczeniach. | S |
 | L4.2 | **Miesiąc w liczbach** pod podsumowaniem: pożyczono, oddano, zmiana salda; zwinięte domyślnie. | S |
-| L4.3 | **Zdjęcie dowodu.** Jedno zdjęcie przy wpisie przez istniejący magazyn obrazów (skrót treści w Yjs, plik w IndexedDB, synchronizacja jak obrazy notatek). Przy ukrytych kwotach miniatura rozmyta. | M |
+| L4.3 ✅ `55881847` 2026-11-18 | **Zdjęcie dowodu.** Jedno zdjęcie przy wpisie przez istniejący magazyn obrazów (skrót treści w Yjs, plik w IndexedDB, synchronizacja jak obrazy notatek). Przy ukrytych kwotach miniatura rozmyta. | M |
 | L4.4 | **PDF „Rozliczenie”** dla osoby (`jspdf` już jest w projekcie, ładowany leniwie): historia, saldo, data. Odpowiednik „Wyślij” do wydruku. | S |
 
 ## Etap 5: do decyzji

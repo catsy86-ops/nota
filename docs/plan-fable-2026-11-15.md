@@ -1,6 +1,6 @@
 # Plan Fable: trzy najtrudniejsze tematy (2026-11-15)
 
-> **Status:** zapisany, realizacja nie zaczęta. Tu są tylko decyzje i specyfikacje, których nie warto zostawiać słabszemu modelowi. Kod według tych specyfikacji pisze inny model, punkt po punkcie.
+> **Status:** realizacja w toku (2026-11-20): F1.1–F1.4 i F2 w kodzie. Tu są tylko decyzje i specyfikacje, których nie warto zostawiać słabszemu modelowi. Kod według tych specyfikacji pisze inny model, punkt po punkcie.
 >
 > Poza tym plikiem (dla innego modelu, bez specyfikacji): audyt animacji i system ruchu, QoL, podział `Index.tsx` i `exportNotes.ts`, reguła ESLint warstw `lib ← hooks ← components`, plany działów (`plan-praca-2026-11-15.md`, `plan-dlugi-2026-11-15.md`, `plan-cwiczenia-2026-11-15.md`).
 
@@ -8,7 +8,7 @@ Zasada dla wykonawcy: przed każdym punktem sprawdź stan w kodzie, a nie w liś
 
 ---
 
-> **Stan 2026-11-16:** F1.1–F1.3 w kodzie (port, ujście natywne, Ustawienia, powłoka, workflow) — ADR-8 przyjęty z N-1…N-3 domyślnymi. Niezrobione: F1.0 (próba na telefonie — kroki właściciela), F1.4 (pliki w powłoce), testy. Zlecenia: zadanie 13 w `zlecenia-fable-2026-11-15.md`.
+> **Stan 2026-11-16:** F1.1–F1.3 w kodzie (port, ujście natywne, Ustawienia, powłoka, workflow) — ADR-8 przyjęty z N-1…N-3 domyślnymi. Niezrobione: F1.0 (próba na telefonie — kroki właściciela), testy. F1.4 (pliki w powłoce) ✅ `eb3f2812` 2026-11-18 (Z-13.4). Zlecenia: zadanie 13 w `zlecenia-fable-2026-11-15.md`.
 
 ## F1. Powiadomienia przy zamkniętej aplikacji bez serwera (propozycja ADR-8)
 
@@ -98,7 +98,7 @@ Decyzje właściciela: **N-1** czy w ogóle APK (tak → F1.0); **N-2** dystrybu
 
 ---
 
-## F2. Hartowanie przekaźnika (`relay-server/`)
+## F2. Hartowanie przekaźnika (`relay-server/`) ✅ `1aa8810a` 2026-11-17 (Z-15.8)
 
 **Stan 2026-11-17 (Fable, Z-15.8): zrobione.** `relay-server/storage.js` według projektu niżej; odstępstwo: tożsamość (`authHash`, `epoch`, `created`) w osobnym `room.json` zapisywanym raz — brak `meta.json` nie gubi wtedy pokoju. Kryteria odbioru spełnione (testy awarii, obciążenie 200 × 2000 ze stałym czasem dopisania i stertą 9 MB po GC, testy integracyjne bez zmian protokołu). Przegląd `security-reviewer` — wynik w `opis.md`. `signaling-server/Dockerfile` czeka na SE-4 (S4.9).
 

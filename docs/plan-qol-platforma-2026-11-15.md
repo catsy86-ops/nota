@@ -1,6 +1,6 @@
 # Plan: QoL i możliwości platformy (2026-11-15)
 
-> **Status:** zapisany, realizacja nie zaczęta. Wykonawca: Sonnet, poza Q2 (Opus + `security-reviewer`). Wcześniejsze plany QoL (`nowyplan.md`, plan UI/UX z 25.10) są zrobione — tu są tylko rzeczy, których w kodzie nie ma albo są w jednym miejscu. Każdy punkt: najpierw `grep`, czy nie powstał w międzyczasie.
+> **Status:** realizacja w toku (2026-11-20): Q1.1, Q1.2, Q1.5 zrobione (`1ed2a2b6`). Wykonawca: Sonnet, poza Q2 (Opus + `security-reviewer`). Wcześniejsze plany QoL (`nowyplan.md`, plan UI/UX z 25.10) są zrobione — tu są tylko rzeczy, których w kodzie nie ma albo są w jednym miejscu. Każdy punkt: najpierw `grep`, czy nie powstał w międzyczasie.
 
 ## 1. Stan (policzone w `src/`, manifeście i `index.html`)
 

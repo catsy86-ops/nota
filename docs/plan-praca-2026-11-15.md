@@ -1,6 +1,6 @@
 # Plan: Praca — ulepszenie, dopracowanie, rozwój (2026-11-15)
 
-> **Status:** zapisany, realizacja nie zaczęta. Kontynuuje `plan-praca-budowa-2026-11-10.md` (fazy B0–B5 w większości zrobione) i `plan-wyceny-klienci-2026-11-13.md` (zrobiony). Nie powtarza ich punktów.
+> **Status:** realizacja w toku (2026-11-20): R2.2, R3.3, R4.3 zrobione; R2.1, R3.1 częściowo. Kontynuuje `plan-praca-budowa-2026-11-10.md` (fazy B0–B5 w większości zrobione) i `plan-wyceny-klienci-2026-11-13.md` (zrobiony). Nie powtarza ich punktów.
 
 ## 1. Diagnoza
 
@@ -44,7 +44,7 @@ Wynik Etapu 1 może zmienić kolejność Etapów 2–4.
 | Nr | Punkt | Gdzie | Rozmiar |
 |---|---|---|---|
 | R2.1 | **Dokończyć podział `JournalEntrySheet.tsx`** (B1.6): reduktor szkicu w `src/lib/study/draft.ts`, sekcje etapu, zdjęć, lokalizacji i próby w `components/study/entry/`. Najpierw testy charakteryzujące reduktor. | `JournalEntrySheet.tsx` | M |
-| R2.2 | **Podział `SiteCardDialog.tsx`** na pięć segmentów jako osobne, leniwie ładowane komponenty (Dziś, Materiał, Punkty, Pieniądze, Papiery). | `SiteCardDialog.tsx` | M |
+| R2.2 ✅ `29f6b634` 2026-11-18 | **Podział `SiteCardDialog.tsx`** na pięć segmentów jako osobne, leniwie ładowane komponenty (Dziś, Materiał, Punkty, Pieniądze, Papiery). | `SiteCardDialog.tsx` | M |
 | R2.3 | **Schować nieużywane** według R1.3: jeden wiersz „Więcej narzędzi” w karcie zamiast stałych przycisków. | karta budowy, zakładka Budowa | S |
 | R2.4 | **Eksperymenty za flagą.** NFC, podsumowanie AI i poziomica dostają wspólny przełącznik „Funkcje próbne” w Ustawieniach; domyślnie wyłączone, jeśli R1.3 pokaże brak użycia. | flagi funkcji (Faza 0 planu rozbudowy) | S |
 | R2.5 | **„Zacznij dzień”** — brakująca połowa B2.4: budowa z lokalizacji albo Grafiku, godzina wejścia, plan na dziś, jednym arkuszem. | `endDay.ts` jako wzór | M |
@@ -58,7 +58,7 @@ Wynik Etapu 1 może zmienić kolejność Etapów 2–4.
 |---|---|---|
 | R3.1 | **Ekran „Należności”.** Jedna lista: budowy z saldem do zapłaty, zlecenia „zrobione, niezapłacone”, faktury wystawione bez wpłaty. Sortowanie po liczbie dni. Czysta funkcja zbierająca z `billing.ts`, `jobs.ts` i faktur; bez nowych danych. | M |
 | R3.2 | **Oś zlecenia.** Na karcie zlecenia i klienta jeden pasek etapów: wycena → zaliczka → realizacja → protokół → faktura → zapłata → gwarancja, liczony z istniejących danych. Stuknięcie w brakujący etap otwiera właściwe narzędzie. | M |
-| R3.3 | **„Do wystawienia”.** Zlecenie w stanie „zrobione” bez faktury pojawia się na Dziś z przyciskiem „Wystaw fakturę” (przenosi pozycje z wyceny). | S |
+| R3.3 ✅ `67d9758b` 2026-11-15 | **„Do wystawienia”.** Zlecenie w stanie „zrobione” bez faktury pojawia się na Dziś z przyciskiem „Wystaw fakturę” (przenosi pozycje z wyceny). | S |
 | R3.4 | **Wpłata częściowa i zaliczka** widoczne w R3.1 jako pasek „zapłacono 40%” (ten sam wzór co pasek spłaty w Długach). | S |
 | R3.5 | **Eksport dla księgowej za miesiąc:** jeden ZIP z fakturami XML i PDF, CSV kilometrówki i zestawieniem; szyfrowany tak jak eksport faktur. | M |
 | R3.6 | **KSeF Etap 2** zostaje odłożony (wymaga serwera i decyzji o hostingu). Nie wchodzi do tego planu. | — |
@@ -69,7 +69,7 @@ Wynik Etapu 1 może zmienić kolejność Etapów 2–4.
 |---|---|---|
 | R4.1 | **Tryb jednej ręki** na zakładce Budowa: wszystkie główne akcje w dolnej połowie ekranu, cele 56 px. Zmiana rozmiaru tylko tutaj i po uzgodnieniu — ogólne powiększenie `Button` na dotyku zostało cofnięte. | M |
 | R4.2 | **Kolejka zdjęć bez czekania:** zdjęcie zapisuje się od razu, miniatura i zmniejszanie w tle (Worker), z widocznym licznikiem „przetwarzam 3”. Najpierw pomiar, czy dziś blokuje. | M |
-| R4.3 | **Raport dnia głosem:** „Zakończ dzień” czyta podsumowanie na głos (`speechSynthesis`), żeby dało się je sprawdzić z brudnymi rękami. Do wyłączenia. | S |
+| R4.3 ✅ `67d9758b` 2026-11-15 | **Raport dnia głosem:** „Zakończ dzień” czyta podsumowanie na głos (`speechSynthesis`), żeby dało się je sprawdzić z brudnymi rękami. Do wyłączenia. | S |
 | R4.4 | **Wzorce powtarzalnych budów:** „Nowa budowa z poprzedniej” (B3.7) rozszerzone o zapisane wzorce („łazienka”, „kotłownia”) z etapami i punktami. | S |
 | R4.5 | **Powiadomienia natywne** dla próby szczelności i końca dnia — po F1 z `plan-fable-2026-11-15.md`. Bez niego minutnik działa tylko przy otwartej aplikacji. | zależne |
 

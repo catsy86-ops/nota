@@ -16,8 +16,8 @@ Fable opłaca się tam, gdzie błąd jest cichy i drogi: poprawność prawna alb
 | 3 | KSeF Etap 2: przegląd projektu serwera przed wykonaniem (podwójna wysyłka, tryb offline, sesja szyfrowana) | plan KSeF | M | plan | uwagi do projektu; Z-3 |
 | 4 | Edycja tekstu: `writeContent` podmienia całą treść, gdy edytor się nie zamontował — przy edycji z drugiego urządzenia grozi utratą lub zdublowaniem | `useNoteEditSession.ts`, `yjsStore.ts:85–90, 655–658` | M | przegląd i testy zbieżności | poprawione w kodzie; testy Z-4.T |
 | 5 | Klient przekaźnika: kursor, kolejka niewysłanych, migawka — plan F2 obejmuje tylko serwer | `relayProvider.ts:175–311` | M | przegląd i testy | Z-5.1–Z-5.4 w kodzie; drugi przegląd 2026-11-16: Z-5.5–Z-5.9, Z-5.T |
-| 6 | Odśmiecanie obrazów: listy odwołań utrzymywane ręcznie w dwóch plikach; raz już skończyło się utratą zdjęć | `yjsStore.ts:758–771`, `journalRefs.ts`, `imageStore.ts`, `useNotes.ts:213–229` | S/M | test-strażnik | specyfikacja; Z-6 |
-| 7 | Wiele kart: co dokładnie blokować, zanim ktoś zrobi Q1.1 | `plan-qol-platforma-2026-11-15.md` | S/M | plan | plan; Z-7 |
+| 6 | Odśmiecanie obrazów: listy odwołań utrzymywane ręcznie w dwóch plikach; raz już skończyło się utratą zdjęć | `yjsStore.ts:758–771`, `journalRefs.ts`, `imageStore.ts`, `useNotes.ts:213–229` | S/M | test-strażnik | ✅ `cfeace2c`, `29009b0d` 2026-11-18; Z-6 |
+| 7 | Wiele kart: co dokładnie blokować, zanim ktoś zrobi Q1.1 | `plan-qol-platforma-2026-11-15.md` | S/M | plan | ✅ `cfeace2c`, `61f1f203` 2026-11-18; Z-7 |
 | 8 | Godzina ścienna przypomnień (zmiana czasu, zgodność wstecz) | przypomnienia, `push/schedule.ts` | M | plan | przegląd zrobiony 2026-11-16, trzy błędy poprawione; Z-8.1–Z-8.4, decyzja D-P1 |
 | 9 | Niestabilny `reminders-agenda.spec.ts` — może być prawdziwym wyścigiem w interfejsie | `e2e/` | S/M | diagnoza | hipotezy; Z-9 |
 | 10 | „Kroje się nie zapisują” — trzy możliwe przyczyny | `persistedStore.ts:71–87`, `appFont.ts:34–42`, `appearanceCode.ts:14` | S | diagnoza | diagnoza; Z-10 |

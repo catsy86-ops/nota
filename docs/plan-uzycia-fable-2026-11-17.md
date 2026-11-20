@@ -1,6 +1,6 @@
 # Plan użycia Fable w planach Praca, Bezpieczeństwo i QoL (2026-11-17)
 
-> **Status:** zapisany, realizacja nie zaczęta. Dotyczy `plan-praca-2026-11-15.md`, `plan-security-2026-11-15.md`, `plan-qol-platforma-2026-11-15.md`. Część druga (Długi, Ćwiczenia, Architektura, audyt): `plan-uzycia-fable-cz2-2026-11-17.md`.
+> **Status:** zrobione sesje 0, A–E (2026-11-20); F i G czekają (§6.1). Dotyczy `plan-praca-2026-11-15.md`, `plan-security-2026-11-15.md`, `plan-qol-platforma-2026-11-15.md`. Część druga (Długi, Ćwiczenia, Architektura, audyt): `plan-uzycia-fable-cz2-2026-11-17.md`.
 > **Zasada (decyzja właściciela):** Fable robi plan, diagnozę, projekt protokołu i trudny kod; testy, interfejs i prace mechaniczne robią Opus i Sonnet. Fable wchodzi tam, gdzie błąd kosztuje dane albo poufność i gdzie nie wykryje go zwykły test: protokół synchronizacji, kryptografia, współbieżność (karty, Yjs, service worker), odtwarzanie danych, decyzje zmieniające ADR.
 > **Stan sprawdzony w kodzie 2026-11-17:** z planu bezpieczeństwa nic nie jest zrobione (brak `docs/model-zagrozen.md`, `SECURITY.md`, `deploy/`, `src/lib/net/`, Trusted Types, COOP, `USER` w `signaling-server/Dockerfile`; audyt npm tylko dla serwerów). Z QoL zrobione Q1.1, Q1.2, Q1.5; brak OPFS, `scheduler.yield`, `protocol_handlers`. Z Pracy jest tylko `src/lib/study/receivables.ts` (R3.1 bez ekranu). Epoka pokoju przekaźnika (Z-5.5) jest w drzewie roboczym, niezacommitowana.
 > Numery zleceń kontynuują `zlecenia-fable-2026-11-15.md`: zadanie 15 — bezpieczeństwo, 16 — QoL, 14 — Praca (uzupełnienie).
@@ -132,7 +132,7 @@ Kolejność: 0 → A → B → C → D → E → (F) → G. Sesje A–D nie zale
 | A | zrobiona (dokument) | `plan-wymiana-kodu.md` — zlecenia Z-15.1–Z-15.4; nowa decyzja **D-W1**: nowy kod domyślnie długi (28 znaków) |
 | B | zrobiona (dokument) | `plan-wiadomosci-i-cofniecia.md` — zlecenia Z-15.5, Z-15.6; ustalenia U-1 (możliwy limit 256 KB wiadomości kanału danych — najpierw pomiar) i U-2 (transport obrazów) |
 | C | zrobiona (dokument) | `plan-dane-lokalne.md` — zlecenia Z-16.1 (części A i B), Z-16.2, Z-14.5 (po pomiarze); nowe wymaganie: opcja „Zastąp dane na tym urządzeniu danymi grupy” przy dołączaniu |
-| D | zrobiona poza podpięciem | `rekey.ts`, `rekeyRelay.ts`, `RelayProvider.settle()`/`canSend`, testy sprawdzające; podpięcie w `yjsSync.ts` (lista w `plan-wymiana-kodu.md`, „Sesja D”) czeka na Z-15.1 i Z-15.2 (Opus) |
+| D | zrobiona ✅ (podpięcie `89ae0a28` 2026-11-17) | `rekey.ts`, `rekeyRelay.ts`, `RelayProvider.settle()`/`canSend`, testy sprawdzające; podpięcie w `yjsSync.ts` (lista w `plan-wymiana-kodu.md`, „Sesja D”) czeka na Z-15.1 i Z-15.2 (Opus) |
 | E | specyfikacja zrobiona | `docs/plan-powiadomienia.md`: format S3.1 i zlecenie Z-15.7, luki R4.5 i zlecenie Z-14.6 (to czeka na próbę F1.0). Zostaje przegląd diffu Z-15.7 po pracy Opusa |
 | F | czeka | na SE-1 |
 | G | czeka | na kod z sesji C i D |

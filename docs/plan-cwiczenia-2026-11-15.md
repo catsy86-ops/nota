@@ -1,6 +1,6 @@
 # Plan: Ćwiczenia — ulepszenie, dopracowanie, rozwój (2026-11-15)
 
-> **Status:** zapisany, realizacja nie zaczęta. Poprzedni plan (`plan-cwiczenia-2026-10-25.md`) został zrobiony 12.11 (1.2, 2.1–2.7, 3.4, 4.x). Linie „Status” w tamtym pliku są starsze niż kod — przed każdym punktem sprawdź stan w `src/`.
+> **Status:** realizacja w toku (2026-11-20): C1.4 zrobione. Poprzedni plan (`plan-cwiczenia-2026-10-25.md`) został zrobiony 12.11 (1.2, 2.1–2.7, 3.4, 4.x). Linie „Status” w tamtym pliku są starsze niż kod — przed każdym punktem sprawdź stan w `src/`.
 
 ## 1. Diagnoza
 
@@ -43,7 +43,7 @@ Znane ograniczenie z `opis.md`: odhaczenie odżywki w Ćwiczeniach i „Gotowe�
 | C1.1 | **Przegląd wizualny** elementów z 12.11 na 390 px, jasny i ciemny, 2–3 style; zrzuty przez `playwright.visual.config.ts`. Poprawki od razu. | S |
 | C1.2 | **Podział `TrainingSection.tsx`**: `LogForm`, `RestTimer`, `ProgressList`, `PlanForm`, `EquipmentForm` w osobnych plikach. Bez zmian zachowania. | M |
 | C1.3 | **Ekran nie gaśnie w sesji** — `useWakeLock` na czas trwania `TrainingSession`. | S |
-| C1.4 | **Odhaczenie = „Gotowe”.** Odhaczenie odżywki przesuwa serię jej notatki-przypomnienia, a „Gotowe” w powiadomieniu odhacza odżywkę (po `reminderNoteId`). Jedna funkcja w `src/lib/supplements/`, wołana z obu stron. | M |
+| C1.4 ✅ `d2051d4c` 2026-11-18 | **Odhaczenie = „Gotowe”.** Odhaczenie odżywki przesuwa serię jej notatki-przypomnienia, a „Gotowe” w powiadomieniu odhacza odżywkę (po `reminderNoteId`). Jedna funkcja w `src/lib/supplements/`, wołana z obu stron. | M |
 | C1.5 | **Akceptacja katalogu** (C-4): właściciel czyta wskazówki 33 ćwiczeń; poprawki treści. | S, właściciel |
 
 ## Etap 2: trening, który prowadzi

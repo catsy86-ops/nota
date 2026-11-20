@@ -472,3 +472,5 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 **Plany użycia Fable (Z-15, Z-16, Z-17, sesje):** Z-15.0, Z-15.9, Z-15.10, Z-16.4, Z-16.5, Z-17.9; dokończyć Z-15.6 i Z-17.4 (L3.1 po DL-2); sesja G i G+ (przeglądy diffów, część gotowa); po F1.0: Z-14.6, dodatek C2.6; po pomiarze: Z-14.5; po SE-1: sesja F; Z-16.3 po QL-2; przegląd A5.4 po szkicu.
 
 **Do poprawy w dokumentach:** nieaktualne nagłówki i znaczniki stanu wymienione w „Rozbieżnościach” na górze.
+
+2026-11-20: statusy w planach poprawione (`plany-2026-11-15.md`, `plan-fable-2026-11-15.md`, `plan-qol-platforma-2026-11-15.md`, `plan-praca-2026-11-15.md`, `plan-dlugi-2026-11-15.md`, `plan-cwiczenia-2026-11-15.md`, `plan-security-2026-11-15.md`, `plan-uzycia-fable-2026-11-17.md`, `plan-wiadomosci-i-cofniecia.md`, `audyt-2-2026-11-17.md`, `plan-zgodnosc-i-obieg.md`, `audyt-fable-2026-11-15.md`). Bez zmian: `zlecenia-fable` Z-5.6 (serwer nadal zwraca 413).
