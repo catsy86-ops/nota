@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { StatusPanel } from "@/components/StatusPanel";
 import { Stat } from "@/components/ui/stat";
+import { Sparkline } from "@/components/ui/mini-charts";
 import { ArrowDownLeft, ArrowUpRight, Check, ChevronDown, Combine, Download, Eye, EyeOff, HandCoins, Pencil, Plus, Search, Send, Trash2, TriangleAlert, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -544,6 +545,11 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
         <SheetDescription>
           {person.balance === 0 ? "Rozliczone." : person.balance > 0 ? `Do oddania: ${amountText(person.balance, hidden)}` : `Jesteś winien: ${amountText(-person.balance, hidden)}`}
         </SheetDescription>
+        {/* W5.3: przebieg salda od pierwszego wpisu; przy ukrytych kwotach nie, bo kształt zdradza wielkości. */}
+        {!hidden && running.length >= 3 && (
+          <Sparkline values={[...running].reverse()}
+            className={cn("mt-1 h-7 w-full max-w-60", person.balance > 0 ? "text-success-ink" : person.balance < 0 ? "text-warning-ink" : "text-muted-foreground")} />
+        )}
       </SheetHeader>
       <PersonTools person={person} others={others} onRekey={onRekey} />
       <DebtPlans person={person} hidden={hidden} />

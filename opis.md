@@ -6792,6 +6792,40 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — małe wykresy w kartach (W5.3, 2026-11-20)
+
+### Co robi
+
+- **Dziś, karta zmiany:** wiersz „Ten tydzień: 44 h” z paskiem siedmiu słupków pon–nd. Dzisiejszy słupek jest w akcencie, dzień bez pracy to kreska przy podstawie. Wiersza nie ma, gdy w tym tygodniu nie ma pracy w Grafiku. Suma obejmuje też dni zaplanowane do końca tygodnia.
+- **Dziś, podgląd notatki dnia:** mały pierścień przed „Odhaczone: 2 z 5”.
+- **Długi, karta osoby:** iskra salda — przebieg salda od pierwszego wpisu do dziś, w kolorze strony (zielony: winni nam, bursztyn: my winni, szary: rozliczone). Pokazuje się od trzech wpisów i nie przy ukrytych kwotach.
+- **Praca, statystyki:** pierścienie kafelków są teraz tym samym komponentem.
+
+### Gdzie jest
+
+- `src/components/ui/mini-charts.tsx`: `Sparkline` (`values` od najstarszej), `WeekBars` (`values` pon–nd, `today` 0–6), `ProgressRing` (`value` 0–1, `strokeWidth`).
+- `src/lib/shifts/yearCharts.ts`: `weekDayMinutes(data, day)` i wspólny `workMinutes` (używa go też `yearDayMinutes`).
+- Użycia: `src/components/review/TodayShiftCard.tsx` (`today-week`), `src/components/debts/DebtsView.tsx` (`PersonHistory`), `src/components/study/StudyStats.tsx` (`Tile`).
+
+### Jak działa
+
+- Same SVG i `div`, bez recharts — nie dokładają nic do paczki wejściowej; wszystkie są `aria-hidden`, bo liczbę mówi tekst obok.
+- `Sparkline` ma zero zawsze w skali (przy saldzie liczy się odległość od rozliczenia); przerywana linia zera tylko wtedy, gdy przebieg przechodzi przez zero. Skaluje się bez zachowania proporcji (`preserveAspectRatio="none"`, `vector-effect: non-scaling-stroke`), więc kropka końca to odcinek zerowej długości z okrągłym końcem — koło by się rozciągnęło.
+- `weekDayMinutes` liczy tydzień od poniedziałku przez `Date` lokalne, więc działa przez przełom roku; urlop i L4 to 0.
+
+### Ograniczenia i pułapki
+
+- Iskra przy ukrytych kwotach jest schowana, bo kształt zdradza proporcje kwot.
+- Podpisy dni w `WeekBars` to `text-2xs` — strażnik `pxText` nie pozwala na mniejsze px.
+
+### Testy
+
+- `src/lib/shifts/yearCharts.test.ts` (tydzień przez przełom roku, urlop = 0). e2e: `daily-note`, `debts-*`, `dzis-phone`, `inbox-today`, `stats-practice`, `study`, `today-cards-settings`, `today-study` — 59 przeszło, 2 pominięte. Zrzuty Dziś (jasny, ciemny) i karty osoby w Długach — tymczasowym specem.
+
+### Commit
+
+W5.3 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — oprawa wykresu `ChartFrame` (W5.1, W5.2, 2026-11-20)
 
 ### Co robi

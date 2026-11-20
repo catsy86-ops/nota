@@ -35,3 +35,7 @@ Rozmiary pigułek: `size="chip"` (w linii tekstu: 12 px tekstu, 14 px ikona, 44 
 ## Wykres: `ChartFrame` (W5.1)
 
 Każdy wykres stoi w `ChartFrame` (`ui/chart-frame.tsx`): `title`, `value` (suma, `num-lg`), `range`, `series` (podpis + kolor + kształt `bar`/`hatch`/`line`/`dash`), `plotClassName` (wysokość), `table` (zwinięta tabela „Pokaż dane”, wtedy wykres jest `aria-hidden`). Recharts tylko w `children`; dymek i podpisy osi z `ui/chart-style.ts`. Druga seria w tym samym kolorze rodziny dostaje inny kształt (`HatchPattern` w `<defs>`), nie tylko inną barwę.
+
+## Małe wykresy (W5.3)
+
+`ui/mini-charts.tsx`: `Sparkline` (przebieg, kolor z `currentColor`), `WeekBars` (pon–nd, dziś w akcencie), `ProgressRing` (0–1). Bez recharts, zawsze `aria-hidden` — wartość podaje tekst obok. Nowy pierścień postępu nie rysuje własnego SVG, tylko bierze `ProgressRing`.

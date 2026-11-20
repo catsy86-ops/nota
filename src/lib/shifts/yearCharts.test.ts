@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, type ShiftData } from "./model";
-import { yearChartRows, yearDayMinutes } from "./yearCharts";
+import { weekDayMinutes, yearChartRows, yearDayMinutes } from "./yearCharts";
 
 const eight = DEFAULT_SHIFT_TYPES.find((t) => t.id === "e")!; // 8–16
 const leave = DEFAULT_SHIFT_TYPES.find((t) => t.id === "u")!;
@@ -20,5 +20,11 @@ describe("wykresy roku (G4.3)", () => {
     expect(map.get("2026-10-05")).toBe(8 * 60);
     expect(map.has("2026-10-06")).toBe(false);
     expect(map.has("2025-10-05")).toBe(false);
+  });
+
+  it("tydzień (W5.3): pon–nd wokół dnia, także przez przełom roku; urlop = 0", () => {
+    const d = data({ "2025-12-29": { type: "e" }, "2026-01-01": { type: "u" }, "2026-01-04": { type: "e" } });
+    expect(weekDayMinutes(d, new Date(2026, 0, 1))).toEqual([480, 0, 0, 0, 0, 0, 480]);
+    expect(weekDayMinutes(d, new Date(2026, 0, 4))).toEqual([480, 0, 0, 0, 0, 0, 480]);
   });
 });

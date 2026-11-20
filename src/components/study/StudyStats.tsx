@@ -15,6 +15,7 @@ import { downloadBlob } from "@/lib/downloadBlob";
 import { useJobs } from "@/lib/study/jobsStore";
 import { entrySiteId } from "@/lib/study/sites";
 import { cardVariant } from "@/components/ui/card";
+import { ProgressRing } from "@/components/ui/mini-charts";
 
 const topicName = (id: string) => topicTitle(id) ?? id;
 const WEEKDAYS = ["pn", "wt", "śr", "cz", "pt", "sb", "nd"];
@@ -254,19 +255,12 @@ const STREAK_GOAL = 7;
  * `aria-hidden`; wartość i opis czyta tekst kafelka.
  */
 function Tile({ label, value, hint, ring }: { label: string; value: string; hint: string; ring?: number }) {
-  const r = 14;
-  const c = 2 * Math.PI * r;
   return (
     <div className={cn(cardVariant(), "px-3 py-2.5")}>
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 flex items-center justify-between gap-2">
         <span className="num-lg">{value}</span>
-        {ring !== undefined && (
-          <svg viewBox="0 0 36 36" className="size-9 shrink-0 -rotate-90" aria-hidden>
-            <circle cx="18" cy="18" r={r} fill="none" stroke="var(--muted)" strokeWidth="4" />
-            <circle cx="18" cy="18" r={r} fill="none" stroke="var(--primary)" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${c * ring} ${c}`} />
-          </svg>
-        )}
+        {ring !== undefined && <ProgressRing value={ring} />}
       </dd>
       <dd className="text-2xs text-muted-foreground">{hint}</dd>
     </div>

@@ -14,6 +14,8 @@ import { format, formatDistanceStrict } from "date-fns";
 import { pl } from "date-fns/locale";
 import { CardSkeleton } from "@/components/ViewSkeleton";
 import { cardVariant } from "@/components/ui/card";
+import { ProgressRing, WeekBars } from "@/components/ui/mini-charts";
+import { weekDayMinutes } from "@/lib/shifts/yearCharts";
 
 /**
  * Pierwsza rzecz w widoku „Dziś”: dzisiejsza zmiana z Grafiku (albo „wolne”), obok skrótów
@@ -59,6 +61,9 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
     : next ? `Zaczynasz za ${formatDistanceStrict(next.start, now, { locale: pl })}, o ${format(next.start, "HH:mm")}`
     : null;
   const finishable = current ?? ended;
+  // W5.3: pasek tygodnia pon–nd; bez pracy w tym tygodniu go nie ma.
+  const week = ready ? weekDayMinutes(data, today) : [];
+  const weekMinutes = week.reduce((a, b) => a + b, 0);
 
   // Dziś 1.3: zanim Grafik się wczyta — ten sam szkielet co przy leniwym ładowaniu karty, zamiast napisu.
   if (!ready) return <div aria-busy="true" aria-label="Wczytuję grafik"><CardSkeleton /></div>;
@@ -118,12 +123,18 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
           <div className="h-full rounded-full bg-primary transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${progress * 100}%`, ...(current?.type?.color ? { backgroundColor: current.type.color } : {}) }} data-testid="today-progress" />
         </div>
       )}
+      {weekMinutes > 0 && (
+        <div className="mt-3 flex items-end justify-between gap-3" data-testid="today-week">
+          <p className="ui-meta">Ten tydzień: <span className="font-semibold text-foreground">{String(Math.round(weekMinutes / 6) / 10).replace(".", ",")} h</span></p>
+          <WeekBars values={week} today={(today.getDay() + 6) % 7} />
+        </div>
+      )}
       {dailyNote && (() => {
         const p = dailyPreview(dailyNote);
         return (
           <div className="mt-3 rounded-field bg-muted/40 px-3 py-2 text-sm" data-testid="today-daily-preview">
             {dailyNote.locked ? <p className="text-muted-foreground">Notatka dnia jest w skarbcu.</p> : p.lines.length > 0 ? p.lines.map((l, i) => <p key={i} className="truncate">{l}</p>) : <p className="text-muted-foreground">Notatka dnia jest pusta.</p>}
-            {p.total > 0 && <p className="ui-meta mt-1">Odhaczone: {p.done} z {p.total}</p>}
+            {p.total > 0 && <p className="ui-meta mt-1 flex items-center gap-1.5"><ProgressRing value={p.done / p.total} className="size-4" strokeWidth={6} />Odhaczone: {p.done} z {p.total}</p>}
           </div>
         );
       })()}
