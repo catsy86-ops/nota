@@ -135,6 +135,17 @@ describe("W1.7 — kolory w CSS w OKLCH", () => {
   });
 });
 
+// W6.4: `!important` tylko tam, gdzie kolejność warstw nie wystarczy — ograniczony ruch (globalnie i w utility
+// z animacją), druk raportu, pauza w karcie w tle, tryb OLED (zdejmuje rozmycie z utility), toasty Sonnera
+// (jego styl wstrzykiwany po naszym) i płynna zmiana motywu (przebija `transition-*` komponentów). Opis: opis.md, W6.4.
+const IMPORTANT_MAX = 31;
+describe("W6.4 — !important w CSS", () => {
+  it(`co najwyżej ${IMPORTANT_MAX} poza komentarzami`, () => {
+    const n = cssFiles(SRC).reduce((sum, path) => sum + (readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").match(/!important/g)?.length ?? 0), 0);
+    expect(n).toBeLessThanOrEqual(IMPORTANT_MAX);
+  });
+});
+
 describe("tokeny projektowe — surowe klasy nie przybywają", () => {
   for (const [name, { pattern, max, token }] of Object.entries(LIMITS)) {
     it(`${name}: co najwyżej ${max} wystąpień (zamiast tego: ${token})`, () => {

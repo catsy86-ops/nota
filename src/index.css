@@ -233,17 +233,12 @@ details.disclosure[open] > summary::before { transform: rotate(45deg); }
 }
 
 @utility sidebar-gradient {
-  /* Pasek boczny to margines zeszytu: gładki papier, czerwona linia na prawej krawędzi. */
+  /* Pasek boczny to margines zeszytu: gładki papier, czerwona linia na prawej krawędzi.
+     W6.4: bez `!important` — kolor krawędzi ustawia tylko ta klasa (element nie ma już `border-border/50`). */
   background-color: var(--background);
-  border-right-color: color-mix(in srgb, var(--margin) 80%, transparent) !important;
+  border-right-color: color-mix(in srgb, var(--margin) 80%, transparent);
   .dark & {
-    border-right-color: color-mix(in srgb, var(--margin) 45%, transparent) !important;
-  }
-}
-
-@utility dark {
-  & .sidebar-gradient {
-    border-right-color: color-mix(in srgb, var(--margin) 45%, transparent) !important;
+    border-right-color: color-mix(in srgb, var(--margin) 45%, transparent);
   }
 }
 

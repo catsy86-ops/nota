@@ -6792,6 +6792,40 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — `!important` tylko tam, gdzie musi (W6.4, 2026-11-20)
+
+### Co robi
+
+- Bez widocznej zmiany: obwódka paska bocznego (czerwona linia marginesu zeszytu) ma ten sam kolor co wcześniej, ale bez `!important`.
+
+### Gdzie jest
+
+- `src/index.css`: `@utility sidebar-gradient` bez `!important`; usunięta zdublowana `@utility dark` z tą samą regułą (wystarcza `.dark &` w środku `sidebar-gradient`).
+- `src/components/AppSidebar.tsx`: z paska zdjęte `border-border/50` — to ono konkurowało z kolorem krawędzi i wymuszało `!important`.
+- `src/styles/skins/tablica.css`: przezroczysta krawędź przy aluminiowej ramie bez `!important` (reguła stylu jest poza warstwami Tailwinda, więc i tak wygrywa).
+- `src/test/designTokens.test.ts`: strażnik `IMPORTANT_MAX` (31, poza komentarzami).
+
+### Jak działa — co zostaje i dlaczego
+
+- **Ograniczony ruch** (`prefers-reduced-motion`, `html[data-motion="reduced"]`): globalne skrócenie animacji i przejść oraz wyłączenia w utility `theme-transition`, `hover-scale`, w ramce kafla (`.note-frame`) i w `motion.css`. Muszą przebić `animation`/`transition` ustawione w utility i w stylu elementu.
+- **Płynna zmiana motywu** (`theme-transition`): na chwilę przebija `transition-*` komponentów, inaczej część elementów zmieniałaby kolor skokiem.
+- **Druk raportu** (`html.printing-report`): chowa wszystko poza raportem i czyści tło — druk ma pierwszeństwo przed każdą klasą.
+- **Karta w tle** (`html[data-hidden]`): pauza wszystkich animacji.
+- **Tryb OLED** (`preferences.css`): zdejmuje `backdrop-filter` ustawione utility `backdrop-blur-*`.
+- **Toasty Sonnera**: położenie nad dolnym paskiem i pod paskiem stanu. Sonner wstrzykuje własny arkusz po naszym, z tą samą specyficznością.
+
+### Ograniczenia i pułapki
+
+- Kolor krawędzi paska bocznego ustawia teraz tylko `sidebar-gradient`. Dodanie do paska klasy koloru obramowania (`border-border…`) zmieni krawędź na kolor tej klasy, zależnie od kolejności w wygenerowanym CSS.
+
+### Testy
+
+- Strażnik `IMPORTANT_MAX`; kolor krawędzi sprawdzony w przeglądarce (Zeszyt jasny 80% `--margin`, ciemny 45%, Plan ciemny 45%, Tablica przezroczysta); e2e `a11y` (pasek boczny, Tablica) — 24 przeszło.
+
+### Commit
+
+W6.4 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — szkielety w kształcie kart (W5.5, 2026-11-20)
 
 ### Co robi

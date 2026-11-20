@@ -121,7 +121,7 @@ html[data-skin="tablica"] .paper-grid::after { content: none; }
 
 /* Aluminiowa rama przy pasku bocznym. */
 html[data-skin="tablica"] .sidebar-gradient {
-  border-right-color: transparent !important;
+  border-right-color: transparent;
   box-shadow: inset -6px 0 0 -1px oklch(0.7629 0.0083 247.94), inset -3px 0 0 -1px oklch(0.9222 0.0044 247.87);
 }
 
