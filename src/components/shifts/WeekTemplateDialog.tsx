@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Trash } from "lucide-react";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -64,7 +66,7 @@ export function WeekTemplateDialog({ open, onOpenChange, types, templates, weekS
                 return (
                   <li key={p.id} className="flex items-center gap-1">
                     <button type="button" onClick={() => apply(p.steps)} aria-label={`Nałóż szablon ${p.name} na ${target.label}`}
-                      className="pressable flex-1 min-w-0 text-left px-3 py-2 rounded-card border border-border/60 bg-card/50 hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                      className={cn(cardVariant("interactive"), "flex-1 min-w-0 text-left px-3 py-2")}>
                       <span className="block font-medium truncate">{p.name}</span>
                       <span className="mt-1 flex gap-1" aria-hidden>
                         {p.steps.map((s, i) => {

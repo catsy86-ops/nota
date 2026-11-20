@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 import { format, formatDistanceStrict, isToday, isTomorrow } from "date-fns";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
@@ -16,7 +18,7 @@ function when(occ: ShiftOccurrence): string {
 /** Zakończona przed chwilą zmiana: „Skończyłem teraz” zapisze nadgodziny jednym stuknięciem. */
 function EndedCard({ occ }: { occ: ShiftOccurrence }) {
   return (
-    <section aria-label="Zakończona zmiana" className="relative overflow-hidden rounded-card border border-border/60 bg-card p-4 flex items-center gap-4">
+    <section aria-label="Zakończona zmiana" className={cn(cardVariant(), "relative overflow-hidden p-4 flex items-center gap-4")}>
       <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: occ.type.color }} />
       <div className="min-w-0 flex-1">
         <p className="ui-hint font-semibold">Zmiana się skończyła</p>
@@ -50,7 +52,7 @@ export function NowCard({ data }: { data: ShiftData }) {
   const progress = current ? (now.getTime() - current.start.getTime()) / (current.end.getTime() - current.start.getTime()) : 0;
 
   return (
-    <section aria-label="Bieżąca zmiana" className="relative overflow-hidden rounded-card border border-border/60 bg-card p-4 flex items-center gap-4">
+    <section aria-label="Bieżąca zmiana" className={cn(cardVariant(), "relative overflow-hidden p-4 flex items-center gap-4")}>
       <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: main.type.color }} />
       <span className="size-12 shrink-0 rounded-card flex items-center justify-center font-display font-bold text-lg" style={{ backgroundColor: main.type.color, color: shiftInk(main.type.color) }}>
         {main.type.short}

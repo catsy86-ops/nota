@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Plus, Pencil, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -102,7 +104,7 @@ export function ScheduleSwitcher({ overlayId = null, onOverlayChange }: { overla
         </form>
       )}
       {mode === "delete" && (
-        <div role="alertdialog" aria-label="Usuwanie grafiku" className="flex w-full flex-wrap items-center gap-2 rounded-card border border-destructive/40 p-3 text-sm">
+        <div role="alertdialog" aria-label="Usuwanie grafiku" className={cn(cardVariant("status", "danger"), "flex w-full flex-wrap items-center gap-2 p-3 text-sm")}>
           <span>Usunąć grafik „{active.name}” razem z jego zmianami, cyklami i premiami? Tego nie cofniemy.</span>
           <Button type="button" variant="destructive" size="sm" className="coarse:h-11" onClick={confirmDelete}>Usuń grafik</Button>
           <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={close}>Anuluj</Button>

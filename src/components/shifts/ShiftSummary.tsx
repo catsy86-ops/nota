@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { lazy, Suspense, useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { SectionCard } from "@/components/ui/section-card";
 import { Stat as UiStat } from "@/components/ui/stat";
@@ -238,7 +239,7 @@ function PhoneFold({ label, summary, children }: { label: string; summary?: stri
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="pressable flex w-full items-center justify-between gap-3 rounded-card border border-border/60 bg-muted/40 px-3 py-2 text-left text-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+        className={cn(cardVariant("inset"), "pressable flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring")}
       >
         <span className="font-medium">{label}</span>
         <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
@@ -451,7 +452,7 @@ function PaySlipPanel({ monthKey, estimate, paid, facts }: { monthKey: string; e
     : Math.abs(cmp.diff) <= PAYSLIP_TOLERANCE ? "Zgadza się z szacunkiem (różnica poniżej 1 zł)."
     : `Wypłacono ${cmp.diff > 0 ? "więcej" : "mniej"} o ${formatMoney(Math.abs(cmp.diff))} niż szacunek (${cmp.percent > 0 ? "+" : ""}${cmp.percent.toLocaleString("pl-PL")} %).`;
   return (
-    <section aria-label="Pasek wypłaty" className="mt-4 rounded-card border border-border/60 bg-card p-4">
+    <section aria-label="Pasek wypłaty" className={cn(cardVariant("inset"), "mt-4 p-4")}>
       <h3 className="section-caps">Pasek wypłaty</h3>
       <label className="mt-2 flex flex-col gap-1 text-sm">
         Wypłacono brutto (zł)

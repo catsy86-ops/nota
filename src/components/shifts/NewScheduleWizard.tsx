@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -104,7 +105,7 @@ export function NewScheduleWizard({ open, onOpenChange }: { open: boolean; onOpe
             {(Object.keys(FIRST_CYCLES) as FirstCycle[]).map((key) => {
               const disabled = key !== "none" && !cycleAvailable;
               return (
-                <label key={key} className={cn("flex items-start gap-2.5 rounded-card border border-border/60 p-3 text-sm", disabled && "opacity-50")}>
+                <label key={key} className={cn(cardVariant("inset"), "flex items-start gap-2.5 p-3 text-sm", disabled && "opacity-50")}>
                   <input type="radio" name="first-cycle" value={key} checked={effectiveCycle === key} disabled={disabled}
                     onChange={() => setCycle(key)} className="mt-1 accent-primary" />
                   <span>{FIRST_CYCLES[key].label}{disabled && <span className="block text-xs text-muted-foreground">Najpierw dodaj startowe rodzaje.</span>}</span>

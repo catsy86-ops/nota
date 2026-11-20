@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { useMemo, useState } from "react";
 import { pluralPl } from "@/lib/plural";
 import { format } from "date-fns";
@@ -132,7 +133,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply, ove
               {patterns.map((p) => (
                 <li key={p.id} className="flex items-center gap-1">
                   <button type="button" onClick={() => loadPattern(p)}
-                    className="pressable flex-1 min-w-0 text-left px-3 py-2 rounded-card border border-border/60 bg-card/50 hover:bg-muted text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                    className={cn(cardVariant("interactive"), "flex-1 min-w-0 text-left px-3 py-2 text-sm")}>
                     <span className="block font-medium truncate">{p.name}</span>
                     <span className="block text-2xs text-muted-foreground font-mono truncate">
                       {p.steps.map((s) => (s ? typesById.get(s)?.short ?? "?" : "–")).join(" ")}
@@ -212,7 +213,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply, ove
         )}
 
         {valid && (
-          <div className="space-y-2 rounded-card border border-border/60 p-3">
+          <div className={cn(cardVariant("inset"), "space-y-2 p-3")}>
             <p className="text-sm" aria-live="polite">{overlapSummary(overlap, skipProtected)}</p>
             <label className="flex items-center gap-2 text-sm coarse:min-h-11">
               <Checkbox checked={skipProtected} onCheckedChange={(v) => setSkipProtected(v === true)} />

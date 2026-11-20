@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Lightbulb, X } from "lucide-react";
 import { markGuideSeen, shouldAutoShow } from "@/lib/guides";
@@ -9,7 +11,7 @@ export function ShiftsHint() {
   if (!show) return null;
   const close = () => { markGuideSeen("shifts-hint"); setShow(false); };
   return (
-    <aside aria-label="Podpowiedź: Grafik" data-testid="shifts-hint" className="flex items-start gap-3 rounded-card border border-primary/40 bg-primary/10 p-3 text-sm">
+    <aside aria-label="Podpowiedź: Grafik" data-testid="shifts-hint" className={cn(cardVariant("status", "info"), "flex items-start gap-3 bg-primary/10 p-3 text-sm")}>
       <Lightbulb className="mt-0.5 size-4 shrink-0 text-primary-ink" aria-hidden />
       <p className="min-w-0 flex-1 leading-relaxed">
         <span className="font-semibold">Pierwszy raz w Grafiku?</span> Wybierz zmianę na palecie, potem {TAP.toLowerCase()} dni w kalendarzu,

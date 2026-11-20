@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { ShiftsIcsImport } from "./ShiftsIcsImport";
 import { format } from "date-fns";
@@ -82,7 +83,7 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
           </Field>
           <EveningNudgeField />
           {/* Pora nocna i doba niedzieli zwykle zostają ustawowe — zmienia się je tylko, gdy regulamin pracy mówi inaczej. */}
-          <details open={s.nightFrom !== 22 || s.sundayFrom !== 6 || undefined} className="group rounded-card border border-border/60 px-3 py-2.5">
+          <details open={s.nightFrom !== 22 || s.sundayFrom !== 6 || undefined} className={cn(cardVariant("inset"), "group px-3 py-2.5")}>
             <summary className="cursor-pointer text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-control">
               Opcjonalne <span className="font-normal text-muted-foreground">— pora nocna, niedziela i święto</span>
             </summary>

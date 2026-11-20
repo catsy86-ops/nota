@@ -6787,7 +6787,7 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
-## Wygląd — karty na odmianach: Długi, Praca, Ustawienia (W3.2, 2026-11-19)
+## Wygląd — karty na odmianach: Długi, Praca, Ustawienia, Grafik (W3.2, 2026-11-19/20)
 
 ### Co robi
 
@@ -6803,7 +6803,8 @@ W1.8 — commit po tym wpisie (2026-11-19).
 - `src/components/debts/DebtPlans.tsx` — rata (`inset`).
 - Praca (`src/components/study/**`, 36 plików, 57 kart). Panele budowy, quiz, statystyki, sekcje arkusza wpisu i zestawy dostały `plain` (`cardVariant()`). Ramki ostrzeżenia i sukcesu (kamera, skaner, NFC, poziomica, AI, przypomnienia, etap wpisu) dostały `status` z tonem i zachowanym tłem `bg-*/5|10`. Ramki akcentu (zlecenie własne, próba ciśnienia, zdjęcia, „na dziś” w quizie) to `status` (`info`). Odczyt licznika i poziomicy oraz „Plan na dziś” to `inset`. Karta przejścia wpisu (`EntryCheck`) to `raised`. Kafle i karta budowy w `SiteHome.tsx` to `interactive`, a nieaktywny kafel ma `text-faint` zamiast `opacity-60`.
 - Ustawienia i synchronizacja (`src/components/settings/**`, `SyncSettings.tsx`, `src/components/sync/**`, 19 plików, 39 miejsc). Grupy `border-border/60 bg-muted/20|30` stoją na powierzchni okna Ustawień, więc są `inset`: wyciszone tło bez ramki, tak jak wpisy w arkuszu osoby w Długach. Dotyczy to też przycisków-wierszy (`QuickPresets`, `CustomThemeControl`, kroje w `FontPicker`). Ostrzeżenia synchronizacji (nowy kod, starsze urządzenie, wstrzymane P2P, zmiana klucza, przekaźnik, format dokumentu) są `status` z tonem `warning`.
-- `src/test/designTokens.test.ts` — strażnik „W3.2”: ręczne `rounded-card … border` i goły `cardClass` poza `components/ui/`, próg 96 (po Długach, Pracy i Ustawieniach). Nie liczy ramek przerywanych (miejsce na „dodaj”, pusty stan) ani ramek podglądu kamery i obrazu (`object-cover|contain`), bo to nie są karty. Maleje z kolejnymi działami.
+- Grafik (`src/components/shifts/**`, `guide/ShiftsHint.tsx`, 9 plików, 12 miejsc). Karta bieżącej i zakończonej zmiany (`NowCard`) to `plain` z paskiem koloru zmiany. Grupy w oknach i kartach (własne godziny pędzla, wybór pierwszego cyklu w kreatorze, podsumowanie nałożenia w „Cyklu”, „Opcjonalne” w ustawieniach, przycisk składanej sekcji i pasek wypłaty w „Miesiącu w liczbach”) to `inset`. Zapisane cykle i szablony tygodnia to `interactive`. Potwierdzenie usunięcia grafiku to `status` (`danger`), podpowiedź „Pierwszy raz w Grafiku?” to `status` (`info`) z tłem `bg-primary/10`.
+- `src/test/designTokens.test.ts` — strażnik „W3.2”: ręczne `rounded-card … border` i goły `cardClass` poza `components/ui/`, próg 84 (po Długach, Pracy, Ustawieniach i Grafiku). Nie liczy ramek przerywanych (miejsce na „dodaj”, pusty stan) ani ramek podglądu kamery i obrazu (`object-cover|contain`), bo to nie są karty. Maleje z kolejnymi działami.
 
 ### Jak działa
 
@@ -6815,6 +6816,7 @@ W1.8 — commit po tym wpisie (2026-11-19).
 - Plan Długów zakładał podział `DebtsView.tsx` (L1.1) przed W3.2. Karty są przeniesione w obecnym pliku, a podział nadal czeka.
 - Hover osoby ma obrys `foreground/25` z odmiany, a nie `primary/50` jak wcześniej.
 - W Pracy zostały nieprzeniesione: przełączniki wyboru z obrysem (`QuizPanel` odpowiedzi, `FittingsFields`, `SiteCardDialog` wysyłka), papier raportu (`ReportPaper`), pole podpisu i podgląd podpisu (`bg-white`), pasek stanu budowy (`SiteTallyBar`, `xl:` w `StudyJournal`), karta tematu w `StudyBoard`. To kontrolki albo papier, nie karty.
+- W Grafiku zostały nieprzeniesione przyciski i kontrolki: pędzle i gumka w `BrushBar`, wybór w `DayDialog`, przyciski drugorzędne w `EmptyShifts`, `NoShiftTypes`, `NowCard` („Skończyłem teraz”) i `ShiftSummary` („Rok”), lista wyboru grafiku w `ScheduleSwitcher`. Przejdą na `Button` z W4.5. `TodayShiftCard` (Dziś) przejdzie z działem Dziś.
 - Ramki stanu mają teraz lewą krawędź 4 px zamiast pełnego kolorowego obrysu.
 - W Ustawieniach zostały nieprzeniesione: `Segmented` (tor przełącznika), przyciski wyboru stylu, gęstości i kroju (`AppearanceSettings`), zaznaczenie w `FontPicker` i `SkinPicker` (`border-2`), podgląd poświaty (`GlowPicker`, `border-transparent`). To kontrolki, nie karty.
 - Pułapka skryptu migracji: import dopisany po „ostatniej linii `import`” trafia do środka wielowierszowego `import {`. Typecheck to łapie.
@@ -6824,6 +6826,7 @@ W1.8 — commit po tym wpisie (2026-11-19).
 
 - `src/components/debts/DebtsView.test.tsx` (22), e2e `debts-due`, `debts-plan`, `debts-rates` (13), `@visual dlugi` (6), strażnik.
 - Ustawienia: Vitest `settings`, `sync` i strażnik (34); pełne e2e (1235): 1203 przeszło, 12 porażek — wszystkie w Notatkach i Terminach i występują też na stanie sprzed sesji (77094141), więc nie wynikają z tej zmiany.
+- Grafik: strażnik, typecheck, e2e `shifts*`, `shift-end-action`, `calendar-shift-edit`, `guide*` (63 przeszło, 2 pominięte); zrzut 390 px z danymi przejrzany.
 - Praca: Vitest `src/components/study` i strażnik (123); e2e wszystkich 97 spec z `/praca`: 602 przeszło, jedna porażka to przekroczony czas ładowania Kalendarza w `a11y.spec.ts` przy obciążeniu (powtórzona osobno — przechodzi).
 
 ### Commit
