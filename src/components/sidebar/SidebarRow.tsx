@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { forwardRef } from "react";
 import { m as motion } from "framer-motion";
 import { useBump } from "@/hooks/useBump";
@@ -105,14 +106,14 @@ export function SidebarRowMenu({ label, children, onCloseAutoFocus }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button
           type="button"
           aria-label={`Akcje ${label}`}
           onClick={(e) => e.stopPropagation()}
-          className="pressable relative grid size-7 coarse:h-9 coarse:w-9 place-items-center rounded-control coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-foreground/10"
+          variant="ghost" size="icon-sm" className="relative size-7 coarse:h-9 coarse:w-9 coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] hover:bg-foreground/10 data-[state=open]:bg-foreground/10"
         >
           <Ellipsis className="size-4" />
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48" onCloseAutoFocus={onCloseAutoFocus}>
         {children}

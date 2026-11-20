@@ -84,13 +84,14 @@ export function PricingManager({ pricing, onUpdate }: PricingManagerProps) {
                 <div className="font-medium">{item.name}</div>
                 <div className="text-xs text-muted-foreground">{item.price} zł · {item.pointType}</div>
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={() => remove(item.id)}
-                className="text-muted-foreground hover:text-destructive"
+                aria-label={`Usuń z cennika: ${item.name}`}
+                variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-destructive-ink"
               >
                 <Trash2 className="size-4" aria-hidden />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
