@@ -3,6 +3,7 @@ import { itemClientPrice, itemClientTotal, QUOTE_KIND_LABEL, QUOTE_KINDS, quoteS
 import { effectiveValidUntil } from "./quoteDoc";
 import { PdfWriter, pdfFileName, type PdfColumn } from "./pdfWriter";
 import type { SiteSignature } from "./signature";
+import { PDF_TYPE } from "@/lib/pdfType";
 
 /**
  * H3.4 / plan wycen i klientów 3.4: wycena zlecenia własnego jako PDF dla klienta — numer, daty, dane klienta, tabela
@@ -61,17 +62,17 @@ export async function buildJobPdf(
 ): Promise<Blob> {
   const w = await PdfWriter.create();
   const doc = job.doc;
-  if (opts.company.trim()) w.line(opts.company.trim(), 9, "bold");
-  w.line("Wycena", 16, "bold");
-  if (doc?.number) w.line(`Nr ${doc.number}`, 12, "bold");
+  if (opts.company.trim()) w.line(opts.company.trim(), PDF_TYPE.table, "bold");
+  w.line("Wycena", PDF_TYPE.title, "bold");
+  if (doc?.number) w.line(`Nr ${doc.number}`, PDF_TYPE.subtitle, "bold");
   w.line(`Data wystawienia: ${dmyKey(doc?.issued ?? opts.today)}${effectiveValidUntil(doc) ? `   ·   Ważna do: ${dmyKey(effectiveValidUntil(doc)!)}` : ""}`);
-  w.line(card.name, 11, "bold");
+  w.line(card.name, PDF_TYPE.heading, "bold");
 
   const c = opts.client;
   const forName = c?.name || card.investor;
   if (forName) {
     w.heading("Dla");
-    w.line(forName, 10, "bold");
+    w.line(forName, PDF_TYPE.body, "bold");
     if (c?.address) w.line(c.address);
     if (c?.nip) w.line(`NIP: ${c.nip}`);
     const phone = c?.phone || card.phone;
@@ -81,12 +82,12 @@ export async function buildJobPdf(
 
   if (job.scope) {
     w.heading("Zakres prac");
-    w.line(job.scope, 10, "normal", 2);
+    w.line(job.scope, PDF_TYPE.body, "normal", 2);
   }
 
   w.heading("Pozycje");
   if (job.items.length === 0) {
-    w.line("Brak pozycji wyceny.", 10, "normal", 2);
+    w.line("Brak pozycji wyceny.", PDF_TYPE.body, "normal", 2);
   } else {
     const tag = doc?.vatMode === "net" ? " netto" : doc?.vatMode === "gross" ? " brutto" : "";
     const cols: PdfColumn[] = [
@@ -113,12 +114,12 @@ export async function buildJobPdf(
   w.gap(3);
   const { detail, total: grand } = summaryParts(job);
   for (const r of detail) w.keyValue(r.label, r.value);
-  w.keyValue(grand.label, grand.value, 13, "bold");
+  w.keyValue(grand.label, grand.value, PDF_TYPE.subtitle, "bold");
   for (const r of depositRows(job)) w.keyValue(r.label, r.value);
 
   if (doc?.notes) {
     w.heading("Uwagi i warunki");
-    for (const l of noteLines(doc.notes)) w.line(l, 10, "normal", 2);
+    for (const l of noteLines(doc.notes)) w.line(l, PDF_TYPE.body, "normal", 2);
   }
 
   // Podpis sprzed ostatniej zmiany wyceny nie trafia pod nową treść — zostaje puste pole do podpisu długopisem.
@@ -141,33 +142,33 @@ export async function buildJobDonePdf(
   opts: { company: string; today: string; signatureDataUrl?: string },
 ): Promise<Blob> {
   const w = await PdfWriter.create();
-  if (opts.company.trim()) w.line(opts.company.trim(), 9, "bold");
-  w.line("Potwierdzenie wykonania", 16, "bold");
-  if (job.doc?.number) w.line(`Dotyczy wyceny ${job.doc.number}`, 10);
-  w.line(card.name, 11, "bold");
+  if (opts.company.trim()) w.line(opts.company.trim(), PDF_TYPE.table, "bold");
+  w.line("Potwierdzenie wykonania", PDF_TYPE.title, "bold");
+  if (job.doc?.number) w.line(`Dotyczy wyceny ${job.doc.number}`, PDF_TYPE.body);
+  w.line(card.name, PDF_TYPE.heading, "bold");
   w.line(`Data: ${dmyKey(opts.today)}`);
   if (card.investor) w.line(`Klient: ${card.investor}`);
   if (card.address) w.line(`Adres: ${card.address}`);
   w.heading("Wykonane prace");
-  if (job.scope) w.line(job.scope, 10, "normal", 2);
+  if (job.scope) w.line(job.scope, PDF_TYPE.body, "normal", 2);
   for (const i of job.items) {
-    w.line(`${QUOTE_KIND_LABEL[i.kind]}: ${i.name}, ${qty(i.qty)} ${i.unit} = ${money(itemClientTotal(i, job.margin))}`, 10, "normal", 2);
+    w.line(`${QUOTE_KIND_LABEL[i.kind]}: ${i.name}, ${qty(i.qty)} ${i.unit} = ${money(itemClientTotal(i, job.margin))}`, PDF_TYPE.body, "normal", 2);
   }
-  if (!job.scope && job.items.length === 0) w.line("Zakres jak w zleceniu.", 10, "normal", 2);
+  if (!job.scope && job.items.length === 0) w.line("Zakres jak w zleceniu.", PDF_TYPE.body, "normal", 2);
   w.gap(4);
   const s = quoteSummary(job);
   const total = s.payable;
   if (total > 0) {
     // Rabat i VAT z wyceny, żeby kwota na potwierdzeniu zgadzała się z wyceną (bez ostatniego wiersza — ten jest niżej).
     for (const r of summaryParts(job).detail) w.keyValue(r.label, r.value);
-    if (job.status === "paid") w.line(`Zapłacono: ${money(total)}`, 13, "bold");
+    if (job.status === "paid") w.line(`Zapłacono: ${money(total)}`, PDF_TYPE.subtitle, "bold");
     else {
       // Wpłacona zaliczka pomniejsza „do zapłaty” (5.3): klient widzi, co już wpłacił i ile zostało.
       if (s.paid > 0) { w.keyValue("Razem", money(total)); w.keyValue("Wpłacono (zaliczka)", `−${money(s.paid)}`); }
-      w.line(`Do zapłaty: ${money(s.due)}`, 13, "bold");
+      w.line(`Do zapłaty: ${money(s.due)}`, PDF_TYPE.subtitle, "bold");
     }
   }
-  w.line("Klient potwierdza wykonanie prac bez zastrzeżeń.", 10);
+  w.line("Klient potwierdza wykonanie prac bez zastrzeżeń.", PDF_TYPE.body);
   const sig = signatureValidFor(job, card.signature) ? card.signature : undefined;
   w.signatures(["Wykonawca", "Klient"], sig
     ? { dataUrl: opts.signatureDataUrl, caption: `${sig.name || "klient"}, ${shortDate(sig.at)}${opts.signatureDataUrl ? "" : " (obraz podpisu niedostępny)"}` }

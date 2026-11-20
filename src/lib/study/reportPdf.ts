@@ -1,5 +1,6 @@
 import { reportBody, type JournalReport } from "./report";
 import { PdfWriter, pdfFileName, type PdfPhoto } from "./pdfWriter";
+import { PDF_TYPE } from "@/lib/pdfType";
 
 /**
  * P2.5: raport dnia/tygodnia jako PDF. Treść to ta sama co w tekście raportu (`reportBody`):
@@ -13,13 +14,13 @@ export const reportPdfName = (title: string) => pdfFileName("Raport", title.repl
 
 export async function buildReportPdf(r: JournalReport, opts: { company: string; photos: PdfPhoto[] }): Promise<Blob> {
   const w = await PdfWriter.create();
-  if (opts.company.trim()) w.line(opts.company.trim(), 9, "bold");
-  w.line(r.title, 16, "bold");
-  w.line(r.period, 10);
+  if (opts.company.trim()) w.line(opts.company.trim(), PDF_TYPE.table, "bold");
+  w.line(r.title, PDF_TYPE.title, "bold");
+  w.line(r.period, PDF_TYPE.body);
   for (const l of reportBody(r).split("\n")) {
     if (l.startsWith("## ")) w.heading(l.slice(3));
     else if (l === "") w.gap(1);
-    else if (l.startsWith("- ")) w.line(`• ${l.slice(2)}`, 10, "normal", 2);
+    else if (l.startsWith("- ")) w.line(`• ${l.slice(2)}`, PDF_TYPE.body, "normal", 2);
     else w.line(l);
   }
   if (opts.photos.length > 0) {

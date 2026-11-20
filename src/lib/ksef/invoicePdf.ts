@@ -3,6 +3,7 @@ import { money } from "@/lib/study/billing";
 import { computeInvoice, computeLines, type Invoice } from "./invoice";
 import { invoiceQrUrl, qrPngDataUrl } from "./qr";
 import type { InvoiceRecord } from "./yInvoices";
+import { PDF_TYPE } from "@/lib/pdfType";
 
 /**
  * Wizualizacja faktury w PDF (KSeF Etap 1, ADR-6) — czytelna kopia dla klienta; prawnie obowiązuje plik XML. Zawiera
@@ -22,8 +23,8 @@ export async function buildInvoicePdf(r: InvoiceRecord): Promise<Blob> {
   const w = await PdfWriter.create();
 
   const c = inv.correction;
-  w.line(c ? "Faktura korygująca" : "Faktura VAT", 16, "bold");
-  w.line(`Nr ${r.number}`, 12, "bold");
+  w.line(c ? "Faktura korygująca" : "Faktura VAT", PDF_TYPE.title, "bold");
+  w.line(`Nr ${r.number}`, PDF_TYPE.subtitle, "bold");
   if (c) {
     w.line(`Dotyczy faktury ${c.originalNumber} z dnia ${dmy(c.originalIssueDate)}${c.ksefNumber ? ` (KSeF: ${c.ksefNumber})` : ""}`);
     w.line(`Przyczyna korekty: ${c.reason}`);
@@ -31,12 +32,12 @@ export async function buildInvoicePdf(r: InvoiceRecord): Promise<Blob> {
   w.line(`Data wystawienia: ${dmy(inv.issueDate)}   ·   Data wykonania usługi: ${dmy(inv.saleDate)}`);
 
   w.heading("Sprzedawca");
-  w.line(inv.seller.name, 10, "bold");
+  w.line(inv.seller.name, PDF_TYPE.body, "bold");
   w.line([inv.seller.address1, inv.seller.address2].filter(Boolean).join(", "));
   w.line(`NIP: ${inv.seller.nip}`);
 
   w.heading("Nabywca");
-  w.line(inv.buyer.name, 10, "bold");
+  w.line(inv.buyer.name, PDF_TYPE.body, "bold");
   if (inv.buyer.address1) w.line([inv.buyer.address1, inv.buyer.address2].filter(Boolean).join(", "));
   if (inv.buyer.nip) w.line(`NIP: ${inv.buyer.nip}`);
 
@@ -48,15 +49,15 @@ export async function buildInvoicePdf(r: InvoiceRecord): Promise<Blob> {
   if (c) {
     w.heading(`Przed korektą (ceny ${unit})`);
     const before = computeLines({ lines: c.linesBefore, priceMode: inv.priceMode });
-    c.linesBefore.forEach((l, i) => w.line(lineText(l, i, before.lines[i]), 10, "normal", 2));
+    c.linesBefore.forEach((l, i) => w.line(lineText(l, i, before.lines[i]), PDF_TYPE.body, "normal", 2));
   }
   w.heading(c ? `Po korekcie (ceny ${unit})` : `Pozycje (ceny ${unit})`);
-  if (inv.lines.length === 0) w.line("Brak pozycji (faktura anulowana w całości)", 10, "normal", 2);
-  inv.lines.forEach((l, i) => w.line(lineText(l, i, t.lines[i]), 10, "normal", 2));
+  if (inv.lines.length === 0) w.line("Brak pozycji (faktura anulowana w całości)", PDF_TYPE.body, "normal", 2);
+  inv.lines.forEach((l, i) => w.line(lineText(l, i, t.lines[i]), PDF_TYPE.body, "normal", 2));
 
   w.heading(c ? "Różnica (po korekcie − przed)" : "Podsumowanie");
-  for (const g of t.byRate) w.line(`Stawka ${g.rate}%: netto ${zl(g.net)}, VAT ${zl(g.vat)}, brutto ${zl(g.gross)}`, 10, "normal", 2);
-  w.line(c ? `Razem różnica: ${zl(t.gross)}` : `Razem do zapłaty: ${zl(t.gross)}`, 13, "bold");
+  for (const g of t.byRate) w.line(`Stawka ${g.rate}%: netto ${zl(g.net)}, VAT ${zl(g.vat)}, brutto ${zl(g.gross)}`, PDF_TYPE.body, "normal", 2);
+  w.line(c ? `Razem różnica: ${zl(t.gross)}` : `Razem do zapłaty: ${zl(t.gross)}`, PDF_TYPE.subtitle, "bold");
 
   if (inv.payment) {
     w.heading("Płatność");
@@ -72,9 +73,9 @@ export async function buildInvoicePdf(r: InvoiceRecord): Promise<Blob> {
   if (png) {
     w.doc.addImage(png, "PNG", 15, w.y, 34, 34);
     w.y += 36;
-    w.line("OFFLINE", 8, "bold");
+    w.line("OFFLINE", PDF_TYPE.small, "bold");
   }
-  w.line("Kod QR i skrót prowadzą do tej faktury w KSeF po wgraniu pliku XML. Obowiązującą wersją faktury jest plik XML (FA(3)).", 8);
-  w.line(`SHA-256 pliku XML: ${r.hash}`, 7);
+  w.line("Kod QR i skrót prowadzą do tej faktury w KSeF po wgraniu pliku XML. Obowiązującą wersją faktury jest plik XML (FA(3)).", PDF_TYPE.small);
+  w.line(`SHA-256 pliku XML: ${r.hash}`, PDF_TYPE.small);
   return w.finish();
 }

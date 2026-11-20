@@ -1,5 +1,6 @@
 import { imageStore } from "@/lib/imageStore";
 import { safeLine } from "@/lib/safeText";
+import { PDF_MARGIN_MM, PDF_TYPE } from "@/lib/pdfType";
 
 /**
  * Wspólny zapis PDF dla protokołu i raportu (P2.5): jsPDF ładowany leniwie, polskie znaki z czcionki
@@ -9,7 +10,7 @@ import { safeLine } from "@/lib/safeText";
 
 const PAGE_W = 210;
 const PAGE_H = 297;
-const MARGIN = 15;
+const MARGIN = PDF_MARGIN_MM;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 const BOTTOM = PAGE_H - 18;
 const FONT_ID = "Protokol";
@@ -100,7 +101,7 @@ export class PdfWriter {
     if (this.y + h > BOTTOM) { this.doc.addPage(); this.y = MARGIN; }
   }
 
-  line(text: string, size = 10, style: "normal" | "bold" = "normal", indent = 0) {
+  line(text: string, size: number = PDF_TYPE.body, style: "normal" | "bold" = "normal", indent = 0) {
     const { doc } = this;
     doc.setFont(FONT_ID, style);
     doc.setFontSize(size);
@@ -117,7 +118,7 @@ export class PdfWriter {
   heading(text: string) {
     this.gap(3);
     this.ensure(10);
-    this.line(text, 11, "bold");
+    this.line(text, PDF_TYPE.heading, "bold");
     this.gap(1);
   }
 
@@ -126,7 +127,7 @@ export class PdfWriter {
    * nagłówek pogrubiony z linią, długie komórki łamane na kilka wierszy, cienka linia pod każdym wierszem. Po przejściu
    * na nową stronę nagłówek jest powtarzany; wiersz nigdy nie jest dzielony między strony.
    */
-  table(cols: PdfColumn[], rows: string[][], size = 9) {
+  table(cols: PdfColumn[], rows: string[][], size: number = PDF_TYPE.table) {
     const { doc } = this;
     const sum = cols.reduce((a, c) => a + c.width, 0) || 1;
     const widths = cols.map((c) => (c.width / sum) * CONTENT_W);
@@ -158,7 +159,7 @@ export class PdfWriter {
   }
 
   /** Wiersz „etykieta ... kwota”: etykieta przy lewym marginesie, wartość wyrównana do prawego (podsumowanie wyceny). */
-  keyValue(label: string, value: string, size = 10, style: "normal" | "bold" = "normal") {
+  keyValue(label: string, value: string, size: number = PDF_TYPE.body, style: "normal" | "bold" = "normal") {
     const { doc } = this;
     this.ensure(size * 0.45 + 1);
     doc.setFont(FONT_ID, style);
@@ -189,11 +190,11 @@ export class PdfWriter {
         doc.addImage(p.dataUrl, x, this.y, w, h);
       } catch {
         doc.setFont(FONT_ID, "normal");
-        doc.setFontSize(8);
+        doc.setFontSize(PDF_TYPE.small);
         doc.text("(zdjęcia nie udało się wczytać)", x, this.y + 5);
       }
       doc.setFont(FONT_ID, "normal");
-      doc.setFontSize(8);
+      doc.setFontSize(PDF_TYPE.small);
       doc.text(doc.splitTextToSize(p.caption, colW)[0] as string, x, this.y + cellH - 3);
       slot += 1;
       if (col === 1) this.y += cellH + 4;
@@ -215,7 +216,7 @@ export class PdfWriter {
       const boxW = 60, boxH = 24;
       // Obraz zaczyna się tam, gdzie linia drugiego podpisu (ta sama czcionka co `line` niżej).
       doc.setFont(FONT_ID, "normal");
-      doc.setFontSize(10);
+      doc.setFontSize(PDF_TYPE.body);
       const x = Math.min(MARGIN + doc.getTextWidth(first), MARGIN + CONTENT_W - boxW);
       try {
         const props = doc.getImageProperties(signed.dataUrl);
@@ -240,7 +241,7 @@ export class PdfWriter {
     for (let p = 1; p <= total; p++) {
       doc.setPage(p);
       doc.setFont(FONT_ID, "normal");
-      doc.setFontSize(8);
+      doc.setFontSize(PDF_TYPE.small);
       doc.text(`Strona ${p} z ${total}`, PAGE_W - MARGIN, PAGE_H - 8, { align: "right" });
       if (footer) doc.text(footer, MARGIN, PAGE_H - 8);
     }

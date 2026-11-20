@@ -6792,6 +6792,31 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Dokumenty PDF — jedna skala pisma (W8.2, 2026-11-20)
+
+### Co robi
+
+- Wycena, faktura (też korekta), protokół odbioru, raport budowy, rozliczenie budowy i eksport notatek mają te same stopnie pisma i ten sam margines 15 mm co druk z przeglądarki. Widoczne zmiany: suma wyceny 12 pt zamiast 13, skrót SHA-256 faktury 8 pt zamiast 7; eksport notatek — tytuł 16 pt zamiast 20, data eksportu 9 pt, margines 15 mm zamiast 16.
+
+### Gdzie jest
+
+- `src/lib/pdfType.ts`: `PDF_TYPE` (`title` 16, `subtitle` 12, `heading` 11, `body` 10, `table` 9, `small` 8) i `PDF_MARGIN_MM` (15). Komentarz wiąże stopnie z rolami z `docs/typografia.md`.
+- `src/lib/study/pdfWriter.ts`: margines, domyślne rozmiary `line`/`table`/`keyValue`, nagłówek sekcji, podpisy zdjęć i pola podpisu na `PDF_TYPE`.
+- Wywołania w `billingPdf.ts`, `handoverPdf.ts`, `jobPdf.ts`, `reportPdf.ts`, `ksef/invoicePdf.ts` (59 rozmiarów) i `src/lib/exportPdf.ts`.
+
+### Ograniczenia i pułapki
+
+- **Eksport notatek do PDF (`exportPdf.ts`) pisze wbudowaną czcionką Helvetica** — według komentarza w `pdfWriter.ts` wbudowane fonty jsPDF nie mają polskich znaków (ą, ę, ł, ś, ż…), więc treść z nimi może wyjść zniekształcona. Dokumenty Pracy używają czcionki `Protokol` (Barlow Condensed). Do decyzji: przenieść eksport na `PdfWriter`. Nagłówek eksportu to nadal „NOTATKI PIJACKIE”.
+- Nowy rozmiar w dokumencie dopisuje się jako stopień w `PDF_TYPE`, nie liczbą w wywołaniu.
+
+### Testy
+
+- Vitest `src/lib/study`, `src/lib/ksef`, `exportPdf` — 979 zielonych; e2e z PDF (`attachments`, `handover-pdf`, `invoice`, `jobs`, `quote`, `report-pdf`, `share-files`, `site-docs`, `study`) — 67 przeszło, 2 pominięte.
+
+### Commit
+
+W8.2 — commit po tym wpisie (2026-11-20).
+
 ## Druk dowolnego widoku (W8.1, 2026-11-20)
 
 ### Co robi
