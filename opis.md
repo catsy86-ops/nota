@@ -6792,6 +6792,24 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — strona zasad dla nowego widoku (W9.4, 2026-11-20)
+
+### Co robi
+
+- `docs/wyglad.md` to jedna strona, od której zaczyna każdy, kto dodaje albo zmienia ekran: siedem zasad, układ strony (marginesy, odstępy, szerokości, wysokości okien, wymiary, `@container`), role tekstu, odmiany powierzchni, kontrolki i pigułki, wykresy i stany puste/ładowania, style, kontrast, druk i lista kroków przed zamknięciem zmiany. Odsyła do `typografia.md`, `komponenty.md` i `karty-stylow.md`.
+
+### Gdzie jest
+
+- `docs/wyglad.md`; strażnicy reguł w `src/test/designTokens.test.ts` (W9.1 — już byli: `bareShadow`, `sizeWeightPair`, `MANUAL_CARD_MAX`, `squarePair`, `dark:`, `RAW_BUTTON_MAX`, `arbitrarySize`, `IMPORTANT_MAX`).
+
+### Ograniczenia i pułapki
+
+- Strona opisuje stan z 2026-11-20. Gdy zmienia się token, wariant albo próg strażnika, popraw też tabelę w `docs/wyglad.md`.
+
+### Commit
+
+W9.4 — commit po tym wpisie (2026-11-20).
+
 ## Dokumenty PDF — jedna skala pisma (W8.2, 2026-11-20)
 
 ### Co robi
