@@ -25,6 +25,8 @@ import { openBytes, relayAad, sealBytes, type RelayKeys } from "@/lib/sync/relay
  */
 
 export type RelayStatus = "idle" | "connecting" | "online" | "offline" | "error";
+/** Kod trwałego błędu — UI rozpoznaje po nim przypadek, nie po tekście `detail`. */
+export type RelayErrorCode = "ROOM_FULL";
 
 export interface RelayState {
   cursor: number;
@@ -72,7 +74,7 @@ export interface RelayOptions {
   fetch?: typeof fetch;
   /** Gniazdo do powiadomień; bez niego działa na samym pobieraniu i ponawianiu. */
   openSocket?: (url: string) => WebSocket;
-  onStatus?: (status: RelayStatus, detail?: string) => void;
+  onStatus?: (status: RelayStatus, detail?: string, code?: RelayErrorCode) => void;
   /** Dokument realnie się zmienił po pobraniu (nie tylko echo naszych wpisów). */
   onRemoteChange?: () => void;
   flushMs?: number;
@@ -139,7 +141,11 @@ class RelayHttpError extends Error {
 }
 
 /** Błąd, po którym ponawianie nie ma sensu (zły kod, uszkodzony wpis). */
-class RelayFatalError extends Error {}
+class RelayFatalError extends Error {
+  constructor(message: string, readonly code?: RelayErrorCode) {
+    super(message);
+  }
+}
 
 export class RelayProvider {
   private readonly origin = { relay: true };
@@ -309,7 +315,7 @@ export class RelayProvider {
   private onError(err: unknown): void {
     if (!this.started) return;
     if (err instanceof RelayFatalError) {
-      this.setStatus("error", err.message);
+      this.setStatus("error", err.message, err.code);
       return;
     }
     if (err instanceof RelayHttpError && (err.status === 401 || err.status === 403)) {
@@ -331,9 +337,9 @@ export class RelayProvider {
     }, wait);
   }
 
-  private setStatus(status: RelayStatus, detail?: string): void {
+  private setStatus(status: RelayStatus, detail?: string, code?: RelayErrorCode): void {
     this.status = status;
-    this.opts.onStatus?.(status, detail);
+    this.opts.onStatus?.(status, detail, code);
   }
 
   private async http<T = Record<string, unknown>>(path: string, init: { method: "GET" | "POST" | "PUT"; body?: unknown }): Promise<T> {
@@ -496,7 +502,7 @@ export class RelayProvider {
           }
         }
         // 409 po udanej migawce: pokój nie mieści nawet pełnego stanu — ponawianie nic nie da.
-        const fatal = attempt > 0 && err instanceof RelayHttpError && err.status === 409 ? new RelayFatalError(ROOM_FULL) : err;
+        const fatal = attempt > 0 && err instanceof RelayHttpError && err.status === 409 ? new RelayFatalError(ROOM_FULL, "ROOM_FULL") : err;
         // Wysłanie się nie udało: wracamy z tym, co zebraliśmy, przed to, co doszło w międzyczasie.
         this.pending = [...parts, ...this.pending];
         await this.persistPending();

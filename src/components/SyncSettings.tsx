@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { acknowledgeRelayWarning, checkRelay, deleteRelayRoom, getRelayUrl, setRelayUrl, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
 import { format, formatDistanceToNow } from "date-fns";
 import { syncErrorText } from "@/lib/syncErrorText";
+import { relayErrorHint } from "@/lib/sync/relayErrorHint";
 import { seenOffline, useSeenDevices } from "@/lib/syncSeen";
 import { pl } from "date-fns/locale";
 import {
@@ -512,6 +513,7 @@ function RelayServer() {
           <span aria-hidden className={`mt-1 inline-block size-2 shrink-0 rounded-full ${relayDotClass(view.status, sync.status)}`} />
           <span>{relayStatusText(view, sync.status)}</span>
         </p>
+        <RelayErrorAction view={view} />
         {probe && <p className="text-muted-foreground" aria-live="polite">{probe}</p>}
         {view.warning && (
           <div role="alert" className={cn(cardVariant("status", "warning"), "space-y-2 bg-warning/10 p-2 text-foreground")}>
@@ -571,10 +573,27 @@ function relayStatusText(view: RelayView, syncStatus: string): string {
     case "offline":
       return "Brak połączenia z przekaźnikiem. Ponowię samo, gdy sieć wróci.";
     case "error":
-      return view.detail ?? "Przekaźnik zgłasza błąd.";
+      return relayErrorHint(view.code)?.text ?? view.detail ?? "Przekaźnik zgłasza błąd.";
     default:
       return view.elsewhere ? "Synchronizuje inna karta tej przeglądarki — ta przejmie, gdy tamta się zamknie." : "Czeka na start.";
   }
+}
+
+/** Przycisk przy wskazówce błędu (ROOM_FULL → panel „Zmiana kodu”), gdy panel jest na stronie. */
+function RelayErrorAction({ view }: { view: RelayView }) {
+  const action = view.status === "error" ? relayErrorHint(view.code)?.action : undefined;
+  if (!action) return null;
+  function go() {
+    const el = document.querySelector<HTMLElement>(`[data-testid="${action!.target}"]`);
+    if (!el) return;
+    el.scrollIntoView({ block: "start", behavior: "smooth" });
+    el.querySelector<HTMLElement>("button")?.focus({ preventScroll: true });
+  }
+  return (
+    <div className="flex justify-end">
+      <Button type="button" size="sm" variant="outline" onClick={go} data-testid="relay-error-action">{action.label}</Button>
+    </div>
+  );
 }
 
 /**

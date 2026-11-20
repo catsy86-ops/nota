@@ -80,7 +80,7 @@ class MemStore implements RelayStore {
 const ITER = 1000; // w testach zamiast 200 000 — tylko wyprowadzenie kluczy
 const CODE = "ABCDEFGHJKMN";
 
-async function device(keys: RelayKeys, server: ReturnType<typeof fakeServer>, opts: { store?: MemStore; statuses?: RelayStatus[] } = {}) {
+async function device(keys: RelayKeys, server: ReturnType<typeof fakeServer>, opts: { store?: MemStore; statuses?: RelayStatus[]; codes?: (string | undefined)[] } = {}) {
   const doc = new Y.Doc();
   const store = opts.store ?? new MemStore();
   const provider = new RelayProvider({
@@ -90,7 +90,7 @@ async function device(keys: RelayKeys, server: ReturnType<typeof fakeServer>, op
     store,
     fetch: server.fetchFn,
     flushMs: 5,
-    onStatus: (s) => opts.statuses?.push(s),
+    onStatus: (s, _d, c) => { opts.statuses?.push(s); opts.codes?.push(c); },
   });
   await provider.start();
   return { doc, store, provider, text: doc.getText("t") };
@@ -502,11 +502,12 @@ describe("Z-5.T: przerwania, błędy w połowie, kompaktowanie, 409, limit czasu
     let posts = 0;
     let puts = 0;
     const statuses: RelayStatus[] = [];
+    const codes: (string | undefined)[] = [];
     const a = await device(keys, hooked(server, (u, m) => {
       if (m === "PUT" && u.pathname.endsWith("/snapshot")) puts++;
       if (m === "POST") { posts++; return json(409, { error: "Pokój pełny — zrób snapshot" }); }
       return undefined;
-    }), { statuses });
+    }), { statuses, codes });
     await untilPulled(a.provider, () => a.text.toString() === "x");
     a.doc.transact(() => a.text.insert(1, "z"));
     a.provider.flushNow();
@@ -515,6 +516,7 @@ describe("Z-5.T: przerwania, błędy w połowie, kompaktowanie, 409, limit czasu
     expect(posts).toBe(2);
     expect(puts).toBe(1);
     expect(statuses).not.toContain("offline");
+    expect(codes[statuses.indexOf("error")]).toBe("ROOM_FULL");
     expect(a.store.pending).not.toBeNull();
     a.provider.stop();
   });

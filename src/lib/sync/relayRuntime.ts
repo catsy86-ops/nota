@@ -5,7 +5,7 @@ import { yjsStore } from "@/lib/yjsStore";
 import { logDiag, logSecurity } from "@/lib/diagnostics";
 import { toast } from "@/lib/notify";
 import { deriveRelayKeys } from "@/lib/sync/relayKeys";
-import { RelayProvider, type RelayState, type RelayStatus, type RelayStore, type RelayWarning } from "@/lib/sync/relayProvider";
+import { RelayProvider, type RelayErrorCode, type RelayState, type RelayStatus, type RelayStore, type RelayWarning } from "@/lib/sync/relayProvider";
 import { RelayHeadCompare, relayUrlTag, type OwnRelayHead } from "@/lib/sync/relayHeadCompare";
 import { RelayBlobs } from "@/lib/sync/relayBlobs";
 import { holdTabRole, RELAY_ROLE } from "@/lib/tabLock";
@@ -55,6 +55,8 @@ export function setRelayUrl(raw: string): void {
 export interface RelayView {
   status: RelayStatus;
   detail?: string;
+  /** Kod trwałego błędu (np. ROOM_FULL) — do wskazówki w UI. */
+  code?: RelayErrorCode;
   /** Ostatnie udane wysłanie albo pobranie (ms), do „ostatnio zsynchronizowano”. */
   syncedAt: number | null;
   /** Przekaźnik prowadzi inna karta tej przeglądarki; ta czeka na rolę. */
@@ -305,7 +307,7 @@ export async function startRelay(code: string): Promise<void> {
   if (!url) return;
   const token = ++startToken;
   firstPullDone = false;
-  setView({ status: "connecting", detail: undefined });
+  setView({ status: "connecting", detail: undefined, code: undefined });
   releaseRole = holdTabRole(
     RELAY_ROLE,
     () => { void lead(code, url, token); },
@@ -313,14 +315,14 @@ export async function startRelay(code: string): Promise<void> {
       if (token !== startToken) return;
       // Przekaźnik prowadzi inna karta i to ona pobiera; ta nie ma na co czekać.
       finishFirstPull();
-      setView({ status: "idle", detail: undefined, elsewhere: true });
+      setView({ status: "idle", detail: undefined, code: undefined, elsewhere: true });
     },
   );
 }
 
 async function lead(code: string, url: string, token: number): Promise<void> {
   if (token !== startToken) return;
-  setView({ status: "connecting", detail: undefined, elsewhere: false });
+  setView({ status: "connecting", detail: undefined, code: undefined, elsewhere: false });
   try {
     const keys = await deriveRelayKeys(code);
     if (token !== startToken) return; // zastąpione przez późniejszy start albo stop
@@ -347,10 +349,10 @@ async function lead(code: string, url: string, token: number): Promise<void> {
         lastRemoteToastAt = now;
         toast("Zmiana z innego urządzenia", { description: "Przyszła przez przekaźnik." });
       },
-      onStatus: (status, detail) => {
+      onStatus: (status, detail, code) => {
         if (token !== startToken) return;
         if (status !== "connecting") finishFirstPull();
-        setView({ status, detail, ...(status === "online" ? { syncedAt: Date.now() } : {}) });
+        setView({ status, detail, code, ...(status === "online" ? { syncedAt: Date.now() } : {}) });
         if (status === "error") logDiag("error", "relay", detail ?? "błąd przekaźnika");
       },
     });
@@ -377,7 +379,7 @@ async function lead(code: string, url: string, token: number): Promise<void> {
     if (token !== startToken) return;
     logDiag("error", "relay", "nie udało się uruchomić przekaźnika", err);
     finishFirstPull();
-    setView({ status: "error", detail: "Nie udało się uruchomić przekaźnika" });
+    setView({ status: "error", detail: "Nie udało się uruchomić przekaźnika", code: undefined });
   }
 }
 
@@ -399,5 +401,5 @@ export function stopRelay(): void {
   blobRerun = false;
   unobserveNotes?.();
   unobserveNotes = null;
-  setView({ status: "idle", detail: undefined, elsewhere: false, warning: null });
+  setView({ status: "idle", detail: undefined, code: undefined, elsewhere: false, warning: null });
 }
