@@ -10,9 +10,10 @@ import { comparePin, readVaultPin, writeVaultPin } from "@/lib/vaultPin";
 import { assertPasskey, registerPasskey } from "@/lib/passkey";
 import { MAX_PASSKEYS, unlockWithPasskey as unlockKeyWithPasskey, unwrapRawWithPassword, wrapDataKeyForPasskey, fromB64u, toB64u } from "@/lib/vault";
 import { toast } from "@/lib/notify";
+import { pluralPl } from "@/lib/plural";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, encryptString, isValidMeta, noteAad,
-  unlockWithPassword, unlockWithRecovery, type VaultMeta,
+  unlockWithPassword, unlockWithRecovery, VAULT_VERSION, type VaultMeta,
 } from "@/lib/vault";
 
 /**
@@ -682,20 +683,30 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
    * dokumentu. Błąd na dowolnym etapie nie zapisuje niczego. Notatki, których
    * i tak nie dało się odszyfrować (obcy szyfrogram), są zgłaszane w `skipped`.
    */
-  async function rekey(oldKey: CryptoKey, newPassword: string, withRecovery: boolean): Promise<{ recoveryCode: string | null; skipped: string[] }> {
+  async function rekey(oldKey: CryptoKey, newPassword: string, withRecovery: boolean, from: VaultMeta): Promise<{ recoveryCode: string | null; skipped: string[] }> {
     rekeying = true;
-    try { return await rekeyInner(oldKey, newPassword, withRecovery); } finally { rekeying = false; }
+    try { return await rekeyInner(oldKey, newPassword, withRecovery, from); } finally { rekeying = false; }
   }
 
-  async function rekeyInner(oldKey: CryptoKey, newPassword: string, withRecovery: boolean): Promise<{ recoveryCode: string | null; skipped: string[] }> {
-    const m = meta();
-    if (!m) throw new Error("Brak skarbca");
+  async function rekeyInner(oldKey: CryptoKey, newPassword: string, withRecovery: boolean, from: VaultMeta): Promise<{ recoveryCode: string | null; skipped: string[] }> {
     await flush();
+    // Klucz wyprowadzono z `from`; nagłówek zmieniony w międzyczasie (synchronizacja) to nie „nieczytelne notatki”.
+    const m = meta();
+    if (!m || fingerprint(m) !== fingerprint(from)) throw new Error("Skarbiec zmienił się w trakcie zmiany hasła — spróbuj ponownie");
     const plain = new Map<string, { expected: string; json: string }>();
     const skipped: string[] = [];
+    // C-1: epoka z nagłówka, nie z sesji — przy resecie kodem awaryjnym sesja nie była odblokowana (`sessionEpoch` = 0).
+    let unsafe = 0;
     for (const id of store.lockedNoteIds()) {
       const token = store.getVault(id)!;
-      try { plain.set(id, { expected: token, json: await decryptNoteString(oldKey, token, id, sessionEpoch) }); } catch { skipped.push(id); }
+      try { plain.set(id, { expected: token, json: await decryptNoteString(oldKey, token, id, m.epoch) }); } catch {
+        skipped.push(id);
+        // Pominąć wolno tylko obcy szyfrogram v1; v2 i wersja nieznana (C-28) to dane tego skarbca, które nowy klucz by odciął.
+        if (!token.startsWith(`${VAULT_VERSION}.`)) unsafe++;
+      }
+    }
+    if (unsafe > 0 || (skipped.length > 0 && plain.size === 0)) {
+      throw new Error(`Zmiana hasła przerwana: ${skipped.length} ${pluralPl(skipped.length, ["notatki", "notatek", "notatek"])} nie da się odszyfrować tym kluczem. Nic nie zostało zmienione.`);
     }
     const created = await createVault(newPassword, { iterations, withRecovery, epoch: m.epoch + 1 });
     const next = new Map<string, { expected: string; vault: string }>();
@@ -732,7 +743,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       throw err;
     }
     recordSuccess();
-    return rekey(oldKey, newPassword, withRecovery);
+    return rekey(oldKey, newPassword, withRecovery, m);
   }
 
   /** Nowe hasło za pomocą kodu awaryjnego (zapomniane hasło). */
@@ -750,7 +761,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       throw err;
     }
     recordSuccess();
-    const result = await rekey(oldKey, newPassword, withRecovery);
+    const result = await rekey(oldKey, newPassword, withRecovery, m);
     failed.clear();
     await decryptAll();
     emit();

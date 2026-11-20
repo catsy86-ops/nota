@@ -366,6 +366,8 @@ function RecoverForm({ onBack, onDone }: { onBack: () => void; onDone: (recovery
     setError(null);
     try {
       const res = await privateNotes.resetPasswordWithRecovery(code, password);
+      // C-1: pominięte mogą być tylko obce szyfrogramy v1 — pozostałe przerywają reset przed zapisem.
+      if (res.skipped.length) toast.warning(`${res.skipped.length} notatek prywatnych nie dało się odszyfrować i zostały bez zmian`);
       toast.success("Ustawiono nowe hasło");
       onDone(res.recoveryCode);
     } catch (err) {

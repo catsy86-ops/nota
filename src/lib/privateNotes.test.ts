@@ -293,6 +293,69 @@ describe("privateNotes — zmiana hasła i próby", () => {
     expect(pn.peek("n1")?.content).toBe("ODZYSKANA");
   });
 
+  it("C-1: reset kodem awaryjnym po świeżym otwarciu (sesja nieodblokowana) zachowuje notatki v2", async () => {
+    const { store, versions, pn } = fresh();
+    store.upsertNote(makeNote({ content: "ZAPOMNIANE HASŁO" }));
+    const { recoveryCode } = await pn.setup(PW);
+    await pn.lockNote("n1");
+    expect(store.getVault("n1")).toMatch(/^v2\./);
+    await pn.lock();
+    // Nowa instancja = aplikacja otwarta od nowa: `sessionEpoch` jeszcze 0.
+    const pn2 = createPrivateNotes(store, { iterations: IT, minIterations: IT, writeDelayMs: 5, versions });
+    const res = await pn2.resetPasswordWithRecovery(recoveryCode!, "zupelnie-nowe-haslo-1");
+    expect(res.skipped).toEqual([]);
+    expect(pn2.peek("n1")?.content).toBe("ZAPOMNIANE HASŁO");
+    await pn2.lock();
+    await pn2.unlock("zupelnie-nowe-haslo-1");
+    expect(pn2.peek("n1")?.content).toBe("ZAPOMNIANE HASŁO");
+  });
+
+  it("C-1: nieczytelna notatka v2 przerywa zmianę klucza przed zapisem — metadane i szyfrogramy bez zmian", async () => {
+    const { store, versions, pn } = fresh();
+    store.upsertNote(makeNote({ id: "a", content: "AAA" }));
+    store.upsertNote(makeNote({ id: "b", content: "BBB" }));
+    const { recoveryCode } = await pn.setup(PW);
+    await pn.lockNote("a");
+    await pn.lockNote("b");
+    await pn.lock();
+    // Szyfrogram „b” z innej epoki — tym kluczem i tą epoką się nie odszyfruje.
+    const m = store.getVaultMeta()!;
+    const bad = store.getVault("a")!;
+    store.rekeyVault(m, new Map([["b", { expected: store.getVault("b")!, vault: bad }]]));
+    const meta = JSON.stringify(store.getVaultMeta());
+    const tokens = [store.getVault("a"), store.getVault("b")];
+    const pn2 = createPrivateNotes(store, { iterations: IT, minIterations: IT, writeDelayMs: 5, versions });
+    await expect(pn2.resetPasswordWithRecovery(recoveryCode!, "zupelnie-nowe-haslo-1")).rejects.toThrow(/nie da się odszyfrować/);
+    expect(JSON.stringify(store.getVaultMeta())).toBe(meta);
+    expect([store.getVault("a"), store.getVault("b")]).toEqual(tokens);
+  });
+
+  it("C-28: żeton nieznanej wersji przerywa zmianę hasła przed zapisem", async () => {
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ id: "a", content: "AAA" }));
+    store.upsertNote(makeNote({ id: "b", content: "BBB" }));
+    await pn.setup(PW);
+    await pn.lockNote("a");
+    await pn.lockNote("b");
+    store.rekeyVault(store.getVaultMeta()!, new Map([["b", { expected: store.getVault("b")!, vault: "v9.AAAAAAAAAAAAAAAA.BBBBBBBBBBBBBBBBBBBBBBBB" }]]));
+    const meta = JSON.stringify(store.getVaultMeta());
+    await expect(pn.changePassword(PW, "zupelnie-nowe-haslo-1")).rejects.toThrow(/nie da się odszyfrować/);
+    expect(JSON.stringify(store.getVaultMeta())).toBe(meta);
+  });
+
+  it("C-1: obcy szyfrogram v1 obok czytelnej notatki v2 — zmiana hasła przechodzi, v1 w skipped", async () => {
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ id: "a", content: "AAA" }));
+    store.upsertNote(makeNote({ id: "b", content: "BBB" }));
+    await pn.setup(PW);
+    await pn.lockNote("a");
+    await pn.lockNote("b");
+    store.rekeyVault(store.getVaultMeta()!, new Map([["b", { expected: store.getVault("b")!, vault: "v1.AAAAAAAAAAAAAAAA.BBBBBBBBBBBBBBBBBBBBBBBB" }]]));
+    const res = await pn.changePassword(PW, "zupelnie-nowe-haslo-1");
+    expect(res.skipped).toEqual(["b"]);
+    expect(pn.peek("a")?.content).toBe("AAA");
+  });
+
   it("2.4: sprawdzenie kodu awaryjnego bez zmiany sesji; zły kod liczy się do limitu prób; 2.5: statystyki", async () => {
     const { store, pn } = fresh();
     store.upsertNote(makeNote({ content: "TAJNE" }));

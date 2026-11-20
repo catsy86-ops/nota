@@ -1,6 +1,6 @@
 # Plan: Skarbiec — wycofane klucze (1.2 cz. 2) i szyfrowane załączniki (3.3) (2026-11-15)
 
-> **Status:** projekt przejrzany 2026-11-15 dwa razy (§0, drugie czytanie — §0.6) i poprawiony; realizacja nie zaczęta. Wykonawca: Opus. K0 zatwierdzony; K1–K3, K5 i K6.1 zatwierdzone warunkowo; K4 i K6.2–K6.3 wymagają przeglądu diffu po wpisanych poprawkach. Poprzedni projekt 1.2 cz. 2 został odrzucony 2026-11-02; stan siedmiu wymagań z `plan-skarbiec-2026-10-25.md` — §0.2.
+> **Status:** projekt przejrzany 2026-11-15 dwa razy (§0, drugie czytanie — §0.6) i poprawiony; realizacja: K0 cz. 1 (błąd C-1, z C-28 i pominiętymi w oknie resetu) zrobiona 2026-11-20; K0 cz. 2–4 i reszta nie zaczęte. Wykonawca: Opus. K0 zatwierdzony; K1–K3, K5 i K6.1 zatwierdzone warunkowo; K4 i K6.2–K6.3 wymagają przeglądu diffu po wpisanych poprawkach. Poprzedni projekt 1.2 cz. 2 został odrzucony 2026-11-02; stan siedmiu wymagań z `plan-skarbiec-2026-10-25.md` — §0.2.
 >
 > Projekt powstał z czytania `vault.ts`, `vaultPin.ts` i `privateNotes.ts` z 2026-11-15. Założenia o kodzie są rozstrzygnięte w §0.4; to, czego nie potwierdzono, wymienia §0.5 — K0 zaczyna od tej listy.
 
