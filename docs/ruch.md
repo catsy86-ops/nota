@@ -10,7 +10,7 @@ Jedna strona zasad dla każdego, kto dodaje animację. Plan: `docs/plan-ruch-202
 4. **CSS przed JS.** Framer Motion tylko tam, gdzie potrzebny jest gest, sprężyna zależna od prędkości, `layoutId` albo wyjście z drzewa. Reszta: przejścia CSS, `@starting-style`, View Transitions.
 5. **Ograniczony ruch = zanikanie, nie brak informacji.** Przesunięcia znikają, zmiana stanu zostaje widoczna (przenikanie 150 ms).
 6. **Przerywalność.** Każdą animację da się przerwać kolejnym dotykiem; nic nie blokuje wejścia.
-7. **Haptyka idzie z ruchem.** `tap` przy przyjęciu, `selection` przy przełączeniu, `success`/`warn` tylko przy wyniku. Nigdy dwa razy na jedną czynność.
+7. **Haptyka idzie z ruchem.** `tap` przy przyjęciu, `selection` przy przełączeniu, `success`/`warn` tylko przy wyniku. Nigdy dwa razy na jedną czynność. `Switch` wibruje sam (`selection`) — przy przełączniku nie dopisuj `haptic` w wywołaniu.
 
 ## Tokeny
 
@@ -50,4 +50,4 @@ Krzywe: `--ease-out` / `ease-out-soft` (wejście, domyślna), `--ease-in` / `eas
 
 ## Do zrobienia
 
-Pomiar klatek (M2), CSS zamiast JS (M3), przejścia między działami i arkusze z gestem (M4), stan wciśnięcia i przegląd haptyki (M5.1–M5.2, M5.4–M5.5). Wyniki pomiaru M2.1 trafią tutaj.
+Pomiar klatek (M2), CSS zamiast JS (M3), przejścia między działami i arkusze z gestem (M4), stan wciśnięcia i przegląd haptyki (M5.4–M5.5). Wyniki pomiaru M2.1 trafią tutaj.
