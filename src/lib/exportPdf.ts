@@ -3,7 +3,7 @@ import { pl } from "date-fns/locale";
 import jsPDF from "jspdf";
 import type { Note } from "@/lib/types/note";
 import { embeddableImages } from "@/lib/exportNotes";
-import { PDF_MARGIN_MM, PDF_TYPE } from "@/lib/pdfType";
+import { addPdfFonts, PDF_FONT, PDF_MARGIN_MM, PDF_TYPE } from "@/lib/pdfType";
 
 // Split out from exportNotes.ts: jsPDF (+ the html2canvas it dynamically
 // pulls in) is the single heaviest dependency in the app but only used by
@@ -32,18 +32,20 @@ function addImagesToPDF(doc: jsPDF, images: string[], margin: number, contentW: 
 
 export async function exportToPDF(notes: Note[]) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  // Polskie znaki: wbudowana Helvetica zamieniała „ż”, „ą”, „ł” na inne znaki (W8.2).
+  addPdfFonts(doc);
   const pageW = doc.internal.pageSize.getWidth();
   const margin = PDF_MARGIN_MM;
   const contentW = pageW - margin * 2;
   let y = 20;
 
   // Title
-  doc.setFont("helvetica", "bold");
+  doc.setFont(PDF_FONT, "bold");
   doc.setFontSize(PDF_TYPE.title);
   doc.text("NOTATKI PIJACKIE", margin, y);
   y += 6;
   doc.setFontSize(PDF_TYPE.table);
-  doc.setFont("helvetica", "normal");
+  doc.setFont(PDF_FONT, "normal");
   doc.setTextColor(120);
   doc.text(`Eksport: ${format(new Date(), "d MMMM yyyy, HH:mm", { locale: pl })}`, margin, y);
   doc.setTextColor(0);
@@ -58,7 +60,7 @@ export async function exportToPDF(notes: Note[]) {
 
     // Title
     if (note.title) {
-      doc.setFont("helvetica", "bold");
+      doc.setFont(PDF_FONT, "bold");
       doc.setFontSize(PDF_TYPE.subtitle);
       const titleLines = doc.splitTextToSize(note.title, contentW);
       doc.text(titleLines, margin, y);
@@ -67,7 +69,7 @@ export async function exportToPDF(notes: Note[]) {
 
     // Labels
     if (note.labels.length > 0) {
-      doc.setFont("helvetica", "italic");
+      doc.setFont(PDF_FONT, "normal");
       doc.setFontSize(PDF_TYPE.small);
       doc.setTextColor(100);
       doc.text(`Etykiety: ${note.labels.join(", ")}`, margin, y);
@@ -77,7 +79,7 @@ export async function exportToPDF(notes: Note[]) {
 
     // Reminder
     if (note.reminder) {
-      doc.setFont("helvetica", "italic");
+      doc.setFont(PDF_FONT, "normal");
       doc.setFontSize(PDF_TYPE.small);
       doc.setTextColor(100);
       doc.text(`Przypomnienie: ${format(new Date(note.reminder), "d MMM yyyy, HH:mm", { locale: pl })}`, margin, y);
@@ -87,7 +89,7 @@ export async function exportToPDF(notes: Note[]) {
 
     // Content
     if (note.content) {
-      doc.setFont("helvetica", "normal");
+      doc.setFont(PDF_FONT, "normal");
       doc.setFontSize(PDF_TYPE.body);
       const lines = doc.splitTextToSize(note.content, contentW);
       for (const line of lines) {

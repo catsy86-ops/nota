@@ -1,6 +1,6 @@
 import { imageStore } from "@/lib/imageStore";
 import { safeLine } from "@/lib/safeText";
-import { PDF_MARGIN_MM, PDF_TYPE } from "@/lib/pdfType";
+import { addPdfFonts, PDF_FONT, PDF_MARGIN_MM, PDF_TYPE } from "@/lib/pdfType";
 
 /**
  * Wspólny zapis PDF dla protokołu i raportu (P2.5): jsPDF ładowany leniwie, polskie znaki z czcionki
@@ -13,7 +13,7 @@ const PAGE_H = 297;
 const MARGIN = PDF_MARGIN_MM;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 const BOTTOM = PAGE_H - 18;
-const FONT_ID = "Protokol";
+const FONT_ID = PDF_FONT;
 /** Zdjęcia na stronie: 2 w rzędzie, 3 rzędy. */
 export const PDF_PHOTOS_PER_PAGE = 6;
 
@@ -91,9 +91,7 @@ export class PdfWriter {
   static async create(): Promise<PdfWriter> {
     const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const base = typeof location !== "undefined" ? location.origin : "http://localhost";
-    doc.addFont(new URL("/fonts/protokol-regular.ttf", base), FONT_ID, "normal", 400, "Identity-H");
-    doc.addFont(new URL("/fonts/protokol-bold.ttf", base), FONT_ID, "bold", 700, "Identity-H");
+    addPdfFonts(doc);
     return new PdfWriter(doc);
   }
 

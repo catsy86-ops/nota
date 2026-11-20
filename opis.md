@@ -6818,18 +6818,18 @@ W9.4 — commit po tym wpisie (2026-11-20).
 
 ### Gdzie jest
 
-- `src/lib/pdfType.ts`: `PDF_TYPE` (`title` 16, `subtitle` 12, `heading` 11, `body` 10, `table` 9, `small` 8) i `PDF_MARGIN_MM` (15). Komentarz wiąże stopnie z rolami z `docs/typografia.md`.
+- `src/lib/pdfType.ts`: `PDF_FONT`, `addPdfFonts()`, `PDF_TYPE` (`title` 16, `subtitle` 12, `heading` 11, `body` 10, `table` 9, `small` 8) i `PDF_MARGIN_MM` (15). Komentarz wiąże stopnie z rolami z `docs/typografia.md`.
 - `src/lib/study/pdfWriter.ts`: margines, domyślne rozmiary `line`/`table`/`keyValue`, nagłówek sekcji, podpisy zdjęć i pola podpisu na `PDF_TYPE`.
 - Wywołania w `billingPdf.ts`, `handoverPdf.ts`, `jobPdf.ts`, `reportPdf.ts`, `ksef/invoicePdf.ts` (59 rozmiarów) i `src/lib/exportPdf.ts`.
 
 ### Ograniczenia i pułapki
 
-- **Eksport notatek do PDF (`exportPdf.ts`) pisze wbudowaną czcionką Helvetica** — według komentarza w `pdfWriter.ts` wbudowane fonty jsPDF nie mają polskich znaków (ą, ę, ł, ś, ż…), więc treść z nimi może wyjść zniekształcona. Dokumenty Pracy używają czcionki `Protokol` (Barlow Condensed). Do decyzji: przenieść eksport na `PdfWriter`. Nagłówek eksportu to nadal „NOTATKI PIJACKIE”.
+- **Czcionka PDF (naprawione 2026-11-20).** `public/fonts/protokol-*.ttf` był samym podzbiorem `latin-ext` Barlow Condensed (U+0100–024F): bez A–Z, a–z, cyfr i „ó”. W dokumentach Pracy zostawały więc prawie wyłącznie polskie znaki specjalne. Do tego pogrubienie rejestrowało się jako styl `"boldbold"` (jsPDF skleja `"bold"` z wagą 700), więc nagłówki szły czcionką zastępczą. Teraz: `scripts/build-pdf-font.mjs` scala podzbiory `latin` i `latin-ext` z `@fontsource/barlow-condensed` (WOFF 1.0 → TTF, 498 glifów, 389 znaków), `addPdfFonts()` w `src/lib/pdfType.ts` rejestruje obie wagi (pogrubienie jako `"normal"` + 700) dla `PdfWriter` i dla eksportu notatek, który wcześniej pisał Helvetiką („Zażółć” → „Za|óB”). Kursywy krój nie ma — etykiety i przypomnienie w eksporcie są zwykłym krojem w szarym. Nagłówek eksportu to nadal „NOTATKI PIJACKIE”.
 - Nowy rozmiar w dokumencie dopisuje się jako stopień w `PDF_TYPE`, nie liczbą w wywołaniu.
 
 ### Testy
 
-- Vitest `src/lib/study`, `src/lib/ksef`, `exportPdf` — 979 zielonych; e2e z PDF (`attachments`, `handover-pdf`, `invoice`, `jobs`, `quote`, `report-pdf`, `share-files`, `site-docs`, `study`) — 67 przeszło, 2 pominięte.
+- `src/lib/pdfFont.test.ts` — czcionki mają litery, cyfry i polskie znaki (ze starą czcionką test nie przechodzi). PDF z jsPDF i eksport notatek z aplikacji obejrzane. Vitest `src/lib/study`, `src/lib/ksef`, `exportPdf` — 979 zielonych; e2e z PDF (`attachments`, `handover-pdf`, `invoice`, `jobs`, `quote`, `report-pdf`, `share-files`, `site-docs`, `study`) — 67 przeszło, 2 pominięte.
 
 ### Commit
 
