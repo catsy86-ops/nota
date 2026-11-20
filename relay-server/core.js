@@ -159,7 +159,7 @@ export function epochConflict(room, epoch) {
 export function prepareAppend(room, data, now) {
   if (!validEntry(data)) return { error: 413, message: "Wpis ma zły rozmiar lub format" };
   if (countOf(room) >= LIMITS.MAX_ENTRIES) return { error: 409, message: "Log pełny — zrób snapshot" };
-  if (bytesOf(room) + data.length > LIMITS.MAX_ROOM_CHARS) return { error: 413, message: "Pokój pełny — zrób snapshot" };
+  if (bytesOf(room) + data.length > LIMITS.MAX_ROOM_CHARS) return { error: 409, message: "Pokój pełny — zrób snapshot" };
   return { entry: { seq: room.last + 1, data, at: now } };
 }
 

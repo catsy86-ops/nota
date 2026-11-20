@@ -219,6 +219,20 @@ test("snapshot starszy niż pierwszy zachowany wpis — 409 (pokój nie rośnie 
   assert.deepEqual(applySnapshot(room, 5, "SNAP3", NOW), { seq: 5 });
 });
 
+test("pokój pełny (suma znaków): wpis odrzucany 409, jak log pełny — klient robi migawkę (Z-5.6)", () => {
+  const { room } = writable();
+  const saved = LIMITS.MAX_ROOM_CHARS;
+  LIMITS.MAX_ROOM_CHARS = 20;
+  try {
+    assert.deepEqual(appendEntry(room, blob(12), NOW), { seq: 1 });
+    const r = appendEntry(room, blob(12), NOW);
+    assert.equal(r.error, 409);
+    assert.match(r.message, /Pokój pełny/);
+  } finally {
+    LIMITS.MAX_ROOM_CHARS = saved;
+  }
+});
+
 test("snapshot ponad limit pokoju — 413", () => {
   const { room } = writable();
   const saved = LIMITS.MAX_ROOM_CHARS;
