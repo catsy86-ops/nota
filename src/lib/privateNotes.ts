@@ -122,6 +122,23 @@ function cleanPrivateMeta(raw: unknown): PrivateMeta | undefined {
 const KNOWN_CONTENT_KEYS = new Set(["title", "content", "checklist", "labels", "meta"]);
 const MAX_EXTRA_JSON = 64 * 1024;
 
+/**
+ * Widok treści bez pól z przyszłości (przegląd K0 cz. 2): karta składa `{ ...note, ...content }`, więc nieznane pole
+ * (np. `id`, `images`) nadpisałoby pola notatki. Pola zostają w pamięci podręcznej i wracają przy zapisie.
+ * Ten sam obiekt dla tej samej treści — `useMemo` w karcie nie liczy się od nowa.
+ */
+const knownView = new WeakMap<PrivateContent, PrivateContent>();
+function knownContent(c: PrivateContent | undefined): PrivateContent | undefined {
+  if (!c) return undefined;
+  if (Object.keys(c).every((k) => KNOWN_CONTENT_KEYS.has(k))) return c;
+  let v = knownView.get(c);
+  if (!v) {
+    v = { title: c.title, content: c.content, checklist: c.checklist, labels: c.labels, ...(c.meta ? { meta: c.meta } : {}) };
+    knownView.set(c, v);
+  }
+  return v;
+}
+
 function parseContent(json: string): PrivateContent {
   const raw = JSON.parse(json) as Partial<PrivateContent> | null;
   if (!raw || typeof raw !== "object") throw new VaultError("bad-format");
@@ -797,7 +814,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     hasVault: () => meta() !== null,
     isUnlocked: () => key !== null && !locking,
     /** Odszyfrowana treść notatki prywatnej (albo `undefined`, gdy zablokowane / nieodszyfrowane). */
-    peek: (id: string): PrivateContent | undefined => (key && !locking ? cache.get(id)?.content : undefined),
+    peek: (id: string): PrivateContent | undefined => (key && !locking ? knownContent(cache.get(id)?.content) : undefined),
     peekToken: (id: string): string | undefined => (key && !locking ? cache.get(id)?.vault : undefined),
     isUndecryptable: (id: string) => failed.has(id),
     /** 2.5: liczba notatek prywatnych w dokumencie i tych, których nie da się odszyfrować w tej sesji. */

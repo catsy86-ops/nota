@@ -78,6 +78,20 @@ describe("C-14: pole z przyszłości w treści notatki prywatnej", () => {
     expect(note).not.toHaveProperty("futureField");
   });
 
+  it("peek pokazuje tylko znane pola — nieznane (np. `id`) nie nadpisują notatki w karcie, a zapis je zachowuje", async () => {
+    const extra = { id: "inna-notatka", images: ["x"], futureField: 1 };
+    const { store, pn, read } = await withFuture(extra);
+    await pn.unlock(PW);
+    await pn.ensureDecrypted(store.projectNotes().find((n) => n.id === "n1")!);
+    const seen = pn.peek("n1")!;
+    expect(Object.keys(seen).sort()).toEqual(["checklist", "content", "labels", "title"]);
+    expect(pn.peek("n1")).toBe(seen);
+    store.patchNote("n1", { content: "po edycji" });
+    await wait(30);
+    await pn.flush();
+    expect(await read("n1")).toMatchObject({ content: "po edycji", ...extra });
+  });
+
   it("nieznane pola ponad 64 KB JSON-u są odrzucane", async () => {
     const { store, pn, read } = await withFuture({ big: "x".repeat(70 * 1024) });
     await pn.unlock(PW);
