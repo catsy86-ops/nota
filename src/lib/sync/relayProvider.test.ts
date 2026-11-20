@@ -491,6 +491,34 @@ describe("Z-5.T: przerwania, błędy w połowie, kompaktowanie, 409, limit czasu
     c.provider.stop();
   });
 
+  it("409 także po migawce: stan „błąd” bez ponowień, zaległość zostaje", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const a0 = await device(keys, server);
+    a0.doc.transact(() => a0.text.insert(0, "x"));
+    a0.provider.flushNow();
+    await until(() => a0.store.pending === null && a0.provider.cursor > 0);
+    a0.provider.stop();
+    let posts = 0;
+    let puts = 0;
+    const statuses: RelayStatus[] = [];
+    const a = await device(keys, hooked(server, (u, m) => {
+      if (m === "PUT" && u.pathname.endsWith("/snapshot")) puts++;
+      if (m === "POST") { posts++; return json(409, { error: "Pokój pełny — zrób snapshot" }); }
+      return undefined;
+    }), { statuses });
+    await untilPulled(a.provider, () => a.text.toString() === "x");
+    a.doc.transact(() => a.text.insert(1, "z"));
+    a.provider.flushNow();
+    await until(() => statuses.includes("error"));
+    await new Promise((r) => setTimeout(r, 300));
+    expect(posts).toBe(2);
+    expect(puts).toBe(1);
+    expect(statuses).not.toContain("offline");
+    expect(a.store.pending).not.toBeNull();
+    a.provider.stop();
+  });
+
   it("żądanie bez odpowiedzi: po limicie czasu „offline”, kolejka rusza dalej", async () => {
     const server = fakeServer();
     const keys = await deriveRelayKeys(CODE, ITER);

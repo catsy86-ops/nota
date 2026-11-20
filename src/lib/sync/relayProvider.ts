@@ -103,6 +103,7 @@ export const REQUEST_TIMEOUT_MS = 30_000;
 /** Limit wpisu serwera (`relay-server/core.js` `MAX_ENTRY_CHARS`, ~16 MB po odkodowaniu). */
 export const MAX_ENTRY_CHARS = 22_400_000;
 const TOO_BIG = "Dane są za duże dla przekaźnika (limit 16 MB na wpis)";
+const ROOM_FULL = "Pokój na przekaźniku jest pełny — migawka nie zwolniła miejsca";
 const RETRY_MIN_MS = 2000;
 /** Górny limit stron w jednym pobraniu; reszta idzie przy następnym (kursor jest zapisany). */
 const MAX_PULL_PAGES = 1000;
@@ -494,10 +495,12 @@ export class RelayProvider {
             // migawka się nie udała — wracamy z pierwotnym błędem
           }
         }
+        // 409 po udanej migawce: pokój nie mieści nawet pełnego stanu — ponawianie nic nie da.
+        const fatal = attempt > 0 && err instanceof RelayHttpError && err.status === 409 ? new RelayFatalError(ROOM_FULL) : err;
         // Wysłanie się nie udało: wracamy z tym, co zebraliśmy, przed to, co doszło w międzyczasie.
         this.pending = [...parts, ...this.pending];
         await this.persistPending();
-        throw err;
+        throw fatal;
       }
     }
     await this.persistPending();
