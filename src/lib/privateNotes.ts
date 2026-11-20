@@ -170,6 +170,8 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   let locking = false;
   /** Trwa zmiana hasła: nowa notatka dostałaby szyfrogram pod klucz, który zaraz zniknie. */
   let rekeying = false;
+  /** Trwa własny, synchroniczny zapis nowych metadanych w `rekeyInner` — obserwator nie blokuje wtedy sesji (K0 cz. 4). */
+  let ownMetaWrite = false;
   let version = 0;
   let snapshot: VaultSnapshot = { phase: "none", corrupt: false, version: 0 };
   const cache = new Map<string, Entry>();
@@ -216,6 +218,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   // Porównujemy cały odcisk (sól, klucz opakowany, kod sprawdzający), nie tylko epoch — przy równoległym
   // zakładaniu skarbca offline oba urządzenia mają epoch 1, a klucz tego przegranego przestałby pasować.
   store.observeVaultMeta(() => {
+    if (ownMetaWrite) return;
     const m = meta();
     if (key && (!m || m.epoch !== sessionEpoch || (sessionFingerprint !== "" && fingerprint(m) !== sessionFingerprint))) void lock();
     else emit();
@@ -712,7 +715,10 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     const next = new Map<string, { expected: string; vault: string }>();
     for (const [id, p] of plain) next.set(id, { expected: p.expected, vault: await encryptNoteWrite(created.dataKey, p.json, id, created.meta.epoch) });
     // Zmiana w trakcie (np. edycja z innego urządzenia) — przerywamy bez zapisu.
-    if (!store.rekeyVault(created.meta, next)) throw new Error("Notatki zmieniły się w trakcie zmiany hasła — spróbuj ponownie");
+    ownMetaWrite = true;
+    let written: boolean;
+    try { written = store.rekeyVault(created.meta, next); } finally { ownMetaWrite = false; }
+    if (!written) throw new Error("Notatki zmieniły się w trakcie zmiany hasła — spróbuj ponownie");
     writeVaultPin(created.meta);
     key = created.dataKey;
     sessionEpoch = created.meta.epoch;
