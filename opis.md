@@ -6787,7 +6787,7 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
-## Wygląd — karty na odmianach: Długi, Praca, Ustawienia, Grafik, Dziś, Kalendarz (W3.2, 2026-11-19/20)
+## Wygląd — karty na odmianach: Długi, Praca, Ustawienia, Grafik, Dziś, Kalendarz, Notatki (W3.2, 2026-11-19/20)
 
 ### Co robi
 
@@ -6806,7 +6806,13 @@ W1.8 — commit po tym wpisie (2026-11-19).
 - Grafik (`src/components/shifts/**`, `guide/ShiftsHint.tsx`, 9 plików, 12 miejsc). Karta bieżącej i zakończonej zmiany (`NowCard`) to `plain` z paskiem koloru zmiany. Grupy w oknach i kartach (własne godziny pędzla, wybór pierwszego cyklu w kreatorze, podsumowanie nałożenia w „Cyklu”, „Opcjonalne” w ustawieniach, przycisk składanej sekcji i pasek wypłaty w „Miesiącu w liczbach”) to `inset`. Zapisane cykle i szablony tygodnia to `interactive`. Potwierdzenie usunięcia grafiku to `status` (`danger`), podpowiedź „Pierwszy raz w Grafiku?” to `status` (`info`) z tłem `bg-primary/10`.
 - Dziś (`src/components/review/**`, 7 miejsc). Karty zmiany, osi dnia, terminów Pracy, „Skrzynka, Ćwiczenia i raty” i „Do wystawienia” to `plain` (`cardVariant()` zamiast gołego `cardClass`). „Przegląd tygodnia” to `status` (`info`) z cieniem elewacji 1 i obrysem `primary/25`. Notatka w przeglądzie krok po kroku (`ReviewWalkthrough`) to `status` (`info`) z tłem `bg-muted/30`.
 - Kalendarz (`src/components/calendar/**`, 5 miejsc). Legenda, panel dnia, dni w widoku Lista (`MonthAgenda`) i oś tygodnia to `plain`. Kafle „Dziś” i „Jutro” (`UpcomingDays`) to `interactive`. Komórki siatki miesiąca (`dayCellStyles.ts`) zostają, bo to kontrolki siatki, nie karty.
-- `src/test/designTokens.test.ts` — strażnik „W3.2”: ręczne `rounded-card … border` i goły `cardClass` poza `components/ui/`, próg 72 (po Długach, Pracy, Ustawieniach, Grafiku, Dziś i Kalendarzu). Nie liczy ramek przerywanych (miejsce na „dodaj”, pusty stan) ani ramek podglądu kamery i obrazu (`object-cover|contain`), bo to nie są karty. Maleje z kolejnymi działami.
+- Notatki i powłoka (`src/components/*.tsx`, 16 plików, 22 miejsca):
+  - `plain`: tabela notatek, blok zapytania, graf, karta w segregowaniu Skrzynki;
+  - `raised`: nagłówek kolumny tablicy (`NoteBoard`), ekran błędu (`ErrorBoundary`);
+  - `inset`: kolumna tablicy (`BoardColumn`), spis treści czytnika, kolejka offline, ostatnie działania, kafle i wykres w statystykach, termin przypomnienia w segregowaniu, komunikat „Dane zastąpione” (wariant zwykły);
+  - `interactive`: karta galerii (`NoteGallery`; zaznaczona dalej `border-primary bg-primary/10`);
+  - `status` (`warning`): banery formatu dokumentu, przerwanego przywracania, utraty danych i wymiany dokumentu; `status` (`info`): baner instalacji aplikacji.
+- `src/test/designTokens.test.ts` — strażnik „W3.2”: ręczne `rounded-card … border` i goły `cardClass` poza `components/ui/`, próg 50 (po Długach, Pracy, Ustawieniach, Grafiku, Dziś, Kalendarzu i części Notatek). Nie liczy ramek przerywanych (miejsce na „dodaj”, pusty stan) ani ramek podglądu kamery i obrazu (`object-cover|contain`), bo to nie są karty. Maleje z kolejnymi działami.
 
 ### Jak działa
 
@@ -6819,6 +6825,7 @@ W1.8 — commit po tym wpisie (2026-11-19).
 - Hover osoby ma obrys `foreground/25` z odmiany, a nie `primary/50` jak wcześniej.
 - W Pracy zostały nieprzeniesione: przełączniki wyboru z obrysem (`QuizPanel` odpowiedzi, `FittingsFields`, `SiteCardDialog` wysyłka), papier raportu (`ReportPaper`), pole podpisu i podgląd podpisu (`bg-white`), pasek stanu budowy (`SiteTallyBar`, `xl:` w `StudyJournal`), karta tematu w `StudyBoard`. To kontrolki albo papier, nie karty.
 - W Grafiku zostały nieprzeniesione przyciski i kontrolki: pędzle i gumka w `BrushBar`, wybór w `DayDialog`, przyciski drugorzędne w `EmptyShifts`, `NoShiftTypes`, `NowCard` („Skończyłem teraz”) i `ShiftSummary` („Rok”), lista wyboru grafiku w `ScheduleSwitcher`. Przejdą na `Button` z W4.5. `TodayShiftCard` (Dziś) przejdzie z działem Dziś.
+- W Notatkach zostały nieprzeniesione: `NoteCard` i `AddNoteBar`/`InboxCapture` (własny cień `note-shadow` i obrys z koloru notatki), pole wyszukiwania i jego wyskakujące listy (`SearchBar`, `AppHeader`), kafle nawigacji (`BottomNav`, `InstallAppButton`), paski narzędzi (`BulkActionBar`, `ViewControls`), pływający panel czytnika (`NoteReader`), powiadomienie o terminie (`ReminderDueToast`) i odznaki w statystykach (obrys niesie stan „zdobyta”). To kontrolki, nakładki albo karty z własnym kolorem.
 - Obrysy kart Dziś i Kalendarza mają teraz pełny kolor `border` zamiast wcześniejszego `border/50|60|70`, a hover kafli „Dziś”/„Jutro” to `foreground/25` z odmiany zamiast `primary/40`.
 - Ramki stanu mają teraz lewą krawędź 4 px zamiast pełnego kolorowego obrysu.
 - W Ustawieniach zostały nieprzeniesione: `Segmented` (tor przełącznika), przyciski wyboru stylu, gęstości i kroju (`AppearanceSettings`), zaznaczenie w `FontPicker` i `SkinPicker` (`border-2`), podgląd poświaty (`GlowPicker`, `border-transparent`). To kontrolki, nie karty.
@@ -6830,12 +6837,13 @@ W1.8 — commit po tym wpisie (2026-11-19).
 - `src/components/debts/DebtsView.test.tsx` (22), e2e `debts-due`, `debts-plan`, `debts-rates` (13), `@visual dlugi` (6), strażnik.
 - Ustawienia: Vitest `settings`, `sync` i strażnik (34); pełne e2e (1235): 1203 przeszło, 12 porażek — wszystkie w Notatkach i Terminach i występują też na stanie sprzed sesji (77094141), więc nie wynikają z tej zmiany.
 - Grafik: strażnik, typecheck, e2e `shifts*`, `shift-end-action`, `calendar-shift-edit`, `guide*` (63 przeszło, 2 pominięte); zrzut 390 px z danymi przejrzany.
+- Notatki: typecheck, Vitest `src/components` i `src/test` (426), e2e `board-table`, `card-keyboard-open`, `dictation-offline`, `inbox-*`, `local-graph`, `note-gallery`, `query-block`, `restore-*`, `shortcuts-settings-stats`, `stats-practice` (51 przeszło, 3 pominięte); zrzuty tablicy, galerii i tabeli przejrzane.
 - Dziś i Kalendarz: typecheck, Vitest `review`, `calendar` i strażnik (72), e2e `calendar-*`, `dzis-*`, `today-*`, `inbox-today`, `reminders-agenda`, `reminders-calendar`, `weekly-review` (50 przeszło, 4 pominięte); zrzuty 390 px z danymi przejrzane.
 - Praca: Vitest `src/components/study` i strażnik (123); e2e wszystkich 97 spec z `/praca`: 602 przeszło, jedna porażka to przekroczony czas ładowania Kalendarza w `a11y.spec.ts` przy obciążeniu (powtórzona osobno — przechodzi).
 
 ### Commit
 
-W3.2 Długi — a1c616bb; Praca — 69be452f; Ustawienia — d610da72 (2026-11-19); Grafik — 33a37488; Dziś i Kalendarz — zob. commit „W3.2 Dziś, Kalendarz” (2026-11-20).
+W3.2 Długi — a1c616bb; Praca — 69be452f; Ustawienia — d610da72 (2026-11-19); Grafik — 33a37488; Dziś i Kalendarz — 7c5674f9; Notatki — zob. commit „W3.2 Notatki” (2026-11-20).
 
 ## Wygląd — rozmycie, gradienty, obrazy (W3.5, W3.6, W5.6, 2026-11-19)
 

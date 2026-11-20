@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { Archive, Bell, Clock, PencilLine, Plus, RotateCcw, Trash } from "lucide-react";
 import { m } from "framer-motion";
@@ -235,7 +236,7 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
               key={current.id}
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0, transition: tween.enter }}
-              className="overflow-hidden rounded-card border border-border/60 bg-card p-4 note-shadow"
+              className={cn(cardVariant(), "overflow-hidden p-4 note-shadow")}
               drag={coarse ? "x" : false}
               dragDirectionLock
               dragElastic={0.25}
@@ -335,7 +336,7 @@ export function InboxTriage({ open, onOpenChange, onOpenNote }: InboxTriageProps
               </Button>
             </div>
             {reminderOpen && (
-              <div role="group" aria-label="Termin przypomnienia" className="space-y-2 rounded-card border border-border/60 p-3">
+              <div role="group" aria-label="Termin przypomnienia" className={cn(cardVariant("inset"), "space-y-2 p-3")}>
                 <div className="flex flex-wrap gap-1.5">
                   {quickReminders(new Date()).map((r) => (
                     <Button key={r.label} type="button" variant="outline" size="sm" className="coarse:h-11" onClick={() => remind(r.at)}>{r.label}</Button>

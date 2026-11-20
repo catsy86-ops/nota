@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -71,7 +72,7 @@ export function NoteBoard({ headers, children }: { headers: BoardHeader[]; child
                 label={h.label}
                 icon={h.icon}
                 count={h.count}
-                className={cn(BOARD_COLUMN_WIDTH, "shrink-0 rounded-card border border-border/60 bg-card shadow-elevation-1 px-3.5 py-2")}
+                className={cn(BOARD_COLUMN_WIDTH, cardVariant("raised"), "shrink-0 px-3.5 py-2")}
               />
             ))}
           </div>

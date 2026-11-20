@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 import { PropCell } from "@/components/NoteTable";
 import { useNotesContextOptional } from "@/hooks/NotesProvider";
@@ -33,7 +35,7 @@ export function QueryBlock({ source, onWikiClick }: { source: string; onWikiClic
   return (
     <div
       data-query-block
-      className="not-prose mb-1 overflow-hidden rounded-card border border-border/60 bg-card/60"
+      className={cn(cardVariant(), "not-prose mb-1 overflow-hidden bg-card/60")}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >

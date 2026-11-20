@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { format } from "date-fns";
 import { TriangleAlert } from "lucide-react";
@@ -18,7 +20,7 @@ export function RestoreInterruptedBanner({ onOpenBackup }: { onOpenBackup: () =>
   }
 
   return (
-    <div role="alert" data-testid="restore-interrupted" className="flex flex-wrap items-start gap-2 rounded-card border border-warning/50 bg-warning/10 px-3 py-2 text-sm">
+    <div role="alert" data-testid="restore-interrupted" className={cn(cardVariant("status", "warning"), "flex flex-wrap items-start gap-2 bg-warning/10 px-3 py-2 text-sm")}>
       <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
       <p className="min-w-0 flex-1">
         Przywracanie kopii z {format(marker.exportedAt, "dd.MM")} zostało przerwane. Część danych pochodzi z kopii, część sprzed niej.

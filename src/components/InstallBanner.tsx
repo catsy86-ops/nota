@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { NotkiLogo } from "@/components/NotkiLogo";
@@ -33,7 +35,7 @@ export function InstallBanner({ ready }: { ready: boolean }) {
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden flex items-center gap-2.5 rounded-card border border-primary/25 bg-primary/5 py-2 pl-3 pr-1.5"
+          className={cn(cardVariant("status", "info"), "md:hidden flex items-center gap-2.5 bg-primary/5 py-2 pl-3 pr-1.5")}
         >
           <span className="size-8 shrink-0 rounded-card bg-primary/15 text-primary-ink grid place-items-center">
             <Smartphone className="size-4" />

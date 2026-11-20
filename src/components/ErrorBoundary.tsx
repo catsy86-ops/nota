@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { TriangleAlert, RotateCcw, Trash } from "lucide-react";
@@ -60,7 +62,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-        <div className="max-w-md w-full rounded-card border border-border/60 bg-card p-6 shadow-elevation-1 text-center space-y-4">
+        <div className={cn(cardVariant("raised"), "max-w-md w-full p-6 text-center space-y-4")}>
           <div className="mx-auto size-14 rounded-full bg-destructive/10 flex items-center justify-center">
             <TriangleAlert className="size-7 text-destructive-ink" />
           </div>

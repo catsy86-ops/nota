@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -119,7 +121,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="flex items-start gap-3 rounded-card border border-border/60 bg-card/60 px-3 py-2.5"
+                  className={cn(cardVariant("inset"), "flex items-start gap-3 px-3 py-2.5")}
                 >
                   <Icon className={`size-4 shrink-0 mt-0.5 ${meta.tone}`} />
                   <div

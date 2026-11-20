@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { Note, Folder } from "@/hooks/useNotes";
 import { getDescendantFolderIds } from "@/hooks/useNotes";
@@ -274,7 +276,7 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
         viewBox={graphViewBox(view, W, H)}
         role="group"
         aria-label="Graf powiązań między notatkami"
-        className="block h-auto w-full rounded-card border border-border/60 bg-card text-foreground"
+        className={cn(cardVariant(), "block h-auto w-full text-foreground")}
         // Przy przybliżeniu jeden palec przesuwa graf, więc przeglądarka nie przewija strony.
         // W skali 1 przewijanie strony zostaje (pan-y).
         onPointerDown={onPointerDown}

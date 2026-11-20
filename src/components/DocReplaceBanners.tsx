@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Info, TriangleAlert } from "lucide-react";
@@ -11,7 +12,7 @@ import { pluralPl } from "@/lib/plural";
 const SNAPSHOT_LAST_KEY = "kaczy.snapshot.last.v1";
 const DISMISSED_KEY = "kaczy.dataloss.dismissed.v1";
 
-const box = "flex flex-wrap items-start gap-2 rounded-card border px-3 py-2 text-sm";
+const box = "flex flex-wrap items-start gap-2 px-3 py-2 text-sm";
 const when = (at: number) => format(at, "dd.MM, 'godz.' H:mm");
 
 /**
@@ -51,7 +52,7 @@ export function DocReplaceNotice({ onOpenSync }: { onOpenSync: () => void }) {
 
   if (!result.ok) {
     return (
-      <div role="alert" data-testid="doc-replace-result" className={`${box} border-warning/50 bg-warning/10`}>
+      <div role="alert" data-testid="doc-replace-result" className={`${box} ${cardVariant("status", "warning")} bg-warning/10`}>
         <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
         <p className="min-w-0 flex-1">Nie przywrócono danych: {result.reason}. Dane na tym urządzeniu są bez zmian.</p>
         <Button type="button" variant="ghost" size="sm" onClick={close} className="coarse:h-11">Zamknij</Button>
@@ -60,7 +61,7 @@ export function DocReplaceNotice({ onOpenSync }: { onOpenSync: () => void }) {
   }
 
   return (
-    <div role="status" data-testid="doc-replace-result" className={`${box} border-border/60 bg-muted/30`}>
+    <div role="status" data-testid="doc-replace-result" className={`${box} ${cardVariant("inset")}`}>
       <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
       <p className="min-w-0 flex-1">
         {intent.kind === "snapshot"
@@ -123,7 +124,7 @@ export function DataLossBanner({ onOpenBackup }: { onOpenBackup: () => void }) {
   };
 
   return (
-    <div role="alert" data-testid="data-loss" className={`${box} border-warning/50 bg-warning/10`}>
+    <div role="alert" data-testid="data-loss" className={`${box} ${cardVariant("status", "warning")} bg-warning/10`}>
       <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning-ink" aria-hidden />
       <p className="min-w-0 flex-1">
         Wygląda na to, że dane zniknęły. Jest kopia z {format(last.date, "dd.MM")} ({last.notes} {pluralPl(last.notes, ["notatka", "notatki", "notatek"])}).

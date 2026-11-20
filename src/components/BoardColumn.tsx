@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { useDroppable } from "@dnd-kit/core";
@@ -43,7 +44,7 @@ export function BoardColumn({ columnKey, label, icon, count, droppable = true, c
       aria-label={typeof label === "string" ? label : undefined}
       className={cn(
         BOARD_COLUMN_WIDTH,
-        "shrink-0 snap-start rounded-card border border-border/60 bg-muted/30 p-2.5 transition-colors duration-fast",
+        cardVariant("inset"), "shrink-0 snap-start p-2.5 transition-colors duration-fast",
         isOver && "border-primary/50 bg-primary/5",
       )}
     >

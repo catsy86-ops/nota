@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { Pin, ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Note } from "@/hooks/useNotes";
@@ -60,8 +61,7 @@ export function NoteGallery({ notes, onOpen, selectedIds, propDefs = [] }: NoteG
               onClick={() => onOpen(n.id)}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(n.id); } }}
               className={cn(
-                "group flex h-full cursor-pointer flex-col overflow-hidden rounded-card border border-border/60 bg-card/70 transition-colors duration-fast hover:bg-muted/40",
-                "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50",
+                cardVariant("interactive"), "group flex h-full flex-col overflow-hidden",
                 selectedIds?.has(n.id) && "border-primary bg-primary/10",
               )}
             >

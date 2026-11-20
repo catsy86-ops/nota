@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { ArrowDown, ArrowUp, Bell, ChevronDown, Columns3, Flag, Pin } from "lucide-react";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -223,7 +224,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
   return (
     <>
     {chooser}
-    <div className="overflow-x-auto rounded-card border border-border/60 bg-card/60">
+    <div className={cn(cardVariant(), "overflow-x-auto bg-card/60")}>
       <table className="w-full text-sm" data-note-table>
         <thead>
           <tr className="border-b border-border/60 text-left text-xs text-muted-foreground">

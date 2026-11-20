@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -109,7 +110,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
 
         <div className="grid grid-cols-3 gap-2 pt-2">
           {tiles.map((t) => (
-            <div key={t.label} className="rounded-card border border-border/60 bg-muted/30 p-3 text-center">
+            <div key={t.label} className={cn(cardVariant("inset"), "p-3 text-center")}>
               <t.icon className="size-4 mx-auto text-primary-ink mb-1" />
               <p className="text-lg font-display font-bold">{t.value}</p>
               <p className="ui-hint">{t.label}</p>
@@ -117,7 +118,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
           ))}
         </div>
 
-        <div className="flex items-center gap-3 mt-3 rounded-card border border-border/60 bg-muted/30 p-3">
+        <div className={cn(cardVariant("inset"), "flex items-center gap-3 mt-3 p-3")}>
           <Flame className={`size-6 shrink-0 ${live.currentStreak > 0 ? "text-warning-ink" : "text-muted-foreground"}`} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold">
@@ -131,7 +132,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
 
         <div className="pt-3">
           <p className="ui-hint font-semibold mb-2">Aktywność (14 dni)</p>
-          <div className="h-24 rounded-card border border-border/60 bg-muted/20 p-2">
+          <div className={cn(cardVariant("inset"), "h-24 p-2")}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={activity}>
                 <XAxis
