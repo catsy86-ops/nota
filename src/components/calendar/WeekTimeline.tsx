@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { addDays, format, isSameDay } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -112,7 +113,7 @@ export function WeekTimeline({ weekStart, byDay, titleOf, shiftOf, onEdit, onOpe
   }
 
   return (
-    <div className="rounded-card border border-border/60 bg-card overflow-x-auto">
+    <div className={cn(cardVariant(), "overflow-x-auto")}>
       <div className="grid min-w-[44rem]" style={{ gridTemplateColumns: `${GUTTER_PX}px repeat(7, minmax(0, 1fr))` }}>
         {/* Nagłówki dni: klik ustawia wybrany dzień (panel dnia). */}
         <div />

@@ -1,3 +1,4 @@
+import { cardVariant } from "@/components/ui/card";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Archive, BellRing, ExternalLink, FolderInput, Inbox, ListChecks, Pin, PinOff, Sparkles } from "lucide-react";
@@ -198,8 +199,8 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
         aria-label="Przegląd tygodnia"
         data-testid="weekly-review"
         className={cn(
-          "relative rounded-card border border-primary/25 bg-card p-4 sm:p-5 pl-5 sm:pl-6",
-          "border-l-4 border-l-primary/50 shadow-elevation-1",
+          cardVariant("status", "info"),
+          "relative border-primary/25 shadow-elevation-1 p-4 sm:p-5 pl-5 sm:pl-6",
         )}
       >
         <header className="flex flex-wrap items-start gap-x-3 gap-y-2">

@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +23,7 @@ export function TodayInvoiceDue() {
   const open = openId ? due.find((d) => d.siteId === openId) : undefined;
   const site = open ? dir.find((s) => s.id === open.siteId) : undefined;
   return (
-    <section aria-label="Do wystawienia" className="rounded-card border border-border bg-card p-4" data-testid="today-invoice-due">
+    <section aria-label="Do wystawienia" className={cn(cardVariant(), "p-4")} data-testid="today-invoice-due">
       <h2 className="mb-2 flex items-center gap-1.5 font-display text-base">
         <FileText className="size-4 text-primary-ink" aria-hidden />Do wystawienia
         <span className="text-xs font-normal text-muted-foreground">{due.length} {pluralPl(due.length, ["zlecenie", "zlecenia", "zleceń"])} bez faktury</span>

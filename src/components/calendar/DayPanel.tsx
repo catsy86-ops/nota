@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { ReminderQuickActions } from "@/components/ReminderQuickActions";
 import type { Note } from "@/hooks/useNotes";
 import { format, isSameDay } from "date-fns";
@@ -83,7 +85,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
     </p>
   );
   return (
-    <section aria-label="Terminy wybranego dnia" className="rounded-card border border-border/50 bg-card p-4">
+    <section aria-label="Terminy wybranego dnia" className={cn(cardVariant(), "p-4")}>
       <div className="flex items-center gap-2 mb-3">
         <h3 className="font-display font-semibold text-sm first-letter:uppercase">
           {format(day, "EEEE, d MMMM", { locale: pl })}

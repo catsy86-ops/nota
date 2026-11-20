@@ -7,7 +7,7 @@ import { pluralPl } from "@/lib/plural";
 import { takenCount } from "@/lib/supplements/model";
 import { useSupplements, useSupplementsTaken } from "@/lib/supplements/store";
 import { useTrainingEntries } from "@/lib/training/store";
-import { cardClass } from "@/components/ui/card";
+import { cardVariant } from "@/components/ui/card";
 import { haptic } from "@/lib/haptics";
 import { amountText, useHideAmounts } from "@/lib/debts/hideAmounts";
 import { overdueRates } from "@/lib/debts/plans";
@@ -45,7 +45,7 @@ export function TodayPersonalRows({ inboxCount, onOpenInbox, onOpenCwiczenia, on
   if (entries.length > 0) parts.push(setsToday > 0 ? `Trening: ${setsToday} ${pluralPl(setsToday, ["seria", "serie", "serii"])} dziś` : "Trening: jeszcze nie dziś");
 
   return (
-    <section aria-label="Skrzynka, Ćwiczenia i raty" data-testid="today-personal" className={`${cardClass} px-4 py-2 sm:px-5 divide-y divide-border/50`}>
+    <section aria-label="Skrzynka, Ćwiczenia i raty" data-testid="today-personal" className={`${cardVariant()} px-4 py-2 sm:px-5 divide-y divide-border/50`}>
       {inboxCount > 0 && (
         <div className="flex items-center gap-3 py-2">
           <Inbox className="size-4 shrink-0 text-muted-foreground" aria-hidden />

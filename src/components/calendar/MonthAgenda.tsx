@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { parseDayKey } from "@/lib/week";
@@ -33,7 +35,7 @@ export function MonthAgenda({ month, byDay, titleOf, shiftOf, studyOf, onSelectD
         const shift = shiftOf?.(k);
         const occ = byDay.get(k) ?? [];
         return (
-          <section key={k} role="listitem" aria-label={format(parseDayKey(k), "EEEE, d MMMM", { locale: pl })} className="rounded-card border border-border/70 bg-card p-3">
+          <section key={k} role="listitem" aria-label={format(parseDayKey(k), "EEEE, d MMMM", { locale: pl })} className={cn(cardVariant(), "p-3")}>
             <button type="button" onClick={() => onSelectDay(k)} className="pressable flex w-full items-baseline justify-between gap-2 text-left coarse:min-h-11">
               <span className="text-sm font-semibold first-letter:uppercase">{format(parseDayKey(k), "EEEE, d MMMM", { locale: pl })}</span>
               {shift && <span className="shrink-0 text-xs text-muted-foreground">{shift}</span>}

@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { ChevronDown, HardHat } from "lucide-react";
 
 /**
@@ -6,7 +8,7 @@ import { ChevronDown, HardHat } from "lucide-react";
  */
 export function CalendarLegend() {
   return (
-    <details data-testid="calendar-legend" className="group rounded-card border border-border/60 bg-card/60 px-3 py-2 text-xs text-muted-foreground">
+    <details data-testid="calendar-legend" className={cn(cardVariant(), "group bg-card/60 px-3 py-2 text-xs text-muted-foreground")}>
       <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between font-medium text-foreground sm:min-h-0">
         Legenda
         <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />

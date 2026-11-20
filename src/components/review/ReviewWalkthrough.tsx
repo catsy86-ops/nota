@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Archive, ArrowLeft, ArrowRight, Check, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -124,7 +126,7 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-card border border-border/70 bg-muted/30 p-4 border-l-4 border-l-primary/50">
+            <div className={cn(cardVariant("status", "info"), "bg-muted/30 p-4")}>
               <p className="font-display text-base font-semibold leading-snug wrap-break-word">
                 {current.note.title.trim() || "Bez tytułu"}
               </p>

@@ -1,3 +1,5 @@
+import { cardVariant } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 import { addDays, format, startOfDay } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -49,7 +51,7 @@ export function UpcomingDays({ notes, titleOf, shiftOf, studyOf, onSelectDay }: 
             type="button"
             onClick={() => onSelectDay(day)}
             style={{ "--i": i } as React.CSSProperties}
-            className="rise-in min-w-0 text-left rounded-card border border-border/50 bg-card p-2.5 sm:p-3 transition-colors [@media(hover:hover)]:hover:border-primary/40"
+            className={cn(cardVariant("interactive"), "rise-in min-w-0 text-left p-2.5 sm:p-3")}
           >
             <span className="flex items-baseline gap-2">
               <span className="font-display font-semibold text-sm">{i === 0 ? "Dziś" : "Jutro"}</span>
