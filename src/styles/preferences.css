@@ -9,6 +9,10 @@
   html[data-skin], html:not([data-skin]) {
     --border: color-mix(in oklab, var(--foreground) 55%, var(--background));
     --muted-foreground: color-mix(in oklab, var(--foreground) 85%, var(--background));
+    /* W6.7: bez tekstu przygaszonego poniżej wyciszonego (`--faint`) i z pełną krawędzią pól — pole ma być
+       widać od razu, nie tylko po najechaniu. Zwykłe krawędzie zostają na 55%, żeby siatka kart nie krzyczała. */
+    --faint: var(--muted-foreground);
+    --input: var(--foreground);
   }
   /* Grubsze obramowania (3.12): 1 px → 2 px tam, gdzie krawędź rysuje utility `border…`. Późniejszy plik,
      więc wygrywa z utility o tej samej specyficzności. Kolory krawędzi są wyżej. */
@@ -58,5 +62,37 @@ html[data-oled="on"] *::after {
   :focus-visible {
     outline: 2px solid Highlight;
     outline-offset: 2px;
+  }
+  /* W6.7: stan wybrania niosło tło (`bg-primary/10`, `data-state=active`), które system zdejmuje.
+     Zamiast tła obrys w kolorze systemowym `Highlight` — pigułki, zakładki, przełączniki grup, pozycja w nawigacji. */
+  [aria-pressed="true"],
+  [aria-selected="true"],
+  [aria-current]:not([aria-current="false"]),
+  [role="tab"][data-state="active"],
+  [data-state="on"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+  /* Przełącznik i pasek postępu to same tła — bez nich nie widać ani toru, ani stanu. */
+  [role="switch"] {
+    border: 1px solid CanvasText;
+  }
+  [role="switch"] > span {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+  [role="switch"][data-state="checked"] {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+  [role="switch"][data-state="checked"] > span {
+    background: HighlightText;
+  }
+  [role="progressbar"] {
+    border: 1px solid CanvasText;
+  }
+  [role="progressbar"] > * {
+    forced-color-adjust: none;
+    background: Highlight;
   }
 }

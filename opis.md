@@ -6792,6 +6792,36 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — wysoki kontrast i wymuszone kolory (W6.7, 2026-11-20)
+
+### Co robi
+
+- **System prosi o więcej kontrastu** (`prefers-contrast: more`): poza dotychczasowymi mocniejszymi krawędziami (55% tekstu, 2 px) tekst przygaszony (`--faint`) jest tak ciemny jak wyciszony, a krawędzie pól (`--input`) mają pełny kolor tekstu. „Tryb budowa” w ustawieniu `auto` włącza się jak dotąd.
+- **Tryb wysokiego kontrastu systemu** (`forced-colors: active`, np. Windows): stan wybrania — pigułki z `aria-pressed`, zakładki, przełączniki grup, aktywna pozycja nawigacji, wiersz „dziś” — ma obrys w systemowym kolorze `Highlight`, bo tło, które go niosło, system zdejmuje. Przełączniki mają tor z obwódką i włączony stan w `Highlight`, paski postępu — obwódkę i wypełnienie w `Highlight`.
+
+### Gdzie jest
+
+- `src/styles/preferences.css` — oba bloki `@media`; plik importowany ostatni w `main.tsx`, więc wygrywa kolejnością.
+
+### Jak działa
+
+- Selektory po atrybutach ARIA i Radix (`aria-pressed`, `aria-selected`, `aria-current`, `role="tab"][data-state="active"]`, `data-state="on"`), więc działają we wszystkich komponentach bez zmian w kodzie.
+- Przy przełączniku i pasku postępu `forced-color-adjust: none` — bez tego system wyzerowałby tło także w regule z kolorem systemowym.
+- Ikony lucide rysują `currentColor`, więc w wymuszonych kolorach biorą kolor tekstu systemu bez osobnej reguły.
+
+### Ograniczenia i pułapki
+
+- `--input` przy wyższym kontraście to też tor wyłączonego przełącznika (`bg-input`) i obwódka przycisków `outline` — są pełne, celowo.
+- Wykresy SVG z kolorami z tokenów (iskra, pasek tygodnia, oprawa wykresów) w wymuszonych kolorach zostają w barwach stylu; wartość i tak podaje tekst obok.
+
+### Testy
+
+- Zrzuty w emulacji Chrome (`emulateMedia({ forcedColors: "active" })` i `{ contrast: "more" }`): Notatki, Grafik, Ustawienia → Wygląd. Vitest `src/lib` i `src/test` (3707) oraz e2e `hidden-views`, `night-skin` zielone.
+
+### Commit
+
+W6.7 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — `!important` tylko tam, gdzie musi (W6.4, 2026-11-20)
 
 ### Co robi
