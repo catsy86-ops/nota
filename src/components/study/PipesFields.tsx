@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useId, useMemo, useRef, useState } from "react";
 import { Cylinder, Plus, Trash } from "lucide-react";
 import { haptic } from "@/lib/haptics";
@@ -97,14 +98,14 @@ export function PipesFields({ value, history, onChange }: { value: Pipe[]; histo
                   />
                   m
                 </label>
-                <button
+                <Button
                   type="button"
                   onClick={() => remove(i)}
                   aria-label={`Usuń rurę ${p.name || i + 1}`}
-                  className="pressable grid size-10 shrink-0 place-items-center rounded-field border border-border text-muted-foreground coarse:size-11"
+                  variant="outline" size="icon" className="size-10 shrink-0 text-muted-foreground"
                 >
                   <Trash className="size-4" aria-hidden />
-                </button>
+                </Button>
               </li>
             );
           })}

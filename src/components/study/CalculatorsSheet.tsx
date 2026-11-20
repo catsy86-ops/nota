@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Calculator, Plus, X } from "lucide-react";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -193,15 +194,15 @@ function VolumeCalc() {
                 <input inputMode="decimal" value={r.length} onChange={(e) => patch(r.id, { length: e.target.value })} aria-label={`Rura ${i + 1}: długość`} className={fieldClass} />
               </label>
             )}
-            <button
+            <Button
               type="button"
               onClick={() => setRows((rs) => (rs.length > 1 ? rs.filter((x) => x.id !== r.id) : rs))}
               disabled={rows.length === 1}
               aria-label={`Usuń rurę ${i + 1}`}
-              className="pressable grid size-11 place-items-center rounded-field text-muted-foreground hover:bg-muted disabled:opacity-40"
+              variant="ghost" size="icon" className="size-11 text-muted-foreground"
             >
               <X className="size-4" aria-hidden />
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

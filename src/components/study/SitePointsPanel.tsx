@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Camera, Check, ChevronDown, Droplets, Pencil, Plus, Trash2 } from "lucide-react";
@@ -160,16 +161,16 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">{room.name}</span>
                     <span className="font-mono text-xs tabular-nums text-muted-foreground" aria-label={`${rp.done} z ${rp.total} gotowe`}>{rp.done}/{rp.total}</span>
                   </button>
-                  <button type="button" onClick={() => setRenaming(room.id)} aria-label={`Zmień nazwę: ${room.name}`}
-                    className="pressable grid size-9 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
+                  <Button type="button" onClick={() => setRenaming(room.id)} aria-label={`Zmień nazwę: ${room.name}`}
+                    variant="ghost" size="icon" className="shrink-0 text-muted-foreground">
                     <Pencil className="size-4" aria-hidden />
-                  </button>
+                  </Button>
                 </>
               )}
-              <button type="button" onClick={() => dropRoom(room.id)} aria-label={`Usuń pomieszczenie ${room.name}`}
-                className="pressable grid size-9 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
+              <Button type="button" onClick={() => dropRoom(room.id)} aria-label={`Usuń pomieszczenie ${room.name}`}
+                variant="ghost" size="icon" className="shrink-0 text-muted-foreground">
                 <Trash2 className="size-4" aria-hidden />
-              </button>
+              </Button>
             </div>
             {expanded && (
               <div id={`room-${room.id}`} className="space-y-2 border-t border-dashed border-border px-3 py-2">
@@ -198,15 +199,15 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
                             />
                             cm
                           </label>
-                          <button type="button" onClick={() => takePhoto(p, room.name)} disabled={photoBusy === p.id} aria-label={`Zdjęcie punktu: ${t.label}`}
+                          <Button type="button" onClick={() => takePhoto(p, room.name)} disabled={photoBusy === p.id} aria-label={`Zdjęcie punktu: ${t.label}`}
                             title="Zdjęcie z podpisem: pomieszczenie, punkt, wysokość"
-                            className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground disabled:opacity-50 coarse:size-11">
+                            variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground">
                             <Camera className="size-4" aria-hidden />
-                          </button>
-                          <button type="button" onClick={() => dropPoint(p)} aria-label={`Usuń punkt ${t.label}`}
-                            className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
+                          </Button>
+                          <Button type="button" onClick={() => dropPoint(p)} aria-label={`Usuń punkt ${t.label}`}
+                            variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground">
                             <Trash2 className="size-3.5" aria-hidden />
-                          </button>
+                          </Button>
                         </div>
                         <div className="flex items-center gap-1.5" role="group" aria-label={`${t.label}: stan`}>
                           {POINT_STEPS.map((s, i) => (

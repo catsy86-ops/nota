@@ -50,9 +50,9 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
               {isRunning(value) && <span className="ml-1 font-mono tabular-nums" data-testid="timer-badge">· {clockLabel(remainingSec(value, now))}</span>}
             </Button>
           )}
-          <button type="button" onClick={() => onChange(null)} aria-label="Usuń protokół próby" className="grid size-8 place-items-center rounded-full text-muted-foreground hover:bg-muted coarse:size-11">
+          <Button type="button" onClick={() => onChange(null)} aria-label="Usuń protokół próby" variant="ghost" size="icon-sm" className="rounded-full text-muted-foreground">
             <X className="size-4" aria-hidden />
-          </button>
+          </Button>
         </div>
       <ToggleGroup
         aria-label="Czym próba"

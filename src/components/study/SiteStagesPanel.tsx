@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Fragment, useState } from "react";
 import { Check, ListChecks, Plus, X } from "lucide-react";
 import { toast } from "sonner";
@@ -107,14 +108,14 @@ export function SiteStagesPanel({ site, journal = [] }: { site: SiteInfo; journa
                 <span className={cn("min-w-0 flex-1 truncate", isDone && "text-muted-foreground line-through decoration-muted-foreground/50")}>{s.name}</span>
                 {isDone && <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground">{shortDate(s.done!)}</span>}
               </button>
-              <button
+              <Button
                 type="button"
                 onClick={() => remove(s.id)}
                 aria-label={`Usuń etap: ${s.name}`}
-                className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+                variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground"
               >
                 <X className="size-3.5" aria-hidden />
-              </button>
+              </Button>
             </li>
             {s.id === COVER_STAGE_ID && !isDone && (
               <li className="flex items-center justify-between gap-2 pb-1 pl-9" data-testid="cover-photos">

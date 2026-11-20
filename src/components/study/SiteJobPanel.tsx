@@ -249,10 +249,10 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
                   <span className="min-w-0 flex-1 truncate">{i.name}</span>
                   <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{qtyText(i.qty)} {i.unit} × {money(i.price)}</span>
                   <span className="w-20 shrink-0 text-right font-mono text-xs font-semibold tabular-nums">{money(itemClientTotal(i, job.margin))}</span>
-                  <button type="button" onClick={() => dropItem(i.id)} aria-label={`Usuń pozycję ${i.name}`}
-                    className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
+                  <Button type="button" onClick={() => dropItem(i.id)} aria-label={`Usuń pozycję ${i.name}`}
+                    variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground">
                     <X className="size-4" aria-hidden />
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>

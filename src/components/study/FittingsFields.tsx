@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useId, useMemo, useRef } from "react";
 import { Mic, Minus, Package, Plus, Trash } from "lucide-react";
 import { toast } from "sonner";
@@ -95,9 +96,9 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
               {f.qty <= 1 ? <Trash className="size-4" aria-hidden /> : <Minus className="size-4" aria-hidden />}
             </button>
             <span className="w-8 shrink-0 text-center font-mono text-base font-semibold tabular-nums" aria-label={`${f.qty} szt.`} data-testid="fitting-qty">{f.qty}</span>
-            <button type="button" onClick={() => setRow(i, { qty: Math.min(FITTING_QTY_MAX, f.qty + 1) })} aria-label={`${f.name || "Kształtka"}: więcej`} className="pressable grid size-10 shrink-0 place-items-center rounded-field border border-border text-muted-foreground coarse:size-11">
+            <Button type="button" onClick={() => setRow(i, { qty: Math.min(FITTING_QTY_MAX, f.qty + 1) })} aria-label={`${f.name || "Kształtka"}: więcej`} variant="outline" size="icon" className="size-10 shrink-0 text-muted-foreground">
               <Plus className="size-4" aria-hidden />
-            </button>
+            </Button>
           </li>
         ))}
       </ul>}

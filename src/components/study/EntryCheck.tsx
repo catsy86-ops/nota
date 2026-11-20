@@ -366,14 +366,14 @@ function ItemsEditor({ items, custom, onDone }: { items: readonly CheckItem[]; c
               aria-invalid={!item.text.trim()}
               className="h-10 min-w-0 flex-1 rounded-field border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring aria-invalid:border-destructive coarse:h-11 sm:text-sm"
             />
-            <button
+            <Button
               type="button"
               onClick={() => setDraft((d) => d.filter((_, i) => i !== idx))}
               aria-label={`Usuń punkt: ${item.text || idx + 1}`}
-              className="pressable grid size-10 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+              variant="ghost" size="icon" className="size-10 shrink-0 text-muted-foreground"
             >
               <X className="size-4" aria-hidden />
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

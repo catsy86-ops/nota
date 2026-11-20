@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { CircleCheck, Copy, Ellipsis, Pencil, RotateCcw, Share2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -44,14 +45,14 @@ export function JournalItemMenu({ entry: e, resolved, onToggleResolved }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button
           type="button"
           aria-label="Opcje wpisu"
           title="Edytuj, kopiuj, usuń"
-          className="grid size-8 shrink-0 place-items-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground data-[state=open]:bg-muted coarse:h-11 coarse:w-11"
+          variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground data-[state=open]:bg-muted"
         >
           <Ellipsis className="size-4" aria-hidden />
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">
         <DropdownMenuItem onSelect={() => openJournalEdit(e)} className={item}>

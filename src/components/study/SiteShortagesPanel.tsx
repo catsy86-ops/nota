@@ -144,14 +144,14 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
               >
                 {STATUS_LABEL[s.status]}
               </button>
-              <button
+              <Button
                 type="button"
                 onClick={() => remove(s.id)}
                 aria-label={`Usuń brak: ${s.text}`}
-                className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+                variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground"
               >
                 <X className="size-3.5" aria-hidden />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
@@ -196,14 +196,14 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
               <Mic className={cn("size-4", dictation.listening && "animate-pulse")} aria-hidden />
             </button>
           )}
-          <button
+          <Button
             type="submit"
             disabled={!text.trim()}
             aria-label="Dodaj brak"
-            className="pressable grid size-9 shrink-0 place-items-center rounded-field border border-border text-muted-foreground hover:bg-muted disabled:opacity-50 coarse:size-11"
+            variant="outline" size="icon" className="shrink-0 text-muted-foreground"
           >
             <Plus className="size-4" aria-hidden />
-          </button>
+          </Button>
         </form>
       )}
 

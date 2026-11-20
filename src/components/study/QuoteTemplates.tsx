@@ -72,10 +72,10 @@ export function QuoteTemplates({ siteId, job }: { siteId: string; job: Job }) {
             <FilePlus2 className="size-4" aria-hidden />Wstaw
           </Button>
           {chosen && (
-            <button type="button" onClick={drop} aria-label={`Usuń szablon ${chosen.name}`} data-testid="template-remove"
-              className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
+            <Button type="button" onClick={drop} aria-label={`Usuń szablon ${chosen.name}`} data-testid="template-remove"
+              variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground">
               <Trash2 className="size-4" aria-hidden />
-            </button>
+            </Button>
           )}
         </div>
       )}

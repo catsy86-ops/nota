@@ -100,10 +100,10 @@ export function SiteBillingDues({ site, billing, hours, points }: {
           <li key={p.id} className="flex items-center gap-2">
             <span className="min-w-0 flex-1 truncate"><span className="font-mono text-xs tabular-nums">{dmy(p.day)}</span>{p.note && <span className="text-muted-foreground"> · {p.note}</span>}</span>
             <span className="shrink-0 font-mono tabular-nums">−{money(p.amount)}</span>
-            <button type="button" onClick={() => remove(p.id)} aria-label={`Usuń wpłatę ${money(p.amount)} z ${dmy(p.day)}`}
-              className="pressable -mr-1 grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
+            <Button type="button" onClick={() => remove(p.id)} aria-label={`Usuń wpłatę ${money(p.amount)} z ${dmy(p.day)}`}
+              variant="ghost" size="icon-sm" className="-mr-1 shrink-0 rounded-full text-muted-foreground">
               <X className="size-4" aria-hidden />
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

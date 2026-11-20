@@ -170,10 +170,10 @@ export function VanDialog({ open, onOpenChange, journal }: { open: boolean; onOp
                   <span className={cn("shrink-0 font-mono text-sm tabular-nums", s.toBuy > 0 ? "font-semibold text-warning-ink" : "text-foreground")} data-testid="van-qty">
                     {vanQtyLabel(s.qty, s.item.unit)}
                   </span>
-                  <button type="button" onClick={() => drop(s.item.id)} aria-label={`Usuń ${s.item.name}`}
-                    className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground coarse:size-11">
+                  <Button type="button" onClick={() => drop(s.item.id)} aria-label={`Usuń ${s.item.name}`}
+                    variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground">
                     <Trash2 className="size-4" aria-hidden />
-                  </button>
+                  </Button>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                   {s.item.min !== undefined && <span>min. {vanQtyLabel(s.item.min, s.item.unit)}</span>}

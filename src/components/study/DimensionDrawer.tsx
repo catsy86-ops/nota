@@ -207,10 +207,10 @@ export function DimensionDrawer({ open, onOpenChange, imageUrl, dimensions, onSa
               {list.map((d, i) => (
                 <li key={i} className="flex items-center justify-between gap-2 rounded-card bg-muted px-3 py-1.5 text-sm" data-testid="dimension-item">
                   <span className="min-w-0 truncate">{d.text}</span>
-                  <button type="button" onClick={() => setList((l) => l.filter((_, j) => j !== i))} aria-label={`Usuń wymiar ${d.text}`}
-                    className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:h-11 coarse:w-11">
+                  <Button type="button" onClick={() => setList((l) => l.filter((_, j) => j !== i))} aria-label={`Usuń wymiar ${d.text}`}
+                    variant="ghost" size="icon-sm" className="shrink-0 rounded-full text-muted-foreground">
                     <Trash2 className="size-4" aria-hidden />
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>
