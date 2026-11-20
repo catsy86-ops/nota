@@ -9,5 +9,27 @@
   html.printing-report body { background: oklch(1.0000 0.0000 0.00); }
   /* Ciemny motyw nie trafia na papier. */
   html.printing-report .report-paper, html.printing-report .report-paper * { background: transparent !important; color: oklch(0.0000 0.0000 0.00) !important; border-color: oklch(0.6830 0.0000 0.00) !important; }
-  @page { margin: 14mm; }
+}
+
+/* W8.1: druk dowolnego widoku (Ctrl+P, „Drukuj” przeglądarki). Powłoka zostaje na ekranie: pasek boczny, nagłówek,
+   dolny pasek, tło kartki, kompozytor, ikony na kartach i toasty. Kolory papieru ustawia `preferences.css`
+   (plik importowany ostatni, więc przebija tokeny stylów). Margines 15 mm i numer strony dla każdego wydruku. */
+@media print {
+  @page {
+    margin: 15mm;
+    @bottom-right { content: counter(page) " / " counter(pages); font-size: 9pt; color: oklch(0.4500 0.0000 0.00); }
+  }
+  html:not(.printing-report) :is(.paper-grid, .sidebar-gradient, .app-header, .paper-stamp, .save-status, .card-actions, [data-print="hide"], [data-add-note-bar], [data-sonner-toaster]) { display: none; }
+  html:not(.printing-report) main { max-width: none; padding: 0; }
+  /* Otwarte okno (czytnik notatki, wycena): drukuje się samo okno, bez widoku pod nim i bez przyciemnienia. */
+  html:not(.printing-report) body:has(> [role="dialog"]) > #root { display: none; }
+  /* Czytnik notatki ma własny wrapper w `#root` (nie portal Radix): chowamy resztę `#root`, a rodzic okna przestaje centrować. */
+  html:not(.printing-report) #root:has([role="dialog"]) > :not(:has([role="dialog"])) { display: none; }
+  html:not(.printing-report) :has(> [role="dialog"]) { position: static; display: block; padding: 0; }
+  html:not(.printing-report) [role="dialog"] { position: static; inset: auto; transform: none; translate: none; margin: 0 auto; max-height: none; overflow: visible; box-shadow: none; }
+  /* Karta, wiersz listy i tabeli w całości na jednej stronie; nagłówek tabeli na każdej stronie. */
+  :is(.note-card, [role="listitem"], li, tr, figure) { break-inside: avoid; }
+  thead { display: table-header-group; }
+  /* Adres linku na papierze — kliknąć się nie da. */
+  :is(main, [role="dialog"]) a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; overflow-wrap: anywhere; }
 }

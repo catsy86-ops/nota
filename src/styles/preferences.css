@@ -96,3 +96,36 @@ html[data-oled="on"] *::after {
     background: Highlight;
   }
 }
+
+/* W8.1: papier — ciemny tekst na białym niezależnie od stylu i schematu, bez cieni i kolorowych teł notatek.
+   `html:root[data-skin]` ma tę samą specyficzność co `html[data-skin="…"]:not(.dark)` w stylach, a ten plik jest ostatni. */
+@media print {
+  html:root[data-skin],
+  html:root:not([data-skin]) {
+    color-scheme: light;
+    --background: oklch(1.0000 0.0000 0.00);
+    --foreground: oklch(0.1500 0.0000 0.00);
+    --card: oklch(1.0000 0.0000 0.00);
+    --card-foreground: oklch(0.1500 0.0000 0.00);
+    --popover: oklch(1.0000 0.0000 0.00);
+    --popover-foreground: oklch(0.1500 0.0000 0.00);
+    --muted: oklch(0.9600 0.0000 0.00);
+    --muted-foreground: oklch(0.3800 0.0000 0.00);
+    --faint: oklch(0.4500 0.0000 0.00);
+    --border: oklch(0.8000 0.0000 0.00);
+    --elevation-1: none;
+    --elevation-2: none;
+    --elevation-3: none;
+    --note-default: oklch(1.0000 0.0000 0.00);
+    --note-coral: oklch(1.0000 0.0000 0.00);
+    --note-peach: oklch(1.0000 0.0000 0.00);
+    --note-sand: oklch(1.0000 0.0000 0.00);
+    --note-mint: oklch(1.0000 0.0000 0.00);
+    --note-sage: oklch(1.0000 0.0000 0.00);
+    --note-sky: oklch(1.0000 0.0000 0.00);
+    --note-lavender: oklch(1.0000 0.0000 0.00);
+    --note-rose: oklch(1.0000 0.0000 0.00);
+  }
+  /* Poświaty tytułów (Neon, Zorza, Matryca) na papierze to rozmazana plama. */
+  html:root[data-skin] :is(h1, h2, h3) { text-shadow: none; filter: none; }
+}

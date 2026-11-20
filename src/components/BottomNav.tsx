@@ -168,6 +168,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
   return (
     <>
       <motion.nav
+        data-print="hide"
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={spring.soft}

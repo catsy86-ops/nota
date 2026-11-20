@@ -6792,6 +6792,42 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Druk dowolnego widoku (W8.1, 2026-11-20)
+
+### Co robi
+
+- „Drukuj” przeglądarki (Ctrl+P) na każdym widoku daje papier zamiast zrzutu aplikacji: bez paska bocznego, nagłówka, dolnego paska, tła kartki, kompozytora, ikon na kartach, plakietki „Zapisano” i toastów; ciemny tekst na białym w każdym stylu i schemacie (też Neon czy ciemny Zeszyt), bez cieni, poświat tytułów i kolorowych teł notatek.
+- Otwarte okno (czytnik notatki, okna Radix — np. wycena) drukuje się samo, od góry strony, bez widoku pod nim.
+- Karty, wiersze list i tabel nie łamią się między stronami; nagłówek tabeli powtarza się na każdej stronie; link drukuje swój adres w nawiasie.
+- Każdy wydruk (też raport budowy, protokół odbioru i miesiąc Kalendarza przez `PrintRoot`) ma marginesy 15 mm (wcześniej 14) i numer strony „1 / 3” w prawym dolnym rogu.
+
+### Gdzie jest
+
+- `src/styles/app/print.css`: drugi blok `@media print` — `@page` z `@bottom-right`, ukrywanie powłoki (`.paper-grid`, `.sidebar-gradient`, `.app-header`, `.paper-stamp`, `.save-status`, `.card-actions`, `[data-print="hide"]`, `[data-add-note-bar]`, toaster Sonnera), okno zamiast widoku, `break-inside`, `thead`, adresy linków. Reguły zwykłego druku mają `html:not(.printing-report)`, więc nie ruszają `PrintRoot`.
+- `src/styles/preferences.css`: `@media print` z tokenami papieru (`html:root[data-skin]`) i bez `text-shadow`/`filter` w nagłówkach.
+- `src/components/BottomNav.tsx`: `data-print="hide"` na pasku.
+
+### Jak działa
+
+- Kolory przez tokeny, nie przez `!important`: `html:root[data-skin]` ma specyficzność stylów (`html[data-skin="…"]:not(.dark)`), a `preferences.css` jest importowany ostatni.
+- Czytnik notatki to wrapper w `#root`, nie portal: `#root:has([role="dialog"]) > :not(:has([role="dialog"]))` chowa resztę, a rodzic okna (`:has(> [role="dialog"])`) przestaje być `fixed` i centrować. Tailwind v4 centruje właściwością `translate`, więc reguła zeruje też `translate`, nie tylko `transform`.
+
+### Ograniczenia i pułapki
+
+- Numer strony z `@page @bottom-right` drukuje Chrome/Edge (od 131); Firefox i Safari pomijają go bez błędu.
+- Link, którego tekst jest adresem, drukuje adres dwa razy (CSS nie porówna tekstu z `href`).
+- Czytnik drukuje też swój pasek przycisków, lokalny graf i „Podstrony”; notatka otwarta do edycji w kaflu drukuje się pustą ramką — do druku służy czytnik (Spacja).
+- Otwarty popover Radix (też `role="dialog"`) w chwili druku zastąpi widok na papierze.
+- Grafik drukuje się z przyciskami i kontrolkami; do papieru jest „Obraz miesiąca (.png)”.
+
+### Testy
+
+- PDF z Chromium (`page.pdf`) obejrzany: lista notatek w stylu Neon, czytnik notatki (samo okno od góry strony), Grafik (3 strony, numeracja). e2e druku: `private-notes`, `reminders-calendar`, `site-handover`, `study` — 64 przeszło, 2 pominięte.
+
+### Commit
+
+W8.1 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — rytm strony (W7.3, 2026-11-20)
 
 ### Co robi
