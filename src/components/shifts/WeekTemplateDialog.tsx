@@ -51,7 +51,7 @@ export function WeekTemplateDialog({ open, onOpenChange, types, templates, weekS
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="max-w-md max-h-[90dvh] overflow-y-auto">
+      <ResponsiveDialogContent className="max-w-md max-h-dialog overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display">Szablony tygodnia</DialogTitle>
           <DialogDescription>Układ pn–nd nakładany na {target.label}. Urlopy i L4 zostają.</DialogDescription>

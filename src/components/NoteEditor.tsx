@@ -93,7 +93,7 @@ export function NoteEditor({
   function renderEditor(cls: string) {
     if (cmOn) {
       return (
-        <Suspense fallback={<div className={cn(cls, "min-h-[60px]")} aria-busy="true" />}>
+        <Suspense fallback={<div className={cn(cls, "min-h-15")} aria-busy="true" />}>
           <CmEditor
             key={collabText ? `${note.id}:collab` : `${note.id}:plain`}
             value={editContent}
@@ -208,15 +208,15 @@ export function NoteEditor({
             </div>
             <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-2", contentFills && "h-full")}>
               <div className={cn("min-w-0", phoneTab === "preview" && "max-sm:hidden", contentFills && "h-full")}>
-                {renderEditor(cn(textareaCls, "border border-border/30 rounded-field p-2", !contentFills && "min-h-[80px]"))}
+                {renderEditor(cn(textareaCls, "border border-border/30 rounded-field p-2", !contentFills && "min-h-20"))}
               </div>
-              <div className={cn("bg-muted/20 rounded-field p-2 overflow-y-auto border border-border/30", contentFills ? "h-full" : "min-h-[80px]", phoneTab === "edit" && "max-sm:hidden")}>
+              <div className={cn("bg-muted/20 rounded-field p-2 overflow-y-auto border border-border/30", contentFills ? "h-full" : "min-h-20", phoneTab === "edit" && "max-sm:hidden")}>
                 {editContent ? <MarkdownRenderer content={editContent} knownTitles={knownTitles} onWikiClick={onWikiClick} /> : <p className="ui-hint italic">Podgląd…</p>}
               </div>
             </div>
           </>
         ) : (
-          renderEditor(cn(textareaCls, !full && "min-h-[60px]"))
+          renderEditor(cn(textareaCls, !full && "min-h-15"))
         )}
         {wiki.popup()}{slash.popup()}
       </div>

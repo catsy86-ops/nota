@@ -116,7 +116,7 @@ export function CustomQuestionsDialog({ open, onOpenChange, prefill }: { open: b
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-xl" data-testid="custom-questions">
+      <ResponsiveDialogContent className="max-h-sheet overflow-y-auto sm:max-w-xl" data-testid="custom-questions">
         <div className="pr-8">
           <DialogTitle className="font-display text-lg">Moje pytania</DialogTitle>
           <DialogDescription className="text-xs">

@@ -276,7 +276,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
               )}
             >
               {/* Telefon: tytuł bierze resztę szerokości i się skraca — wcześniej 18rem wypychało datę poza ekran. */}
-              <td className="px-3 py-2 coarse:py-3 w-full max-w-0 sm:w-auto sm:max-w-[18rem]">
+              <td className="px-3 py-2 coarse:py-3 w-full max-w-0 sm:w-auto sm:max-w-72">
                 <span className="flex items-center gap-1.5">
                   {n.pinned && <Pin className="size-3 shrink-0 text-primary-ink" aria-label="Przypięta" />}
                   {n.icon && <span aria-hidden>{n.icon}</span>}

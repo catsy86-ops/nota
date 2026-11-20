@@ -292,10 +292,10 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
   return (
     <Dialog open={open} onOpenChange={requestClose}>
       <DialogContent onEscapeKeyDown={guardOutside} onInteractOutside={guardOutside}
-        className="max-w-[95vw] max-sm:max-w-[95vw] w-full max-h-[90dvh] h-full p-0 gap-0 overflow-hidden flex flex-col">
+        className="max-w-[95vw] max-sm:max-w-[95vw] w-full max-h-dialog h-full p-0 gap-0 overflow-hidden flex flex-col">
         {askDiscard && (
           <div role="alertdialog" aria-label="Niezapisany rysunek" className="flex flex-wrap items-center gap-2 border-b border-warning/50 bg-warning/10 px-3 py-2 text-sm">
-            <span className="flex-1 min-w-[12rem]">Rysunek nie jest zapisany.</span>
+            <span className="flex-1 min-w-48">Rysunek nie jest zapisany.</span>
             <Button size="sm" onClick={() => { setAskDiscard(false); handleSave(); }}>Zapisz rysunek</Button>
             <Button size="sm" variant="outline" onClick={() => { setAskDiscard(false); setStrokes([]); onOpenChange(false); }}>Porzuć</Button>
             <Button size="sm" variant="ghost" autoFocus onClick={() => setAskDiscard(false)}>Rysuj dalej</Button>
@@ -353,7 +353,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
           <div className="w-px h-6 bg-border" />
 
           {/* Stroke width */}
-          <div className="flex items-center gap-2 min-w-[120px]">
+          <div className="flex items-center gap-2 min-w-30">
             <Minus className="size-3 text-muted-foreground" />
             <Slider
               value={[strokeWidth]}

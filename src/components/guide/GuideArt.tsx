@@ -165,7 +165,7 @@ const SCENES: Record<GuideArtId, ReactNode> = {
 export function GuideArt({ art, chip }: { art: GuideArtId; chip?: string }) {
   return (
     <div
-      className="relative mx-auto aspect-[10/7] w-full max-w-[17rem] overflow-hidden rounded-card border border-border bg-card"
+      className="relative mx-auto aspect-[10/7] w-full max-w-68 overflow-hidden rounded-card border border-border bg-card"
       style={{ backgroundImage: "linear-gradient(var(--grid, color-mix(in oklab, var(--border) 70%, transparent)) 1px, transparent 1px), linear-gradient(90deg, var(--grid, color-mix(in oklab, var(--border) 70%, transparent)) 1px, transparent 1px)", backgroundSize: "16px 16px", backgroundPosition: "-1px -1px" }}
       aria-hidden
       data-testid="guide-art"

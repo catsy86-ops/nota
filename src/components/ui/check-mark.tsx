@@ -19,7 +19,7 @@ export function CheckMark({ checked, size = "md", drawIn }: { checked: boolean; 
       aria-hidden
       className={cn(
         "rounded flex items-center justify-center shrink-0 border-[1.5px] transition-colors duration-fast",
-        size === "sm" ? "size-4" : "w-[18px] h-[18px]",
+        size === "sm" ? "size-4" : "size-icon-nav",
         checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50 group-hover/check:border-primary",
       )}
     >

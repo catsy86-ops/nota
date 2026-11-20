@@ -29,7 +29,7 @@ export function DebtProofThumb({ proofRef, hidden, label }: { proofRef: string; 
         <DialogContent className="max-w-lg p-3">
           <DialogTitle className="sr-only">Zdjęcie dowodu</DialogTitle>
           <DialogDescription className="sr-only">{label}{hidden ? " — rozmyte, bo kwoty są ukryte" : ""}</DialogDescription>
-          <NoteImage imageRef={proofRef} loading="eager" alt={`Dowód: ${label}`} className={cn("max-h-[75dvh] w-full rounded-field object-contain", hidden && "blur-xl")} />
+          <NoteImage imageRef={proofRef} loading="eager" alt={`Dowód: ${label}`} className={cn("max-h-media w-full rounded-field object-contain", hidden && "blur-xl")} />
           {hidden && <p className="ui-hint text-center">Kwoty są ukryte — zdjęcie też. Pokaż kwoty, żeby je obejrzeć.</p>}
         </DialogContent>
       </Dialog>

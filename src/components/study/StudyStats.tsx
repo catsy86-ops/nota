@@ -28,7 +28,7 @@ const WEEKDAYS = ["pn", "wt", "śr", "cz", "pt", "sb", "nd"];
 export function StudyStatsDialog({ open, onOpenChange, onPractice }: { open: boolean; onOpenChange: (open: boolean) => void; /** Ćwicz prosto z statystyk (§8 D1): zamyka okno i startuje rundę. */ onPractice?: () => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-2xl" data-testid="study-stats">
+      <ResponsiveDialogContent className="max-h-sheet overflow-y-auto sm:max-w-2xl" data-testid="study-stats">
         <div className="flex items-start justify-between gap-3 pr-8">
           <div>
             <DialogTitle className="font-display text-lg">Statystyki</DialogTitle>

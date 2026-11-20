@@ -101,7 +101,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
     ) : (
       // Zwykły wiersz paska — cichy jak reszta; ikona w kolorze podpowiada akcję.
       <SidebarRow
-        icon={<Download className="w-[18px] h-[18px] text-primary-ink" />}
+        icon={<Download className="size-icon-nav text-primary-ink" />}
         label="Zainstaluj aplikację"
         onClick={handleClick}
         className={className}

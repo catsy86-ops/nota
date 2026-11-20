@@ -38,7 +38,7 @@ export function CalculatorsButton({ variant = "pill", className }: { variant?: "
         {variant !== "icon" && "Kalkulatory"}
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <ResponsiveDialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-lg" data-testid="calculators">
+        <ResponsiveDialogContent className="max-h-sheet overflow-y-auto sm:max-w-lg" data-testid="calculators">
           <div className="pr-8">
             <DialogTitle className="font-display text-lg">Kalkulatory</DialogTitle>
             <DialogDescription className="text-xs">Liczby z materiału G-HEAT, norm i kart producentów — źródło pod każdym kalkulatorem. W razie wątpliwości — projekt albo Grzegorz.</DialogDescription>

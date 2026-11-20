@@ -183,7 +183,7 @@ function PdfPreview({ attachment }: { attachment: Attachment }) {
           data-testid="attachment-pdf-preview"
           src={url}
           title={`Podgląd: ${attachment.name}`}
-          className="mt-1 block h-[70dvh] max-h-[40rem] w-full rounded-field border border-border/60 bg-muted/30"
+          className="mt-1 block h-[70dvh] max-h-160 w-full rounded-field border border-border/60 bg-muted/30"
         />
       )}
     </div>

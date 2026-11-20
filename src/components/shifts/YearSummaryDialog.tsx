@@ -84,7 +84,7 @@ function YearBody({ data, initialYear, onOpenChange, onOpenMonth }: { data: Shif
 
       {/* Na telefonie tabela przewija się w poziomie zamiast ściskać kolumny (5.6). */}
       <div className="font-mono text-xs sm:text-sm tabular-nums overflow-x-auto">
-        <table className="w-full min-w-[30rem] table-fixed border-collapse">
+        <table className="w-full min-w-120 table-fixed border-collapse">
           <caption className="sr-only">Podsumowanie roku {year} według miesięcy</caption>
           <colgroup>
             <col className="w-[15%]" />

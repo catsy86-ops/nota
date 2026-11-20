@@ -109,7 +109,7 @@ export function VanDialog({ open, onOpenChange, journal }: { open: boolean; onOp
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { setAction(null); setNewCode(null); setScan(null); } onOpenChange(o); }}>
-      <ResponsiveDialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-lg" data-testid="van-dialog">
+      <ResponsiveDialogContent className="max-h-sheet overflow-y-auto sm:max-w-lg" data-testid="van-dialog">
         <div className="pr-8">
           <DialogTitle className="font-display text-lg">Materiał w aucie</DialogTitle>
           <DialogDescription className="text-xs">Stan liczy się sam: inwentaryzacja + przyjęcia − to, co wpisy „z auta” zużyły po niej.</DialogDescription>

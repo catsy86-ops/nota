@@ -250,7 +250,7 @@ export function SiteCardDialog({
   return (
     <Dialog open={!!site} onOpenChange={close}>
       <ResponsiveDialogContent
-        className="max-h-[92dvh] gap-0 overflow-y-auto p-0 sm:max-w-md"
+        className="max-h-sheet gap-0 overflow-y-auto p-0 sm:max-w-md"
         data-testid="site-card"
         // Esc w polu z własną obsługą (np. zmiana nazwy pomieszczenia) anuluje edycję, nie zamyka karty.
         onEscapeKeyDown={(e) => { if (e.target instanceof Element && e.target.closest("[data-own-escape]")) e.preventDefault(); }}

@@ -46,7 +46,7 @@ export function JoinCodeField({ value, long, onChange, onPasteText }: Props) {
           aria-label="Kod z innego urządzenia (28 znaków)"
           aria-describedby="sync-join-hint"
           aria-invalid={error ? true : undefined}
-          className="w-full font-mono text-base tracking-wider sm:w-[22rem] sm:text-sm"
+          className="w-full font-mono text-base tracking-wider sm:w-88 sm:text-sm"
         />
       ) : (
         <InputOTP

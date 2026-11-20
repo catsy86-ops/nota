@@ -94,7 +94,7 @@ function ReminderSurface({ open, onOpenChange, trigger, children }: { open: bool
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetTrigger asChild>{trigger}</SheetTrigger>
-        <SheetContent side="bottom" snap data-reminder-sheet className="max-h-[88dvh] overflow-y-auto rounded-t-3xl border-t border-border/60 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-5 space-y-3" onClick={(e) => e.stopPropagation()}>
+        <SheetContent side="bottom" snap data-reminder-sheet className="max-h-dialog overflow-y-auto rounded-t-3xl border-t border-border/60 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-5 space-y-3" onClick={(e) => e.stopPropagation()}>
           <SheetHeader className="sr-only"><SheetTitle className="sheet-title-serif text-2xl">Przypomnienie</SheetTitle></SheetHeader>
           {children}
         </SheetContent>

@@ -37,7 +37,7 @@ const MAX_SUGGESTIONS = 6;
  * przeglądarki mobilnej zmienia wysokość widoku w trakcie przewijania.
  */
 const DIALOG_CLASS =
-  "sm:max-w-md max-h-[85dvh] overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]";
+  "sm:max-w-md max-h-dialog overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]";
 
 export interface ReminderEditTarget {
   noteId: string;

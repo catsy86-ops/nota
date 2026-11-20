@@ -322,7 +322,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
         style={present ? undefined : ({ viewTransitionName: "note-shared" } as CSSProperties)}
         className={cn(
           "pointer-events-auto flex flex-col rounded-card border border-border/60 bg-card shadow-elevation-3",
-          present ? "w-[min(56rem,95vw)] h-[90dvh]" : wide ? "w-full max-w-5xl max-h-[80dvh]" : "w-full max-w-2xl max-h-[80dvh]",
+          present ? "w-[min(56rem,95vw)] h-[90dvh]" : wide ? "w-full max-w-5xl max-h-dialog" : "w-full max-w-2xl max-h-dialog",
         )}
         onClick={(e) => e.stopPropagation()}
         onWheelCapture={(e) => e.stopPropagation()}

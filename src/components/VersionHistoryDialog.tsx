@@ -76,7 +76,7 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[80dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <DialogContent className="sm:max-w-lg max-h-dialog overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
             <RotateCcwClock className="size-5" />

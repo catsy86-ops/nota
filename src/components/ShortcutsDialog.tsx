@@ -5,7 +5,7 @@ import { SHORTCUT_GROUPS } from "@/lib/shortcuts";
 export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85dvh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-dialog overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Skróty klawiszowe</DialogTitle>
         </DialogHeader>

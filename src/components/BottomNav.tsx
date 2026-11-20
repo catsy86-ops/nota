@@ -174,7 +174,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
         className="fixed bottom-0 inset-x-0 z-overlay desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] shadow-elevation-up transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible max-sm:in-data-plan-full:hidden"
       >
         <LayoutGroup id="bottom-nav">
-          <ul className={cn("relative grid items-end h-[64px] max-w-md mx-auto px-2", showPaletteSlot ? "grid-cols-6" : "grid-cols-5")}>
+          <ul className={cn("relative grid items-end h-16 max-w-md mx-auto px-2", showPaletteSlot ? "grid-cols-6" : "grid-cols-5")}>
             {slots.map(({ key, label, Icon }) => (
               <NavItem key={key} active={view === key} label={label} onClick={() => (key === "notes" && view === "notes" ? focusSearch() : onGo(key))}>
                 <Icon className={cn("nav-lucide size-5", sectionIconClass(key))} />
@@ -374,7 +374,7 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
         <span className="relative z-raised">{children}</span>
         <span className="relative z-raised whitespace-nowrap leading-none tracking-tight">{label}</span>
         {!!badge && (
-          <span key={bump} className={cn("absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center z-raised", bump > 0 && "count-bump")}>
+          <span key={bump} className={cn("absolute top-0.5 right-1/4 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center z-raised", bump > 0 && "count-bump")}>
             {badge}
           </span>
         )}
@@ -460,7 +460,7 @@ const SheetTile = forwardRef<HTMLButtonElement, SheetTileProps>(function SheetTi
       </span>
       <span className="text-xs font-medium font-display leading-tight text-center text-foreground">{label}</span>
       {badge !== undefined && (
-        <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center">
+        <span className="absolute top-1.5 right-1.5 min-size-icon-nav px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center">
           {badge}
         </span>
       )}

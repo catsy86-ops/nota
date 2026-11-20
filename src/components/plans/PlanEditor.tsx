@@ -376,7 +376,7 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
 
   return (
     // Na telefonie `fixed inset-0`: płótno nie dzieli ekranu z główką kartki, paskiem u góry i dolnym paskiem.
-    <section ref={sectionRef} aria-label={`Analiza: ${project.name}`} className="sm:scroll-mt-24 flex flex-col overflow-hidden bg-card max-sm:fixed max-sm:inset-0 max-sm:z-overlay max-sm:pt-[env(safe-area-inset-top)] max-sm:pb-[env(safe-area-inset-bottom)] sm:h-[calc(100dvh-7rem)] sm:min-h-[28rem] sm:rounded-card sm:border sm:border-border/60" data-testid="plan-editor">
+    <section ref={sectionRef} aria-label={`Analiza: ${project.name}`} className="sm:scroll-mt-24 flex flex-col overflow-hidden bg-card max-sm:fixed max-sm:inset-0 max-sm:z-overlay max-sm:pt-[env(safe-area-inset-top)] max-sm:pb-[env(safe-area-inset-bottom)] sm:h-[calc(100dvh-7rem)] sm:min-h-112 sm:rounded-card sm:border sm:border-border/60" data-testid="plan-editor">
       <div className="flex flex-wrap items-center gap-1 border-b border-border/60 px-1.5 py-1">
         <Button type="button" onClick={onBack} variant="ghost" className={toolAction} aria-label="Wróć do listy analiz">
           <ArrowLeft className="size-4" aria-hidden /><span className="hidden sm:inline">Analizy</span>

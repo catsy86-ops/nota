@@ -6792,6 +6792,35 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — wymiary na skali i tokenach (W7.1, 2026-11-20)
+
+### Co robi
+
+- Wymiary wpisywane ręcznie (`w-[18px]`, `max-h-[88dvh]`, `min-w-[12rem]`) przeszły na skalę Tailwinda albo na nazwane tokeny. Przy domyślnym rozmiarze tekstu wygląd się nie zmienia; wymiary w px rosną teraz z ustawieniem „Rozmiar tekstu”, jak reszta interfejsu (zasada z `text-size.css`: wszystko w rem).
+- Okna mają trzy wysokości zamiast dziesięciu: arkusz i okno na telefonie 92dvh, wyśrodkowane okno 85dvh (wcześniej 80/85/88/90), podgląd obrazu 80dvh (wcześniej 75/80). Czytnik notatki i historia wersji mają teraz 85dvh zamiast 80dvh.
+
+### Gdzie jest
+
+- `tailwind.config.ts`: `spacing["icon-nav"]` = 1.125rem (`size-icon-nav`, `w-icon-nav` — ikony paska bocznego i dolnego, przycisk instalacji, przegląd tygodnia, `CheckMark`), `maxHeight.sheet|dialog|media`.
+- Zamiany w 47 plikach: 17 par ikon 18 px, 28 wysokości okien, 24 wymiary na skalę (`min-h-15`, `min-h-20`, `max-h-75`, `min-w-30`, `h-16`, `min-h-16.5/17.5`, `min-w-48`, `max-w-64/68/72`, `w-34`, `w-88`, `min-h-112`, `min-w-120/176`, `max-h-160`).
+- `src/test/designTokens.test.ts`: strażnik `arbitrarySize` (34).
+
+### Ograniczenia i pułapki — co zostaje wpisane ręcznie (34)
+
+- Kreski i kropki 2–3 px (znacznik w dolnym pasku, pasek zmiany w kafelku dnia, kropki w kafelku notatki, legenda) — linia ma mieć stałą grubość.
+- Obszary przewijane wewnątrz okien w `dvh` (28–70) i szerokości w `vw` (pasek boczny 85vw, rysunek 95vw, podpowiedzi) — zależą od ekranu, nie od tekstu.
+- Kalendarz zastępczy `w-[252px] h-[294px]` (`lazy-calendar.tsx`) — wymiar obcego komponentu, który zastępuje.
+- Logo w `em` (rośnie z napisem) i `max-w-[26ch]` (szerokość w znakach).
+- Wybór tokenu przy wysokości okna: arkusz/telefon → `max-h-sheet`, wyśrodkowane okno z przewijaniem → `max-h-dialog`, obraz → `max-h-media`.
+
+### Testy
+
+- Każda nowa klasa sprawdzona w zbudowanym CSS. Strażnicy `src/test` zieloni, typecheck czysty; e2e: `a11y`, `attachments`, `board-table`, `calendar-*`, `dzis-phone`, `editing`, `leave-year`, `mobile*`, `plans`, `reader*`, `shortcuts-settings-stats`, `clients`, `sync-status-dot` — 361 przeszło; `clients` na iPhone 14 raz nie znalazł widoku po kliknięciu zakładki, osobno przechodzi (niestabilny).
+
+### Commit
+
+W7.1 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — podział `index.css` (W6.5, 2026-11-20)
 
 ### Co robi

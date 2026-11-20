@@ -492,7 +492,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     <Sheet open={open} onOpenChange={(o) => { if (!o) closeJournalSheet(); }}>
       <SheetContent
         side={isMobile ? "bottom" : "right"}
-        className={cn("flex flex-col gap-0 overflow-hidden p-0", isMobile ? "max-h-[94dvh] rounded-t-3xl pb-0" : "w-full sm:max-w-md")}
+        className={cn("flex flex-col gap-0 overflow-hidden p-0", isMobile ? "max-h-sheet rounded-t-3xl pb-0" : "w-full sm:max-w-md")}
         data-testid="journal-entry-sheet"
         onOpenAutoFocus={(e) => { e.preventDefault(); titleRef.current?.focus(); }}
       >

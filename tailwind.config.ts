@@ -14,7 +14,10 @@ export default {
     },
     extend: {
       // W1.5: odstępy semantyczne z `src/index.css` (idą za gęstością interfejsu).
-      spacing: { page: "var(--space-page)", card: "var(--space-card)", stack: "var(--space-stack)", row: "var(--space-row)" },
+      spacing: { page: "var(--space-page)", card: "var(--space-card)", stack: "var(--space-stack)", row: "var(--space-row)", "icon-nav": "1.125rem" },
+      // W7.1: stałe elementów zamiast wpisywanych wysokości. sheet — arkusz dolny i okno na telefonie (zostaje pasek nad nim),
+      // dialog — wyśrodkowane okno z przewijaną treścią, media — obraz w podglądzie (dowód, dokument budowy).
+      maxHeight: { sheet: "92dvh", dialog: "85dvh", media: "80dvh" },
       // Skala warstw (plan UI/UX 1.3): nazwane zamiast wpisywanych `z-10…z-70`. Kolejność jak dotąd.
       // W1.4: skala warstw, od dołu. raised — element uniesiony w treści (przeciągana karta, przypięty pasek
       // w karcie); sticky — nagłówki przyklejone przy przewijaniu; dropdown — menu i podpowiedzi przy polu;

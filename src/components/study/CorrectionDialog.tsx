@@ -57,7 +57,7 @@ function CorrectionForm({ record, onClose }: { record: InvoiceRecord; onClose: (
   }
 
   return (
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg" data-testid="correction-dialog">
+    <DialogContent className="max-h-dialog overflow-y-auto sm:max-w-lg" data-testid="correction-dialog">
       <DialogHeader>
         <DialogTitle className="font-display">Korekta faktury {record.number}</DialogTitle>
         <DialogDescription>

@@ -183,7 +183,7 @@ function AddMealForm({ recent, yesterdayCount, onRepeatYesterday }: { recent: Me
         <div role="group" aria-label="Ostatnie posiłki" className="flex flex-wrap gap-1.5" data-testid="diet-recent">
           {recent.map((m) => (
             <button key={m.text} type="button" onClick={() => fill(m)}
-              className="pressable max-w-[16rem] truncate rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11">
+              className="pressable max-w-64 truncate rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11">
               {m.text}{m.kcal !== undefined && <span className="text-muted-foreground"> · {m.kcal} kcal</span>}
             </button>
           ))}

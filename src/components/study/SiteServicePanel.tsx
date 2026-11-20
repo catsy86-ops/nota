@@ -147,7 +147,7 @@ export function SiteServicePanel({ site }: { site: SiteInfo }) {
           maxLength={SERVICE_TEXT_MAX}
           placeholder="Zgłoszenie, np. cieknie syfon w łazience"
           aria-label="Nowe zgłoszenie serwisowe"
-          className={cn(fieldClass, "min-w-[12rem] flex-1")}
+          className={cn(fieldClass, "min-w-48 flex-1")}
         />
         <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
           Wizyta

@@ -43,6 +43,9 @@ const LIMITS = {
   bareShadow: { pattern: /(?<![\w-])shadow(?:-sm|-xl)?(?![\w-[])/g, max: 0, token: "shadow-elevation-1..3" },
   // `shadow-[…]` tylko na obwódki, wcięcia i poświaty (suwak, przycisk wciśnięty, dzień, chip, podpis) — nie na głębię.
   arbitraryShadow: { pattern: /(?<![\w-])shadow-\[/g, max: 7, token: "shadow-elevation-1..3" },
+  // W7.1: wymiar wpisany ręcznie omija skalę (`w-34`, `min-h-20`) i tokeny (`max-h-sheet|dialog|media`, `size-icon-nav`).
+  // Zostają świadome wyjątki: kreski 2–3 px, obszary przewijane w `dvh`/`vw`, wymiary obcego kalendarza, logo w `em`.
+  arbitrarySize: { pattern: /(?<![\w-])(?:min-|max-)?(?:w|h|size)-\[\d+(?:\.\d+)?(?:px|rem|vh|vw|dvh|svh|ch|em)\]/g, max: 34, token: "skala (w-34, min-h-20) / max-h-sheet|dialog|media" },
   // W1.1: tekst wyciszony przez przezroczystość nie ma sprawdzanego kontrastu. Został nieaktywny `IconButton`.
   mutedAlpha: { pattern: /text-muted-foreground\/\d+/g, max: 1, token: "text-faint" },
   // Zmienna `--radius-*` nie istnieje — promienie to `--r-control/field/card`.

@@ -71,7 +71,7 @@ function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean;
     <div data-folder-drop-root={droppableId ? "" : undefined}>
       <SidebarRow
         ref={droppableId ? setNodeRef : undefined}
-        icon={<item.icon className={cn("w-[18px] h-[18px]", sectionIconClass(item.view))} />}
+        icon={<item.icon className={cn("size-icon-nav", sectionIconClass(item.view))} />}
         label={item.label}
         active={active}
         dropActive={isOver}
@@ -329,7 +329,7 @@ export function AppSidebar({
                     {favorites.map((n) => (
                       <SidebarRow
                         key={n.id}
-                        icon={n.icon ? <span className="text-sm leading-none">{n.icon}</span> : <Star className="w-[18px] h-[18px]" />}
+                        icon={n.icon ? <span className="text-sm leading-none">{n.icon}</span> : <Star className="size-icon-nav" />}
                         label={n.locked ? "Notatka prywatna" : n.title.trim() || "Notatka bez tytułu"}
                         onClick={() => onOpenNote(n.id)}
                       />
@@ -351,7 +351,7 @@ export function AppSidebar({
                       {recentNotes.map((n) => (
                         <SidebarRow
                           key={n.id}
-                          icon={n.icon ? <span className="text-sm leading-none">{n.icon}</span> : <RotateCcwClock className="w-[18px] h-[18px]" />}
+                          icon={n.icon ? <span className="text-sm leading-none">{n.icon}</span> : <RotateCcwClock className="size-icon-nav" />}
                           label={n.title.trim() || "Notatka bez tytułu"}
                           onClick={() => onOpenNote(n.id)}
                         />
@@ -469,17 +469,17 @@ export function AppSidebar({
                 {/* Stopka (plan 3.7): jeden rząd ikon zamiast trzech wierszy; slogan jest już pod logo. */}
                 <div className="flex items-center justify-between gap-1" role="group" aria-label="Szybkie akcje">
                   <FooterIcon label="Paleta poleceń" title={`Paleta poleceń (${modShortcut("K")})`} onClick={onOpenPalette}
-                    icon={<Command className="w-[18px] h-[18px]" />} />
+                    icon={<Command className="size-icon-nav" />} />
                   <FooterIcon label="Tryb ciemny" title="Przytrzymaj albo prawy przycisk: zestawy wyglądu" onClick={() => { if (!themePress.shouldSkipClick()) onToggleTheme(); }}
                     extra={{ "aria-pressed": dark, ...themePress.handlers }}
-                    icon={dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />} />
+                    icon={dark ? <Sun className="size-icon-nav" /> : <Moon className="size-icon-nav" />} />
                   <FooterIcon label="Ustawienia" title={`Ustawienia (${shortcutFor("Ustawienia")})`} onClick={() => onSettingsOpenChange(true)}
-                    icon={<SettingsIcon className="w-[18px] h-[18px]" />} />
+                    icon={<SettingsIcon className="size-icon-nav" />} />
                 </div>
 
                 {/* Akcje drugorzędne zwinięte — sidebar ma się mieścić na 900 px. */}
                 <SidebarRow
-                  icon={<Ellipsis className="w-[18px] h-[18px]" />}
+                  icon={<Ellipsis className="size-icon-nav" />}
                   label="Narzędzia"
                   onClick={() => setMoreOpen((v) => !v)}
                   buttonProps={{ "aria-expanded": moreOpen }}
@@ -487,12 +487,12 @@ export function AppSidebar({
                 />
                 {moreOpen && (
                   <div className="space-y-0.5 pl-2">
-                    <SidebarRow icon={<RotateCcwClock className="w-[18px] h-[18px]" />} label="Ostatnie akcje" onClick={onOpenActions} />
-                    <SidebarRow icon={<Trophy className="w-[18px] h-[18px]" />} label="Statystyki" tipKeys={shortcutFor("Statystyki")} onClick={onOpenStats} />
-                    <SidebarRow icon={<Brain className="w-[18px] h-[18px]" />} label="Tryb skupienia" onClick={onOpenFocusMode} />
-                    <SidebarRow icon={<CircleQuestionMark className="w-[18px] h-[18px]" />} label="Samouczek" onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))} />
+                    <SidebarRow icon={<RotateCcwClock className="size-icon-nav" />} label="Ostatnie akcje" onClick={onOpenActions} />
+                    <SidebarRow icon={<Trophy className="size-icon-nav" />} label="Statystyki" tipKeys={shortcutFor("Statystyki")} onClick={onOpenStats} />
+                    <SidebarRow icon={<Brain className="size-icon-nav" />} label="Tryb skupienia" onClick={onOpenFocusMode} />
+                    <SidebarRow icon={<CircleQuestionMark className="size-icon-nav" />} label="Samouczek" onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))} />
                     <SidebarRow
-                      icon={<BrainCircuit className="w-[18px] h-[18px]" />}
+                      icon={<BrainCircuit className="size-icon-nav" />}
                       label="Trening mózgu"
                       onClick={() => window.open(NEUROKLIK_URL, "_blank", "noopener,noreferrer")}
                       trailing={<ExternalLink className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />}

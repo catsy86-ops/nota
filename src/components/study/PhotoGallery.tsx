@@ -102,7 +102,7 @@ export function PhotoGalleryDialog({ zoom, onIndex, onClose, label = "Zdjęcie z
                 imageRef={zoom.refs[zoom.index]}
                 alt={`${label} ${zoom.index + 1} z ${zoom.refs.length}`}
                 loading="eager"
-                className="max-h-[92dvh] max-w-[100vw] object-contain"
+                className="max-h-sheet max-w-[100vw] object-contain"
               />
             </div>
             {onAnnotate && (

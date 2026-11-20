@@ -76,7 +76,7 @@ export function AppHeader({
       )}
     >
       {/* Stała wysokość: bez kontrolek widoku (kalendarz, grafik) nagłówek nie skacze przy przejściu. */}
-      <div className="max-w-[calc(var(--page-wide)+3rem)] mx-auto px-4 sm:px-6 py-3 min-h-[66px] sm:min-h-[70px] flex items-center justify-between gap-3">
+      <div className="max-w-[calc(var(--page-wide)+3rem)] mx-auto px-4 sm:px-6 py-3 min-h-16.5 sm:min-h-17.5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>

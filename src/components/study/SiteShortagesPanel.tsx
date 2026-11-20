@@ -133,7 +133,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
                   onChange={(e) => setDue(s.id, e.target.value)}
                   aria-label={`Data dostawy: ${s.text}`}
                   title="Data dostawy"
-                  className="h-8 w-[8.5rem] shrink-0 rounded-field border border-input bg-background px-1.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+                  className="h-8 w-34 shrink-0 rounded-field border border-input bg-background px-1.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
                 />
               )}
               <button

@@ -80,7 +80,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && stage !== "saving") onClose(); }}>
-      <ResponsiveDialogContent className="max-w-md max-h-[88dvh] overflow-y-auto">
+      <ResponsiveDialogContent className="max-w-md max-h-dialog overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Import z Google Keep / Markdown</DialogTitle>
           <DialogDescription>

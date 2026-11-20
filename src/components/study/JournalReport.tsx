@@ -178,7 +178,7 @@ export function JournalReportDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <ResponsiveDialogContent className="max-h-[92dvh] gap-0 overflow-y-auto p-0 sm:max-w-2xl" data-testid="journal-report">
+        <ResponsiveDialogContent className="max-h-sheet gap-0 overflow-y-auto p-0 sm:max-w-2xl" data-testid="journal-report">
           <div className="space-y-3 border-b border-border px-5 pb-4 pt-5 sm:px-6">
             <div className="pr-8">
               <DialogTitle className="font-display text-lg">Raport z budowy</DialogTitle>

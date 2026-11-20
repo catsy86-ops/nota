@@ -47,7 +47,7 @@ export function KitsDialog({ open, onOpenChange, fittingHistory, pipeHistory }: 
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) setEditing(null); onOpenChange(o); }}>
-      <ResponsiveDialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-xl" data-testid="kits-dialog" data-reminder-sheet>
+      <ResponsiveDialogContent className="max-h-sheet overflow-y-auto sm:max-w-xl" data-testid="kits-dialog" data-reminder-sheet>
         <div className="pr-8">
           <DialogTitle className="font-display text-lg">Zestawy materiału</DialogTitle>
           <DialogDescription className="text-xs">

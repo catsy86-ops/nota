@@ -150,7 +150,7 @@ export function InvoiceDialog({ open, onOpenChange, site, job }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg" data-testid="invoice-dialog">
+      <DialogContent className="max-h-dialog overflow-y-auto sm:max-w-lg" data-testid="invoice-dialog">
         <DialogHeader>
           <DialogTitle className="font-display">Faktura dla „{site.name}”</DialogTitle>
           <DialogDescription>

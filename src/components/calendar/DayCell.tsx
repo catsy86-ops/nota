@@ -203,7 +203,7 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
             <span
               key={dot.noteId}
               className={cn(
-                "size-[7px] rounded-full",
+                "size-1.75 rounded-full",
                 // Prognoza serii to pusty krąg, a zapisany termin pełny — różni się kształtem, nie tylko odcieniem.
                 // Zaległy: czerwony kwadrat — święto (czerwona kropka) ma kształt koła, więc się nie myli (K1.1).
                 dot.kind === "forecast" ? "bg-transparent ring-1 ring-primary"

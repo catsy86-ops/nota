@@ -74,7 +74,7 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
           before ? "pl-1.5 pr-3" : "px-3",
         )}
       >
-        {icon && <span className="flex w-[18px] shrink-0 items-center justify-center">{icon}</span>}
+        {icon && <span className="flex w-icon-nav shrink-0 items-center justify-center">{icon}</span>}
         <span className="min-w-0 flex-1 truncate">{label}</span>
         {trailing}
       </button>
@@ -130,7 +130,7 @@ export function SidebarCount({ value, active, alert = false }: { value: number; 
     <span
       key={bump}
       className={cn(
-        "shrink-0 min-w-[22px] rounded-full px-2 py-0.5 text-center text-2xs font-semibold tabular-nums",
+        "shrink-0 min-w-5.5 rounded-full px-2 py-0.5 text-center text-2xs font-semibold tabular-nums",
         bump > 0 && "count-bump",
         alert ? "bg-destructive/15 text-destructive-ink" : active ? "bg-primary/20 text-primary-ink" : "bg-muted text-muted-foreground",
       )}

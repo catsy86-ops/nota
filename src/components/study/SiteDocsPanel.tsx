@@ -186,12 +186,12 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
         <DialogContent className="max-w-[min(96vw,64rem)] gap-2 p-3">
           <DialogTitle className="truncate pr-8 text-sm">{zoom ? docLabel(zoom) : ""}</DialogTitle>
           {zoom && (
-            <div className={cn("max-h-[80dvh] overflow-auto rounded-field", actual ? "touch-pan-x touch-pan-y" : "")} data-testid="site-doc-zoom">
+            <div className={cn("max-h-media overflow-auto rounded-field", actual ? "touch-pan-x touch-pan-y" : "")} data-testid="site-doc-zoom">
               <NoteImage
                 imageRef={zoom.id}
                 alt={docLabel(zoom)}
                 loading="eager"
-                className={actual ? "max-w-none" : "max-h-[80dvh] w-full object-contain"}
+                className={actual ? "max-w-none" : "max-h-media w-full object-contain"}
               />
             </div>
           )}

@@ -40,7 +40,7 @@ export function PropDefsDialog({ open, onOpenChange, defs, onAdd, onUpdate, onDe
 
   return (
     <Dialog open={open} onOpenChange={(next) => { setError(null); setConfirmId(null); onOpenChange(next); }}>
-      <DialogContent className="max-w-lg max-h-[85dvh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-dialog overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Pola notatek</DialogTitle>
           <DialogDescription>Własne właściwości: tekst, liczba, data albo wybór z listy. Wartości ustawiasz w tabeli.</DialogDescription>

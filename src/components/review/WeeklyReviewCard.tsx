@@ -205,7 +205,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
       >
         <header className="flex flex-wrap items-start gap-x-3 gap-y-2">
           <span className="size-9 shrink-0 rounded-card bg-primary/15 text-primary-ink grid place-items-center" aria-hidden>
-            <Sparkles className="w-[18px] h-[18px]" />
+            <Sparkles className="size-icon-nav" />
           </span>
           <div className="min-w-0 flex-1">
             <h2 className="title-section">Przegląd tygodnia</h2>

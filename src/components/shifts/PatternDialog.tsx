@@ -58,7 +58,7 @@ export function overlapSummary(overlap: Partial<Record<PatternOverlapKind, numbe
 export function PatternDialog({ open, onOpenChange, ...form }: PatternDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="max-w-md max-h-[90dvh] overflow-y-auto">
+      <ResponsiveDialogContent className="max-w-md max-h-dialog overflow-y-auto">
         <PatternForm onOpenChange={onOpenChange} {...form} />
       </ResponsiveDialogContent>
     </Dialog>
