@@ -89,6 +89,20 @@ describe("W3.2 — ręczne karty poza components/ui", () => {
   });
 });
 
+// W4.5: surowe `<button>` w dziale = tylko jawne wyjątki; reszta to `Button`/`IconButton`. Progi maleją działami.
+// Grafik (2026-11-20): radia i przełączniki (paleta pędzli, wybór w oknie dnia, dni urlopu, kolory), komórki siatki,
+// krokomierz czasu (`TimeStepper`, przytrzymanie), linki w zdaniu, wiersze rozwijane i karty-listy (`cardVariant`).
+const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26 };
+describe("W4.5 — surowe <button> w działach", () => {
+  for (const [dir, max] of Object.entries(RAW_BUTTON_MAX)) {
+    it(`components/${dir}: co najwyżej ${max} (zamiast tego: Button / IconButton)`, () => {
+      const n = SOURCES.filter(({ path }) => path.replace(/\\/g, "/").includes(`/components/${dir}/`))
+        .reduce((sum, { text }) => sum + (text.match(/<button\b/g)?.length ?? 0), 0);
+      expect(n).toBeLessThanOrEqual(max);
+    });
+  }
+});
+
 // W1.7: kolory w CSS tylko w OKLCH (przeliczone narzędziem 2026-11-19). Komentarze i `url(…)` (SVG w data URL) się nie liczą.
 function cssFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {

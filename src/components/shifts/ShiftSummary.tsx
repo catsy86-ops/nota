@@ -91,10 +91,10 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
         {(summary.earnings > 0 || grossTotal > 0) && (
           <UiStat label="Razem brutto" size="lg" tone="primary" align="end" value={<CountUp value={grossTotal} format={formatMoney} />} />
         )}
-        <button type="button" onClick={() => setYearOpen(true)} aria-label="Podsumowanie roku"
-          className="pressable shrink-0 flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-card border border-border/60 bg-background hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        <Button type="button" onClick={() => setYearOpen(true)} aria-label="Podsumowanie roku"
+          variant="outline" size="sm" className="shrink-0 gap-1.5 coarse:h-11">
           <CalendarRange className="size-4" aria-hidden /> Rok
-        </button>
+        </Button>
       </div>
       <Suspense fallback={null}><SiteMonthEarnings monthKey={monthKey} base={grossTotal} /></Suspense>
 

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { DEFAULT_SHIFT_TYPES } from "@/lib/shifts";
 
 interface NoShiftTypesProps {
@@ -14,14 +15,14 @@ export function NoShiftTypes({ onAdd, onRestore }: NoShiftTypesProps) {
         <span className="text-muted-foreground">Dodaj własny albo przywróć startowe ({DEFAULT_SHIFT_TYPES.map((t) => t.name).join(", ")}), żeby nanosić je na dni.</span>
       </p>
       <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={onAdd}
-          className="pressable h-10 coarse:h-11 px-4 rounded-control bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        <Button type="button" onClick={onAdd}
+          className="coarse:h-11">
           Dodaj rodzaj zmiany
-        </button>
-        <button type="button" onClick={onRestore}
-          className="pressable h-10 coarse:h-11 px-4 rounded-card border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        </Button>
+        <Button type="button" onClick={onRestore}
+          variant="outline" className="coarse:h-11">
           Przywróć startowe
-        </button>
+        </Button>
       </div>
     </section>
   );

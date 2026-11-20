@@ -400,18 +400,18 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           {isWeek && (
             <div className="flex flex-wrap items-center gap-1">
               {weekStart !== thisWeek && (
-                <button type="button" onClick={() => setWeekStart(thisWeek)}
-                  className="pressable h-9 coarse:h-11 px-3 rounded-card text-sm font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                <Button type="button" onClick={() => setWeekStart(thisWeek)}
+                  variant="ghost" size="sm" className="text-primary-ink hover:bg-primary/10 hover:text-primary-ink coarse:h-11">
                   Ten tydzień
-                </button>
+                </Button>
               )}
-              <button type="button" onClick={copyWeek}
-                className={TOOLBAR_BTN}>
+              <Button type="button" onClick={copyWeek}
+                variant="ghost" className={TOOLBAR_BTN}>
                 <CalendarRange className="size-4" /> Skopiuj ten tydzień na następny
-              </button>
-              <button type="button" onClick={() => setRangeOpen(true)} className={TOOLBAR_BTN}>
+              </Button>
+              <Button type="button" onClick={() => setRangeOpen(true)} variant="ghost" className={TOOLBAR_BTN}>
                 <CalendarRange className="size-4" /> Kopiuj zakres dni
-              </button>
+              </Button>
             </div>
           )}
         </div>

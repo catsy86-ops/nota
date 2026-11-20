@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { CalendarArrowDown, FileSpreadsheet, Image as ImageIcon, Share2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { ImageTheme } from "@/lib/shifts/monthImageDraw";
@@ -19,9 +20,9 @@ export function ShiftExportMenu({ onCsv, onSiteCsv, onIcs, onImage }: ShiftExpor
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button type="button" className={TOOLBAR_BTN}>
+        <Button type="button" variant="ghost" className={TOOLBAR_BTN}>
           <Share2 className="size-4" /> Udostępnij
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuItem onSelect={() => onCsv()}>
@@ -47,26 +48,26 @@ export function ShiftExportMenu({ onCsv, onSiteCsv, onIcs, onImage }: ShiftExpor
 export function ShiftExportToolbar({ imageTheme, onImageTheme, onCsv, onSiteCsv, onIcs, onImage }: ShiftExportHandlers & { imageTheme: ImageTheme; onImageTheme: (t: ImageTheme) => void }) {
   return (
     <>
-      <button type="button" onClick={onCsv}
-        className={TOOLBAR_BTN}>
+      <Button type="button" onClick={onCsv}
+        variant="ghost" className={TOOLBAR_BTN}>
         <FileSpreadsheet className="size-4" /> Karta czasu (.csv)
-      </button>
-      <button type="button" onClick={onSiteCsv}
-        className={TOOLBAR_BTN}>
+      </Button>
+      <Button type="button" onClick={onSiteCsv}
+        variant="ghost" className={TOOLBAR_BTN}>
         <FileSpreadsheet className="size-4" /> Godziny na budowach (.csv)
-      </button>
-      <button type="button" onClick={onIcs}
-        className={TOOLBAR_BTN}>
+      </Button>
+      <Button type="button" onClick={onIcs}
+        variant="ghost" className={TOOLBAR_BTN}>
         <CalendarArrowDown className="size-4" /> Do kalendarza (.ics)
-      </button>
+      </Button>
       <select aria-label="Motyw obrazu miesiąca" value={imageTheme} onChange={(e) => onImageTheme(e.target.value as ImageTheme)}
         className="h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm">
         {(["light", "dark", "style"] as const).map((t) => <option key={t} value={t}>{IMAGE_THEME_LABEL[t]}</option>)}
       </select>
-      <button type="button" onClick={() => onImage()}
-        className={TOOLBAR_BTN}>
+      <Button type="button" onClick={() => onImage()}
+        variant="ghost" className={TOOLBAR_BTN}>
         <ImageIcon className="size-4" /> Obraz miesiąca (.png)
-      </button>
+      </Button>
     </>
   );
 }

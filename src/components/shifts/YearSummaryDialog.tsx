@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -61,15 +62,15 @@ function YearBody({ data, initialYear, onOpenChange, onOpenMonth }: { data: Shif
     <>
       <DialogHeader>
         <DialogTitle className="font-display flex items-center gap-1">
-          <button type="button" aria-label="Poprzedni rok" onClick={() => setYear((y) => y - 1)}
-            className="pressable -ml-2 size-9 coarse:w-11 coarse:h-11 grid place-items-center rounded-field outline-hidden hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring">
+          <Button type="button" aria-label="Poprzedni rok" onClick={() => setYear((y) => y - 1)}
+            variant="ghost" size="icon" className="-ml-2 [&_svg]:size-5">
             <ChevronLeft className="size-5" aria-hidden />
-          </button>
+          </Button>
           <span className="tabular-nums" aria-live="polite">Rok {year}</span>
-          <button type="button" aria-label="Następny rok" onClick={() => setYear((y) => y + 1)}
-            className="pressable size-9 coarse:w-11 coarse:h-11 grid place-items-center rounded-field outline-hidden hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring">
+          <Button type="button" aria-label="Następny rok" onClick={() => setYear((y) => y + 1)}
+            variant="ghost" size="icon" className="[&_svg]:size-5">
             <ChevronRight className="size-5" aria-hidden />
-          </button>
+          </Button>
         </DialogTitle>
         <DialogDescription>Godziny, nadgodziny, urlop i L4 miesiąc po miesiącu.</DialogDescription>
       </DialogHeader>

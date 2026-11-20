@@ -1,10 +1,8 @@
+import { Button } from "@/components/ui/button";
 import { CalendarPlus } from "lucide-react";
 import { StatusPanel } from "@/components/StatusPanel";
 import { addDaysToKey } from "@/lib/week";
 import type { DayEntry } from "@/lib/shifts";
-
-const primaryBtn = "pressable h-10 coarse:h-11 px-4 rounded-control bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
-const secondaryBtn = "pressable h-10 coarse:h-11 px-4 rounded-card border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
  * G2.2: pusty miesiąc i pusty tydzień mają ten sam pusty stan. Z wcześniejszymi dniami proponujemy
@@ -32,16 +30,16 @@ export function EmptyShifts({ days, isWeek, weekStart, monthKey, onPattern, onTe
         title={isWeek ? "W tym tygodniu nie ma zmian." : "W tym miesiącu nie ma jeszcze zmian."}
         actions={
           <>
-            <button type="button" onClick={onPattern} className={primaryBtn}>
+            <Button type="button" onClick={onPattern} className="coarse:h-11">
               {extend ? "Przedłuż cykl" : "Nałóż cykl"}
-            </button>
-            <button type="button" onClick={onTemplate} className={secondaryBtn}>
+            </Button>
+            <Button type="button" onClick={onTemplate} variant="outline" className="coarse:h-11">
               Szablon tygodnia
-            </button>
+            </Button>
             {!isWeek && (
-              <button type="button" onClick={onCopyPreviousMonth} className={secondaryBtn}>
+              <Button type="button" onClick={onCopyPreviousMonth} variant="outline" className="coarse:h-11">
                 Skopiuj poprzedni miesiąc
-              </button>
+              </Button>
             )}
           </>
         } />

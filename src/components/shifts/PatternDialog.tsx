@@ -174,10 +174,10 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply, ove
               className="pressable h-9 coarse:h-11 px-3 rounded-card border border-dashed border-border text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               + Wolne
             </button>
-            <button type="button" onClick={() => setSteps((s) => s.slice(0, -1))} disabled={!steps.length} aria-label="Usuń ostatni dzień cyklu"
-              className="pressable h-9 coarse:h-11 px-3 rounded-card text-muted-foreground hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            <Button variant="ghost" size="sm" type="button" onClick={() => setSteps((s) => s.slice(0, -1))} disabled={!steps.length} aria-label="Usuń ostatni dzień cyklu"
+              className="text-muted-foreground coarse:h-11">
               <Delete className="size-4" />
-            </button>
+            </Button>
           </div>
         </fieldset>
 

@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { cardVariant } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
@@ -27,10 +28,10 @@ function EndedCard({ occ }: { occ: ShiftOccurrence }) {
         </p>
         <p className="ui-hint">Zostajesz dłużej? Zapisz koniec, zanim zmiana zniknie z karty.</p>
       </div>
-      <button type="button" onClick={() => finishNow(occ)}
-        className="pressable shrink-0 h-10 coarse:h-11 px-3 rounded-card border border-border/60 text-sm font-medium hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+      <Button type="button" onClick={() => finishNow(occ)}
+        variant="outline" className="shrink-0 px-3 coarse:h-11">
         Skończyłem teraz
-      </button>
+      </Button>
     </section>
   );
 }
@@ -83,10 +84,10 @@ export function NowCard({ data }: { data: ShiftData }) {
         )}
       </div>
       {current && (
-        <button type="button" onClick={() => finishNow(current)}
-          className="pressable shrink-0 h-10 coarse:h-11 px-3 rounded-card border border-border/60 text-sm font-medium hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        <Button type="button" onClick={() => finishNow(current)}
+          variant="outline" className="shrink-0 px-3 coarse:h-11">
           Skończyłem teraz
-        </button>
+        </Button>
       )}
       {current && next && (
         <p className="ui-hint hidden sm:block text-right shrink-0">

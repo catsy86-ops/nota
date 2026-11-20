@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { cardVariant } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -17,9 +18,9 @@ export function ShiftsHint() {
         <span className="font-semibold">Pierwszy raz w Grafiku?</span> Wybierz zmianę na palecie, potem {TAP.toLowerCase()} dni w kalendarzu,
         a zmiana się naniesie. Powtarzalny układ (np. 4 dni pracy, 4 wolne) ustawisz przyciskiem „Cykl”. Podsumowanie niżej liczy godziny i zarobek.
       </p>
-      <button type="button" onClick={close} aria-label="Zamknij podpowiedź" className="pressable -m-1 grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:text-foreground coarse:size-11">
+      <Button type="button" onClick={close} aria-label="Zamknij podpowiedź" variant="ghost" size="icon-sm" className="-m-1 rounded-full text-muted-foreground">
         <X className="size-4" aria-hidden />
-      </button>
+      </Button>
     </aside>
   );
 }

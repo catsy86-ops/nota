@@ -107,12 +107,12 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             <p className="ui-hint font-medium">Gotowe</p>
             <div className="flex flex-wrap gap-1.5">
               {presets.map((p) => (
-                <button key={p.id} type="button" onClick={() => { setDraft({ ...p }); setRate(""); }}
-                  className="pressable flex items-center gap-1.5 h-8 coarse:h-11 px-2.5 rounded-field border border-border/60 bg-card hover:bg-muted text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                <Button variant="outline" size="sm" key={p.id} type="button" onClick={() => { setDraft({ ...p }); setRate(""); }}
+                  className="h-8 gap-1.5 px-2.5 text-xs coarse:h-11">
                   <span aria-hidden className="size-2.5 rounded-full" style={{ backgroundColor: p.color }} />
                   {p.name}
                   <span className="text-muted-foreground tabular-nums">{p.kind === "absence" ? "nieobecność" : `${p.start}–${p.end}`}</span>
-                </button>
+                </Button>
               ))}
             </div>
           </div>

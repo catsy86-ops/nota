@@ -6882,3 +6882,33 @@ W3.2 Długi — a1c616bb; Praca — 69be452f; Ustawienia — d610da72 (2026-11-1
 ### Commit
 
 W3.5, W3.6, W5.6 — commit po tym wpisie (2026-11-19).
+
+## Wygląd — przyciski Grafiku na `Button` (W4.5, 2026-11-20)
+
+### Co robi
+
+Przyciski akcji w Grafiku mają te same stany co reszta aplikacji: hover, fokus, wciśnięcie i nieaktywny z `--faint` zamiast `opacity-40`.
+
+### Gdzie jest
+
+- `Button` (`src/components/ui/button.tsx`) zamiast surowego `<button>`:
+  - `EmptyShifts`, `NoShiftTypes`: domyślny i `outline`;
+  - `NowCard` „Skończyłem teraz”, „Rok” w `ShiftSummary`, presety w `ShiftTypeDialog`: `outline`;
+  - pasek eksportu (`ShiftExportControls`) i kopiowania tygodnia (`ShiftsView`): `ghost` z `TOOLBAR_BTN` (`shiftControlStyles.ts` — teraz tylko dodatek do wariantu);
+  - „Ten tydzień”, godziny pędzla (`BrushHours`), „Usuń ostatni dzień cyklu” (`PatternDialog`), strzałki roku (`YearSummaryDialog`, `size="icon"`), zamknięcie podpowiedzi (`guide/ShiftsHint.tsx`): `ghost`.
+- `src/test/designTokens.test.ts` — strażnik „W4.5”: `RAW_BUTTON_MAX` na dział, Grafik 26.
+
+### Ograniczenia i pułapki
+
+- Celowo surowe (jawne wyjątki): radia i przełączniki (paleta pędzli w `BrushBar`, wybór w `DayDialog`, dni urlopu, kolory, kroki cyklu), presety długości w `BrushHours` (stan wybrany), komórki siatki miesiąca i tygodnia, `TimeStepper` (przytrzymanie), linki w zdaniu (`ShiftSummary`, `YearSummaryDialog`, schowek i podpowiedź w `ShiftsView`), wiersze rozwijane i karty-listy (`cardVariant`). „Cykl” i „Szablon” w `BrushBar` zostają, bo dzielą promień i wysokość z paletą pędzli.
+- Ścieżki w strażniku: pliki na Windows mają `\`, więc filtr działu normalizuje separator (pierwsza wersja nic nie liczyła).
+- Dopisywanie importu na początek pliku z BOM zakopuje BOM w drugiej linii (`no-irregular-whitespace`) — tak było w `BrushHours.tsx` po W3.2; usunięty.
+
+### Testy
+
+typecheck, eslint działu, strażnik, e2e `shifts*`, `shift-end-action`, `calendar-shift-edit`, `guide*`, `a11y` (304 przeszło, 2 pominięte).
+
+### Commit
+
+Zob. commit „W4.5 Grafik” (2026-11-20).
+

@@ -1,5 +1,6 @@
+import { Button } from "@/components/ui/button";
 import { cardVariant } from "@/components/ui/card";
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Clock, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,10 +57,10 @@ export function BrushHours({ type, hours, onChange }: BrushHoursProps) {
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)}
-        className="pressable flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-card text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+      <Button variant="ghost" size="sm" type="button" onClick={() => setOpen(true)}
+        className="gap-1.5 text-muted-foreground coarse:h-11">
         <Clock className="size-4" /> Własne godziny dla „{type.name}”
-      </button>
+      </Button>
     );
   }
 
@@ -73,10 +74,10 @@ export function BrushHours({ type, hours, onChange }: BrushHoursProps) {
           <Input id="brush-break" type="number" min={0} step={5} inputMode="numeric" value={draft.breakMin}
             onChange={(e) => edit({ breakMin: e.target.value })} className="w-24" />
         </div>
-        <button type="button" onClick={reset} disabled={hours === null}
-          className="pressable h-10 coarse:h-11 px-3 rounded-card flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        <Button variant="ghost" type="button" onClick={reset} disabled={hours === null}
+          className="gap-1.5 px-3 text-muted-foreground coarse:h-11">
           <RotateCcw className="size-4" /> Godziny zmiany
-        </button>
+        </Button>
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
         {PRESETS.map(([label, h]) => {
