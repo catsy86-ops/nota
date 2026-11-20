@@ -1,0 +1,112 @@
+/* W6.5: część dawnego `src/index.css` (linie 8–117 przed podziałem), bez zmian w regułach. Zgodność z Tailwind v3 (kolor krawędzi), kreska ikon, kursor przycisków — `@layer base`.
+   Kolejność importów w `src/index.css` = dawna kolejność w pliku — nie przestawiać. */
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+/* Podpowiedź w polach jak w v3 (szary 400) — v4 bierze półprzezroczysty kolor tekstu. */
+@layer base {
+  /* W4.2: grubość kreski ikon z tokenu, ustawiona raz. Cieńsza w stylach rysunkowych (plan, matryca, zeszyt),
+     pełna 2 w hydraulice. Tylko ikony z domyślną kreską (`stroke-width="2"` od lucide): jawne `strokeWidth`
+     (pogrubiony ✓ w zaznaczeniu, cienki rysunek pustego stanu) zostają, bo CSS przebiłby atrybut. */
+  html[data-skin="plan"],
+  html[data-skin="matrix"],
+  html[data-skin="zeszyt"] {
+    --icon-stroke: 1.5;
+  }
+  html[data-skin="hydraulika"] {
+    --icon-stroke: 2;
+  }
+  .lucide[stroke-width="2"] {
+    stroke-width: var(--icon-stroke);
+  }
+  /* W4.3: ikona obok tekstu nie ściska się, gdy tekst łamie się w wierszu flex — kreska zostaje w skali. */
+  .lucide {
+    flex-shrink: 0;
+  }
+
+  /* Przejścia do `height: auto` (plan 2.4). Bez przejść w CSS nic się nie zmienia; w starszych przeglądarkach skok jak dziś. */
+  html {
+    interpolate-size: allow-keywords;
+  }
+
+  /* Selektor `html`, nie `:root`: testy kontrastu czytają pierwszy blok z selektorem :root jako tokeny schematu jasnego.
+     W1.5: odstępy semantyczne — aliasy skali, nie nowa skala. Liczone od `--spacing`, więc idą za gęstością
+     (`html[data-ui-density]`). Tailwind: `p-card`, `px-page`, `gap-stack`, `py-row`. */
+  html {
+    --space-page: calc(var(--spacing) * 4);
+    --space-card: calc(var(--spacing) * 4);
+    --space-stack: calc(var(--spacing) * 8);
+    --space-row: calc(var(--spacing) * 2);
+  }
+  @media (min-width: 640px) {
+    html {
+      --space-page: calc(var(--spacing) * 6);
+      --space-card: calc(var(--spacing) * 5);
+      --space-stack: calc(var(--spacing) * 10);
+    }
+  }
+
+  /* W1.6: paleta danych. Wykresy mają dziś po jednej serii (dwie w nadgodzinach roku), więc dwie barwy serii;
+     kolejne dopisywać w stałej kolejności i sprawdzać walidatorem CVD (skill dataviz). Siatka i osie wycofane,
+     podpisy w tokenie tekstu, nie w kolorze serii. */
+  html {
+    --chart-1: var(--primary);
+    --chart-2: var(--accent);
+    --chart-grid: var(--border);
+    --chart-axis: var(--muted-foreground);
+    --positive: var(--success);
+    --negative: var(--destructive);
+  }
+
+  /* W6.6: natywne kontrolki (checkbox, radio, suwak, postęp) i zaznaczenie tekstu w akcencie stylu.
+     `color-scheme` i `theme-color` ustawiają `prepaint.js` i `useTheme` przy każdej zmianie stylu. */
+  html {
+    accent-color: var(--primary);
+  }
+  ::selection {
+    background-color: color-mix(in srgb, var(--primary) 30%, transparent);
+    color: var(--foreground);
+  }
+
+  /* Równe łamanie tytułów (plan 1.4): bez pojedynczego słowa w drugiej linii. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  /* Akapity: bez samotnego słowa na końcu (plan QoL 1.4). */
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted-foreground);
+  }
+}
+
+/* v4 zdjął wskaźnik „rączki” z przycisków w preflight — zostajemy przy zachowaniu z v3. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,325 @@
+/* W6.5: część dawnego `src/index.css` (linie 638–960 przed podziałem), bez zmian w regułach. Warstwy `utilities`, `base` i `components`: pasek czytania, role tekstu (`ui-*`, `title-*`, `num-lg`), karty, okna.
+   Kolejność importów w `src/index.css` = dawna kolejność w pliku — nie przestawiać. */
+
+@layer utilities {
+  /* Pasek postępu czytania (plan 2.5): przyklejony u góry przewijanego obszaru, rośnie wraz z przewijaniem. */
+  .reader-progress {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: 2px;
+    margin-inline: -1.5rem;
+    margin-bottom: -2px;
+    background: var(--sec-notes);
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: reader-progress-grow linear both;
+    animation-timeline: scroll(nearest);
+  }
+  @keyframes reader-progress-grow {
+    to { transform: scaleX(1); }
+  }
+  @media (min-width: 640px) {
+    .reader-progress { margin-inline: -3rem; }
+  }
+
+  /* Pole rośnie z treścią (plan 2.6); do 60% wysokości okna, potem przewija się. JS tylko jako rezerwa (TitleField). */
+  .field-grow {
+    field-sizing: content;
+    max-height: 60dvh;
+  }
+
+  /* Ikona działu w nawigacji (`sectionIconClass` w src/lib/sections.ts). */
+  .sec-notes { color: var(--sec-notes); }
+  .sec-shifts { color: var(--sec-shifts); }
+  .sec-study { color: var(--sec-study); }
+  .sec-calendar { color: var(--sec-calendar); }
+
+  /* Pasek nagłówka w kolorze działu (tylko linia dolna, tekst zostaje w kolorze motywu). */
+  html[data-view="notes"] .app-header { border-bottom-color: color-mix(in srgb, var(--sec-notes) 60%, transparent); }
+  html[data-view="shifts"] .app-header { border-bottom-color: color-mix(in srgb, var(--sec-shifts) 60%, transparent); }
+  html[data-view="study"] .app-header { border-bottom-color: color-mix(in srgb, var(--sec-study) 60%, transparent); }
+  html[data-view="calendar"] .app-header { border-bottom-color: color-mix(in srgb, var(--sec-calendar) 60%, transparent); }
+
+  /* Pusty stan w dziale: ikona i szkic w kolorze działu (5.1). `StatusPanel` daje korzeniowi `data-status`,
+     a ikonie `data-status-tone`; szkic (`EmptySketch`) ma tylko `data-testid`, więc dostaje kolor przez korzeń. */
+  html[data-view="notes"] :is([data-status="empty"] [data-testid="empty-illustration"], [data-status-tone="empty"]) { color: var(--sec-notes); }
+  html[data-view="shifts"] :is([data-status="empty"] [data-testid="empty-illustration"], [data-status-tone="empty"]) { color: var(--sec-shifts); }
+  html[data-view="study"] :is([data-status="empty"] [data-testid="empty-illustration"], [data-status-tone="empty"]) { color: var(--sec-study); }
+  html[data-view="calendar"] :is([data-status="empty"] [data-testid="empty-illustration"], [data-status-tone="empty"]) { color: var(--sec-calendar); }
+
+  /* Bez „gumki” i systemowego pull-to-refresh przy przewijaniu listy na telefonie. */
+  html,
+  body {
+    overscroll-behavior-y: contain;
+  }
+
+  /* --- Seasonal theme: background wash, blobs and accents --- */
+}
+@layer base {
+  :root {
+    /* defaults = autumn-ish warm, overridden by [data-season] below */
+    --season-accent: oklch(0.6977 0.1576 51.88);
+    --season-blob-1: oklch(0.7543 0.1511 37.70);
+    --season-blob-2: oklch(0.7976 0.1472 62.66);
+    --season-blob-3: oklch(0.6780 0.1807 2.47);
+  }
+
+  /* Poświata aktywnej notatki: w Zeszycie kolor pory roku, w innych stylach ich własny akcent
+     (plan motywów 2026-10-30, 0.3) — pomarańczowa poświata w Matrycy czy Neonie gryzła się ze stylem. */
+  html[data-skin]:not([data-skin="zeszyt"]) {
+    --glow-default: var(--primary);
+  }
+
+  /* Sezony zmieniają akcent i dekoracje, nie kolor marki — bursztyn zostaje przez cały rok
+     (wcześniej zimą cała aplikacja robiła się niebieska, wiosną różowa). */
+  html[data-season="spring"] {
+    --season-accent: oklch(0.7638 0.1369 349.49);
+    --season-blob-1: oklch(0.7886 0.1273 349.06);
+    --season-blob-2: oklch(0.8449 0.1367 135.82);
+    --season-blob-3: oklch(0.7806 0.1220 314.04);
+  }
+  html[data-season="summer"] {
+    --season-accent: oklch(0.8471 0.1549 89.45);
+    --season-blob-1: oklch(0.8806 0.1540 90.03);
+    --season-blob-2: oklch(0.8185 0.1261 214.04);
+    --season-blob-3: oklch(0.7301 0.1613 38.92);
+  }
+  html[data-season="autumn"] {
+    --season-accent: oklch(0.6977 0.1576 51.88);
+    --season-blob-1: oklch(0.7543 0.1511 37.70);
+    --season-blob-2: oklch(0.7976 0.1472 62.66);
+    --season-blob-3: oklch(0.6780 0.1807 2.47);
+    /* Jesień to domyślny wygląd — marka i długopis z :root/.dark. */
+  }
+  html[data-season="winter"] {
+    --season-accent: oklch(0.7874 0.0878 231.11);
+    --season-blob-1: oklch(0.8078 0.0978 231.46);
+    --season-blob-2: oklch(0.7104 0.1123 263.48);
+    --season-blob-3: oklch(0.7340 0.1115 298.96);
+  }
+  /* Siła poświaty: w ciemnym motywie przygaszona, żeby nie zalewała notatek. */
+  html[data-season] { --season-glow: 1; }
+  html.dark[data-season] { --season-glow: 0.42; }
+}
+
+/* Ziarno papieru w Zeszycie (plan 5.2): szum SVG w pierwszej warstwie tła kratki, ~4% krycia.
+   Maska kratki gasi je przy dole i bokach razem z liniami. Wyłączane w `preferences.css`
+   przy ograniczonej przezroczystości. Inne style nie ustawiają zmiennej (`none`). */
+html[data-skin="zeszyt"] {
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .47 0 0 0 0 .42 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* Zeszyt w porze roku: światło wpada z górnych rogów i od dołu, kolorami sezonu.
+   Tylko styl Zeszyt — pozostałe style mają własne tła i nie są tu ruszane. */
+html[data-skin="zeszyt"][data-season] .paper-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(62% 48% at 100% 0%, color-mix(in srgb, var(--season-blob-1) calc(34% * var(--season-glow)), transparent), transparent 72%),
+    radial-gradient(52% 40% at 0% 0%, color-mix(in srgb, var(--season-blob-2) calc(24% * var(--season-glow)), transparent), transparent 70%),
+    radial-gradient(70% 46% at 50% 100%, color-mix(in srgb, var(--season-blob-3) calc(20% * var(--season-glow)), transparent), transparent 75%);
+}
+
+@layer base {
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    /* Preflight zeruje wagę nagłówków (400); bez tego nowe widoki bez jawnego `font-semibold` wyglądają jak tekst. */
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  /* Tytuł strony jest jeden i najgrubszy: 700 i ciaśniej. Podtytuły zostają na 600. */
+  h1 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  /* Spacja w Plus Jakarta Sans ma 0,17 em — „Spotkanie z zespołem” czytało się jak „zzespołem”.
+     Krój jest teraz w całej aplikacji, więc poprawka na body; pola formularzy jej nie dziedziczą same. */
+  body {
+    word-spacing: 0.06em;
+  }
+  input, textarea, select, button {
+    word-spacing: inherit;
+  }
+}
+
+@layer base {
+  /* One focus ring for every interactive element; component utilities may override. */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+  }
+}
+
+/* Etykieta sekcji: zdanie, nie wersaliki. Licznik dopisuje komponent w `font-mono`.
+   Na papierze Zeszytu cienka kreska marginesu pod etykietą (bez wersalików i kresek z dashboardów). */
+@layer components {
+  /* Plan Notatek 4.2: fragment treści na kaflu — 4 linie (telefon: 3) przy interlinii 1,5, ostatnia gaśnie jak tekst
+     schodzący pod krawędź kartki. Zamiast `line-clamp`, który przy kilku akapitach Markdownu ucinał w pół linii
+     wielokropkiem. Treść, która się mieści, zostaje w pełni kryjąca. */
+  .tile-fade {
+    max-height: 6em;
+    overflow: hidden;
+  }
+  /* Maska tylko przy rzeczywistym ucięciu — `data-clipped` ustawia `src/lib/clipObserver.ts`. */
+  .tile-fade[data-clipped] {
+    -webkit-mask-image: linear-gradient(to bottom, oklch(0.0000 0.0000 0.00) 4.5em, transparent 6em);
+    mask-image: linear-gradient(to bottom, oklch(0.0000 0.0000 0.00) 4.5em, transparent 6em);
+  }
+  @media (max-width: 639.98px) {
+    .tile-fade {
+      max-height: 4.5em;
+    }
+    .tile-fade[data-clipped] {
+      -webkit-mask-image: linear-gradient(to bottom, oklch(0.0000 0.0000 0.00) 3em, transparent 4.5em);
+      mask-image: linear-gradient(to bottom, oklch(0.0000 0.0000 0.00) 3em, transparent 4.5em);
+    }
+  }
+  .section-label {
+    @apply flex items-center gap-1.5 text-sm font-semibold text-foreground;
+  }
+  /* Nagłówek grupy (pasek boczny, dolny pasek, tablica, quiz): jeden przepis zamiast czterech (§audyt 1).
+     Nowy plan 2.6: zdaniem, nie wersalikami — 12 px, bez rozstrzelenia. */
+  .section-caps {
+    @apply text-xs font-semibold text-muted-foreground;
+  }
+  /* Role tekstu (plan UI 2026-11-06, Etap 2). Nazwy bez przedrostka `text-`: tailwind-merge w `cn`
+     wziąłby `text-hint` za kolor i zdjąłby go przy `text-destructive`. Utility na tym samym elemencie
+     wygrywa (warstwa components < utilities), więc kolor stanu dokłada się zwykłą klasą. */
+  /* Opis i podpowiedź pod kontrolką albo nad listą — czytane, więc 14 px, nie 12. */
+  .ui-hint {
+    @apply text-sm text-muted-foreground;
+  }
+  /* W2.3: etykieta pola i przycisk tekstowy — 500, nie 600; grubość tytułów zostaje dla `title-*`. */
+  .ui-label {
+    @apply text-sm font-medium;
+  }
+  /* Data, licznik, jednostka — zerkane, więc 12 px i cyfry tabelaryczne. */
+  .ui-meta {
+    @apply text-xs tabular-nums text-muted-foreground;
+  }
+  /* W2.1: skala ról (`docs/typografia.md`). Rozmiary w rem, więc rosną z „Rozmiarem tekstu”. Tytuły odstają od
+     tekstu interfejsu (`--text-ui`, 14 px; 15 px na telefonie — WZ-1) o co najmniej dwa stopnie. */
+  /* Tytuł ekranu poza `ViewTitle` (dialog pełnoekranowy, kreator). */
+  .title-page {
+    font-size: 1.375rem; line-height: 1.75rem; font-weight: 700;
+    @apply font-display text-foreground;
+  }
+  /* Tytuł sekcji w widoku (h2 pod h1 główki), gdy nie jest kartą `SectionCard`. */
+  .title-section {
+    font-size: 1.0625rem; line-height: 1.5rem; font-weight: 650;
+    @apply font-display text-foreground;
+  }
+  /* Nagłówek karty (`SectionCard`): stopień nad tekstem interfejsu, nie ten sam rozmiar co on. */
+  .title-card {
+    font-size: calc(var(--text-ui) + 0.0625rem); line-height: 1.25rem; font-weight: 600;
+    @apply flex items-center gap-2 font-display text-foreground;
+  }
+  /* W2.4: role tytułów stoją też na `div`/`span`, więc równe łamanie dostają z roli, nie tylko z h1–h3. */
+  .title-page,
+  .title-section,
+  .title-card {
+    text-wrap: balance;
+  }
+  /* W2.4: treść notatki — czytana, więc wiersz najwyżej 68 znaków i dzielenie wyrazów (`lang="pl"` w `index.html`).
+     Tylko akapity i listy: tabele i bloki kodu zostają na pełnej szerokości. */
+  .prose-note :where(p, li, blockquote) {
+    max-width: 68ch;
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
+  /* Liczba główna karty (saldo, suma godzin, wynik): największy element karty. */
+  .num-lg {
+    font-size: 1.75rem; line-height: 2rem; font-weight: 600;
+    @apply font-mono tabular-nums text-foreground;
+  }
+
+  /* Tabliczka rysunkowa na końcu kartki: nazwa widoku w każdym skinie. Ostatni element `<main>` (nowy plan 1.4):
+     stoi po treści przy prawej krawędzi, a przy krótkiej treści schodzi na dół ekranu. Wcześniej była przyklejona
+     do rogu okna i prześwitywała między kartami. Tylko komputer — na telefonie dół zajmuje dolny pasek.
+     Bez JS: napis wybiera `html[data-view]`. */
+  .paper-stamp {
+    align-self: flex-end;
+    margin-top: auto;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid color-mix(in srgb, var(--muted-foreground) 30%, transparent);
+    box-shadow: inset 0 0 0 3px var(--background), inset 0 0 0 4px color-mix(in srgb, var(--muted-foreground) 12%, transparent);
+    font: 500 0.6875rem/1 var(--font-mono, ui-monospace, monospace);
+    letter-spacing: 0.18em;
+    color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+    white-space: nowrap;
+  }
+  .paper-stamp::after { content: "NOTKI · ARKUSZ 1/1 · SKALA 1:1"; }
+  html[data-view="today"] .paper-stamp::after { content: "DZIŚ · PRZEGLĄD DNIA"; }
+  html[data-view="week"] .paper-stamp::after { content: "TYDZIEŃ · PRZEGLĄD"; }
+  html[data-view="archive"] .paper-stamp::after { content: "ARCHIWUM · ARKUSZ 1/1"; }
+  html[data-view="trash"] .paper-stamp::after { content: "KOSZ · ARKUSZ 1/1"; }
+  html[data-view="reminders"] .paper-stamp::after { content: "PRZYPOMNIENIA · ARKUSZ 1/1"; }
+  html[data-view="calendar"] .paper-stamp::after { content: "KALENDARZ · ARKUSZ 1/1"; }
+  html[data-view="shifts"] .paper-stamp::after { content: "GRAFIK · ARKUSZ 1/1"; }
+  html[data-view="study"] .paper-stamp::after { content: "PRACA · DZIENNIK BUDOWY"; }
+  html[data-skin="plan"] .paper-stamp {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    border-color: color-mix(in srgb, var(--grid) 30%, transparent);
+    box-shadow: inset 0 0 0 3px var(--background), inset 0 0 0 4px color-mix(in srgb, var(--grid) 18%, transparent);
+    color: color-mix(in srgb, var(--grid) 45%, transparent);
+  }
+  @media (max-width: 767px) {
+    .paper-stamp { display: none; }
+  }
+
+  /* Odznaka statusu: pieczątka, a nie kolorowa pigułka. Obwiedzina i tekst w tym samym kolorze,
+     bez wypełnienia; tylko do tekstu nieklikalnego (przyciski zostają chipami). */
+  .stamp-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.05rem 0.4rem;
+    border: 1.5px solid currentColor;
+    border-radius: 0.3rem;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  /* Pociągnięcie ołówka pod etykietą „Zapisano”: rysuje się przy każdym zapisie (mount), bez JS.
+     Przy ograniczonym ruchu od razu w stanie końcowym. */
+  .pencil-stroke {
+    display: block;
+    height: 2px;
+    margin-top: 2px;
+    border-radius: 9999px;
+    background: var(--primary);
+    transform-origin: left center;
+    animation: pencil-draw var(--dur-slow) var(--ease-out) both;
+  }
+  @keyframes pencil-draw {
+    from { transform: scaleX(0); opacity: 1; }
+    to { transform: scaleX(1); opacity: 0.45; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pencil-stroke { animation: none; transform: none; opacity: 0.45; }
+  }
+
+  /* Zeszyt: delikatne ziarno papieru, tylko na komputerze (koszt na telefonie).
+     Margines świadomie nie jest tu rysowany: tło nie zna szerokości paska bocznego,
+     więc linia lądowałaby pod paskiem albo pod kartami. */
+
+}

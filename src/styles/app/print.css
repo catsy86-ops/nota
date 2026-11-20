@@ -1,0 +1,13 @@
+/* W6.5: część dawnego `src/index.css` (linie 1465–1475 przed podziałem), bez zmian w regułach. Wydruk raportu z budowy (`#report-print`).
+   Kolejność importów w `src/index.css` = dawna kolejność w pliku — nie przestawiać. */
+
+/* Wydruk raportu z budowy (JournalReport): drukuje się tylko `#report-print`, reszta strony schowana. */
+#report-print { display: none; }
+@media print {
+  html.printing-report body > *:not(#report-print) { display: none !important; }
+  html.printing-report #report-print { display: block; }
+  html.printing-report body { background: oklch(1.0000 0.0000 0.00); }
+  /* Ciemny motyw nie trafia na papier. */
+  html.printing-report .report-paper, html.printing-report .report-paper * { background: transparent !important; color: oklch(0.0000 0.0000 0.00) !important; border-color: oklch(0.6830 0.0000 0.00) !important; }
+  @page { margin: 14mm; }
+}

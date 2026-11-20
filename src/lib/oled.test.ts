@@ -1,10 +1,9 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { oledOn, setOled } from "@/lib/oled";
 import { APPEARANCE_KEYS } from "@/lib/appearanceCode";
+import { readAppCss } from "@/test/appCss";
 
-const css = readFileSync(resolve(process.cwd(), "src/index.css"), "utf8");
+const css = readAppCss();
 
 describe("czarne tło OLED (plan motywów 3.3)", () => {
   beforeEach(() => { localStorage.clear(); setOled(false); });

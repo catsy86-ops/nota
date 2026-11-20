@@ -1,0 +1,260 @@
+/* W6.5: część dawnego `src/index.css` (linie 1476–1733 przed podziałem), bez zmian w regułach. Szkielety, przejścia widoków, wykresy, ramka kafla, szkice, tytuł działu, kolorowanie kodu.
+   Kolejność importów w `src/index.css` = dawna kolejność w pliku — nie przestawiać. */
+
+/* Szkielet widoku ładowanego leniwie (ViewSkeleton.tsx): wchodzi po 300 ms (plan 3.3), żeby szybkie
+   ładowanie nie mignęło; kości pulsują tylko przy pełnym ruchu. */
+.view-skeleton { animation: view-skeleton-in 0.2s ease-out 0.3s both; }
+.view-skeleton-bone { animation: view-skeleton-pulse 1.6s ease-in-out 0.4s infinite; }
+@keyframes view-skeleton-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes view-skeleton-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) {
+  .view-skeleton-bone { animation: none; }
+}
+html[data-motion='reduced'] .view-skeleton-bone { animation: none; }
+
+/* Karta w tle (`lib/pageHidden.ts`): zapętlone animacje stoją, po powrocie ruszają dalej. */
+html[data-hidden] *,
+html[data-hidden] *::before,
+html[data-hidden] *::after {
+  animation-play-state: paused !important;
+}
+
+/* Przyklejona akcja nad dolnym paskiem (np. „Dalej” w quizie, `data-sticky-action`) — plakietka zapisu
+   (`OfflineStatus`) wypada na jej wysokości, więc na telefonie idzie nad nią. */
+@media (max-width: 767px) {
+  html:has([data-sticky-action]) .save-status { bottom: calc(9.5rem + env(safe-area-inset-bottom)); }
+}
+
+/* Kierunek przejścia między działami (plan 2.2): `setView` w Index ustawia `data-vt-dir`. */
+@keyframes vt-out-left { to { transform: translateX(-24px); opacity: 0; } }
+@keyframes vt-in-right { from { transform: translateX(24px); opacity: 0; } }
+@keyframes vt-out-right { to { transform: translateX(24px); opacity: 0; } }
+@keyframes vt-in-left { from { transform: translateX(-24px); opacity: 0; } }
+html[data-vt-dir="fwd"]::view-transition-old(root) { animation: vt-out-left 0.22s var(--ease-out) both; }
+html[data-vt-dir="fwd"]::view-transition-new(root) { animation: vt-in-right 0.22s var(--ease-out) both; }
+html[data-vt-dir="back"]::view-transition-old(root) { animation: vt-out-right 0.22s var(--ease-out) both; }
+html[data-vt-dir="back"]::view-transition-new(root) { animation: vt-in-left 0.22s var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-vt-dir]::view-transition-old(root),
+  html[data-vt-dir]::view-transition-new(root) { animation: none; }
+}
+
+/* Kalendarz, wybór dnia (K4.5): podświetlenie (`day-active`) przesuwa się z komórki do nowej,
+   a panel dnia (`day-panel`) wjeżdża z dołu. Przy redukcji ruchu (także z ustawienia w aplikacji)
+   zostaje samo przenikanie, bez przesunięć. */
+@keyframes vt-day-rise { from { transform: translateY(12px); opacity: 0; } }
+@keyframes vt-fade { from { opacity: 0; } }
+
+/* B2.7: View Transitions w karcie budowy (zmiana sekcji, wejście/wyjście) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: vt-fade 0.15s ease-out both;
+}
+html:not([data-motion="reduced"])::view-transition-new(day-panel) { animation: vt-day-rise 0.22s var(--ease-out) both; }
+html[data-motion="reduced"]::view-transition-new(day-panel) { animation: vt-fade 0.2s linear both; }
+html[data-motion="reduced"]::view-transition-group(day-active) { animation-duration: 0s; }
+
+/* Wykresy roku w Grafiku (G4.3): kolory z tokenów; recharts daje klasy na grupach, kolor idzie na elementy. */
+.year-chart-grid line { stroke: var(--chart-grid); }
+.year-chart-hours .recharts-rectangle { fill: var(--chart-1); }
+.year-chart-norm .recharts-curve { stroke: var(--foreground); stroke-dasharray: 4 3; stroke-width: 1.5; }
+.year-chart-over .recharts-rectangle { fill: var(--warning); }
+
+/* Osie i dymki Recharts: cyfry o stałej szerokości, żeby wartości nie skakały (plan 5.3). */
+.recharts-wrapper { font-variant-numeric: tabular-nums; }
+/* W1.6: podpisy osi w tokenie tekstu (recharts domyślnie #666, bez kontrastu stylu). */
+.recharts-cartesian-axis-tick-value { fill: var(--chart-axis); }
+
+/* ── Animowana ramka kafla (2026-10-27) ─────────────────────────────────────────
+   Obwódka w spoczynku zostaje zwykłym `border`. Przy najechaniu, fokusie klawiaturą
+   i zaznaczeniu pojawia się gradient, który krąży po krawędzi. Tylko kilka kafli naraz
+   się animuje (przy setkach notatek ciągły obrót byłby kosztowny), a ruch wyłącza
+   `prefers-reduced-motion` i `data-motion="reduced"`. */
+@property --frame-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.note-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1.5px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--frame-angle),
+    transparent 0deg,
+    color-mix(in srgb, var(--primary) 85%, transparent) 70deg,
+    color-mix(in srgb, var(--accent) 70%, transparent) 150deg,
+    transparent 230deg,
+    color-mix(in srgb, var(--primary) 60%, transparent) 300deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(oklch(0.0000 0.0000 0.00) 0 0) content-box, linear-gradient(oklch(0.0000 0.0000 0.00) 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(oklch(0.0000 0.0000 0.00) 0 0) content-box exclude, linear-gradient(oklch(0.0000 0.0000 0.00) 0 0);
+  opacity: 0;
+  transition: opacity var(--dur-base, 200ms) var(--ease-out, ease-out);
+}
+.note-card:is(:hover, [data-selected]) .note-frame,
+.note-card:has(:focus-visible) .note-frame {
+  opacity: 1;
+  animation: note-frame-spin 3.6s linear infinite;
+}
+@keyframes note-frame-spin {
+  to { --frame-angle: 360deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-card .note-frame { animation: none !important; }
+}
+html[data-motion="reduced"] .note-card .note-frame { animation: none !important; }
+/* Telefon (plan motywów 2.7): obrót ramki przemalowuje ją co klatkę i zjada baterię przy kilku zaznaczonych
+   notatkach — tu ramka stoi, a zaznaczenie widać z koloru i grubości. */
+@media (pointer: coarse) {
+  .note-card .note-frame { animation: none !important; }
+}
+
+/* P5.3: nagłówki dni na osi dziennika wchodzą przy przewijaniu (animacja sterowana widokiem).
+   Tylko gdy przeglądarka to wspiera i ruch nie jest ograniczony — bez tego nagłówek po prostu stoi. */
+@keyframes scroll-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-enter {
+      animation: scroll-enter linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}
+
+/* Samouczek (components/guide/GuideArt.tsx): ilustracje rysowane długopisem jak ekran startowy.
+   `--d` = opóźnienie kreski; kreska niewidoczna do startu, bo zaokrąglony koniec o zerowej długości robi kropkę. */
+.guide-draw { stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; animation: guide-draw 0.45s var(--ease-out) var(--d, 0s) forwards; }
+.guide-pop { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: guide-pop 0.4s cubic-bezier(0.34, 1.7, 0.64, 1) var(--d, 0s) forwards; }
+.guide-grow { transform-box: fill-box; transform-origin: bottom; transform: scaleY(0); animation: guide-grow 0.5s var(--ease-out) var(--d, 0s) forwards; }
+.guide-slide { animation: guide-slide 1.6s var(--ease-in-out, ease-in-out) var(--d, 0s) infinite alternate; }
+@keyframes guide-draw { from { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
+@keyframes guide-pop { to { transform: scale(1); } }
+@keyframes guide-grow { to { transform: scaleY(1); } }
+@keyframes guide-slide { from { transform: translateX(-10px); } to { transform: translateX(10px); } }
+@media (prefers-reduced-motion: reduce) {
+  .guide-draw, .guide-pop, .guide-grow, .guide-slide { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
+}
+html[data-motion='reduced'] :is(.guide-draw, .guide-pop, .guide-grow, .guide-slide) { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
+
+/* Szkic pustych ekranów (components/art/Sketch.tsx, plan motywów 2.1): kreska z tokenów stylu.
+   `--sketch-w` grubość, `--sketch-dash` linie kartki, `--sketch-glow` filtr poświaty. */
+.sketch { filter: var(--sketch-glow, none); }
+.sketch-line { fill: none; stroke: currentColor; stroke-width: var(--sketch-w, 2); stroke-linecap: round; stroke-linejoin: round; }
+.sketch-under { stroke-opacity: 0.5; }
+.sketch-paper { stroke: currentColor; stroke-opacity: 0.18; stroke-width: var(--sketch-w, 2); stroke-dasharray: var(--sketch-dash, none); }
+.sketch-draw { stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; animation: guide-draw 0.35s var(--ease-out) var(--d, 0s) forwards; }
+@media (prefers-reduced-motion: reduce) { .sketch-draw { animation: none; stroke-dashoffset: 0; opacity: 1; } }
+html[data-motion='reduced'] .sketch-draw { animation: none; stroke-dashoffset: 0; opacity: 1; }
+html[data-skin="plan"] { --sketch-w: 1.4; --sketch-dash: 3 3; }
+html[data-skin="neon"] { --sketch-w: 1.8; --sketch-glow: drop-shadow(0 0 4px color-mix(in srgb, var(--primary) 70%, transparent)); }
+html[data-skin="zorza"] { --sketch-w: 1.8; --sketch-glow: drop-shadow(0 0 6px color-mix(in srgb, var(--primary) 45%, transparent)); }
+html[data-skin="matrix"] { --sketch-w: 1.6; --sketch-glow: drop-shadow(0 0 3px color-mix(in srgb, var(--primary) 80%, transparent)); }
+html[data-skin="miedz"] { --sketch-w: 2.2; }
+html[data-skin="hydraulika"] { --sketch-w: 2.6; }
+html[data-skin="odblask"] { --sketch-w: 3; }
+html[data-skin="kafle"] { --sketch-w: 2.4; }
+html[data-skin="tablica"] { --sketch-w: 2.4; }
+
+/* Dolny pasek per styl (plan motywów 2.2): znacznik aktywnej pozycji i kształt przycisku „+” z tokenów.
+   Domyślnie: pasek akcentu na górze, tło pozycji i okrąg. Każdy styl może to przebrać w swojej skórce. */
+.nav-active-bar { border-radius: var(--nav-bar-radius, 9999px); }
+.nav-active-tile { border-radius: var(--nav-tile-radius, var(--r-card, 0.75rem)); }
+.fab-brand { border-radius: var(--fab-radius, 9999px); }
+
+
+/* Podkreślenie tytułu działu (plan motywów 2.4): kreska piórem w kolorze działu, dorysowana raz przy wejściu
+   w widok — tylko w główce kartki (`ViewTitle`, h1). Mały tytuł w pasku (`.app-title`) jest bez kreski
+   (plan wyglądu, Faza 2: pióro tylko tam, gdzie znaczy „tu jesteś”). */
+@keyframes section-rule { to { transform: scaleX(1); } }
+
+/* Tytuł działu w główce kartki (ViewTitle) — we wszystkich działach. */
+.section-title { position: relative; display: inline-block; }
+.section-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.12em;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--sec-notes);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: section-rule 0.6s var(--ease-out) 0.05s forwards;
+}
+html[data-view="today"] .section-title::after { background: var(--sec-notes); }
+html[data-view="calendar"] .section-title::after { background: var(--sec-calendar); }
+html[data-view="study"] .section-title::after { background: var(--sec-study); }
+html[data-view="shifts"] .section-title::after { background: var(--sec-shifts); }
+@media (prefers-reduced-motion: reduce) { .section-title::after { animation: none; transform: scaleX(1); } }
+html[data-motion='reduced'] .section-title::after { animation: none; transform: scaleX(1); }
+
+/* Czarne tło OLED (plan motywów 3.3): tylko w ciemnym schemacie. Specyficzność wyższa niż tokeny stylów
+   (`html[data-skin].dark`), więc działa w każdym stylu; karty zostają rozjaśnione tokenami stylu. */
+html[data-oled="on"][data-skin].dark { --background: oklch(0.0000 0.0000 0.00); }
+
+/* Podkreślenia działów (plan motywów 3.4): subtelne domyślnie, wyraźne po przełączeniu w Wyglądzie. */
+html:not([data-sections]) .section-title::after { height: 2px; opacity: 0.6; }
+html[data-sections="bold"] .section-title::after { height: 3px; opacity: 1; }
+
+/* Gęstość całego interfejsu (plan motywów 4.2): odstępy i wymiary idą przez `--spacing` (Tailwind v4).
+   Tylko mysz i klawiatura — na dotyku cele dotyku zostają 44 px (`coarse:` nie zmienia się). */
+@media (pointer: fine) {
+  html[data-ui-density="compact"] { --spacing: 0.2rem; }
+  html[data-ui-density="comfy"] { --spacing: 0.3rem; }
+}
+
+/* Długi 4.2: kółko z inicjałem osoby w barwie z palety notatek (`--note-ink` przez `[data-avatar]`). Inicjał jest
+   ozdobą (nazwa stoi obok, `aria-hidden`), ale i tak czytelny: tło 16% barwy na karcie, litera w pełnej barwie. */
+.debt-avatar {
+  background-color: color-mix(in oklch, var(--note-ink, var(--primary)) 16%, var(--card));
+  color: var(--note-ink, var(--primary));
+}
+
+/* Długi 4.4: szkic pustego stanu rysuje się kreską (długość ścieżki 1 przez `pathLength`). */
+.debt-sketch path, .debt-sketch circle {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: debt-sketch-draw 1.1s cubic-bezier(0.3, 0.1, 0.2, 1) 0.1s forwards;
+}
+@keyframes debt-sketch-draw { to { stroke-dashoffset: 0; } }
+html[data-motion="reduced"] .debt-sketch path, html[data-motion="reduced"] .debt-sketch circle { animation: none; stroke-dashoffset: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .debt-sketch path, .debt-sketch circle { animation: none; stroke-dashoffset: 0; }
+}
+
+/* Kolorowanie bloków kodu (plan Notatek 5.3): klasy `tok-*` z Lezer `classHighlighter`. Kolory to tokeny motywu
+   zmieszane z kolorem tekstu, żeby kontrast zostawał wysoki w jasnym i ciemnym schemacie każdego stylu. */
+.code-hl .tok-keyword,
+.code-hl .tok-operatorKeyword,
+.code-hl .tok-modifier,
+.code-hl .tok-controlKeyword,
+.code-hl .tok-definitionKeyword { color: color-mix(in oklab, var(--accent) 70%, var(--foreground)); font-weight: 600; }
+.code-hl .tok-string,
+.code-hl .tok-string2,
+.code-hl .tok-regexp { color: color-mix(in oklab, var(--success) 45%, var(--foreground)); }
+.code-hl .tok-number,
+.code-hl .tok-bool,
+.code-hl .tok-atom,
+.code-hl .tok-null { color: color-mix(in oklab, var(--warning) 40%, var(--foreground)); }
+.code-hl .tok-comment,
+.code-hl .tok-lineComment,
+.code-hl .tok-blockComment { color: var(--muted-foreground); font-style: italic; }
+.code-hl .tok-typeName,
+.code-hl .tok-className,
+.code-hl .tok-tagName,
+.code-hl .tok-namespace { color: color-mix(in oklab, var(--accent) 45%, var(--foreground)); }
+.code-hl .tok-propertyName,
+.code-hl .tok-attributeName,
+.code-hl .tok-labelName { color: color-mix(in oklab, var(--success) 30%, var(--foreground)); }
+.code-hl .tok-invalid { color: var(--destructive-ink, var(--destructive)); text-decoration: underline wavy; }

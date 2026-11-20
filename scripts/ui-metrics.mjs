@@ -93,11 +93,12 @@ const metrics = {
   "gradienty: bg-gradient/linear-gradient": count([...code, ...css], /(bg-gradient-|linear-gradient\(|radial-gradient\()/g),
 };
 
-const indexCss = css.find(([f]) => relative(ROOT, f).replace(/\\/g, "/") === "src/index.css");
+// W6.5: `index.css` to lista importów, treść jest w `src/styles/app/` — liczymy obie części razem.
+const appCss = css.filter(([f]) => /^src\/(index\.css$|styles\/app\/)/.test(relative(ROOT, f).replace(/\\/g, "/")));
 const result = {
   date: new Date().toISOString().slice(0, 10),
   files: { code: code.length, css: css.length },
-  "index.css linie": indexCss ? indexCss[1].split("\n").length : null,
+  "index.css linie": appCss.length ? appCss.reduce((n, [, text]) => n + text.split("\n").length, 0) : null,
   metrics,
 };
 

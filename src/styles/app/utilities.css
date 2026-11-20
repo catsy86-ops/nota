@@ -1,0 +1,304 @@
+/* W6.5: część dawnego `src/index.css` (linie 118–419 przed podziałem), bez zmian w regułach. Własne utility (`@utility`): tło kartki, cienie notatek, szkło, przewijanie, `pressable`, płynna zmiana motywu.
+   Kolejność importów w `src/index.css` = dawna kolejność w pliku — nie przestawiać. */
+
+@utility paper-grid {
+  /* --- Tło: kratka zeszytu (co 20 px ≈ 5 mm), nieruchoma, wygasa ku dołowi i bokom --- */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      var(--paper-grain, none),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: -1px -1px;
+    -webkit-mask-image: radial-gradient(
+      140% 110% at 50% 0%,
+      oklch(0.0000 0.0000 0.00) 45%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      140% 110% at 50% 0%,
+      oklch(0.0000 0.0000 0.00) 45%,
+      transparent 100%
+    );
+  }
+}
+
+@utility note-glow-active {
+  /* --- Active note: seasonal glow --- */
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) 90%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(22% * var(--glow-mul, 1)), transparent),
+    0 10px 34px -8px color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(55% * var(--glow-mul, 1)), transparent);
+  &::after {
+    animation: note-glow-wash 2.8s ease-in-out infinite;
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      120% 80% at 50% 0%,
+      color-mix(in srgb, var(--glow-color, var(--glow-default, var(--season-accent))) calc(18% * var(--glow-mul, 1)), transparent),
+      transparent 65%
+    );
+  }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+  html[data-motion='reduced'] & {
+    animation: none !important;
+  }
+}
+
+@utility note-shadow {
+  box-shadow: var(--elevation-1);
+}
+
+@utility note-shadow-hover {
+  box-shadow: var(--elevation-3);
+}
+
+/* Powłoka 1.6: telefon w poziomie z wycięciem ekranu (`viewport-fit=cover`) — treść w układzie (nagłówek,
+   główna kolumna) odsunięta od boków o wycięcie. W pionie wcięcia są zerowe, więc nic się nie zmienia.
+   Elementy `fixed` (dolny pasek, pasek boczny na telefonie) mają własne odsunięcie w klasach. */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Rozwijane sekcje (Ustawienia): strzałka aplikacji zamiast trójkąta przeglądarki, obrót przy otwarciu. */
+details.disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  list-style: none;
+}
+details.disclosure > summary::-webkit-details-marker { display: none; }
+details.disclosure > summary::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: 0.6;
+  transform: rotate(-45deg);
+  transition: transform var(--dur-fast, 0.15s) ease-out;
+}
+details.disclosure[open] > summary::before { transform: rotate(45deg); }
+@media (prefers-reduced-motion: reduce) {
+  details.disclosure > summary::before { transition: none; }
+}
+
+@utility glass {
+  /* Nagłówek i dolny pasek to pełny papier — bez rozmycia (koszt na telefonie) i bez prześwitującej kratki. */
+  background-color: var(--background);
+}
+
+@utility glass-strong {
+  background-color: var(--background);
+}
+
+@utility pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
+  @media (min-width: 768px) and (min-height: 501px),
+    (min-width: 768px) and (pointer: fine) {
+    padding-bottom: 2rem;
+  }
+}
+
+@utility focus-ring-gradient {
+  &:focus-within {
+    box-shadow:
+      0 0 0 2px var(--background),
+      0 0 0 4px color-mix(in srgb, var(--primary) 50%, transparent);
+  }
+}
+
+@utility sidebar-gradient {
+  /* Pasek boczny to margines zeszytu: gładki papier, czerwona linia na prawej krawędzi.
+     W6.4: bez `!important` — kolor krawędzi ustawia tylko ta klasa (element nie ma już `border-border/50`). */
+  background-color: var(--background);
+  border-right-color: color-mix(in srgb, var(--margin) 80%, transparent);
+  .dark & {
+    border-right-color: color-mix(in srgb, var(--margin) 45%, transparent);
+  }
+}
+
+@utility header-glow {
+  box-shadow:
+    0 1px 0 var(--border),
+    var(--elevation-1);
+}
+
+/* Zeszyt: tytuł widoku w Fraunces (łagodny szeryf) i pasek bez cienia — sama kreska linii, jak w zeszycie.
+   Selektory z `data-skin="zeszyt"` (atrybut jest zawsze ustawiony), a nie `:not([data-skin])`, które nigdy nie pasowało. */
+html[data-skin="zeszyt"] .app-title {
+  font-family: 'Fraunces Variable', Georgia, serif;
+  font-variation-settings: "SOFT" 50, "WONK" 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+html[data-skin="zeszyt"] .app-header {
+  box-shadow: 0 1px 0 var(--border);
+}
+
+/* Powłoka 4.3: cień pod nagłówkiem po zjechaniu ze szczytu — przez pierwsze 80 px przewijania (animacja sterowana
+   przewijaniem, bez JS). Pseudo-element, żeby nie nadpisać `box-shadow` stylów (Zeszyt ma tam linię). Bez wsparcia
+   `animation-timeline` cienia nie ma — jak dotąd. */
+@supports (animation-timeline: scroll()) {
+  .app-header::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: 12px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--foreground) 9%, transparent), transparent);
+    opacity: 0;
+    animation: header-shade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 80px;
+  }
+  @keyframes header-shade {
+    to { opacity: 1; }
+  }
+}
+
+@utility stats-card {
+  @apply rounded-card border border-border/50 p-4;
+  background: linear-gradient(
+    135deg,
+    var(--card) 0%,
+    color-mix(in srgb, var(--muted) 50%, transparent) 100%
+  );
+}
+
+@utility gradient-text {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(
+    135deg,
+    var(--primary),
+    oklch(0.5678 0.1381 53.47)
+  );
+}
+
+@utility scrollbar-none {
+  /* Przewijany w poziomie rząd bez paska przewijania (np. formatowanie w wąskim kaflu). */
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: 9999px;
+  }
+}
+
+@utility pressable {
+  /* Dociśnięcie: sygnatura wciśnięcia w całej appce (zamiast skalowania
+     z framer-motion). `translate`, nie `transform` — składa się z pozycjonowaniem
+     typu `-translate-y-1/2` i z transformami framer-motion, zamiast je nadpisać. */
+  transition-property:
+    color, background-color, border-color, box-shadow, translate, filter;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-std);
+  &:active:not(:disabled) {
+    translate: 0 1px;
+    filter: brightness(0.94);
+    transition-duration: var(--dur-press);
+  }
+}
+
+@utility toast-undo {
+  /* Toast „Cofnij”: cienki pasek pokazuje, ile czasu zostało. Sonner wstrzymuje
+     licznik, gdy kursor jest nad stosem toastów — pasek robi to samo. */
+  overflow: hidden;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 2px;
+    background: color-mix(in srgb, var(--primary) 70%, transparent);
+    transform-origin: left center;
+    animation: toast-timer var(--toast-ms, 5000ms) linear forwards;
+    pointer-events: none;
+  }
+  [data-sonner-toaster]:hover &::after {
+    animation-play-state: paused;
+  }
+  html[data-motion='reduced'] &::after {
+    display: none;
+  }
+}
+
+@utility theme-transition {
+  /* Smooth theme switch: applied briefly on <html> when theme changes */
+  transition:
+    background-color var(--dur-slow) var(--ease-std),
+    color var(--dur-slow) var(--ease-std),
+    border-color var(--dur-slow) var(--ease-std),
+    fill var(--dur-slow) var(--ease-std),
+    stroke var(--dur-slow) var(--ease-std),
+    box-shadow var(--dur-slow) var(--ease-std) !important;
+  & * {
+    transition:
+      background-color var(--dur-slow) var(--ease-std),
+      color var(--dur-slow) var(--ease-std),
+      border-color var(--dur-slow) var(--ease-std),
+      fill var(--dur-slow) var(--ease-std),
+      stroke var(--dur-slow) var(--ease-std),
+      box-shadow var(--dur-slow) var(--ease-std) !important;
+  }
+  & *::before {
+    transition:
+      background-color var(--dur-slow) var(--ease-std),
+      color var(--dur-slow) var(--ease-std),
+      border-color var(--dur-slow) var(--ease-std),
+      fill var(--dur-slow) var(--ease-std),
+      stroke var(--dur-slow) var(--ease-std),
+      box-shadow var(--dur-slow) var(--ease-std) !important;
+  }
+  & *::after {
+    transition:
+      background-color var(--dur-slow) var(--ease-std),
+      color var(--dur-slow) var(--ease-std),
+      border-color var(--dur-slow) var(--ease-std),
+      fill var(--dur-slow) var(--ease-std),
+      stroke var(--dur-slow) var(--ease-std),
+      box-shadow var(--dur-slow) var(--ease-std) !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none !important;
+    & * {
+      transition: none !important;
+    }
+  }
+  html[data-motion='reduced'] & {
+    transition: none !important;
+  }
+
+  html[data-motion='reduced'] & * {
+    transition: none !important;
+  }
+}
+
+@utility hover-scale {
+  html[data-motion='reduced'] &:hover {
+    transform: none !important;
+  }
+}

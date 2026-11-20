@@ -1,12 +1,11 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { oklchToRgb } from "@/test/oklch";
+import { readAppCss } from "@/test/appCss";
 
 // Kontrast liczony z tokenów w index.css (bez przeglądarki). Axe nie widzi
 // gradientów, a nie liczy 1.4.11 dla pól — dlatego ten test pilnuje tokenów.
 
-const css = readFileSync(resolve(process.cwd(), "src/index.css"), "utf8");
+const css = readAppCss();
 
 /** Treść bloku zaczynającego się od `selector {` (do pierwszego `\n  }` na tym poziomie). */
 function block(selector: string): string {

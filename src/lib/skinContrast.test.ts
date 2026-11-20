@@ -6,11 +6,12 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SKINS, SKIN_SCHEME, type Skin } from "@/lib/skins";
 import { oklchToRgb, parseOklch, type Oklch } from "@/test/oklch";
+import { readAppCss } from "@/test/appCss";
 
 // Kontrast tokenów każdego stylu (WCAG AA), liczony z `index.css` i `styles/skins/*.css` bez przeglądarki.
 // Zeszyt jest sprawdzany w obu motywach, pozostałe w swoim jedynym schemacie.
 
-const index = readFileSync(resolve(process.cwd(), "src/index.css"), "utf8");
+const index = readAppCss();
 const skins = readSkinCss();
 
 function block(src: string, selector: string): string {

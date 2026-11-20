@@ -6792,6 +6792,37 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — podział `index.css` (W6.5, 2026-11-20)
+
+### Co robi
+
+- Bez zmiany wyglądu: główny arkusz (1732 linie) jest podzielony na siedem plików według zawartości. Zbudowany CSS jest bajt w bajt taki sam jak przed podziałem (ten sam hash `index-C-Oulk4o.css`).
+
+### Gdzie jest
+
+- `src/index.css` — tylko importy: `tailwindcss`, `tw-animate-css`, siedem części i na końcu `@config`.
+- `src/styles/app/`: `base.css` (zgodność z v3, kreska ikon, kursor), `utilities.css` (`@utility`), `tokens.css` (`:root` i `.dark`), `components.css` (warstwy `utilities`/`base`/`components`: role tekstu, karty, okna), `features.css` (reguły działów poza warstwami: „+”, kolory notatek, toasty, logo, marka), `print.css` (wydruk raportu), `effects.css` (szkielety, przejścia widoków, wykresy, ramka kafla, szkice, tytuł działu, kod). Każdy plik ma w nagłówku zakres dawnych linii.
+- `src/test/appCss.ts` — `readAppCss()`: skleja `index.css` z częściami w kolejności importów; używają go testy, które czytały `index.css` (kontrast, OLED, kolory działów, kształt, gęstość, kreska szkicu, logo, obwódka zmian).
+- `scripts/ui-metrics.mjs` — metryka „index.css linie” liczy `index.css` razem z `styles/app/`.
+
+### Jak działa
+
+- Części są wycięte w miejscach, gdzie zagnieżdżenie klamer wraca do zera, i importowane w dawnej kolejności, więc kaskada się nie zmienia. Tailwind wkleja je w miejscu importu.
+
+### Ograniczenia i pułapki
+
+- **`@import` musi stać przed `@config`.** Tailwind pomija importy po innych regułach — przy pierwszej próbie CSS stracił 56 KB bez żadnego błędu builda.
+- Kolejności importów nie przestawiać. Pierwszy blok `:root` (tokeny w `tokens.css`) czytają testy kontrastu — nie dodawaj wcześniej innego `:root`.
+- Plan dzielił na `tokens/base/components/utilities/print`; części noszą nazwy po treści, bo dawny plik przeplatał warstwy i reguły bez warstw, a kolejności nie wolno zmieniać.
+
+### Testy
+
+- Porównanie zbudowanego CSS przed i po (identyczny). Vitest 4230 zielony, typecheck czysty, e2e `csp`, `view-skeleton` zielone. `bundle.spec.ts` „precache” nie przechodzi: 4 785 272 B (300 plików) przy progu 4,4 MiB — przyrost z wcześniejszych commitów, podział CSS go nie zmienia; próg czeka na decyzję właściciela.
+
+### Commit
+
+W6.5 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — wysoki kontrast i wymuszone kolory (W6.7, 2026-11-20)
 
 ### Co robi

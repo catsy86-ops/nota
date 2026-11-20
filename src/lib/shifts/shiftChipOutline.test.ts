@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
 import { contrastRatio } from "./color";
 import { oklchToHex, parseOklch } from "@/test/oklch";
 import { readSkinCss } from "@/test/skinCss";
+import { readAppCss } from "@/test/appCss";
 
 /** Wartość tokenu `oklch(...)` z bloku CSS, na hex; `null`, gdy go nie ma. */
 function token(block: string, name: string): string | null {
@@ -19,7 +19,7 @@ function surfaces(): Record<string, { card: string; ink: string }> {
     const ink = token(m[2], "--foreground");
     if (card && ink && !(m[1] in out)) out[m[1]] = { card, ink };
   }
-  const root = /:root\s*\{([^}]*)\}/.exec(readFileSync("src/index.css", "utf8"));
+  const root = /:root\s*\{([^}]*)\}/.exec(readAppCss());
   if (root) {
     const card = token(root[1], "--card");
     const ink = token(root[1], "--foreground");

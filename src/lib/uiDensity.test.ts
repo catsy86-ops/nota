@@ -1,10 +1,9 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { setUiDensity } from "@/lib/uiDensity";
 import { APPEARANCE_KEYS } from "@/lib/appearanceCode";
+import { readAppCss } from "@/test/appCss";
 
-const css = readFileSync(resolve(process.cwd(), "src/index.css"), "utf8");
+const css = readAppCss();
 
 describe("gęstość interfejsu (plan motywów 4.2)", () => {
   beforeEach(() => { localStorage.clear(); setUiDensity("normal"); });

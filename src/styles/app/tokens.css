@@ -1,0 +1,220 @@
+/* W6.5: część dawnego `src/index.css` (linie 420–637 przed podziałem), bez zmian w regułach. Tokeny schematu jasnego (`:root`) i ciemnego (`.dark`) w `@layer base`. Testy kontrastu czytają PIERWSZY blok `:root` — nie dodawaj wcześniej innego.
+   Kolejność importów w `src/index.css` = dawna kolejność w pliku — nie przestawiać. */
+
+@layer base {
+  :root {
+    /* D-4 (plan 5.1): odcienie działów z palety motywu, nie wpisane na sztywno. */
+    /* Jasne tło: kolor przyciemniony o 50% czerni (ikony ≥3:1, 1.4.11; motyw Miedź rozjaśnia tekst, więc nie
+       bierzemy jego `--ink-mix`). Ciemny motyw: czysty kolor, patrz `.dark` niżej. Sprawdza `skinContrast.test.ts`. */
+    --sec-notes: color-mix(in srgb, var(--primary) 50%, black);
+    --sec-shifts: color-mix(in srgb, var(--accent) 50%, black);
+    --sec-study: color-mix(in srgb, var(--warning) 50%, black);
+    --sec-calendar: color-mix(in srgb, var(--success) 50%, black);
+
+    /* Pierścień fokusu (plan 1.7): jeden token, na razie ten sam kolor co `--ring`. */
+    --ring-focus: var(--ring);
+    /* Grubość kreski ikon lucide (W4.2): 1,75 — o włos lżejsza od domyślnej 2 lucide przy 16 px; styl może zmienić. */
+    --icon-stroke: 1.75;
+
+    /* Kierunek „zeszyt w kratkę przy barze”: papier, kratka, bursztyn piwa,
+       niebieski długopis i czerwony margines (święta, usuwanie). */
+    --background: oklch(0.9863 0.0059 95.10);
+    --foreground: oklch(0.2486 0.0195 264.13);
+
+    --card: oklch(1.0000 0.0000 0.00);
+    --card-foreground: oklch(0.2486 0.0195 264.13);
+
+    --popover: oklch(1.0000 0.0000 0.00);
+    --popover-foreground: oklch(0.2486 0.0195 264.13);
+
+    --primary: oklch(0.6650 0.1566 63.41);
+    --ink-mix: 62%;
+    --primary-foreground: oklch(0.2059 0.0182 264.05);
+
+    --secondary: oklch(0.9356 0.0055 264.53);
+    --secondary-foreground: oklch(0.2486 0.0195 264.13);
+
+    --muted: oklch(0.9599 0.0034 264.54);
+    /* ≥4.6:1 na tle, muted, karcie i kolorowych notatkach (WCAG AA). */
+    --muted-foreground: oklch(0.5146 0.0243 264.34);
+    /* W1.1: trzeci poziom tekstu. Mieszany z tłem stylu, więc działa w każdym; jasne schematy mają ledwo zapas
+       nad 4,5:1 (Zeszyt: 96%), ciemne więcej (84%). Pilnuje `skinContrastReport.test.ts`. Zamiast `opacity-NN`. */
+    --faint: color-mix(in oklch, var(--muted-foreground) 96%, var(--background));
+
+    /* Niebieski długopis — linki, [[linki]], kursor w logo. */
+    --accent: oklch(0.4554 0.1411 264.13);
+    --accent-foreground: oklch(1.0000 0.0000 0.00);
+
+    /* Biały tekst 4.8:1 — poprzednie 0 84% 60% dawało 3.8:1. */
+    --destructive: oklch(0.5786 0.2137 27.17);
+    --destructive-foreground: oklch(1.0000 0.0000 0.00);
+    /* Tekst i ikony czerwone na jasnym tle (≥4.5:1 na muted) — jak `primary-ink`. */
+    --destructive-ink: oklch(0.5314 0.1989 27.39);
+    /* Chip terminu (K4.2): tło i tekst zamiast przezroczystości marki; test w contrastTokens.test.ts. */
+    --chip-bg: oklch(0.9400 0.0400 63.41);
+    --chip-ink: oklch(0.4200 0.0900 63.41);
+    --chip-edge: oklch(0.6100 0.1400 63.41);
+
+    /* Krawędź dekoracyjna (karty, podziały) — może być jasna. */
+    --border: color-mix(in oklab, oklch(0.9194 0.0069 264.53) var(--frame-mix), transparent);
+    /* Krawędź pól i przycisków „outline”: ≥3:1 na tle, karcie, muted i secondary (WCAG 1.4.11). */
+    --input: oklch(0.6128 0.0357 264.27);
+    /* Obwódka fokusu: ten sam bursztyn, ciemniejszy — ≥3:1 na wszystkich tłach, także kolorowych notatkach (2.4.13). */
+    --ring: oklch(0.6123 0.1355 63.86);
+
+    /* Linie kratki i czerwony margines zeszytu. */
+    --grid: oklch(0.9220 0.0131 255.03);
+    --margin: oklch(0.6003 0.1873 28.15);
+
+    /* Kształt (plan motywów 1.2, `src/lib/shape.ts`): mnożnik wszystkich promieni, `html[data-shape]` niżej. */
+    /* Ramki (`src/lib/frames.ts`): procent koloru krawędzi; inline na <html> ustawia Ustawienia. */
+    --frame-mix: 30%;
+    --shape: 1;
+    --radius: calc(0.75rem * var(--shape));
+    /* Trzy promienie zamiast wartości wpisywanych ręcznie (klasy `rounded-control|field|card`). */
+    --r-control: calc(0.5rem * var(--shape));
+    --r-field: calc(0.75rem * var(--shape));
+    --r-card: calc(1rem * var(--shape));
+
+    /* Note colors */
+    --note-default: oklch(1.0000 0.0000 0.00);
+    /* Jasne notatki: lekki odcień zamiast pełnego pastelu (wyglądało jak karteczki samoprzylepne);
+       kolor niesie pasek u góry kafla (`--note-ink`), tak samo jak w ciemnym motywie. */
+    --note-coral: oklch(0.9643 0.0182 37.66);
+    --note-peach: oklch(0.9716 0.0196 67.59);
+    --note-sand: oklch(0.9771 0.0311 91.65);
+    --note-mint: oklch(0.9676 0.0191 164.61);
+    --note-sage: oklch(0.9603 0.0105 174.27);
+    --note-sky: oklch(0.9677 0.0163 228.98);
+    --note-lavender: oklch(0.9614 0.0171 301.21);
+    --note-rose: oklch(0.9650 0.0155 355.05);
+
+    --font-display: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'Plus Jakarta Sans Fallback', sans-serif;
+    --font-body: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'Plus Jakarta Sans Fallback', sans-serif;
+
+    /* Sidebar z tokenów aplikacji, nie z domyślnego (niebieskiego) shadcn. */
+    --sidebar-background: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--muted);
+    --sidebar-accent-foreground: var(--foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
+
+    /* Trzy poziomy uniesienia zamiast cieni ad hoc. */
+    /* Papier na papierze: ostra dolna krawędź 1 px i miękki cień w ciepłym odcieniu (było niebieskoszare). */
+    /* W1.2: cienie z barwy stylu. Styl podaje `--shadow-tint` (i ewentualnie `--shadow-strength`), nie cztery
+       cienie; własne cienie zostają tylko jako podpis stylu (poświaty, obwódki). Jasne schematy: ostra krawędź
+       i miękki cień; ciemne: cień czarny i jasna krawędź 1 px — głębię w ciemnym daje głównie jaśniejsza powierzchnia. */
+    --shadow-tint: oklch(0.308 0.031 58.7);
+    --shadow-strength: 1;
+    --shadow-edge: oklch(1 0 0);
+    --elev-light-1: 0 1px 0 color-mix(in oklch, var(--shadow-tint) calc(7% * var(--shadow-strength)), transparent), 0 3px 8px -4px color-mix(in oklch, var(--shadow-tint) calc(14% * var(--shadow-strength)), transparent);
+    --elev-light-2: 0 1px 0 color-mix(in oklch, var(--shadow-tint) calc(6% * var(--shadow-strength)), transparent), 0 6px 14px -4px color-mix(in oklch, var(--shadow-tint) calc(14% * var(--shadow-strength)), transparent);
+    --elev-light-3: 0 1px 0 color-mix(in oklch, var(--shadow-tint) calc(5% * var(--shadow-strength)), transparent), 0 14px 32px -8px color-mix(in oklch, var(--shadow-tint) calc(20% * var(--shadow-strength)), transparent);
+    /* Cień skierowany w górę (dolny pasek). */
+    --elev-light-up: 0 -8px 24px -12px color-mix(in oklch, var(--shadow-tint) calc(18% * var(--shadow-strength)), transparent);
+    --elev-dark-1: 0 1px 2px color-mix(in oklch, var(--shadow-tint) calc(30% * var(--shadow-strength)), transparent);
+    --elev-dark-2: 0 4px 12px -2px color-mix(in oklch, var(--shadow-tint) calc(40% * var(--shadow-strength)), transparent), 0 0 0 1px color-mix(in oklch, var(--shadow-edge) 3%, transparent);
+    --elev-dark-3: 0 12px 32px -8px color-mix(in oklch, var(--shadow-tint) calc(55% * var(--shadow-strength)), transparent), 0 0 0 1px color-mix(in oklch, var(--shadow-edge) 4%, transparent);
+    --elev-dark-up: 0 -8px 24px -12px color-mix(in oklch, var(--shadow-tint) calc(50% * var(--shadow-strength)), transparent);
+    --elevation-1: var(--elev-light-1);
+    --elevation-2: var(--elev-light-2);
+    --elevation-3: var(--elev-light-3);
+    --elevation-up: var(--elev-light-up);
+    /* Poświata akcentu (FAB). */
+    --glow-primary: 0 10px 28px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+
+    /* Ruch: jeden zestaw czasów i krzywych zamiast wartości wpisywanych ręcznie.
+       Wyjście = ok. 0.75× wejścia. Pod reduced-motion wyłącza je reguła niżej. */
+    --dur-press: 90ms;
+    --dur-fast: 150ms;
+    --dur-base: 220ms;
+    --dur-slow: 320ms;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-std: cubic-bezier(0.2, 0, 0, 1);
+
+    --success: oklch(0.6931 0.1535 156.04);
+    --success-foreground: oklch(1.0000 0.0000 0.00);
+    --warning: oklch(0.7697 0.1645 70.61);
+    --warning-foreground: oklch(1.0000 0.0000 0.00);
+  }
+
+  .dark {
+    /* D-4: na ciemnym tle ikony działów są jasne, czyste kolory motywu (bez przyciemnienia). */
+    --sec-notes: var(--primary);
+    --sec-shifts: var(--accent);
+    --sec-study: var(--warning);
+    --sec-calendar: var(--success);
+    /* Natywne listy wyboru, kalendarze i paski przewijania też w ciemnym motywie. */
+    color-scheme: dark;
+    /* Ciepła ciemność (porter) zamiast niebieskoszarej — pasuje do bursztynu marki. */
+    --background: oklch(0.1832 0.0091 59.58);
+    --foreground: oklch(0.9277 0.0092 76.60);
+
+    --card: oklch(0.2176 0.0112 59.55);
+    --card-foreground: oklch(0.9277 0.0092 76.60);
+
+    --popover: oklch(0.2176 0.0112 59.55);
+    --popover-foreground: oklch(0.9277 0.0092 76.60);
+
+    --primary: oklch(0.7706 0.1483 67.07);
+    --ink-mix: 100%;
+    --primary-foreground: oklch(0.1962 0.0154 59.12);
+
+    --secondary: oklch(0.2824 0.0131 59.63);
+    --secondary-foreground: oklch(0.9277 0.0092 76.60);
+
+    --muted: oklch(0.2613 0.0125 59.61);
+    --muted-foreground: oklch(0.7373 0.0159 67.58);
+    --faint: color-mix(in oklch, var(--muted-foreground) 84%, var(--background));
+
+    /* Długopis żelowy pod lampką (plan motywów 4.4): nasycony niebieski zamiast przygaszonego. */
+    --accent: oklch(0.7450 0.1300 264.00);
+    --accent-foreground: oklch(0.1962 0.0154 59.12);
+
+    /* Było 0 62.8% 30.6% — ginęło na ciemnym tle (1.9:1). */
+    --destructive: oklch(0.5786 0.2137 27.17);
+    --destructive-foreground: oklch(1.0000 0.0000 0.00);
+    /* Czerwony tekst na ciemnym tle: 3.9:1 przy starym 0 72% 51% → ≥5:1 na muted i secondary. */
+    --destructive-ink: oklch(0.7056 0.1550 21.82);
+    --chip-bg: oklch(0.3300 0.0550 63.41);
+    --chip-ink: oklch(0.9150 0.0700 63.41);
+    --chip-edge: oklch(0.6200 0.1200 63.41);
+
+    --border: color-mix(in oklab, oklch(0.2929 0.0138 59.62) var(--frame-mix), transparent);
+    /* Krawędź pól: ≥3:1 na karcie, tle i muted (WCAG 1.4.11). Stare 26 14% 17% dawało 1.3:1. */
+    --input: oklch(0.5673 0.0226 59.73);
+    --ring: oklch(0.7706 0.1483 67.07);
+
+    /* Kratka kredą na tablicy, margines przygaszony. */
+    --grid: oklch(0.2624 0.0150 61.38);
+    --margin: oklch(0.6372 0.1479 25.17);
+
+    /* Ciemne notatki: odcień przygaszony (40% nasycenia przy 22% jasności dawało oliwkę
+       i brąz), a kolor niesie pasek u góry kafla (`--note-ink`, reguła niżej). */
+    --note-default: oklch(0.2286 0.0109 59.62);
+    --note-coral: oklch(0.2754 0.0225 37.60);
+    --note-peach: oklch(0.2873 0.0206 66.85);
+    --note-sand: oklch(0.2953 0.0197 91.80);
+    --note-mint: oklch(0.2826 0.0226 162.84);
+    --note-sage: oklch(0.2785 0.0140 173.04);
+    --note-sky: oklch(0.2843 0.0214 230.06);
+    --note-lavender: oklch(0.2692 0.0326 299.50);
+    --note-rose: oklch(0.2684 0.0267 357.32);
+
+    --shadow-tint: oklch(0 0 0);
+    --elevation-1: var(--elev-dark-1);
+    --elevation-2: var(--elev-dark-2);
+    --elevation-3: var(--elev-dark-3);
+    --elevation-up: var(--elev-dark-up);
+    --glow-primary: 0 10px 28px -8px color-mix(in srgb, var(--primary) 45%, transparent);
+
+    --success: oklch(0.6109 0.1221 157.56);
+    --success-foreground: oklch(1.0000 0.0000 0.00);
+    --warning: oklch(0.6888 0.1410 73.42);
+    --warning-foreground: oklch(1.0000 0.0000 0.00);
+  }
+}

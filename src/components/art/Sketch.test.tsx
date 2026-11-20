@@ -4,8 +4,9 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Sketch } from "./Sketch";
 import { SKINS } from "@/lib/skins";
+import { readAppCss } from "@/test/appCss";
 
-const css = readFileSync(resolve(process.cwd(), "src/index.css"), "utf8");
+const css = readAppCss();
 
 describe("szkic pustych ekranów (plan motywów 2.1)", () => {
   it("rysuje ścieżki z opóźnieniem po kolei i podkreślenie na końcu; bez framer-motion", () => {

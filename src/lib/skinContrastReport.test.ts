@@ -1,9 +1,10 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { readSkinCss } from "@/test/skinCss";
 import { SKINS, SKIN_SCHEME, type Skin } from "@/lib/skins";
 import { oklchToRgb, parseOklch, type Oklch } from "@/test/oklch";
+import { readAppCss } from "@/test/appCss";
 
 /**
  * W0.3 (`docs/plan-warstwa-wizualna-2026-11-15.md`): tabela kontrastu par tokenów dla 10 stylów × 2 schematów.
@@ -14,7 +15,7 @@ import { oklchToRgb, parseOklch, type Oklch } from "@/test/oklch";
  * zapisuje `docs/kontrast-tokenow.md`.
  */
 
-const index = readFileSync(resolve(process.cwd(), "src/index.css"), "utf8");
+const index = readAppCss();
 const skins = readSkinCss();
 
 function block(src: string, selector: string): string {
