@@ -6792,6 +6792,30 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — przyciski terminu, listy kontrolnej i wyglądu notatki na `Button` (W4.5 cd., 2026-11-20)
+
+### Co robi
+
+- **Przypomnienie (`ReminderPicker`):** szybkie terminy, dni, godziny i „Wcześniej” to pigułki `Button variant="chip"` — wybrana (`aria-pressed`) ma obrys i tło akcentu jak pigułki w Pracy; tekst pigułki jest pełnym kolorem zamiast wyciszonego. ✕ „Bez końca serii” to `IconButton`.
+- **Lista kontrolna (`ChecklistEditor`):** ✕ „Usuń pozycję” i strzałki „Przesuń” na `IconButton` (20 px, na dotyku 44 px, pojawiają się po najechaniu jak dotąd); „Usuń ukończone”, „Zamień na listę” i „Zamień na tekst” na `Button ghost`.
+- **Wygląd notatki (`NoteLookPicker`):** „Usuń” ikonę i okładkę na `Button variant="link"`, na dotyku 44 px.
+
+### Gdzie jest
+
+- `src/components/ReminderPicker.tsx` (usunięta stała `chipClass`), `src/components/ChecklistEditor.tsx`, `src/components/NoteLookPicker.tsx`; próg `RAW_BUTTON_MAX["."]` 127 → 112.
+
+### Ograniczenia i pułapki
+
+- Zostają celowo: kafelki szablonów w `QuickTemplates` (własny kształt `rounded-field` z ikoną), przełącznik segmentowy kolumn i filtrów w `ViewControls`, plakietki „Linkują tutaj” w czytniku (tło akcentu), uchwyt przeciągania i pola odhaczania listy (kontrolki dnd i `role="checkbox"`), wyzwalacze `card-action` na kafelku.
+
+### Testy
+
+- e2e `checklist*`, `composer-reminder`, `editing`, `fab-press`, `journal-tools`, `mobile`, `note-look`, `qol-etap5`, `reminder-lead`, `reminder-sheet` — 94 przeszło, 2 pominięte; `bundle` precache — znany przekroczony próg.
+
+### Commit
+
+W4.5 cd. — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — trzy rozmiary ikon (W4.1 dokończone, 2026-11-20)
 
 ### Co robi

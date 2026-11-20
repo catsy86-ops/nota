@@ -16,6 +16,7 @@ import { QuickReminderInput } from "@/components/QuickReminderInput";
 import { useReminderPassed } from "@/hooks/useReminderPassed";
 import { useShiftPresets } from "@/hooks/useShiftPresets";
 import { LEAD_OPTIONS, leadShort } from "@/lib/reminderLead";
+import { IconButton } from "@/components/ui/icon-button";
 
 interface ReminderPickerProps {
   reminder: number | null;
@@ -71,8 +72,6 @@ const DAY_CHIPS = [
 ];
 /** Chipy godzin (F2.2): ustawiają pole godziny; pole zostaje do dowolnej wartości. */
 const HOUR_CHIPS = ["08:00", "12:00", "15:00", "18:00", "20:00"];
-
-const chipClass = "rounded-full border px-2.5 py-1 text-xs transition-colors coarse:min-h-11 coarse:px-3.5 aria-pressed:border-primary/60 aria-pressed:bg-primary/10 aria-pressed:text-primary-ink border-border text-muted-foreground hover:border-primary/60 hover:text-primary-ink";
 
 /** Etykieta kroku w pickerze (zeszytowa, z przerywaną linią): kolejność dnia, godziny i powtarzania. */
 function StepLabel({ children }: { children: ReactNode }) {
@@ -221,14 +220,9 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
         <p className="ui-hint font-semibold font-display">Przypomnienie</p>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Szybkie terminy">
           {presets(new Date(), shiftList, mobile).map((p) => (
-            <button
-              key={p.label}
-              type="button"
-              onClick={() => handleQuickParsed(p.at)}
-              className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary-ink coarse:min-h-11 coarse:px-3.5"
-            >
+            <Button key={p.label} type="button" variant="chip" size="chip" onClick={() => handleQuickParsed(p.at)}>
               {p.label}
-            </button>
+            </Button>
           ))}
         </div>
         <QuickReminderInput
@@ -238,20 +232,21 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
         <StepLabel>Dzień</StepLabel>
         <div role="group" aria-label="Dzień terminu" className="flex flex-wrap gap-1.5">
           {DAY_CHIPS.map((c) => (
-            <button
+            <Button
               key={c.label}
               type="button"
+              variant="chip"
+              size="chip"
               aria-pressed={!!date && sameDay(date, chipDay(c.days))}
               onClick={() => { setDate(chipDay(c.days)); setPickingDate(false); }}
-              className={chipClass}
             >
               {c.label}
-            </button>
+            </Button>
           ))}
           {mobile && (
-            <button type="button" aria-pressed={showCalendar} onClick={() => setPickingDate((v) => !v)} className={chipClass}>
+            <Button type="button" variant="chip" size="chip" aria-pressed={showCalendar} onClick={() => setPickingDate((v) => !v)}>
               Wybierz…
-            </button>
+            </Button>
           )}
         </div>
         {/* Przeszłe dni zostają do wyboru (K-1): zapis jest dozwolony z ostrzeżeniem, jak w dialogu Kalendarza (K1.4). */}
@@ -280,9 +275,9 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
             </div>
             <div role="group" aria-label="Godzina terminu" className="flex flex-wrap gap-1.5">
               {HOUR_CHIPS.map((h) => (
-                <button key={h} type="button" aria-pressed={time === h} onClick={() => setTime(h)} className={chipClass}>
+                <Button key={h} type="button" variant="chip" size="chip" aria-pressed={time === h} onClick={() => setTime(h)}>
                   {h}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -311,9 +306,9 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
               className="max-sm:h-11 text-xs bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
             />
             {untilText && (
-              <button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" className="p-1 rounded text-muted-foreground hover:text-foreground">
+              <IconButton size="sm" onClick={() => setUntilText("")} aria-label="Bez końca serii">
                 <X className="size-3.5" />
-              </button>
+              </IconButton>
             )}
           </div>
         )}
@@ -325,11 +320,11 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
         {/* T 3.2: drugi sygnał przed terminem; termin dalej dzwoni o swojej porze. */}
         <div role="group" aria-label="Przypomnij wcześniej" className="flex flex-wrap items-center gap-1.5">
           <span aria-hidden className="text-xs text-muted-foreground">Wcześniej:</span>
-          <button type="button" aria-pressed={lead === undefined} onClick={() => setLead(undefined)} className={chipClass}>Nie</button>
+          <Button type="button" variant="chip" size="chip" aria-pressed={lead === undefined} onClick={() => setLead(undefined)}>Nie</Button>
           {LEAD_OPTIONS.map((o) => (
-            <button key={o.min} type="button" aria-pressed={lead === o.min} onClick={() => setLead(o.min)} className={chipClass}>
+            <Button key={o.min} type="button" variant="chip" size="chip" aria-pressed={lead === o.min} onClick={() => setLead(o.min)}>
               {o.label}
-            </button>
+            </Button>
           ))}
         </div>
         {pastTime && (

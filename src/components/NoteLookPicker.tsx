@@ -2,6 +2,7 @@ import { FaceSlightlySmiling } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { COVER_LABELS, COVER_STYLES, NOTE_COVERS, NOTE_ICONS, type NoteCover } from "@/lib/noteLook";
+import { Button } from "@/components/ui/button";
 
 interface NoteLookPickerProps {
   icon?: string;
@@ -29,9 +30,9 @@ export function NoteLookPicker({ icon, cover, onChange }: NoteLookPickerProps) {
           <div className="flex items-center justify-between pb-1.5">
             <p className="ui-hint font-semibold font-display">Ikona</p>
             {icon && (
-              <button type="button" onClick={() => onChange({ icon: undefined })} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
+              <Button type="button" variant="link" size="sm" onClick={() => onChange({ icon: undefined })} className="h-auto p-0 text-xs font-normal text-muted-foreground underline hover:text-foreground coarse:min-h-11">
                 Usuń
-              </button>
+              </Button>
             )}
           </div>
           <div className="grid grid-cols-8 gap-0.5">
@@ -56,9 +57,9 @@ export function NoteLookPicker({ icon, cover, onChange }: NoteLookPickerProps) {
           <div className="flex items-center justify-between pb-1.5">
             <p className="ui-hint font-semibold font-display">Okładka</p>
             {cover && (
-              <button type="button" onClick={() => onChange({ cover: undefined })} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
+              <Button type="button" variant="link" size="sm" onClick={() => onChange({ cover: undefined })} className="h-auto p-0 text-xs font-normal text-muted-foreground underline hover:text-foreground coarse:min-h-11">
                 Usuń
-              </button>
+              </Button>
             )}
           </div>
           <div className="flex gap-1.5">

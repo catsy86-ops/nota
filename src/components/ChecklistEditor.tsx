@@ -12,6 +12,8 @@ import { haptic } from "@/lib/haptics";
 import { toastWithUndo } from "@/lib/undoToast";
 import { checklistToContent, contentToChecklist, parsePastedChecklist } from "@/lib/checklistPaste";
 import type { ChecklistItem } from "@/hooks/useNotes";
+import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 
 export type { ChecklistItem };
 
@@ -272,30 +274,30 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                   const label = dirName === "up" ? "Przesuń w górę" : "Przesuń w dół";
                   const Icon = dirName === "up" ? ChevronUp : ChevronDown;
                   return (
-                    <button
+                    <IconButton
                       key={dirName}
-                      type="button"
+                      size="sm"
                       onClick={() => moveItem(item.id, dir)}
                       disabled={!canMove(item.id, dir)}
                       aria-label={`${label}: ${item.text || "pusta"}`}
                       title={label}
-                      className="grid place-items-center rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-9"
+                      className="size-5 coarse:h-11 coarse:w-9"
                     >
                       <Icon className="size-3.5" aria-hidden />
-                    </button>
+                    </IconButton>
                   );
                 })}
               </span>
             )}
             {!readOnly && (
-              <button
-                type="button"
+              <IconButton
+                size="sm"
                 onClick={() => removeItem(item.id)}
                 aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
-                className="p-0.5 coarse:p-2 rounded text-faint hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                className="size-5 text-faint hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity"
               >
                 <X className="size-3.5" />
-              </button>
+              </IconButton>
             )}
           </div>
             )}
@@ -313,10 +315,10 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
               {checked.length} ukończone
             </p>
             {!readOnly && (
-              <button type="button" onClick={clearChecked}
-                className="text-2xs coarse:text-xs text-muted-foreground hover:text-foreground rounded outline-hidden focus-visible:ring-2 focus-visible:ring-ring px-1 coarse:py-1">
+              <Button type="button" variant="ghost" size="sm" onClick={clearChecked}
+                className="h-6 px-1 text-2xs font-normal text-muted-foreground coarse:h-11 coarse:text-xs">
                 Usuń ukończone
-              </button>
+              </Button>
             )}
           </div>
           {checked.map((item) => (
@@ -335,14 +337,14 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 <StrikeText checked drawIn={item.id === justChecked}>{item.text}</StrikeText>
               </span>
               {!readOnly && (
-                <button
-                  type="button"
+                <IconButton
+                  size="sm"
                   onClick={() => removeItem(item.id)}
                   aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
-                  className="p-0.5 coarse:p-2 rounded text-faint hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                  className="size-5 text-faint hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity"
                 >
                   <X className="size-3.5" />
-                </button>
+                </IconButton>
               )}
             </div>
           ))}
@@ -426,18 +428,18 @@ export function ChecklistConvertButtons({ content, checklist, onConvert }: {
   checklist: ChecklistItem[];
   onConvert: (result: { content: string; checklist: ChecklistItem[] }, toList: boolean) => void;
 }) {
-  const cls = "text-xs text-muted-foreground hover:text-foreground transition-colors";
+  const cls = "-ml-1 h-7 px-2 text-xs font-normal text-muted-foreground coarse:h-11";
   return (
     <>
       {content.trim() && (
-        <button type="button" className={cls} onClick={() => onConvert(contentToChecklist(content, checklist), true)}>
+        <Button type="button" variant="ghost" size="sm" className={cls} onClick={() => onConvert(contentToChecklist(content, checklist), true)}>
           Zamień na listę
-        </button>
+        </Button>
       )}
       {checklist.length > 0 && (
-        <button type="button" className={cls} onClick={() => onConvert(checklistToContent(content, checklist), false)}>
+        <Button type="button" variant="ghost" size="sm" className={cls} onClick={() => onConvert(checklistToContent(content, checklist), false)}>
           Zamień na tekst
-        </button>
+        </Button>
       )}
     </>
   );
