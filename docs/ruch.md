@@ -35,6 +35,7 @@ Krzywe: `--ease-out` / `ease-out-soft` (wejście, domyślna), `--ease-in` / `eas
 | Karta znika po akcji | `cardExit(intent, id, reduced)` w `src/lib/cardMotion.ts` | kosz, archiwum w Notatkach |
 | Kolejność wejścia listy | `cascadeDelay(index, reduced)` | lista notatek |
 | Przejście między widokami | `withViewTransition` + `html[data-vt-dir]` w `src/styles/app/effects.css` | zmiana widoku, panel dnia w Kalendarzu |
+| Wciśnięcie elementu dotykowego | klasa `pressable` (`src/styles/app/utilities.css`): `translate` 1 px + `brightness`, `--dur-press`; nie skala | `Button`, wiersze, karty |
 | Rysowanie obrysu | `@keyframes` + `var(--dur-*)` | `pencil-draw`, `sketch-draw` |
 
 ## Ograniczony ruch
