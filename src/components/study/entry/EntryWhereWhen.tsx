@@ -53,16 +53,16 @@ export function EntryWhereWhen(p: {
           />
         </label>
       ) : (
-        <button
+        <Button
           type="button"
           onClick={p.onOpenSiteEditor}
           aria-label={site ? `Budowa: ${site}. Zmień` : "Dodaj budowę"}
-          className="pressable inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm coarse:min-h-11"
+          variant="chip" size="chip-md" className="max-w-full bg-muted/50"
         >
           <MapPin className="size-4 shrink-0 text-primary-ink" aria-hidden />
           <span className={cn("truncate", !site && "text-muted-foreground")}>{site || "Dodaj budowę"}</span>
           <Pencil className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-        </button>
+        </Button>
       )}
       {editingSite && p.siteChipsRow}
       {!editingSite && (geo ? (
@@ -74,29 +74,29 @@ export function EntryWhereWhen(p: {
           </button>
         </span>
       ) : (
-        <button
+        <Button
           type="button"
           onClick={p.onLocate}
           disabled={p.locating}
-          className="pressable inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground hover:border-primary hover:text-foreground disabled:opacity-60 coarse:min-h-11"
+          variant="chip-add" size="chip-md"
         >
           {p.locating ? <DelayedSpinner active className="size-4" /> : <LocateFixed className="size-4" aria-hidden />}
           {p.locating ? "Szukam…" : "Tu jestem"}
-        </button>
+        </Button>
       ))}
       {/* Lokalizacja wpisu obok zapisanej budowy: jeden dotyk zamiast wybierania. */}
       {!editingSite && p.nearbyName && p.nearbyName !== site && (
-        <button type="button" onClick={() => p.onPickSite(p.nearbyName!)} data-testid="journal-nearby-site" className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-primary/40 px-3 py-1.5 text-sm text-primary-ink hover:bg-primary/10 coarse:min-h-11">
+        <Button type="button" onClick={() => p.onPickSite(p.nearbyName!)} data-testid="journal-nearby-site" variant="pill" size="chip-md">
           <MapPin className="size-4 shrink-0" aria-hidden />
           <span className="truncate">Budowa obok: {p.nearbyName}</span>
-        </button>
+        </Button>
       )}
       {/* Pierwszy raz na tej budowie: zapisz jej lokalizację, następne wpisy podpowiedzą ją same. */}
       {!editingSite && geo && p.saveSiteGeoFor && (
-        <button type="button" onClick={p.onSaveSiteGeo} data-testid="journal-save-site-geo" className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-dashed border-primary/40 px-3 py-1.5 text-sm text-primary-ink hover:bg-primary/10 coarse:min-h-11">
+        <Button type="button" onClick={p.onSaveSiteGeo} data-testid="journal-save-site-geo" variant="chip-add" size="chip-md" className="max-w-full text-primary-ink border-primary/40">
           <MapPin className="size-4 shrink-0" aria-hidden />
           <span className="truncate">Zapisz jako lokalizację budowy</span>
-        </button>
+        </Button>
       )}
       {/* Wpis „za wczoraj”: data i godzina zwinięte w pigułkę, domyślnie chwila zapisu. */}
       {p.editingWhen ? (
@@ -116,16 +116,16 @@ export function EntryWhereWhen(p: {
           <Button type="button" variant="outline" onClick={() => { p.onAt(null); p.onEditingWhen(false); }} className="coarse:h-11">Teraz</Button>
         </div>
       ) : (
-        <button
+        <Button
           type="button"
           onClick={() => p.onEditingWhen(true)}
           aria-label={`Kiedy: ${at === null ? "teraz" : whenLabel(at)}. Zmień`}
-          className="pressable inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm coarse:min-h-11"
+          variant="chip" size="chip-md" className="max-w-full bg-muted/50"
         >
           <Clock className="size-4 shrink-0 text-primary-ink" aria-hidden />
           <span className={cn("truncate tabular-nums", at === null && "text-muted-foreground")}>{at === null ? "Teraz" : whenLabel(at)}</span>
           <Pencil className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-        </button>
+        </Button>
       )}
       {!editingSite && p.siteChipsRow}
     </div>

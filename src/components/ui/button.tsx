@@ -26,6 +26,12 @@ const buttonVariants = cva(
         toolbar: "rounded-control border border-border/60 bg-card hover:bg-muted disabled:bg-muted/40 disabled:text-faint",
         /** Pigułka podpowiedzi (budowa, „Tu jestem”): akcentowy obrys, cała szerokość tekstu. */
         pill: "max-w-full gap-1 rounded-full border border-primary/40 text-primary-ink hover:bg-primary/10 disabled:border-border disabled:text-faint",
+        /** W4.5: pigułka neutralna (filtr, szybki wybór); jako przełącznik z `aria-pressed` — wybrana w akcencie. */
+        chip: "rounded-full border border-border font-normal hover:bg-muted aria-pressed:border-primary aria-pressed:bg-primary/10 disabled:text-faint",
+        /** Pigułka-podpowiedź (wstaw tekst, gotowa wartość): wypełniona, bez obrysu. */
+        "chip-soft": "rounded-full bg-muted font-normal hover:bg-primary/10 disabled:text-faint",
+        /** Pigułka „dodaj” (nowa pozycja, własna wartość): obrys przerywany, tekst wyciszony. */
+        "chip-add": "rounded-full border border-dashed border-border font-normal text-muted-foreground hover:border-primary hover:text-foreground disabled:text-faint",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -36,6 +42,10 @@ const buttonVariants = cva(
         /** Duży przycisk z ikoną na pasku działu — zawsze 44 px, ikona 20 px. */
         "icon-lg": "size-11 [&_svg]:size-5",
         pill: "h-9 px-3 coarse:min-h-11",
+        /** Pigułka w linii tekstu (podpowiedzi, filtry): niska, na dotyku 44 px. */
+        chip: "h-auto whitespace-normal gap-1 px-2.5 py-1 text-xs coarse:min-h-11 coarse:px-3.5 coarse:text-sm [&_svg]:size-3.5",
+        /** Pigułka w rzędzie akcji (wybór, „dodaj” w formularzu). */
+        "chip-md": "h-auto whitespace-normal gap-1.5 px-3 py-1.5 coarse:min-h-11",
       },
     },
     defaultVariants: {

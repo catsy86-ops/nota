@@ -137,14 +137,14 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
           </label>
           <div className="flex flex-wrap gap-1.5">
             {CAPTION_CHIPS.map((chip) => (
-              <button
+              <Button
                 key={chip}
                 type="button"
                 onClick={() => onCaptionDraft((d) => (d.trim() ? d.trim() + ", " + chip.toLowerCase() : chip))}
-                className="pressable rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted coarse:min-h-11 coarse:px-3 coarse:text-sm"
+                variant="chip" size="chip" className="text-muted-foreground"
               >
                 {chip}
-              </button>
+              </Button>
             ))}
           </div>
           <div className="flex gap-2">

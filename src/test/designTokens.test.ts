@@ -100,11 +100,11 @@ describe("W3.2 — ręczne karty poza components/ui", () => {
 // (radio i `aria-pressed`), skróty sekcji, „Wyczyść” w zdaniu, zestawy wyglądu (wiersze), wiersz paska, rozwijanie folderu, emoji i kolory.
 // Plany (2026-11-20): przełączniki trybu i podsumowania (`aria-pressed`), wiersze wyboru (materiały, symbole, trasy), typ symbolu (radio),
 // miniatura analizy, „Inny plik” w zdaniu, uchwyt wysokości panelu.
-// Praca (2026-11-20): przeniesione tylko przyciski-ikony. Zostały pigułki-podpowiedzi i filtry (`rounded-full`), przerywane wiersze „dodaj”,
-// wiersze-listy i kafle, linki w zdaniu, dyktowanie, wybory (`aria-pressed`, radio) — pigułka czeka na wspólny wariant (W4.4).
+// Praca (2026-11-20): przyciski-ikony i pigułki (warianty `chip`, `chip-soft`, `chip-add`, `pill`) przeniesione. Zostały przerywane wiersze „dodaj”,
+// pigułki z `cn(...)` i stanem, wiersze-listy i kafle, linki w zdaniu, dyktowanie, przyciski na zdjęciu (biel na ciemnym), FAB.
 // Główny katalog `components/` (2026-11-20): przeniesione „Znajdź i zamień”, ikona paska bocznego, zapis aliasu. Zostało 138 — długi ogon:
 // pasek edytora notatki i kafla (`card-action`), listy kontrolne, wybór koloru i rysunek, nawigacja dolna, pigułki, linki w zdaniu.
-const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26, review: 11, calendar: 14, debts: 3, cwiczenia: 8, clients: 8, vault: 5, sync: 1, settings: 22, sidebar: 6, plans: 10, study: 149, ".": 138 };
+const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26, review: 11, calendar: 14, debts: 3, cwiczenia: 8, clients: 8, vault: 5, sync: 1, settings: 22, sidebar: 6, plans: 10, study: 106, ".": 138 };
 describe("W4.5 — surowe <button> w działach", () => {
   for (const [dir, max] of Object.entries(RAW_BUTTON_MAX)) {
     it(`components/${dir}: co najwyżej ${max} (zamiast tego: Button / IconButton)`, () => {

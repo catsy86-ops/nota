@@ -119,15 +119,15 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
             )}
             {e.topic && (
               // Pigułka tematu filtruje dziennik po temacie — ćwiczenie jest pod jawnym „Ćwicz teraz”.
-              <button
+              <Button
                 type="button"
                 onClick={() => onTopic(e.topic!)}
-                className="pressable rounded-full bg-muted px-2 py-0.5 hover:bg-primary/10 hover:text-primary-ink coarse:min-h-11 coarse:px-3 coarse:text-sm"
+                variant="chip-soft" size="chip"
                 title="Pokaż wpisy z tego tematu"
                 aria-label={`Pokaż wpisy z tematu: ${topicTitle(e.topic)}`}
               >
                 {topicTitle(e.topic)}
-              </button>
+              </Button>
             )}
             {e.checked.length > 0 && <span className="tabular-nums">punkty {e.checked.length}/{total}</span>}
           </div>
@@ -146,24 +146,24 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
               </button>
               {/* Rozwiązany problem z opisem i sposobem naprawy: szkic własnego pytania (§4.2). */}
               {resolved && e.text.trim() && e.solution?.trim() && (
-                <button
+                <Button
                   type="button"
                   onClick={() => requestCustomPrefill({ topic: e.topic, question: e.text.trim(), correct: e.solution!.trim() })}
-                  className="pressable inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11 coarse:px-3.5 coarse:text-sm"
+                  variant="chip" size="chip" className="text-muted-foreground"
                 >
                   Zamień w pytanie
-                </button>
+                </Button>
               )}
               {/* Otwarty problem z tematem: od razu runda pytań z tego tematu — teoria tam, gdzie praktyka zawiodła. */}
               {!resolved && e.topic && (
-                <button
+                <Button
                   type="button"
                   onClick={() => onPractice(e.topic!)}
                   aria-label={`Ćwicz teraz: ${topicTitle(e.topic)}`}
-                  className="pressable inline-flex items-center gap-1.5 rounded-full border border-primary/40 px-2.5 py-1 text-xs font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11 coarse:px-3.5 coarse:text-sm"
+                  variant="pill" size="chip" className="font-medium"
                 >
                   <Play className="size-3.5" aria-hidden />Ćwicz teraz
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -238,12 +238,12 @@ function SolutionLine({ entry: e, editing, onEditing }: { entry: JournalEntry; e
     );
   }
   return (
-    <button
+    <Button
       type="button"
       onClick={() => onEditing(true)}
-      className="pressable mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
+      variant="chip-add" size="chip" className="mt-1.5"
     >
       <Wrench className="size-3.5" aria-hidden />Jak rozwiązane?
-    </button>
+    </Button>
   );
 }

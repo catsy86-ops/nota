@@ -320,64 +320,64 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                       </button>
                     );
                   })}
-                  <button
+                  <Button
                     type="button"
                     onClick={() => { setNewSiteJob(false); setNewSiteOpen(true); }}
-                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-primary-ink hover:bg-primary/10 coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                    variant="chip-add" size="chip" className="shrink-0 text-primary-ink"
                   >
                     + Nowa budowa
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => setJobsOpen(true)}
                     data-testid="jobs-open"
-                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                    variant="chip-add" size="chip" className="shrink-0"
                   >
                     <Wrench className="size-3.5 shrink-0" aria-hidden />Zlecenia{jobs.size > 0 && ` (${jobs.size})`}
                     {unpaid > 0 && <span className="font-mono tabular-nums text-primary-ink">· {money(unpaid)}</span>}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => setVanOpen(true)}
                     data-testid="van-open"
-                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                    variant="chip-add" size="chip" className="shrink-0"
                   >
                     <Truck className="size-3.5 shrink-0" aria-hidden />Auto{vanBuy.length > 0 && <span className="text-warning-ink"> · dokupić {vanBuy.length}</span>}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => setPhotoDayOpen(true)}
                     data-testid="photo-day-open"
                     title="Zdjęcia z galerii jako wpisy z godziną zrobienia"
-                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                    variant="chip-add" size="chip" className="shrink-0"
                   >
                     <Images className="size-3.5 shrink-0" aria-hidden />Zdjęcia z dnia
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => setEndDayOpen(true)}
                     data-testid="end-day-open"
-                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                    variant="chip-add" size="chip" className="shrink-0"
                   >
                     <Flag className="size-3.5 shrink-0" aria-hidden />Zakończ dzień
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => setMileageOpen(true)}
                     data-testid="mileage-open"
-                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                    variant="chip-add" size="chip" className="shrink-0"
                   >
                     <Car className="size-3.5 shrink-0" aria-hidden />Kilometrówka
-                  </button>
+                  </Button>
                   {wholesaleCount > 0 && (
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setWholesaleOpen(true)}
                       data-testid="wholesale-open"
-                      className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                      variant="chip-add" size="chip" className="shrink-0"
                     >
                       <PackageCheck className="size-3.5 shrink-0" aria-hidden />Do hurtowni ({wholesaleCount})
-                    </button>
+                    </Button>
                   )}
                   {archivedCount > 0 && (
                     <button

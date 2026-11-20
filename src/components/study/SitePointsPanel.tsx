@@ -261,10 +261,10 @@ export function SitePointsPanel({ site, journal }: { site: SiteInfo; journal: re
       </form>
       <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Pomieszczenie z szablonu">
         {ROOM_TEMPLATES.map((t) => (
-          <button key={t.id} type="button" onClick={() => addFromTemplate(t.id)}
-            className="pressable rounded-full bg-muted px-2.5 py-1 text-xs hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm">
+          <Button key={t.id} type="button" onClick={() => addFromTemplate(t.id)}
+            variant="chip-soft" size="chip">
             + {t.name} ({t.types.map((x) => pointType(x).label.toLowerCase()).join(", ")})
-          </button>
+          </Button>
         ))}
       </div>
       {rooms.length > 0 && (

@@ -130,10 +130,10 @@ export function VanDialog({ open, onOpenChange, journal }: { open: boolean; onOp
             {van.items.some((i) => !i.code) && (
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Przypisz do istniejącej pozycji">
                 {van.items.filter((i) => !i.code).map((i) => (
-                  <button key={i.id} type="button" onClick={() => assignCode(i)}
-                    className="pressable max-w-full truncate rounded-full border border-border px-3 py-1 text-sm hover:bg-muted coarse:min-h-11">
+                  <Button key={i.id} type="button" onClick={() => assignCode(i)}
+                    variant="chip" size="chip-md" className="max-w-full truncate">
                     {i.name}
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}

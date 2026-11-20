@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Stat } from "@/components/ui/stat";
 import { cn } from "@/lib/utils";
@@ -93,16 +94,16 @@ function DueTodayChip({ onClick }: { onClick: () => void }) {
   const n = dueToday(study).length;
   if (n === 0) return null;
   return (
-    <button
+    <Button
       type="button"
       onClick={onClick}
       data-testid="due-chip"
-      className="pressable inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary-ink coarse:min-h-11"
+      variant="pill" size="chip-md" className="bg-primary/10 font-medium"
     >
       <RotateCcw className="size-4" aria-hidden />
       <span className="tabular-nums">Na dziś: {n}</span>
       <span className="font-normal text-muted-foreground">{pluralPl(n, ["powtórka", "powtórki", "powtórek"])}</span>
-    </button>
+    </Button>
   );
 }
 

@@ -107,22 +107,22 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
           {recent.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Ostatnio używane kształtki">
               {recent.map((n) => (
-                <button key={n} type="button" onClick={() => add(n)} className="pressable rounded-full bg-muted px-2.5 py-1 text-xs hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm">
+                <Button key={n} type="button" onClick={() => add(n)} variant="chip-soft" size="chip">
                   {n}
-                </button>
+                </Button>
               ))}
             </div>
           )}
           <SystemPicker sizes />
           <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Kształtki z katalogu">
             {catalog.map((n) => (
-              <button key={n} type="button" onClick={() => add(n)} className="pressable rounded-full bg-muted px-2.5 py-1 text-xs hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm">
+              <Button key={n} type="button" onClick={() => add(n)} variant="chip-soft" size="chip">
                 {n}
-              </button>
+              </Button>
             ))}
-            <button type="button" onClick={() => add()} className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted coarse:min-h-11 coarse:px-3 coarse:text-sm">
+            <Button type="button" onClick={() => add()} variant="chip" size="chip" className="text-muted-foreground">
               <Plus className="size-3.5" aria-hidden />Inna
-            </button>
+            </Button>
             {mic}
           </div>
         </div>

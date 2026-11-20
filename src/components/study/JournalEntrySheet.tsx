@@ -469,17 +469,17 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const siteChipsRow = siteChips.length > 0 && (
     <div className="flex w-full flex-wrap gap-1.5" role="group" aria-label="Ostatnie budowy" data-testid="journal-site-chips">
       {siteChips.map((s) => (
-        <button
+        <Button
           key={s}
           type="button"
           // Bez utraty fokusu: pole nie zamyka się przed kliknięciem pigułki.
           onPointerDown={(e) => e.preventDefault()}
           onClick={() => pickSite(s)}
-          className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-primary hover:text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm"
+          variant="chip-add" size="chip" className="max-w-full"
         >
           <MapPin className="size-3.5 shrink-0" aria-hidden />
           <span className="truncate">{s}</span>
-        </button>
+        </Button>
       ))}
     </div>
   );
@@ -609,27 +609,27 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             {!text.trim() && (yesterdayText || textSuggestions.length > 0) && (
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Podpowiedzi tekstu z tej budowy" data-testid="journal-text-suggestions">
                 {yesterdayText && (
-                  <button
+                  <Button
                     type="button"
                     onPointerDown={(e) => e.preventDefault()}
                     onClick={() => { haptic("selection"); setText(yesterdayText); }}
                     title={yesterdayText}
-                    className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-primary/40 px-2.5 py-1 text-xs text-primary-ink hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm"
+                    variant="pill" size="chip"
                   >
                     Jak wczoraj
-                  </button>
+                  </Button>
                 )}
                 {textSuggestions.map((t) => (
-                  <button
+                  <Button
                     key={t}
                     type="button"
                     onPointerDown={(e) => e.preventDefault()}
                     onClick={() => { haptic("selection"); setText(t); }}
                     title={t}
-                    className="pressable inline-flex max-w-full items-center rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-primary hover:text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm"
+                    variant="chip-add" size="chip" className="max-w-full"
                   >
                     <span className="truncate">{t}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
@@ -701,87 +701,87 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           <div className="space-y-2" data-testid="journal-sections">
             {/* Sekcje dodaje się pigułką (QoL, § D5): schowane, dopóki nie są potrzebne; te z danymi otwarte same. */}
             <div className="flex flex-wrap gap-1.5" role="group" aria-label="Dodaj do wpisu">
-              <button
+              <Button
                 type="button"
                 aria-pressed={testVisible}
                 aria-controls="journal-test"
                 aria-disabled={testForced || undefined}
                 onClick={() => { if (!testForced) setTestOpen((o) => !o); }}
-                className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
+                variant="chip" size="chip" className="text-foreground"
               >
                 {form.test ? "✓ " : "+ "}Próba
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 aria-pressed={fittingsVisible}
                 aria-controls="journal-fittings"
                 aria-disabled={fittingsForced || undefined}
                 onClick={() => { if (!fittingsForced) setFittingsOpen((o) => !o); }}
-                className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
+                variant="chip" size="chip" className="text-foreground"
               >
                 {(form.fittings?.length ?? 0) > 0 ? "✓ " : "+ "}Kształtki
-              </button>
+              </Button>
               {quickFittings.map((n) => (
-                <button
+                <Button
                   key={n}
                   type="button"
                   onClick={() => patch({ fittings: [{ name: n, qty: 1 }] })}
-                  className="pressable inline-flex max-w-full items-center rounded-full bg-muted px-2.5 py-1 text-xs text-foreground hover:bg-primary/10 coarse:min-h-11 coarse:px-3.5"
+                  variant="chip-soft" size="chip" className="max-w-full text-foreground"
                 >
                   <span className="truncate">+ {n}</span>
-                </button>
+                </Button>
               ))}
-              <button
+              <Button
                 type="button"
                 aria-pressed={pipesVisible}
                 aria-controls="journal-pipes"
                 aria-disabled={pipesForced || undefined}
                 onClick={() => { if (!pipesForced) setPipesOpen((o) => !o); }}
-                className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
+                variant="chip" size="chip" className="text-foreground"
               >
                 {(form.pipes?.length ?? 0) > 0 ? "✓ " : "+ "}Rury
-              </button>
+              </Button>
               {/* Czujniki i narzędzia (Faza 3): pigułki otwierają okna; po zapisie wartość widać w blokach poniżej. */}
               {touchDevice && typeof DeviceOrientationEvent !== "undefined" && (
-                <button type="button" onClick={() => setLevelOpen(true)} data-testid="pill-level"
-                  className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5">
+                <Button type="button" onClick={() => setLevelOpen(true)} data-testid="pill-level"
+                  variant="chip" size="chip" className="text-foreground">
                   {form.level !== undefined ? "✓ " : "+ "}Spadek
-                </button>
+                </Button>
               )}
-              <button type="button" onClick={() => setBarcodeOpen(true)} data-testid="pill-barcode"
-                className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5">
+              <Button type="button" onClick={() => setBarcodeOpen(true)} data-testid="pill-barcode"
+                variant="chip" size="chip" className="text-foreground">
                 {form.barcode ? "✓ " : "+ "}Kod
-              </button>
+              </Button>
               {touchDevice && hasNFC() && (
-                <button type="button" onClick={() => setNfcOpen(true)} data-testid="pill-nfc"
-                  className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5">
+                <Button type="button" onClick={() => setNfcOpen(true)} data-testid="pill-nfc"
+                  variant="chip" size="chip" className="text-foreground">
                   + NFC
-                </button>
+                </Button>
               )}
               {hasAISummarizer() && (
-                <button type="button" onClick={() => setAiOpen(true)} data-testid="pill-ai"
-                  className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5">
+                <Button type="button" onClick={() => setAiOpen(true)} data-testid="pill-ai"
+                  variant="chip" size="chip" className="text-foreground">
                   {form.summary ? "✓ " : "+ "}Streszczenie
-                </button>
+                </Button>
               )}
-              <button
+              <Button
                 type="button"
                 aria-expanded={kitsOpen}
                 aria-controls="journal-kits"
                 onClick={() => setKitsOpen((o) => !o)}
-                className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
+                variant="chip" size="chip" className="text-foreground"
               >
                 + Zestaw
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 aria-expanded={topicOpen}
                 aria-controls="journal-topic"
                 onClick={() => setTopicOpen((o) => !o)}
-                className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
+                variant="chip" size="chip" className="max-w-full text-foreground"
               >
                 <span className="truncate">{topic ? `Temat: ${current?.title ?? topic}${checked.size > 0 ? ` · ${checked.size}/${items.length}` : ""}` : "+ Temat"}</span>
-              </button>
+              </Button>
             </div>
             {testVisible && (
               <div id="journal-test" className={cn(cardVariant(), "p-2")}>

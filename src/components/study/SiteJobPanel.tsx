@@ -274,10 +274,10 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
             {kind === "labor" && (pricing.items.length > 0 ? (
               <div className="flex flex-wrap gap-1" role="group" aria-label="Z cennika" data-testid="job-pricing">
                 {pricing.items.map((it) => (
-                  <button key={it.id} type="button" onClick={() => fromPricing(it)}
-                    className="pressable max-w-full truncate rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm">
+                  <Button key={it.id} type="button" onClick={() => fromPricing(it)}
+                    variant="chip-add" size="chip" className="max-w-full truncate">
                     {it.name} · {money(it.price)}
-                  </button>
+                  </Button>
                 ))}
               </div>
             ) : (
@@ -286,10 +286,10 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
             {kind === "material" && chips.length > 0 && (
               <div className="flex flex-wrap gap-1" role="group" aria-label="Z cennika kształtek" data-testid="job-material-pricing">
                 {chips.map((c) => (
-                  <button key={c.name} type="button" onClick={() => fromMaterial(c)}
-                    className="pressable max-w-full truncate rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs text-muted-foreground hover:text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm">
+                  <Button key={c.name} type="button" onClick={() => fromMaterial(c)}
+                    variant="chip-add" size="chip" className="max-w-full truncate">
                     {c.name} · {money(c.price)}
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}

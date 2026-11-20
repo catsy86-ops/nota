@@ -206,14 +206,14 @@ function VolumeCalc() {
           </li>
         ))}
       </ul>
-      <button
+      <Button
         type="button"
         onClick={() => setRows((rs) => [...rs, { id: Math.max(...rs.map((x) => x.id)) + 1, pipe: PIPES[0].id, inner: "", length: "" }])}
         disabled={rows.length >= 8}
-        className="pressable inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-sm text-muted-foreground hover:bg-muted coarse:min-h-11"
+        variant="chip" size="chip-md" className="text-muted-foreground"
       >
         <Plus className="size-4" aria-hidden />Kolejny odcinek
-      </button>
+      </Button>
       <Result label="Razem" value={total !== null ? plNum(total, total < 10 ? 2 : 1) : null} unit="l" testId="calc-volume-total" />
       <p className="ui-hint">Ile wody wejdzie przy napełnianiu i płukaniu. Średnica wewnętrzna = zewnętrzna − 2 × ścianka.</p>
     </section>

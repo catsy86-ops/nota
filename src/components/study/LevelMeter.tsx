@@ -139,10 +139,10 @@ export function LevelMeter({ open, onOpenChange, onSelect }: LevelMeterProps) {
 
               <div className="flex flex-wrap items-center justify-between gap-2" role="group" aria-label="Oś pomiaru">
                 {(["beta", "gamma"] as const).map((a) => (
-                  <button key={a} type="button" aria-pressed={axis === a} onClick={() => setAxis(a)}
-                    className="pressable flex-1 rounded-full border border-border px-3 py-1 text-sm text-muted-foreground aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-foreground coarse:min-h-11">
+                  <Button key={a} type="button" aria-pressed={axis === a} onClick={() => setAxis(a)}
+                    variant="chip" size="chip-md" className="flex-1 text-muted-foreground">
                     {a === "beta" ? "Wzdłuż telefonu" : "W poprzek telefonu"}
-                  </button>
+                  </Button>
                 ))}
               </div>
 

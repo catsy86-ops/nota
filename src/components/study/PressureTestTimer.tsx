@@ -144,10 +144,10 @@ export function PressureTestTimer({ open, onOpenChange, test, onUpdate }: {
               </div>
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Typowy czas próby">
                 {PRESETS.map((m) => (
-                  <button key={m} type="button" onClick={() => setMinutes(String(m))} aria-pressed={readBar(minutes) === m}
-                    className="pressable rounded-full border border-border px-3 py-1 text-sm text-muted-foreground hover:text-foreground aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-foreground coarse:min-h-11">
+                  <Button key={m} type="button" onClick={() => setMinutes(String(m))} aria-pressed={readBar(minutes) === m}
+                    variant="chip" size="chip-md" className="text-muted-foreground">
                     {m} min
-                  </button>
+                  </Button>
                 ))}
               </div>
               {test.readings && test.readings.length > 1 && <PressureChart test={test} />}

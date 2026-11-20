@@ -19,6 +19,9 @@ Jedna tabela stanów dla kontrolek z `src/components/ui/` (plan warstwy wizualne
 | `Card variant="interactive"` (`ui/card.tsx`) | obrys `border` | obrys `foreground/25` | pierścień | `pressable` | obrys `primary` przy `aria-selected` / `aria-pressed` / `aria-current` | `aria-disabled`: `text-faint`, bez reakcji | — (treść karty pokazuje własny stan) |
 | `ListRow` (`ui/list-row.tsx`) | statyczny | — | — | — | — | — | — |
 | Pigułka (`Button variant="pill"`) | obrys `primary/40` | tło `primary/10` | pierścień | `pressable` | — | obrys `border`, `text-faint` | jak `Button` |
+| Pigułka neutralna (`chip`) | obrys `border` | tło `muted` | pierścień | `pressable` | `aria-pressed`: obrys `primary`, tło `primary/10` | `text-faint` | jak `Button` |
+| Pigułka-podpowiedź (`chip-soft`) | tło `muted`, bez obrysu | tło `primary/10` | pierścień | `pressable` | — | `text-faint` | jak `Button` |
+| Pigułka „dodaj” (`chip-add`) | obrys przerywany, tekst wyciszony | obrys `primary`, tekst pełny | pierścień | `pressable` | — | `text-faint` | jak `Button` |
 | Zakładka (`ui/tabs.tsx`, `ui/toggle-group.tsx`) | tekst wyciszony | tekst `foreground` | pierścień | `pressable` | `data-state="active"` / `"on"`: tło karty i tekst `foreground` | wzór Radix (`data-disabled`) | — |
 
 ## Czego jeszcze nie ma
@@ -26,3 +29,5 @@ Jedna tabela stanów dla kontrolek z `src/components/ui/` (plan warstwy wizualne
 - `ListRow` jest statyczny. Klikalny wiersz stawia w środku `<button>` albo ma akcję w slocie `action`. Stany wiersza dojdą razem z migracją list (W3.2).
 - `aria-[current]` w `Card interactive` reaguje na sam atrybut. Nie ustawiaj `aria-current="false"`, tylko pomiń atrybut.
 - Zakładki i przełączniki biorą stany z Radix i nie były przeglądane pod `text-faint`.
+
+Rozmiary pigułek: `size="chip"` (w linii tekstu: 12 px tekstu, 14 px ikona, 44 px na dotyku) i `size="chip-md"` (w rzędzie akcji: 14 px tekstu). Tekst pigułki się łamie (`whitespace-normal`); `truncate` w `className` przywraca jedną linię.
