@@ -6792,6 +6792,33 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — rytm strony (W7.3, 2026-11-20)
+
+### Co robi
+
+- Bez widocznej zmiany. Przegląd potwierdził jeden rytm na wszystkich ekranach: margines boczny `--space-page` (16 px na telefonie, 24 px od 640 px), tytuł działu, potem odstęp `--space-stack` (32/40 px) do sekcji, treść wyśrodkowana do `--page-wide` (80rem).
+- Wyjątek Dziś na telefonie (16 px między kartami, mniej przewijania) jest zapisany jako `gap-4 sm:gap-stack` zamiast `gap-4 sm:gap-10` — ta sama wartość, ale od 640 px idzie za tokenem.
+
+### Gdzie jest
+
+- `src/pages/Index.tsx`: `<main>` (`px-page`, `gap-stack`, `max-w-[calc(var(--page-wide)+3rem)]`).
+
+### Jak działa — pomiar
+
+- Tymczasowy test mierzył na 12 ekranach (Notatki, Dziś, Tydzień, Archiwum, Przypomnienia, Kalendarz, Grafik, Długi, Ćwiczenia, Praca, Kosz, Skrzynka) przy 390 i 1280 px lewą krawędź tytułu i pierwszych elementów treści oraz wcięcie bezpośrednich dzieci `<main>`. Wszystkie elementy treści zaczynają się na krawędzi tytułu (różnica 1 px to obramowanie karty), żaden widok nie ma własnego wcięcia na poziomie strony.
+
+### Ograniczenia i pułapki
+
+- Paski przewijane w poziomie na telefonie (pędzle Grafiku, pasek edytora) cofają margines przez `-mx-4 px-4` — to wartość `--space-page` na telefonie; od 640 px przechodzą na inny układ, więc nie potrzebują tokenu.
+
+### Testy
+
+- Pomiar krawędzi (opisany wyżej). Zmiana klasy nie zmienia wartości.
+
+### Commit
+
+W7.3 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — układ kart od ich szerokości (W7.2, 2026-11-20)
 
 ### Co robi

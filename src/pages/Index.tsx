@@ -567,7 +567,7 @@ const Index = () => {
         {/* Dziś na telefonie: ciaśniejsze odstępy między kartami, mniej przewijania na 390 px. */}
         {/* Akcje widoków trafiają do główki przez portal (nowy plan 1.1). */}
         <PageActionsProvider>
-        <main ref={mainRef} className={`flex-1 max-w-[calc(var(--page-wide)+3rem)] mx-auto w-full px-page py-6 sm:py-8 flex flex-col pb-safe ${view === "today" ? "gap-4 sm:gap-10" : "gap-stack"}`}>
+        <main ref={mainRef} className={`flex-1 max-w-[calc(var(--page-wide)+3rem)] mx-auto w-full px-page py-6 sm:py-8 flex flex-col pb-safe ${view === "today" ? "gap-4 sm:gap-stack" : "gap-stack"}`}>
           <RestoreInterruptedBanner onOpenBackup={() => { requestSettingsTab("backup"); setSettingsOpen(true); }} />
           <DocFormatBanner />
           <DocReplaceNotice onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }} />
