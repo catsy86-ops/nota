@@ -31,3 +31,7 @@ Jedna tabela stanów dla kontrolek z `src/components/ui/` (plan warstwy wizualne
 - Zakładki i przełączniki biorą stany z Radix i nie były przeglądane pod `text-faint`.
 
 Rozmiary pigułek: `size="chip"` (w linii tekstu: 12 px tekstu, 14 px ikona, 44 px na dotyku) i `size="chip-md"` (w rzędzie akcji: 14 px tekstu). Tekst pigułki się łamie (`whitespace-normal`); `truncate` w `className` przywraca jedną linię.
+
+## Wykres: `ChartFrame` (W5.1)
+
+Każdy wykres stoi w `ChartFrame` (`ui/chart-frame.tsx`): `title`, `value` (suma, `num-lg`), `range`, `series` (podpis + kolor + kształt `bar`/`hatch`/`line`/`dash`), `plotClassName` (wysokość), `table` (zwinięta tabela „Pokaż dane”, wtedy wykres jest `aria-hidden`). Recharts tylko w `children`; dymek i podpisy osi z `ui/chart-style.ts`. Druga seria w tym samym kolorze rodziny dostaje inny kształt (`HatchPattern` w `<defs>`), nie tylko inną barwę.

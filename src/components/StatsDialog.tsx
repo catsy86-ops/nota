@@ -27,6 +27,8 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { ChartFrame } from "@/components/ui/chart-frame";
+import { CHART_TOOLTIP_STYLE } from "@/components/ui/chart-style";
 
 interface Props {
   open: boolean;
@@ -130,30 +132,43 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
           </div>
         </div>
 
-        <div className="pt-3">
-          <p className="ui-hint font-semibold mb-2">Aktywność (14 dni)</p>
-          <div className={cn(cardVariant("inset"), "h-24 p-2")}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={activity}>
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(d: string) => format(parseDayKey(d), "d.MM")}
-                  tick={{ fontSize: 10 }}
-                  interval={2}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  labelFormatter={(d: string) => format(parseDayKey(d), "d MMM yyyy", { locale: pl })}
-                  formatter={(v: number) => [v, "aktywność"]}
-                  // Tokeny motywu, nie domyślne białe tło Recharts (plan 5.3); liczby w osiach i dymku tabelarycznie (`.recharts-wrapper` w index.css).
-                  contentStyle={{ fontSize: 12, borderRadius: 8, background: "var(--popover)", border: "1px solid var(--border)", color: "var(--popover-foreground)" }}
-                />
-                <Bar dataKey="count" fill="var(--chart-1)" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <ChartFrame
+          className="pt-3"
+          title="Aktywność"
+          value={activity.reduce((sum, d) => sum + d.count, 0)}
+          range="ostatnie 14 dni"
+          plotClassName={cn(cardVariant("inset"), "h-24 p-2")}
+          table={
+            <table className="w-full tabular-nums">
+              <caption className="sr-only">Aktywność w ostatnich 14 dniach</caption>
+              <thead><tr><th scope="col" className="text-left font-medium">Dzień</th><th scope="col" className="text-right font-medium">Aktywność</th></tr></thead>
+              <tbody>
+                {activity.map((d) => (
+                  <tr key={d.date}><td>{format(parseDayKey(d.date), "EEEEEE d.MM", { locale: pl })}</td><td className="text-right">{d.count}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          }
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={activity}>
+              <XAxis
+                dataKey="date"
+                tickFormatter={(d: string) => format(parseDayKey(d), "d.MM")}
+                tick={{ fontSize: 10 }}
+                interval={2}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                labelFormatter={(d: string) => format(parseDayKey(d), "d MMM yyyy", { locale: pl })}
+                formatter={(v: number) => [v, "aktywność"]}
+                contentStyle={CHART_TOOLTIP_STYLE}
+              />
+              <Bar dataKey="count" fill="var(--chart-1)" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartFrame>
 
         <div className="pt-4 space-y-2">
           <div className="flex items-center justify-between">

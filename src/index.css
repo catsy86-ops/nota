@@ -1536,7 +1536,6 @@ html[data-motion="reduced"]::view-transition-group(day-active) { animation-durat
 .year-chart-hours .recharts-rectangle { fill: var(--chart-1); }
 .year-chart-norm .recharts-curve { stroke: var(--foreground); stroke-dasharray: 4 3; stroke-width: 1.5; }
 .year-chart-over .recharts-rectangle { fill: var(--warning); }
-.year-chart-night .recharts-rectangle { fill: var(--chart-2); }
 
 /* Osie i dymki Recharts: cyfry o stałej szerokości, żeby wartości nie skakały (plan 5.3). */
 .recharts-wrapper { font-variant-numeric: tabular-nums; }

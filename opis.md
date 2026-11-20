@@ -6707,7 +6707,7 @@ W1.5 — commit po tym wpisie (2026-11-19).
 
 ### Gdzie jest
 
-- `src/index.css` (`@layer base`, `:root`): `--chart-1` (= `--primary`), `--chart-2` (= `--accent`), `--chart-grid` (= `--border`), `--chart-axis` (= `--muted-foreground`), `--positive` / `--negative` (= `--success` / `--destructive`). Reguły `.year-chart-*` i `.recharts-cartesian-axis-tick-value`.
+- `src/index.css` (`@layer base`, `:root`): `--chart-1` (= `--primary`), `--chart-2` (= `--accent`), `--chart-grid` (= `--border`), `--chart-axis` (= `--muted-foreground`), `--positive` / `--negative` (= `--success` / `--destructive`). Reguły `.year-chart-*` (bez `.year-chart-night` od W5.2 — noc ma wzór kreskowania) i `.recharts-cartesian-axis-tick-value`.
 - `src/components/StatsDialog.tsx` (słupki aktywności), `src/components/study/PressureChart.tsx` (osie, podpisy, linia, punkty), `src/components/shifts/YearCharts.tsx` (przez klasy `.year-chart-*`).
 
 ### Jak działa
@@ -6791,6 +6791,42 @@ W1.7 — commit po tym wpisie (2026-11-19).
 ### Commit
 
 W1.8 — commit po tym wpisie (2026-11-19).
+
+## Wygląd — oprawa wykresu `ChartFrame` (W5.1, W5.2, 2026-11-20)
+
+### Co robi
+
+- Każdy wykres ma ten sam układ: tytuł, pod nim duża wartość (suma), z prawej zakres danych, pod spodem podpisy serii ze znacznikiem, a dalej sam wykres. Legenda nie jest osobną ramką w obszarze wykresu.
+- Serie odróżnia też kształt, nie tylko kolor: słupek to pełny kwadrat, noc to kwadrat kreskowany, norma to linia przerywana.
+- Pod wykresem może być zwinięta tabela „Pokaż dane” z tymi samymi liczbami — dla czytnika ekranu i do odczytu dokładnych wartości.
+
+### Gdzie jest
+
+- `src/components/ui/chart-frame.tsx`: `ChartFrame` (props `title`, `value`, `range`, `series`, `plotClassName`, `table`), typy `ChartSeries` i `SeriesShape` (`bar` | `hatch` | `line` | `dash`), `HatchPattern` — wzór SVG do `<defs>` wykresu.
+- `src/components/ui/chart-style.ts`: `CHART_TOOLTIP_STYLE` (dymek w tokenach) i `CHART_TICK` (podpisy osi 11 px). Osobny plik, bo plik komponentu eksportuje tylko komponenty (fast refresh).
+- `src/components/shifts/YearCharts.tsx`: „Godziny i norma” (suma godzin roku) i „Nadgodziny i noc” (suma nadgodzin), noc kreskowana przez `fill="url(#…)"` z `useId`.
+- `src/components/StatsDialog.tsx`: „Aktywność”, suma z 14 dni, zakres „ostatnie 14 dni” i tabela dni.
+
+### Jak działa
+
+- `ChartFrame` nie importuje recharts: wykres podaje wywołujący jako `children`, więc oprawa nie trafia z biblioteką do paczki wejściowej.
+- Wartość główna ma rolę `num-lg`, tytuł `ui-label` w kolorze wyciszonym, zakres i podpisy `ui-meta`. Suma roku to pełne godziny z `toLocaleString("pl-PL")` i mniejszą jednostką „h”, jak w `Stat`.
+- Gdy jest `table`, obszar wykresu ma `aria-hidden` — czytnik dostaje tabelę zamiast pustego SVG. Wykresy roku nie mają `table`, bo tabela miesięcy stoi tuż pod nimi w `YearSummaryDialog`.
+- Kolor nocy szedł wcześniej z reguły `.year-chart-night` w `index.css`. Reguła usunięta, bo CSS `fill` przykryłby wzór kreskowania.
+
+### Ograniczenia i pułapki
+
+- W kodzie są dwa wykresy recharts, nie trzy jak w planie. `PressureChart` w Pracy to własny SVG i nie przeszedł na oprawę.
+- `toLocaleString("pl-PL")` nie dzieli liczb czterocyfrowych (1712), tylko od pięciu cyfr. To zgodne z polską typografią.
+- Podziałka osi przy samych zerach (recharts) bywa nierówna, np. 0, 1, 2, 4. To stan sprzed zmiany.
+
+### Testy
+
+- e2e `leave-year.spec.ts`, `stats-practice.spec.ts`, `shortcuts-settings-stats.spec.ts`; strażnicy `src/test/` zieloni. Zrzuty: Grafik (komputer, telefon, ciemny) i Statystyki — przez tymczasowy spec, potem usunięty.
+
+### Commit
+
+W5.1–W5.2 — commit po tym wpisie (2026-11-20).
 
 ## Wygląd — karty na odmianach: Długi, Praca, Ustawienia, Grafik, Dziś, Kalendarz, Notatki (W3.2, 2026-11-19/20)
 
