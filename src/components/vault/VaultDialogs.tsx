@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { privateNotes, VaultThrottledError } from "@/lib/privateNotes";
+import { privateNotes, VaultThrottledError, VaultUnreadableError } from "@/lib/privateNotes";
 import { MIN_PASSWORD_LENGTH, VaultError, formatRecoveryInput, passwordStrength } from "@/lib/vault";
 import { printRecoveryCode } from "@/lib/recoveryPrint";
 import { getRecoveryCheck, markRecoveryChecked, markRecoveryNudged, recoveryCheckDue } from "@/lib/vaultRecoveryCheck";
@@ -312,19 +312,22 @@ function ChangeForm({ onChanged }: { onChanged: (recoveryCode: string | null) =>
   const canSubmit = !!oldPw && passwordStrength(password).ok && password === confirm && !busy;
   // Zmiana hasła kasuje odblokowania biometrią (stare opakowania wiążą stary klucz). Mówimy to przed zmianą.
   const hadPasskeys = privateNotes.hasPasskeys();
+  const [unreadable, setUnreadable] = useState(0);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(e: React.FormEvent | null, dropUnreadable = false) {
+    e?.preventDefault();
     if (!canSubmit) return;
     setBusy(true);
     setError(null);
+    setUnreadable(0);
     try {
-      const res = await privateNotes.changePassword(oldPw, password, { withRecovery });
+      const res = await privateNotes.changePassword(oldPw, password, { withRecovery, dropUnreadable });
       if (res.skipped.length) toast.warning(`${res.skipped.length} notatek prywatnych nie dało się odszyfrować i zostały bez zmian`);
       else toast.success("Zmieniono hasło", { description: hadPasskeys ? "Odblokowanie biometrią trzeba dodać ponownie w Ustawieniach." : "Wszystkie prywatne notatki przeszyfrowano nowym kluczem." });
       onChanged(res.recoveryCode);
     } catch (err) {
-      setError(errorText(err));
+      if (err instanceof VaultUnreadableError) setUnreadable(err.skipped.length);
+      else setError(errorText(err));
     } finally {
       setBusy(false);
     }
@@ -344,10 +347,26 @@ function ChangeForm({ onChanged }: { onChanged: (recoveryCode: string | null) =>
         <span>Wygeneruj nowy kod awaryjny <span className="text-muted-foreground">— stary przestanie działać.</span></span>
       </label>
       {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
+      {unreadable > 0 && <UnreadableNotice count={unreadable} busy={busy} action="zmień hasło" onConfirm={() => void submit(null, true)} />}
       <ResponsiveDialogFooter>
         <Button type="submit" disabled={!canSubmit}>{busy ? "Przeszyfrowuję…" : "Zmień hasło"}</Button>
       </ResponsiveDialogFooter>
     </form>
+  );
+}
+
+/**
+ * Zmiana hasła przerwana przez nieczytelne notatki (`VaultUnreadableError`): wyjście „do kosza i dalej”.
+ * Tytuły są w szyfrogramie, więc pokazujemy tylko liczbę.
+ */
+function UnreadableNotice({ count, busy, action, onConfirm }: { count: number; busy: boolean; action: string; onConfirm: () => void }) {
+  const notes = count === 1 ? "notatki prywatnej" : "notatek prywatnych";
+  return (
+    <div role="alert" className="space-y-2 rounded-md border border-destructive/40 p-3 text-sm">
+      <p className="text-destructive-ink">Nic nie zostało zmienione: {count} {notes} nie da się odszyfrować tym kluczem (bez widocznego tytułu — tytuł jest w szyfrogramie).</p>
+      <p className="text-muted-foreground">Możesz przenieść je do kosza i kontynuować. Zostaną tam w starej, zaszyfrowanej postaci — da się je pobrać przyciskiem „Pobierz szyfrogram”, ale nowe hasło ich nie otworzy.</p>
+      <Button type="button" variant="destructive" size="sm" disabled={busy} onClick={onConfirm}>Przenieś nieczytelne do kosza i {action}</Button>
+    </div>
   );
 }
 
@@ -358,20 +377,23 @@ function RecoverForm({ onBack, onDone }: { onBack: () => void; onDone: (recovery
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const canSubmit = code.trim().length > 0 && passwordStrength(password).ok && password === confirm && !busy;
+  const [unreadable, setUnreadable] = useState(0);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(e: React.FormEvent | null, dropUnreadable = false) {
+    e?.preventDefault();
     if (!canSubmit) return;
     setBusy(true);
     setError(null);
+    setUnreadable(0);
     try {
-      const res = await privateNotes.resetPasswordWithRecovery(code, password);
+      const res = await privateNotes.resetPasswordWithRecovery(code, password, { dropUnreadable });
       // C-1: pominięte mogą być tylko obce szyfrogramy v1 — pozostałe przerywają reset przed zapisem.
       if (res.skipped.length) toast.warning(`${res.skipped.length} notatek prywatnych nie dało się odszyfrować i zostały bez zmian`);
       toast.success("Ustawiono nowe hasło");
       onDone(res.recoveryCode);
     } catch (err) {
-      setError(errorText(err));
+      if (err instanceof VaultUnreadableError) setUnreadable(err.skipped.length);
+      else setError(errorText(err));
     } finally {
       setBusy(false);
     }
@@ -386,6 +408,7 @@ function RecoverForm({ onBack, onDone }: { onBack: () => void; onDone: (recovery
       </div>
       <NewPasswordFields password={password} setPassword={setPassword} confirm={confirm} setConfirm={setConfirm} />
       {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
+      {unreadable > 0 && <UnreadableNotice count={unreadable} busy={busy} action="ustaw nowe hasło" onConfirm={() => void submit(null, true)} />}
       <ResponsiveDialogFooter className="gap-2 sm:justify-between">
         <Button type="button" variant="ghost" size="sm" onClick={onBack}>Wróć</Button>
         <Button type="submit" disabled={!canSubmit}>{busy ? "Przeszyfrowuję…" : "Ustaw nowe hasło"}</Button>

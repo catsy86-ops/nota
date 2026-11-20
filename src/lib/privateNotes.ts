@@ -60,6 +60,44 @@ export class VaultThrottledError extends Error {
   }
 }
 
+/**
+ * Zmiana hasła przerwana, bo części notatek nie da się odszyfrować starym kluczem. `skipped` — ich id; ponowienie
+ * z `{ dropUnreadable: true }` przenosi je do kosza (ze starym szyfrogramem) i przeszyfrowuje resztę.
+ */
+export class VaultUnreadableError extends Error {
+  constructor(public readonly skipped: string[]) {
+    super(`Zmiana hasła przerwana: ${skipped.length} ${pluralPl(skipped.length, ["notatki", "notatek", "notatek"])} nie da się odszyfrować tym kluczem. Nic nie zostało zmienione.`);
+    this.name = "VaultUnreadableError";
+  }
+}
+
+export interface RekeyOptions {
+  withRecovery?: boolean;
+  /** Nieczytelne notatki do kosza (szyfrogram zostaje) zamiast przerwania. */
+  dropUnreadable?: boolean;
+}
+
+/** Nieznane pola treści (C-14) jako JSON do zachowania przy zdjęciu blokady; za duże albo brak — `undefined`. */
+function futureFieldsJson(c: PrivateContent): string | undefined {
+  const extra: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(c)) if (!KNOWN_CONTENT_KEYS.has(k)) extra[k] = v;
+  if (!Object.keys(extra).length) return undefined;
+  const json = JSON.stringify(extra);
+  return json.length <= MAX_EXTRA_JSON ? json : undefined;
+}
+
+/** Odwrotność `futureFieldsJson` przy ponownej blokadzie: tylko nieznane klucze, bez `__proto__`. */
+function parseFutureFields(json: string | null): Record<string, unknown> {
+  if (!json || json.length > MAX_EXTRA_JSON) return {};
+  try {
+    const raw = JSON.parse(json) as unknown;
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(raw)) if (!KNOWN_CONTENT_KEYS.has(k) && k !== "__proto__") out[k] = v;
+    return out;
+  } catch { return {}; }
+}
+
 /** Najniższy numer formatu, który wymaga zapisu v2 (V-3): dopiero gdy wszystkie widziane urządzenia go znają. */
 export const NOTE_FORMAT_V2_SCHEMA = 2;
 
@@ -580,13 +618,15 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
         if (!plain) return { ok: false, reason: "missing" };
         if (plain.images.length || plain.attachments?.length) return { ok: false, reason: "has-files" };
         const meta = writeFormatAllowed(METADATA_IN_CIPHERTEXT_SCHEMA) ? privateMetaOf(plain) : undefined;
-        const content: PrivateContent = { title: plain.title, content: plain.content, checklist: plain.checklist, labels: plain.labels, ...(meta ? { meta } : {}) };
+        // Pola z przyszłości zachowane przy zdjęciu blokady wracają do szyfrogramu (znane pola mają pierwszeństwo).
+        const future = parseFutureFields(store.getFutureContent(id));
+        const content: PrivateContent = { ...future, title: plain.title, content: plain.content, checklist: plain.checklist, labels: plain.labels, ...(meta ? { meta } : {}) };
         const json = JSON.stringify(content);
         const token = await encryptNoteWrite(k, json, id, sessionEpoch);
         // Edytor mógł zatwierdzić szkic w trakcie szyfrowania — wtedy powtarzamy.
         const again = store.readPlainNote(id);
         const againMeta = writeFormatAllowed(METADATA_IN_CIPHERTEXT_SCHEMA) && again ? privateMetaOf(again) : undefined;
-        if (!again || JSON.stringify({ title: again.title, content: again.content, checklist: again.checklist, labels: again.labels, ...(againMeta ? { meta: againMeta } : {}) }) !== json) continue;
+        if (!again || JSON.stringify({ ...parseFutureFields(store.getFutureContent(id)), title: again.title, content: again.content, checklist: again.checklist, labels: again.labels, ...(againMeta ? { meta: againMeta } : {}) }) !== json) continue;
         if (!store.lockNote(id, token, writeFormatAllowed(METADATA_IN_CIPHERTEXT_SCHEMA))) return { ok: false, reason: "missing" };
         cache.set(id, { vault: token, content, dirty: false });
         versions.remove(id);
@@ -608,7 +648,8 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     if (!entry) return false;
     const t = timers.get(id);
     if (t) { clearTimeout(t); timers.delete(id); }
-    const ok = store.unlockNote(id, { ...entry.content, ...(entry.content.meta ?? {}) });
+    // C-14: pola z przyszłości nie mieszczą się w jawnym modelu — idą do osobnego klucza dokumentu.
+    const ok = store.unlockNote(id, { ...entry.content, ...(entry.content.meta ?? {}) }, futureFieldsJson(entry.content));
     cache.delete(id);
     emit();
     return ok;
@@ -714,31 +755,32 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
    * dokumentu. Błąd na dowolnym etapie nie zapisuje niczego. Notatki, których
    * i tak nie dało się odszyfrować (obcy szyfrogram), są zgłaszane w `skipped`.
    */
-  async function rekey(oldKey: CryptoKey, newPassword: string, withRecovery: boolean, from: VaultMeta): Promise<{ recoveryCode: string | null; skipped: string[] }> {
+  async function rekey(oldKey: CryptoKey, newPassword: string, opts: RekeyOptions, from: VaultMeta): Promise<{ recoveryCode: string | null; skipped: string[] }> {
     rekeying = true;
-    try { return await rekeyInner(oldKey, newPassword, withRecovery, from); } finally { rekeying = false; }
+    try { return await rekeyInner(oldKey, newPassword, opts, from); } finally { rekeying = false; }
   }
 
-  async function rekeyInner(oldKey: CryptoKey, newPassword: string, withRecovery: boolean, from: VaultMeta): Promise<{ recoveryCode: string | null; skipped: string[] }> {
+  async function rekeyInner(oldKey: CryptoKey, newPassword: string, { withRecovery = true, dropUnreadable = false }: RekeyOptions, from: VaultMeta): Promise<{ recoveryCode: string | null; skipped: string[] }> {
     await flush();
     // Klucz wyprowadzono z `from`; nagłówek zmieniony w międzyczasie (synchronizacja) to nie „nieczytelne notatki”.
     const m = meta();
     if (!m || fingerprint(m) !== fingerprint(from)) throw new Error("Skarbiec zmienił się w trakcie zmiany hasła — spróbuj ponownie");
     const plain = new Map<string, { expected: string; json: string }>();
     const skipped: string[] = [];
+    const unreadable = new Map<string, string>();
     // C-1: epoka z nagłówka, nie z sesji — przy resecie kodem awaryjnym sesja nie była odblokowana (`sessionEpoch` = 0).
     let unsafe = 0;
     for (const id of store.lockedNoteIds()) {
       const token = store.getVault(id)!;
       try { plain.set(id, { expected: token, json: await decryptNoteString(oldKey, token, id, m.epoch) }); } catch {
         skipped.push(id);
+        unreadable.set(id, token);
         // Pominąć wolno tylko obcy szyfrogram v1; v2 i wersja nieznana (C-28) to dane tego skarbca, które nowy klucz by odciął.
         if (!token.startsWith(`${VAULT_VERSION}.`)) unsafe++;
       }
     }
-    if (unsafe > 0 || (skipped.length > 0 && plain.size === 0)) {
-      throw new Error(`Zmiana hasła przerwana: ${skipped.length} ${pluralPl(skipped.length, ["notatki", "notatek", "notatek"])} nie da się odszyfrować tym kluczem. Nic nie zostało zmienione.`);
-    }
+    // Z `dropUnreadable` nieczytelne idą do kosza w tej samej transakcji co nowy klucz (szyfrogram zostaje do pobrania).
+    if (!dropUnreadable && (unsafe > 0 || (skipped.length > 0 && plain.size === 0))) throw new VaultUnreadableError(skipped);
     const created = await createVault(newPassword, { iterations, withRecovery, epoch: m.epoch + 1 });
     const next = new Map<string, { expected: string; vault: string }>();
     for (const [id, p] of plain) next.set(id, { expected: p.expected, vault: await encryptNoteWrite(created.dataKey, p.json, id, created.meta.epoch) });
@@ -747,7 +789,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     const metaUnchanged = (cur: unknown): boolean => isValidMeta(cur) && fingerprint(cur) === fromPrint;
     ownMetaWrite = true;
     let written: boolean;
-    try { written = store.rekeyVault(created.meta, next, metaUnchanged); } finally { ownMetaWrite = false; }
+    try { written = store.rekeyVault(created.meta, next, metaUnchanged, dropUnreadable ? unreadable : undefined); } finally { ownMetaWrite = false; }
     if (!written) throw new Error("Skarbiec lub notatki zmieniły się w trakcie zmiany hasła — spróbuj ponownie");
     writeVaultPin(created.meta);
     key = created.dataKey;
@@ -765,11 +807,11 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
 
   // Z-7.1: zmiana klucza pod blokadą wyłączną — dwie karty nie wygenerują dwóch różnych kluczy danych. Nagłówek
   // skarbca (`meta()`) czytany dopiero w blokadzie: druga karta mogła go właśnie zmienić.
-  function changePassword(oldPassword: string, newPassword: string, opts: { withRecovery?: boolean } = {}) {
+  function changePassword(oldPassword: string, newPassword: string, opts: RekeyOptions = {}) {
     return withExclusiveLock(VAULT_LOCK, () => changePasswordLocked(oldPassword, newPassword, opts));
   }
 
-  async function changePasswordLocked(oldPassword: string, newPassword: string, { withRecovery = true }: { withRecovery?: boolean } = {}) {
+  async function changePasswordLocked(oldPassword: string, newPassword: string, opts: RekeyOptions = {}) {
     const m = meta();
     if (!m) throw new Error("Brak skarbca");
     checkThrottle();
@@ -779,15 +821,15 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       throw err;
     }
     recordSuccess();
-    return rekey(oldKey, newPassword, withRecovery, m);
+    return rekey(oldKey, newPassword, opts, m);
   }
 
   /** Nowe hasło za pomocą kodu awaryjnego (zapomniane hasło). */
-  function resetPasswordWithRecovery(recoveryCode: string, newPassword: string, opts: { withRecovery?: boolean } = {}) {
+  function resetPasswordWithRecovery(recoveryCode: string, newPassword: string, opts: RekeyOptions = {}) {
     return withExclusiveLock(VAULT_LOCK, () => resetPasswordLocked(recoveryCode, newPassword, opts));
   }
 
-  async function resetPasswordLocked(recoveryCode: string, newPassword: string, { withRecovery = true }: { withRecovery?: boolean } = {}) {
+  async function resetPasswordLocked(recoveryCode: string, newPassword: string, opts: RekeyOptions = {}) {
     const m = meta();
     if (!m) throw new Error("Brak skarbca");
     checkThrottle();
@@ -797,7 +839,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       throw err;
     }
     recordSuccess();
-    const result = await rekey(oldKey, newPassword, withRecovery, m);
+    const result = await rekey(oldKey, newPassword, opts, m);
     failed.clear();
     await decryptAll();
     emit();

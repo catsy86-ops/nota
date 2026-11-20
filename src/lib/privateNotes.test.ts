@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { createYjsStore, yjsStore } from "@/lib/yjsStore";
-import { createPrivateNotes, privateNotes, throttleDelayMs, VaultThrottledError } from "@/lib/privateNotes";
+import { createPrivateNotes, privateNotes, throttleDelayMs, VaultThrottledError, VaultUnreadableError } from "@/lib/privateNotes";
 import { createVersionsStore, versionsStore } from "@/lib/versionsStore";
 import { searchNotes, loadSearchIndex } from "@/lib/searchNotes";
 import { buildGraph } from "@/lib/noteGraph";
@@ -341,6 +341,34 @@ describe("privateNotes — zmiana hasła i próby", () => {
     const meta = JSON.stringify(store.getVaultMeta());
     await expect(pn.changePassword(PW, "zupelnie-nowe-haslo-1")).rejects.toThrow(/nie da się odszyfrować/);
     expect(JSON.stringify(store.getVaultMeta())).toBe(meta);
+  });
+
+  it("C-1: przerwanie niesie id nieczytelnych; dropUnreadable przenosi je do kosza ze starym szyfrogramem, reszta pod nowym hasłem", async () => {
+    const { store, versions, pn } = fresh();
+    store.upsertNote(makeNote({ id: "a", content: "AAA" }));
+    store.upsertNote(makeNote({ id: "b", content: "BBB" }));
+    const { recoveryCode } = await pn.setup(PW);
+    await pn.lockNote("a");
+    await pn.lockNote("b");
+    await pn.lock();
+    const m = store.getVaultMeta()!;
+    store.rekeyVault(m, new Map([["b", { expected: store.getVault("b")!, vault: store.getVault("a")! }]]));
+    const badToken = store.getVault("b");
+    const oldMeta = JSON.stringify(store.getVaultMeta());
+    const pn2 = createPrivateNotes(store, { iterations: IT, minIterations: IT, writeDelayMs: 5, versions });
+    const err = await pn2.resetPasswordWithRecovery(recoveryCode!, "zupelnie-nowe-haslo-1").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(VaultUnreadableError);
+    expect((err as VaultUnreadableError).skipped).toEqual(["b"]);
+    const res = await pn2.resetPasswordWithRecovery(recoveryCode!, "zupelnie-nowe-haslo-1", { dropUnreadable: true });
+    expect(res.skipped).toEqual(["b"]);
+    expect(JSON.stringify(store.getVaultMeta())).not.toBe(oldMeta);
+    const b = store.projectNotes().find((n) => n.id === "b")!;
+    expect(b).toMatchObject({ trashed: true, locked: true, vault: badToken });
+    expect(store.projectNotes().find((n) => n.id === "a")!.trashed).toBe(false);
+    expect(pn2.undecryptableToken("b")).toBe(badToken);
+    await pn2.lock();
+    await pn2.unlock("zupelnie-nowe-haslo-1");
+    expect(pn2.peek("a")?.content).toBe("AAA");
   });
 
   it("C-1: obcy szyfrogram v1 obok czytelnej notatki v2 — zmiana hasła przechodzi, v1 w skipped", async () => {

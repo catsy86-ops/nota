@@ -75,6 +75,9 @@ function readReminderState(y: YNote): ReminderState {
   });
 }
 
+/** Klucz `Y.Map` jawnej notatki z nieznanymi polami treści szyfrogramu (JSON); nie trafia do `Note`. */
+export const FUTURE_CONTENT_KEY = "futureContent";
+
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
   "labels", "aliases", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate", "periodKey", "snoozedUntil",
@@ -1098,6 +1101,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       y.delete("attachments");
       // Metadane idą do szyfrogramu (krok 3): z dokumentu znikają jawne wartości.
       if (dropMeta) for (const f of PRIVATE_META) y.delete(f);
+      // Pola z przyszłości wróciły do szyfrogramu (`privateNotes.lockNote`) — jawna kopia znika.
+      y.delete(FUTURE_CONTENT_KEY);
       y.set("vault", vault);
       y.set("locked", true);
       y.set("updatedAt", Date.now());
@@ -1118,7 +1123,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   }
 
   /** Zdejmuje blokadę: jawna treść wraca do dokumentu, szyfrogram znika. */
-  function unlockNote(id: string, plain: Pick<Note, "title" | "content" | "checklist" | "labels"> & Partial<Pick<Note, "color" | "folderId" | "parentId" | "icon">>): boolean {
+  function unlockNote(id: string, plain: Pick<Note, "title" | "content" | "checklist" | "labels"> & Partial<Pick<Note, "color" | "folderId" | "parentId" | "icon">>, futureContent?: string): boolean {
     const y = notesMap.get(id);
     if (!y || y.get("locked") !== true) return false;
     doc.transact(() => {
@@ -1131,11 +1136,19 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       // Metadane z szyfrogramu wracają do dokumentu, ale tylko tam, gdzie dokument ich nie ma: wartość jawna
       // (zapisana przy zablokowanym skarbcu) jest świeższa niż ta z szyfrogramu. Starsze treści: zostają jak były.
       for (const f of PRIVATE_META) if (plain[f] !== undefined && y.get(f) === undefined) y.set(f, plain[f]);
+      // Nieznane pola treści szyfrogramu (nowsza wersja) — poza projekcją `Note`, wracają przy ponownej blokadzie.
+      if (futureContent) y.set(FUTURE_CONTENT_KEY, futureContent);
       y.delete("vault");
       y.delete("locked");
       y.set("updatedAt", Date.now());
     });
     return true;
+  }
+
+  /** Pola z przyszłości zachowane przy zdjęciu blokady (JSON) albo `null`. */
+  function getFutureContent(id: string): string | null {
+    const v = notesMap.get(id)?.get(FUTURE_CONTENT_KEY);
+    return typeof v === "string" ? v : null;
   }
 
   function getVaultMeta(): unknown {
@@ -1159,10 +1172,17 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
    * albo gdy bieżące metadane skarbca nie spełniają `metaUnchanged` (inne
    * urządzenie zmieniło nagłówek w trakcie — nie nadpisujemy go).
    */
-  function rekeyVault(meta: unknown, next: Map<string, { expected: string; vault: string }>, metaUnchanged?: (current: unknown) => boolean): boolean {
+  function rekeyVault(meta: unknown, next: Map<string, { expected: string; vault: string }>, metaUnchanged?: (current: unknown) => boolean, trash?: Map<string, string>): boolean {
     if (metaUnchanged && !metaUnchanged(vaultMap.get("meta"))) return false;
     for (const [id, { expected }] of next) if (getVault(id) !== expected) return false;
+    for (const [id, expected] of trash ?? []) if (getVault(id) !== expected) return false;
     doc.transact(() => {
+      // Nieczytelne notatki idą do kosza ze starym szyfrogramem (da się go pobrać) — w tej samej transakcji.
+      const t = Date.now();
+      for (const id of trash?.keys() ?? []) {
+        const y = notesMap.get(id)!;
+        if (y.get("trashed") !== true) { y.set("trashed", true); y.set("trashedAt", t); }
+      }
       for (const [id, { vault }] of next) notesMap.get(id)!.set("vault", vault);
       vaultMap.set("meta", meta);
     });
@@ -1342,7 +1362,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     replaceAll, replaceAllChunked, isBulkWriting, onBulkWriteEnd, resetForTests, diagStats, encodeSyncState, encodeStateVector, mergeSyncState,
     referencedImages, referencedAttachments, syncableRefs, remapImageRefs,
     beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange, getNoteText,
-    readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote,
+    readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote, getFutureContent,
     getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink, compactPersistence,
   };
 }

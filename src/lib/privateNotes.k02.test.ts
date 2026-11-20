@@ -69,13 +69,26 @@ describe("C-14: pole z przyszłości w treści notatki prywatnej", () => {
     expect(await read(id!)).toMatchObject({ title: "Tytuł (kopia)", ...FUTURE });
   });
 
-  it("zdjęcie blokady: jawny model nie ma miejsca na nieznane pole — pole znika, znane pola wracają", async () => {
-    const { store, pn } = await withFuture(FUTURE);
+  it("przeżywa zdjęcie blokady i ponowną blokadę — poza projekcją `Note`, znane pola mają pierwszeństwo", async () => {
+    const { store, pn, read } = await withFuture(FUTURE);
     await pn.unlock(PW);
     expect(await pn.removeLock("n1")).toBe(true);
     const note = store.projectNotes().find((n) => n.id === "n1")!;
-    expect(note).toMatchObject({ title: "Tytuł", content: "Treść" });
+    expect(note).toMatchObject({ content: "Treść" });
     expect(note).not.toHaveProperty("futureField");
+    expect(note).not.toHaveProperty("futureContent");
+    expect(JSON.parse(store.getFutureContent("n1")!)).toEqual(FUTURE);
+    store.patchNote("n1", { title: "Nowy tytuł" });
+    expect((await pn.lockNote("n1")).ok).toBe(true);
+    expect(store.getFutureContent("n1")).toBeNull();
+    expect(await read("n1")).toMatchObject({ title: "Nowy tytuł", content: "Treść", ...FUTURE });
+  });
+
+  it("zdjęcie blokady bez pól z przyszłości nie dodaje klucza do dokumentu", async () => {
+    const { store, pn } = await withFuture({});
+    await pn.unlock(PW);
+    await pn.removeLock("n1");
+    expect(store.getFutureContent("n1")).toBeNull();
   });
 
   it("peek pokazuje tylko znane pola — nieznane (np. `id`) nie nadpisują notatki w karcie, a zapis je zachowuje", async () => {
