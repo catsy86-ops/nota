@@ -71,7 +71,7 @@ export function AppHeader({
     <header
       ref={headerRef}
       className={cn(
-        "app-header sticky top-0 z-dropdown glass header-glow border-b border-border/50 transition-transform duration-base ease-out will-change-transform motion-reduce:transition-none",
+        "app-header sticky top-0 z-dropdown glass header-glow border-b border-border/50 transition-transform duration-base ease-out motion-reduce:transition-none",
         hidden ? "-translate-y-full" : "translate-y-0"
       )}
     >

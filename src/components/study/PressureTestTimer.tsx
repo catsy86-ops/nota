@@ -165,6 +165,7 @@ export function PressureTestTimer({ open, onOpenChange, test, onUpdate }: {
                   {over ? `Minęło ${clockLabel(elapsed)} — wpisz ciśnienie końcowe.` : `Do końca · upłynęło ${clockLabel(elapsed)} z ${clockLabel(total)}`}
                 </p>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-border" aria-hidden>
+                  {/* M1.4: 1000 ms liniowo = odstęp tyknięcia zegara próby (setInterval 1 s) — pasek płynie bez zatrzymań. */}
                   <div className="h-full bg-primary transition-[width] duration-1000 ease-linear motion-reduce:transition-none" style={{ width: `${total > 0 ? Math.min(100, (elapsed / total) * 100) : 0}%` }} />
                 </div>
               </div>

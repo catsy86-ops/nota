@@ -100,10 +100,10 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
 
       <div className="h-2.5 rounded-full bg-muted overflow-hidden flex" role="img"
         aria-label={`${formatDuration(minutes)} z ${formatDuration(normMinutes)} normy${extra ? `, ${formatDuration(extra)} ponadwymiarowych` : ""}${overtimeMinutes ? `, ${formatDuration(overtimeMinutes)} nadgodzin` : ""}`}>
-        <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${(within / scale) * 100}%` }} />
-        {extra > 0 && <div className="h-full bg-primary/40 transition-[width] duration-500" style={{ width: `${(extra / scale) * 100}%` }} />}
+        <div className="h-full bg-primary transition-[width] duration-slow" style={{ width: `${(within / scale) * 100}%` }} />
+        {extra > 0 && <div className="h-full bg-primary/40 transition-[width] duration-slow" style={{ width: `${(extra / scale) * 100}%` }} />}
         {/* Nadgodziny w kolorze marki w paski — róż był jedynym miejscem, gdzie akcent coś znaczył. */}
-        {overtimeMinutes > 0 && <div className="h-full transition-[width] duration-500" style={{ width: `${(overtimeMinutes / scale) * 100}%`, backgroundImage: "repeating-linear-gradient(-45deg, var(--primary) 0 4px, color-mix(in srgb, var(--primary) 45%, transparent) 4px 8px)" }} />}
+        {overtimeMinutes > 0 && <div className="h-full transition-[width] duration-slow" style={{ width: `${(overtimeMinutes / scale) * 100}%`, backgroundImage: "repeating-linear-gradient(-45deg, var(--primary) 0 4px, color-mix(in srgb, var(--primary) 45%, transparent) 4px 8px)" }} />}
       </div>
 
       {/* Kolumny wg szerokości kontenera (`@container` w ShiftsView): w panelu bocznym na xl dwie, nie cztery. */}

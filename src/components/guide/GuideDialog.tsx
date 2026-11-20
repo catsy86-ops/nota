@@ -76,7 +76,7 @@ export function GuideDialog({ open, label, steps, step, onStep, onClose, extra, 
               aria-current={i === step ? "step" : undefined}
               className="pressable grid h-6 place-items-center px-1 coarse:h-11"
             >
-              <span className={cn("block h-1.5 rounded-full transition-all duration-300 motion-reduce:transition-none", i === step ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30")} />
+              <span className={cn("block h-1.5 rounded-full transition-all duration-slow motion-reduce:transition-none", i === step ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30")} />
             </button>
           ))}
         </div>

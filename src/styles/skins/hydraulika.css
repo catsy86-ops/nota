@@ -102,7 +102,6 @@ html[data-skin="hydraulika"] .paper-grid::after {
   right: -130px;
   background-image: repeating-linear-gradient(90deg, transparent 0 34px, oklch(0.7783 0.1277 226.48 / 0.09) 34px 48px, transparent 48px 120px);
   animation: hydro-flow 9s linear infinite;
-  will-change: transform;
 }
 @keyframes hydro-flow {
   from { transform: translate3d(0, 0, 0); }
@@ -120,7 +119,6 @@ html[data-skin="hydraulika"] .paper-grid::after {
   animation-name: hydro-rise;
   animation-timing-function: ease-in;
   animation-iteration-count: infinite;
-  will-change: transform, opacity;
 }
 @keyframes hydro-rise {
   0% { transform: translate3d(0, 0, 0) scale(0.7); opacity: 0; }

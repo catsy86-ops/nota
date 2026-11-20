@@ -120,7 +120,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
       {timing && <p className="ui-meta mt-2" data-testid="today-timing">{timing}</p>}
       {progress !== null && (
         <div role="progressbar" aria-label="Postęp zmiany" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-primary transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${progress * 100}%`, ...(current?.type?.color ? { backgroundColor: current.type.color } : {}) }} data-testid="today-progress" />
+          <div className="h-full rounded-full bg-primary transition-[width] duration-slow motion-reduce:transition-none" style={{ width: `${progress * 100}%`, ...(current?.type?.color ? { backgroundColor: current.type.color } : {}) }} data-testid="today-progress" />
         </div>
       )}
       {weekMinutes > 0 && (

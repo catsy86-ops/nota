@@ -669,6 +669,7 @@ function RestTimer({ until, total, onExtend, onStop }: { until: number; total: n
       <div className="relative size-20 shrink-0">
         <svg viewBox="0 0 80 80" className="size-full -rotate-90" aria-hidden>
           <circle cx="40" cy="40" r={R} fill="none" strokeWidth="6" className="stroke-border" />
+          {/* M1.4: 500 ms liniowo = odstęp tyknięcia licznika (setInterval 500 ms) — pierścień płynie bez zatrzymań. */}
           <circle cx="40" cy="40" r={R} fill="none" strokeWidth="6" strokeLinecap="round" className="stroke-primary transition-[stroke-dashoffset] duration-500 ease-linear motion-reduce:transition-none"
             strokeDasharray={C} strokeDashoffset={C * (1 - fraction)} />
         </svg>

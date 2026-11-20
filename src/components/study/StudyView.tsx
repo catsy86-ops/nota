@@ -68,8 +68,8 @@ function MasteryStrip() {
                 aria-label={`${m.label}: ${modDone} z ${topics.length} w „Umiem”${modDoing > 0 ? `, ${modDoing} w trakcie` : ""}`}
                 className="flex h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted"
               >
-                <span className="h-full bg-primary transition-[width] duration-500" style={{ width: `${(modDone / topics.length) * 100}%` }} />
-                <span className="h-full bg-primary/35 transition-[width] duration-500" style={{ width: `${(modDoing / topics.length) * 100}%` }} />
+                <span className="h-full bg-primary transition-[width] duration-slow" style={{ width: `${(modDone / topics.length) * 100}%` }} />
+                <span className="h-full bg-primary/35 transition-[width] duration-slow" style={{ width: `${(modDoing / topics.length) * 100}%` }} />
               </div>
               <span className="flex shrink-0 items-center gap-1.5">
                 {modDone === topics.length && (

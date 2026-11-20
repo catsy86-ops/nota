@@ -6792,6 +6792,32 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Ruch — porządek i straż (M1.2–M1.6, 2026-11-20)
+
+### Co robi
+
+- Czasy przejść idą z tokenów: 16 klas `duration-200/300/500/700` zamieniono na `duration-base` (220 ms) i `duration-slow` (320 ms). Paski postępu i przejścia wcześniej trwały 500–700 ms, teraz najwyżej 320 ms. Zostają dwa liczniki, gdzie czas przejścia = odstęp tyknięcia (pierścień przerwy w treningu 500 ms, pasek próby ciśnienia 1 s), z komentarzem przy kodzie.
+- Usunięto stałe `will-change` (nagłówek, tło Hydrauliki, bąbelki, Zorza); animowany `transform` dostaje warstwę sam.
+
+### Gdzie jest
+
+- `src/test/motionTokens.test.ts`: M1.2 — `--dur-*` i `--ease-*` w `tokens.css` muszą równać się `dur` i `ease` z `src/lib/motion.ts`; M1.5 — klasy `duration-<liczba>` najwyżej 2, literały `duration: 0.x` w `.tsx` najwyżej 4 (pieczątka osiągnięcia ×2, wordmark, przewijanie liczby).
+- Zamiany w 13 komponentach (m.in. `DebtsView`, `ShiftSummary`, `StudyView`, `NowCard`, `GuideDialog`, `NoteBoard`, `QuizPanel`).
+
+### Ograniczenia i pułapki
+
+- M1.3 (martwe `@keyframes`): sprawdzone skryptem — wszystkie 82 reguły mają odwołanie w CSS, TS/TSX albo konfiguracji Tailwinda, więc nic nie usunięto. Skrypt nie widzi nazw składanych dynamicznie z kilku części.
+- Literały `duration:` w wywołaniach `toast(...)` to czas wyświetlenia w ms, nie animacja — strażnik ich nie liczy (szuka tylko `0.x`).
+- Wizualnie: paski w Długach, Grafiku i Pracy wypełniają się krócej (320 zamiast 500 ms).
+
+### Testy
+
+- `motionTokens.test.ts` (4), strażnicy `src/test`, typecheck. Pełne e2e nie było puszczane po tej zmianie.
+
+### Commit
+
+M1.2–M1.6 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — przyciski terminu, listy kontrolnej i wyglądu notatki na `Button` (W4.5 cd., 2026-11-20)
 
 ### Co robi

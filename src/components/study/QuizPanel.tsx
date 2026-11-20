@@ -350,7 +350,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           <span
             key={i}
             className={cn(
-              "h-1.5 flex-1 rounded-full transition-colors duration-300",
+              "h-1.5 flex-1 rounded-full transition-colors duration-slow",
               i < index + (answered ? 1 : 0) ? "bg-primary" : i === index ? "bg-primary/40" : "bg-muted",
             )}
           />

@@ -154,8 +154,8 @@ function Summary({ owedToMe, iOwe, hidden }: { owedToMe: number; iOwe: number; h
       {total > 0 && (
         // 4.1: proporcja w jednym pasku — lewa część „nam winni”, prawa „Ty winien”.
         <div className="mt-3 flex h-2 gap-0.5 overflow-hidden rounded-full" role="img" aria-label={`Proporcja: ${owedShare}% to, co nam winni, ${100 - owedShare}% to, co jesteś winien`} data-testid="debts-ratio">
-          {owedToMe > 0 && <div className="h-full rounded-full bg-success transition-[flex-grow] duration-500 motion-reduce:transition-none" style={{ flexGrow: owedToMe }} />}
-          {iOwe > 0 && <div className="h-full rounded-full bg-warning transition-[flex-grow] duration-500 motion-reduce:transition-none" style={{ flexGrow: iOwe }} />}
+          {owedToMe > 0 && <div className="h-full rounded-full bg-success transition-[flex-grow] duration-slow motion-reduce:transition-none" style={{ flexGrow: owedToMe }} />}
+          {iOwe > 0 && <div className="h-full rounded-full bg-warning transition-[flex-grow] duration-slow motion-reduce:transition-none" style={{ flexGrow: iOwe }} />}
         </div>
       )}
     </div>
@@ -441,7 +441,7 @@ function PersonList({ people, onOpen, hidden, label }: { people: PersonDebts[]; 
                 <span className="shrink-0">{settled ? "Oddane w całości" : p.balance > 0 ? "Do oddania" : "Jesteś winien"}</span>
                 {side > 0 && (
                   <div className="debt-bar h-1.5 flex-1 overflow-hidden rounded-full bg-muted" role="img" aria-label={`Oddano ${share}% z ${amountText(side, hidden)}`}>
-                    <div className={cn("debt-bar-fill h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none", p.balance < 0 ? "bg-warning" : "bg-success")} style={{ width: `${share}%` }} />
+                    <div className={cn("debt-bar-fill h-full rounded-full transition-[width] duration-slow motion-reduce:transition-none", p.balance < 0 ? "bg-warning" : "bg-success")} style={{ width: `${share}%` }} />
                   </div>
                 )}
               </div>

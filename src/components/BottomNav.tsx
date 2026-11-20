@@ -172,7 +172,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={spring.soft}
-        className="fixed bottom-0 inset-x-0 z-overlay desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] shadow-elevation-up transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible max-sm:in-data-plan-full:hidden"
+        className="fixed bottom-0 inset-x-0 z-overlay desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] shadow-elevation-up transition-[translate,visibility] duration-base ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible max-sm:in-data-plan-full:hidden"
       >
         <LayoutGroup id="bottom-nav">
           <ul className={cn("relative grid items-end h-16 max-w-md mx-auto px-2", showPaletteSlot ? "grid-cols-6" : "grid-cols-5")}>
@@ -427,7 +427,7 @@ function QuickTile({ Icon, title, hint, tone, recent = false, index = 0, onClick
       className={cn("tile-enter pressable group relative flex items-center gap-3 overflow-hidden rounded-card border bg-card py-2.5 pl-4 pr-3 coarse:min-h-14 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring", recent ? "border-primary/50 bg-primary/5" : "border-border/60")}
     >
       <span aria-hidden className={cn("absolute inset-y-0 left-0 w-1", QUICK_STRIPE[tone])} />
-      <span className={cn("grid size-11 shrink-0 place-items-center rounded-card transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
+      <span className={cn("grid size-11 shrink-0 place-items-center rounded-card transition-transform duration-base group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
         <Icon className="size-5" />
       </span>
       <span className="min-w-0 flex-1">

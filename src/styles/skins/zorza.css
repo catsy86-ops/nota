@@ -107,7 +107,7 @@ html[data-skin="zorza"] .paper-grid::after {
   filter: blur(36px);
   transform-origin: 50% 30%;
   animation: aurora-drift 28s ease-in-out infinite alternate;
-  will-change: transform;
+  /* M1.6: bez `will-change` — animowany `transform` dostaje warstwę sam, a przy ograniczonym ruchu warstwa nie wisi na stałe. */
 }
 @keyframes aurora-drift {
   0% { transform: translate3d(-4%, 0, 0) rotate(-3deg) scale(1); }

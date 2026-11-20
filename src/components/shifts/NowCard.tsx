@@ -74,7 +74,7 @@ export function NowCard({ data }: { data: ShiftData }) {
           <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden" role="progressbar" aria-label="Postęp zmiany"
             aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
             {/* Wypełnienie jest pełnej szerokości i wsuwa się przesunięciem (transform) — kształt końca się nie spłaszcza; tor przycina. */}
-            <div className="relative h-full w-full overflow-hidden rounded-full now-bar transition-transform duration-700 ease-out-soft"
+            <div className="relative h-full w-full overflow-hidden rounded-full now-bar transition-transform duration-slow ease-out-soft"
               style={{ transform: `translateX(${(Math.min(1, Math.max(0, progress)) - 1) * 100}%)`, backgroundColor: main.type.color }}>
               <span aria-hidden className="now-bar-sheen" />
             </div>
