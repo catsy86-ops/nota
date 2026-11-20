@@ -29,10 +29,10 @@ export function NewCodeBanner({ onOpenSync }: { onOpenSync: () => void }) {
         {rekeyed ? "Sparuj ponownie" : "Szczegóły"}
       </Button>
       {!rekeyed && (
-        <button type="button" onClick={dismissNewCodeHint} aria-label="Nie teraz — ukryj propozycję nowego kodu"
-          className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted coarse:size-11">
+        <Button type="button" onClick={dismissNewCodeHint} aria-label="Nie teraz — ukryj propozycję nowego kodu"
+          variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground">
           <X className="size-4" aria-hidden />
-        </button>
+        </Button>
       )}
     </div>
   );

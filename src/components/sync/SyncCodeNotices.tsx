@@ -105,14 +105,14 @@ export function V2OnlyNotices() {
               : <>«{name}» nie synchronizuje się od {day(until)} (stara wersja). Zaktualizuj aplikację na tym urządzeniu.</>}
           </p>
           {!active && (
-            <button
+            <Button
               type="button"
               onClick={() => clearV2Only(name)}
               aria-label={`Zamknij komunikat o urządzeniu ${name}`}
-              className="pressable grid size-6 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted coarse:size-11"
+              variant="ghost" size="icon-sm" className="size-6 shrink-0 text-muted-foreground [&_svg]:size-3.5"
             >
               <X className="size-3.5" aria-hidden />
-            </button>
+            </Button>
           )}
         </li>
       ))}

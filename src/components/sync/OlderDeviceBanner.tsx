@@ -34,10 +34,10 @@ export function OlderDeviceBanner({ onOpenSync }: { onOpenSync: () => void }) {
         <span className="font-medium">{older.map((d) => d.name).join(", ")}</span> {older.length === 1 ? "ma" : "mają"} starszą wersję aplikacji — część danych może być tam niewidoczna. Zaktualizuj {older.length === 1 ? "go" : "je"}.
       </p>
       <Button type="button" variant="ghost" size="sm" onClick={onOpenSync} className="shrink-0 coarse:h-11">Szczegóły</Button>
-      <button type="button" onClick={hide} aria-label="Ukryj ostrzeżenie o starszej wersji"
-        className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted coarse:size-11">
+      <Button type="button" onClick={hide} aria-label="Ukryj ostrzeżenie o starszej wersji"
+        variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground">
         <X className="size-4" aria-hidden />
-      </button>
+      </Button>
     </div>
   );
 }
