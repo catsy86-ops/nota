@@ -362,7 +362,7 @@ function ChangeForm({ onChanged }: { onChanged: (recoveryCode: string | null) =>
 function UnreadableNotice({ count, busy, action, onConfirm }: { count: number; busy: boolean; action: string; onConfirm: () => void }) {
   const notes = count === 1 ? "notatki prywatnej" : "notatek prywatnych";
   return (
-    <div role="alert" className="space-y-2 rounded-md border border-destructive/40 p-3 text-sm">
+    <div role="alert" className="space-y-2 rounded-control border border-destructive/40 p-3 text-sm">
       <p className="text-destructive-ink">Nic nie zostało zmienione: {count} {notes} nie da się odszyfrować tym kluczem (bez widocznego tytułu — tytuł jest w szyfrogramie).</p>
       <p className="text-muted-foreground">Możesz przenieść je do kosza i kontynuować. Zostaną tam w starej, zaszyfrowanej postaci — da się je pobrać przyciskiem „Pobierz szyfrogram”, ale nowe hasło ich nie otworzy.</p>
       <Button type="button" variant="destructive" size="sm" disabled={busy} onClick={onConfirm}>Przenieś nieczytelne do kosza i {action}</Button>

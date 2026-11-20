@@ -1,5 +1,6 @@
 import { lazy, memo, Suspense } from "react";
 import { cn } from "@/lib/utils";
+import { IconButton } from "@/components/ui/icon-button";
 import { hasMath } from "@/lib/mathHint";
 import type { EmbedContext } from "@/lib/embeds";
 import { Bold, Code, Heading2, Italic, Link2, List, Quote } from "lucide-react";
@@ -71,16 +72,9 @@ export function FormatToolbar({ onInsert, nowrap = false }: { onInsert: (before:
   return (
     <div role="toolbar" aria-label="Formatowanie" className={cn("flex items-center gap-0.5 -ml-1.5", nowrap ? "flex-nowrap overflow-x-auto min-w-0 scrollbar-none" : "flex-wrap")}>
       {tools.map(({ Icon, ...t }) => (
-        <button
-          key={t.title}
-          type="button"
-          onClick={() => onInsert(t.before, t.after)}
-          title={t.title}
-          aria-label={t.title}
-          className="pressable p-1.5 coarse:p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-control transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-        >
+        <IconButton key={t.title} size="sm" onClick={() => onInsert(t.before, t.after)} title={t.title} aria-label={t.title}>
           <Icon className="size-3.5" aria-hidden />
-        </button>
+        </IconButton>
       ))}
     </div>
   );

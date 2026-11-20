@@ -10,6 +10,7 @@ import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { EditorStats } from "./EditorStats";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { findDateInText } from "@/lib/dateInText";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -153,31 +154,34 @@ export function NoteEditor({
       {findOpen && <Suspense fallback={null}><FindReplaceBar value={editContent} onChange={writeContent} textareaRef={textareaRef} onClose={() => setFindOpen(false)} /></Suspense>}
       <div className="flex items-center gap-1">
         <FormatToolbar onInsert={handleFormatInsert} nowrap={!full} />
-        <button
+        <IconButton
+          size="sm"
           onClick={handleExtractSelection}
-          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0"
           title="Wyodrębnij zaznaczenie do nowej notatki"
           aria-label="Wyodrębnij zaznaczenie do nowej notatki"
         >
           <Scissors className="size-3.5" />
-        </button>
-        <button
+        </IconButton>
+        <IconButton
+          size="sm"
+          tone={showPreview ? "active" : "muted"}
           onClick={() => setShowPreview(!showPreview)}
-          className={cn("p-1 rounded text-2xs transition-colors ml-auto", showPreview ? "text-primary-ink bg-primary/10" : "text-muted-foreground hover:text-foreground")}
+          className="ml-auto"
           title={showPreview ? "Ukryj podgląd" : "Podgląd Markdown"}
           aria-label={showPreview ? "Ukryj podgląd" : "Podgląd Markdown"}
         >
           {showPreview ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-        </button>
-        <button
+        </IconButton>
+        <IconButton
+          size="sm"
           onClick={() => setFullEditor(!full)}
           // Na telefonie edycja jest zawsze pełnoekranowa — powrót do wąskiego kafla nie ma sensu.
-          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors max-sm:hidden"
+          className="max-sm:hidden"
           title={full ? "Wróć do kafla" : "Pełny ekran"}
           aria-label={full ? "Wróć do kafla" : "Pełny ekran"}
         >
           {full ? <Minimize2 className="size-3.5" /> : <Expand className="size-3.5" />}
-        </button>
+        </IconButton>
       </div>
       </div>
 
@@ -188,16 +192,18 @@ export function NoteEditor({
             {/* A3 (plan mobile 1.1): na telefonie Edycja i Podgląd to zakładki, obok siebie dopiero od sm. */}
             <div role="tablist" aria-label="Edycja i podgląd" className="mb-2 flex gap-1 sm:hidden">
               {(["edit", "preview"] as const).map((t) => (
-                <button
+                <Button
                   key={t}
                   type="button"
+                  variant="outline"
+                  size="sm"
                   role="tab"
                   aria-selected={phoneTab === t}
                   onClick={() => setPhoneTab(t)}
-                  className={cn("flex-1 rounded-control border px-3 py-1.5 text-xs coarse:h-11", phoneTab === t ? "border-primary/60 bg-primary/10 text-primary-ink" : "border-border text-muted-foreground")}
+                  className={cn("h-8 flex-1 text-xs font-normal coarse:h-11", phoneTab === t ? "border-primary/60 bg-primary/10 text-primary-ink" : "text-muted-foreground")}
                 >
                   {t === "edit" ? "Edycja" : "Podgląd"}
-                </button>
+                </Button>
               ))}
             </div>
             <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-2", contentFills && "h-full")}>
@@ -217,13 +223,15 @@ export function NoteEditor({
 
       {/* Checklist toggle + konwersja tekst ↔ lista */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setShowChecklist(!showChecklist)}
-          className={cn("flex items-center gap-1.5 text-xs transition-colors", showChecklist ? "text-primary-ink" : "text-muted-foreground hover:text-foreground")}
+          className={cn("-ml-2 h-7 gap-1.5 px-2 text-xs font-normal coarse:h-11 [&_svg]:size-3.5", showChecklist ? "text-primary-ink hover:text-primary-ink" : "text-muted-foreground")}
         >
-          <ListChecks className="size-3.5" />
+          <ListChecks />
           {showChecklist ? "Lista zadań" : "Dodaj listę"}
-        </button>
+        </Button>
         <ChecklistConvertButtons
           content={editContent}
           checklist={editChecklist}
@@ -252,10 +260,9 @@ export function NoteEditor({
             }}>
             Ustaw przypomnienie
           </Button>
-          <button type="button" onClick={() => setDismissedHint(dateHint.phrase)} aria-label="Ukryj podpowiedź terminu"
-            className="grid size-7 place-items-center rounded-control hover:bg-muted coarse:size-11">
+          <IconButton size="sm" onClick={() => setDismissedHint(dateHint.phrase)} aria-label="Ukryj podpowiedź terminu">
             <X className="size-3.5" aria-hidden />
-          </button>
+          </IconButton>
         </div>
       )}
 
@@ -266,7 +273,7 @@ export function NoteEditor({
           <Type className="size-3 shrink-0" />
           <EditorStats textareaRef={textareaRef} value={editContent} />
         </span>
-        <button onClick={handleSave} className="text-sm font-medium text-primary-ink hover:bg-primary/10 px-3 py-1 rounded-field transition-colors">Zapisz</button>
+        <Button variant="ghost" size="sm" onClick={handleSave} className="h-8 text-primary-ink hover:bg-primary/10 hover:text-primary-ink coarse:h-11">Zapisz</Button>
       </div>
     </div>
   );
