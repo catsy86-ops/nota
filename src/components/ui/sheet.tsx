@@ -4,6 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 import * as React from "react";
 
+import { OVERLAY_FADE } from "./overlay-motion";
 import { cn } from "@/lib/utils";
 import { OverlayBack } from "@/components/ui/overlay-back";
 import { SNAP_MAX_HEIGHT, snapDecision, type SheetSnap } from "@/components/ui/sheet-snap";
@@ -22,7 +23,7 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
     className={cn(
-      "fixed inset-0 z-modal bg-foreground/30 dark:bg-black/60 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:duration-base data-[state=closed]:duration-fast",
+      "fixed inset-0 z-modal bg-foreground/30 dark:bg-black/60", OVERLAY_FADE,
       className,
     )}
     {...props}

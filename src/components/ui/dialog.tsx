@@ -3,6 +3,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
+import { OVERLAY_FADE } from "./overlay-motion";
 import { cn } from "@/lib/utils";
 import { OverlayBack } from "@/components/ui/overlay-back";
 
@@ -21,7 +22,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-modal bg-foreground/30 dark:bg-black/60 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:duration-base data-[state=closed]:duration-fast",
+      "fixed inset-0 z-modal bg-foreground/30 dark:bg-black/60", OVERLAY_FADE,
       className,
     )}
     {...props}
