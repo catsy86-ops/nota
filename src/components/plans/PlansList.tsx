@@ -69,10 +69,10 @@ export function PlansList({ plans, onOpen, onNew }: { plans: PlanData[]; onOpen:
                     </span>
                   </span>
                 </button>
-                <button type="button" onClick={() => remove(d)} aria-label={`Usuń analizę ${d.project.name}`}
-                  className="absolute bottom-1.5 right-1.5 inline-flex size-10 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                <Button type="button" onClick={() => remove(d)} aria-label={`Usuń analizę ${d.project.name}`}
+                  variant="ghost" size="icon" className="absolute bottom-1.5 right-1.5 size-10 text-muted-foreground hover:text-destructive-ink">
                   <Trash className="size-4" aria-hidden />
-                </button>
+                </Button>
               </li>
             );
           })}

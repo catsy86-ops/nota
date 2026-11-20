@@ -123,10 +123,10 @@ function ManualItems({ pid, items }: { pid: string; items: readonly MaterialItem
               <Checkbox checked={i.verified} onCheckedChange={(v) => save({ ...i, verified: v === true })} aria-label={`Zatwierdzona: ${i.description}`} />
               <span className="min-w-0 flex-1 truncate">{i.description}</span>
               <span className="font-mono tabular-nums">{i.quantity.toLocaleString("pl-PL")} {i.unit === "szt" ? "szt." : "m"}</span>
-              <button type="button" aria-label={`Usuń pozycję ${i.description}`} onClick={() => { stopPlansCapture(); const r = removePlanEntity("i", pid, i.id); if (r) toastWithUndo("Usunięto pozycję", () => savePlanEntity("i", pid, r)); }}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+              <Button type="button" aria-label={`Usuń pozycję ${i.description}`} onClick={() => { stopPlansCapture(); const r = removePlanEntity("i", pid, i.id); if (r) toastWithUndo("Usunięto pozycję", () => savePlanEntity("i", pid, r)); }}
+                variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive-ink">
                 <Trash className="size-4" aria-hidden />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

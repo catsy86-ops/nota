@@ -98,7 +98,9 @@ describe("W3.2 — ręczne karty poza components/ui", () => {
 // kafle i wiersze-listy, rozwijane nagłówki, miniatura dowodu, „Nowa wycena” obok linków-pigułek, akcje kafla notatki (`card-action`).
 // Ustawienia i pasek boczny (2026-11-20): wybór stylu, akcentu, kroju, ramek, sezonu, układu, gęstości, kolumn, koloru, dnia przeglądu
 // (radio i `aria-pressed`), skróty sekcji, „Wyczyść” w zdaniu, zestawy wyglądu (wiersze), wiersz paska, rozwijanie folderu, emoji i kolory.
-const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26, review: 11, calendar: 14, debts: 3, cwiczenia: 8, clients: 8, vault: 5, sync: 1, settings: 22, sidebar: 6 };
+// Plany (2026-11-20): przełączniki trybu i podsumowania (`aria-pressed`), wiersze wyboru (materiały, symbole, trasy), typ symbolu (radio),
+// miniatura analizy, „Inny plik” w zdaniu, uchwyt wysokości panelu.
+const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26, review: 11, calendar: 14, debts: 3, cwiczenia: 8, clients: 8, vault: 5, sync: 1, settings: 22, sidebar: 6, plans: 10 };
 describe("W4.5 — surowe <button> w działach", () => {
   for (const [dir, max] of Object.entries(RAW_BUTTON_MAX)) {
     it(`components/${dir}: co najwyżej ${max} (zamiast tego: Button / IconButton)`, () => {

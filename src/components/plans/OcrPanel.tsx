@@ -77,14 +77,14 @@ export function OcrSection({ run, engineCached, proposals, texts, focusId, onFoc
                   <div className="flex items-center gap-1">
                     <input value={p.text} onChange={(e) => onEdit(p.id, e.target.value)} aria-label={`Odczytany tekst: ${p.raw}`}
                       className="h-9 min-w-0 flex-1 rounded-field border border-border bg-background px-2 font-mono text-sm outline-hidden focus:ring-2 focus:ring-ring coarse:h-11" />
-                    <button type="button" onClick={() => onAccept(p)} disabled={!p.text.trim()} aria-label={`Zatwierdź „${p.text}”`}
-                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-primary-ink hover:bg-primary/10 disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                    <Button type="button" onClick={() => onAccept(p)} disabled={!p.text.trim()} aria-label={`Zatwierdź „${p.text}”`}
+                      variant="ghost" size="icon" className="shrink-0 text-primary-ink hover:bg-primary/10 hover:text-primary-ink">
                       <Check className="size-4" aria-hidden />
-                    </button>
-                    <button type="button" onClick={() => onReject(p.id)} aria-label={`Odrzuć „${p.text}”`}
-                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                    </Button>
+                    <Button type="button" onClick={() => onReject(p.id)} aria-label={`Odrzuć „${p.text}”`}
+                      variant="ghost" size="icon" className="shrink-0 text-muted-foreground">
                       <X className="size-4" aria-hidden />
-                    </button>
+                    </Button>
                   </div>
                   <p className="ui-hint mt-0.5 px-0.5">{meaningLabel(meaning)} · pewność {pct(p.confidence)}</p>
                 </li>
@@ -102,10 +102,10 @@ export function OcrSection({ run, engineCached, proposals, texts, focusId, onFoc
               <li key={t.id} className={cn("flex items-center gap-2 rounded-control px-1.5", focusId === t.id && "bg-primary/10")}
                 onMouseEnter={() => onFocus(t.id)} onMouseLeave={() => onFocus(null)}>
                 <span className="min-w-0 flex-1 truncate py-1.5 text-sm"><span className="font-mono">{t.text}</span> <span className="text-xs text-muted-foreground">· {meaningLabel(interpretOcrText(t.text))}</span></span>
-                <button type="button" onClick={() => onRemoveText(t.id)} aria-label={`Usuń opis „${t.text}”`}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                <Button type="button" onClick={() => onRemoveText(t.id)} aria-label={`Usuń opis „${t.text}”`}
+                  variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive-ink">
                   <Trash className="size-4" aria-hidden />
-                </button>
+                </Button>
               </li>
             ))}
           </ul>

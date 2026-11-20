@@ -82,14 +82,14 @@ export function DetectSection({ picking, onPick, color, tolerance, onTolerance, 
                   Propozycja {i + 1} · <span className="font-mono tabular-nums">{lengthLabel(measureRoute({ pts: p.pts, verified: false }, mpp)).replace(" (bez skali)", "")}</span>
                   <span className="text-xs text-muted-foreground"> · pewność {pct(p.confidence)}</span>
                 </span>
-                <button type="button" onClick={() => onAdd(p)} aria-label={`Dodaj propozycję ${i + 1}`}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                <Button type="button" onClick={() => onAdd(p)} aria-label={`Dodaj propozycję ${i + 1}`}
+                  variant="ghost" size="icon" className="shrink-0 text-primary-ink hover:bg-primary/10 hover:text-primary-ink">
                   <Plus className="size-4" aria-hidden />
-                </button>
-                <button type="button" onClick={() => onReject(p.id)} aria-label={`Odrzuć propozycję ${i + 1}`}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11">
+                </Button>
+                <Button type="button" onClick={() => onReject(p.id)} aria-label={`Odrzuć propozycję ${i + 1}`}
+                  variant="ghost" size="icon" className="shrink-0 text-muted-foreground">
                   <X className="size-4" aria-hidden />
-                </button>
+                </Button>
               </li>
             ))}
           </ul>

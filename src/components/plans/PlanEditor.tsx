@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, CircleDot, ClipboardList, Maximize, Minus, MousePointer2, Pencil, Plus, Redo2, RotateCw, Ruler, Spline, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -29,6 +30,8 @@ import type { DetectedText } from "@/lib/plans/model";
 import { DraftSection, RouteSection, RoutesList, ScaleSection, type EditorMode } from "./PlanPanel";
 
 const toolBtn = "pressable inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-control px-2.5 text-sm font-medium text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40 disabled:hover:bg-transparent coarse:h-11 coarse:min-w-11";
+/** Dodatek do `<Button variant="ghost">` na pasku edytora (W4.5); przełączniki trybu zostają na `toolBtn`. */
+const toolAction = "h-10 min-w-10 gap-1.5 px-2.5 text-foreground coarse:h-11 coarse:min-w-11";
 /** Promień trafienia trasy i punktu w pikselach EKRANU (palec ~ 10 mm). */
 const HIT_ROUTE_PX = 14;
 const HIT_HANDLE_PX = 18;
@@ -375,9 +378,9 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
     // Na telefonie `fixed inset-0`: płótno nie dzieli ekranu z główką kartki, paskiem u góry i dolnym paskiem.
     <section ref={sectionRef} aria-label={`Analiza: ${project.name}`} className="sm:scroll-mt-24 flex flex-col overflow-hidden bg-card max-sm:fixed max-sm:inset-0 max-sm:z-overlay max-sm:pt-[env(safe-area-inset-top)] max-sm:pb-[env(safe-area-inset-bottom)] sm:h-[calc(100dvh-7rem)] sm:min-h-[28rem] sm:rounded-card sm:border sm:border-border/60" data-testid="plan-editor">
       <div className="flex flex-wrap items-center gap-1 border-b border-border/60 px-1.5 py-1">
-        <button type="button" onClick={onBack} className={toolBtn} aria-label="Wróć do listy analiz">
+        <Button type="button" onClick={onBack} variant="ghost" className={toolAction} aria-label="Wróć do listy analiz">
           <ArrowLeft className="size-4" aria-hidden /><span className="hidden sm:inline">Analizy</span>
-        </button>
+        </Button>
         {renaming ? (
           <form className="min-w-0 flex-1" onSubmit={(e) => { e.preventDefault(); setRenaming(false); }}>
             <input
@@ -390,20 +393,20 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
         ) : (
           <h2 className="flex min-w-0 flex-1 items-center gap-1 px-1 font-display text-base">
             <span className="truncate">{project.name}</span>
-            <button type="button" onClick={() => setRenaming(true)} className={cn(toolBtn, "h-8 min-w-8 px-1 text-muted-foreground")} aria-label="Zmień nazwę analizy">
+            <Button type="button" onClick={() => setRenaming(true)} variant="ghost" className={cn(toolAction, "h-8 min-w-8 px-1 text-muted-foreground [&_svg]:size-3.5")} aria-label="Zmień nazwę analizy">
               <Pencil className="size-3.5" aria-hidden />
-            </button>
+            </Button>
           </h2>
         )}
-        <button type="button" onClick={undoPlans} disabled={!undo.undo} className={toolBtn} aria-label="Cofnij" title={`Cofnij (${modShortcut("Z")})`}><Undo2 className="size-4" aria-hidden /></button>
-        <button type="button" onClick={redoPlans} disabled={!undo.redo} className={toolBtn} aria-label="Ponów" title={`Ponów (${modShortcut("Y")})`}><Redo2 className="size-4" aria-hidden /></button>
+        <Button type="button" onClick={undoPlans} disabled={!undo.undo} variant="ghost" className={toolAction} aria-label="Cofnij" title={`Cofnij (${modShortcut("Z")})`}><Undo2 className="size-4" aria-hidden /></Button>
+        <Button type="button" onClick={redoPlans} disabled={!undo.redo} variant="ghost" className={toolAction} aria-label="Ponów" title={`Ponów (${modShortcut("Y")})`}><Redo2 className="size-4" aria-hidden /></Button>
         <span aria-hidden className="mx-0.5 hidden h-6 w-px bg-border sm:block" />
         {/* Na telefonie przybliża szczypanie — pasek zostawia miejsce na nazwę analizy. */}
-        <button type="button" onClick={() => canvas.current?.zoomBy(0.8)} className={cn(toolBtn, "hidden sm:inline-flex")} aria-label="Oddal"><Minus className="size-4" aria-hidden /></button>
-        <button type="button" onClick={() => canvas.current?.zoomBy(1.25)} className={cn(toolBtn, "hidden sm:inline-flex")} aria-label="Przybliż"><Plus className="size-4" aria-hidden /></button>
-        <button type="button" onClick={() => canvas.current?.fit()} className={toolBtn} aria-label="Dopasuj do ekranu" title="Dopasuj do ekranu (0)">
+        <Button type="button" onClick={() => canvas.current?.zoomBy(0.8)} variant="ghost" className={cn(toolAction, "hidden sm:inline-flex")} aria-label="Oddal"><Minus className="size-4" aria-hidden /></Button>
+        <Button type="button" onClick={() => canvas.current?.zoomBy(1.25)} variant="ghost" className={cn(toolAction, "hidden sm:inline-flex")} aria-label="Przybliż"><Plus className="size-4" aria-hidden /></Button>
+        <Button type="button" onClick={() => canvas.current?.fit()} variant="ghost" className={toolAction} aria-label="Dopasuj do ekranu" title="Dopasuj do ekranu (0)">
           <Maximize className="size-4" aria-hidden />
-        </button>
+        </Button>
       </div>
 
       <div className="flex items-center gap-1 border-b border-border/60 px-1.5 py-1" role="group" aria-label="Narzędzie">
@@ -426,9 +429,9 @@ export function PlanEditor({ plan, onBack }: { plan: PlanData; onBack: () => voi
             <p className="absolute inset-x-2 top-2 z-raised flex items-center gap-2 rounded-card border border-border/60 bg-card/95 px-3 py-2 text-xs shadow-elevation-2 sm:hidden" role="status">
               <RotateCw className="size-4 shrink-0 text-primary-ink" aria-hidden />
               <span className="min-w-0 flex-1">Plan jest poziomy — obróć telefon, będzie większy.</span>
-              <button type="button" onClick={() => { dismissRotateHint(); setRotateHint(false); }} className={cn(toolBtn, "h-8 min-w-8 px-1")} aria-label="Zamknij podpowiedź">
+              <Button type="button" onClick={() => { dismissRotateHint(); setRotateHint(false); }} variant="ghost" className={cn(toolAction, "h-8 min-w-8 px-1")} aria-label="Zamknij podpowiedź">
                 <X className="size-4" aria-hidden />
-              </button>
+              </Button>
             </p>
           )}
           <PlanCanvas

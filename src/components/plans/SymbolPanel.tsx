@@ -98,10 +98,10 @@ export function FittingsSection({ proposals, symbols, routesCount, selectedId, f
             {proposals.map((p) => (
               <li key={p.id} className={cn("flex items-center gap-1 rounded-control px-1.5", focusId === p.id && "bg-primary/10")} onMouseEnter={() => onFocus(p.id)} onMouseLeave={() => onFocus(null)}>
                 <span className="min-w-0 flex-1 truncate py-1.5 text-sm">{SYMBOL_META[p.type].label} · {SYSTEM_META[p.system].short} <span className="text-xs text-muted-foreground">· pewność {pct(p.confidence)}</span></span>
-                <button type="button" onClick={() => onAdd(p)} aria-label={`Dodaj: ${SYMBOL_META[p.type].label}`}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11"><Plus className="size-4" aria-hidden /></button>
-                <button type="button" onClick={() => onReject(p.id)} aria-label={`Odrzuć: ${SYMBOL_META[p.type].label}`}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-control text-muted-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-11"><X className="size-4" aria-hidden /></button>
+                <Button type="button" onClick={() => onAdd(p)} aria-label={`Dodaj: ${SYMBOL_META[p.type].label}`}
+                  variant="ghost" size="icon" className="shrink-0 text-primary-ink hover:bg-primary/10 hover:text-primary-ink"><Plus className="size-4" aria-hidden /></Button>
+                <Button type="button" onClick={() => onReject(p.id)} aria-label={`Odrzuć: ${SYMBOL_META[p.type].label}`}
+                  variant="ghost" size="icon" className="shrink-0 text-muted-foreground"><X className="size-4" aria-hidden /></Button>
               </li>
             ))}
           </ul>
