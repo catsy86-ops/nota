@@ -58,7 +58,7 @@ export function TodayCards({ searching, go, notes, folders, reminderNotes, today
           {!searching && (
             <div className="lg:col-span-2">
               <ViewErrorBoundary name="Grafik">
-                <Suspense fallback={<CardSkeleton />}>
+                <Suspense fallback={<CardSkeleton variant="hero" />}>
                   <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} dailyNote={findDailyNote(notes, dailyKey()) ?? null}
                     reminderNotes={reminderNotes} onOpenTomorrow={() => navigate(`/kalendarz?dzien=${localDayKey(((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1))(new Date()))}`)} />
                 </Suspense>

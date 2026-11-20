@@ -66,7 +66,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
   const weekMinutes = week.reduce((a, b) => a + b, 0);
 
   // Dziś 1.3: zanim Grafik się wczyta — ten sam szkielet co przy leniwym ładowaniu karty, zamiast napisu.
-  if (!ready) return <div aria-busy="true" aria-label="Wczytuję grafik"><CardSkeleton /></div>;
+  if (!ready) return <div aria-busy="true" aria-label="Wczytuję grafik"><CardSkeleton variant="hero" /></div>;
 
   const t = type ? dayType(type, entry) : undefined;
   const working = !!t && t.kind !== "absence";

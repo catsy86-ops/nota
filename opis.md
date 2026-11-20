@@ -6792,6 +6792,41 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — szkielety w kształcie kart (W5.5, 2026-11-20)
+
+### Co robi
+
+- Przy pierwszym wejściu do leniwie ładowanego działu na wolnym łączu widać zarys docelowego widoku: te same karty (ramka, promień, wcięcie `p-card`), a w nich szare linie tekstu. Po wczytaniu ramki zostają na miejscu i wypełniają się treścią.
+- **Długi:** karta podsumowania z dwiema liczbami i paskiem proporcji, pod nią trzy wiersze osób (awatar, imię, kwota).
+- **Ćwiczenia:** pasek „dziś” i dwie sekcje-karty z wierszami.
+- **Plany:** siatka kart z miniaturą 16:9 (jak `PlansList`).
+- **Oś tygodnia (Kalendarz):** siedem wierszy dni.
+- **Praca:** zakładki i cztery karty z liniami tekstu. **Kalendarz, Grafik:** pasek miesiąca i siatka; w Grafiku trzy karty liczb.
+- **Dziś:** karta zmiany ma szkielet „bohatera” — data, znaczek, rząd przycisków — zamiast niskiego prostokąta.
+
+### Gdzie jest
+
+- `src/components/ViewSkeleton.tsx`: `ViewSkeleton` (`ViewBody` — przełącznik po `SkeletonView`), `CardSkeleton({ variant: "card" | "hero" })`, wewnętrzne `SkeletonCard` (`cardVariant()` + `p-card`), `Lines`, `Bone`, `MonthGrid`.
+- `hero` używają `review/TodayCards.tsx` (fallback karty zmiany) i `review/TodayShiftCard.tsx` (Grafik jeszcze się wczytuje).
+
+### Jak działa
+
+- Pojawianie się i pulsowanie bez zmian: `.view-skeleton` w `index.css` wchodzi po 300 ms (szybkie ładowanie nie miga — wymóg M5.3 „bez migotania < 150 ms” spełniony z zapasem), `.view-skeleton-bone` pulsuje, a przy ograniczonym ruchu stoi.
+- Czytnik ekranu dostaje tylko `role="status"` z napisem „Ładowanie …”; zarys jest `aria-hidden`.
+
+### Ograniczenia i pułapki
+
+- Szkielet to przybliżenie układu, nie kopia: zmiana układu działu nie zepsuje testów, ale szkielet trzeba wtedy poprawić ręcznie.
+- Strażnik `squarePair` łapie `h-3 w-3/5` (to samo N przed ułamkiem) — w kościach używaj innych par.
+
+### Testy
+
+- e2e `view-skeleton`, `a11y`, `csp`, `inbox-today`, `today-study`, `debts-plan`, `cwiczenia-zakladki` — 274 przeszło, 2 pominięte. Zrzuty Długów i Ćwiczeń przy opóźnionych paczkach — tymczasowym specem.
+
+### Commit
+
+W5.5 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — stany puste działów (W5.4, 2026-11-20)
 
 ### Co robi
