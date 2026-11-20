@@ -71,9 +71,9 @@ function FolderMenu({ note, folders, onMove }: { note: Note; folders: Folder[]; 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button type="button" aria-label="Przenieś do folderu" title="Przenieś do folderu" className={rowBtn}>
+        <Button type="button" aria-label="Przenieś do folderu" title="Przenieś do folderu" variant="ghost" size="icon-sm" className={rowBtn}>
           <FolderInput className="size-4" />
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-2 max-h-72 overflow-y-auto">
         <p className="ui-hint font-semibold px-2 pb-1">Przenieś do folderu</p>
@@ -96,7 +96,7 @@ function FolderMenu({ note, folders, onMove }: { note: Note; folders: Folder[]; 
   );
 }
 
-const rowBtn = "pressable p-2 rounded-field text-muted-foreground hover:text-foreground hover:bg-foreground/5 coarse:p-2.5 coarse:min-h-11 coarse:min-w-11";
+const rowBtn = "text-muted-foreground hover:bg-foreground/5";
 
 function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions }) {
   const Icon = ICONS[cat.key];
@@ -116,14 +116,14 @@ function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions
               <p className="truncate text-xs text-muted-foreground">{detail(cat.key, n)}</p>
             </div>
             <div className="flex items-center shrink-0">
-              <button type="button" aria-label="Otwórz" title="Otwórz" className={rowBtn} onClick={() => a.onOpen(n.id)}>
+              <Button type="button" aria-label="Otwórz" title="Otwórz" variant="ghost" size="icon-sm" className={rowBtn} onClick={() => a.onOpen(n.id)}>
                 <ExternalLink className="size-4" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 aria-label={n.pinned ? "Odepnij" : "Przypnij"}
                 title={n.pinned ? "Odepnij" : "Przypnij"}
-                className={rowBtn}
+                variant="ghost" size="icon-sm" className={rowBtn}
                 onClick={() => {
                   const was = n.pinned;
                   a.onTogglePin(n.id);
@@ -131,10 +131,10 @@ function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions
                 }}
               >
                 {n.pinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
-              </button>
-              <button type="button" aria-label="Archiwizuj" title="Archiwizuj" className={rowBtn} onClick={() => a.onArchive(n.id)}>
+              </Button>
+              <Button type="button" aria-label="Archiwizuj" title="Archiwizuj" variant="ghost" size="icon-sm" className={rowBtn} onClick={() => a.onArchive(n.id)}>
                 <Archive className="size-4" />
-              </button>
+              </Button>
               <FolderMenu
                 note={n}
                 folders={a.folders}

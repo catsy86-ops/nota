@@ -140,9 +140,9 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
               <Button variant="ghost" onClick={skip} className="coarse:h-11">Dalej<ArrowRight className="size-4 ml-1.5" /></Button>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <button type="button" onClick={back} disabled={index === 0} className="inline-flex items-center gap-1 coarse:min-h-11 disabled:opacity-40 hover:text-foreground">
+              <Button type="button" onClick={back} disabled={index === 0} variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs text-muted-foreground coarse:min-h-11 [&_svg]:size-3.5">
                 <ArrowLeft className="size-3.5" />Wstecz
-              </button>
+              </Button>
               <span>Strzałki ← → przechodzą, K / A / D działają od razu</span>
             </div>
           </div>

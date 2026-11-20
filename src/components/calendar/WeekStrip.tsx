@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useRef } from "react";
 import { format, isSameDay } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -54,14 +55,14 @@ export function WeekStrip({ day, byDay, shiftOf, titleOf, studyOf, onSelectDay }
       <div className="flex items-center justify-between gap-2 px-0.5">
         <span className="text-xs font-medium text-muted-foreground">{weekRangeLabel(keys[0])}</span>
         <span className="flex items-center">
-          <button type="button" onClick={() => go(addDaysToKey(selectedKey, -7))} aria-label="Poprzedni tydzień"
-            className="size-9 coarse:w-11 coarse:h-11 rounded-card flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+          <Button type="button" onClick={() => go(addDaysToKey(selectedKey, -7))} aria-label="Poprzedni tydzień"
+            variant="ghost" size="icon" className="text-muted-foreground">
             <ChevronLeft className="size-4" />
-          </button>
-          <button type="button" onClick={() => go(addDaysToKey(selectedKey, 7))} aria-label="Następny tydzień"
-            className="size-9 coarse:w-11 coarse:h-11 rounded-card flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+          </Button>
+          <Button type="button" onClick={() => go(addDaysToKey(selectedKey, 7))} aria-label="Następny tydzień"
+            variant="ghost" size="icon" className="text-muted-foreground">
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </span>
       </div>
       <div role="group" aria-label="Dni tygodnia" onKeyDown={onKeyDown} className="grid grid-cols-7 gap-1 sm:gap-1.5">

@@ -950,16 +950,18 @@ Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) 
 
 - Wszystkie zadania klienta idą jednym łańcuchem obietnic (pobranie, wysyłka, migawka), więc jedno żądanie bez odpowiedzi zatrzymywało wszystko. Wyścig z zegarem zamiast samego `signal`, bo atrapy i starsze silniki potrafią zignorować przerwanie.
 - Serwer przy ciele większym niż limit zrywa połączenie, zanim odpowie 413 — klient widział błąd sieci i ponawiał bez końca. Teraz szyfrogram jest mierzony przed wysyłką (`MAX_ENTRY_CHARS` jak w `relay-server/core.js`), a przekroczenie to `RelayFatalError`.
+- Pokój pełny (suma szyfrogramów ponad `MAX_ROOM_CHARS`, 50 mln znaków) serwer zgłasza jako 409, tak samo jak log pełny (Z-5.6): klient robi wtedy wymuszoną migawkę i ponawia wysyłkę raz. Wcześniej było 413, które klient traktuje jako „za duży wpis” (błąd trwały), choć migawka zwykle zwalnia miejsce.
 - Ustalone przy testach: w trakcie wysyłki zaległość w magazynie bywa już pusta, ale nic nie ginie — wektor stanu `sv` przesuwa się dopiero po udanej wysyłce, więc po ponownym starcie różnica idzie jeszcze raz.
 
 ### Ograniczenia i pułapki
 
 - Migawka (`PUT snapshot`) nie ma kontroli rozmiaru przed wysyłką; dokument większy niż limit kończy się błędem serwera przy kompaktowaniu.
 - Przypadek „gniazdo zamknięte przy oczekującym ponowieniu” nie ma testu — atrapa nie ma gniazda.
+- Drugie 409 po wymuszonej migawce klient ponawia z rosnącą przerwą zamiast zgłosić błąd trwały „pokój na przekaźniku jest pełny” (reszta Z-5.6). Zmiana 413→409 działa dopiero po wdrożeniu nowej wersji `relay-server`.
 
 ### Testy
 
-- `src/lib/sync/relayProvider.test.ts`, blok „Z-5.T”: karta zamknięta w trakcie wysyłki, uszkodzony wpis w połowie strony (kursor na ostatnim dobrym), kursor sprzed migawki, dwa urządzenia kompaktujące naraz, 409 → migawka i ponowienie, żądanie bez odpowiedzi → „offline” i dalsza praca, za duży wpis → jedna próba i „błąd”. Pokój usunięty i odtworzony z wyższym `last` są w `relayServer.integration.test.ts`.
+- `src/lib/sync/relayProvider.test.ts`, blok „Z-5.T”: karta zamknięta w trakcie wysyłki, uszkodzony wpis w połowie strony (kursor na ostatnim dobrym), kursor sprzed migawki, dwa urządzenia kompaktujące naraz, 409 → migawka i ponowienie, żądanie bez odpowiedzi → „offline” i dalsza praca, za duży wpis → jedna próba i „błąd”. Pokój usunięty i odtworzony z wyższym `last` są w `relayServer.integration.test.ts`. Serwer: `relay-server/core.test.js` — „pokój pełny (suma znaków): wpis odrzucany 409”.
 
 ### Commit
 
@@ -6883,7 +6885,7 @@ W3.2 Długi — a1c616bb; Praca — 69be452f; Ustawienia — d610da72 (2026-11-1
 
 W3.5, W3.6, W5.6 — commit po tym wpisie (2026-11-19).
 
-## Wygląd — przyciski Grafiku na `Button` (W4.5, 2026-11-20)
+## Wygląd — przyciski Grafiku, Dziś i Kalendarza na `Button` (W4.5, 2026-11-20)
 
 ### Co robi
 
@@ -6896,7 +6898,8 @@ Przyciski akcji w Grafiku mają te same stany co reszta aplikacji: hover, fokus,
   - `NowCard` „Skończyłem teraz”, „Rok” w `ShiftSummary`, presety w `ShiftTypeDialog`: `outline`;
   - pasek eksportu (`ShiftExportControls`) i kopiowania tygodnia (`ShiftsView`): `ghost` z `TOOLBAR_BTN` (`shiftControlStyles.ts` — teraz tylko dodatek do wariantu);
   - „Ten tydzień”, godziny pędzla (`BrushHours`), „Usuń ostatni dzień cyklu” (`PatternDialog`), strzałki roku (`YearSummaryDialog`, `size="icon"`), zamknięcie podpowiedzi (`guide/ShiftsHint.tsx`): `ghost`.
-- `src/test/designTokens.test.ts` — strażnik „W4.5”: `RAW_BUTTON_MAX` na dział, Grafik 26.
+- Dziś i Kalendarz: akcje w panelu dnia (`DayPanel`: „Dodaj termin”, „Zmień godziny”, „Dodaj zmianę”, kopiowanie zmiany, ikony notatki, `.ics` i pominięcia), strzałki tygodnia (`WeekStrip`), ikony w przeglądzie tygodnia (`WeeklyReviewCard`, `rowBtn` to teraz tylko dodatek), „Wstecz” w przeglądzie krok po kroku, czyszczenie końca serii (`ReminderQuickAddDialog`) — `ghost`, ikony w `icon-sm`/`icon` z zachowanym rozmiarem 14 px.
+- `src/test/designTokens.test.ts` — strażnik „W4.5”: `RAW_BUTTON_MAX` na dział, Grafik 26, Dziś (`review`) 11, Kalendarz 14. Wyjątki Dziś i Kalendarza: wiersze-listy, pola wyboru listy, linki w zdaniu, rozwijany nagłówek osi dnia, komórki tygodnia i siatki, warstwy (`aria-pressed`), wybór notatki.
 
 ### Ograniczenia i pułapki
 
@@ -6906,9 +6909,9 @@ Przyciski akcji w Grafiku mają te same stany co reszta aplikacji: hover, fokus,
 
 ### Testy
 
-typecheck, eslint działu, strażnik, e2e `shifts*`, `shift-end-action`, `calendar-shift-edit`, `guide*`, `a11y` (304 przeszło, 2 pominięte).
+typecheck, eslint działu, strażnik, e2e `shifts*`, `shift-end-action`, `calendar-shift-edit`, `guide*`, `a11y` (304 przeszło, 2 pominięte); Dziś i Kalendarz: Vitest `review`, `calendar` i strażnik (75), e2e `calendar-*`, `dzis-*`, `today-*`, `inbox-today`, `reminders-agenda`, `reminders-calendar`, `weekly-review` (50 przeszło, 4 pominięte).
 
 ### Commit
 
-Zob. commit „W4.5 Grafik” (2026-11-20).
+Grafik — 8b786ae3; Dziś i Kalendarz — zob. commit „W4.5 Dziś, Kalendarz” (2026-11-20).
 

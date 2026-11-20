@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { cardVariant } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ReminderQuickActions } from "@/components/ReminderQuickActions";
@@ -90,13 +91,13 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
         <h3 className="font-display font-semibold text-sm first-letter:uppercase">
           {format(day, "EEEE, d MMMM", { locale: pl })}
         </h3>
-        <button
+        <Button
           onClick={onAdd}
-          className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          variant="ghost" size="sm" className="ml-auto text-primary-ink hover:bg-primary/10 hover:text-primary-ink h-8 gap-1 px-2 text-xs coarse:min-h-11 coarse:px-3 [&_svg]:size-3.5"
         >
           <Plus className="size-3.5" />
           Dodaj termin
-        </button>
+        </Button>
       </div>
 
       {/* Ten sam przełącznik segmentowy co reszta trybów widoku (nowy plan 2.2). */}
@@ -131,40 +132,40 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
           </span>
           <span><span className="sr-only">Zmiana w Grafiku: </span>{shiftLabel(shift)}</span>
           {onEditShift && (
-            <button
+            <Button
               type="button"
               onClick={onEditShift}
               aria-keyshortcuts="Z"
               title="Zmień rodzaj zmiany i godziny tego dnia (Z)"
-              className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              variant="ghost" size="sm" className="ml-auto text-primary-ink hover:bg-primary/10 hover:text-primary-ink h-8 gap-1 px-2 text-xs coarse:min-h-11 coarse:px-3 [&_svg]:size-3.5"
             >
               <Clock className="size-3.5" aria-hidden />
               Zmień godziny
-            </button>
+            </Button>
           )}
         </p>
       )}
       {!shift && onEditShift && (
         <div className="flex flex-wrap items-center gap-1 mb-3 -mx-2">
-          <button
+          <Button
             type="button"
             onClick={onEditShift}
             aria-keyshortcuts="Z"
             title="Wpisz zmianę z Grafiku w tym dniu (Z)"
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            variant="ghost" size="sm" className="text-primary-ink hover:bg-primary/10 hover:text-primary-ink h-8 gap-1 px-2 text-xs coarse:min-h-11 coarse:px-3 [&_svg]:size-3.5"
           >
             <Clock className="size-3.5" aria-hidden />
             Dodaj zmianę
-          </button>
+          </Button>
           {onCopyPrevShift && (
-            <button
+            <Button
               type="button"
               onClick={onCopyPrevShift}
-              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              variant="ghost" size="sm" className="text-muted-foreground h-8 gap-1 px-2 text-xs coarse:min-h-11 coarse:px-3 [&_svg]:size-3.5"
             >
               <Copy className="size-3.5" aria-hidden />
               Jak poprzedni dzień
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -225,33 +226,33 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
                     <Pencil className="size-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
                   </button>
                   {onOpenNote && (
-                    <button
+                    <Button
                       onClick={() => onOpenNote(occ.noteId)}
                       aria-label={`Otwórz notatkę: ${title.trim() || "Bez tytułu"}`}
                       title="Otwórz notatkę"
-                      className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                      variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground [&_svg]:size-3.5"
                     >
                       <StickyNote className="size-3.5" aria-hidden />
-                    </button>
+                    </Button>
                   )}
-                  <button
+                  <Button
                     onClick={() => onExport(occ)}
                     aria-label={`Dodaj do kalendarza systemowego: ${title.trim() || "Bez tytułu"}`}
                     title="Pobierz .ics — dodaj do kalendarza Google, Apple lub Outlook"
-                    className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                    variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground [&_svg]:size-3.5"
                   >
                     <Download className="size-3.5" />
-                  </button>
+                  </Button>
                   {/* Pominięcie bez wchodzenia w edycję — w wierszu serii, a nie tylko w dialogu (2b planu). */}
                   {onSkip && occ.repeat.kind !== "none" && (
-                    <button
+                    <Button
                       onClick={() => onSkip(occ)}
                       aria-label={`Pomiń to wystąpienie: ${title.trim() || "Bez tytułu"}`}
                       title="Pomiń to wystąpienie — seria przesunie się na następne"
-                      className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                      variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground [&_svg]:size-3.5"
                     >
                       <SkipForward className="size-3.5" />
-                    </button>
+                    </Button>
                   )}
                   {/* Akcje tylko przy aktualnym terminie notatki — odłożenie zawsze dotyczy `note.reminder`. */}
                   {(() => { const note = noteOf?.(occ.noteId); return note && onUpdateNote && note.reminder === occ.at ? <ReminderQuickActions note={note} onUpdate={onUpdateNote} className="w-full pl-1" /> : null; })()}

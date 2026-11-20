@@ -92,7 +92,9 @@ describe("W3.2 — ręczne karty poza components/ui", () => {
 // W4.5: surowe `<button>` w dziale = tylko jawne wyjątki; reszta to `Button`/`IconButton`. Progi maleją działami.
 // Grafik (2026-11-20): radia i przełączniki (paleta pędzli, wybór w oknie dnia, dni urlopu, kolory), komórki siatki,
 // krokomierz czasu (`TimeStepper`, przytrzymanie), linki w zdaniu, wiersze rozwijane i karty-listy (`cardVariant`).
-const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26 };
+// Dziś i Kalendarz (2026-11-20): wiersze-listy (termin, rata, ćwiczenia, dzień w agendzie, chip na osi), pola wyboru listy,
+// linki w zdaniu, nagłówek rozwijany osi dnia, komórki tygodnia i siatki, warstwy kalendarza (`aria-pressed`), wybór notatki.
+const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26, review: 11, calendar: 14 };
 describe("W4.5 — surowe <button> w działach", () => {
   for (const [dir, max] of Object.entries(RAW_BUTTON_MAX)) {
     it(`components/${dir}: co najwyżej ${max} (zamiast tego: Button / IconButton)`, () => {

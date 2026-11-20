@@ -308,9 +308,9 @@ export function ReminderQuickAddDialog({
               className="text-xs bg-muted/60 border border-border rounded-field px-2 py-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring text-foreground"
             />
             {untilText && (
-              <button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" className="p-1 rounded text-muted-foreground hover:text-foreground">
+              <Button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" variant="ghost" size="icon-sm" className="text-muted-foreground [&_svg]:size-3">
                 <X className="size-3" />
-              </button>
+              </Button>
             )}
           </div>
         )}
