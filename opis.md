@@ -6792,6 +6792,42 @@ W1.7 — commit po tym wpisie (2026-11-19).
 
 W1.8 — commit po tym wpisie (2026-11-19).
 
+## Wygląd — stany puste działów (W5.4, 2026-11-20)
+
+### Co robi
+
+- Puste listy działów mają jeden wzór: przerywana ramka, szkic „długopisem” w kresce stylu, jedno zdanie (czasem opis) i jedna akcja główna.
+- **Klienci:** wizytówka z sylwetką i przycisk „Dodaj pierwszego klienta”. Brak wyników wyszukiwania to `StatusPanel` „nic nie pasuje” z „Wyczyść wyszukiwanie”.
+- **Grafik:** brak rodzajów zmian — trzy kafelki z plusem, „Dodaj rodzaj zmiany” (główna) i „Przywróć startowe”. Pusty miesiąc/tydzień — szkic tygodnia zamiast ikony.
+- **Kalendarz:** pusta agenda miesiąca — szkic kalendarza.
+- **Ćwiczenia:** pusta lista odżywek — kapsułka; „Dodaj odżywkę” jest teraz przyciskiem głównym (wcześniej obrysowy).
+- **Notatki i Skrzynka (`EmptyState`):** „Napisz pierwszą notatkę”, „Zapisz pomysł” i „Wyczyść wyszukiwanie” na `Button` (główny i pigułka `chip`).
+
+### Gdzie jest
+
+- `src/components/art/Sketch.tsx`: nowy prop `size` — `page` (dotychczasowy, 160×112) i `inline` (112×80, do `StatusPanel size="inline"`). Jawny `className` dalej wygrywa.
+- `src/lib/emptyGlyphs.ts`: `CLIENTS_GLYPH`, `SHIFT_TYPES_GLYPH`, `SUPPLEMENTS_GLYPH` (viewBox 120×84, linie kartki na 72 i 78 — rysunek kończy się nad nimi).
+- Użycia: `clients/ClientsView.tsx`, `shifts/NoShiftTypes.tsx`, `shifts/EmptyShifts.tsx`, `calendar/MonthAgenda.tsx`, `cwiczenia/CwiczeniaView.tsx` (`EmptyList`), `study/StudyJournal.tsx` (już był, teraz `size="inline"`), `EmptyState.tsx`.
+
+### Jak działa
+
+- `StatusPanel` nie przyjmuje `data-testid` ani `aria-label`, więc tam, gdzie testy lub czytnik ich potrzebują, panel siedzi w opakowaniu (`section aria-label`, `div data-testid`, `div role="status"` dla braku wyników).
+- Szkice rysują się raz przy wejściu (`.sketch-draw`), a przy ograniczonym ruchu są od razu gotowe — bez zmian względem Dziennika i Notatek.
+
+### Ograniczenia i pułapki
+
+- W Klientach „Nowy klient” nad listą i „Dodaj pierwszego klienta” w pustym stanie robią to samo; pusty stan ma przycisk, bo na telefonie pasek nad listą bywa poza ekranem.
+- Puste stany wewnątrz okien (np. listy w dialogach Pracy, `UpcomingDays` „Brak terminów.” w kafelku dnia) zostały tekstem — to komórki, nie listy działu.
+- Próg strażnika `RAW_BUTTON_MAX` dla głównego `components/` obniżony do 127.
+
+### Testy
+
+- e2e: `a11y`, `clients`, `calendar-agenda`, `cwiczenia-*`, `empty-journal-tools`, `empty-states-qol`, `inbox-*`, `shifts`, `shifts-undo`, `study`.
+
+### Commit
+
+W5.4 — commit po tym wpisie (2026-11-20).
+
 ## Wygląd — małe wykresy w kartach (W5.3, 2026-11-20)
 
 ### Co robi

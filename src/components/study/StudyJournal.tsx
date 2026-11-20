@@ -255,7 +255,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
           <StatusPanel
             size="inline"
             icon={null}
-            art={<EmptySketch paths={JOURNAL_GLYPH} className="relative mx-auto mb-3 h-20 w-28 text-primary-ink" />}
+            art={<EmptySketch paths={JOURNAL_GLYPH} size="inline" />}
             title="Brak wpisów"
             description="Zapisz, co robisz na budowie — dziennik połączy to z tematami, które przerabiasz."
             actions={<div className="flex flex-wrap justify-center gap-2"><Button size="sm" className="coarse:h-11" onClick={() => openJournalSheet()}><Plus className="size-4" aria-hidden />Dodaj wpis</Button><Button size="sm" variant="outline" className="coarse:h-11" onClick={() => setNewSiteOpen(true)}>Nowa budowa</Button>{/* Auto i kilometrówka nie zależą od wpisów dziennika — nie znikają przy pustym dzienniku. */}<Button size="sm" variant="outline" className="coarse:h-11" onClick={() => setVanOpen(true)} data-testid="van-open-empty">Auto</Button><Button size="sm" variant="outline" className="coarse:h-11" onClick={() => setMileageOpen(true)} data-testid="mileage-open-empty">Kilometrówka</Button></div>}

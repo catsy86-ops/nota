@@ -1,5 +1,8 @@
 import { cardVariant } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { StatusPanel } from "@/components/StatusPanel";
+import { Sketch } from "@/components/art/Sketch";
+import { EMPTY_GLYPHS } from "@/lib/emptyGlyphs";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { parseDayKey } from "@/lib/week";
@@ -27,7 +30,7 @@ export function MonthAgenda({ month, byDay, titleOf, shiftOf, studyOf, onSelectD
     .filter((k) => k.startsWith(prefix) && ((byDay.get(k)?.length ?? 0) > 0 || shiftOf?.(k) || work(k)))
     .sort();
 
-  if (keys.length === 0) return <div aria-label="Agenda miesiąca"><p className="px-1 py-6 text-center text-sm text-muted-foreground">Brak terminów i zmian w tym miesiącu.</p></div>;
+  if (keys.length === 0) return <div aria-label="Agenda miesiąca"><StatusPanel size="inline" art={<Sketch paths={EMPTY_GLYPHS.calendar!} size="inline" />} title="Brak terminów i zmian w tym miesiącu." /></div>;
 
   return (
     <div className="space-y-3" aria-label="Agenda miesiąca" role="list">

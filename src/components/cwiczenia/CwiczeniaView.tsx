@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SectionCard } from "@/components/ui/section-card";
 import { MissingHint } from "@/components/ui/missing-hint";
 import { StatusPanel } from "@/components/StatusPanel";
+import { Sketch } from "@/components/art/Sketch";
+import { SUPPLEMENTS_GLYPH } from "@/lib/emptyGlyphs";
 import { Pencil, Pill, Plus, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -203,10 +205,10 @@ function EmptyList({ notes, onAdd }: { notes: NotesActions; onAdd: () => void })
   return (
     <StatusPanel
       size="inline"
-      icon={Pill}
+      art={<Sketch paths={SUPPLEMENTS_GLYPH} size="inline" />}
       title="Nie masz jeszcze odżywek na liście"
       actions={<>
-        <Button variant="outline" size="sm" className="coarse:h-11" aria-expanded={false} onClick={onAdd}>
+        <Button size="sm" className="coarse:h-11" aria-expanded={false} onClick={onAdd}>
           <Plus className="size-4" aria-hidden />Dodaj odżywkę
         </Button>
         <Button

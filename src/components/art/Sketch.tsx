@@ -8,14 +8,21 @@ import { cn } from "@/lib/utils";
  * `--sketch-glow` (poświata w Neonie, Zorzy, Matrycy). `--sketch-dash` przerywa linie kartki (Plan) — samej kreski
  * nie, bo `stroke-dasharray` rysuje animację. Ograniczony ruch: od razu gotowy rysunek.
  */
-export function Sketch({ paths, className = "relative mx-auto h-28 w-40 text-primary-ink", testId = "empty-illustration" }: {
+const SIZE = {
+  page: "relative mx-auto h-28 w-40 text-primary-ink",
+  /** W5.4: pusty stan fragmentu widoku (`StatusPanel size="inline"`). */
+  inline: "relative mx-auto mb-3 h-20 w-28 text-primary-ink",
+} as const;
+
+export function Sketch({ paths, size = "page", className, testId = "empty-illustration" }: {
   paths: readonly string[];
+  size?: keyof typeof SIZE;
   className?: string;
   testId?: string;
 }) {
   const at = (d: number) => ({ "--d": `${d}s` }) as CSSProperties;
   return (
-    <svg viewBox="0 0 120 84" className={cn("sketch", className)} aria-hidden="true" data-testid={testId}>
+    <svg viewBox="0 0 120 84" className={cn("sketch", className ?? SIZE[size])} aria-hidden="true" data-testid={testId}>
       {/* Linie kartki. */}
       {[72, 78].map((y) => (
         <line key={y} x1="10" x2="110" y1={y} y2={y} className="sketch-paper" />

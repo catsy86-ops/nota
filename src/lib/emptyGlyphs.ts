@@ -18,6 +18,15 @@ export const EMPTY_GLYPHS: Partial<Record<View, string[]>> = {
 /** Dziennik budowy bez wpisów: kartka zeszytu z marginesem, wiersze tekstu i długopis. */
 export const JOURNAL_GLYPH = ["M28 16 H92 V64 H28 Z", "M42 16 V64", "M52 30 H82", "M52 40 H78", "M52 50 H70", "M76 60 L92 44"];
 
+/** W5.4: Klienci bez wpisów — wizytówka z sylwetką. */
+export const CLIENTS_GLYPH = ["M26 22 H94 V64 H26 Z", "M48 38 A7 7 0 1 1 47.9 38 Z", "M36 58 C36 48 60 48 60 58", "M68 34 H86", "M68 44 H82", "M68 54 H78"];
+
+/** W5.4: Grafik bez rodzajów zmian — trzy kafelki zmian, ostatni z plusem. */
+export const SHIFT_TYPES_GLYPH = ["M28 24 H54 V40 H28 Z", "M64 24 H92 V40 H64 Z", "M28 50 H54 V66 H28 Z", "M78 50 V66", "M70 58 H86"];
+
+/** W5.4: Ćwiczenia bez odżywek — kapsułka. */
+export const SUPPLEMENTS_GLYPH = ["M40 52 L66 26 A10 10 0 0 1 80 40 L54 66 A10 10 0 0 1 40 52 Z", "M53 39 L67 53"];
+
 export function hasEmptyIllustration(view: View): boolean {
   return view in EMPTY_GLYPHS;
 }

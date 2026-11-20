@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
+import { StatusPanel } from "@/components/StatusPanel";
+import { Sketch } from "@/components/art/Sketch";
+import { CLIENTS_GLYPH } from "@/lib/emptyGlyphs";
 import { pluralPl } from "@/lib/plural";
 import { CLIENT_NAME_MAX, CLIENT_PHONE_MAX, CLIENTS_MAX, findDuplicates, searchClients, type Client } from "@/lib/clients/model";
 import { addClient, useClientLinks, useClients } from "@/lib/clients/store";
@@ -185,13 +188,18 @@ export default function ClientsView({ onOpenSite, onOpenDebts, requestedId, onRe
       )}
 
       {clients.length === 0 ? (
-        <div className="rounded-card border border-dashed border-border px-4 py-8 text-center" data-testid="clients-empty">
-          <UserRound className="mx-auto size-8 text-muted-foreground" aria-hidden />
-          <p className="mt-2 font-medium">Nie masz jeszcze klientów</p>
-          <p className="ui-hint mt-1">Z kartoteki wybierzesz inwestora przy nowej budowie, a dane do faktury wypełnią się same.</p>
+        // W5.4: szkic, jedno zdanie i jedna akcja — ta sama co „Nowy klient” nad listą.
+        <div data-testid="clients-empty">
+          <StatusPanel size="inline" art={<Sketch paths={CLIENTS_GLYPH} size="inline" />}
+            title="Nie masz jeszcze klientów"
+            description="Z kartoteki wybierzesz inwestora przy nowej budowie, a dane do faktury wypełnią się same."
+            actions={<Button type="button" size="sm" onClick={() => setNewOpen(true)} className="coarse:h-11"><Plus className="size-4" aria-hidden />Dodaj pierwszego klienta</Button>} />
         </div>
       ) : found.length === 0 ? (
-        <p className="ui-hint" role="status" data-testid="clients-none">Nikt nie pasuje do „{query.trim()}”.</p>
+        <div role="status" data-testid="clients-none">
+          <StatusPanel size="inline" tone="no-results" title={`Nikt nie pasuje do „${query.trim()}”.`}
+            actions={<Button type="button" size="sm" variant="outline" onClick={() => setQuery("")} className="coarse:h-11">Wyczyść wyszukiwanie</Button>} />
+        </div>
       ) : (
         <ul className="space-y-1" aria-label="Lista klientów">
           {found.map((c) => {

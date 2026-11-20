@@ -1,6 +1,7 @@
 import { Archive, Bell, CalendarDays, CalendarRange, FolderOpen, Tag, Trash, type LucideIcon } from "lucide-react";
 import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View, Elsewhere } from "@/hooks/useFilteredNotes";
+import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
 import { EmptyIllustration } from "@/components/EmptyIllustration";
 import { hasEmptyIllustration } from "@/lib/emptyGlyphs";
@@ -93,14 +94,9 @@ export function EmptyState({ view, search, elsewhere, onGo, onNew, onClearSearch
           </>
         ) : onClearSearch ? (
           // QoL: wyjście z pustego wyniku jednym kliknięciem, bez szukania „×” w pasku.
-          <button
-            type="button"
-            onClick={onClearSearch}
-            data-testid="empty-clear-search"
-            className="tap-target text-sm font-medium rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-foreground hover:bg-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-          >
+          <Button type="button" variant="chip" size="chip-md" onClick={onClearSearch} data-testid="empty-clear-search">
             Wyczyść wyszukiwanie
-          </button>
+          </Button>
         ) : undefined}
       />
     );
@@ -125,25 +121,17 @@ export function EmptyState({ view, search, elsewhere, onGo, onNew, onClearSearch
         // Pusty widok: jeden główny przycisk (N-3, plan Notatek 4.6), też w Notatkach — wiersz zapisu bywa schowany na telefonie.
         // Przycisk otwiera nową notatkę (1d planu).
         <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            onClick={onNew}
-            className="inline-flex items-center gap-1.5 rounded-card bg-primary/10 px-4 py-2 text-sm font-medium text-primary-ink hover:bg-primary/20 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-          >
+          <Button type="button" onClick={onNew} className="coarse:h-11">
             {view === "notes" ? "Napisz pierwszą notatkę" : "Nowa notatka"}
-          </button>
+          </Button>
         </div>
       )}
       {view === "inbox" && (
         // Skrzynka 4.5: jedno działanie — kursor w polu przechwytywania nad listą.
         <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            onClick={() => document.querySelector<HTMLTextAreaElement>("[data-inbox-capture]")?.focus()}
-            className="inline-flex items-center gap-1.5 rounded-card bg-primary/10 px-4 py-2 text-sm font-medium text-primary-ink hover:bg-primary/20 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-          >
+          <Button type="button" onClick={() => document.querySelector<HTMLTextAreaElement>("[data-inbox-capture]")?.focus()} className="coarse:h-11">
             Zapisz pomysł
-          </button>
+          </Button>
         </div>
       )}
       {view === "notes" && (

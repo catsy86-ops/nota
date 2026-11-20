@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { CalendarPlus } from "lucide-react";
+import { Sketch } from "@/components/art/Sketch";
+import { EMPTY_GLYPHS } from "@/lib/emptyGlyphs";
 import { StatusPanel } from "@/components/StatusPanel";
 import { addDaysToKey } from "@/lib/week";
 import type { DayEntry } from "@/lib/shifts";
@@ -26,7 +27,7 @@ export function EmptyShifts({ days, isWeek, weekStart, monthKey, onPattern, onTe
   return (
     // Ten sam pusty stan co w innych działach (`StatusPanel`, nowy plan 2.5): przerywana ramka, szkic kalendarza.
     <section aria-label={isWeek ? "Pusty tydzień" : "Pusty miesiąc"} className="mb-3">
-      <StatusPanel size="inline" icon={CalendarPlus} className="p-4"
+      <StatusPanel size="inline" art={<Sketch paths={EMPTY_GLYPHS.week!} size="inline" />} className="p-4"
         title={isWeek ? "W tym tygodniu nie ma zmian." : "W tym miesiącu nie ma jeszcze zmian."}
         actions={
           <>

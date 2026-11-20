@@ -39,3 +39,7 @@ Każdy wykres stoi w `ChartFrame` (`ui/chart-frame.tsx`): `title`, `value` (suma
 ## Małe wykresy (W5.3)
 
 `ui/mini-charts.tsx`: `Sparkline` (przebieg, kolor z `currentColor`), `WeekBars` (pon–nd, dziś w akcencie), `ProgressRing` (0–1). Bez recharts, zawsze `aria-hidden` — wartość podaje tekst obok. Nowy pierścień postępu nie rysuje własnego SVG, tylko bierze `ProgressRing`.
+
+## Pusty stan (W5.4)
+
+`StatusPanel` + `Sketch` (`art/Sketch.tsx`): w liście działu `size="inline"` w obu. Rysunek to ścieżki z `lib/emptyGlyphs.ts` (viewBox 120×84, kończy się nad liniami kartki na y=72). Jedno zdanie w `title`, opcjonalny `description`, jedna akcja główna (`Button` domyślny), najwyżej jedna zapasowa (`outline`). Brak wyników wyszukiwania: `tone="no-results"` i „Wyczyść wyszukiwanie”.
