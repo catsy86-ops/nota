@@ -742,11 +742,13 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     const created = await createVault(newPassword, { iterations, withRecovery, epoch: m.epoch + 1 });
     const next = new Map<string, { expected: string; vault: string }>();
     for (const [id, p] of plain) next.set(id, { expected: p.expected, vault: await encryptNoteWrite(created.dataKey, p.json, id, created.meta.epoch) });
-    // Zmiana w trakcie (np. edycja z innego urządzenia) — przerywamy bez zapisu.
+    // Zmiana w trakcie (np. edycja z innego urządzenia albo nowy nagłówek) — przerywamy bez zapisu.
+    const fromPrint = fingerprint(from);
+    const metaUnchanged = (cur: unknown): boolean => isValidMeta(cur) && fingerprint(cur) === fromPrint;
     ownMetaWrite = true;
     let written: boolean;
-    try { written = store.rekeyVault(created.meta, next); } finally { ownMetaWrite = false; }
-    if (!written) throw new Error("Notatki zmieniły się w trakcie zmiany hasła — spróbuj ponownie");
+    try { written = store.rekeyVault(created.meta, next, metaUnchanged); } finally { ownMetaWrite = false; }
+    if (!written) throw new Error("Skarbiec lub notatki zmieniły się w trakcie zmiany hasła — spróbuj ponownie");
     writeVaultPin(created.meta);
     key = created.dataKey;
     sessionEpoch = created.meta.epoch;

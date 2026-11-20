@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createYjsStore } from "@/lib/yjsStore";
 import { createPrivateNotes } from "@/lib/privateNotes";
 import { createVersionsStore } from "@/lib/versionsStore";
+import { createVault } from "@/lib/vault";
 import type { Note } from "@/lib/types/note";
 
 const IT = 1000;
@@ -92,5 +93,22 @@ describe("K0 cz. 4 — dosłany szyfrogram obcego skarbca", () => {
     expect(winner.pn.isUndecryptable("l")).toBe(true);
     expect(winner.pn.peek("l")).toBeUndefined();
     expect(winner.pn.peek("w")?.content).toBe("notatka zwycięzcy");
+  });
+});
+
+describe("C-1 — rekeyVault porównuje metadane skarbca", () => {
+  it("nagłówek zmieniony przez inne urządzenie w trakcie zmiany hasła: błąd, cudze metadane zostają", async () => {
+    const d = fresh(1);
+    d.store.upsertNote(makeNote({ content: "pierwotna" }));
+    await d.pn.setup(PW);
+    await d.pn.lockNote("n1");
+    const before = d.store.getVaultMeta() as { epoch: number };
+    const foreign = (await createVault("cudze-hasło-55555", { iterations: IT, withRecovery: false, epoch: before.epoch + 1 })).meta;
+    const original = d.store.rekeyVault;
+    // Inne urządzenie zapisuje nowy nagłówek po createVault/szyfrowaniu, tuż przed zapisem rekey.
+    d.store.rekeyVault = (meta, next, check) => { d.store.setVaultMeta(foreign); return original(meta, next, check); };
+
+    await expect(d.pn.changePassword(PW, PW2)).rejects.toThrow(/zmieniły się w trakcie/);
+    expect(d.store.getVaultMeta()).toEqual(foreign);
   });
 });

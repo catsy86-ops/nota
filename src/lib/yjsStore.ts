@@ -1155,9 +1155,12 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
    * Zmiana klucza skarbca: nowe metadane i nowe szyfrogramy wszystkich podanych
    * notatek w JEDNEJ transakcji — peer widzi albo stary stan, albo cały nowy.
    * Zwraca `false` (nic nie zapisuje), gdy któraś notatka zmieniła szyfrogram
-   * od chwili, gdy go odczytano (`expected`), albo przestała być prywatna.
+   * od chwili, gdy go odczytano (`expected`), albo przestała być prywatna,
+   * albo gdy bieżące metadane skarbca nie spełniają `metaUnchanged` (inne
+   * urządzenie zmieniło nagłówek w trakcie — nie nadpisujemy go).
    */
-  function rekeyVault(meta: unknown, next: Map<string, { expected: string; vault: string }>): boolean {
+  function rekeyVault(meta: unknown, next: Map<string, { expected: string; vault: string }>, metaUnchanged?: (current: unknown) => boolean): boolean {
+    if (metaUnchanged && !metaUnchanged(vaultMap.get("meta"))) return false;
     for (const [id, { expected }] of next) if (getVault(id) !== expected) return false;
     doc.transact(() => {
       for (const [id, { vault }] of next) notesMap.get(id)!.set("vault", vault);
