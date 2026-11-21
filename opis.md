@@ -6804,6 +6804,8 @@ W1.8 — commit po tym wpisie (2026-11-19).
 - `src/test/motionTokens.test.ts`: M1.2 — `--dur-*` i `--ease-*` w `tokens.css` muszą równać się `dur` i `ease` z `src/lib/motion.ts`; M1.5 — klasy `duration-<liczba>` najwyżej 2, literały `duration: 0.x` w `.tsx` najwyżej 4 (pieczątka osiągnięcia ×2, wordmark, przewijanie liczby).
 - Zamiany w 13 komponentach (m.in. `DebtsView`, `ShiftSummary`, `StudyView`, `NowCard`, `GuideDialog`, `NoteBoard`, `QuizPanel`).
 - `docs/ruch.md` (M1.1): jedna strona zasad ruchu — siedem zasad, tabela tokenów (czas → klasa → `dur.*`), tabela „który wzór kiedy”, ograniczony ruch, straż. Zmieniasz token albo próg strażnika — popraw tabelę.
+- M5.2 (haptyka): `Switch` (`src/components/ui/switch.tsx`) wibruje sam `selection` przy zmianie; przegląd 184 wywołań `haptic()` nie wykrył dubli. M5.1 to istniejące `pressable` (`utilities.css`).
+- M3.3: `src/components/ui/overlay-motion.ts` — `OVERLAY_FADE` (Dialog, Sheet, AlertDialog) i `POPUP_MOTION` (Popover, DropdownMenu); Tooltip poza nim (stany `delayed-open`/`instant-open`). Commity e284a4c1, 39a52a28 (2026-11-21).
 
 ### Ograniczenia i pułapki
 
