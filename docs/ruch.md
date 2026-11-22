@@ -39,6 +39,7 @@ Krzywe: `--ease-out` / `ease-out-soft` (wejście, domyślna), `--ease-in` / `eas
 | Okno, arkusz, popover, menu | `OVERLAY_FADE` i `POPUP_MOTION` z `src/components/ui/overlay-motion.ts` (nie kopiuj list klas) | `Dialog`, `Sheet`, `Popover`, `DropdownMenu` |
 | Liczba zmienia się po akcji | `AnimatedNumber` (`src/components/ui/animated-number.tsx`); liczy tylko po `recentUserAction()`, przy synchronizacji przeskakuje | saldo Długów, podsumowanie Grafiku |
 | Zwijanie sekcji | `m.div` z `height: "auto"` w `AnimatePresence` (framer mierzy sam); w CSS `interpolate-size` jest już globalnie | grupy notatek, foldery w panelu bocznym |
+| Proste pokazanie i schowanie (bez gestu, `layout`, przesunięcia) | `presence-fade` / `presence-pop` (`utilities.css`) + `data-shown`; element zostaje w drzewie | przyciski w polu szukania, tło panelu bocznego |
 | Rysowanie obrysu | `@keyframes` + `var(--dur-*)` | `pencil-draw`, `sketch-draw` |
 
 ## Ograniczony ruch
@@ -53,4 +54,4 @@ Krzywe: `--ease-out` / `ease-out-soft` (wejście, domyślna), `--ease-in` / `eas
 
 ## Do zrobienia
 
-Pomiar klatek (M2), `@starting-style` zamiast JS (M3.1), przejścia między działami i arkusze z gestem (M4), zrzuty z wyłączonym ruchem i film (M5.5). Wyniki pomiaru M2.1 trafią tutaj.
+Pomiar klatek (M2), przejścia między działami i arkusze z gestem (M4), zrzuty z wyłączonym ruchem i film (M5.5). Wyniki pomiaru M2.1 trafią tutaj.

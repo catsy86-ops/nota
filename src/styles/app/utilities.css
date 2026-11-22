@@ -224,6 +224,45 @@ html[data-skin="zeszyt"] .app-header {
   }
 }
 
+/* M3.1: wejście i wyjście bez framer-motion. `@starting-style` daje stan wejścia (też po `display: none`).
+   Wyjście: element zostaje w drzewie z `data-shown="false"` i znika przez `display: none` po wygaśnięciu
+   (`allow-discrete`). Bez `data-shown` jest tylko wejście (wyjście natychmiast). Przeglądarka bez tych
+   funkcji przełącza od razu — zapas „bez animacji”; ograniczony ruch skraca czasy regułą z features.css.
+   `presence-pop` = przezroczystość + skala (małe przyciski, pigułki), `presence-fade` = sama przezroczystość. */
+@utility presence-fade {
+  transition-property: opacity, display;
+  transition-duration: var(--dur-base);
+  transition-timing-function: var(--ease-out);
+  transition-behavior: allow-discrete;
+  @starting-style {
+    opacity: 0;
+  }
+  &[data-shown="false"] {
+    display: none;
+    opacity: 0;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-in);
+  }
+}
+
+@utility presence-pop {
+  transition-property: opacity, scale, display;
+  transition-duration: var(--dur-base);
+  transition-timing-function: var(--ease-out);
+  transition-behavior: allow-discrete;
+  @starting-style {
+    opacity: 0;
+    scale: 0.8;
+  }
+  &[data-shown="false"] {
+    display: none;
+    opacity: 0;
+    scale: 0.8;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-in);
+  }
+}
+
 @utility toast-undo {
   /* Toast „Cofnij”: cienki pasek pokazuje, ile czasu zostało. Sonner wstrzymuje
      licznik, gdy kursor jest nad stosem toastów — pasek robi to samo. */

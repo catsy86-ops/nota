@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Tag, Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { m as motion, AnimatePresence } from "framer-motion";
 
 interface LabelPickerProps {
   allLabels: string[];
@@ -41,19 +40,18 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
       <PopoverContent className="w-56 p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
         <p className="ui-hint font-semibold font-display">Etykiety</p>
         <div className="flex gap-1 flex-wrap">
-          <AnimatePresence>
-            {allLabels.map((label) => (
-              <motion.div key={label} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}>
-                <Badge
-                  variant={selected.includes(label) ? "default" : "outline"}
-                  className="cursor-pointer text-xs"
-                  onClick={() => onToggle(label)}
-                >
-                  {label}
-                </Badge>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {/* M3.1: pigułki wchodzą z `@starting-style` przy otwarciu i dodaniu; usunięta znika od razu. */}
+          {allLabels.map((label) => (
+            <div key={label} className="presence-pop">
+              <Badge
+                variant={selected.includes(label) ? "default" : "outline"}
+                className="cursor-pointer text-xs"
+                onClick={() => onToggle(label)}
+              >
+                {label}
+              </Badge>
+            </div>
+          ))}
         </div>
         {allLabels.length === 0 && (
           <p className="ui-hint">Brak etykiet. Utwórz pierwszą!</p>

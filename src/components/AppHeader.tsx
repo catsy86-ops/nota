@@ -2,7 +2,7 @@ import { VaultStatusButton } from "@/components/vault/VaultStatusButton";
 import { isAppView, VIEW_LABEL } from "@/lib/viewMeta";
 import { SyncStatusDot } from "@/components/sync/SyncStatusDot";
 import { useEffect, useRef } from "react";
-import { AnimatePresence, m as motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { PanelLeftClose, PanelLeftOpen, Moon, Sun, FileDown, FolderOpen, Tag, Search } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SearchBar } from "@/components/SearchBar";
@@ -162,19 +162,14 @@ export function AppHeader({
                 aria-label="Tryb ciemny"
                 aria-pressed={dark}
               >
-                {/* Słońce i księżyc zamieniają się obrotem — ikona mówi, co się stanie po kliknięciu. */}
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.span
-                    key={dark ? "sun" : "moon"}
-                    initial={{ rotate: -90, scale: 0.4, opacity: 0 }}
-                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                    exit={{ rotate: 90, scale: 0.4, opacity: 0 }}
-                    transition={tween.enter}
-                    className="inline-flex"
-                  >
-                    {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
-                  </motion.span>
-                </AnimatePresence>
+                {/* Słońce i księżyc zamieniają się obrotem — ikona mówi, co się stanie po kliknięciu.
+                    M3.1: nowa ikona (nowy `key`) wkręca się z `@starting-style`; stara znika od razu. */}
+                <span
+                  key={dark ? "sun" : "moon"}
+                  className="inline-flex transition-[opacity,scale,rotate] duration-base ease-out-soft starting:opacity-0 starting:scale-40 starting:-rotate-90"
+                >
+                  {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+                </span>
               </motion.button>
             </IconButton>
           )}

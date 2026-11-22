@@ -248,17 +248,12 @@ export function AppSidebar({
 
   return (
     <>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: tween.enter }}
-            exit={{ opacity: 0, transition: tween.exit }}
-            className="fixed inset-0 z-overlay bg-foreground/30 desk:hidden"
-            onClick={onClose}
-          />
-        )}
-      </AnimatePresence>
+      {/* M3.1: tło zostaje w drzewie, `presence-fade` chowa je przez `display: none`. */}
+      <div
+        data-shown={String(open)}
+        className="presence-fade fixed inset-0 z-overlay bg-foreground/30 desk:hidden"
+        onClick={onClose}
+      />
       {/* initial={false}: przy starcie aplikacji pasek jest od razu rozwinięty — bez wjazdu od zera,
           który przesuwał całą treść (CLS) przy każdym wczytaniu strony. */}
       <AnimatePresence initial={false}>

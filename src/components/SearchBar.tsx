@@ -1,9 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Bookmark, Clock, Search, X } from "lucide-react";
-import { m as motion, AnimatePresence } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { tween, spring } from "@/lib/motion";
+import { spring } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useSavedFilters, sameQuery, MAX_FILTER_NAME } from "@/lib/savedFilters";
@@ -139,38 +139,30 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
           focused ? "border-primary/50 ring-2 ring-primary/20 bg-background" : "border-border"
         )}
       />
-      <AnimatePresence>
-        {value && canSave && (
-          <motion.button
-            type="button"
-            aria-label="Zapisz wyszukiwanie jako filtr"
-            aria-expanded={saving}
-            title="Zapisz jako filtr"
-            initial={{ opacity: 0, scale: reduced ? 1 : 0.8 }}
-            animate={{ opacity: 1, scale: 1, transition: tween.enter }}
-            exit={{ opacity: 0, scale: reduced ? 1 : 0.8, transition: tween.exit }}
-            onClick={() => setSaving((v) => !v)}
-            className="pressable absolute right-9 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary-ink"
-          >
-            <Bookmark className="size-4" />
-          </motion.button>
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {value && (
-          <motion.button
-            type="button"
-            aria-label="Wyczyść wyszukiwanie"
-            initial={{ opacity: 0, scale: reduced ? 1 : 0.8 }}
-            animate={{ opacity: 1, scale: 1, transition: tween.enter }}
-            exit={{ opacity: 0, scale: reduced ? 1 : 0.8, transition: tween.exit }}
-            onClick={() => { setSaving(false); commit(""); }}
-            className="pressable absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            <X className="size-4" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* M3.1: przyciski zostają w drzewie, `presence-pop` chowa je w CSS (`display: none` po wygaśnięciu).
+          Otoczka trzyma położenie, bo `pressable` na przycisku nadpisuje `translate` przy wciśnięciu. */}
+      <span data-shown={String(!!value && canSave)} className="presence-pop absolute right-9 top-1/2 -translate-y-1/2 inline-flex">
+        <button
+          type="button"
+          aria-label="Zapisz wyszukiwanie jako filtr"
+          aria-expanded={saving}
+          title="Zapisz jako filtr"
+          onClick={() => setSaving((v) => !v)}
+          className="pressable inline-flex text-muted-foreground hover:text-primary-ink"
+        >
+          <Bookmark className="size-4" />
+        </button>
+      </span>
+      <span data-shown={String(!!value)} className="presence-pop absolute right-2.5 top-1/2 -translate-y-1/2 inline-flex">
+        <button
+          type="button"
+          aria-label="Wyczyść wyszukiwanie"
+          onClick={() => { setSaving(false); commit(""); }}
+          className="pressable inline-flex text-muted-foreground hover:text-foreground"
+        >
+          <X className="size-4" />
+        </button>
+      </span>
 
       {showSuggestions && (
         <ul
