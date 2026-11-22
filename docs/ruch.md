@@ -52,29 +52,46 @@ Krzywe: `--ease-out` / `ease-out-soft` (wejście, domyślna), `--ease-in` / `eas
 - Stałego `will-change` nie dodajemy (M1.6); tylko na czas animacji.
 - Martwych `@keyframes` nie zostawiamy (M1.3) — nazwy składane w motywach sprawdź przed usunięciem.
 
-## Pomiar klatek (M2.1, 2026-11-22)
+## Pomiar klatek (M2.1–M2.2, 2026-11-22)
 
-Test: `e2e/motion-frames.spec.ts`, uruchamiany na żądanie: `PERF=1 npx playwright test e2e/motion-frames.spec.ts --project=pixel-7`. Telefon Pixel 7 w Playwright, produkcyjny build, procesor zdławiony ×4 (`CPU_RATE`), 300 notatek w ręcznym porządku. Klatki z pętli `requestAnimationFrame`, długie klatki z Long Animation Frames razem z przypisaniem do skryptu. `PROFILE=1` zapisuje profil CPU przewijania. `FRAMES_STRICT=1` włącza próg 50 ms.
+Test: `e2e/motion-frames.spec.ts`, uruchamiany na żądanie: `PERF=1 npx playwright test e2e/motion-frames.spec.ts --project=pixel-7`. Telefon Pixel 7 w Playwright, produkcyjny build, procesor zdławiony ×4 (`CPU_RATE`), 300 notatek w ręcznym porządku, układ mozaiki (domyślny). Klatki liczy pętla `requestAnimationFrame`, a długie klatki Long Animation Frames, razem z przypisaniem do skryptu. `PROFILE=<fragment nazwy kroku>` zapisuje profil CPU tego kroku. `FRAMES_STRICT=1` włącza próg 50 ms.
 
-| Ścieżka | Przed poprawką: klatki > 50 ms, najdłuższa | Po poprawce: klatki > 50 ms, najdłuższa | Co zajmuje klatkę |
+Kolejność kroków: otwarcie notatki, zmiana zakładki, arkusz, przeciągnięcie, a przewijanie na końcu. Po geście przewijania wysłanym przez CDP Chromium nie zamieniał następnego stuknięcia w `click`, więc przy przewijaniu na początku krok „otwarcie notatki” bywał pusty, a „wstecz” wychodziło z aplikacji.
+
+Pojedynczy przebieg waha się nawet dwukrotnie (obciążenie maszyny), dlatego porównania to mediany z 5 przebiegów.
+
+| Ścieżka (CPU ×4) | Przed M2.1: najdłuższa klatka | Po M2.1 i M2.2: klatki > 50 ms, najdłuższa (mediana) | Co zostało w najdłuższej klatce |
 |---|---|---|---|
-| Przewijanie 300 notatek | 31–40, 250–300 ms | 1–2, 50–83 ms | — |
-| Otwarcie notatki | 1, ~600 ms | 1, ~530 ms | render Reacta po stuknięciu (montaż edytora i czytnika) |
-| Zmiana zakładki (Notatki → Dziś → Notatki) | 5–8, 230–340 ms | 8, ~270 ms | render widoku po zmianie trasy |
-| Otwarcie i zamknięcie arkusza „Widok” | 10–12, ~350 ms | 3, ~280 ms | po ~220 ms przy otwarciu, przy Escape i przy `popstate` |
-| Przeciągnięcie karty | 3–7, 300–440 ms | 3, ~320 ms | `handleEnd` dnd-kit i render po zmianie kolejności |
+| Przewijanie 300 notatek | 250–300 ms (31–40 klatek > 50 ms) | 0, 50 ms | — |
+| Otwarcie notatki | 683 ms | 1, 400 ms | render czytnika i jeden pełny układ strony |
+| Zmiana zakładki (Notatki → Dziś → Notatki) | 317 ms | 7, 267 ms | render widoku po zmianie trasy |
+| Otwarcie i zamknięcie arkusza „Widok” | 300 ms | 4, 300 ms | otwarcie: `focus()` w FocusScope Radix wymusza układ (~190 ms) |
+| Przeciągnięcie karty | 350 ms | 2, 283 ms (raz na kilka przebiegów 33 ms) | `handleEnd` dnd-kit i render po zmianie kolejności |
 
 Przy CPU ×1 żadna ścieżka poza otwarciem notatki (~110 ms) nie przekracza 82 ms.
 
-**Znalezisko i poprawka:** paralaksa stylu Zorza (`src/lib/scrollParallax.ts`) ustawiała `--sig-scroll` na `<html>` w każdej klatce przewijania, niezależnie od stylu. Zmienna dziedziczy się w całe drzewo, więc styl 300 kart był unieważniany co klatkę. `useHideOnScroll` czytał zaraz potem `window.scrollY` i wymuszał pełne przeliczenie stylu i układu, co dawało ~5 s na 6 s przewijania. Teraz paralaksa działa tylko przy `data-skin="zorza"`.
+### Znaleziska i poprawki
 
-**Kryterium etapu niespełnione:** pojedyncze klatki po stuknięciu mają 270–530 ms przy CPU ×4. To pojedyncze rendery Reacta, nie animacje. Kierunki na M2.2:
-- Zamknięcie warstwy robi `history.back()` (`overlayHistory.ts`). Na `popstate` reaguje też router i przerysowuje widok, choć adres się nie zmienił.
-- Otwarcie notatki: koszt montażu czytnika (~480 ms przy ×4).
-- Zmiana zakładki i koniec przeciągania: render całej listy.
+- **Przewijanie (M2.1).** Paralaksa stylu Zorza (`src/lib/scrollParallax.ts`) ustawiała `--sig-scroll` na `<html>` w każdej klatce przewijania, niezależnie od stylu. Zmienna dziedziczy się w całe drzewo, więc styl kart był unieważniany co klatkę. Zaraz potem `useHideOnScroll` czytał `window.scrollY` i wymuszał przeliczenie, razem ~5 s na 6 s przewijania. Teraz paralaksa działa tylko przy `data-skin="zorza"`.
+- **Zamknięcie warstwy (M2.2).** Zamknięcie z interfejsu (×, Escape, zsunięcie) robi `history.back()`. Router dostawał wtedy `popstate` i przerysowywał cały widok (~220 ms), choć adres się nie zmieniał. `overlayHistory.ts` ma teraz słuchacza zarejestrowanego przed routerem (przy wczytaniu modułu, import w `App.tsx`). Zatrzymuje on tylko własne cofnięcie przy identycznym adresie. „Wstecz” systemowe idzie do routera jak dawniej.
+- **Escape i skróty siatki (M2.2).** `handleGridNavKey` liczył kolumny siatki (`getComputedStyle`) przy każdym klawiszu, także przy Escape zamykającym arkusz (~150–245 ms). Teraz liczy je tylko dla ↑/↓.
+- **Otwarcie z kafla (M2.2).** `useOriginFromTile` mierzył kafel i panel w efekcie układu, w środku zatwierdzania renderu, a blokada przewijania Radix zaraz to unieważniała. Wychodziły dwa pełne układy zamiast jednego (~180 ms). Pomiar jest teraz w `requestAnimationFrame` przed malowaniem. Zmienne skali okna (`--tw-enter-*`) zostają ustawiane od razu.
 
-INP z `web-vitals-phone.spec.ts` (bez dławienia) po poprawce: mediana 160–176 ms, LCP 160–280 ms.
+### Sprawdzone i odrzucone
+
+- `layout` framer-motion na kartach: wyłączenie oszczędza tylko ~40 ms przy otwarciu notatki. Pomiar przewijania nie pokazał kosztu projekcji układu, więc `layout="position"` i `layoutScroll` z planu nie mają tu uzasadnienia.
+- `pointer-events: none`, które Radix ustawia na `<body>` przy oknach modalnych: mikropomiar pokazał ~50 ms przeliczenia stylu na 24 karty. Jawne `#root { pointer-events: auto }` nie zmieniło jednak klatki otwarcia arkusza, więc to nie jest główny koszt.
+
+### Co zostaje (kryterium etapu nadal niespełnione)
+
+- **Otwarcie arkusza:** `focus()` w FocusScope wymusza pełny układ strony z kartami mozaiki. Mozaika nie ma `content-visibility` (potrzebuje prawdziwych wysokości do rozpiętości), więc układane są wszystkie wyrenderowane karty.
+- **Zmiana zakładki i koniec przeciągania:** render całej listy.
+- **Otwarcie notatki:** render czytnika.
+
+Wszystkie trzy zależą od liczby kart w drzewie. Kierunek: `content-visibility` także w mozaice, z zapamiętaną wysokością (`contain-intrinsic-size: auto`). To zmiana zachowania układu i wymaga decyzji: niewidziane jeszcze kafle dostają zastępczą wysokość, więc rozpiętości poprawiają się dopiero przy przewinięciu.
+
+INP z `web-vitals-phone.spec.ts` (bez dławienia) po M2.1: mediana 160–176 ms, LCP 160–280 ms.
 
 ## Do zrobienia
 
-Renderowanie po stuknięciu (M2.2, kierunki wyżej), przejścia między działami i arkusze z gestem (M4), zrzuty z wyłączonym ruchem i film (M5.5).
+`content-visibility` w mozaice (decyzja wyżej), M2.3 (kaskada wejścia), M2.4 (budżet `domMax`), przejścia między działami i arkusze z gestem (M4), zrzuty z wyłączonym ruchem i film (M5.5).

@@ -18,7 +18,8 @@ test("telefon: edytor z kafla — origin w kaflu, kolor notatki, cień nagłówk
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
 
-  // Rośnie z kafla: origin poza środkiem okna, bez wjazdu z góry.
+  // Rośnie z kafla: origin poza środkiem okna, bez wjazdu z góry. Origin liczony w następnej klatce (M2.2).
+  await expect.poll(() => dialog.evaluate((el) => (el as HTMLElement).style.transformOrigin)).toMatch(/^-?\d+px -?\d+px$/);
   const style = await dialog.evaluate((el) => ({
     origin: (el as HTMLElement).style.transformOrigin,
     ty: (el as HTMLElement).style.getPropertyValue("--tw-enter-translate-y"),

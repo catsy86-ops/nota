@@ -212,14 +212,16 @@ export function handleGridNavKey(e: KeyboardEvent) {
   const hasFocus = focusedId !== null && ids.includes(focusedId);
   const curIdx = hasFocus ? ids.indexOf(focusedId as string) : 0;
   const section = hasFocus ? sectionOf(focusedId as string) : orderedSections()[0];
-  const cols = section?.handlers.colsCount() ?? 1;
+  // M2.2: kolumny tylko dla ↑/↓ — `colsCount` czyta `getComputedStyle` siatki, co wymusza przeliczenie stylu
+  // dokumentu. Liczone przy każdym klawiszu (też Escape po zamknięciu arkusza) zabierało ~245 ms przy CPU ×4.
+  const cols = () => section?.handlers.colsCount() ?? 1;
 
   let next = curIdx;
   switch (e.key) {
     case "ArrowRight": next = Math.min(ids.length - 1, curIdx + 1); break;
     case "ArrowLeft": next = Math.max(0, curIdx - 1); break;
-    case "ArrowDown": next = Math.min(ids.length - 1, curIdx + cols); break;
-    case "ArrowUp": next = Math.max(0, curIdx - cols); break;
+    case "ArrowDown": next = Math.min(ids.length - 1, curIdx + cols()); break;
+    case "ArrowUp": next = Math.max(0, curIdx - cols()); break;
     case "Home": next = 0; break;
     case "End": next = ids.length - 1; break;
     case " ":

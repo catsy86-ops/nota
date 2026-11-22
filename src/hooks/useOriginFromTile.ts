@@ -24,12 +24,7 @@ export function useOriginFromTile(
   useLayoutEffect(() => {
     const el = panel && "current" in panel ? panel.current : panel;
     if (!active || !el) return;
-    const tile = document.querySelector(`[data-note-id-wrap="${CSS.escape(noteId)}"]`);
-    const t = tile?.getBoundingClientRect();
-    if (!t || t.bottom < 0 || t.top > window.innerHeight) {
-      el.style.transformOrigin = "";
-      return;
-    }
+    // Same zapisy — nie wymuszają układu, a animacja CSS musi je mieć od pierwszej klatki.
     if (cssScale !== undefined) {
       for (const phase of ["enter", "exit"]) {
         el.style.setProperty(`--tw-${phase}-scale`, String(cssScale));
@@ -37,11 +32,23 @@ export function useOriginFromTile(
         el.style.setProperty(`--tw-${phase}-translate-y`, "0");
       }
     }
-    // Środek panelu nie zależy od skali wokół środka, więc pomiar w trakcie wejścia jest wierny.
-    const p = el.getBoundingClientRect();
-    const x = t.left + t.width / 2 - (p.left + p.width / 2) + el.offsetWidth / 2;
-    const y = t.top + t.height / 2 - (p.top + p.height / 2) + el.offsetHeight / 2;
-    el.style.transformOrigin = `${Math.round(x)}px ${Math.round(y)}px`;
+    // M2.2: pomiary w następnej klatce, przed jej malowaniem. W efekcie układu `getBoundingClientRect` wymuszał
+    // pełne przeliczenie układu z 300 kartami w środku zatwierdzania renderu, a blokada przewijania z Radix
+    // unieważniała je zaraz potem — dwa pełne układy zamiast jednego (~180 ms przy CPU ×4 na otwarcie notatki).
+    const frame = requestAnimationFrame(() => {
+      const tile = document.querySelector(`[data-note-id-wrap="${CSS.escape(noteId)}"]`);
+      const t = tile?.getBoundingClientRect();
+      if (!t || t.bottom < 0 || t.top > window.innerHeight) {
+        el.style.transformOrigin = "";
+        return;
+      }
+      // Środek panelu nie zależy od skali wokół środka, więc pomiar w trakcie wejścia jest wierny.
+      const p = el.getBoundingClientRect();
+      const x = t.left + t.width / 2 - (p.left + p.width / 2) + el.offsetWidth / 2;
+      const y = t.top + t.height / 2 - (p.top + p.height / 2) + el.offsetHeight / 2;
+      el.style.transformOrigin = `${Math.round(x)}px ${Math.round(y)}px`;
+    });
+    return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `element` zamiast `panel`: ref to stały obiekt
   }, [element, noteId, active, cssScale]);
 }

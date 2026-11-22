@@ -14,6 +14,8 @@ import { useEffectsSettings } from "./lib/effectsSettings";
 import { startScrollParallax } from "./lib/scrollParallax";
 import { pulseDawnIfNewDay } from "./lib/skinSignal";
 import { NotesProvider } from "./hooks/NotesProvider";
+// Słuchacz „wstecz” warstw musi być zarejestrowany przed BrowserRouterem (M2.2, opis w module).
+import "./lib/overlayHistory";
 
 // Funkcje animacji dociągane po starcie (osobna paczka). `strict`: pełny `motion` zamiast
 // lekkiego `m` rzuci błąd — w komponentach importujemy `m as motion` z framer-motion.

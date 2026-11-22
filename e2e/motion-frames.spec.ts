@@ -106,61 +106,66 @@ test("ruch: klatki na pięciu ścieżkach przy procesorze zdławionym @mobile", 
   const vw = await page.evaluate(() => window.innerWidth);
   const results: Record<string, Frames> = {};
 
-  // 1. Przewijanie listy: trzy szybkie pociągnięcia palcem w górę i chwila na wyhamowanie.
-  await start(page);
-  // PROFILE=1: profil CPU przewijania do test-results (szukanie, kto zajmuje klatkę).
-  if (process.env.PROFILE) { await cdp.send("Profiler.enable"); await cdp.send("Profiler.start"); }
-  for (let i = 0; i < 3; i++) {
-    await touchDrag(cdp, page, vw / 2, 650, 0, -450, 10);
-    await page.waitForTimeout(250);
-  }
-  await page.waitForTimeout(600);
-  results["przewijanie 300 notatek"] = await stop(page);
-  if (process.env.PROFILE) {
-    const { profile } = await cdp.send("Profiler.stop");
-    writeFileSync(testInfo.outputPath("przewijanie.cpuprofile"), JSON.stringify(profile));
-    console.log(`[profil] ${testInfo.outputPath("przewijanie.cpuprofile")}`);
-  }
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.waitForTimeout(500);
+  // Jeden krok pomiaru. PROFILE=<fragment nazwy> zapisuje profil CPU tego kroku do katalogu wyników testu.
+  const measure = async (name: string, act: () => Promise<void>) => {
+    const profile = !!process.env.PROFILE && name.includes(process.env.PROFILE);
+    await start(page);
+    if (profile) { await cdp.send("Profiler.enable"); await cdp.send("Profiler.start"); }
+    await act();
+    results[name] = await stop(page);
+    if (profile) {
+      const file = testInfo.outputPath(`${name.replace(/\s+/g, "-")}.cpuprofile`);
+      writeFileSync(file, JSON.stringify((await cdp.send("Profiler.stop")).profile));
+      console.log(`[profil] ${file}`);
+    }
+  };
 
-  // 2. Otwarcie notatki stuknięciem w kafel.
-  await start(page);
-  await cards.first().getByRole("heading").tap({ position: { x: 8, y: 8 } });
-  await page.waitForTimeout(1200);
-  results["otwarcie notatki"] = await stop(page);
+  // 1. Otwarcie notatki stuknięciem w kafel.
+  await measure("otwarcie notatki", async () => {
+    await cards.first().getByRole("heading").tap({ position: { x: 8, y: 8 } });
+    await page.waitForTimeout(1200);
+  });
   await page.goBack();
   await expect(cards.first()).toBeVisible();
   await page.waitForTimeout(800);
 
-  // 3. Zmiana zakładki: Notatki → Dziś → Notatki.
-  await start(page);
-  await page.getByRole("button", { name: "Dziś", exact: true }).first().tap();
-  await expect(page).toHaveURL(/\/dzis/);
-  await page.waitForTimeout(900);
-  await page.getByRole("button", { name: "Notatki", exact: true }).first().tap();
-  await expect(cards.first()).toBeVisible();
-  await page.waitForTimeout(900);
-  results["zmiana zakładki"] = await stop(page);
+  // 2. Zmiana zakładki: Notatki → Dziś → Notatki.
+  await measure("zmiana zakładki", async () => {
+    await page.getByRole("button", { name: "Dziś", exact: true }).first().tap();
+    await expect(page).toHaveURL(/\/dzis/);
+    await page.waitForTimeout(900);
+    await page.getByRole("button", { name: "Notatki", exact: true }).first().tap();
+    await expect(cards.first()).toBeVisible();
+    await page.waitForTimeout(900);
+  });
 
-  // 4. Otwarcie arkusza „Widok” i zamknięcie Escape.
-  await start(page);
-  await page.getByRole("button", { name: "Widok i kolumny" }).tap();
-  await expect(page.getByRole("dialog", { name: "Widok" })).toBeVisible();
-  await page.waitForTimeout(900);
-  await page.keyboard.press("Escape");
-  await page.waitForTimeout(700);
-  results["otwarcie arkusza"] = await stop(page);
+  // 3. Otwarcie arkusza „Widok” i zamknięcie Escape.
+  await measure("otwarcie arkusza", async () => {
+    await page.getByRole("button", { name: "Widok i kolumny" }).tap();
+    await expect(page.getByRole("dialog", { name: "Widok" })).toBeVisible();
+    await page.waitForTimeout(900);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(700);
+  });
 
-  // 5. Przeciągnięcie karty: przytrzymanie uchwytu (TouchSensor, 200 ms) i przesunięcie w dół o dwie karty.
+  // 4. Przeciągnięcie karty: przytrzymanie uchwytu (TouchSensor, 200 ms) i przesunięcie w dół o dwie karty.
   const handle = cards.nth(0).locator("[data-drag-handle]");
   await expect(handle).toBeVisible();
   const box = (await handle.boundingBox())!;
-  await start(page);
-  await touchDrag(cdp, page, box.x + box.width / 2, box.y + box.height / 2, 0, 320, 20, 300);
-  await page.waitForTimeout(900);
-  results["przeciągnięcie karty"] = await stop(page);
+  await measure("przeciągnięcie karty", async () => {
+    await touchDrag(cdp, page, box.x + box.width / 2, box.y + box.height / 2, 0, 320, 20, 300);
+    await page.waitForTimeout(900);
+  });
 
+  // 5. Przewijanie listy: trzy szybkie pociągnięcia palcem w górę i chwila na wyhamowanie. Na końcu, bo po geście
+  // przewijania wysłanym przez CDP Chromium nie zamieniał następnego stuknięcia w `click` (touchend bez kliknięcia).
+  await measure("przewijanie 300 notatek", async () => {
+    for (let i = 0; i < 3; i++) {
+      await touchDrag(cdp, page, vw / 2, 650, 0, -450, 10);
+      await page.waitForTimeout(250);
+    }
+    await page.waitForTimeout(600);
+  });
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
 
   const lines = Object.entries(results).map(([name, r]) =>
