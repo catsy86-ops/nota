@@ -21,7 +21,7 @@ describe("M1.2 — tokeny ruchu CSS = motion.ts", () => {
 
 // M1.5: czas animacji tylko z tokenu (`duration-press|fast|base|slow`, `dur.*`). Zostają wyjątki, które mogą tylko maleć:
 // - `duration-500`/`duration-1000` liniowo w licznikach, gdzie czas przejścia = odstęp tyknięcia (przerwa w treningu, próba ciśnienia);
-// - literały `duration: 0.x` w dekoracjach framer-motion (pieczątka osiągnięcia ×2, pisanie wordmarku, przewijanie liczby).
+// - literały `duration: 0.x` w dekoracjach framer-motion (pieczątka osiągnięcia ×2, pisanie wordmarku).
 const SRC = resolve(process.cwd(), "src");
 function tsxFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -37,7 +37,7 @@ describe("M1.5 — czasy animacji z tokenów", () => {
   it("klasy duration-<liczba>: co najwyżej 2 (liczniki)", () => {
     expect(count(/(?<![\w-])duration-\d+(?![\w-])/g)).toBeLessThanOrEqual(2);
   });
-  it("literały duration: 0.x w .tsx: co najwyżej 4 (dekoracje)", () => {
-    expect(count(/duration:\s*0\.\d/g)).toBeLessThanOrEqual(4);
+  it("literały duration: 0.x w .tsx: co najwyżej 3 (dekoracje)", () => {
+    expect(count(/duration:\s*0\.\d/g)).toBeLessThanOrEqual(3);
   });
 });

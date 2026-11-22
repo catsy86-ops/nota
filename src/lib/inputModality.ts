@@ -7,6 +7,8 @@
 export type InputModality = "touch" | "mouse" | "keyboard";
 
 let current: InputModality = "mouse";
+/** Czas ostatniego dotyku, kliknięcia albo klawisza (`performance.now()`); -Infinity przed pierwszym. */
+let lastActionAt = -Infinity;
 
 const NON_TEXT_INPUT = new Set(["checkbox", "radio", "button", "submit", "reset", "range", "color", "file"]);
 
@@ -24,8 +26,12 @@ function set(next: InputModality) {
 }
 
 if (typeof document !== "undefined") {
-  document.addEventListener("pointerdown", (e) => set(e.pointerType === "mouse" ? "mouse" : "touch"), true);
+  document.addEventListener("pointerdown", (e) => {
+    lastActionAt = performance.now();
+    set(e.pointerType === "mouse" ? "mouse" : "touch");
+  }, true);
   document.addEventListener("keydown", (e) => {
+    lastActionAt = performance.now();
     // Same modyfikatory i Escape nie przełączają — Esc zamyka okno po dotyku.
     if (e.key === "Tab" || e.key.startsWith("Arrow")) set("keyboard");
     // Enter i Spacja na przycisku (nie w polu tekstowym — tam klawiatura ekranowa wysyła to samo
@@ -36,4 +42,12 @@ if (typeof document !== "undefined") {
 
 export function lastInputWasTouch(): boolean {
   return current === "touch";
+}
+
+/**
+ * Czy użytkownik dotknął, kliknął albo nacisnął klawisz w ostatnich `windowMs` ms.
+ * Odróżnia zmianę po jego akcji od zmiany z synchronizacji, przy której nic się nie rusza (M5.4).
+ */
+export function recentUserAction(windowMs = 1500): boolean {
+  return performance.now() - lastActionAt <= windowMs;
 }

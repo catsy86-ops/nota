@@ -37,6 +37,8 @@ Krzywe: `--ease-out` / `ease-out-soft` (wejście, domyślna), `--ease-in` / `eas
 | Przejście między widokami | `withViewTransition` + `html[data-vt-dir]` w `src/styles/app/effects.css` | zmiana widoku, panel dnia w Kalendarzu |
 | Wciśnięcie elementu dotykowego | klasa `pressable` (`src/styles/app/utilities.css`): `translate` 1 px + `brightness`, `--dur-press`; nie skala | `Button`, wiersze, karty |
 | Okno, arkusz, popover, menu | `OVERLAY_FADE` i `POPUP_MOTION` z `src/components/ui/overlay-motion.ts` (nie kopiuj list klas) | `Dialog`, `Sheet`, `Popover`, `DropdownMenu` |
+| Liczba zmienia się po akcji | `AnimatedNumber` (`src/components/ui/animated-number.tsx`); liczy tylko po `recentUserAction()`, przy synchronizacji przeskakuje | saldo Długów, podsumowanie Grafiku |
+| Zwijanie sekcji | `m.div` z `height: "auto"` w `AnimatePresence` (framer mierzy sam); w CSS `interpolate-size` jest już globalnie | grupy notatek, foldery w panelu bocznym |
 | Rysowanie obrysu | `@keyframes` + `var(--dur-*)` | `pencil-draw`, `sketch-draw` |
 
 ## Ograniczony ruch
@@ -51,4 +53,4 @@ Krzywe: `--ease-out` / `ease-out-soft` (wejście, domyślna), `--ease-in` / `eas
 
 ## Do zrobienia
 
-Pomiar klatek (M2), CSS zamiast JS (M3.1–M3.2), przejścia między działami i arkusze z gestem (M4), stan wciśnięcia i przegląd haptyki (M5.4–M5.5). Wyniki pomiaru M2.1 trafią tutaj.
+Pomiar klatek (M2), `@starting-style` zamiast JS (M3.1), przejścia między działami i arkusze z gestem (M4), zrzuty z wyłączonym ruchem i film (M5.5). Wyniki pomiaru M2.1 trafią tutaj.

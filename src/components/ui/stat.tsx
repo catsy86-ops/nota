@@ -17,7 +17,7 @@ const TONE = {
 export interface StatProps extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
   /** Etykieta zdaniem, nad liczbą („Są nam winni”, „Przepracowane”). */
   label: ReactNode;
-  /** Liczba — tekst albo `AnimatedNumber`/`CountUp`, które zostają w środku. */
+  /** Liczba — tekst albo `AnimatedNumber`, które zostają w środku. */
   value: ReactNode;
   /** Jednostka po liczbie, mniejsza i przygaszona („h”, „zł”). */
   unit?: ReactNode;
@@ -37,7 +37,7 @@ export interface StatProps extends Omit<HTMLAttributes<HTMLDivElement>, "childre
 /**
  * Jeden wygląd liczby (nowy plan 2026-11-05, 2.3): etykieta zdaniem, liczba w mono z cyframi tabelarycznymi,
  * jednostka mniejsza, opcjonalnie dopisek, linijka i pasek. Animacja liczby zostaje w `value`
- * (`AnimatedNumber`, `CountUp`), więc Stat nie zależy od framer-motion.
+ * (`AnimatedNumber`), więc Stat nie zależy od framer-motion.
  */
 export function Stat({ label, value, unit, suffix, hint, bar, size = "md", tone = "default", align = "start", term = false, className, ...rest }: StatProps) {
   const Label = term ? "dt" : "p";

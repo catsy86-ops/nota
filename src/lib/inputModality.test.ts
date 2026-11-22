@@ -64,3 +64,24 @@ describe("inputModality — ostatnie źródło wejścia", () => {
     expect(document.documentElement.dataset.input).toBe("touch");
   });
 });
+
+describe("recentUserAction — zmiana po akcji, nie z synchronizacji (M5.4)", () => {
+  it("jest prawdą tuż po dotyku i klawiszu, fałszem po upływie okna", async () => {
+    const { recentUserAction } = await import("@/lib/inputModality");
+    const realNow = performance.now.bind(performance);
+    let now = realNow();
+    performance.now = () => now;
+    try {
+      pointer(document.body, "touch");
+      expect(recentUserAction()).toBe(true);
+      now += 1600;
+      expect(recentUserAction()).toBe(false);
+      press(document.body, "a");
+      expect(recentUserAction()).toBe(true);
+      now += 400;
+      expect(recentUserAction(300)).toBe(false);
+    } finally {
+      performance.now = realNow;
+    }
+  });
+});

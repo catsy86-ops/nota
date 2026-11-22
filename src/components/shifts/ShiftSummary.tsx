@@ -20,7 +20,7 @@ import type { TimeOffBalance } from "@/lib/shifts/timeOff";
 import { useDayClock } from "@/lib/dayClock";
 import { deleteBonus, FTE_OPTIONS, setPaidGross, formatDuration, formatHoursShort, formatMoney, leaveBalance, nightAllowance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
-import { CountUp } from "./CountUp";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 import { LeaveMeter, YearSummaryDialog } from "./YearSummaryDialog";
 
 /** Czas albo „—” dla zera — jak dotychczasowe kafelki „Nadgodziny” i „Do normy”. */
@@ -85,11 +85,11 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
   return (
     <SectionCard level={3} aria-label="Podsumowanie miesiąca" title="Miesiąc w liczbach" bodyClassName="space-y-4">
       <div className="flex items-end justify-between gap-4 flex-wrap">
-        <UiStat label="Przepracowane" size="lg" value={<CountUp value={minutes} format={formatHoursShort} />} unit="h"
-          suffix={<>/ <CountUp value={normMinutes} format={formatHoursShort} /> h normy</>} />
+        <UiStat label="Przepracowane" size="lg" value={<AnimatedNumber value={minutes} format={formatHoursShort} />} unit="h"
+          suffix={<>/ <AnimatedNumber value={normMinutes} format={formatHoursShort} /> h normy</>} />
         {/* Pokazuje się też wtedy, gdy zarobek to 0, a jest szacunek urlopu albo L4 (G0.5). */}
         {(summary.earnings > 0 || grossTotal > 0) && (
-          <UiStat label="Razem brutto" size="lg" tone="primary" align="end" value={<CountUp value={grossTotal} format={formatMoney} />} />
+          <UiStat label="Razem brutto" size="lg" tone="primary" align="end" value={<AnimatedNumber value={grossTotal} format={formatMoney} />} />
         )}
         <Button type="button" onClick={() => setYearOpen(true)} aria-label="Podsumowanie roku"
           variant="outline" size="sm" className="shrink-0 gap-1.5 coarse:h-11">
@@ -108,18 +108,18 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
 
       {/* Kolumny wg szerokości kontenera (`@container` w ShiftsView): w panelu bocznym na xl dwie, nie cztery. */}
       <dl className="grid grid-cols-2 @lg:grid-cols-4 gap-3 text-sm">
-        <Stat label="Dni pracy" value={<CountUp value={summary.daysWorked} format={(n) => String(Math.round(n))} />} />
-        <Stat label="Nadgodziny" value={<CountUp value={overtimeMinutes} format={durationOrDash} />} accent={overtimeMinutes > 0}
+        <Stat label="Dni pracy" value={<AnimatedNumber value={summary.daysWorked} format={(n) => String(Math.round(n))} />} />
+        <Stat label="Nadgodziny" value={<AnimatedNumber value={overtimeMinutes} format={durationOrDash} />} accent={overtimeMinutes > 0}
           hint={overtimeMinutes > 0 ? [
             dailyOvertimeMinutes > 0 ? `dobowe ${formatDuration(dailyOvertimeMinutes)}` : null,
             overtime100Minutes > 0 ? `z dodatkiem 100% ${formatDuration(overtime100Minutes)}` : null,
           ].filter(Boolean).join(" · ") || undefined : undefined} />
         {/* Dodatek nocny wpisany tylko jako informacja: dodatek 100% za porę nocną już jest w rachunku, więc nie dodajemy go drugi raz. */}
-        <Stat label="W nocy" value={<CountUp value={summary.nightMinutes} format={formatDuration} />}
+        <Stat label="W nocy" value={<AnimatedNumber value={summary.nightMinutes} format={formatDuration} />}
           hint={summary.nightMinutes > 0 && nightRate > 0 ? `dodatek ${formatMoney(nightAllowance(summary.nightMinutes, nightRate))} · ${formatMoney(nightRate)}/h` : undefined} />
-        <Stat label="Do normy" value={<CountUp value={Math.max(0, normMinutes - minutes)} format={durationOrDash} />} />
+        <Stat label="Do normy" value={<AnimatedNumber value={Math.max(0, normMinutes - minutes)} format={durationOrDash} />} />
         {extra > 0 && (
-          <Stat label="Ponadwymiarowe" value={<CountUp value={extra} format={formatDuration} />} hint="ponad etat, bez dodatku" />
+          <Stat label="Ponadwymiarowe" value={<AnimatedNumber value={extra} format={formatDuration} />} hint="ponad etat, bez dodatku" />
         )}
       </dl>
 

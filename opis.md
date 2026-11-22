@@ -103,7 +103,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 - **LazyMotion.** `App.tsx` owija aplikację w `<LazyMotion features={loadMotionFeatures} strict>`; pełny zestaw funkcji (`src/lib/motionFeatures.ts`) jest w osobnej paczce tuż po starcie. Komponenty importują `m as motion` (pełne `motion` w trybie `strict` to błąd). Wejściowy JS po tej zmianie 372,4 KB gzip. Do załadowania funkcji animacje wejścia nie grają.
 - **Czasy i sprężyny** z `src/lib/motion.ts` (`spring.snap`, `spring.soft`, `tween.enter`). Animowane są tylko `transform` i `opacity`. Ograniczony ruch obsługuje `MotionConfig` w `App.tsx`. Animacje CSS i mikrointerakcje (słownik ruchu) są w `src/styles/motion.css` — opis w sekcji „ruch i drobny szlif, Etap 4”.
-- **Przełączniki** (`settings/Segmented.tsx`, `SkinPicker`): podświetlenie przesuwa się sprężyną (`layoutId` w `LayoutGroup` z `useId`). `RollingNumber` (licznik notatek) przewija cyfrę. Ikona słońca/księżyca obraca się.
+- **Przełączniki** (`settings/Segmented.tsx`, `SkinPicker`): podświetlenie przesuwa się sprężyną (`layoutId` w `LayoutGroup` z `useId`). Ikona słońca/księżyca obraca się.
 - **Listy:** zwijanie grupy w Notatkach opada wysokością; wiersz tabeli usunięty lub zarchiwizowany gaśnie, nowy wjeżdża (bez animacji przy pierwszym montażu); szkielet kart Dziś rezerwuje miejsce; pusty stan gaśnie.
 - **Mikrointerakcje stanów:** pole z błędem (`aria-invalid`) ma czerwoną ramkę, a z klasą `shake-invalid` także drga przy próbie zapisu; liczniki w nawigacji pulsują przy zmianie (`count-bump`); przełączniki i checkboxy podświetlają się po najechaniu; suwak ma halo; tosty mają przycisk × (błąd 9 s można zamknąć); Enter i Spacja po dotyku nie włączają ramki fokusu (`src/lib/inputModality.ts`). Przycisk „ładuje” (wspólny prop `loading`) nie jest zrobiony.
 - **Podpis wciśnięcia** przycisków to klasa `pressable`, nie skala framer-motion.
@@ -715,7 +715,7 @@ Plan: `nowyplan.md`, Etap 2 (punkty 2.1–2.6, V5–V7).
 ### Jak działa i dlaczego
 
 - **`SectionCard` nazywa sekcję tytułem** (`aria-labelledby`), chyba że widok poda własne `aria-label` (karty Dziś mają je z testów i czytnika). Poziom nagłówka `level` (2 w widoku, 3 w karcie w karcie).
-- **`Stat` nie animuje sam:** `AnimatedNumber` i `CountUp` zostają w `value`, więc komponent nie ciągnie framer-motion. Prop `term` daje parę `dt`/`dd` do listy opisów (siatka podsumowania Grafiku).
+- **`Stat` nie animuje sam:** `AnimatedNumber` zostaje w `value`, więc komponent nie ciągnie framer-motion. Prop `term` daje parę `dt`/`dd` do listy opisów (siatka podsumowania Grafiku).
 - **`ToggleGroup` zamiast przycisków `aria-pressed`:** jeden przystanek Tab, strzałki, rola `radiogroup`/`radio` z `aria-checked`. Testy szukają teraz `radio`.
 - **Zakładki Ćwiczeń z `forceMount`:** sekcje są w DOM zawsze (jak dotąd). Telefon chowa nieaktywne (`max-sm:data-[state=inactive]:hidden`), a komputer pokazuje wszystkie i nie ma listy zakładek.
 - **`MissingHint` zawsze jest w DOM** (pusty jako `sr-only`), więc `aria-describedby` przycisku ma cel, a `aria-live` ogłasza zmianę.
@@ -1574,7 +1574,7 @@ Dział opisany w jednym miejscu: rdzeń (dotąd nieopisany) i dodatki z 2026-10-
 - **Testy (Etap 2, pkt 2.4):** `move.test.ts` (`planMonthCopy`: dni tygodnia, brak nadpisania). Pusty stan nie ma osobnego e2e.
 - **Testy (Etap 1 planu Grafiku, Etap 2 pkt 2.1 i 2.3):** `undo.test.ts` (redo), `pattern.test.ts` (`defaultPatternStart`), `e2e/shifts.spec.ts` („Cofnij” w cyklu, w usunięciu rodzaju i w czyszczeniu dnia).
 - **Testy (Etap 1 planu Grafiku):** `money.test.ts` (kwoty), `overtimePremium.test.ts` (podstawa + dodatek = zarobek), `pattern.test.ts` (ochrona urlopów i notatek przy cyklu), `timesheet.test.ts` (kolumny „Do” i „Do (plan)”).
-- **Komponenty** (`src/components/shifts/`): `ShiftsView.tsx` (widok, `exportImage`, podpięcie przełącznika), `ShiftMonthGrid.tsx`, `ShiftWeekView.tsx`, `ShiftSummary.tsx` (`Receipt`, `BonusPanel`), `NowCard.tsx`, `DayDialog.tsx`, `ShiftTypeDialog.tsx`, `PatternDialog.tsx`, `ShiftSettingsDialog.tsx`, `YearSummaryDialog.tsx`, `BrushBar.tsx`, `BrushHours.tsx`, `ShiftDnd.tsx`, `TimeStepper.tsx`, `CountUp.tsx`, `ScheduleSwitcher.tsx`, `labels.ts`, `dayLabel.ts`.
+- **Komponenty** (`src/components/shifts/`): `ShiftsView.tsx` (widok, `exportImage`, podpięcie przełącznika), `ShiftMonthGrid.tsx`, `ShiftWeekView.tsx`, `ShiftSummary.tsx` (`Receipt`, `BonusPanel`), `NowCard.tsx`, `DayDialog.tsx`, `ShiftTypeDialog.tsx`, `PatternDialog.tsx`, `ShiftSettingsDialog.tsx`, `YearSummaryDialog.tsx`, `BrushBar.tsx`, `BrushHours.tsx`, `ShiftDnd.tsx`, `TimeStepper.tsx`, `ScheduleSwitcher.tsx`, `labels.ts`, `dayLabel.ts`.
 - **Kopia:** `src/lib/noteSchema.ts` (pola `shifts`, `shiftSchedules`), `src/lib/exportNotes.ts` (zapis w buildzie i przywracanie; grafik główny zastępuje, dodatkowe są dokładane).
 - **Podpięcie:** `src/pages/Index.tsx` (leniwy widok), `src/hooks/useFilteredNotes.ts`, `src/lib/viewRoute.ts`, pasek boczny, `BottomNav.tsx`, paleta poleceń. Telefon w poziomie: wariant `short:` w `tailwind.config.ts`.
 
@@ -6801,11 +6801,13 @@ W1.8 — commit po tym wpisie (2026-11-19).
 
 ### Gdzie jest
 
-- `src/test/motionTokens.test.ts`: M1.2 — `--dur-*` i `--ease-*` w `tokens.css` muszą równać się `dur` i `ease` z `src/lib/motion.ts`; M1.5 — klasy `duration-<liczba>` najwyżej 2, literały `duration: 0.x` w `.tsx` najwyżej 4 (pieczątka osiągnięcia ×2, wordmark, przewijanie liczby).
+- `src/test/motionTokens.test.ts`: M1.2 — `--dur-*` i `--ease-*` w `tokens.css` muszą równać się `dur` i `ease` z `src/lib/motion.ts`; M1.5 — klasy `duration-<liczba>` najwyżej 2, literały `duration: 0.x` w `.tsx` najwyżej 3 (pieczątka osiągnięcia ×2, wordmark).
 - Zamiany w 13 komponentach (m.in. `DebtsView`, `ShiftSummary`, `StudyView`, `NowCard`, `GuideDialog`, `NoteBoard`, `QuizPanel`).
 - `docs/ruch.md` (M1.1): jedna strona zasad ruchu — siedem zasad, tabela tokenów (czas → klasa → `dur.*`), tabela „który wzór kiedy”, ograniczony ruch, straż. Zmieniasz token albo próg strażnika — popraw tabelę.
 - M5.2 (haptyka): `Switch` (`src/components/ui/switch.tsx`) wibruje sam `selection` przy zmianie; przegląd 184 wywołań `haptic()` nie wykrył dubli. M5.1 to istniejące `pressable` (`utilities.css`).
 - M3.3: `src/components/ui/overlay-motion.ts` — `OVERLAY_FADE` (Dialog, Sheet, AlertDialog) i `POPUP_MOTION` (Popover, DropdownMenu); Tooltip poza nim (stany `delayed-open`/`instant-open`). Commity e284a4c1, 39a52a28 (2026-11-21).
+- M5.4 (liczby): jeden licznik `AnimatedNumber` (`src/components/ui/animated-number.tsx`) zamiast trzech (`shifts/CountUp.tsx` i nieużywany `RollingNumber.tsx` usunięte). Używają go podsumowanie Grafiku (`ShiftSummary`), Długi (`DebtsView`) i licznik powtórek na Dziś (`StudyDueRows`). Przelicza krótkim tweenem (`dur.slow + 0.1`, `ease.out`) tylko wtedy, gdy `recentUserAction()` z `src/lib/inputModality.ts` mówi, że w ostatnich 1,5 s był dotyk, kliknięcie albo klawisz; zmiana z synchronizacji Yjs, pierwszy render i ograniczony ruch pokazują wynik od razu. Tekst wpisuje efekt w węzeł (ref), bez setState na klatkę; zawsze `tabular-nums`. Bez `format` zaokrągla, z `format` dostaje wartości pośrednie (złotówki z groszami w Grafiku).
+- M3.2 (zwijanie): bez zmian w kodzie. `interpolate-size: allow-keywords` jest globalnie na `html` (`styles/app/base.css`), a sekcje zwijane w JS (`NoteGroupSection`, `NoteCard`, `ChecklistEditor`, `SidebarFolderItem`, `VersionHistoryDialog`) animują `height: "auto"` przez framer-motion, który mierzy sam — nigdzie nie ma ręcznego liczenia wysokości do zastąpienia. Przejście na CSS wymagałoby rezygnacji z `AnimatePresence` (zwinięta sekcja przestaje być w DOM i w nawigacji klawiaturą), więc zostaje.
 
 ### Ograniczenia i pułapki
 
@@ -6816,6 +6818,7 @@ W1.8 — commit po tym wpisie (2026-11-19).
 ### Testy
 
 - `motionTokens.test.ts` (4), strażnicy `src/test`, typecheck. Pełne e2e nie było puszczane po tej zmianie.
+- M5.4: `src/lib/inputModality.test.ts` („recentUserAction”), e2e `debts-due`, `debts-plan`, `debts-rates`, `shifts`, `shifts-undo`, `today-study` (43 zaliczone, 2 pominięte z założenia).
 
 ### Commit
 
