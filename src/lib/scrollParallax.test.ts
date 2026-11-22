@@ -14,6 +14,7 @@ describe("scrollOffset", () => {
 describe("startScrollParallax", () => {
   it("ustawia zmienną na przewinięciu i sprząta ją po zakończeniu", async () => {
     const root = document.createElement("html");
+    root.dataset.skin = "zorza";
     const stop = startScrollParallax(root);
     const el = document.createElement("div");
     Object.defineProperty(el, "scrollTop", { value: 90, configurable: true });
@@ -25,6 +26,20 @@ describe("startScrollParallax", () => {
     expect(root.style.getPropertyValue(PARALLAX_VAR)).toBe("90");
     stop();
     expect(root.style.getPropertyValue(PARALLAX_VAR)).toBe("");
+    el.remove();
+  });
+
+  it("poza stylem Zorza nie ustawia zmiennej (M2.1: zmiana na <html> unieważniała styl całego drzewa)", async () => {
+    const root = document.createElement("html");
+    root.dataset.skin = "zeszyt";
+    const stop = startScrollParallax(root);
+    const el = document.createElement("div");
+    Object.defineProperty(el, "scrollTop", { value: 90, configurable: true });
+    document.body.appendChild(el);
+    el.dispatchEvent(new Event("scroll", { bubbles: true }));
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    expect(root.style.getPropertyValue(PARALLAX_VAR)).toBe("");
+    stop();
     el.remove();
   });
 });

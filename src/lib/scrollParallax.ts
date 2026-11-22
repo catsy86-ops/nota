@@ -15,6 +15,12 @@ export function startScrollParallax(root: HTMLElement = document.documentElement
   let frame = 0;
   let latest = 0;
   const onScroll = (e: Event) => {
+    // M2.1: tylko przy Zorzy. Zmienna na `<html>` dziedziczy się w całe drzewo, więc jej zmiana na każdej
+    // klatce przewijania unieważniała styl wszystkich kart (pomiar: ~5 s na 6 s przewijania przy CPU ×4).
+    if (root.dataset.skin !== "zorza") {
+      if (root.style.getPropertyValue(PARALLAX_VAR)) root.style.removeProperty(PARALLAX_VAR);
+      return;
+    }
     latest = scrollOffset(e.target);
     if (frame) return;
     frame = requestAnimationFrame(() => {

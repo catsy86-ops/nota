@@ -52,6 +52,29 @@ Krzywe: `--ease-out` / `ease-out-soft` (wejście, domyślna), `--ease-in` / `eas
 - Stałego `will-change` nie dodajemy (M1.6); tylko na czas animacji.
 - Martwych `@keyframes` nie zostawiamy (M1.3) — nazwy składane w motywach sprawdź przed usunięciem.
 
+## Pomiar klatek (M2.1, 2026-11-22)
+
+Test: `e2e/motion-frames.spec.ts`, uruchamiany na żądanie: `PERF=1 npx playwright test e2e/motion-frames.spec.ts --project=pixel-7`. Telefon Pixel 7 w Playwright, produkcyjny build, procesor zdławiony ×4 (`CPU_RATE`), 300 notatek w ręcznym porządku. Klatki z pętli `requestAnimationFrame`, długie klatki z Long Animation Frames razem z przypisaniem do skryptu. `PROFILE=1` zapisuje profil CPU przewijania. `FRAMES_STRICT=1` włącza próg 50 ms.
+
+| Ścieżka | Przed poprawką: klatki > 50 ms, najdłuższa | Po poprawce: klatki > 50 ms, najdłuższa | Co zajmuje klatkę |
+|---|---|---|---|
+| Przewijanie 300 notatek | 31–40, 250–300 ms | 1–2, 50–83 ms | — |
+| Otwarcie notatki | 1, ~600 ms | 1, ~530 ms | render Reacta po stuknięciu (montaż edytora i czytnika) |
+| Zmiana zakładki (Notatki → Dziś → Notatki) | 5–8, 230–340 ms | 8, ~270 ms | render widoku po zmianie trasy |
+| Otwarcie i zamknięcie arkusza „Widok” | 10–12, ~350 ms | 3, ~280 ms | po ~220 ms przy otwarciu, przy Escape i przy `popstate` |
+| Przeciągnięcie karty | 3–7, 300–440 ms | 3, ~320 ms | `handleEnd` dnd-kit i render po zmianie kolejności |
+
+Przy CPU ×1 żadna ścieżka poza otwarciem notatki (~110 ms) nie przekracza 82 ms.
+
+**Znalezisko i poprawka:** paralaksa stylu Zorza (`src/lib/scrollParallax.ts`) ustawiała `--sig-scroll` na `<html>` w każdej klatce przewijania, niezależnie od stylu. Zmienna dziedziczy się w całe drzewo, więc styl 300 kart był unieważniany co klatkę. `useHideOnScroll` czytał zaraz potem `window.scrollY` i wymuszał pełne przeliczenie stylu i układu, co dawało ~5 s na 6 s przewijania. Teraz paralaksa działa tylko przy `data-skin="zorza"`.
+
+**Kryterium etapu niespełnione:** pojedyncze klatki po stuknięciu mają 270–530 ms przy CPU ×4. To pojedyncze rendery Reacta, nie animacje. Kierunki na M2.2:
+- Zamknięcie warstwy robi `history.back()` (`overlayHistory.ts`). Na `popstate` reaguje też router i przerysowuje widok, choć adres się nie zmienił.
+- Otwarcie notatki: koszt montażu czytnika (~480 ms przy ×4).
+- Zmiana zakładki i koniec przeciągania: render całej listy.
+
+INP z `web-vitals-phone.spec.ts` (bez dławienia) po poprawce: mediana 160–176 ms, LCP 160–280 ms.
+
 ## Do zrobienia
 
-Pomiar klatek (M2), przejścia między działami i arkusze z gestem (M4), zrzuty z wyłączonym ruchem i film (M5.5). Wyniki pomiaru M2.1 trafią tutaj.
+Renderowanie po stuknięciu (M2.2, kierunki wyżej), przejścia między działami i arkusze z gestem (M4), zrzuty z wyłączonym ruchem i film (M5.5).
