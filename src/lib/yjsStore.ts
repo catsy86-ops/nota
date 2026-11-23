@@ -22,15 +22,15 @@ import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 import { startupReplace } from "@/lib/docReplaceCore";
 import { cleanLabelPath, isUnderLabel, renameLabelBranch } from "@/lib/labelTree";
 import {
-  type YNote, type YFolder, type YChecklistItem, type ImagesById, imageRefs, readReminderState,
-  FUTURE_CONTENT_KEY, NOTE_SCALAR_FIELDS, FOLDER_SCALAR_FIELDS, applyTextDiff, yChecklistFromPlain,
-  applyChecklistDiff, applyPropsDiff, type YPropDef, yPropDefFromPlain, plainPropDefFromY, plainAttachments,
-  PRIVATE_FIELDS, PRIVATE_META, type PrivateFields, yNoteFromPlain, plainFromYNote, FOLDER_KEYS, PROP_DEF_KEYS,
-  keepForeignKeys, yFolderFromPlain, plainFromYFolder,
+  type YNote, type YFolder, type ImagesById, imageRefs, readReminderState,
+  NOTE_SCALAR_FIELDS, FOLDER_SCALAR_FIELDS, applyTextDiff, applyChecklistDiff, applyPropsDiff, type YPropDef,
+  yPropDefFromPlain, plainPropDefFromY, plainAttachments, PRIVATE_FIELDS, PRIVATE_META, type PrivateFields,
+  yNoteFromPlain, plainFromYNote, FOLDER_KEYS, PROP_DEF_KEYS, keepForeignKeys, yFolderFromPlain,
+  plainFromYFolder,
 } from "./yjs/codec";
 import type { StoreCtx } from "./yjs/context";
 import { createTextEditApi } from "./yjs/textEdit";
-
+import { createVaultApi } from "./yjs/vault";
 export { FUTURE_CONTENT_KEY } from "./yjs/codec";
 
 /**
@@ -165,11 +165,10 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   const propDefsMap = doc.getMap<YPropDef>("propDefs");
   const noteCache = new Map<string, Note>();
   const dirtyNotes = new Set<string>();
-  /** Odbiorca zapisów treści notatek prywatnych (ustawia `privateNotes.ts`). */
-  let lockedWriteSink: ((id: string, fields: PrivateFields) => boolean) | null = null;
   const vaultMap = doc.getMap<unknown>("vault");
   const ctx: StoreCtx = { doc, notesMap, foldersMap, labelsMap, propDefsMap, vaultMap, noteCache, dirtyNotes, images };
   const { textBases, beginTextEdit, getNoteText, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange } = createTextEditApi(ctx);
+  const { writeLocked, readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote, getFutureContent, getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink } = createVaultApi(ctx, textBases);
   notesMap.observeDeep((events) => {
     for (const e of events) {
       if (e.target === notesMap) e.changes.keys.forEach((_c, k) => dirtyNotes.add(k));
@@ -401,7 +400,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       delete rest.vault;
       // Właściwości nie są w szyfrogramie — przy notatce prywatnej pomijamy je po cichu.
       delete rest.props;
-      const accepted = Object.keys(priv).length === 0 || (lockedWriteSink?.(id, priv as PrivateFields) ?? false);
+      const accepted = Object.keys(priv).length === 0 || writeLocked(id, priv as PrivateFields);
       // Przegląd V-3 (punkt 1): metadane przy zablokowanym skarbcu NIE zapisują się jawnie — odrzucamy je
       // i mówimy o tym użytkownikowi. Przy zamkniętej bramce schematu zostaje dotychczasowe zachowanie (jawne).
       if (!accepted && metaSecret && (PRIVATE_META as readonly string[]).some((f) => f in priv)) {
@@ -628,139 +627,6 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
         y.set("labels", renameLabelBranch(labels, oldLabel, target));
       });
     });
-  }
-
-  /** Jawna, pełna notatka z dokumentu (dla skarbca przy blokowaniu). `null`, gdy nie ma albo jest już prywatna. */
-  function readPlainNote(id: string): Note | null {
-    const y = notesMap.get(id);
-    if (!y || y.get("locked") === true) return null;
-    return plainFromYNote(id, y);
-  }
-
-  function isLocked(id: string): boolean {
-    return notesMap.get(id)?.get("locked") === true;
-  }
-
-  /** Id wszystkich notatek prywatnych (też w koszu i archiwum). */
-  function lockedNoteIds(): string[] {
-    const ids: string[] = [];
-    notesMap.forEach((y, id) => { if (y.get("locked") === true && typeof y.get("vault") === "string") ids.push(id); });
-    return ids;
-  }
-
-  function getVault(id: string): string | null {
-    const y = notesMap.get(id);
-    const v = y?.get("locked") === true ? y.get("vault") : undefined;
-    return typeof v === "string" ? v : null;
-  }
-
-  /**
-   * Zamienia notatkę w prywatną: jawne pola znikają z dokumentu (stary `Y.Text` i
-   * mapa listy są zastępowane nowymi, więc ich zawartość zostaje odśmiecona),
-   * zostaje szyfrogram. Jedna transakcja.
-   */
-  function lockNote(id: string, vault: string, dropMeta = false): boolean {
-    const y = notesMap.get(id);
-    if (!y || y.get("locked") === true) return false;
-    doc.transact(() => {
-      y.set("content", new Y.Text());
-      y.set("title", "");
-      y.set("labels", []);
-      y.set("checklist", new Y.Map<YChecklistItem>());
-      y.set("imageHashes", []);
-      y.delete("attachments");
-      // Metadane idą do szyfrogramu (krok 3): z dokumentu znikają jawne wartości.
-      if (dropMeta) for (const f of PRIVATE_META) y.delete(f);
-      // Pola z przyszłości wróciły do szyfrogramu (`privateNotes.lockNote`) — jawna kopia znika.
-      y.delete(FUTURE_CONTENT_KEY);
-      y.set("vault", vault);
-      y.set("locked", true);
-      y.set("updatedAt", Date.now());
-    });
-    textBases.delete(id);
-    return true;
-  }
-
-  /** Nowy szyfrogram istniejącej notatki prywatnej. */
-  function setVault(id: string, vault: string, touch = true): boolean {
-    const y = notesMap.get(id);
-    if (!y || y.get("locked") !== true) return false;
-    doc.transact(() => {
-      y.set("vault", vault);
-      if (touch) y.set("updatedAt", Date.now());
-    });
-    return true;
-  }
-
-  /** Zdejmuje blokadę: jawna treść wraca do dokumentu, szyfrogram znika. */
-  function unlockNote(id: string, plain: Pick<Note, "title" | "content" | "checklist" | "labels"> & Partial<Pick<Note, "color" | "folderId" | "parentId" | "icon">>, futureContent?: string): boolean {
-    const y = notesMap.get(id);
-    if (!y || y.get("locked") !== true) return false;
-    doc.transact(() => {
-      const text = new Y.Text();
-      if (plain.content) text.insert(0, plain.content);
-      y.set("content", text);
-      y.set("title", plain.title);
-      y.set("labels", plain.labels.slice());
-      y.set("checklist", yChecklistFromPlain(plain.checklist));
-      // Metadane z szyfrogramu wracają do dokumentu, ale tylko tam, gdzie dokument ich nie ma: wartość jawna
-      // (zapisana przy zablokowanym skarbcu) jest świeższa niż ta z szyfrogramu. Starsze treści: zostają jak były.
-      for (const f of PRIVATE_META) if (plain[f] !== undefined && y.get(f) === undefined) y.set(f, plain[f]);
-      // Nieznane pola treści szyfrogramu (nowsza wersja) — poza projekcją `Note`, wracają przy ponownej blokadzie.
-      if (futureContent) y.set(FUTURE_CONTENT_KEY, futureContent);
-      y.delete("vault");
-      y.delete("locked");
-      y.set("updatedAt", Date.now());
-    });
-    return true;
-  }
-
-  /** Pola z przyszłości zachowane przy zdjęciu blokady (JSON) albo `null`. */
-  function getFutureContent(id: string): string | null {
-    const v = notesMap.get(id)?.get(FUTURE_CONTENT_KEY);
-    return typeof v === "string" ? v : null;
-  }
-
-  function getVaultMeta(): unknown {
-    return vaultMap.get("meta");
-  }
-
-  function setVaultMeta(meta: unknown): void {
-    doc.transact(() => { vaultMap.set("meta", meta); });
-  }
-
-  function observeVaultMeta(listener: () => void): () => void {
-    vaultMap.observe(listener);
-    return () => vaultMap.unobserve(listener);
-  }
-
-  /**
-   * Zmiana klucza skarbca: nowe metadane i nowe szyfrogramy wszystkich podanych
-   * notatek w JEDNEJ transakcji — peer widzi albo stary stan, albo cały nowy.
-   * Zwraca `false` (nic nie zapisuje), gdy któraś notatka zmieniła szyfrogram
-   * od chwili, gdy go odczytano (`expected`), albo przestała być prywatna,
-   * albo gdy bieżące metadane skarbca nie spełniają `metaUnchanged` (inne
-   * urządzenie zmieniło nagłówek w trakcie — nie nadpisujemy go).
-   */
-  function rekeyVault(meta: unknown, next: Map<string, { expected: string; vault: string }>, metaUnchanged?: (current: unknown) => boolean, trash?: Map<string, string>): boolean {
-    if (metaUnchanged && !metaUnchanged(vaultMap.get("meta"))) return false;
-    for (const [id, { expected }] of next) if (getVault(id) !== expected) return false;
-    for (const [id, expected] of trash ?? []) if (getVault(id) !== expected) return false;
-    doc.transact(() => {
-      // Nieczytelne notatki idą do kosza ze starym szyfrogramem (da się go pobrać) — w tej samej transakcji.
-      const t = Date.now();
-      for (const id of trash?.keys() ?? []) {
-        const y = notesMap.get(id)!;
-        if (y.get("trashed") !== true) { y.set("trashed", true); y.set("trashedAt", t); }
-      }
-      for (const [id, { vault }] of next) notesMap.get(id)!.set("vault", vault);
-      vaultMap.set("meta", meta);
-    });
-    return true;
-  }
-
-  function setLockedWriteSink(sink: typeof lockedWriteSink): void {
-    lockedWriteSink = sink;
   }
 
   /**
