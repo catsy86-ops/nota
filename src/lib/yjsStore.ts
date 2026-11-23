@@ -5,22 +5,19 @@ import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatS
 import { applyTextEdit } from "./yTextEdit";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { trackPersistence } from "@/lib/saveStatus";
-import { normalizeAttachments, isAttachmentSyncable, type Attachment } from "@/lib/attachments";
+import { normalizeAttachments } from "@/lib/attachments";
 import { imageStore as defaultImageStore, type ImageStore } from "@/lib/imageStore";
 import type { Note, Folder } from "@/lib/types/note";
 import { logDiag } from "@/lib/diagnostics";
 import { cleanNoteProps, cleanPropDefs, type PropDef } from "@/lib/noteProps";
 import { mergeSpec, REMINDER_FIELDS } from "@/lib/reminderSpec";
 import { fallbackRepeat } from "@/lib/reminderRepeat";
-import { journalRefsIn } from "@/lib/study/journalRefs";
-import { planRefsIn } from "@/lib/plans/planRefs";
-import { debtProofRefsIn } from "@/lib/debts/proofs";
 import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 import { startupReplace } from "@/lib/docReplaceCore";
 import {
   type YNote, type YFolder, imageRefs, readReminderState, NOTE_SCALAR_FIELDS, applyTextDiff, applyChecklistDiff,
-  applyPropsDiff, type YPropDef, yPropDefFromPlain, plainAttachments, PRIVATE_FIELDS, PRIVATE_META,
-  type PrivateFields, yNoteFromPlain, plainFromYNote, yFolderFromPlain,
+  applyPropsDiff, type YPropDef, yPropDefFromPlain, PRIVATE_FIELDS, PRIVATE_META, type PrivateFields,
+  yNoteFromPlain, plainFromYNote, yFolderFromPlain,
 } from "./yjs/codec";
 import type { StoreCtx } from "./yjs/context";
 import { createTextEditApi } from "./yjs/textEdit";
@@ -28,7 +25,7 @@ import { createVaultApi } from "./yjs/vault";
 import { createMigrations } from "./yjs/migrations";
 import { createTaxonomyApi } from "./yjs/taxonomy";
 import { replacePersistedDoc } from "./yjs/docFile";
-
+import { createFileRefsApi } from "./yjs/fileRefs";
 export { FUTURE_CONTENT_KEY } from "./yjs/codec";
 export { readDocState, replacePersistedDoc, type DocState } from "./yjs/docFile";
 
@@ -67,6 +64,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   const { textBases, beginTextEdit, getNoteText, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange } = createTextEditApi(ctx);
   const { writeLocked, readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote, getFutureContent, getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink } = createVaultApi(ctx, textBases);
   const { projectFolders, projectLabels, projectPropDefs, upsertPropDef, deletePropDef, upsertFolder, patchFolder, removeFolder, addLabel, removeLabelEverywhere, renameLabelEverywhere } = createTaxonomyApi(ctx);
+  const { referencedImages, noteFileRefs, referencedAttachments, syncableRefs } = createFileRefsApi(ctx);
   notesMap.observeDeep((events) => {
     for (const e of events) {
       if (e.target === notesMap) e.changes.keys.forEach((_c, k) => dirtyNotes.add(k));
@@ -212,69 +210,6 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
         if (y) applyPatch(id, y, updates);
       }
     });
-  }
-
-  /**
-   * Wszystkie klucze bajtów w `imageStore`, do których odwołuje się jakakolwiek
-   * notatka (także w Koszu) albo wpis dziennika z budowy: obrazy ORAZ załączniki. To wejście dla GC — blob
-   * używany przez inną notatkę (ten sam hash) nigdy nie jest kandydatem.
-   */
-  function referencedImages(): Set<string> {
-    const refs = new Set<string>();
-    notesMap.forEach((y) => {
-      const list = y.get("imageHashes");
-      if (Array.isArray(list)) for (const r of list) if (typeof r === "string") refs.add(r);
-      for (const a of plainAttachments(y.get("attachments"))) refs.add(a.hash);
-    });
-    // Zdjęcia dziennika z budowy (Nauka) — te same bajty w `imageStore`.
-    for (const r of journalRefsIn(doc)) refs.add(r);
-    // Obrazy analiz planów (oryginał i kopia robocza).
-    for (const r of planRefsIn(doc)) refs.add(r);
-    // Zdjęcia dowodów długów (L4.3).
-    for (const r of debtProofRefsIn(doc)) refs.add(r);
-    return refs;
-  }
-
-  /** Obrazy i załączniki podanych notatek (Z-6.5: odnowienie karencji przy trwałym usunięciu). */
-  function noteFileRefs(ids: readonly string[]): string[] {
-    const refs = new Set<string>();
-    for (const id of ids) {
-      const y = notesMap.get(id);
-      if (!y) continue;
-      const list = y.get("imageHashes");
-      if (Array.isArray(list)) for (const r of list) if (typeof r === "string") refs.add(r);
-      for (const a of plainAttachments(y.get("attachments"))) refs.add(a.hash);
-    }
-    return [...refs];
-  }
-
-  /** Załączniki wszystkich notatek: hash → manifest (rozmiar do limitu łącznego i backupu). */
-  function referencedAttachments(): Map<string, Attachment> {
-    const out = new Map<string, Attachment>();
-    notesMap.forEach((y) => {
-      for (const a of plainAttachments(y.get("attachments"))) if (!out.has(a.hash)) out.set(a.hash, a);
-    });
-    return out;
-  }
-
-  /**
-   * Klucze, które wolno wysłać innemu urządzeniu (P2P, plik sync): wszystkie
-   * obrazy (także zdjęcia dziennika z budowy) i załączniki do `ATTACHMENT_SYNC_MAX_BYTES`. Większe pliki są
-   * lokalne dla urządzenia (UI mówi o tym wprost).
-   */
-  function syncableRefs(): Set<string> {
-    const refs = new Set<string>();
-    notesMap.forEach((y) => {
-      const list = y.get("imageHashes");
-      if (Array.isArray(list)) for (const r of list) if (typeof r === "string") refs.add(r);
-    });
-    referencedAttachments().forEach((a, hash) => { if (isAttachmentSyncable(a)) refs.add(hash); });
-    for (const r of journalRefsIn(doc, true)) refs.add(r);
-    // Plany: kopia robocza zawsze, oryginał tylko do 2 MB (D3).
-    for (const r of planRefsIn(doc, true)) refs.add(r);
-    // Dowody długów: po `prepareImage` (do 2 MB), więc jadą zawsze.
-    for (const r of debtProofRefsIn(doc)) refs.add(r);
-    return refs;
   }
 
   /** Persists a manual drag order (index per id) in one transaction. */
