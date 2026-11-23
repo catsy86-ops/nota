@@ -38,6 +38,8 @@ export default tseslint.config(
     // Only these modules (and their tests) are allowed to talk to Yjs directly.
     files: [
       "src/lib/yjsStore.ts",
+      // F3: części magazynu wydzielone z yjsStore.ts.
+      "src/lib/yjs/*.ts",
       "src/lib/yjsStore.test.ts",
       // Właściwości notatek: test synchronizacji dwóch dokumentów (Y.applyUpdate) i ręczny Y.Map w uszkodzonym wpisie.
       "src/lib/yjsStore.props.test.ts",
