@@ -613,10 +613,24 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 - `SECURITY.md` — zgłaszanie prywatne, zakres, obsługiwane wersje (tylko `master`).
 - `src/lib/htmlSinkGuard.test.ts` — czyta wszystkie źródła `src/` i szuka `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `srcdoc`, `document.write`, `insertAdjacentHTML`, `createContextualFragment`.
 
-**Jak działa.** Lista dozwolonych (`ALLOWED`) ma jeden wpis: `MermaidBlock.tsx`. Test padnie, gdy nowy plik użyje ujścia bez wpisu, a także gdy wpis nie ma już użycia. Komentarze są wycinane przed szukaniem, żeby opis w kodzie nie dawał fałszywych alarmów.
+**Jak działa.** Lista dozwolonych (`ALLOWED`) jest pusta od S1.6 (wcześniej miała jeden wpis: `MermaidBlock.tsx`). Test padnie, gdy nowy plik użyje ujścia bez wpisu, a także gdy wpis nie ma już użycia. Komentarze są wycinane przed szukaniem, żeby opis w kodzie nie dawał fałszywych alarmów.
 
-**Ograniczenia i pułapki.** Strażnik łapie nazwy, nie przepływ danych — ujście ukryte w dynamicznym dostępie (`el["inner"+"HTML"]`) go ominie. Reszta planu klienta (S1.1 Trusted Types, S1.2 adresy serwerów, S1.3 nagłówki, S1.6 druga warstwa Mermaida) jest do zrobienia.
+**Ograniczenia i pułapki.** Strażnik łapie nazwy, nie przepływ danych — ujście ukryte w dynamicznym dostępie (`el["inner"+"HTML"]`) go ominie. Reszta planu klienta (S1.1 Trusted Types, S1.2 adresy serwerów, S1.3 nagłówki) jest do zrobienia.
 
 **Testy.** `src/lib/htmlSinkGuard.test.ts` (2 przypadki; sprawdzone ręcznie, że plik z `innerHTML` go zawodzi).
 
 **Commit.** Patrz historia `docs/model-zagrozen.md`, 2026-11-23.
+
+## Bezpieczeństwo — Mermaid jako obraz `blob:` (S1.6, 2026-11-23)
+
+**Co robi.** Diagramy z bloków ` ```mermaid ` wyglądają jak dotąd, ale są obrazem, nie SVG wstawionym do strony. Ostatnie ujście HTML w aplikacji zniknęło.
+
+**Gdzie jest.** `src/components/MermaidBlock.tsx` (`MermaidImage`), `src/lib/mermaidRender.ts` (`fontFamily`, `htmlLabels: false`).
+
+**Jak działa.** SVG z `renderMermaid` trafia do `Blob` (`image/svg+xml`), `URL.createObjectURL` daje adres dla `<img>`, adres jest zwalniany przy zmianie diagramu i odmontowaniu. Zakładamy `xmlns` z wyjścia Mermaida (bez niego `<img>` nie narysuje SVG). Szerokość naturalna pochodzi z `max-width` w stylu SVG, żeby mały diagram nie rozciągał się na całą kartę. CSP już dopuszcza `img-src blob:`.
+
+**Ograniczenia i pułapki.** Tekstu diagramu nie da się zaznaczyć ani przeszukać na stronie. Czcionka jest systemowa, nie czcionką aplikacji (obraz nie widzi `@font-face` strony). Etykiety to SVG `<text>`, nie HTML — długie etykiety nie zawijają się tak jak wcześniej. Sprawdzone w Chromium (zrzut: etykiety, strzałki, kolory motywu); Safari i Firefox do sprawdzenia ręcznie.
+
+**Testy.** `src/components/MermaidBlock.test.tsx` (obraz `blob:`, brak `<svg>` w DOM, ładunek XSS nie trafia do drzewa i nie wykonuje się), `e2e/mermaid.spec.ts` (przeglądarka dekoduje obraz), `src/lib/htmlSinkGuard.test.ts`.
+
+**Commit.** Patrz historia `src/components/MermaidBlock.tsx`, 2026-11-23.

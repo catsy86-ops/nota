@@ -42,7 +42,7 @@ Urządzenie A ──WebRTC (DTLS, hasło = kod)──► Urządzenie B
 | Kod | Przeciwnik | Co może | Główna obrona | Otwarte |
 |---|---|---|---|---|
 | T1 | Znalazca albo złodziej odblokowanego telefonu | Czyta wszystko poza skarbcem | Blokada skarbca po czasie i przy ukryciu, ukrywanie kwot | Blokada całej aplikacji (S1.8) |
-| T2 | Złośliwa treść (wklejka, import, udostępnienie, plik planu) | XSS → odczyt dokumentu i sekretów z `localStorage`, wysyłka na dowolny host | CSP, brak ujść HTML (strażnik), Mermaid w trybie `strict` | Trusted Types (S1.1), druga warstwa Mermaida (S1.6), `connect-src` |
+| T2 | Złośliwa treść (wklejka, import, udostępnienie, plik planu) | XSS → odczyt dokumentu i sekretów z `localStorage`, wysyłka na dowolny host | CSP, brak ujść HTML (strażnik), Mermaid w trybie `strict` i jako obraz `blob:` | Trusted Types (S1.1), `connect-src` |
 | T3 | Operator albo włamywacz na przekaźniku | Analiza ruchu, usuwanie i cofanie wpisów, zapełnienie pokoju | Szyfrowanie, AAD z identyfikatorem pokoju, limity | Powtórzenie i cofnięcie stanu (S2.3) |
 | T4 | Operator albo włamywacz na serwerze powiadomień | Wysyła fałszywe powiadomienia; treść niewidoczna (szyfrowana) | Token, lista hostów, szyfrowanie treści | Token na urządzenie (S3.2) |
 | T5 | Osoba znająca kod synchronizacji (były współużytkownik, podejrzany QR) | Pełny odczyt i zapis zwykłych danych, łamanie hasła skarbca offline, wstrzyknięcie metadanych skarbca | Pin, walidacja, AAD, wymiana kodu z wyrzuceniem urządzenia (S2.1) | Metadane skarbca w dokumencie (patrz §6) |
@@ -53,11 +53,13 @@ Urządzenie A ──WebRTC (DTLS, hasło = kod)──► Urządzenie B
 
 **Poza zakresem:** złośliwe oprogramowanie na urządzeniu z dostępem do pamięci przeglądarki, przymus wobec użytkownika, błędy w przeglądarce i WebCrypto, ataki kanałem bocznym na sprzęt.
 
-## 5. Ujścia HTML (S0.2)
+## 5. Ujścia HTML (S0.2, S1.6)
 
-W całym `src/` jest jedno ujście: SVG Mermaida wstawiane przez `dangerouslySetInnerHTML` (`src/components/MermaidBlock.tsx`, `securityLevel: "strict"`). Markdown, podgląd importu i nazwy plików renderuje React. Brak `innerHTML`, `outerHTML`, `srcdoc`, `document.write`, `insertAdjacentHTML`, `createContextualFragment`.
+W `src/` nie ma żadnego ujścia HTML. Do S1.6 było jedno: SVG Mermaida wstawiane przez `dangerouslySetInnerHTML`. Teraz `MermaidBlock` zamienia SVG na `Blob` i pokazuje go jako `<img src="blob:…">` — skrypty i obsługa zdarzeń w SVG wczytanym jako obraz się nie wykonują, więc błąd w czyszczeniu Mermaida (`securityLevel: "strict"`, DOMPurify) nie kończy się XSS. Markdown, podgląd importu i nazwy plików renderuje React.
 
-Pilnuje tego `src/lib/htmlSinkGuard.test.ts`: nowe ujście bez wpisu na liście dozwolonych nie przechodzi, a wpis bez użycia też nie (martwa lista). Nowy wpis wymaga przeglądu i opisu tutaj.
+Koszt: diagramu nie da się zaznaczyć, a czcionki strony nie sięgają obrazu (stąd jawna czcionka systemowa i `htmlLabels: false` — WebKit nie rysuje `foreignObject` w obrazach SVG).
+
+Pilnuje tego `src/lib/htmlSinkGuard.test.ts`: lista dozwolonych jest pusta, więc każde nowe `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `srcdoc`, `document.write`, `insertAdjacentHTML` lub `createContextualFragment` wymaga wpisu z uzasadnieniem i przeglądu tutaj.
 
 ## 6. Znane ograniczenia
 

@@ -26,8 +26,12 @@ test("diagram Mermaid: SVG w czytniku, a biblioteka ładuje się dopiero przy di
   const requested: string[] = [];
   await openOnly(page, [note("m-ok", "Schemat", "```mermaid\ngraph TD\n  A[Start] --> B[Koniec]\n```")], requested);
   const reader = page.getByRole("dialog", { name: "Schemat" });
-  await expect(reader.locator("[data-mermaid='ready'] svg")).toBeVisible({ timeout: 30_000 });
-  await expect(reader.locator("[data-mermaid='ready']")).toContainText("Start");
+  // S1.6: diagram to obraz z adresu blob:, nie SVG w DOM strony — sprawdzamy, że przeglądarka go zdekodowała.
+  const img = reader.locator("[data-mermaid='ready'] img");
+  await expect(img).toBeVisible({ timeout: 30_000 });
+  await expect(img).toHaveAttribute("src", /^blob:/);
+  await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+  await expect(reader.locator("[data-mermaid='ready'] svg")).toHaveCount(0);
   expect(requested.some((u) => u.endsWith("/mermaid.esm.min.mjs"))).toBe(true);
 });
 

@@ -471,3 +471,4 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Architektura — nakładki w `IndexOverlays` i jeden reduktor okien (A2.4, 2026-11-23)
 - Architektura — pomiar renderów strony głównej (A2.5, 2026-11-23)
 - Bezpieczeństwo — model zagrożeń, `SECURITY.md` i strażnik ujść HTML (S0, 2026-11-23)
+- Bezpieczeństwo — Mermaid jako obraz `blob:` (S1.6, 2026-11-23)

@@ -71,7 +71,8 @@ function themeVariables() {
       clusterBkg: muted,
       clusterBorder: line,
       edgeLabelBackground: bg,
-      fontFamily: "inherit",
+      // SVG idzie do `<img>` (MermaidBlock), gdzie `inherit` nie sięga czcionek strony — czcionka systemowa.
+      fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     },
   };
 }
@@ -92,6 +93,9 @@ export function renderMermaid(source: string): Promise<MermaidResult> {
         theme: "base",
         darkMode: dark,
         themeVariables: vars,
+        // Etykiety jako SVG `<text>`, nie `foreignObject`: WebKit nie rysuje HTML w obrazach SVG (`<img>`).
+        htmlLabels: false,
+        flowchart: { htmlLabels: false },
       });
       await mermaid.parse(source);
       const { svg } = await mermaid.render(`mmd-${++counter}`, source);

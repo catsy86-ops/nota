@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StatusPanel } from "@/components/StatusPanel";
 import type { MermaidResult } from "@/lib/mermaidRender";
 
@@ -41,14 +41,25 @@ export function MermaidBlock({ source }: { source: string }) {
       </div>
     );
   }
+  return <MermaidImage svg={result.svg} />;
+}
+
+/**
+ * Druga warstwa obrony (S1.6): SVG trafia do `<img src="blob:…">`, nie do DOM strony. Skrypty i obsługa zdarzeń w SVG
+ * wczytanym jako obraz się nie wykonują, więc błąd w czyszczeniu Mermaida nie kończy się XSS. Koszt: diagramu nie da się
+ * zaznaczyć, a czcionki strony nie sięgają obrazu (stąd jawna czcionka systemowa w `mermaidRender`).
+ */
+function MermaidImage({ svg }: { svg: string }) {
+  const url = useMemo(() => {
+    // Mermaid zawsze dodaje `xmlns`, którego `<img>` wymaga.
+    return URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+  }, [svg]);
+  useEffect(() => () => URL.revokeObjectURL(url), [url]);
+  // Szerokość naturalna z `max-width` w stylu SVG Mermaida; obraz bez niej rozciągnąłby mały diagram na całą kartę.
+  const maxWidth = Number(/max-width:\s*([\d.]+)px/.exec(svg)?.[1]);
   return (
-    <div
-      data-mermaid="ready"
-      role="img"
-      aria-label="Diagram"
-      className="mb-1 overflow-x-auto rounded-field bg-muted/30 p-2 [&_svg]:mx-auto [&_svg]:h-auto [&_svg]:max-w-full"
-      // SVG z Mermaida przechodzi przez jego czyszczenie (`securityLevel: "strict"`, DOMPurify).
-      dangerouslySetInnerHTML={{ __html: result.svg }}
-    />
+    <div data-mermaid="ready" className="mb-1 overflow-x-auto rounded-field bg-muted/30 p-2">
+      <img src={url} alt="Diagram" style={maxWidth > 0 ? { maxWidth } : undefined} className="mx-auto h-auto w-full" />
+    </div>
   );
 }
