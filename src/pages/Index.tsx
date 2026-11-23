@@ -32,6 +32,7 @@ import { requestHeading } from "@/lib/wikiHeading";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import { useWikiLinkIndex } from "@/hooks/useWikiLinkIndex";
 import { useLaunchIntents } from "@/hooks/useLaunchIntents";
+import { useResumeView } from "@/hooks/useResumeView";
 import { useBulkNoteOps } from "@/hooks/useBulkNoteOps";
 import { setGridNavPreview, setGridNavPreviewTransitions } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
@@ -464,6 +465,7 @@ const Index = () => {
   const { handleAddNoteGlow, handleComposerAdd, composerParents, handleMoveToFolderGlow } = useNoteGlowActions({ notes, view, activeLabel, activeFolder, addNote, updateNote, deleteNote, moveNoteToFolder });
 
   useLaunchIntents({ navigate, addNote: handleAddNoteGlow, openNote, expandComposer: expandAddNote, openQuickInbox: () => setQuickInboxOpen(true) });
+  useResumeView(navigate);
 
   // Licznik w pasku bocznym tylko przy tym, co wymaga uwagi: zaległe przypomnienia i Kosz.
   // Ta sama liczba ląduje w tytule karty i na ikonie aplikacji (useOverdueBadge).

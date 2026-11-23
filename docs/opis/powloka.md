@@ -352,3 +352,11 @@ Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj nota
 - **Gdzie:** `src/index.css` (`.app-header::after`, `@keyframes header-shade`, `animation-timeline: scroll(root)`).
 - **Ograniczenia:** bez wsparcia `animation-timeline` (Safari, Firefox) cienia nie ma — jak dotąd; zwężenie nagłówka i wjazd tytułu działu (reszta 4.3) — nie zrobione. Powłoka 4.1 (88 × `uppercase tracking-wider`) i 4.4 (arkusz „Więcej” jako siatka kafli z licznikami) okazały się zrobione wcześniej.
 - **Testy:** sprawdzone w przeglądarce (krycie cienia 0 na szczycie, 1 po przewinięciu 400 px).
+
+## Powłoka — wznowienie: ostatni dział, a po 4 h „Dziś” (Q3.4, decyzja QL-3, 2026-11-23)
+
+- **Co robi:** w zainstalowanej aplikacji (PWA w trybie `standalone` albo powłoka Androida) zimny start z ikony wraca do ostatnio otwartego działu, a po co najmniej 4 h przerwy zaczyna od „Dziś”. Tak samo powrót do schowanej aplikacji: po 4 h przełącza na „Dziś”, krótsza przerwa niczego nie zmienia. W zwykłej karcie przeglądarki nic się nie dzieje — adres wybiera użytkownik.
+- **Gdzie jest:** `src/lib/resumeView.ts` (czyste decyzje: `launchTarget`, `resumeTarget`, `RESUME_TODAY_AFTER_MS`, klucz `kaczy.lastSeen.v1`), `src/hooks/useResumeView.ts` (podpięty w `pages/Index.tsx` obok `useLaunchIntents`).
+- **Jak działa:** przy schowaniu (`visibilitychange` → `hidden`, `pagehide`) zapis `{ at, path }` lokalnie (poza kopią). Zimny start działa tylko dla wejścia z ikony — dokładnie „/” bez zapytania (skróty z ekranu głównego i udostępnianie mają parametry, link do konkretnego miejsca zostaje). Nie przywraca udostępniania (`/share`) ani jednorazowych akcji (`?new=`, `?szukaj=`, `?skrzynka=`, `?inbox=`, `?akcja=`). Przy powrocie nie przełącza, gdy otwarte jest okno (`role=dialog` z `data-state=open`) albo fokus jest w polu tekstowym.
+- **Ograniczenia:** plan Q3.4 mówił o 8 h — właściciel wybrał 4 h. Pozycja przewijania w dziale nie jest przywracana (przy zimnym starcie lista i tak buduje się od nowa).
+- **Testy:** `src/lib/resumeView.test.ts` (5), `e2e/resume-view.spec.ts` (zimny start po 3 h i 5 h, powrót po 30 min i po 4 h, zwykła karta bez zmian).

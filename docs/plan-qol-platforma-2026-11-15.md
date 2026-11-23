@@ -42,7 +42,7 @@
 | Q3.1 | **Ekran nie gaśnie tam, gdzie się czyta z rękami zajętymi:** wspólny `useWakeLock` w sesji treningu, kalkulatorach Pracy, liście zakupów w trybie „w sklepie”, czytniku notatki (przełącznik). | S |
 | Q3.2 | **Klawiatura ekranowa:** jeden hook na `visualViewport` — pasek akcji i przycisk zapisu zawsze nad klawiaturą we wszystkich arkuszach z polami (dziś 1 plik). Przegląd na 390 px: Długi, wpis Dziennika, posiłek, szybka notatka. | M |
 | Q3.3 | **Motyw według pory:** opcja „jasny w dzień, ciemny po zmroku” z godzin (domyślnie 7–19) — obok „jak system”. Bez lokalizacji. | S |
-| Q3.4 | **Wznowienie:** po powrocie do aplikacji po > 30 min — ten sam dział, ta sama notatka, pozycja przewijania (`captureAnchor`/`restoreAnchor` już są dla zmiany widoku). Po > 8 h start na „Dziś”. | S |
+| Q3.4 | **(zrobione 2026-11-23: 4 h wg QL-3; bez pozycji przewijania)** **Wznowienie:** po powrocie do aplikacji po > 30 min — ten sam dział, ta sama notatka, pozycja przewijania (`captureAnchor`/`restoreAnchor` już są dla zmiany widoku). Po > 8 h start na „Dziś”. | S |
 | Q3.5 | **„Ostatnie” w palecie poleceń:** 5 ostatnio otwartych notatek i 3 ostatnie polecenia na pustym zapytaniu (sprawdzić, co już daje historia wyszukiwarki z Ustawień). | S |
 | Q3.6 | **Schowek z sensem:** wklejenie adresu na zaznaczony tekst robi link; wklejenie listy z punktorami do listy zadań robi pozycje; wklejenie obrazu wszędzie, gdzie jest załącznik. Testy na fragmentach HTML z Worda, Keep i WhatsAppa. | M |
 | Q3.7 | **Głębokie linki:** `protocol_handlers` (`web+notatnik:`) i stałe adresy do notatki, budowy, osoby w Długach; „Skopiuj link” w menu. Przydaje się do tagów NFC i skrótów na ekranie głównym. | S |

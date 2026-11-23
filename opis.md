@@ -319,6 +319,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Powłoka — nazwa aplikacji w jednym miejscu (1.2, 2026-11-06)
 - Powłoka — karty Ustawień w palecie (plan 2.5, 2026-11-12)
 - Powłoka — cień nagłówka przy przewijaniu (plan 4.3, 2026-11-12)
+- Powłoka — wznowienie: ostatni dział, a po 4 h „Dziś” (Q3.4, decyzja QL-3, 2026-11-23)
 
 ### Wygląd i ruch — [`docs/opis/wyglad.md`](docs/opis/wyglad.md)
 
