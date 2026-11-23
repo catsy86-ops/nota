@@ -466,4 +466,4 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Architektura — warstwy `lib ← hooks ← components` (A1.1–A1.4, A1.6 planu architektury, 2026-11-15)
 - CI — pełne e2e tylko na master, gałęzie na @smoke (AR-3, 2026-11-23)
 - Zrzuty `@visual` — wzorce odświeżone (2026-11-23)
-- Architektura — mapa `Index.tsx` i efekty bez widoku (A2.1, A2.2 częściowo, 2026-11-23)
+- Architektura — mapa `Index.tsx` i efekty bez widoku (A2.1, A2.2, 2026-11-23)

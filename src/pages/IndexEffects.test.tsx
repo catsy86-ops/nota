@@ -1,4 +1,4 @@
-import { act, render } from "@testing-library/react";
+import { act, render, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Note } from "@/lib/types/note";
 
@@ -8,9 +8,12 @@ const mocks = vi.hoisted(() => ({
   registerUndoHandlers: vi.fn(),
   markNoteOpened: vi.fn(),
   setSearchTerms: vi.fn(),
+  shifts: { canUndoShifts: vi.fn(() => true), undoShifts: vi.fn(), canRedoShifts: vi.fn(() => false), redoShifts: vi.fn() },
+  toast: vi.fn(),
   step: vi.fn<(dir: -1 | 1, exists: (id: string) => boolean) => string | null>(),
 }));
-vi.mock("./indexViews", () => ({ loadNoteReader: mocks.loadNoteReader }));
+vi.mock("./indexViews", () => ({ loadNoteReader: mocks.loadNoteReader, loadShiftsStore: () => Promise.resolve(mocks.shifts) }));
+vi.mock("sonner", () => ({ toast: mocks.toast }));
 vi.mock("@/hooks/useShiftPresets", () => ({ loadShiftPresets: mocks.loadShiftPresets }));
 vi.mock("@/lib/actionHistory", () => ({ registerUndoHandlers: mocks.registerUndoHandlers }));
 vi.mock("@/lib/lastOpened", () => ({ markNoteOpened: mocks.markNoteOpened }));
@@ -18,6 +21,7 @@ vi.mock("@/lib/searchTerms", () => ({ setSearchTerms: mocks.setSearchTerms }));
 vi.mock("@/lib/noteHistory", () => ({ noteHistory: { step: mocks.step } }));
 
 import { IdleWarmup, MarkOpenedSync, ReaderHistoryKeys, SearchTermsSync, UndoHandlersSync } from "./IndexEffects";
+import { useShiftsUndo, useSidebarOpen } from "./indexHooks";
 
 const note = (id: string, locked = false) => ({ id, locked }) as Note;
 const ref = <T,>(current: T) => ({ current });
@@ -108,5 +112,25 @@ describe("IndexEffects (A2.2)", () => {
       input.remove();
       dialog.remove();
     });
+  });
+
+  it("useSidebarOpen: zamknięty na telefonie, otwarty po przejściu na komputer", () => {
+    const { result, rerender } = renderHook(({ mobile }) => useSidebarOpen(mobile), { initialProps: { mobile: true } });
+    expect(result.current[0]).toBe(false);
+    rerender({ mobile: false });
+    expect(result.current[0]).toBe(true);
+  });
+
+  it("useShiftsUndo cofa w Grafiku dopiero po załadowaniu magazynu, poza Grafikiem oddaje skrót dalej", async () => {
+    const { result, rerender } = renderHook(({ view }) => useShiftsUndo(view), { initialProps: { view: "notes" } });
+    const api = result.current;
+    expect(api.undo()).toBe(false);
+    rerender({ view: "shifts" });
+    await waitFor(() => expect(api.undo()).toBe(true));
+    expect(mocks.shifts.undoShifts).toHaveBeenCalledOnce();
+    expect(api.redo()).toBe(false);
+    rerender({ view: "notes" });
+    expect(api.undo()).toBe(false);
+    expect(result.current).toBe(api);
   });
 });

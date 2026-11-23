@@ -101,8 +101,9 @@ import { DataLossBanner, DocReplaceNotice } from "@/components/DocReplaceBanners
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
-import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, CommandPalette, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, NoteReader } from "./indexViews";
+import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, CommandPalette, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, StudyOverdueSync, NoteReader } from "./indexViews";
 import { IdleWarmup, MarkOpenedSync, ReaderHistoryKeys, SearchTermsSync, UndoHandlersSync } from "./IndexEffects";
+import { useShiftsUndo, useSidebarOpen } from "./indexHooks";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -133,9 +134,7 @@ const Index = () => {
   const { view, label: activeLabel, folder: activeFolder, go } = route;
   const { setView, search, setSearch, deferredSearch, navigate, keptViews, mainRef } = useViewShell(route);
 
-  // Start zgodny z efektem poniżej (desktop: otwarty), żeby pasek nie wjeżdżał od zera po montażu
-  // i nie przesuwał całej treści przy każdym wczytaniu strony.
-  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
+  const [sidebarOpen, setSidebarOpen] = useSidebarOpen(isMobile);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
   const [triageOpen, setTriageOpen] = useState(false);
   const [triageMounted, setTriageMounted] = useState(false);
@@ -159,11 +158,6 @@ const Index = () => {
       toast.success("🎉 Niespodzianka!");
     }
   }
-
-  // Auto-close sidebar on mobile, auto-open on desktop
-  useEffect(() => {
-    setSidebarOpen(!isMobile);
-  }, [isMobile]);
 
   const openNoteRef = useRef<(id: string) => void>(() => {});
   // Stabilna tablica: nowa w każdym renderze restartowałaby sprawdzanie przy każdym znaku w wyszukiwarce.
@@ -197,11 +191,7 @@ const Index = () => {
   useBackupReminders(prefs, notes, archivedNotes);
   useDailyWeeklyNudges(prefs, notes, setView);
   const openShifts = useCallback(() => setView("shifts"), [setView]);
-  // Store Grafiku dla Ctrl+Z / Ctrl+Shift+Z — na widoku Grafiku jest już załadowany (ShiftsView), skrót sprawdza synchronicznie.
-  const shiftsStore = useRef<Awaited<ReturnType<typeof loadShiftsStore>> | null>(null);
-  useEffect(() => {
-    if (view === "shifts" && !shiftsStore.current) void loadShiftsStore().then((m) => { shiftsStore.current = m; });
-  }, [view]);
+  const shiftsUndo = useShiftsUndo(view);
 
   // Pasek dodawania jest też w folderze i etykiecie — nowa notatka dziedziczy
   // ten kontekst (`handleAddNoteGlow`), zamiast lądować poza widokiem.
@@ -235,21 +225,10 @@ const Index = () => {
     onEasterEgg: () => { megaCelebrate(); toast.success("🎮 KONAMI! Pełen pokaz mocy!"); },
     hasSelection: () => selectedIds.size > 0,
     onEscapeSelection: clearSelection,
-    onRedo: () => {
-      const s = shiftsStore.current;
-      if (view === "shifts" && s?.canRedoShifts()) {
-        s.redoShifts();
-        toast("Ponowiono zmianę w Grafiku", { icon: "↪️" });
-      }
-    },
+    onRedo: () => { shiftsUndo.redo(); },
     onUndo: () => {
       // Na widoku Grafiku Ctrl+Z cofa ostatnią zmianę w Grafiku (zanim sięgnie po kosz/archiwum).
-      const s = shiftsStore.current;
-      if (view === "shifts" && s?.canUndoShifts()) {
-        s.undoShifts();
-        toast("Cofnięto zmianę w Grafiku", { icon: "↩️" });
-        return;
-      }
+      if (shiftsUndo.undo()) return;
       const done = undoLastAction();
       if (done) {
         toast.success(done.kind === "trash" ? "Cofnięto usunięcie" : "Cofnięto archiwizację", {

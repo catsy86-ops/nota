@@ -71,3 +71,4 @@ export function ReaderHistoryKeys({ notesRef, archivedRef, show }: {
   }, [notesRef, archivedRef, show]);
   return null;
 }
+

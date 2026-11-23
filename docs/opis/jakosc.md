@@ -516,9 +516,9 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - 153 z 227 wzorców w `e2e/visual.spec.ts-snapshots/` odświeżone (`--update-snapshots=changed`) po przeglądzie różnic z decyzji właściciela. Wzorce były z 19.11 (`a1c616bb`); różnice pochodziły z planów po tej dacie: zakładka „Klienci” w Pracy, nowe teksty i pole tokenu w Ustawieniach (push), ikony meta 14 px i rytm strony (W4.1, W7.3), przesunięcie treści Kalendarza i Grafiku. Przejrzane przedstawiciele: lista notatek (telefon), Praca i Kalendarz (komputer), Ustawienia ogólne (telefon) — bez błędów układu.
 - Przebieg po odświeżeniu: 227/227.
 
-## Architektura — mapa `Index.tsx` i efekty bez widoku (A2.1, A2.2 częściowo, 2026-11-23)
+## Architektura — mapa `Index.tsx` i efekty bez widoku (A2.1, A2.2, 2026-11-23)
 
-**Co robi.** Nic widocznego dla użytkownika. `Index.tsx` traci pięć efektów ubocznych, które teraz są osobnymi komponentami bez widoku, każdy z testem. Jest też mapa odpowiedzialności całego `Index` — punkt wyjścia do kontrolera widoku (A2.3) i nakładek (A2.4).
+**Co robi.** Nic widocznego dla użytkownika. `Index.tsx` traci efekty uboczne: pięć jest osobnymi komponentami bez widoku, dwa hookami, każdy z testem. Jest też mapa odpowiedzialności całego `Index` — punkt wyjścia do kontrolera widoku (A2.3) i nakładek (A2.4).
 
 **Gdzie jest.**
 - `docs/index-mapa.md` — grupy hooków (dane, trasa, filtr, terminy, zaznaczenie, tworzenie, nawigacja, czytnik, nakładki, skróty, efekty, przeciąganie): skąd biorą, komu dają, dokąd pójdą w A2; kolejność renderu; obserwacje (renderowanie przy zmianie notatki, powtórzony kod terminów i pasków, liniowe wyszukiwanie po `id`).
@@ -528,12 +528,15 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
   - `UndoHandlersSync` — cofanie kosza i archiwum po przeładowaniu;
   - `MarkOpenedSync` — „ostatnio otwierane” przy otwarciu czytnika;
   - `ReaderHistoryKeys` — Alt+←/→ po historii notatek.
-- `src/pages/Index.tsx` montuje je obok synchronizatorów (`PushScheduleSync` i reszta); 1000 → 962 linie.
+- `src/pages/indexHooks.ts`:
+  - `useSidebarOpen(isMobile)` — pasek boczny otwarty na komputerze, zamknięty na telefonie;
+  - `useShiftsUndo(view)` — Ctrl+Z / Ctrl+Shift+Z w Grafiku; ładuje magazyn przy wejściu na Grafik, `undo()`/`redo()` zwracają `false`, gdy skrót ma iść dalej do historii kosza i archiwum. Obiekt jest stały między renderami (widok czytany z `ref`).
+- `src/pages/Index.tsx` montuje komponenty obok synchronizatorów (`PushScheduleSync` i reszta); 1000 → 941 linii.
 
-**Jak działa.** Każdy komponent renderuje `null` i ma jeden `useEffect` z tymi samymi zależnościami co wcześniej w `Index`. `ReaderHistoryKeys` dostaje stabilne `showPreview` (`useCallback` nad `showInReader(id, "preview")`), żeby nie przepinać nasłuchu przy każdym renderze. Plik jest w `src/pages/`, bo `IdleWarmup` ładuje czytnik przez `pages/indexViews` — komponenty z `src/components` nie mogą importować ze stron (reguła warstw A1.6).
+**Jak działa.** Każdy komponent renderuje `null` i ma jeden `useEffect` z tymi samymi zależnościami co wcześniej w `Index`. `ReaderHistoryKeys` dostaje stabilne `showPreview` (`useCallback` nad `showInReader(id, "preview")`), żeby nie przepinać nasłuchu przy każdym renderze. Hooki są w osobnym pliku `.ts`, bo plik z komponentami i hookami łamie Fast Refresh (`react-refresh/only-export-components`). Oba pliki są w `src/pages/`, bo ładują czytnik i Grafik przez `pages/indexViews` — komponenty z `src/components` nie mogą importować ze stron (reguła warstw A1.6).
 
-**Ograniczenia i pułapki.** Zostały do A2.2: cofnij/ponów Grafiku (`shiftsStore` i część `useGlobalShortcuts`) i efekt telefon/komputer paska bocznego. Kolejność montażu efektów zmieniła się (są po drzewie widoków, nie przed) — żaden nie zależy od DOM listy.
+**Ograniczenia i pułapki.** Kolejność montażu efektów zmieniła się (są po drzewie widoków, nie przed) — żaden nie zależy od DOM listy.
 
-**Testy.** `src/pages/IndexEffects.test.tsx` (7 przypadków: rozgrzewka po czasie, frazy, oba ujścia cofania, zapis otwarcia, Alt+← z pominięciem zablokowanych, brak kroku zostawia skrót przeglądarce, pole tekstowe i otwarte okno).
+**Testy.** `src/pages/IndexEffects.test.tsx` (9 przypadków: pasek boczny telefon/komputer, cofanie Grafiku dopiero po załadowaniu magazynu i oddanie skrótu poza Grafikiem, rozgrzewka po czasie, frazy, oba ujścia cofania, zapis otwarcia, Alt+← z pominięciem zablokowanych, brak kroku zostawia skrót przeglądarce, pole tekstowe i otwarte okno).
 
 **Commit.** Patrz historia `src/pages/IndexEffects.tsx`, 2026-11-23.

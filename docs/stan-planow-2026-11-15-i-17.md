@@ -140,7 +140,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | A1.4 | `sonner` poza `lib` (port `notify`) | ◐ | `b7f25e8b` | `notify.ts` bez wstrzykiwanego ujścia |
 | A1.5 | Hooki bez komponentów | ✗ | — | |
 | A1.6 | Reguła ESLint warstw | ✅ | `b7f25e8b` | |
-| A2.1–A2.5 | `Index.tsx`: mapa, efekty, kontroler, nakładki, pomiar renderów | ◐ | 2026-11-23 | A2.1 zrobione (`docs/index-mapa.md`); A2.2 częściowo (`src/pages/IndexEffects.tsx`, 5 efektów; zostają cofnij/ponów Grafiku i pasek boczny); A2.3–A2.5 nie zaczęte; `Index.tsx` 962 linie |
+| A2.1–A2.5 | `Index.tsx`: mapa, efekty, kontroler, nakładki, pomiar renderów | ◐ | 2026-11-23 | A2.1 zrobione (`docs/index-mapa.md`); A2.2 zrobione (`src/pages/IndexEffects.tsx`, `indexHooks.ts`); A2.3–A2.5 nie zaczęte; `Index.tsx` 941 linii |
 | A3.1 | `exportNotes.ts` → `lib/backup/` | ✗ | — | Brak `src/lib/backup/`; Z-18.1 zrobione bez podziału |
 | A3.2 | `AddNoteBar.tsx` (reduktor szkicu) | ✗ | — | 974 linie |
 | A3.3 | `privateNotes.ts` | ✗ | — | 793 linie |
