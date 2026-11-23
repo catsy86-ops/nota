@@ -8,6 +8,7 @@ import { OVERLAY_FADE } from "./overlay-motion";
 import { cn } from "@/lib/utils";
 import { OverlayBack } from "@/components/ui/overlay-back";
 import { SNAP_MAX_HEIGHT, snapDecision, type SheetSnap } from "@/components/ui/sheet-snap";
+import { isMotionReduced } from "@/lib/motionPref";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -42,23 +43,60 @@ interface SnapControl {
  * Przeciąganie arkusza za uchwyt: podąża za palcem w dół, a po progu zamyka.
  * Z punktami zatrzymania (`snap`) przeciągnięcie w górę zmienia wysokość zamiast przesuwać arkusz.
  */
-function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, close: () => void, snap?: SnapControl) {
+function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, overlayRef: React.RefObject<HTMLDivElement | null>, close: () => void, snap?: SnapControl) {
   const start = React.useRef<{ y: number; t: number } | null>(null);
   const dy = React.useRef(0);
   const rawDy = React.useRef(0);
+  /** Ostatnie położenia palca — prędkość z końcówki ruchu, nie średnia od dotknięcia. */
+  const trail = React.useRef<{ y: number; t: number }[]>([]);
   const reset = (el: HTMLElement) => {
     el.style.transition = snap
       ? "transform 200ms cubic-bezier(0.22, 1, 0.36, 1), max-height 200ms cubic-bezier(0.22, 1, 0.36, 1)"
       : "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)";
     el.style.transform = "";
+    const ov = overlayRef.current;
+    if (ov) { ov.style.transition = "opacity 200ms cubic-bezier(0.22, 1, 0.36, 1)"; ov.style.opacity = ""; }
+  };
+  /**
+   * M4.3: odjazd z prędkością palca od miejsca puszczenia. Czas = reszta drogi / prędkość (120–300 ms), krzywa
+   * zaczyna mniej więcej z tą prędkością i hamuje. `data-drag-closed` wyłącza animację zamknięcia Radix
+   * (zaczęłaby od zera — arkusz podskakiwał przed wyjazdem), więc po odjeździe zamknięcie jest natychmiastowe.
+   */
+  const fling = (el: HTMLElement, velocity: number) => {
+    const ov = overlayRef.current;
+    if (isMotionReduced()) { el.style.transform = ""; close(); return; }
+    const remaining = Math.max(0, el.offsetHeight - dy.current);
+    const v = Math.max(velocity, 1); // px/ms — wolne puszczenie po progu i tak odjeżdża żwawo
+    const ms = Math.round(Math.min(300, Math.max(120, remaining / v)));
+    const curve = "cubic-bezier(0.25, 0.8, 0.4, 1)";
+    el.style.transition = `transform ${ms}ms ${curve}`;
+    el.style.transform = "translateY(100%)";
+    if (ov) { ov.style.transition = `opacity ${ms}ms ${curve}`; ov.style.opacity = "0"; }
+    el.dataset.dragClosed = "";
+    if (ov) ov.dataset.dragClosed = "";
+    window.setTimeout(() => {
+      close();
+      // Arkusz trzymany w drzewie po zamknięciu (forceMount) nie może zostać wysunięty przy następnym otwarciu.
+      requestAnimationFrame(() => {
+        for (const n of [el, ov]) {
+          if (!n) continue;
+          n.style.transition = "";
+          delete n.dataset.dragClosed;
+        }
+        el.style.transform = "";
+        if (ov) ov.style.opacity = "";
+      });
+    }, ms);
   };
   return {
     onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
       start.current = { y: e.clientY, t: performance.now() };
       dy.current = 0;
       rawDy.current = 0;
+      trail.current = [{ y: e.clientY, t: performance.now() }];
       e.currentTarget.setPointerCapture(e.pointerId);
       if (contentRef.current) contentRef.current.style.transition = "none";
+      if (overlayRef.current) overlayRef.current.style.transition = "none";
     },
     onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
       const s = start.current;
@@ -67,6 +105,12 @@ function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, cl
       rawDy.current = e.clientY - s.y;
       dy.current = Math.max(0, rawDy.current);
       el.style.transform = `translateY(${dy.current}px)`;
+      const now = performance.now();
+      trail.current.push({ y: e.clientY, t: now });
+      while (trail.current.length > 2 && now - trail.current[0].t > 80) trail.current.shift();
+      // Tło przygasa razem z drogą arkusza (przy punktach „pół/pełny” ruch w górę go nie rozjaśnia).
+      const ov = overlayRef.current;
+      if (ov) ov.style.opacity = String(1 - Math.min(1, dy.current / Math.max(1, el.offsetHeight)));
     },
     onPointerUp: () => {
       const s = start.current;
@@ -74,21 +118,21 @@ function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, cl
       start.current = null;
       if (!s || !el) return;
       const velocity = rawDy.current / Math.max(1, performance.now() - s.t); // px/ms, ze znakiem
+      const first = trail.current[0];
+      const last = trail.current[trail.current.length - 1];
+      const flick = first && last && last.t > first.t ? (last.y - first.y) / (last.t - first.t) : velocity;
       if (snap) {
         const next = snapDecision({ snap: snap.get(), dy: rawDy.current, velocity });
         if (next === "close") {
-          el.style.transform = "";
-          close();
+          fling(el, flick);
           return;
         }
         snap.set(next);
         reset(el);
         return;
       }
-      if (dy.current > 110 || (dy.current > 30 && velocity > 0.6)) {
-        el.style.transform = "";
-        close();
-      } else reset(el);
+      if (dy.current > 110 || (dy.current > 30 && velocity > 0.6)) fling(el, flick);
+      else reset(el);
     },
     onPointerCancel: () => {
       start.current = null;
@@ -142,10 +186,11 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
       () => (useSnap ? { get: () => snapRef.current, set: (s) => { snapRef.current = s; setSnapState(s); } } : undefined),
       [useSnap],
     );
-    const drag = useDragToDismiss(contentRef, () => closeRef.current?.click(), snapControl);
+    const overlayRef = React.useRef<HTMLDivElement | null>(null);
+    const drag = useDragToDismiss(contentRef, overlayRef, () => closeRef.current?.click(), snapControl);
     return (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlay ref={overlayRef} />
       <SheetPrimitive.Content
         ref={setRefs}
         className={cn(sheetVariants({ side }), className)}
