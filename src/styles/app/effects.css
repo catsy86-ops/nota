@@ -269,4 +269,4 @@ html[data-motion="reduced"] .debt-sketch path, html[data-motion="reduced"] .debt
 .code-hl .tok-invalid { color: var(--destructive-ink, var(--destructive)); text-decoration: underline wavy; }
 
 /* M4.3: arkusz zsunięty palcem już wyjechał (`fling` w `ui/sheet.tsx`) — animacja zamknięcia Radix zaczęłaby od zera. */
-[data-drag-closed][data-state="closed"] { animation: none !important; }
+[data-drag-closed][data-state="closed"] { animation: none; }

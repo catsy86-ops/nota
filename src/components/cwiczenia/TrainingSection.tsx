@@ -18,6 +18,9 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { useNotesContext } from "@/hooks/NotesProvider";
+import { AnimatePresence, m as motion } from "framer-motion";
+import { listItemMotion } from "@/lib/cardMotion";
+import { useMotionPref } from "@/hooks/useMotionPref";
 
 /** Trening w dziale Ćwiczenia: przypomnienie, plany dni, dziennik serii z przerwą, dziś i progres. */
 export function TrainingSection() {
@@ -115,13 +118,15 @@ function deleteEntryWithUndo(entry: TrainingEntry) {
 }
 
 function PlanList({ plans }: { plans: PlanDay[] }) {
+  const rowMotion = listItemMotion(useMotionPref().reduced);
   if (plans.length === 0) return <p className="text-sm text-muted-foreground">Nie masz jeszcze planu dni. Dodaj go poniżej.</p>;
   return (
     <div className="space-y-2" data-testid="training-plans">
       <h3 className="section-caps">Plan dni</h3>
       <ul className="divide-y divide-border/50">
+        <AnimatePresence initial={false}>
         {plans.map((p) => (
-          <li key={p.id} className="flex items-start gap-3 py-2">
+          <motion.li key={p.id} {...rowMotion} className="flex items-start gap-3 py-2">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{planLine(p)}</p>
               <p className="ui-hint">{p.exerciseIds.map((id) => exerciseById(id)?.name ?? id).join(" · ")}</p>
@@ -138,8 +143,9 @@ function PlanList({ plans }: { plans: PlanDay[] }) {
             >
               <Trash className="size-4" aria-hidden />
             </Button>
-          </li>
+          </motion.li>
         ))}
+        </AnimatePresence>
       </ul>
     </div>
   );

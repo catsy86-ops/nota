@@ -8,6 +8,9 @@ import { JOB_STATUS_LABEL, quoteSummary, sortJobs, termLabel, unpaidTotal, type 
 import { QUOTE_STATE_LABEL, quoteStamp, quoteState, sinceLabel } from "@/lib/study/quoteDoc";
 import { matchesQuoteFilter, monthKeyOf, QUOTE_FILTERS, quoteReview, type QuoteFilter } from "@/lib/study/quoteReview";
 import type { SiteInfo } from "@/lib/study/sites";
+import { AnimatePresence, m as motion } from "framer-motion";
+import { listItemMotion } from "@/lib/cardMotion";
+import { useMotionPref } from "@/hooks/useMotionPref";
 
 /**
  * Lista „Zlecenia” (H3.4): fuchy od tych, które czekają na termin, przez wyceny, do zapłaconych,
@@ -21,6 +24,7 @@ export function JobsDialog({ open, onOpenChange, jobs, dir, onOpen, onNew }: {
   onOpen: (siteId: string) => void;
   onNew: () => void;
 }) {
+  const rowMotion = listItemMotion(useMotionPref().reduced);
   const rows = useMemo(() => {
     const names = new Map(dir.map((s) => [s.id, s]));
     return sortJobs([...jobs].map(([id, j]) => ({ ...j, id, site: names.get(id) }))).filter((r) => r.site);
@@ -66,10 +70,11 @@ export function JobsDialog({ open, onOpenChange, jobs, dir, onOpen, onNew }: {
           <p className="text-sm text-muted-foreground">Nie masz jeszcze zleceń własnych. Załóż pierwsze — klient, adres i co zrobić.</p>
         ) : (
           <ul className="-mx-1 max-h-[60dvh] space-y-1 overflow-y-auto px-1" aria-label="Lista zleceń">
+            <AnimatePresence initial={false}>
             {shown.map((r) => {
               const total = quoteSummary(r).payable;
               return (
-                <li key={r.id}>
+                <motion.li key={r.id} {...rowMotion}>
                   <button type="button" onClick={() => onOpen(r.id)}
                     className="pressable flex w-full items-center gap-2 rounded-field border border-border px-3 py-2 text-left hover:bg-muted coarse:min-h-11">
                     <Wrench className="size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -87,9 +92,10 @@ export function JobsDialog({ open, onOpenChange, jobs, dir, onOpen, onNew }: {
                     </span>
                     <span className="w-20 shrink-0 text-right font-mono text-xs tabular-nums">{total > 0 ? money(total) : "—"}</span>
                   </button>
-                </li>
+                </motion.li>
               );
             })}
+            </AnimatePresence>
           </ul>
         )}
         <Button type="button" variant="outline" onClick={onNew} className="coarse:h-11"><Plus className="size-4" aria-hidden />Nowe zlecenie</Button>

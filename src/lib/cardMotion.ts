@@ -1,5 +1,5 @@
 import type { TargetAndTransition } from "framer-motion";
-import { dur, ease } from "@/lib/motion";
+import { dur, ease, tween } from "@/lib/motion";
 
 // Ruch kart notatek: kaskada wejścia, wyjście zależne od akcji i „stempel” przypięcia.
 // Same `transform`/`opacity` — bezpieczne przy setkach kart.
@@ -25,6 +25,29 @@ export function cascadeDelay(index: number, reduced: boolean, now = performance.
 /** Tylko dla testów. */
 export function resetCascade() {
   cascadeUntil = undefined;
+}
+
+/**
+ * M4.4: jeden wzór stanów listy poza Notatkami (Długi, Ćwiczenia, Praca). Dodany wiersz osiada z 6 px, usunięty
+ * przygasa i lekko maleje, sąsiedzi dojeżdżają (`layout="position"` — bez rozciągania treści). Pierwsze pokazanie
+ * listy bez wejścia: `AnimatePresence initial={false}` u wywołującego. Ograniczony ruch — samo przenikanie.
+ */
+export function listItemMotion(reduced: boolean) {
+  if (reduced) {
+    return {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0, transition: { duration: dur.fast } },
+      transition: { duration: dur.fast },
+    } as const;
+  }
+  return {
+    layout: "position",
+    initial: { opacity: 0, y: 6 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.98, transition: tween.exit },
+    transition: { ...tween.enter, layout: { duration: dur.base, ease: ease.out } },
+  } as const;
 }
 
 export type CardExitKind = "trash" | "archive";

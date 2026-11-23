@@ -1,4 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { AnimatePresence, m as motion } from "framer-motion";
+import { listItemMotion } from "@/lib/cardMotion";
+import { useMotionPref } from "@/hooks/useMotionPref";
 import { StatusPanel } from "@/components/StatusPanel";
 import { Stat } from "@/components/ui/stat";
 import { Sparkline } from "@/components/ui/mini-charts";
@@ -489,6 +492,7 @@ function clearDueReminders(entries: DebtEntry[], reminders: DebtReminderApi | un
 }
 
 function PersonHistory({ person, onDone, reminders, addReminderNote, people, hidden, onNewEntry, others = [], onRekey }: { person: PersonDebts; onDone: () => void } & HistoryProps) {
+  const rowMotion = listItemMotion(useMotionPref().reduced);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [askRemove, setAskRemove] = useState<DebtEntry | null>(null);
   const proofs = useDebtProofs();
@@ -582,13 +586,15 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
           <section key={m.key} aria-label={monthLabel(m.key)}>
             <h3 className="mb-2 section-caps">{monthLabel(m.key)}</h3>
             <ol className="space-y-2">
+              {/* M4.4: dodany wpis osiada, usunięty przygasa, sąsiedzi dojeżdżają (`listItemMotion`). */}
+              <AnimatePresence initial={false}>
               {m.items.map(({ e, i }) =>
                 editingId === e.id ? (
-                  <li key={e.id}>
+                  <motion.li key={e.id} {...rowMotion}>
                     <EditDebtForm entry={e} people={names} reminders={reminders} addReminderNote={addReminderNote} hidden={hidden} proofRef={proofs.get(e.id)?.ref} onDone={() => setEditingId(null)} />
-                  </li>
+                  </motion.li>
                 ) : (
-                  <li key={e.id} className={cn(cardVariant("inset"), "flex items-center gap-3 p-3")}>
+                  <motion.li key={e.id} {...rowMotion} className={cn(cardVariant("inset"), "flex items-center gap-3 p-3")}>
                     <span className={cn("grid size-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-success/15 text-success-ink" : "bg-warning/15 text-warning-ink")} aria-hidden>
                       {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="size-4" /> : <ArrowDownLeft className="size-4" />}
                     </span>
@@ -608,9 +614,10 @@ function PersonHistory({ person, onDone, reminders, addReminderNote, people, hid
                     <Button variant="ghost" size="icon" aria-label={`Usuń wpis: ${DEBT_KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => requestRemove(e)}>
                       <Trash2 className="size-4" />
                     </Button>
-                  </li>
+                  </motion.li>
                 ),
               )}
+              </AnimatePresence>
             </ol>
           </section>
         ))}

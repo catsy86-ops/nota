@@ -9,9 +9,13 @@ import { parseKg, weightTrend } from "@/lib/weight/model";
 import { removeWeight, restoreWeight, setWeight, useWeights } from "@/lib/weight/store";
 import { WeightChart } from "./WeightChart";
 import { cardClass } from "@/components/ui/card";
+import { AnimatePresence, m as motion } from "framer-motion";
+import { listItemMotion } from "@/lib/cardMotion";
+import { useMotionPref } from "@/hooks/useMotionPref";
 
 /** Masa ciała (C-2): ważenie dnia, zmiana względem poprzedniego i średnia z 7 ważeń. */
 export function WeightSection() {
+  const rowMotion = listItemMotion(useMotionPref().reduced);
   const entries = useWeights();
   const [kgText, setKgText] = useState("");
   const [day, setDay] = useState(() => localDayKey());
@@ -71,8 +75,9 @@ export function WeightSection() {
           </p>
           <WeightChart entries={entries} />
           <ul className="divide-y divide-border/60" data-testid="weight-list">
+            <AnimatePresence initial={false}>
             {recent.map((w) => (
-              <li key={w.day} className="flex items-center justify-between gap-2 py-1.5 text-sm">
+              <motion.li key={w.day} {...rowMotion} className="flex items-center justify-between gap-2 py-1.5 text-sm">
                 <span className="tabular-nums">{w.day}</span>
                 <span className="flex items-center gap-2">
                   <span className="font-mono tabular-nums">{w.kg.toFixed(1)} kg</span>
@@ -80,8 +85,9 @@ export function WeightSection() {
                     <Trash className="size-3.5" aria-hidden />
                   </Button>
                 </span>
-              </li>
+              </motion.li>
             ))}
+            </AnimatePresence>
           </ul>
         </>
       ) : (

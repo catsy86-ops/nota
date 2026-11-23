@@ -25,6 +25,9 @@ import { pluralPl } from "@/lib/plural";
 import { DietSection } from "./DietSection";
 import { WeightSection } from "./WeightSection";
 import { TrainingSection } from "./TrainingSection";
+import { AnimatePresence, m as motion } from "framer-motion";
+import { listItemMotion } from "@/lib/cardMotion";
+import { useMotionPref } from "@/hooks/useMotionPref";
 
 /** Domyślna godzina przypomnienia dla pory dnia (edytowalna w formularzu). */
 const DEFAULT_TIME: Record<SupplementWhen, string> = { rano: "07:30", w_ciagu_dnia: "12:00", wieczorem: "20:00" };
@@ -225,6 +228,7 @@ function EmptyList({ notes, onAdd }: { notes: NotesActions; onAdd: () => void })
 }
 
 function SupplementList({ supplements, taken, day, notes }: { supplements: Supplement[]; taken: Set<string>; day: string; notes: NotesActions }) {
+  const rowMotion = listItemMotion(useMotionPref().reduced);
   const [editingId, setEditingId] = useState<string | null>(null);
   // Grupy w kolejności pory dnia; pusta grupa się nie pokazuje.
   const groups = SUPPLEMENT_WHEN
@@ -237,13 +241,14 @@ function SupplementList({ supplements, taken, day, notes }: { supplements: Suppl
         <div key={g.when} data-supplement-group={g.when}>
           <h3 className="section-caps">{SUPPLEMENT_WHEN_LABEL[g.when]}</h3>
           <ul className="mt-1 divide-y divide-border/50">
+            <AnimatePresence initial={false}>
             {g.items.map((s) => {
               const done = taken.has(logKey(day, s.id));
               if (editingId === s.id) {
-                return <li key={s.id} className="py-2"><EditSupplementForm supplement={s} notes={notes} onClose={() => setEditingId(null)} /></li>;
+                return <motion.li key={s.id} {...rowMotion} className="py-2"><EditSupplementForm supplement={s} notes={notes} onClose={() => setEditingId(null)} /></motion.li>;
               }
               return (
-                <li key={s.id} className="flex items-center gap-3 py-2">
+                <motion.li key={s.id} {...rowMotion} className="flex items-center gap-3 py-2">
                   <Checkbox
                     id={`sup-${s.id}`}
                     checked={done}
@@ -268,9 +273,10 @@ function SupplementList({ supplements, taken, day, notes }: { supplements: Suppl
                   >
                     <Trash className="size-4" aria-hidden />
                   </Button>
-                </li>
+                </motion.li>
               );
             })}
+            </AnimatePresence>
           </ul>
         </div>
       ))}
