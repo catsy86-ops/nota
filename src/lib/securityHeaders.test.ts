@@ -43,9 +43,25 @@ describe("nagłówki bezpieczeństwa", () => {
     expect(hsts).not.toContain("includeSubDomains");
   });
 
-  it("Permissions-Policy nie blokuje kamery (kod QR) ani lokalizacji („Tu jestem”) tej stronie", () => {
+  it("Permissions-Policy zostawia stronie funkcje, których używa aplikacja (S1.3)", () => {
     const pp = vercelHeaders()["Permissions-Policy"];
-    expect(pp).toContain("camera=(self)");
-    expect(pp).toContain("geolocation=(self)");
+    // Kamera: kod QR, zdjęcia, skaner kodów; mikrofon: dyktowanie; lokalizacja: „Tu jestem”; czujniki: poziomica;
+    // wake lock, schowek, udostępnianie i passkey: odpowiednio Grafik/skupienie, kopiowanie, systemowe „Udostępnij”, Skarbiec.
+    for (const f of ["camera", "microphone", "geolocation", "accelerometer", "gyroscope", "magnetometer", "screen-wake-lock", "clipboard-read", "clipboard-write", "web-share", "publickey-credentials-get", "publickey-credentials-create"]) {
+      expect(pp, f).toContain(`${f}=(self)`);
+    }
+  });
+
+  it("Permissions-Policy wyłącza to, czego aplikacja nie używa (S1.3)", () => {
+    const pp = vercelHeaders()["Permissions-Policy"];
+    for (const f of ["payment", "usb", "serial", "hid", "bluetooth", "midi", "display-capture", "xr-spatial-tracking", "idle-detection", "browsing-topics"]) {
+      expect(pp, f).toContain(`${f}=()`);
+    }
+  });
+
+  it("COOP i CORP: same-origin (S1.3)", () => {
+    const h = vercelHeaders();
+    expect(h["Cross-Origin-Opener-Policy"]).toBe("same-origin");
+    expect(h["Cross-Origin-Resource-Policy"]).toBe("same-origin");
   });
 });

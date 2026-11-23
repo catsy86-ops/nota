@@ -114,8 +114,16 @@
           "value": "max-age=31536000"
         },
         {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "Cross-Origin-Resource-Policy",
+          "value": "same-origin"
+        },
+        {
           "key": "Permissions-Policy",
-          "value": "camera=(self), geolocation=(self), payment=()"
+          "value": "camera=(self), microphone=(self), geolocation=(self), accelerometer=(self), gyroscope=(self), magnetometer=(self), screen-wake-lock=(self), clipboard-read=(self), clipboard-write=(self), web-share=(self), publickey-credentials-get=(self), publickey-credentials-create=(self), payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=(), display-capture=(), xr-spatial-tracking=(), idle-detection=(), browsing-topics=()"
         }
       ]
     }

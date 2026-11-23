@@ -665,3 +665,17 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 **Testy.** `src/lib/untrustedInput.prop.test.ts` (23 przypadki).
 
 **Commit.** Patrz historia `src/lib/untrustedInput.prop.test.ts`, 2026-11-23.
+
+## Bezpieczeństwo — nagłówki COOP, CORP i pełna Permissions-Policy (S1.3, 2026-11-23)
+
+**Co robi.** Nic widocznego dla użytkownika. Obce strony nie trzymają uchwytu do okna aplikacji ani nie osadzają jej zasobów, a przeglądarka odmawia funkcji, których aplikacja nie używa.
+
+**Gdzie jest.** `vercel.json` (źródło; z niego czyta też `vite preview` w e2e), `netlify.toml` (kopia), `src/lib/securityHeaders.test.ts`.
+
+**Jak działa.** Nowe nagłówki dla wszystkich stron: `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-origin`. `Permissions-Policy`: `=(self)` dla kamery, mikrofonu, geolokalizacji, akcelerometru, żyroskopu, magnetometru (poziomica), `screen-wake-lock`, `clipboard-read/write`, `web-share`, `publickey-credentials-get/create` (passkey); `=()` dla płatności, USB, portu szeregowego, HID, Bluetooth, MIDI, przechwytywania ekranu, XR, wykrywania bezczynności i `browsing-topics`. Lista „używane” powstała z przeszukania `src/` pod kątem API przeglądarki. COOP nie psuje otwierania załączników: `window.open("", "_blank")` ma ten sam origin, a linki zewnętrzne używają `noopener`.
+
+**Ograniczenia i pułapki.** HSTS zostaje bez `includeSubDomains` — nie da się stąd sprawdzić, że żadna poddomena nie działa po HTTP (S17). Nowa funkcja przeglądarki (np. Bluetooth) wymaga zmiany nagłówka w obu plikach, inaczej przeglądarka jej odmówi; test pilnuje listy. Przeglądarki ignorują nazwy funkcji, których nie znają (Firefox, Safari), więc część wpisów działa tylko w Chromium. Sprawdzone w Chromium (e2e z kamerą, dyktowaniem, lokalizacją, załącznikami, PDF, skarbcem, QR); passkey w prawdziwej przeglądarce z urządzeniem do sprawdzenia ręcznie.
+
+**Testy.** `src/lib/securityHeaders.test.ts` (6: zgodność Vercel/Netlify, CSP, HSTS, funkcje zostawione, funkcje wyłączone, COOP/CORP); e2e `csp`, `attachments`, `private-notes`, `sync-*`, `van-scanner`, `journal-*`, `voice-note`, `dictation-offline`, smoke.
+
+**Commit.** Patrz historia `vercel.json`, 2026-11-23.

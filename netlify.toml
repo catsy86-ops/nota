@@ -70,8 +70,9 @@
 # czyta stamtąd te same nagłówki, więc e2e biegnie pod tą polityką, a `securityHeaders.test.ts` pilnuje,
 # żeby oba pliki się zgadzały. Naruszenia trafiają do diagnostyki (`securitypolicyviolation`).
 # `connect-src` zostawia wss:/https: — adresy serwerów sygnalizacyjnych ustawia użytkownik.
-# Permissions-Policy: kamera (skan kodu QR przy parowaniu) i lokalizacja („Tu jestem”, przyjazd
-# na budowę) tylko dla tej strony; mikrofon (dyktowanie) bez ograniczeń nagłówka.
+# Permissions-Policy (S1.3): używane funkcje (kamera, mikrofon, lokalizacja, czujniki ruchu dla poziomicy, wake lock,
+# schowek, udostępnianie, passkey) tylko dla tej strony; nieużywane (USB, Bluetooth, MIDI, płatności…) wyłączone.
+# COOP/CORP `same-origin`: obce strony nie trzymają uchwytu do naszego okna ani nie osadzają naszych zasobów.
 [[headers]]
   for = "/*"
   [headers.values]
@@ -79,4 +80,6 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
     Strict-Transport-Security = "max-age=31536000"
-    Permissions-Policy = "camera=(self), geolocation=(self), payment=()"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Resource-Policy = "same-origin"
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=(self), accelerometer=(self), gyroscope=(self), magnetometer=(self), screen-wake-lock=(self), clipboard-read=(self), clipboard-write=(self), web-share=(self), publickey-credentials-get=(self), publickey-credentials-create=(self), payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=(), display-capture=(), xr-spatial-tracking=(), idle-detection=(), browsing-topics=()"
