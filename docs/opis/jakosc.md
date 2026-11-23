@@ -561,3 +561,20 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 **Testy.** `src/pages/useNotesScreen.test.ts` (4 przypadki zapisu terminów: bez powtarzania, cały dzień, dołączenie czyści koniec serii, `reminderDay` z Kalendarza); e2e: smoke, `calendar-phase1/2`, `reminders-*`, `board-table`, `composer`, `dzis-composer`, `templates-bulk`, `file-launch`.
 
 **Commit.** Patrz historia `src/pages/useNotesScreen.ts`, 2026-11-23.
+
+## Architektura — nakładki w `IndexOverlays` i jeden reduktor okien (A2.4, 2026-11-23)
+
+**Co robi.** Nic widocznego dla użytkownika. Paleta, czytnik, okna z `IndexDialogs`, triaż Skrzynki i potwierdzenia Kosza montują się w jednym komponencie, a ich stan otwarcia jest w jednym miejscu.
+
+**Gdzie jest.**
+- `src/hooks/useAppDialogs.ts` — `dialogsReducer` (typy `DialogName`, `DialogsState`, `DialogsAction`) i `useAppDialogs()`. Doszły okna `triage` (z `triageMounted`), `emptyTrash` i lista `deleteIds`, które wcześniej były lokalnymi `useState` w `Index`.
+- `src/pages/IndexOverlays.tsx` — `InboxTriage`, `DeleteForeverDialog`, `EmptyTrashDialog`, `CommandPalette`, `IndexDialogs`, `NoteReader`. Dane i operacje na notatkach bierze z `useNotesContext`; od `Index` dostaje stan okien, widok, nawigację, czytnik (`useReaderNav`) i akcje z poświatą.
+- `src/pages/Index.tsx` — 843 → 759 linii.
+
+**Jak działa.** Settery mają kształt `setState` (wartość albo funkcja), więc pasek boczny, nagłówek, skróty i paleta wołają je bez zmian. Są stałe między renderami (`useMemo`), a reduktor zwraca ten sam obiekt, gdy nic się nie zmienia. `triageMounted` ustawia się przy pierwszym otwarciu i zostaje (animacja zamknięcia, stan kroku). „Wstecz” zamyka nakładki jak dotąd: czytnik przez `useOverlayHistory`, okna Radix przez `ui/overlay-back`. `presentingNoteId` i podgląd zostały w `useReaderNav`, bo sterują nimi siatka i nawigacja klawiaturą.
+
+**Ograniczenia i pułapki.** Dialogi Kosza i triaż są teraz poza `<main>` — to portale Radix, więc układ się nie zmienia.
+
+**Testy.** `src/hooks/useAppDialogs.test.ts` (5 przypadków: wartość i funkcja, brak zmiany = ten sam stan, triaż zostaje zamontowany, lista do usunięcia, stałe settery); e2e: smoke, `command-palette-study`, `inbox-*`, `palette-*`, `reader*`, `settings-links`, `shortcuts-settings-stats`, `wiki*`, `notes`.
+
+**Commit.** Patrz historia `src/pages/IndexOverlays.tsx`, 2026-11-23.

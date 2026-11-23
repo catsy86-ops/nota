@@ -21,14 +21,13 @@ import { useTheme } from "@/hooks/useTheme";
 import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { useStudyOverdueCount } from "@/lib/studyOverdueCount";
-import { resolveWikiTarget, splitWikiTarget } from "@/lib/wikiLinks";
+import { splitWikiTarget } from "@/lib/wikiLinks";
 import { requestHeading } from "@/lib/wikiHeading";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import { useWikiLinkIndex } from "@/hooks/useWikiLinkIndex";
 import { useLaunchIntents } from "@/hooks/useLaunchIntents";
 import { useResumeView } from "@/hooks/useResumeView";
 import { setGridNavPreview, setGridNavPreviewTransitions } from "@/lib/gridKeyboardNav";
-import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { tween } from "@/lib/motion";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
 import { useImportExport, useExternalImport } from "@/hooks/useImportExport";
@@ -55,7 +54,6 @@ import { NoteGroupSection } from "@/components/NoteGroupSection";
 import { folderCrumbs, labelCrumbs } from "@/lib/breadcrumbs";
 import { FolderTemplateActions } from "@/components/FolderTemplateActions";
 import { EmptyState } from "@/components/EmptyState";
-import { DeleteForeverDialog, EmptyTrashDialog } from "@/components/TrashConfirmDialogs";
 import { sidebarItems } from "@/components/sidebar/sidebarItems";
 import { useHiddenViews, isViewShown } from "@/lib/hiddenViews";
 import { useTodayCards } from "@/lib/todayCards";
@@ -64,9 +62,7 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { useInboxCapture } from "@/hooks/useInboxCapture";
 import { useNoteNavigation } from "@/hooks/useNoteNavigation";
 import { useAppDialogs } from "@/hooks/useAppDialogs";
-import { toggleChecklistItem } from "@/lib/checklistTree";
 import { findTitleDuplicate } from "@/lib/noteDuplicate";
-import { IndexDialogs } from "@/components/IndexDialogs";
 import { useNoteGlowActions } from "@/hooks/useNoteGlowActions";
 import { useViewShell } from "@/hooks/useViewShell";
 import { pluralPl } from "@/lib/plural";
@@ -93,9 +89,10 @@ import { DataLossBanner, DocReplaceNotice } from "@/components/DocReplaceBanners
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
-import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, CommandPalette, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, StudyOverdueSync, NoteReader } from "./indexViews";
+import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, StudyView, DebtsView, CwiczeniaView, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, StudyOverdueSync } from "./indexViews";
 import { IdleWarmup, MarkOpenedSync, ReaderHistoryKeys, SearchTermsSync, UndoHandlersSync } from "./IndexEffects";
 import { useShiftsUndo, useSidebarOpen } from "./indexHooks";
+import { IndexOverlays } from "./IndexOverlays";
 import { reminderWriters, useComposer, useNoteScreenActions, useNotesScreen } from "./useNotesScreen";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
@@ -109,8 +106,8 @@ import type { DebtReminderApi } from "@/components/debts/DebtsView";
 
 const Index = () => {
   const {
-    notes, archivedNotes, trashedNotes, allLabels, folders, propDefs, addPropDef, updatePropDef, deletePropDef,
-    addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote,
+    notes, archivedNotes, trashedNotes, allLabels, folders, propDefs,
+    addNote, updateNote, deleteNote, trashNote, restoreFromTrash, togglePin, duplicateNote,
     archiveNote, unarchiveNote, addLabel, importNotes, reorderNotes, moveNoteToFolder, updateFolder,
     bulkRestore,
   } = useNotesContext();
@@ -127,13 +124,9 @@ const Index = () => {
   const { setView, search, setSearch, deferredSearch, navigate, keptViews, mainRef } = useViewShell(route);
 
   const [sidebarOpen, setSidebarOpen] = useSidebarOpen(isMobile);
-  const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
-  const [triageOpen, setTriageOpen] = useState(false);
-  const [triageMounted, setTriageMounted] = useState(false);
-  const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
   const logoClicksRef = useRef<{ count: number; lastTs: number }>({ count: 0, lastTs: 0 });
   const dialogs = useAppDialogs();
-  const { paletteOpen, setPaletteOpen, setActionsOpen, setSettingsOpen, setStatsOpen, setQuickInboxOpen, setShortcutsOpen, setPropDefsOpen, setFocusModeOpen } = dialogs;
+  const { paletteOpen, setPaletteOpen, setActionsOpen, setSettingsOpen, setStatsOpen, setQuickInboxOpen, setShortcutsOpen, setPropDefsOpen, setFocusModeOpen, setTriageOpen, setConfirmEmptyTrash, setConfirmDeleteIds } = dialogs;
   const [presentingNoteId, setPresentingNoteId] = useState<string | null>(null);
   const { selectedIds, setSelectedIds, selectionMode, lastSelectedRef, clearSelection } = useSelection({ view, activeLabel, activeFolder });
 
@@ -475,12 +468,8 @@ const Index = () => {
           )}
           {view === "notes" && <InstallBanner ready={notes.length >= 3} />}
           {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} onFiles={captureFilesToInbox} labels={allLabels} folders={folders} />}
-          {view === "inbox" && !deferredSearch && <InboxBar count={inboxCount} onTriage={() => { setTriageMounted(true); setTriageOpen(true); }} />}
-          {triageMounted && (
-            <Suspense fallback={null}>
-              <InboxTriage open={triageOpen} onOpenChange={setTriageOpen} onOpenNote={(id) => openNote(id, false, true)} />
-            </Suspense>
-          )}
+          {view === "inbox" && !deferredSearch && <InboxBar count={inboxCount} onTriage={() => setTriageOpen(true)} />}
+
 
           {view === "today" && (
             <TodayCards searching={!!deferredSearch} go={go} notes={notes} folders={folders} reminderNotes={reminderNotes} todayCards={todayCards}
@@ -524,24 +513,6 @@ const Index = () => {
               </Button>
             </motion.div>
           )}
-
-          <DeleteForeverDialog
-            ids={confirmDeleteIds}
-            onCancel={() => setConfirmDeleteIds(null)}
-            onConfirm={(ids) => {
-              ids.forEach(deleteNoteForever);
-              clearSelection();
-              toast.success(`Usunięto trwale: ${ids.length}`);
-              setConfirmDeleteIds(null);
-            }}
-          />
-
-          <EmptyTrashDialog
-            open={confirmEmptyTrash}
-            onOpenChange={setConfirmEmptyTrash}
-            count={trashedNotes.length}
-            onConfirm={() => { deleteVersions(trashedNotes.map((n) => n.id)); emptyTrash(); toast.success("Kosz opróżniony"); setConfirmEmptyTrash(false); }}
-          />
 
           {showPinned && !boardMode && !tableMode && !galleryMode && (
             <NoteGroupSection
@@ -725,72 +696,17 @@ const Index = () => {
       </Suspense>
     </Suspense>
 
-    {paletteOpen && (
-      <Suspense fallback={null}>
-        <CommandPalette
-          open={paletteOpen}
-          onOpenChange={setPaletteOpen}
-          notes={reminderNotes}
-          onOpenNote={openNote}
-          onNewNote={(title) => expandAddNote(undefined, title)}
-          onDailyNote={openDailyNote}
-          onPeriodNote={openPeriodNote}
-          onGo={setView}
-          onGoFilter={goFilter}
-          onToggleTheme={toggleTheme}
-          onOpenSettings={() => setSettingsOpen(true)}
-          onOpenStats={() => setStatsOpen(true)}
-          onQuickInbox={() => setQuickInboxOpen(true)}
-          onOpenFocusMode={() => setFocusModeOpen(true)}
-          onOpenShortcuts={() => setShortcutsOpen(true)}
-          onCopyNote={copyTarget ? (fmt) => { void copyNoteToClipboard(copyTarget, fmt); } : undefined}
-          currentNote={copyTarget}
-          onTogglePin={(id) => togglePin(id)}
-          onArchive={handleArchiveSingle}
-          onTrash={handleTrashSingle}
-          onDuplicate={duplicateNote}
-          onToggleFavorite={(id, favorite) => updateNote(id, { favorite })}
-          onMoveToFolder={handleMoveToFolderGlow}
-          view={view}
-        />
-      </Suspense>
-    )}
     <AchievementStamp />
-    <IndexDialogs
-      dialogs={dialogs}
-      notes={notes} archivedNotes={archivedNotes} trashedNotes={trashedNotes} allLabels={allLabels} folders={folders}
-      propDefs={propDefs} addPropDef={addPropDef} updatePropDef={updatePropDef} deletePropDef={deletePropDef}
-      addNote={addNote} externalImport={externalImport} captureToInbox={captureToInbox} captureFilesToInbox={captureFilesToInbox} openNote={openNote}
+    <IndexOverlays
+      dialogs={dialogs} view={view} search={search} byId={byId} reminderNotes={reminderNotes}
+      allNotesForLinks={allNotesForLinks} knownTitles={knownTitles} wikiIndex={wikiIndex}
+      reader={{ readerNote, readerSteps, copyTarget, stepReader, editFromReader, showInReader, splitNote, setSplit }}
+      presenting={!!presentingNoteId} closeReader={closeReaderToCard}
+      openNote={openNote} openDailyNote={openDailyNote} openPeriodNote={openPeriodNote} goFilter={goFilter} setView={setView}
+      expandAddNote={expandAddNote} toggleTheme={toggleTheme}
+      noteActions={{ archive: handleArchiveSingle, trash: handleTrashSingle, moveToFolder: handleMoveToFolderGlow, deleteForever: deleteNoteForever, deleteVersions }}
+      clearSelection={clearSelection} externalImport={externalImport} captureToInbox={captureToInbox} captureFilesToInbox={captureFilesToInbox}
     />
-    <AnimatePresence>
-      {readerNote && (
-        <Suspense key="reader" fallback={null}>
-        <NoteReader
-          note={readerNote}
-          mode={presentingNoteId ? "present" : "preview"}
-          searchQuery={search}
-          knownTitles={knownTitles}
-          wikiIndex={wikiIndex}
-          onClose={closeReaderToCard}
-          onStep={stepReader}
-          canPrev={!!readerSteps.prev}
-          canNext={!!readerSteps.next}
-          onEdit={editFromReader}
-          onShow={showInReader}
-          splitNote={splitNote}
-          onSplit={setSplit}
-          resolveTitle={(title) => resolveWikiTarget(title, allNotesForLinks)?.id}
-          propDefs={propDefs}
-          onUpdateProps={updateNote}
-          onToggleChecklist={(noteId, itemId) => {
-            const n = byId.get(noteId);
-            if (!n || n.trashed) return;
-            updateNote(noteId, { checklist: toggleChecklistItem(n.checklist, itemId).items });
-          }}
-        />
-        </Suspense>
-      )}
-    </AnimatePresence>
     <BottomNav
       view={view}
       onGo={setView}
