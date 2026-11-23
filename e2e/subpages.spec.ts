@@ -28,7 +28,7 @@ test("kafle pokazują rodzica i liczbę podstron; sierota zostaje na poziomie g�
   const orphan = page.locator('[data-note-id-wrap="c"]');
 
   await expect(parent.locator("[data-subpage-row]")).toContainText("1 podstrona");
-  await expect(child.getByRole("button", { name: /Remont/ })).toBeVisible();
+  await expect(child.getByRole("button", { name: "Remont", exact: true })).toBeVisible();
   await expect(orphan).toBeVisible();
   await expect(orphan.locator("[data-subpage-row]")).toHaveCount(0);
 });
@@ -63,5 +63,5 @@ test("wybór notatki nadrzędnej nie pozwala na cykl", async ({ page }) => {
 
   await select.selectOption({ label: "Sierota" });
   await page.keyboard.press("Escape");
-  await expect(page.locator('[data-note-id-wrap="a"]').getByRole("button", { name: /Sierota/ })).toBeVisible();
+  await expect(page.locator('[data-note-id-wrap="a"]').getByRole("button", { name: "Sierota", exact: true })).toBeVisible();
 });

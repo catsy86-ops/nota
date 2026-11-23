@@ -96,7 +96,14 @@ html[data-motion="reduced"] .fab-ring[data-pressing="true"] { stroke-dashoffset:
    nie okna — wąskie kolumny zdarzają się też na komputerze (wiele kolumn, otwarty panel boczny). */
 .note-card { container: note-card / inline-size; }
 @media (hover: hover) {
+  /* Zawinięty pasek nałożony od dołu rósł w górę i zakrywał tytuł krótkiego kafla — klik w tytuł trafiał w akcję
+     (np. flagę). Do ok. 12 rem ikony mają cel 24 px (minimum WCAG 2.2 AA) i mieszczą się w jednym wierszu. */
   @container note-card (max-width: 13rem) {
+    .card-actions:not([data-open]):not([data-editing]) { gap: 0; padding-left: 0.25rem; padding-right: 0.25rem; }
+    .card-actions:not([data-open]):not([data-editing]) .card-action { padding: 0.25rem; }
+  }
+  /* Węższy kafel: zawijanie, żeby „Więcej opcji” nie było ucięte. */
+  @container note-card (max-width: 11.75rem) {
     .card-actions:not([data-open]):not([data-editing]) { flex-wrap: wrap; }
   }
 }
