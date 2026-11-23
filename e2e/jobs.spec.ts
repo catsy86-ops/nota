@@ -178,6 +178,10 @@ test("H3.5: po „Zrobione” podpis klienta i PDF „Potwierdzenie wykonania”
   const dialog = page.getByTestId("site-signature");
   await dialog.getByLabel("Imię i nazwisko podpisującego").fill("Jan Kowalski");
   await expect(dialog.getByTestId("signature-pad")).toBeVisible({ timeout: 15000 });
+  // Rysujemy po wejściu okna: w trakcie animacji (skala) pudełko pola jest jeszcze przesunięte, a pierwsze naciśnięcie
+  // trafiało obok płótna — kreska się nie liczyła i „Zapisz podpis” zostawał wyłączony.
+  await dialog.evaluate((el) => Promise.all(el.getAnimations({ subtree: true })
+    .filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished.catch(() => undefined))));
   const pad = (await dialog.getByTestId("signature-pad").boundingBox())!;
   await page.mouse.move(pad.x + 30, pad.y + 100);
   await page.mouse.down();
