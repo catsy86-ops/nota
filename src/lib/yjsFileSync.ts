@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { APP_NAME } from "@/lib/appName";
 import { mayLeaveDevice, sizeCappedRefsIn } from "@/lib/plans/planRefs";
 import { yjsStore, type YjsStore } from "@/lib/yjsStore";
 import { download } from "@/lib/downloadBlob";
@@ -62,7 +63,7 @@ export function parseSyncFile(text: string): SyncFile {
   try { raw = JSON.parse(text); } catch { throw new Error("Plik nie jest poprawnym JSON-em"); }
   const r = raw as Partial<SyncFile> | null;
   if (!r || r.format !== SYNC_FILE_FORMAT) {
-    throw new Error("To nie jest plik synchronizacji aplikacji G (pełny backup przywraca się osobnym przyciskiem)");
+    throw new Error(`To nie jest plik synchronizacji aplikacji ${APP_NAME} (pełny backup przywraca się osobnym przyciskiem)`);
   }
   if (typeof r.version !== "number" || r.version > SYNC_FILE_VERSION) {
     throw new Error("Plik pochodzi z nowszej wersji aplikacji — zaktualizuj aplikację");

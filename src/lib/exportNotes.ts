@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { SCHEMA_VERSION } from "@/lib/formatSchema";
 import { APPEARANCE_KEYS } from "./appearanceCode";
 import { pl } from "date-fns/locale";
 import type { Note } from "@/lib/types/note";
@@ -207,6 +208,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   const propDefs = yjsStore.projectPropDefs();
   const backup: FullBackup = {
     version: 3,
+    // D5.1: wersja formatu dokumentu obok wersji koperty — kopia z nowszego formatu nie wczyta się w starszej aplikacji.
+    schema: SCHEMA_VERSION,
     exportedAt: Date.now(),
     // Notatki prywatne są w projekcji puste i niosą tylko szyfrogram (`vault`).
     notes: await withEmbeddedImages(yjsStore.projectNotes()),
@@ -363,10 +366,12 @@ export const MAX_BACKUP_VERSION = 3;
 export async function parseFullBackup(text: string): Promise<FullBackup> {
   const raw = JSON.parse(text);
   if (!raw || typeof raw !== "object" || !Array.isArray((raw as Record<string, unknown>).notes)) {
-    throw new Error("To nie jest plik pełnego backupu aplikacji G");
+    throw new Error(`To nie jest plik pełnego backupu aplikacji ${APP_NAME}`);
   }
   const version = (raw as Record<string, unknown>).version;
-  if (typeof version === "number" && version > MAX_BACKUP_VERSION) {
+  const schema = (raw as Record<string, unknown>).schema;
+  // D5.3: nowsza koperta albo nowszy format dokumentu — odmowa bez częściowego importu.
+  if ((typeof version === "number" && version > MAX_BACKUP_VERSION) || (typeof schema === "number" && schema > SCHEMA_VERSION)) {
     throw new Error("Ta kopia pochodzi z nowszej wersji aplikacji. Zaktualizuj aplikację i spróbuj ponownie.");
   }
   const { fullBackupSchema } = await loadSchemas();

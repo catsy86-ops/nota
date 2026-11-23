@@ -69,8 +69,12 @@ describe("parseSitePackage", () => {
   it("odrzuca obcy format, inną wersję i budowę bez nazwy", () => {
     expect(parseSitePackage("{nie json", NOW).ok).toBe(false);
     expect(parse({ format: "coś" }).ok).toBe(false);
+    // D5.4: nowsza wersja — odmowa z prośbą o aktualizację; brak albo zła wersja — to nie plik budowy.
     const v = parse({ ...pkg(), version: SITE_PACKAGE_VERSION + 1 });
-    expect(v.ok || v.error).toMatch(/innej wersji/);
+    expect(v.ok || v.error).toMatch(/nowszej wersji/);
+    expect(parse({ ...pkg(), version: "1" }).ok).toBe(false);
+    expect(parse({ ...pkg(), version: 0 }).ok).toBe(false);
+    expect(parse({ ...pkg(), version: SITE_PACKAGE_VERSION }).ok).toBe(true);
     expect(parse({ ...pkg(), site: { id: "x", name: "  " } }).ok).toBe(false);
   });
 

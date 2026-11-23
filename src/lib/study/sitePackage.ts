@@ -100,7 +100,9 @@ export function parseSitePackage(raw: string, now: number): ParseResult {
   let d: Partial<SitePackage> | null;
   try { d = JSON.parse(raw); } catch { return { ok: false, error: "To nie jest plik budowy." }; }
   if (!d || typeof d !== "object" || d.format !== SITE_PACKAGE_FORMAT) return { ok: false, error: "To nie jest plik budowy." };
-  if (d.version !== SITE_PACKAGE_VERSION) return { ok: false, error: "Plik z innej wersji aplikacji — zaktualizuj aplikację u obu osób." };
+  // D5.4: nowsza wersja pliku — odmowa; starsza — przyjęta (przy zmianie kształtu tu przyjdzie migracja).
+  if (typeof d.version !== "number" || !Number.isInteger(d.version) || d.version < 1) return { ok: false, error: "To nie jest plik budowy." };
+  if (d.version > SITE_PACKAGE_VERSION) return { ok: false, error: "Plik z nowszej wersji aplikacji — zaktualizuj aplikację." };
   const s = d.site as Partial<SitePackage["site"]> | undefined;
   const name = text(s?.name, SITE_NAME_MAX);
   if (!s || !isId(s.id) || !name) return { ok: false, error: "W pliku brakuje danych budowy." };

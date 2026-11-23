@@ -276,12 +276,12 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | D2.1–D2.4 | Rejestr, wykonawca na kopii, przeniesienie, migawka | ✅ (4) | `70f3c5df` | |
 | D2.5, D2.6 | Wzorce migracji, zasada znaczenia pola | ✅ (2) | `d8c73b69` | |
 | D3.1 | Wzorce dokumentu 1–3 | ✅ | `963d900d` | Tylko notatki, foldery, etykiety |
-| D3.2 | Test „każda wersja → bieżąca” przez rejestr | ✗ | — | |
+| D3.2 | Test „każda wersja → bieżąca” przez rejestr | ✅ | 2026-11-23 | `src/test/fixtures/docs/registry.test.ts` |
 | D3.3 | Test zbieżności migracji | ✅ | `70f3c5df` | `runner.test.ts` |
-| D3.4–D3.6 | Spóźniony stary klient, wzorce kopii, rozmiar | ✗ (3) | — | |
+| D3.4–D3.6 | Spóźniony stary klient, wzorce kopii, rozmiar | ◐ | 2026-11-23 | D3.5 zrobione (wzorce v1–v3); D3.4 i D3.6 czekają na pierwszą migrację dokumentu |
 | D4.1, D4.2 | Rejestr urządzeń, bramka | ✅ (2) | `069616d6` | |
 | D4.3, D4.4 | Lista urządzeń, test przez przekaźnik | ✅ (2) | `851a4012` | |
-| D5.1–D5.4 | Kopia i dokument jedną drogą | ✗ (4) | — | |
+| D5.1–D5.4 | Kopia i dokument jedną drogą | ◐ | 2026-11-23 | D5.1, D5.3, D5.4 zrobione; D5.2 razem z A3.1 |
 | D6.1–D6.5 | Rejestr kluczy i pamięć lokalna | ✗ (5) | — | |
 | D7.1, D7.2, D7.4 | `dane-wersje.md`, ADR-11, wpis w `CLAUDE.md` | ✗ (3) | — | |
 | D7.3 | Sprzątanie starych migracji | ⏸ | — | MG-1 |

@@ -1,4 +1,5 @@
 import { cardVariant } from "@/components/ui/card";
+import { APP_NAME } from "@/lib/appName";
 import { cn } from "@/lib/utils";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleClearAndReload = () => {
-    if (!confirm("Wyczyścić lokalne dane aplikacji G i odświeżyć? Notatki zostaną usunięte z tej przeglądarki.")) return;
+    if (!confirm(`Wyczyścić lokalne dane aplikacji ${APP_NAME} i odświeżyć? Notatki zostaną usunięte z tej przeglądarki.`)) return;
     try {
       Object.keys(localStorage)
         .filter((k) => k.startsWith("kaczy") || k.startsWith("dash-notes"))

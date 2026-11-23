@@ -106,6 +106,8 @@ export interface BackupSkipped {
  */
 export interface FullBackup {
   version: 1 | 2 | 3;
+  /** D5.1: wersja formatu dokumentu (`SCHEMA_VERSION`) w chwili zapisu; brak w kopiach sprzed 2026-11-23. */
+  schema?: number;
   exportedAt: number;
   notes: Note[];
   labels: string[];
@@ -190,6 +192,7 @@ function tolerantArray<T extends z.ZodMiniType>(item: T) {
 
 export const fullBackupSchema = z.object({
   version: z.catch(z.union([z.literal(1), z.literal(2), z.literal(3)]), 1),
+  schema: z.catch(z.optional(z.number()), undefined),
   exportedAt: z.catch(z.number(), () => Date.now()),
   // Element po elemencie: jeden uszkodzony wpis odpada, reszta zostaje. Wcześniej `z.catch` na całej tablicy zerował ją
   // przy pierwszym złym elemencie, a „Przywróć” kasowało wszystkie notatki użytkownika.

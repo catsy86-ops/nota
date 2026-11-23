@@ -296,6 +296,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Pewność danych — kilka kart naraz: karta prowadząca przekaźnik, odśmiecanie obrazów (Z-7, Z-6, 2026-11-16)
 - Kopia zapasowa — dzienny zapis do wybranego pliku (Q1.3, decyzja QL-2, 2026-11-23)
 - Kopia zapasowa — „Usuń nieużywane pliki” (Z-6.6, 2026-11-23)
+- Dane — wersje kopii i plików wymiany, wzorce (D3.2, D3.5, D5.1, D5.3, D5.4, 2026-11-23)
 
 ### Powłoka, Ustawienia i telefon — [`docs/opis/powloka.md`](docs/opis/powloka.md)
 

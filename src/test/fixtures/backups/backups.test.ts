@@ -69,3 +69,19 @@ describe("wzorce kopii (D3.5)", () => {
     else expect(shiftStore.get().days["2026-11-01"]).toBeUndefined();
   });
 });
+
+describe("wersja formatu w kopii (D5.1, D5.3)", () => {
+  it("nowa kopia zapisuje `schema`; kopia bez niego (sprzed zmiany) wczytuje się jak dotąd", async () => {
+    const { SCHEMA_VERSION } = await import("@/lib/formatSchema");
+    expect((await buildFullBackup()).schema).toBe(SCHEMA_VERSION);
+    expect((await parseFullBackup(readFileSync(file(3), "utf8"))).schema).toBeUndefined();
+  });
+
+  it("kopia z nowszego formatu dokumentu albo nowszej koperty — odmowa przed czymkolwiek", async () => {
+    const { SCHEMA_VERSION } = await import("@/lib/formatSchema");
+    const v3 = JSON.parse(readFileSync(file(3), "utf8"));
+    await expect(parseFullBackup(JSON.stringify({ ...v3, schema: SCHEMA_VERSION + 1 }))).rejects.toThrow(/nowszej wersji/);
+    await expect(parseFullBackup(JSON.stringify({ ...v3, version: MAX_BACKUP_VERSION + 1 }))).rejects.toThrow(/nowszej wersji/);
+    await expect(parseFullBackup(JSON.stringify({ ...v3, schema: SCHEMA_VERSION }))).resolves.toMatchObject({ schema: SCHEMA_VERSION });
+  });
+});
