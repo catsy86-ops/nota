@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef, type MutableRefObject } from "react";
 import { isAppView } from "@/lib/viewMeta";
 import type { Note, Folder, NoteColor } from "@/hooks/useNotes";
 import type { View } from "@/lib/types/view";
@@ -10,6 +10,13 @@ import { useNextBoundary } from "@/hooks/useNextBoundary";
 import { countDueToday, groupReminders, sortArchivedByReminder } from "@/lib/reminderAgenda";
 import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
 import { groupNotes, type GroupBy } from "@/lib/groupNotes";
+import { useNotesContext } from "@/hooks/NotesProvider";
+import { useNoteActions } from "@/hooks/useNoteActions";
+import { useBulkNoteOps } from "@/hooks/useBulkNoteOps";
+import { useNoteExport } from "@/hooks/useNoteExport";
+import type { useSelection } from "@/hooks/useSelection";
+import type { useConfirmAction } from "@/components/ConfirmActionDialog";
+import type { ComposerAction } from "@/components/AddNoteBar";
 import { repeatUpdate, toRule, type RepeatInput } from "@/lib/reminderRepeat";
 
 /**
@@ -113,4 +120,68 @@ export function reminderWriters(addNote: AddNote, updateNote: UpdateNote, color:
   const attachReminder = (id: string, reminder: number, repeat: RepeatInput, allDay: boolean, base: number | undefined, until?: number) =>
     setReminder(id, reminder, repeat, undefined, base, allDay, until);
   return { createReminderNote, setReminder, attachReminder };
+}
+
+/**
+ * A2.3: kompozytor nowej notatki. Pasek dodawania jest też w folderze, etykiecie i Dziś (2.5) — nowa notatka dziedziczy
+ * ten kontekst (`handleAddNoteGlow`), zamiast lądować poza widokiem.
+ */
+export function useComposer({ view, activeFolder, activeLabel, folders, setView }: {
+  view: View; activeFolder: string | null; activeLabel: string | null; folders: Folder[]; setView: (v: View) => void;
+}) {
+  const addNoteRef = useRef<{ expand: (action?: ComposerAction, prefill?: string) => void }>(null);
+  const canCompose = view === "notes" || view === "today" || (view === "folder" && !!activeFolder) || (view === "label" && !!activeLabel);
+  const composeDestination = view === "folder"
+    ? folders.find((f) => f.id === activeFolder)?.name ?? null
+    : view === "label" ? `#${activeLabel}` : null;
+
+  function expandAddNote(action?: ComposerAction, prefill?: string) {
+    // W Skrzynce nie ma kompozytora: „+” ustawia kursor w polu przechwycenia, bez zmiany działu.
+    if (view === "inbox") { document.querySelector<HTMLTextAreaElement>("[data-inbox-capture]")?.focus(); return; }
+    if (!canCompose) setView("notes");
+    // Kompozytor montuje się po zmianie widoku (i pod obciążeniem bywa później niż po 100 ms) — ponawiamy,
+    // zamiast po cichu zgubić skrót („+”, „?new=list”, „N”). Najwyżej ok. 3 s.
+    const tryExpand = (left: number) => {
+      if (addNoteRef.current) { addNoteRef.current.expand(action, prefill); return; }
+      if (left > 0) window.setTimeout(() => tryExpand(left - 1), 100);
+    };
+    window.setTimeout(() => tryExpand(30), 100);
+  }
+
+  return { addNoteRef, canCompose, composeDestination, expandAddNote };
+}
+
+/**
+ * A2.3: akcje na notatkach — pojedyncze, grupowe (zaznaczenie), eksport i trwałe usunięcie. Operacje na danych czyta
+ * z `useNotesContext`, więc `Index` podaje tylko to, czego kontekst nie zna: widok, zaznaczenie i listę na ekranie.
+ */
+export function useNoteScreenActions({ view, groupBy, selection, confirmAction, visibleNotes, notesRef, moveToFolder, deleteVersions }: {
+  view: View;
+  groupBy: GroupBy;
+  selection: Pick<ReturnType<typeof useSelection>, "selectedIds" | "setSelectedIds" | "clearSelection">;
+  confirmAction: ReturnType<typeof useConfirmAction>["confirmAction"];
+  visibleNotes: Note[];
+  notesRef: MutableRefObject<Note[]>;
+  moveToFolder: (id: string, folderId: string | null) => void;
+  deleteVersions: (ids: string | string[]) => void;
+}) {
+  const {
+    notes, archivedNotes, trashedNotes, folders, propDefs, updateNote, deleteNote, trashNote, restoreFromTrash, togglePin,
+    archiveNote, unarchiveNote, addLabel, bulkTrash, bulkArchive, bulkSetColor, bulkRestore,
+  } = useNotesContext();
+  const { selectedIds, setSelectedIds, clearSelection } = selection;
+  const single = useNoteActions({
+    notes, archivedNotes, selectedIds, confirmAction, clearSelection,
+    trashNote, restoreFromTrash, archiveNote, unarchiveNote,
+    bulkTrash, bulkArchive, bulkSetColor, bulkRestore, setSelectedIds, displayNotes: visibleNotes,
+  });
+  const exports = useNoteExport({ notes, archivedNotes, trashedNotes, selectedIds, folders, propDefs });
+  const bulk = useBulkNoteOps({
+    view, groupBy, folders, notesRef, selectedIds, clearSelection, togglePin, updateNote, addLabel,
+    unarchiveNote, bulkRestore, bulkTrash, bulkArchive, moveToFolder,
+  });
+  // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby w `localStorage` na zawsze i zjadała limit.
+  const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
+  const handleDelete = view === "trash" ? deleteNoteForever : single.handleTrashSingle;
+  return { ...single, ...exports, ...bulk, deleteNoteForever, handleDelete };
 }

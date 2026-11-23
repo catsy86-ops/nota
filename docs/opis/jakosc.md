@@ -541,7 +541,7 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 
 **Commit.** Patrz historia `src/pages/IndexEffects.tsx`, 2026-11-23.
 
-## Architektura — model listy `useNotesScreen` i wspólny zapis terminów (A2.3 część, 2026-11-23)
+## Architektura — model listy `useNotesScreen` i wspólny zapis terminów (A2.3, 2026-11-23)
 
 **Co robi.** Nic widocznego dla użytkownika. Wyliczanie listy notatek i Terminów wyszło z `Index.tsx` do hooka, a Terminy i Kalendarz zapisują terminy jedną funkcją.
 
@@ -549,12 +549,15 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - `useNotesScreen(args)` — filtr (`useFilteredNotes`), `reminderNotes`, grupy i wiersze Terminów (`reminderGroups`, `archivedRows`, `reminderRowCount`), tryby układu (`boardMode`, `tableMode`, `galleryMode`), `groupBy`, sekcja przypiętych, `groups`, `visibleNotes` (+ `visibleNotesRef`);
 - `reminderWriters(addNote, updateNote, color)` — `createReminderNote`, `setReminder` (Kalendarz), `attachReminder` (Terminy, przez `setReminder`).
 
-W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchronizacji oraz mapa `byId` (notatki, archiwum, kosz) dla `debtReminders` i listy w czytniku. 941 → 876 linii.
+- `useComposer(...)` — `addNoteRef`, `canCompose`, `composeDestination`, `expandAddNote` (ponawianie do ok. 3 s, w Skrzynce fokus na polu przechwycenia);
+- `useNoteScreenActions(...)` — akcje pojedyncze i grupowe (`useNoteActions`, `useBulkNoteOps`), eksport, `deleteNoteForever` i `handleDelete`; dane i operacje czyta z `useNotesContext`, więc `Index` podaje tylko widok, `groupBy`, zaznaczenie, listę na ekranie, przeniesienie z poświatą i `deleteVersions`.
 
-**Jak działa.** Hook nie ma własnego stanu — wynika z danych, trasy, `prefs` i odroczonych `deferredSearch`/`deferredPrefs`. Zależności `useMemo` są takie jak wcześniej w `Index`; kolejność `visibleNotes` (przypięte, potem grupy bez zwiniętych) zachowuje nawigację klawiaturą (`navOrder`). Kontroler z planu (`{ view, filtered, selection, actions }`) budujemy etapami: zaznaczenie, akcje i tworzenie zostają na razie w `Index`.
+W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchronizacji oraz mapa `byId` (notatki, archiwum, kosz) dla `debtReminders` i listy w czytniku. 941 → 843 linie.
+
+**Jak działa.** Hook nie ma własnego stanu — wynika z danych, trasy, `prefs` i odroczonych `deferredSearch`/`deferredPrefs`. Zależności `useMemo` są takie jak wcześniej w `Index`; kolejność `visibleNotes` (przypięte, potem grupy bez zwiniętych) zachowuje nawigację klawiaturą (`navOrder`). Kontroler z planu (`{ view, filtered, selection, actions }`) budujemy etapami: zostają w `Index` nawigacja, czytnik i nakładki (A2.4).
 
 **Ograniczenia i pułapki.** Lista w czytniku sprawdza teraz `byId` i pomija notatki z kosza (`trashed`) — wcześniej szukała tylko w notatkach i archiwum, wynik ten sam.
 
-**Testy.** `src/pages/useNotesScreen.test.ts` (4 przypadki zapisu terminów: bez powtarzania, cały dzień, dołączenie czyści koniec serii, `reminderDay` z Kalendarza); e2e: smoke, `calendar-phase1/2`, `reminders-*`.
+**Testy.** `src/pages/useNotesScreen.test.ts` (4 przypadki zapisu terminów: bez powtarzania, cały dzień, dołączenie czyści koniec serii, `reminderDay` z Kalendarza); e2e: smoke, `calendar-phase1/2`, `reminders-*`, `board-table`, `composer`, `dzis-composer`, `templates-bulk`, `file-launch`.
 
 **Commit.** Patrz historia `src/pages/useNotesScreen.ts`, 2026-11-23.

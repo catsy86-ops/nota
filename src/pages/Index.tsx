@@ -27,11 +27,9 @@ import { useLatestRef } from "@/hooks/useLatestRef";
 import { useWikiLinkIndex } from "@/hooks/useWikiLinkIndex";
 import { useLaunchIntents } from "@/hooks/useLaunchIntents";
 import { useResumeView } from "@/hooks/useResumeView";
-import { useBulkNoteOps } from "@/hooks/useBulkNoteOps";
 import { setGridNavPreview, setGridNavPreviewTransitions } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { tween } from "@/lib/motion";
-import { useNoteActions } from "@/hooks/useNoteActions";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
 import { useImportExport, useExternalImport } from "@/hooks/useImportExport";
 import { useAchievementToasts } from "@/hooks/useAchievementToasts";
@@ -41,7 +39,7 @@ import { useBackupReminders } from "@/hooks/useBackupReminders";
 import { useReminderSinkOn } from "@/lib/reminders/sink";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
-import { AddNoteBar, type ComposerAction } from "@/components/AddNoteBar";
+import { AddNoteBar } from "@/components/AddNoteBar";
 import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
@@ -71,7 +69,6 @@ import { findTitleDuplicate } from "@/lib/noteDuplicate";
 import { IndexDialogs } from "@/components/IndexDialogs";
 import { useNoteGlowActions } from "@/hooks/useNoteGlowActions";
 import { useViewShell } from "@/hooks/useViewShell";
-import { useNoteExport } from "@/hooks/useNoteExport";
 import { pluralPl } from "@/lib/plural";
 import { DndContext, pointerWithin } from "@dnd-kit/core";
 import { fireworks, megaCelebrate } from "@/lib/celebrate";
@@ -99,7 +96,7 @@ import { QuickPresetsHost } from "@/components/settings/QuickPresets";
 import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, CommandPalette, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, StudyOverdueSync, NoteReader } from "./indexViews";
 import { IdleWarmup, MarkOpenedSync, ReaderHistoryKeys, SearchTermsSync, UndoHandlersSync } from "./IndexEffects";
 import { useShiftsUndo, useSidebarOpen } from "./indexHooks";
-import { reminderWriters, useNotesScreen } from "./useNotesScreen";
+import { reminderWriters, useComposer, useNoteScreenActions, useNotesScreen } from "./useNotesScreen";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -115,7 +112,7 @@ const Index = () => {
     notes, archivedNotes, trashedNotes, allLabels, folders, propDefs, addPropDef, updatePropDef, deletePropDef,
     addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote,
     archiveNote, unarchiveNote, addLabel, importNotes, reorderNotes, moveNoteToFolder, updateFolder,
-    bulkTrash, bulkArchive, bulkSetColor, bulkRestore,
+    bulkRestore,
   } = useNotesContext();
   const { addVersion, getVersions, deleteVersions } = useNoteVersions();
   const { confirmAction, confirmDialog } = useConfirmAction();
@@ -134,7 +131,6 @@ const Index = () => {
   const [triageOpen, setTriageOpen] = useState(false);
   const [triageMounted, setTriageMounted] = useState(false);
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
-  const addNoteRef = useRef<{ expand: (action?: ComposerAction, prefill?: string) => void }>(null);
   const logoClicksRef = useRef<{ count: number; lastTs: number }>({ count: 0, lastTs: 0 });
   const dialogs = useAppDialogs();
   const { paletteOpen, setPaletteOpen, setActionsOpen, setSettingsOpen, setStatsOpen, setQuickInboxOpen, setShortcutsOpen, setPropDefsOpen, setFocusModeOpen } = dialogs;
@@ -197,26 +193,7 @@ const Index = () => {
   const openShifts = useCallback(() => setView("shifts"), [setView]);
   const shiftsUndo = useShiftsUndo(view);
 
-  // Pasek dodawania jest też w folderze i etykiecie — nowa notatka dziedziczy
-  // ten kontekst (`handleAddNoteGlow`), zamiast lądować poza widokiem.
-  // Dziś 2.5: także w Dziś — nowa notatka jest „dzisiejsza”, więc zostaje na ekranie, a „+” nie przenosi do Notatek.
-  const canCompose = view === "notes" || view === "today" || (view === "folder" && !!activeFolder) || (view === "label" && !!activeLabel);
-  const composeDestination = view === "folder"
-    ? folders.find((f) => f.id === activeFolder)?.name ?? null
-    : view === "label" ? `#${activeLabel}` : null;
-
-  function expandAddNote(action?: ComposerAction, prefill?: string) {
-    // W Skrzynce nie ma kompozytora: „+” ustawia kursor w polu przechwycenia, bez zmiany działu.
-    if (view === "inbox") { document.querySelector<HTMLTextAreaElement>("[data-inbox-capture]")?.focus(); return; }
-    if (!canCompose) setView("notes");
-    // Kompozytor montuje się po zmianie widoku (i pod obciążeniem bywa później niż po 100 ms) — ponawiamy,
-    // zamiast po cichu zgubić skrót („+”, „?new=list”, „N”). Najwyżej ok. 3 s.
-    const tryExpand = (left: number) => {
-      if (addNoteRef.current) { addNoteRef.current.expand(action, prefill); return; }
-      if (left > 0) window.setTimeout(() => tryExpand(left - 1), 100);
-    };
-    window.setTimeout(() => tryExpand(30), 100);
-  }
+  const { addNoteRef, canCompose, composeDestination, expandAddNote } = useComposer({ view, activeFolder, activeLabel, folders, setView });
 
   useGlobalShortcuts({
     onNewNote: expandAddNote,
@@ -330,18 +307,19 @@ const Index = () => {
     setGridNavPreviewTransitions({ open: openPreviewFromCard, close: closeReaderToCard });
     return () => setGridNavPreviewTransitions(null);
   }, [openPreviewFromCard, closeReaderToCard]);
-  const {
-    handleTrashSingle, handleArchiveSingle, handleBulkTrash, handleBulkArchive, handleBulkColor, handleSelectAll,
-  } = useNoteActions({
-    notes, archivedNotes, selectedIds, confirmAction, clearSelection,
-    trashNote, restoreFromTrash, archiveNote, unarchiveNote,
-    bulkTrash, bulkArchive, bulkSetColor, bulkRestore, setSelectedIds, displayNotes: visibleNotes,
-  });
-
   // Notatka tworzona w folderze albo w widoku etykiety ląduje tam, gdzie
   // użytkownik patrzy — inaczej znika mu z oczu i wymaga przeciągnięcia.
   const activeFolderObj = view === "folder" && activeFolder ? folders.find((f) => f.id === activeFolder) ?? null : null;
   const { handleAddNoteGlow, handleComposerAdd, composerParents, handleMoveToFolderGlow } = useNoteGlowActions({ notes, view, activeLabel, activeFolder, addNote, updateNote, deleteNote, moveNoteToFolder });
+
+  const {
+    handleTrashSingle, handleArchiveSingle, handleBulkTrash, handleBulkArchive, handleBulkColor, handleSelectAll,
+    exportSelectedAs, exportSelectedZip, deleteNoteForever, handleDelete,
+    restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn, mergeSelected, favoriteSelected, prioritySelected,
+  } = useNoteScreenActions({
+    view, groupBy, selection: { selectedIds, setSelectedIds, clearSelection }, confirmAction, visibleNotes, notesRef,
+    moveToFolder: handleMoveToFolderGlow, deleteVersions,
+  });
 
   useLaunchIntents({ navigate, addNote: handleAddNoteGlow, openNote, expandComposer: expandAddNote, openQuickInbox: () => setQuickInboxOpen(true) });
   useResumeView(navigate);
@@ -352,18 +330,6 @@ const Index = () => {
   // Skrzynka 5.3: nieposortowane notatki — liczone tylko dla znaczka, gdy użytkownik to włączył.
   const inboxBadge = useMemo(() => notes.reduce((n, note) => n + (isInboxNote(note) ? 1 : 0), 0), [notes]);
   const overdueCount = useOverdueBadge(notes, useStudyOverdueCount(), inboxBadge);
-  // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby
-  // w `localStorage` na zawsze i zjadała limit.
-  const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
-  const handleDelete = view === "trash" ? deleteNoteForever : handleTrashSingle;
-
-  const { exportSelectedAs, exportSelectedZip } = useNoteExport({ notes, archivedNotes, trashedNotes, selectedIds, folders, propDefs });
-
-  const { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn, mergeSelected, favoriteSelected, prioritySelected } = useBulkNoteOps({
-    view, groupBy, folders, notesRef, selectedIds, clearSelection, togglePin, updateNote, addLabel,
-    unarchiveNote, bulkRestore, bulkTrash, bulkArchive, moveToFolder: handleMoveToFolderGlow,
-  });
-
   const { sensors, setDraggingNoteId, handleDragStart, handleDragEnd } = useNoteDnd({
     displayNoteIds: displayNotes.map((n) => n.id),
     folders,
