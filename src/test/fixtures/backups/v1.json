@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "exportedAt": 1793534400000,
+  "notes": [
+    {
+      "id": "k1",
+      "color": "default",
+      "pinned": true,
+      "archived": false,
+      "trashed": false,
+      "trashedAt": null,
+      "reminder": null,
+      "priority": "none",
+      "folderId": "f1",
+      "order": 0,
+      "createdAt": 1793534400000,
+      "updatedAt": 1793534400000,
+      "title": "Notatka k1",
+      "content": "Treść k1",
+      "labels": [
+        "pilne"
+      ],
+      "images": [],
+      "checklist": []
+    },
+    {
+      "id": "k2",
+      "color": "default",
+      "pinned": false,
+      "archived": true,
+      "trashed": false,
+      "trashedAt": null,
+      "reminder": null,
+      "priority": "none",
+      "folderId": null,
+      "order": 0,
+      "createdAt": 1793534400000,
+      "updatedAt": 1793534400000,
+      "title": "Notatka k2",
+      "content": "Treść k2",
+      "labels": [],
+      "images": [],
+      "checklist": [
+        {
+          "id": "c1",
+          "text": "rury",
+          "checked": true
+        }
+      ]
+    }
+  ],
+  "labels": [
+    "pilne"
+  ],
+  "folders": [
+    {
+      "id": "f1",
+      "name": "Dom",
+      "color": "default",
+      "emoji": null,
+      "parentId": null,
+      "order": 0,
+      "createdAt": 1793534400000,
+      "updatedAt": 1793534400000
+    }
+  ]
+}

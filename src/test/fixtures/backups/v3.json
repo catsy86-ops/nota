@@ -1,0 +1,99 @@
+{
+  "version": 3,
+  "exportedAt": 1793534400000,
+  "notes": [
+    {
+      "id": "k1",
+      "color": "default",
+      "pinned": true,
+      "archived": false,
+      "trashed": false,
+      "trashedAt": null,
+      "reminder": null,
+      "priority": "none",
+      "folderId": "f1",
+      "order": 0,
+      "createdAt": 1793534400000,
+      "updatedAt": 1793534400000,
+      "title": "Notatka k1",
+      "content": "Treść k1",
+      "labels": [
+        "pilne"
+      ],
+      "images": [],
+      "checklist": []
+    },
+    {
+      "id": "k2",
+      "color": "default",
+      "pinned": false,
+      "archived": true,
+      "trashed": false,
+      "trashedAt": null,
+      "reminder": null,
+      "priority": "none",
+      "folderId": null,
+      "order": 0,
+      "createdAt": 1793534400000,
+      "updatedAt": 1793534400000,
+      "title": "Notatka k2",
+      "content": "Treść k2",
+      "labels": [],
+      "images": [],
+      "checklist": [
+        {
+          "id": "c1",
+          "text": "rury",
+          "checked": true
+        }
+      ]
+    }
+  ],
+  "labels": [
+    "pilne"
+  ],
+  "folders": [
+    {
+      "id": "f1",
+      "name": "Dom",
+      "color": "default",
+      "emoji": null,
+      "parentId": null,
+      "order": 0,
+      "createdAt": 1793534400000,
+      "updatedAt": 1793534400000
+    }
+  ],
+  "versions": [],
+  "settings": {
+    "kaczy.study.v1": "{\"board\":{},\"checked\":{},\"missed\":{},\"journal\":[],\"site\":\"\",\"sites\":{},\"rounds\":0,\"bestPercent\":null,\"streak\":0,\"lastDay\":null,\"review\":{},\"exams\":[],\"boss\":null,\"group\":null,\"days\":[],\"custom\":[]}"
+  },
+  "shifts": "{\"version\":2,\"types\":[{\"id\":\"u\",\"name\":\"Urlop\",\"short\":\"U\",\"color\":\"#10b981\",\"start\":\"08:00\",\"end\":\"16:00\",\"breakMin\":0,\"kind\":\"absence\"},{\"id\":\"l4\",\"name\":\"L4\",\"short\":\"L4\",\"color\":\"#64748b\",\"start\":\"08:00\",\"end\":\"16:00\",\"breakMin\":0,\"kind\":\"absence\"},{\"id\":\"e\",\"name\":\"Dniówka\",\"short\":\"8\",\"color\":\"#ec4899\",\"start\":\"08:00\",\"end\":\"16:00\",\"breakMin\":0,\"kind\":\"work\"},{\"id\":\"b\",\"name\":\"Budowa\",\"short\":\"B\",\"color\":\"#14b8a6\",\"start\":\"07:00\",\"end\":\"17:00\",\"breakMin\":0,\"kind\":\"work\"}],\"patterns\":[],\"days\":{\"2026-11-01\":{\"type\":\"d\"}},\"bonuses\":[],\"paidGross\":{},\"hourlyRate\":0,\"nightRate\":0,\"workSystem\":\"basic\",\"fte\":1,\"leaveDays\":20,\"overtimeFrom\":1,\"settlementMonths\":1,\"settlementStart\":0,\"sundayFrom\":6,\"nightFrom\":22}",
+  "study": "{\"version\":2,\"board\":{},\"checked\":{},\"missed\":{},\"journal\":[],\"days\":[],\"rounds\":{},\"site\":\"\",\"sites\":{},\"review\":{},\"boss\":null,\"exams\":{},\"group\":null,\"custom\":{}}",
+  "supplements": "{\"list\":[],\"taken\":[]}",
+  "diet": "{\"meals\":[],\"goals\":{}}",
+  "weight": "[]",
+  "training": "{\"entries\":[],\"plans\":[],\"reminder\":null,\"equipment\":{}}",
+  "debts": "[]",
+  "debtPlans": "[]",
+  "debtProofs": "{}",
+  "entryCheck": "{\"records\":[]}",
+  "kits": "{\"own\":false,\"kits\":[]}",
+  "views": "[]",
+  "points": "{\"sites\":{}}",
+  "billing": "{\"sites\":{}}",
+  "jobs": "{\"jobs\":{}}",
+  "invoices": "{\"invoices\":[]}",
+  "clients": "{\"clients\":[],\"sites\":{}}",
+  "pricing": "{\"labor\":[],\"materials\":{},\"templates\":[]}",
+  "van": "{\"items\":[],\"events\":[]}",
+  "plans": "{\"entries\":{}}",
+  "skipped": {
+    "tooLarge": 0,
+    "missing": 0,
+    "journalPhotos": 0,
+    "siteDocs": 0,
+    "recordings": 0,
+    "plans": 0
+  }
+}
