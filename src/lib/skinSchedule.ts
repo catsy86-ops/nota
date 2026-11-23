@@ -1,6 +1,7 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { isSkin, skinStore, type Skin } from "@/lib/skins";
 import { cityById, DEFAULT_CITY, isNightAt } from "@/lib/sun";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Styl na noc (plan motywów 1.4): para „styl dzienny / styl nocny”. Wieczorem aplikacja sama przechodzi
@@ -27,7 +28,7 @@ const DEFAULTS: SkinSchedule = { enabled: false, day: "zeszyt", night: "zorza", 
 
 const isTime = (v: unknown): v is string => typeof v === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 
-export const skinScheduleStore = createPersistedStore<SkinSchedule>("kaczy.skinSchedule.v1", DEFAULTS, {
+export const skinScheduleStore = createPersistedStore<SkinSchedule>(APPEARANCE.skinSchedule, DEFAULTS, {
   merge: (defaults, stored) => {
     if (!stored || typeof stored !== "object") return defaults;
     const s = stored as Partial<SkinSchedule>;

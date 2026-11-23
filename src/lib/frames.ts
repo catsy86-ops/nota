@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Ramki kart i podziałów (Ustawienia → Wygląd → „Ramki”): jak mocno widać krawędź `--border`.
@@ -25,7 +26,7 @@ function applyToDom(frames: Frames) {
   document.documentElement.style.setProperty("--frame-mix", frameMix(frames));
 }
 
-const store = createPersistedStore<Frames>("kaczy.frames.v1", "soft", {
+const store = createPersistedStore<Frames>(APPEARANCE.frames, "soft", {
   merge: (defaults, stored) => (isFrames(stored) ? stored : defaults),
   onChange: applyToDom,
 });

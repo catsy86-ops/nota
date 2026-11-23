@@ -1,6 +1,7 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { skinStore } from "@/lib/skins";
 import type { Skin } from "@/lib/skinList";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Kolor akcentu w stylu (plan motywów 1.1; Ustawienia → Wygląd → „Akcent”). Każdy styl ma pięć
@@ -16,7 +17,7 @@ type AccentMap = Partial<Record<Skin, number>>;
 
 const valid = (n: unknown): n is number => Number.isInteger(n) && (n as number) >= 0 && (n as number) < ACCENT_COUNT;
 
-const store = createPersistedStore<AccentMap>("kaczy.accent.v1", {}, {
+const store = createPersistedStore<AccentMap>(APPEARANCE.accent, {}, {
   merge: (defaults, stored) => {
     if (!stored || typeof stored !== "object") return defaults;
     return Object.fromEntries(Object.entries(stored as Record<string, unknown>).filter(([, v]) => valid(v))) as AccentMap;

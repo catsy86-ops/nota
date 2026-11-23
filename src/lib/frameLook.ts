@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Wygląd ramek (Ustawienia → Wygląd → „Ramki”): kolor krawędzi i kolor tła kart.
@@ -67,7 +68,7 @@ function applyToDom(look: FrameLook) {
   else style.removeProperty("--card");
 }
 
-const store = createPersistedStore<FrameLook>("kaczy.frames.look.v1", DEFAULT_FRAME_LOOK, {
+const store = createPersistedStore<FrameLook>(APPEARANCE.frameLook, DEFAULT_FRAME_LOOK, {
   merge: (defaults, stored) => ({
     color: isColor(stored?.color) ? stored.color : defaults.color,
     surface: isSurface(stored?.surface) ? stored.surface : defaults.surface,

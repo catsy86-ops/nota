@@ -1,6 +1,7 @@
 import { pulseSkinSignal } from "@/lib/skinSignal";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { SKINS, type Skin } from "@/lib/skinList";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Styl aplikacji („skórka”). Każdy ma schemat jasny i ciemny (plan motywów 4.1): Zeszyt słucha wspólnego
@@ -13,7 +14,7 @@ export function isSkin(v: unknown): v is Skin {
   return typeof v === "string" && (SKINS as readonly string[]).includes(v);
 }
 
-export const skinStore = createPersistedStore<Skin>("kaczy.skin.v1", "zeszyt", {
+export const skinStore = createPersistedStore<Skin>(APPEARANCE.skin, "zeszyt", {
   merge: (defaults, stored) => (isSkin(stored) ? stored : defaults),
 });
 

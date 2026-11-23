@@ -1,11 +1,12 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Czarne tło w ciemnym schemacie (plan motywów 3.3, „OLED”): na ekranach OLED czerń to zgaszony piksel,
  * więc to oszczędność baterii, a na słońcu lepszy kontrast kart. Per urządzenie.
  * CSS: `html[data-oled="on"]` w `src/index.css` — nadpisuje tło tylko w ciemnym schemacie.
  */
-const KEY = "kaczy.oled.v1";
+const KEY = APPEARANCE.oled;
 
 function applyToDom(on: boolean) {
   if (typeof document === "undefined") return;

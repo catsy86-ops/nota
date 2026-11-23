@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Podkreślenia działów (plan motywów 3.4): „subtelne” — cienka kreska w kolorze działu, stonowana;
@@ -15,7 +16,7 @@ function applyToDom(mode: SectionColors) {
   else document.documentElement.dataset.sections = mode;
 }
 
-const store = createPersistedStore<SectionColors>("kaczy.sectionColors.v1", "subtle", {
+const store = createPersistedStore<SectionColors>(APPEARANCE.sectionColors, "subtle", {
   merge: (defaults, stored) => (isMode(stored) ? stored : defaults),
   onChange: applyToDom,
 });

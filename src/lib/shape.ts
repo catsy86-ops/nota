@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Kształt interfejsu (plan motywów 1.2; Ustawienia → Wygląd → „Kształt”): mnożnik wszystkich
@@ -15,7 +16,7 @@ function applyToDom(shape: Shape) {
   else document.documentElement.dataset.shape = shape;
 }
 
-const store = createPersistedStore<Shape>("kaczy.shape.v1", "normal", {
+const store = createPersistedStore<Shape>(APPEARANCE.shape, "normal", {
   merge: (defaults, stored) => (isShape(stored) ? stored : defaults),
   onChange: applyToDom,
 });

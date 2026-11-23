@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Gęstość całego interfejsu (plan motywów 4.2): mnożnik odstępów, wysokości i szerokości. Tailwind v4 liczy
@@ -16,7 +17,7 @@ function applyToDom(d: UiDensity) {
   else document.documentElement.dataset.uiDensity = d;
 }
 
-const store = createPersistedStore<UiDensity>("kaczy.uiDensity.v1", "normal", {
+const store = createPersistedStore<UiDensity>(APPEARANCE.uiDensity, "normal", {
   merge: (defaults, stored) => (isDensity(stored) ? stored : defaults),
   onChange: applyToDom,
 });

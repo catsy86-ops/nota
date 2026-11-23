@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Rozmiar tekstu całej aplikacji (Ustawienia → Wygląd → „Rozmiar tekstu”, polecenia w palecie).
@@ -39,7 +40,7 @@ function applyToDom(step: number) {
   root.dataset.textSize = String(clean);
 }
 
-const store = createPersistedStore<number>("kaczy.textSize.v1", DEFAULT_TEXT_SIZE_STEP, {
+const store = createPersistedStore<number>(APPEARANCE.textSize, DEFAULT_TEXT_SIZE_STEP, {
   merge: (defaults, stored) => (typeof stored === "number" ? cleanTextSizeStep(stored) : defaults),
   onChange: applyToDom,
 });

@@ -2,6 +2,7 @@ import { applyAppearanceValues, snapshotAppearance } from "@/lib/appearanceCode"
 import { SKIN_META } from "@/lib/skinGallery";
 import { TEXT_SIZE_STEPS } from "@/lib/textSize";
 import type { Skin } from "@/lib/skins";
+import { APPEARANCE, appearanceSlotKey } from "@/lib/storage/keys";
 
 /**
  * Zestawy wyglądu jednym stuknięciem (plan motywów 2026-10-30, 1.3). Zestaw to wartości kluczy z
@@ -22,13 +23,13 @@ export const PRESETS: readonly AppearancePreset[] = [
     label: "Budowa",
     desc: "Odblask, tryb budowa, gładkie tło, wyraźne ramki, tekst 125%, bez ruchu i poświaty.",
     values: {
-      "kaczy.skin.v1": JSON.stringify("odblask"),
-      "kaczy.siteMode.v1": JSON.stringify("on"),
-      "kaczy.backdrop.v1": JSON.stringify("plain"),
-      "kaczy.frames.v1": JSON.stringify("strong"),
-      "kaczy.textSize.v1": JSON.stringify(3),
-      "kaczy.glow.v1": JSON.stringify({ strength: "off", color: "theme" }),
-      "kaczy.motion.v1": JSON.stringify("reduced"),
+      [APPEARANCE.skin]: JSON.stringify("odblask"),
+      [APPEARANCE.siteMode]: JSON.stringify("on"),
+      [APPEARANCE.backdrop]: JSON.stringify("plain"),
+      [APPEARANCE.frames]: JSON.stringify("strong"),
+      [APPEARANCE.textSize]: JSON.stringify(3),
+      [APPEARANCE.glow]: JSON.stringify({ strength: "off", color: "theme" }),
+      [APPEARANCE.motion]: JSON.stringify("reduced"),
     },
   },
   {
@@ -36,11 +37,11 @@ export const PRESETS: readonly AppearancePreset[] = [
     label: "Noc",
     desc: "Ciemna Zorza, ciche tło, łagodna poświata. Do czytania wieczorem.",
     values: {
-      "kaczy.skin.v1": JSON.stringify("zorza"),
-      "kaczy.skinScheme.v1": JSON.stringify({ zorza: "dark" }),
-      "kaczy.backdrop.v1": JSON.stringify("quiet"),
-      "kaczy.glow.v1": JSON.stringify({ strength: "soft", color: "theme" }),
-      "kaczy.siteMode.v1": JSON.stringify("off"),
+      [APPEARANCE.skin]: JSON.stringify("zorza"),
+      [APPEARANCE.skinScheme]: JSON.stringify({ zorza: "dark" }),
+      [APPEARANCE.backdrop]: JSON.stringify("quiet"),
+      [APPEARANCE.glow]: JSON.stringify({ strength: "soft", color: "theme" }),
+      [APPEARANCE.siteMode]: JSON.stringify("off"),
     },
   },
   {
@@ -48,12 +49,12 @@ export const PRESETS: readonly AppearancePreset[] = [
     label: "Czytanie",
     desc: "Tekst 112,5%, ciche tło, zwykłe ramki, bez poświaty i ruchu. Do dłuższych notatek.",
     values: {
-      "kaczy.textSize.v1": JSON.stringify(2),
-      "kaczy.backdrop.v1": JSON.stringify("quiet"),
-      "kaczy.frames.v1": JSON.stringify("normal"),
-      "kaczy.glow.v1": JSON.stringify({ strength: "off", color: "theme" }),
-      "kaczy.motion.v1": JSON.stringify("reduced"),
-      "kaczy.siteMode.v1": JSON.stringify("off"),
+      [APPEARANCE.textSize]: JSON.stringify(2),
+      [APPEARANCE.backdrop]: JSON.stringify("quiet"),
+      [APPEARANCE.frames]: JSON.stringify("normal"),
+      [APPEARANCE.glow]: JSON.stringify({ strength: "off", color: "theme" }),
+      [APPEARANCE.motion]: JSON.stringify("reduced"),
+      [APPEARANCE.siteMode]: JSON.stringify("off"),
     },
   },
   {
@@ -61,13 +62,13 @@ export const PRESETS: readonly AppearancePreset[] = [
     label: "Oszczędny",
     desc: "Ciemny Zeszyt z czarnym tłem, bez ruchu, poświaty i wzoru tła — mniej prądu na ekranach OLED.",
     values: {
-      "kaczy.skin.v1": JSON.stringify("zeszyt"),
-      "kaczy-theme": "dark",
-      "kaczy.oled.v1": JSON.stringify(true),
-      "kaczy.backdrop.v1": JSON.stringify("plain"),
-      "kaczy.glow.v1": JSON.stringify({ strength: "off", color: "theme" }),
-      "kaczy.motion.v1": JSON.stringify("reduced"),
-      "kaczy.siteMode.v1": JSON.stringify("off"),
+      [APPEARANCE.skin]: JSON.stringify("zeszyt"),
+      [APPEARANCE.theme]: "dark",
+      [APPEARANCE.oled]: JSON.stringify(true),
+      [APPEARANCE.backdrop]: JSON.stringify("plain"),
+      [APPEARANCE.glow]: JSON.stringify({ strength: "off", color: "theme" }),
+      [APPEARANCE.motion]: JSON.stringify("reduced"),
+      [APPEARANCE.siteMode]: JSON.stringify("off"),
     },
   },
 ];
@@ -98,18 +99,18 @@ function sortKeys(v: unknown): unknown {
 /** Krótki opis zapisanego zestawu („Zorza, ciemny · tekst 125%”) — żeby „Mój 1” mówiło, co w nim jest. */
 export function slotSummary(values: Record<string, string>): string {
   const parse = (k: string): unknown => { try { return values[k] === undefined ? undefined : JSON.parse(values[k]); } catch { return values[k]; } };
-  const skin = parse("kaczy.skin.v1");
+  const skin = parse(APPEARANCE.skin);
   const name = typeof skin === "string" && skin in SKIN_META ? SKIN_META[skin as Skin].label : "Zeszyt";
-  const scheme = skin === "zeszyt" || skin === undefined ? values["kaczy-theme"] : (parse("kaczy.skinScheme.v1") as Record<string, string> | undefined)?.[skin as string];
+  const scheme = skin === "zeszyt" || skin === undefined ? values[APPEARANCE.theme] : (parse(APPEARANCE.skinScheme) as Record<string, string> | undefined)?.[skin as string];
   const parts = [scheme === "dark" ? `${name}, ciemny` : scheme === "light" ? `${name}, jasny` : name];
-  const size = parse("kaczy.textSize.v1");
+  const size = parse(APPEARANCE.textSize);
   if (typeof size === "number" && TEXT_SIZE_STEPS[size] !== undefined && size !== 1) parts.push(`tekst ${String(TEXT_SIZE_STEPS[size]).replace(".", ",")}%`);
-  if (parse("kaczy.motion.v1") === "reduced") parts.push("bez ruchu");
+  if (parse(APPEARANCE.motion) === "reduced") parts.push("bez ruchu");
   return parts.join(" · ");
 }
 
 export const SLOT_COUNT = 3;
-const slotKey = (n: number) => `kaczy.appearance.slot.${n}.v1`;
+const slotKey = appearanceSlotKey;
 
 /** Zapisany wygląd z miejsca 1–3; `null` = puste albo nieczytelne. */
 export function readSlot(n: number): Record<string, string> | null {

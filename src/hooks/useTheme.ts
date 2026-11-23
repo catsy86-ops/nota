@@ -5,10 +5,11 @@ import { applyCustomTheme } from "@/lib/customTheme";
 import { SKIN_SCHEME, SKIN_THEME_COLOR, SKIN_THEME_COLOR_ALT, setSkin, skinStore, useSkin, type Skin } from "@/lib/skins";
 import { setSkinScheme, skinSchemeStore, type SkinSchemeMap } from "@/lib/skinScheme";
 import { applySkinFavicon } from "@/lib/skinFavicon";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 export type ThemeMode = "system" | "light" | "dark";
 
-const THEME_KEY = "kaczy-theme"; // stores ThemeMode ("system" | "light" | "dark") — legacy values also accepted
+const THEME_KEY = APPEARANCE.theme; // stores ThemeMode ("system" | "light" | "dark") — legacy values also accepted
 const TRANSITION_CLASS = "theme-transition";
 const REVEAL_CLASS = "theme-reveal";
 const TRANSITION_MS = 350;

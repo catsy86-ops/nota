@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Krój tekstu aplikacji (Ustawienia → Wygląd → „Krój tekstu”). `default` = krój stylu
@@ -31,7 +32,7 @@ function applyToDom(font: AppFont) {
   else root.dataset.font = font;
 }
 
-const store = createPersistedStore<AppFont>("kaczy.font.v1", "default", {
+const store = createPersistedStore<AppFont>(APPEARANCE.font, "default", {
   merge: (defaults, stored) => (isAppFont(stored) ? stored : defaults),
   onChange: applyToDom,
 });

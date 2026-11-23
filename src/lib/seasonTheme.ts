@@ -1,5 +1,6 @@
 ﻿import { getCurrentSeason, type Season } from "@/lib/season";
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 export type SeasonPref = "auto" | Season;
 
@@ -14,7 +15,7 @@ function isValidPref(v: unknown): v is SeasonPref {
   return v === "auto" || v === "spring" || v === "summer" || v === "autumn" || v === "winter";
 }
 
-const store = createPersistedStore<SeasonPref>("kaczy.seasonTheme.v1", "auto", {
+const store = createPersistedStore<SeasonPref>(APPEARANCE.seasonTheme, "auto", {
   merge: (defaults, stored) => (isValidPref(stored) ? stored : defaults),
 });
 

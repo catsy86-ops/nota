@@ -82,34 +82,39 @@ export const isSensitiveKey = (key: string): boolean => registry.get(key)?.sensi
 
 // ── Klucze pełnej kopii (D6.5). Kolejność = kolejność w kopii. ─────────────────────────────────────────────────
 
-/** Wygląd (plan motywów 3.5) — wchodzi do kopii i do kodu wyglądu (`appearanceCode.ts`). */
-export const APPEARANCE_KEYS = [
-  "kaczy.skin.v1",
-  "kaczy-theme",
-  "kaczy.skinScheme.v1",
-  "kaczy.accent.v1",
-  "kaczy.shape.v1",
-  "kaczy.backdrop.v1",
-  "kaczy.font.v1",
-  "kaczy.textSize.v1",
-  "kaczy.skinSchedule.v1",
-  // Ramki i poświata (Wygląd): siła ramek, kolor krawędzi i tło kart, siła i barwa poświaty.
-  "kaczy.frames.v1",
-  "kaczy.frames.look.v1",
-  "kaczy.glow.v1",
+/**
+ * Nazwy kluczy Wyglądu (D6.2: moduły biorą nazwę stąd, nie z literału). Kolejność = kolejność w kopii i w kodzie
+ * wyglądu (`appearanceCode.ts`, plan motywów 3.5).
+ */
+export const APPEARANCE = {
+  skin: "kaczy.skin.v1",
+  theme: "kaczy-theme",
+  skinScheme: "kaczy.skinScheme.v1",
+  accent: "kaczy.accent.v1",
+  shape: "kaczy.shape.v1",
+  backdrop: "kaczy.backdrop.v1",
+  font: "kaczy.font.v1",
+  textSize: "kaczy.textSize.v1",
+  skinSchedule: "kaczy.skinSchedule.v1",
+  // Ramki i poświata: siła ramek, kolor krawędzi i tło kart, siła i barwa poświaty.
+  frames: "kaczy.frames.v1",
+  frameLook: "kaczy.frames.look.v1",
+  glow: "kaczy.glow.v1",
   // Plan motywów 2026-10-30 (1.5): tryb budowa, ruch i pora roku też są wyglądem.
-  "kaczy.siteMode.v1",
-  "kaczy.motion.v1",
-  "kaczy.seasonTheme.v1",
-  // Czarne tło w ciemnym (plan motywów 3.3).
-  "kaczy.oled.v1",
-  // Podkreślenia działów subtelne / wyraźne (plan motywów 3.4).
-  "kaczy.sectionColors.v1",
-  // Gęstość całego interfejsu (plan motywów 4.2).
-  "kaczy.uiDensity.v1",
-  // Własny motyw (plan motywów 4.1): styl bazowy i odcienie papieru, kafla, akcentu.
-  "kaczy.customTheme.v1",
-] as const;
+  siteMode: "kaczy.siteMode.v1",
+  motion: "kaczy.motion.v1",
+  seasonTheme: "kaczy.seasonTheme.v1",
+  // Czarne tło w ciemnym (3.3), podkreślenia działów (3.4), gęstość (4.2), własny motyw (4.1).
+  oled: "kaczy.oled.v1",
+  sectionColors: "kaczy.sectionColors.v1",
+  uiDensity: "kaczy.uiDensity.v1",
+  customTheme: "kaczy.customTheme.v1",
+} as const;
+
+/** Miejsca na zapisane zestawy wyglądu (poza kopią — dane tego urządzenia). */
+export const appearanceSlotKey = (n: number): string => `kaczy.appearance.slot.${n}.v1`;
+
+export const APPEARANCE_KEYS = Object.values(APPEARANCE);
 
 const BACKUP_KEYS = [
   "kaczy.viewPrefs.v1", "kaczy.motion.v1", "kaczy.confirmPrefs.v1",

@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Poświaty (Ustawienia → Wygląd → „Poświata”): siła i kolor świecenia przycisków głównych (FAB,
@@ -62,7 +63,7 @@ function applyToDom(look: GlowLook) {
   else style.removeProperty("--glow-primary");
 }
 
-const store = createPersistedStore<GlowLook>("kaczy.glow.v1", DEFAULT_GLOW_LOOK, {
+const store = createPersistedStore<GlowLook>(APPEARANCE.glow, DEFAULT_GLOW_LOOK, {
   merge: (defaults, stored) => ({
     strength: isStrength(stored?.strength) ? stored.strength : defaults.strength,
     color: isColor(stored?.color) ? stored.color : defaults.color,

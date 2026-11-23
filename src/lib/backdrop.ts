@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Natężenie tła stylu (plan motywów 1.3; Ustawienia → Wygląd → „Tło”). Niezależne od „Ruch i animacje”:
@@ -30,7 +31,7 @@ function applyToDom(pref: BackdropPref) {
   else document.documentElement.dataset.backdrop = b;
 }
 
-const store = createPersistedStore<BackdropPref>("kaczy.backdrop.v1", "auto", {
+const store = createPersistedStore<BackdropPref>(APPEARANCE.backdrop, "auto", {
   merge: (defaults, stored) => (isPref(stored) ? stored : defaults),
   onChange: applyToDom,
 });

@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 export type MotionMode = "system" | "reduced" | "full";
 
@@ -22,7 +23,7 @@ export function applyToDom() {
   document.documentElement.setAttribute("data-motion", isMotionReduced() ? "reduced" : "full");
 }
 
-export const motionStore = createPersistedStore<MotionMode>("kaczy.motion.v1", "system", {
+export const motionStore = createPersistedStore<MotionMode>(APPEARANCE.motion, "system", {
   merge: (defaults, stored) => (isValidMode(stored) ? stored : defaults),
   onChange: applyToDom,
 });

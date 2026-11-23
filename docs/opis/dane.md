@@ -834,20 +834,22 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
   - typ `KeyDef`, funkcje `defineKey`, `jsonKey` (JSON z funkcją sprawdzającą), `rawKey` (surowy tekst);
   - odczyt i zapis: `readKey`, `writeKey`, `removeKey`;
   - zapytania o rejestr: `backupKeyNames`, `isSensitiveKey`, `registeredKeys`.
-- `APPEARANCE_KEYS` mieszka teraz tutaj. `src/lib/appearanceCode.ts` eksportuje je dalej.
+- Nazwy kluczy Wyglądu: obiekt `APPEARANCE` (np. `APPEARANCE.skin`) i `appearanceSlotKey(n)`; `APPEARANCE_KEYS` to jego wartości, `src/lib/appearanceCode.ts` eksportuje je dalej. Moduły Wyglądu (`skins.ts`, `accent.ts`, `frames.ts`, `useTheme.ts`, `appearancePresets.ts` i reszta) biorą nazwę stąd.
+- Strażnik D6.2: `src/lib/storage/keyLiterals.test.ts` z listą wyjątków `keyLiterals.exempt.ts`.
 - `SETTINGS_KEYS` w `src/lib/exportNotes.ts` to `backupKeyNames()`.
 
 **Jak działa.**
 - `readKey` przy braku dostępu do pamięci, braku wpisu albo złym kształcie zwraca wartość domyślną; zły kształt zostawia wpis w diagnostyce. `writeKey` zwraca `false` zamiast rzucać.
 - Klucz nie może być zarejestrowany dwa razy, a klucz wrażliwy nie może mieć flagi `backup` — oba przypadki rzucają przy rejestracji, więc błąd wychodzi w teście, nie u użytkownika.
+- Strażnik przegląda `src/**/*.ts(x)` bez testów i bez komentarzy. Literał `"kaczy.`, `"kaczy:` albo `"kaczy-` poza `keys.ts` jest dozwolony tylko w pliku z listy wyjątków. Lista może tylko maleć: plik bez literału, a nadal na liście, też wywraca test.
 - Klucze kopii są zarejestrowane jako `rawKey` z `backup: true`. Ich kształt nadal sprawdzają moduły, które je czytają, aż do przejścia modułami (D6.2).
 - Jako wrażliwe są oznaczone: kod parowania `kaczy.sync.v1`, token push, PIN i próby skarbca, adres przekaźnika, numer konta i odciski dokumentów.
 
 **Ograniczenia i pułapki.**
-- Moduły jeszcze nie używają `readKey`/`writeKey` (D6.2), a w kodzie są literały `"kaczy.` poza rejestrem.
+- D6.2 w toku: przeniesiony Wygląd; ok. 110 plików jest jeszcze na liście wyjątków. Moduły nadal czytają przez `createPersistedStore`, nie `readKey`/`writeKey`.
 - Nowy klucz kopii trzeba dodać w `keys.ts`, nie w `exportNotes.ts`.
 - `isSensitiveKey` nie ma jeszcze wywołującego. Raport diagnostyczny będzie z niego korzystał po D6.2.
 
-**Testy.** `src/lib/storage/keys.test.ts` (odczyt, wartość domyślna, zły kształt, lista kopii równa flagom, wygląd w kopii, wrażliwe poza kopią), `src/lib/fullBackup.test.ts`, `src/lib/push/token.test.ts`.
+**Testy.** `src/lib/storage/keyLiterals.test.ts` (strażnik literałów), `src/lib/storage/keys.test.ts` (odczyt, wartość domyślna, zły kształt, lista kopii równa flagom, wygląd w kopii, wrażliwe poza kopią), `src/lib/fullBackup.test.ts`, `src/lib/push/token.test.ts`.
 
 **Commit.** Patrz historia `src/lib/storage/keys.ts`, 2026-11-23.

@@ -2,6 +2,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { contrastRatio, formatOklch, parseOklch, type Oklch } from "@/lib/oklch";
 import { isSkin, skinStore } from "@/lib/skins";
 import type { Skin } from "@/lib/skinList";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Własny motyw (plan motywów 4.1, decyzja T-4): styl bazowy i trzy suwaki odcienia (0–359°) — papier,
@@ -87,7 +88,7 @@ function isTheme(v: unknown): v is CustomTheme {
   return isSkin(t.skin) && !!t.hues && isHue(t.hues.paper) && isHue(t.hues.tile) && isHue(t.hues.accent);
 }
 
-export const customThemeStore = createPersistedStore<CustomTheme | null>("kaczy.customTheme.v1", null, {
+export const customThemeStore = createPersistedStore<CustomTheme | null>(APPEARANCE.customTheme, null, {
   merge: (defaults, stored) => (isTheme(stored) ? stored : defaults),
 });
 // Po zapisie (także z innej karty) od razu przeliczyć tokeny; osobno, nie w `onChange`, bo ten

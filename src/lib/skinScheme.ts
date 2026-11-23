@@ -1,5 +1,6 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import type { Skin } from "@/lib/skinList";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * Jasność wybrana osobno dla każdego stylu poza Zeszytem (plan motywów 4.1, decyzja M-2: każdy styl ma
@@ -12,7 +13,7 @@ export type SkinSchemeMap = Partial<Record<Exclude<Skin, "zeszyt">, SchemePref>>
 
 const isPref = (v: unknown): v is SchemePref => v === "system" || v === "light" || v === "dark";
 
-export const skinSchemeStore = createPersistedStore<SkinSchemeMap>("kaczy.skinScheme.v1", {}, {
+export const skinSchemeStore = createPersistedStore<SkinSchemeMap>(APPEARANCE.skinScheme, {}, {
   merge: (defaults, stored) => {
     if (!stored || typeof stored !== "object") return defaults;
     return Object.fromEntries(Object.entries(stored as Record<string, unknown>).filter(([, v]) => isPref(v))) as SkinSchemeMap;

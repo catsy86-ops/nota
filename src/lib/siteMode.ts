@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { APPEARANCE } from "@/lib/storage/keys";
 
 /**
  * „Tryb budowa” — do pracy w rękawicach i w słońcu: większy tekst i cele dotyku,
@@ -17,7 +18,7 @@ export function resolveSiteMode(mode: SiteMode, systemMoreContrast: boolean): bo
   return mode === "on" || (mode === "auto" && systemMoreContrast);
 }
 
-const store = createPersistedStore<SiteMode>("kaczy.siteMode.v1", "off", {
+const store = createPersistedStore<SiteMode>(APPEARANCE.siteMode, "off", {
   merge: (defaults, stored) => (isSiteMode(stored) ? stored : defaults),
   onChange: () => applyToDom(),
 });
