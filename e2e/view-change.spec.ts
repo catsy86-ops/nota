@@ -28,6 +28,10 @@ async function seed(page: Page) {
   }, { timeout: 20_000 }).toBe(NOTES.length);
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  // Nagłówek schowany przy przewijaniu w dół wraca animacją — klik w jego trakcie przewijał stronę o kilka px
+  // (Playwright dosuwa przycisk do ekranu), co psuło „zostaje na górze”.
+  await expect(page.locator("html")).not.toHaveClass(/header-hidden/);
+  await expect(page.getByRole("button", { name: "Widok i kolumny" })).toBeInViewport({ ratio: 1 });
 }
 
 const item = (page: Page) => page.locator(`[data-note-id-wrap="${ANCHOR}"], [data-note-row="${ANCHOR}"]`);

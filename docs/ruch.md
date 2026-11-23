@@ -82,16 +82,18 @@ Przy CPU ×1 żadna ścieżka poza otwarciem notatki (~110 ms) nie przekracza 82
 - `layout` framer-motion na kartach: wyłączenie oszczędza tylko ~40 ms przy otwarciu notatki. Pomiar przewijania nie pokazał kosztu projekcji układu, więc `layout="position"` i `layoutScroll` z planu nie mają tu uzasadnienia.
 - `pointer-events: none`, które Radix ustawia na `<body>` przy oknach modalnych: mikropomiar pokazał ~50 ms przeliczenia stylu na 24 karty. Jawne `#root { pointer-events: auto }` nie zmieniło jednak klatki otwarcia arkusza, więc to nie jest główny koszt.
 
+- `content-visibility` w mozaice (sprawdzone 2026-11-23, zgoda właściciela na próbę): mediana z 5 przy CPU ×4 — otwarcie arkusza 267 → 217 ms, ale przeciągnięcie karty 333 → 433 ms (na czas przeciągania `content-visibility` jest zdejmowane, więc start układa naraz wszystkie pominięte kafle). Otwarcie notatki, zmiana zakładki i przewijanie bez zmian. Bilans ujemny — mozaika zostaje bez `data-cv`.
+
 ### Co zostaje (kryterium etapu nadal niespełnione)
 
 - **Otwarcie arkusza:** `focus()` w FocusScope wymusza pełny układ strony z kartami mozaiki. Mozaika nie ma `content-visibility` (potrzebuje prawdziwych wysokości do rozpiętości), więc układane są wszystkie wyrenderowane karty.
 - **Zmiana zakładki i koniec przeciągania:** render całej listy.
 - **Otwarcie notatki:** render czytnika.
 
-Wszystkie trzy zależą od liczby kart w drzewie. Kierunek: `content-visibility` także w mozaice, z zapamiętaną wysokością (`contain-intrinsic-size: auto`). To zmiana zachowania układu i wymaga decyzji: niewidziane jeszcze kafle dostają zastępczą wysokość, więc rozpiętości poprawiają się dopiero przy przewinięciu.
+Wszystkie trzy zależą od liczby kart w drzewie. `content-visibility` w mozaice sprawdzone i odrzucone (wyżej). Dalszy kierunek to mniej kart w drzewie (okienkowanie), a to osobna decyzja.
 
 INP z `web-vitals-phone.spec.ts` (bez dławienia) po M2.1: mediana 160–176 ms, LCP 160–280 ms.
 
 ## Do zrobienia
 
-`content-visibility` w mozaice (decyzja wyżej), M2.3 (kaskada wejścia), M2.4 (budżet `domMax`), przejścia między działami i arkusze z gestem (M4), zrzuty z wyłączonym ruchem i film (M5.5).
+Przejścia między działami i arkusze z gestem (M4), zrzuty z wyłączonym ruchem i film (M5.5).
