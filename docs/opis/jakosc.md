@@ -634,3 +634,20 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 **Testy.** `src/components/MermaidBlock.test.tsx` (obraz `blob:`, brak `<svg>` w DOM, ładunek XSS nie trafia do drzewa i nie wykonuje się), `e2e/mermaid.spec.ts` (przeglądarka dekoduje obraz), `src/lib/htmlSinkGuard.test.ts`.
 
 **Commit.** Patrz historia `src/components/MermaidBlock.tsx`, 2026-11-23.
+
+## Bezpieczeństwo — service worker: udostępnianie i powiadomienia (S1.10, 2026-11-23)
+
+**Co robi.** Nic widocznego dla użytkownika. Skrzynka udostępnień przyjmuje tylko obrazy i PDF, a testy pilnują, że kliknięcie powiadomienia nie wyprowadza poza aplikację i że worker nie ładuje cudzego kodu.
+
+**Gdzie jest.**
+- `public/sw-share.js` — filtr typów w `storeShare` (`image/*`, `application/pdf`); reszta liczy się jako `skipped`. To te same typy, które strona przyjmuje (`isShareableImage`, `isShareableAttachment` w `src/lib/shareInbox.ts`).
+- `src/lib/swShare.test.ts` — worker z atrapą `self` i żądania: typy, limit 10 MB, obcy `Origin`, `Origin: null`.
+- `src/lib/push/swNotifications.test.ts` — dopisane: `notificationclick` (adresy `//host`, `/\host`, `https://…`, `javascript:`, ścieżka bez `/`, brak adresu → `/`; akcja dokleja `?akcja=` do oczyszczonego adresu) oraz strażnik `importScripts` (lista w `vite.config.ts` to gołe nazwy plików, a skrypty `sw-*.js` same niczego nie importują).
+
+**Jak działa.** Strona z nieprzezroczystym originem (piaskownica) wysyła `Origin: null` i przechodzi sprawdzenie — tej luki nie da się zamknąć nagłówkiem (`Sec-Fetch-Site` nie dochodzi do workera). Zamiast tego ogranicza ją zawartość: do cache trafia najwyżej 30 obrazów lub PDF-ów po 10 MB (razem 50 MB), tekst do 20 000 znaków, tytuł 200, adres 2000. Strona i tak kasuje wpis po odebraniu i czyści porzucone (`sweepShareInbox`).
+
+**Ograniczenia i pułapki.** Typ pliku to deklaracja nadawcy (`File.type`), nie sprawdzenie zawartości — właściwą walidację robi strona przy wczytaniu. W teście `Request` z jsdom nie serializuje jsdomowego `FormData`, dlatego żądanie jest atrapą.
+
+**Testy.** `src/lib/swShare.test.ts` (5), `src/lib/push/swNotifications.test.ts` (+10); e2e `share-files`.
+
+**Commit.** Patrz historia `public/sw-share.js`, 2026-11-23.

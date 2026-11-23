@@ -23,7 +23,16 @@ function loadWorker(visible = false) {
     handlers.push({ data: { json: () => data }, waitUntil: (p: Promise<unknown>) => { waited = p; } });
     await waited;
   }
-  return { push, shown };
+  /** Kliknięcie powiadomienia bez otwartej karty: zwraca adres, pod którym worker otwiera okno. */
+  async function click(data: unknown, action = "") {
+    const opened: string[] = [];
+    (self as { clients: Record<string, unknown> }).clients.openWindow = async (u: string) => { opened.push(u); };
+    let waited: Promise<unknown> = Promise.resolve();
+    handlers.notificationclick({ notification: { close: () => {}, data }, action, waitUntil: (p: Promise<unknown>) => { waited = p; } });
+    await waited;
+    return opened;
+  }
+  return { push, shown, click };
 }
 
 const item = (over: Partial<PushItem> = {}): PushItem => ({ key: "n:abc:1", at: Date.now() + 60_000, title: "Kupić rury", body: "Hurtownia", url: "/notatka/abc", snooze: true, ...over });
@@ -77,5 +86,44 @@ describe("sw-notifications: push zaszyfrowany (S3.1)", () => {
     const w = loadWorker();
     await w.push({ key: "test:1", title: "Próbne", body: "b", url: "/" });
     expect(w.shown[0].title).toBe("Próbne");
+  });
+});
+
+describe("sw-notifications: kliknięcie (S1.10)", () => {
+  it.each([
+    ["//zly.host/x", "/"],
+    ["/\\zly.host", "/"],
+    ["https://zly.host", "/"],
+    ["javascript:alert(1)", "/"],
+    ["notatka/abc", "/"],
+    ["/notatka/abc", "/notatka/abc"],
+  ])("data.url %j otwiera %j", async (url, expected) => {
+    const w = loadWorker();
+    expect(await w.click({ url })).toEqual([expected]);
+  });
+
+  it("brak data.url albo nie-napis → /", async () => {
+    const w = loadWorker();
+    expect(await w.click({})).toEqual(["/"]);
+    expect(await w.click({ url: 5 })).toEqual(["/"]);
+  });
+
+  it("akcja z notatką dokleja ?akcja= do oczyszczonego adresu", async () => {
+    const w = loadWorker();
+    expect(await w.click({ url: "//zly.host", noteId: "abc" }, "done")).toEqual(["/?akcja=done"]);
+  });
+});
+
+describe("service worker: importScripts tylko z własnych plików (S1.10)", () => {
+  it("vite.config.ts i skrypty public/sw-*.js nie ładują kodu spoza źródła", () => {
+    const vite = readFileSync(resolve(__dirname, "../../../vite.config.ts"), "utf8");
+    const list = /importScripts:\s*\[([^\]]*)\]/.exec(vite)?.[1] ?? "";
+    const entries = [...list.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    expect(entries.length).toBeGreaterThan(0);
+    for (const e of entries) expect(e).toMatch(/^[\w.-]+\.js$/); // goła nazwa pliku: bez adresu, bez ścieżki w górę
+    for (const f of ["sw-notifications.js", "sw-share.js"]) {
+      const src = readFileSync(resolve(__dirname, "../../../public", f), "utf8");
+      expect(src.replace(/\/\/.*$/gm, "")).not.toMatch(/importScripts\s*\(/);
+    }
   });
 });

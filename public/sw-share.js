@@ -42,6 +42,8 @@ async function storeShare(request) {
     const files = [];
     let total = 0;
     for (const f of all) {
+      // Strona przyjmuje tylko obrazy i PDF (`isShareableImage`/`isShareableAttachment`); reszta nie ma po co leżeć w cache.
+      if (!/^(image\/|application\/pdf$)/.test(f.type)) continue;
       if (files.length >= MAX_FILES || f.size > MAX_FILE_BYTES || total + f.size > MAX_TOTAL_BYTES) continue;
       files.push(f);
       total += f.size;

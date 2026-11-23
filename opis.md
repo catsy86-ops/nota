@@ -472,3 +472,4 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Architektura — pomiar renderów strony głównej (A2.5, 2026-11-23)
 - Bezpieczeństwo — model zagrożeń, `SECURITY.md` i strażnik ujść HTML (S0, 2026-11-23)
 - Bezpieczeństwo — Mermaid jako obraz `blob:` (S1.6, 2026-11-23)
+- Bezpieczeństwo — service worker: udostępnianie i powiadomienia (S1.10, 2026-11-23)
