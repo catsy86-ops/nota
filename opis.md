@@ -81,6 +81,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Skrzynka — „Zapisz” i dyktowanie w polu, tytuł z treści, „Otwórz notatkę”, pusty stan z działaniem (1.1, 1.3, 2.2, 3.2, 4.5, 2026-11-02)
 - Dziś — listy na dziś i ruch kart (Dziś 4.2 i 3.5, Plan-nowy 2.4, 2026-11-05)
 - Skrzynka — błysk nowej notatki i ikona linku (1.2, 2.4, 2026-11-12)
+- Dziś — „Należności” (R3.1, R3.4, decyzja PR-2, 2026-11-23)
 
 ### Terminy, przypomnienia i powiadomienia — [`docs/opis/terminy.md`](docs/opis/terminy.md)
 

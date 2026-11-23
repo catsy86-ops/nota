@@ -56,10 +56,10 @@ Wynik Etapu 1 może zmienić kolejność Etapów 2–4.
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
-| R3.1 | **Ekran „Należności”.** Jedna lista: budowy z saldem do zapłaty, zlecenia „zrobione, niezapłacone”, faktury wystawione bez wpłaty. Sortowanie po liczbie dni. Czysta funkcja zbierająca z `billing.ts`, `jobs.ts` i faktur; bez nowych danych. | M |
+| R3.1 | **(zrobione 2026-11-23: karta na Dziś, decyzja PR-2)** **Ekran „Należności”.** Jedna lista: budowy z saldem do zapłaty, zlecenia „zrobione, niezapłacone”, faktury wystawione bez wpłaty. Sortowanie po liczbie dni. Czysta funkcja zbierająca z `billing.ts`, `jobs.ts` i faktur; bez nowych danych. | M |
 | R3.2 | **Oś zlecenia.** Na karcie zlecenia i klienta jeden pasek etapów: wycena → zaliczka → realizacja → protokół → faktura → zapłata → gwarancja, liczony z istniejących danych. Stuknięcie w brakujący etap otwiera właściwe narzędzie. | M |
 | R3.3 ✅ `67d9758b` 2026-11-15 | **„Do wystawienia”.** Zlecenie w stanie „zrobione” bez faktury pojawia się na Dziś z przyciskiem „Wystaw fakturę” (przenosi pozycje z wyceny). | S |
-| R3.4 | **Wpłata częściowa i zaliczka** widoczne w R3.1 jako pasek „zapłacono 40%” (ten sam wzór co pasek spłaty w Długach). | S |
+| R3.4 | **(zrobione 2026-11-23: pasek „zapłacono N%” w karcie Należności)** **Wpłata częściowa i zaliczka** widoczne w R3.1 jako pasek „zapłacono 40%” (ten sam wzór co pasek spłaty w Długach). | S |
 | R3.5 | **Eksport dla księgowej za miesiąc:** jeden ZIP z fakturami XML i PDF, CSV kilometrówki i zestawieniem; szyfrowany tak jak eksport faktur. | M |
 | R3.6 | **KSeF Etap 2** zostaje odłożony (wymaga serwera i decyzji o hostingu). Nie wchodzi do tego planu. | — |
 
