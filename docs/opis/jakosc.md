@@ -651,3 +651,17 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 **Testy.** `src/lib/swShare.test.ts` (5), `src/lib/push/swNotifications.test.ts` (+10); e2e `share-files`.
 
 **Commit.** Patrz historia `public/sw-share.js`, 2026-11-23.
+
+## Bezpieczeństwo — testy własności parserów niezaufanych wejść (S1.7, 2026-11-23)
+
+**Co robi.** Nic widocznego dla użytkownika. Setki losowych wejść na każdy parser sprawdzają, że plik od obcej osoby nie wywróci aplikacji ani nie zanieczyści prototypu obiektów.
+
+**Gdzie jest.** `src/lib/untrustedInput.prop.test.ts` (`fast-check`, 300 przebiegów na parser, 150 dla kopii).
+
+**Jak działa.** Pokryte: `parseFullBackup`, `parseKeepJson`, `parseKeepHtml`, `parseFrontmatter`, `parseMarkdownNote`, `parseIcs`, `parseShareParam`, `parseShare`, `parseSitePackage` oraz `clean*` rekordów od peera (`cleanSchemaClaim`, `cleanRecord`, `cleanSellerPrefs`, `cleanJobMeta`, `cleanSignature`, `cleanSiteDocs`, `cleanSiteHours`). Wejścia: dowolne napisy, JSON z kluczami `__proto__`, `constructor`, `prototype` obok prawdziwych kluczy formatów, JSON ucięty w losowym miejscu. Własności: (1) parser nie rzuca — wyjątek dopuszczony tylko tam, gdzie jest udokumentowany (`parseKeepJson` → `SyntaxError`, łapany w `import/plan.ts`; `parseFullBackup` → odrzucenie `Error`); (2) `Object.prototype` bez zmian; (3) wynik nie ma własnego klucza `__proto__`/`constructor`/`prototype` na żadnej głębokości. Limity: link ponad `SHARE_PARAM_MAX_CHARS` → `null`, tytuł i treść udostępnienia w limitach, paczka budowy ponad ~56 MB odrzucona, nowsza wersja formatu paczki i koperty kopii odrzucona.
+
+**Ograniczenia i pułapki.** Zostają bez własności: wiadomości przekaźnika, metadane skarbca i XML KSeF (plan S1.7 wymienia je, ale ich parsery są asynchroniczne/kryptograficzne i wymagają osobnych generatorów). Dwa testy kontrolne pilnują samego harnessu: `dangerousKeys` widzi `__proto__`, a generator naprawdę go produkuje — inaczej testy przechodziłyby na pusto. Pierwszy przebieg nie znalazł błędu w kodzie; jedyne znalezisko (`SyntaxError` z `parseKeepJson`) było zachowaniem udokumentowanym.
+
+**Testy.** `src/lib/untrustedInput.prop.test.ts` (23 przypadki).
+
+**Commit.** Patrz historia `src/lib/untrustedInput.prop.test.ts`, 2026-11-23.
