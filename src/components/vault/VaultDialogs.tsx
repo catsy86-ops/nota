@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { scheduleClipboardClear } from "@/lib/clipboardClear";
 import { MissingHint } from "@/components/ui/missing-hint";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TriangleAlert, Copy, Download, KeyRound, Printer, Shield, ShieldCheck } from "lucide-react";
@@ -466,9 +467,11 @@ function CheckRecoveryForm({ onClose }: { onClose: () => void }) {
 
 function RecoveryCodeStep({ code, onClose }: { code: string; onClose: () => void }) {
   const [saved, setSaved] = useState(false);
+  // Czyszczenie schowka (S1.9) zostaje zaplanowane także po zamknięciu kroku — nie anulujemy go przy odmontowaniu.
+  const cancelClear = useRef<() => void>(() => {});
 
   async function copy() {
-    try { await navigator.clipboard.writeText(code); toast.success("Skopiowano kod awaryjny"); } catch { toast.error("Nie udało się skopiować — przepisz kod ręcznie"); }
+    try { await navigator.clipboard.writeText(code); cancelClear.current(); cancelClear.current = scheduleClipboardClear(code); toast.success("Skopiowano kod awaryjny", { description: "Schowek wyczyści się za minutę." }); } catch { toast.error("Nie udało się skopiować — przepisz kod ręcznie"); }
   }
   function download() {
     const blob = new Blob([`Kod awaryjny skarbca notki\n\n${code}\n\nKto zna ten kod, może odblokować Twoje prywatne notatki. Trzymaj go osobno od urządzeń.\n`], { type: "text/plain" });

@@ -25,6 +25,14 @@ const hiddenStore = createPersistedStore<number>(SKARBIEC.hiddenLock, DEFAULT_HI
 export const setHiddenLockMinutes = (m: number) => hiddenStore.set(m);
 export const useHiddenLockMinutes = () => hiddenStore.use();
 
+/**
+ * S1.9: atrybut na `<html>`, gdy karta jest w tle przy odblokowanym skarbcu — CSS (`styles/app/effects.css`) rozmywa
+ * wtedy całą aplikację, żeby migawka w przełączniku aplikacji nie pokazała prywatnych notatek. To zasłona „na ile się
+ * da”: system może zrobić migawkę zanim `visibilitychange` zadziała.
+ */
+export const PRIVACY_COVER_ATTR = "data-privacy-cover";
+const setCover = (on: boolean) => document.documentElement.toggleAttribute(PRIVACY_COVER_ATTR, on);
+
 /** Ostrzeżenie przed auto-blokadą (1.3 planu Skarbca): tyle sekund przed blokadą. */
 export const LOCK_WARN_MS = 30_000;
 
@@ -94,6 +102,7 @@ export function startAutoLock(pn: PrivateNotes): () => void {
   events.forEach((e) => window.addEventListener(e, onActivity, { passive: true, capture: true }));
 
   function onVisibility() {
+    setCover(document.visibilityState === "hidden" && pn.isUnlocked());
     if (document.visibilityState === "hidden") {
       hiddenAt = Date.now();
       if (hiddenTimer) clearTimeout(hiddenTimer);
@@ -113,7 +122,7 @@ export function startAutoLock(pn: PrivateNotes): () => void {
   document.addEventListener("visibilitychange", onVisibility);
 
   const offState = pn.subscribe(() => {
-    if (pn.isUnlocked()) { if (!idleTimer) { lastActivity = Date.now(); armIdle(); } } else clearTimers();
+    if (pn.isUnlocked()) { if (!idleTimer) { lastActivity = Date.now(); armIdle(); } } else { clearTimers(); setCover(false); }
   });
   const offSetting = store.subscribe(() => armIdle());
 
@@ -132,6 +141,7 @@ export function startAutoLock(pn: PrivateNotes): () => void {
     offState();
     offSetting();
     channel?.close();
+    setCover(false);
   };
 }
 

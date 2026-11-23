@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { HIDDEN_LOCK_CHOICES, setAutoLockMinutes, setHiddenLockMinutes, startAutoLock } from "./vaultAutoLock";
+import { HIDDEN_LOCK_CHOICES, PRIVACY_COVER_ATTR, setAutoLockMinutes, setHiddenLockMinutes, startAutoLock } from "./vaultAutoLock";
 
 let visibility: DocumentVisibilityState = "visible";
 Object.defineProperty(document, "visibilityState", { configurable: true, get: () => visibility });
@@ -50,6 +50,58 @@ describe("blokada skarbca po schowaniu karty — wybór w Ustawieniach", () => {
     expect(pn.lock).not.toHaveBeenCalled();
     vi.advanceTimersByTime(4 * 60_000);
     expect(pn.lock).toHaveBeenCalledTimes(1);
+    stop();
+  });
+});
+
+describe("zasłona ekranu przy odblokowanym skarbcu (S1.9)", () => {
+  const cover = () => document.documentElement.hasAttribute(PRIVACY_COVER_ATTR);
+  beforeEach(() => { localStorage.clear(); setAutoLockMinutes(0); setHiddenLockMinutes(0); });
+  afterEach(() => { visibility = "visible"; document.documentElement.removeAttribute(PRIVACY_COVER_ATTR); });
+
+  it("karta w tle + skarbiec odblokowany → zasłona; powrót ją zdejmuje", () => {
+    const stop = startAutoLock(fakeVault() as never);
+    hide();
+    expect(cover()).toBe(true);
+    visibility = "visible";
+    document.dispatchEvent(new Event("visibilitychange"));
+    expect(cover()).toBe(false);
+    stop();
+  });
+
+  it("skarbiec zablokowany → bez zasłony (nie ma czego zasłaniać)", () => {
+    const vault = { ...fakeVault(), isUnlocked: vi.fn(() => false) };
+    const stop = startAutoLock(vault as never);
+    hide();
+    expect(cover()).toBe(false);
+    stop();
+  });
+
+  it("zasłona działa także przy wyłączonej blokadzie po ukryciu (0 min)", () => {
+    setHiddenLockMinutes(0);
+    const stop = startAutoLock(fakeVault() as never);
+    hide();
+    expect(cover()).toBe(true);
+    stop();
+  });
+
+  it("zatrzymanie nasłuchu zdejmuje zasłonę", () => {
+    const stop = startAutoLock(fakeVault() as never);
+    hide();
+    stop();
+    expect(cover()).toBe(false);
+  });
+
+  it("zablokowanie skarbca w tle zdejmuje zasłonę", () => {
+    let on = true;
+    let notify: () => void = () => {};
+    const vault = { isUnlocked: () => on, lock: vi.fn(async () => {}), subscribe: (fn: () => void) => { notify = fn; return () => {}; } };
+    const stop = startAutoLock(vault as never);
+    hide();
+    expect(cover()).toBe(true);
+    on = false;
+    notify();
+    expect(cover()).toBe(false);
     stop();
   });
 });

@@ -693,3 +693,17 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 **Testy.** `src/lib/secretsLeak.test.ts` (4), `e2e/sync-code-reveal.spec.ts` (2, w tym axe), poprawiony `e2e/sync-rekey.spec.ts`; `sync-*`, `relay-sync`, `a11y` zielone.
 
 **Commit.** Patrz historia `src/lib/secretsLeak.test.ts`, 2026-11-23.
+
+## Bezpieczeństwo — prywatność na ekranie: zasłona w tle i czyszczenie schowka (S1.9, 2026-11-23)
+
+**Co robi.** Gdy karta przechodzi w tło (przełącznik aplikacji) przy odblokowanym skarbcu, cała aplikacja jest rozmywana, żeby migawka nie pokazała prywatnych notatek. Kod awaryjny skopiowany przyciskiem „Kopiuj” znika ze schowka po minucie.
+
+**Gdzie jest.** `src/lib/vaultAutoLock.ts` (`PRIVACY_COVER_ATTR`, `setCover`), `src/styles/app/effects.css` (`html[data-privacy-cover] #root`), `src/lib/clipboardClear.ts` (`clearClipboardIfStill`, `scheduleClipboardClear`), `src/components/vault/VaultDialogs.tsx` (`RecoveryCodeStep`).
+
+**Jak działa.** `startAutoLock` ustawia atrybut `data-privacy-cover` na `<html>` przy `visibilitychange` → hidden, gdy `pn.isUnlocked()`, i zdejmuje go po powrocie, po zablokowaniu skarbca i przy zatrzymaniu nasłuchu. Zasłona działa niezależnie od ustawienia „blokuj po ukryciu” (także przy 0 min). Czyszczenie schowka: gdy przeglądarka już dała zgodę na odczyt (`clipboard-read`), zapisuje pusty tekst tylko jeśli w schowku nadal jest kod; bez zgody czyści bez sprawdzania (odczyt wywołałby pytanie o zgodę). Toast po kopiowaniu uprzedza o czyszczeniu.
+
+**Ograniczenia i pułapki.** Zasłona jest „na ile się da”: system może zrobić migawkę zanim `visibilitychange` zadziała (zwłaszcza iOS). Kwoty: przy włączonym „Ukryj kwoty” (Długi) są już zamaskowane jako „•••”, a przy wyłączonym użytkownik świadomie je widzi — osobnej zasłony dla kwot nie dodałem. Przeglądarka pozwala pisać do schowka tylko aktywnej karcie, więc jeśli karta jest w tle po minucie, czyszczenie się nie uda (`failed`, bez błędu dla użytkownika). Bez sprawdzenia zgody czyszczenie może nadpisać coś, co użytkownik skopiował w tej minucie gdzie indziej.
+
+**Testy.** `src/lib/clipboardClear.test.ts` (5), `src/lib/vaultAutoLock.test.ts` (+5: zasłona w tle, zablokowany skarbiec, 0 min, zatrzymanie, zablokowanie w tle), `e2e/privacy-cover.spec.ts` (rozmycie `#root`); `private-notes` zielone.
+
+**Commit.** Patrz historia `src/lib/clipboardClear.ts`, 2026-11-23.

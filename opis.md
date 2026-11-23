@@ -476,3 +476,4 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Bezpieczeństwo — testy własności parserów niezaufanych wejść (S1.7, 2026-11-23)
 - Bezpieczeństwo — nagłówki COOP, CORP i pełna Permissions-Policy (S1.3, 2026-11-23)
 - Bezpieczeństwo — sekrety poza kopią i raportem, kod za przyciskiem (S1.5, 2026-11-23)
+- Bezpieczeństwo — prywatność na ekranie: zasłona w tle i czyszczenie schowka (S1.9, 2026-11-23)
