@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { daysSinceBackup, LAST_AUTO_EXPORT_KEY } from "@/lib/backupReminder";
 import { requestPersistentStorage, getStorageInfo, storageWarning, type StorageInfo } from "@/lib/storagePersistence";
-import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName } from "@/lib/backupFileHandle";
+import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName, readLastFileWrite } from "@/lib/backupFileHandle";
 import { toast } from "sonner";
 import { ResetSectionButton, Section } from "./SettingsShared";
 import { LastImportUndo } from "./LastImportUndo";
@@ -225,10 +225,11 @@ function BackupFileTarget() {
           <FileCog className="size-4 text-muted-foreground shrink-0" />
           <p className="text-foreground">
             {fileName
-              ? <>Kopie nadpisują <span className="font-semibold">{fileName}</span> zamiast pobierać nowy plik. Każdy kolejny backup, także automatyczny, zastępuje poprzedni — starszych kopii w tym pliku nie będzie.</>
+              ? <>Kopie nadpisują <span className="font-semibold">{fileName}</span> zamiast pobierać nowy plik. Kopia zapisuje się tam sama raz dziennie — przy otwarciu albo schowaniu aplikacji. Każdy zapis zastępuje poprzedni; starsze stany są w kopiach dziennych wyżej.</>
               : "Domyślnie każdy backup to nowy plik w Pobranych. Możesz zamiast tego wskazać jeden plik, który będzie nadpisywany — wtedy każdy kolejny backup, także automatyczny, zastąpi poprzedni, a starsze kopie przepadną."}
           </p>
         </div>
+        {fileName && <LastFileWrite />}
         {fileName ? (
           <Button size="sm" variant="outline" onClick={handleForget} className="w-full">Wróć do pobierania nowego pliku</Button>
         ) : (
@@ -237,6 +238,15 @@ function BackupFileTarget() {
       </div>
     </Section>
   );
+}
+
+/** QL-2: kiedy i ile ostatnio zapisano do wybranego pliku. */
+function LastFileWrite() {
+  const last = readLastFileWrite();
+  if (!last) return <p className="ui-meta" data-testid="backup-file-last">Jeszcze nie zapisano do tego pliku.</p>;
+  const when = new Date(last.at).toLocaleString("pl-PL", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+  const size = last.bytes >= 1024 * 1024 ? `${(last.bytes / 1024 / 1024).toFixed(1).replace(".", ",")} MB` : `${Math.max(1, Math.round(last.bytes / 1024))} KB`;
+  return <p className="ui-meta tabular-nums" data-testid="backup-file-last">Ostatni zapis: {when} · {size}</p>;
 }
 
 function handleAutoExportChange(v: number) {
@@ -527,7 +537,7 @@ export function BackupSettings() {
           onValueChange={([v]) => handleAutoExportChange(v)}
         />
         <p className="ui-hint mt-1.5">
-          Po przekroczeniu interwału (gdy otworzysz aplikację) backup sam zapisze się do pliku wybranego wyżej. Bez wybranego pliku pojawi się przycisk „Pobierz” — przeglądarki nie pozwalają pobierać plików bez kliknięcia.
+          Z plikiem wybranym wyżej kopia zapisuje się sama raz dziennie. Bez niego po tym czasie pojawi się przycisk „Pobierz” — przeglądarki nie pozwalają pobierać plików bez kliknięcia. Pozycja „wyłączony” wyłącza też zapis do pliku.
         </p>
       </Section>
 

@@ -2,6 +2,8 @@
 /** Klucz ostatniej kopii (ręcznej i automatycznej) — jedna stała, używana też w Ustawieniach (Dane). */
 export const LAST_AUTO_EXPORT_KEY = "kaczy.lastAutoExport";
 const KEY = LAST_AUTO_EXPORT_KEY;
+/** QL-2: z wybranym plikiem kopia zapisuje się sama co dzień (niezależnie od interwału przypomnienia). */
+export const FILE_BACKUP_DAYS = 1;
 
 export function getLastBackup(): number {
   try { return Number(localStorage.getItem(KEY) || 0); } catch { return 0; }

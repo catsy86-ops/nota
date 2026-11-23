@@ -293,6 +293,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Synchronizacja: baner starszej wersji w całej aplikacji (P3.2)
 - Pewność danych — blokada kart, błąd zapisu, zapełnienie magazynu (Q1.1, Q1.5, Q1.2 planu QoL, 2026-11-15)
 - Pewność danych — kilka kart naraz: karta prowadząca przekaźnik, odśmiecanie obrazów (Z-7, Z-6, 2026-11-16)
+- Kopia zapasowa — dzienny zapis do wybranego pliku (Q1.3, decyzja QL-2, 2026-11-23)
 
 ### Powłoka, Ustawienia i telefon — [`docs/opis/powloka.md`](docs/opis/powloka.md)
 
