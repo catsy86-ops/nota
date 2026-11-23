@@ -111,7 +111,9 @@ describe("W3.2 — ręczne karty poza components/ui", () => {
 // pigułki z `cn(...)` i stanem, wiersze-listy i kafle, linki w zdaniu, dyktowanie, przyciski na zdjęciu (biel na ciemnym), FAB.
 // Główny katalog `components/` (2026-11-20): przeniesione „Znajdź i zamień”, ikona paska bocznego, zapis aliasu. Zostało 138 — długi ogon:
 // pasek edytora notatki i kafla (`card-action`), listy kontrolne, wybór koloru i rysunek, nawigacja dolna, pigułki, linki w zdaniu.
-const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26, review: 11, calendar: 14, debts: 3, cwiczenia: 8, clients: 8, vault: 5, sync: 1, settings: 22, sidebar: 6, plans: 10, study: 106, ".": 112 };
+// `.`: 112 → 114 (2026-11-23) — M3.1 zamienił w `SearchBar` dwa `motion.button` (wyrażenie ich nie liczyło) na zwykłe
+// `<button>` z `presence-pop`. To te same surowe ikony 16 px w polu, nie nowe; `IconButton` (≥ 28 px) zmieniłby układ pola.
+const RAW_BUTTON_MAX: Record<string, number> = { shifts: 26, review: 11, calendar: 14, debts: 3, cwiczenia: 8, clients: 8, vault: 5, sync: 1, settings: 22, sidebar: 6, plans: 10, study: 106, ".": 114 };
 describe("W4.5 — surowe <button> w działach", () => {
   for (const [dir, max] of Object.entries(RAW_BUTTON_MAX)) {
     it(`components/${dir}: co najwyżej ${max} (zamiast tego: Button / IconButton)`, () => {

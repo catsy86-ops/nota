@@ -33,7 +33,7 @@ import { useLatestRef } from "@/hooks/useLatestRef";
 import { useWikiLinkIndex } from "@/hooks/useWikiLinkIndex";
 import { useLaunchIntents } from "@/hooks/useLaunchIntents";
 import { useBulkNoteOps } from "@/hooks/useBulkNoteOps";
-import { setGridNavPreview } from "@/lib/gridKeyboardNav";
+import { setGridNavPreview, setGridNavPreviewTransitions } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { tween } from "@/lib/motion";
 import { useNoteActions } from "@/hooks/useNoteActions";
@@ -401,6 +401,28 @@ const Index = () => {
     const t = doc.startViewTransition(() => flushSync(() => showInReader(id, "preview")));
     void t.finished.finally(() => { card.style.viewTransitionName = ""; });
   }, [showInReader]);
+  // M4.2: zamknięcie podglądu odwraca wejście — czytnik „wpływa” z powrotem w kafel. Wychodzący czytnik zostaje w DOM
+  // na czas wyjścia (`AnimatePresence`), więc w nowej migawce zdejmujemy z niego nazwę i go chowamy, a nazwę dostaje
+  // kafel — dwa elementy z tą samą nazwą przerwałyby przejście. Kafel poza ekranem albo prezentacja — zwykłe zamknięcie.
+  const closeReaderToCard = useCallback(() => {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
+    const card = previewId && !presentingNoteId ? document.querySelector<HTMLElement>(`[data-note-id-wrap="${CSS.escape(previewId)}"]`) : null;
+    const r = card?.getBoundingClientRect();
+    const onScreen = !!r && r.bottom > 0 && r.top < window.innerHeight;
+    const reader = document.querySelector<HTMLElement>('[data-reader-mode="preview"]');
+    if (!card || !onScreen || !reader || !canViewTransition() || isMotionReduced()) { closeReader(); return; }
+    const t = doc.startViewTransition(() => {
+      flushSync(closeReader);
+      reader.style.viewTransitionName = "none";
+      reader.style.visibility = "hidden";
+      card.style.viewTransitionName = "note-shared";
+    });
+    void t.finished.finally(() => { card.style.viewTransitionName = ""; });
+  }, [previewId, presentingNoteId, closeReader]);
+  useEffect(() => {
+    setGridNavPreviewTransitions({ open: openPreviewFromCard, close: closeReaderToCard });
+    return () => setGridNavPreviewTransitions(null);
+  }, [openPreviewFromCard, closeReaderToCard]);
   useEffect(() => { if (readerId) markNoteOpened(readerId); }, [readerId]);
   // 5.1: Alt+← / Alt+→ po historii otwieranych notatek (czytnik). Tylko gdy historia ma dokąd iść —
   // inaczej skrót zostaje przeglądarce (wstecz). Nie w polu tekstowym i nie nad innym oknem niż czytnik.
@@ -904,7 +926,7 @@ const Index = () => {
           searchQuery={search}
           knownTitles={knownTitles}
           wikiIndex={wikiIndex}
-          onClose={closeReader}
+          onClose={closeReaderToCard}
           onStep={stepReader}
           canPrev={!!readerSteps.prev}
           canNext={!!readerSteps.next}

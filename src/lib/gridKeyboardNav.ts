@@ -113,6 +113,12 @@ export function setGridNavPreview(id: string | null) {
   setState({ previewId: id });
 }
 
+/** M4.2: otwarcie i zamknięcie podglądu z klawiatury tym samym przejściem co myszą (kafel ↔ czytnik, `Index.tsx`). */
+let previewTransitions: { open: (id: string) => void; close: () => void } | null = null;
+export function setGridNavPreviewTransitions(t: typeof previewTransitions) {
+  previewTransitions = t;
+}
+
 export function setGridNavPreviewScrollEl(el: HTMLElement | null) {
   previewScrollEl = el;
 }
@@ -164,7 +170,8 @@ function handlePreviewKeys(e: KeyboardEvent, previewId: string) {
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === "Escape" || e.key === " ") {
     e.preventDefault();
-    setGridNavPreview(null);
+    if (previewTransitions) previewTransitions.close();
+    else setGridNavPreview(null);
     return;
   }
   if (e.key === "Enter") {
@@ -225,7 +232,11 @@ export function handleGridNavKey(e: KeyboardEvent) {
     case "Home": next = 0; break;
     case "End": next = ids.length - 1; break;
     case " ":
-      if (hasFocus) { e.preventDefault(); setGridNavPreview(focusedId); }
+      if (hasFocus) {
+        e.preventDefault();
+        if (previewTransitions) previewTransitions.open(focusedId as string);
+        else setGridNavPreview(focusedId);
+      }
       return;
     case "Enter":
       if (hasFocus) { e.preventDefault(); section?.handlers.openNote(focusedId as string); }
