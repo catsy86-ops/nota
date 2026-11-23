@@ -74,7 +74,8 @@ test("wycena jako dokument: numer, rabat, VAT, uwagi, zaliczka, PDF i stan @mobi
   // PDF ustawia stan „Wysłana”.
   const download = page.waitForEvent("download", { timeout: 30000 });
   await job.getByRole("button", { name: "PDF wyceny" }).click();
-  expect((await download).suggestedFilename()).toBe("Wycena - Kowalski kran.pdf");
+  // Linux w CI zamienia spacje w nazwie pobrania na „_” — porównujemy bez tej różnicy.
+  expect((await download).suggestedFilename().replace(/_/g, " ")).toBe("Wycena - Kowalski kran.pdf");
   await expect(doc.getByTestId("quote-state")).toContainText("Wysłana");
 
   await doc.getByTestId("quote-accept").click();

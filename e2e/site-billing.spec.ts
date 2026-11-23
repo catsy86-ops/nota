@@ -154,7 +154,8 @@ test("miesiąc razem (H3.3): gotowy punkt ze stawką widać w podsumowaniu Grafi
   const download = page.waitForEvent("download");
   await line.getByTestId("month-csv").click();
   const dl = await download;
-  expect(dl.suggestedFilename()).toBe("Zestawienie 2026-10.csv");
+  // Linux w CI zamienia spacje w nazwie pobrania na „_” — porównujemy bez tej różnicy.
+  expect(dl.suggestedFilename().replace(/_/g, " ")).toBe("Zestawienie 2026-10.csv");
   const csv = (await readFile(await dl.path())).toString("utf8").replace("\uFEFF", "").trim().split("\r\n");
   expect(csv).toContain("Zarobek;Lipowa 5 — punkty;2;400,00");
   expect(csv).toContain("Wpłata;Lipowa 5 (2026-10-22);1;150,00");
