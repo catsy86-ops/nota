@@ -2,7 +2,7 @@ import { countRender } from "@/lib/renderProbe";
 import { VaultStatusButton } from "@/components/vault/VaultStatusButton";
 import { isAppView, VIEW_LABEL } from "@/lib/viewMeta";
 import { SyncStatusDot } from "@/components/sync/SyncStatusDot";
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { m as motion } from "framer-motion";
 import { PanelLeftClose, PanelLeftOpen, Moon, Sun, FileDown, FolderOpen, Tag, Search } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -39,7 +39,7 @@ interface AppHeaderProps {
   onOpenPalette?: () => void;
 }
 
-export function AppHeader({
+function AppHeaderImpl({
   selectionMode, sidebarOpen, onToggleSidebar, dark, onToggleTheme,
   view, activeFolder, activeLabel, search, onSearchChange, onImport, onOpenSync, onOpenPalette,
 }: AppHeaderProps) {
@@ -194,3 +194,5 @@ export function AppHeader({
     </header>
   );
 }
+
+export const AppHeader = memo(AppHeaderImpl);

@@ -583,15 +583,22 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 
 **Co robi.** Nic widocznego dla użytkownika. Pozwala policzyć, ile razy renderują się `Index`, nagłówek, pasek boczny i siatka notatek.
 
-**Gdzie jest.** `src/lib/renderProbe.ts` (`countRender(name)`) wywoływane na początku `Index`, `AppHeader`, `AppSidebar` i `NoteGrid`; test `e2e/render-count.spec.ts`.
+**Gdzie jest.** `src/lib/renderProbe.ts` (`countRender(name)`; naprawa: `src/hooks/useLatestRef.ts`, `Index.tsx`, `AppHeader.tsx`, `AppSidebar.tsx`) wywoływane na początku `Index`, `AppHeader`, `AppSidebar` i `NoteGrid`; test `e2e/render-count.spec.ts`.
 
 **Jak działa.** `countRender` nic nie robi, dopóki `window.__renderProbe` nie istnieje; test ustawia go przez `addInitScript`. Profiler Reacta odpada, bo w buildzie produkcyjnym (na nim działa e2e) nie zwraca danych. Test dodaje 3 notatki, wpisuje znak w wyszukiwarkę, potem przypina notatkę, i wypisuje różnice liczników (`[render] …`).
 
-**Wynik (2026-11-23, build produkcyjny, 3 notatki).**
-- Znak w wyszukiwarce: `Index` 4, `AppHeader` 4, `AppSidebar` 4, `NoteGrid` 4.
-- Przypięcie jednej notatki: `Index` 2, `AppHeader` 2, `AppSidebar` 2, `NoteGrid` 4.
+**Wynik (2026-11-23, build produkcyjny, 3 notatki) — przed i po naprawie.**
 
-**Wniosek i ograniczenia.** Cel planu („zmiana notatki nie renderuje nagłówka ani paska”) niespełniony: nagłówek i pasek renderują się tyle razy co `Index`, bo dostają nowe funkcje inline przy każdym renderze. Naprawa wymaga `useCallback` dla ok. 15 handlerów w `Index` i `memo` na obu komponentach (sam `memo` z pominięciem funkcji dałby przestarzałe domknięcia, np. `isMobile` w `onGoView`) — osobne zadanie. Test nie ma progów, tylko wypisuje liczby.
+| Akcja | Index | Nagłówek | Pasek boczny | Siatka |
+|---|---|---|---|---|
+| Znak w wyszukiwarce, przed | 4 | 4 | 4 | 4 |
+| Znak w wyszukiwarce, po | 4 | 1 | 2 | 4 |
+| Przypięcie notatki, przed | 2 | 2 | 2 | 4 |
+| Przypięcie notatki, po | 2 | 1 | 1 | 4 |
+
+**Naprawa.** `useStableFn` (`src/hooks/useLatestRef.ts`) daje funkcję o stałej tożsamości, która woła najnowszą wersję — bez przestarzałych domknięć, więc `isMobile` w `onGoView` zostaje aktualne. `Index` podaje nią wszystkie handlery nagłówka i paska; `navItems` trzyma `useStableByKey` (klucz: dział i licznik). `AppHeader` i `AppSidebar` są w `memo` (funkcje `AppHeaderImpl`, `AppSidebarImpl`). Pozostały jeden render to subskrypcja `useNotesContext` (foldery i etykiety), czyli zmiana danych, nie propsów z `Index`; zejście do zera wymagałoby rozdzielenia kontekstu.
+
+**Ograniczenia.** Nowy handler dla nagłówka lub paska trzeba owinąć w `useStableFn`, inaczej `memo` przestaje działać. Test nie ma progów, tylko wypisuje liczby.
 
 **Testy.** `e2e/render-count.spec.ts`.
 

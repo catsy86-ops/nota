@@ -1,6 +1,6 @@
 import { countRender } from "@/lib/renderProbe";
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { folderProgress } from "@/lib/folderProgress";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
@@ -153,7 +153,7 @@ interface AppSidebarProps {
   onSettingsOpenChange: (open: boolean) => void;
 }
 
-export function AppSidebar({
+function AppSidebarImpl({
   open, onClose, view, activeLabel, activeFolder, onGoView, onGoLabel, onGoFolder, onGoFilter, onOpenView, onOpenNote, search,
   sidebarItems, onLogoClick, dark, onToggleTheme, onOpenPalette, onOpenActions,
   onOpenStats, onOpenFocusMode, onSettingsOpenChange,
@@ -522,3 +522,5 @@ export function AppSidebar({
     </>
   );
 }
+
+export const AppSidebar = memo(AppSidebarImpl);

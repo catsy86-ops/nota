@@ -24,7 +24,7 @@ import { useViewRoute } from "@/hooks/useViewRoute";
 import { useStudyOverdueCount } from "@/lib/studyOverdueCount";
 import { splitWikiTarget } from "@/lib/wikiLinks";
 import { requestHeading } from "@/lib/wikiHeading";
-import { useLatestRef } from "@/hooks/useLatestRef";
+import { useLatestRef, useStableByKey, useStableFn } from "@/hooks/useLatestRef";
 import { useWikiLinkIndex } from "@/hooks/useWikiLinkIndex";
 import { useLaunchIntents } from "@/hooks/useLaunchIntents";
 import { useResumeView } from "@/hooks/useResumeView";
@@ -380,7 +380,28 @@ const Index = () => {
 
   const hiddenViews = useHiddenViews();
   const todayCards = useTodayCards();
-  const navItems = sidebarItems({ inbox: inboxCount, overdue: overdueCount, trash: trashedNotes.length }).filter((i) => isViewShown(hiddenViews, i.view));
+  const navItemsFresh = sidebarItems({ inbox: inboxCount, overdue: overdueCount, trash: trashedNotes.length }).filter((i) => isViewShown(hiddenViews, i.view));
+  // Nowa tablica przy każdym renderze unieważniałaby `memo` paska — odświeżamy ją tylko, gdy zmienią się działy lub liczniki.
+  const navItems = useStableByKey(navItemsFresh, navItemsFresh.map((i) => `${i.view}:${i.count ?? ""}`).join("|"));
+
+  // Nagłówek i pasek boczny są w `memo`: handlery mają stałą tożsamość (`useStableFn`), więc zmiana notatki ich nie renderuje (A2.5).
+  const closeSidebar = useStableFn(() => setSidebarOpen(false));
+  const toggleSidebar = useStableFn(() => setSidebarOpen(!sidebarOpen));
+  const openPalette = useStableFn(() => setPaletteOpen(true));
+  const openActions = useStableFn(() => setActionsOpen(true));
+  const openStats = useStableFn(() => setStatsOpen(true));
+  const openFocusMode = useStableFn(() => setFocusModeOpen(true));
+  const openSyncSettings = useStableFn(() => openSettingsTab("sync"));
+  const sidebarGoView = useStableFn((v: Parameters<typeof setView>[0]) => { setView(v); if (isMobile) setSidebarOpen(false); });
+  const sidebarOpenNote = useStableFn((id: string) => { openNote(id); if (isMobile) setSidebarOpen(false); });
+  const sidebarGoLabel = useStableFn((label: string) => { go("label", { label }); if (isMobile) setSidebarOpen(false); });
+  const sidebarGoFolder = useStableFn((id: string) => { go("folder", { folder: id }); if (isMobile) setSidebarOpen(false); });
+  const stableGoFilter = useStableFn(goFilter);
+  const stableOpenSavedView = useStableFn(openSavedView);
+  const stableToggleTheme = useStableFn(toggleTheme);
+  const stableSetSearch = useStableFn(setSearch);
+  const stableImport = useStableFn(handleImport);
+  const stableLogoClick = useStableFn(handleLogoClick);
 
   return (
     <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setDraggingNoteId(null)}>
@@ -388,43 +409,43 @@ const Index = () => {
     <div className="min-h-screen flex relative">
       <AppSidebar
         open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        onClose={closeSidebar}
         view={view}
         activeLabel={activeLabel}
         activeFolder={activeFolder}
-        onGoView={(v) => { setView(v); if (isMobile) setSidebarOpen(false); }}
-        onOpenNote={(id) => { openNote(id); if (isMobile) setSidebarOpen(false); }}
-        onGoLabel={(label) => { go("label", { label }); if (isMobile) setSidebarOpen(false); }}
-        onGoFolder={(id) => { go("folder", { folder: id }); if (isMobile) setSidebarOpen(false); }}
-        onGoFilter={goFilter}
-        onOpenView={openSavedView}
+        onGoView={sidebarGoView}
+        onOpenNote={sidebarOpenNote}
+        onGoLabel={sidebarGoLabel}
+        onGoFolder={sidebarGoFolder}
+        onGoFilter={stableGoFilter}
+        onOpenView={stableOpenSavedView}
         search={search}
         sidebarItems={navItems}
-        onLogoClick={handleLogoClick}
+        onLogoClick={stableLogoClick}
         dark={dark}
-        onToggleTheme={toggleTheme}
-        onOpenPalette={() => setPaletteOpen(true)}
-        onOpenActions={() => setActionsOpen(true)}
-        onOpenStats={() => setStatsOpen(true)}
-        onOpenFocusMode={() => setFocusModeOpen(true)}
+        onToggleTheme={stableToggleTheme}
+        onOpenPalette={openPalette}
+        onOpenActions={openActions}
+        onOpenStats={openStats}
+        onOpenFocusMode={openFocusMode}
         onSettingsOpenChange={setSettingsOpen}
       />
 
       <div className="flex-1 min-w-0 flex flex-col">
         <AppHeader
-          onOpenSync={() => openSettingsTab("sync")}
-          onOpenPalette={() => setPaletteOpen(true)}
+          onOpenSync={openSyncSettings}
+          onOpenPalette={openPalette}
           selectionMode={selectionMode}
           sidebarOpen={sidebarOpen}
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onToggleSidebar={toggleSidebar}
           dark={dark}
-          onToggleTheme={toggleTheme}
+          onToggleTheme={stableToggleTheme}
           view={view}
           activeFolder={activeFolder}
           activeLabel={activeLabel}
           search={search}
-          onSearchChange={setSearch}
-          onImport={handleImport}
+          onSearchChange={stableSetSearch}
+          onImport={stableImport}
         />
 
         {/* `flex gap`, nie `space-y`: ukryta na sm+ wyszukiwarka nie dokłada marginesu nad treścią. */}
