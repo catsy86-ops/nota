@@ -116,6 +116,7 @@ export function SiteBillingPanel({ site, hours }: { site: SiteInfo; /** Godziny 
               ))}
               <p className="text-2xs text-muted-foreground">
                 {used.length > 0 ? "Puste pole typu = stawka domyślna." : "Stawki na typ (np. WC na stelażu) pojawią się po dodaniu punktów w panelu „Punkty”."}
+                {" "}Zmiana stawki liczy się dla punktów kończonych od teraz — gotowe zachowują stawkę z dnia ukończenia.
               </p>
             </fieldset>
           )}

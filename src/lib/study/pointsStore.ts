@@ -1,7 +1,9 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { currentAuthor } from "./companyPrefs";
 import { yjsStore } from "@/lib/yjsStore";
-import { newPoint, pointType, ROOM_TEMPLATES, toggleStep, type Room, type WaterPoint } from "./points";
+import { newPoint, pointType, ROOM_TEMPLATES, toggleStep, withFrozenRate, type Room, type WaterPoint } from "./points";
+import { pointRateFor } from "./billing";
+import { getSiteBilling } from "./billingStore";
 import { createYPoints, type SitePoints } from "./yPoints";
 
 /** Punkty w pomieszczeniach żyją w dokumencie Yjs notatek (`yPoints.ts`); widoki zmieniają je tylko akcjami poniżej. */
@@ -46,7 +48,9 @@ export const removePoint = (site: string, pointId: string) => yPoints.removePoin
 /** Stuknięcie kratki kroku punktu (`toggleStep`). Zwraca punkt sprzed zmiany — do „Cofnij”. */
 export function togglePointStep(site: string, point: WaterPoint, index: number, now: number = Date.now()): WaterPoint {
   const by = currentAuthor();
-  const { by: _prev, ...next } = toggleStep(point, index, now);
+  const { by: _prev, ...stepped } = toggleStep(point, index, now);
+  // D-A4: stawka zamrożona w chwili ukończenia punktu (z rozliczenia budowy, typ albo domyślna).
+  const next = withFrozenRate(point, stepped, pointRateFor(getSiteBilling(site), point.type));
   yPoints.savePoint(site, { ...next, ...(by ? { by } : {}) });
   return point;
 }

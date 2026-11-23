@@ -224,6 +224,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Faktury KSeF — korekty (2026-11-12)
 - Faktury KSeF — zaszyfrowany eksport (2026-11-12)
 - Zlecenia Fable i plan Praca (2026-11-15, w toku, bez commita)
+- Praca — stawka za punkt zamrażana przy ukończeniu (D-A4, B4 audytu 2, 2026-11-23)
 
 ### Osobiste: Ćwiczenia, Długi, Skarbiec — [`docs/opis/osobiste.md`](docs/opis/osobiste.md)
 

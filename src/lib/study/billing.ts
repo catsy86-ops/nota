@@ -131,7 +131,8 @@ export interface BillingInput {
   minutes: number;
   unsplit: number;
   /** Punkty budowy: typ i czy po białym montażu. */
-  points: readonly { type: string; done: boolean }[];
+  /** `rate` — stawka zamrożona w punkcie (D-A4); brak = bieżąca z rozliczenia. */
+  points: readonly { type: string; done: boolean; rate?: number }[];
   /** Etapy karty (`siteStages`). */
   stages: readonly { id: string; name: string; done?: number }[];
   /** Nazwa typu punktu (`pointType(id).label`) — wstrzykiwana, żeby nie ciągnąć listy typów. */
@@ -175,11 +176,18 @@ export function billingStatement(input: BillingInput): BillingStatement {
   }
 
   if (on("points")) {
-    const byType = new Map<string, number>();
-    for (const p of points) if (p.done) byType.set(p.type, (byType.get(p.type) ?? 0) + 1);
+    // D-A4: stawka zamrożona w punkcie wygrywa z bieżącą — ten sam rodzaj po różnych stawkach to osobne wiersze.
+    const groups = new Map<string, { type: string; rate: number | undefined; count: number }>();
+    for (const p of points) {
+      if (!p.done) continue;
+      const rate = p.rate ?? pointRateFor(b, p.type);
+      const key = `${p.type}|${rate ?? ""}`;
+      const g = groups.get(key);
+      if (g) g.count++;
+      else groups.set(key, { type: p.type, rate, count: 1 });
+    }
     let noRate = 0;
-    for (const [type, count] of byType) {
-      const r = pointRateFor(b, type);
+    for (const { type, rate: r, count } of groups.values()) {
       if (r === undefined) { noRate += count; continue; }
       lines.push({ kind: "points", label: typeLabel(type), detail: `${count} × ${money(r)}`, amount: round2(count * r) });
     }
@@ -256,7 +264,7 @@ export interface MonthSiteEarnings {
  * (archiwizacji, decyzja D-A3; do tej pory `lumpPending`). Tylko włączone sposoby.
  */
 export function monthSiteEarnings(
-  input: { billing: SiteBilling; points: readonly { type: string; doneAt?: number }[]; stages: readonly { id: string; done?: number }[]; archived?: number },
+  input: { billing: SiteBilling; points: readonly { type: string; doneAt?: number; rate?: number }[]; stages: readonly { id: string; done?: number }[]; archived?: number },
   from: number, to: number,
 ): MonthSiteEarnings {
   const { billing: b, points, stages } = input;
@@ -265,7 +273,7 @@ export function monthSiteEarnings(
   if (b.modes.includes("points")) {
     for (const p of points) {
       if (!inMonth(p.doneAt)) continue;
-      const r = pointRateFor(b, p.type);
+      const r = p.rate ?? pointRateFor(b, p.type);
       if (r === undefined) { out.pointsNoRate++; continue; }
       out.points.count++;
       out.points.amount = round2(out.points.amount + r);

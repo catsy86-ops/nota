@@ -66,7 +66,15 @@ export interface WaterPoint {
   order: number;
   /** H5.1: kto ostatni zmienił kroki punktu; brak = nie ustawiono. */
   by?: string;
+  /**
+   * D-A4: stawka (zł) z chwili, gdy punkt stał się zrobiony — późniejsza zmiana stawki nie przelicza go wstecz.
+   * Brak = punkt sprzed zapisu stawek albo bez stawki w tamtej chwili (liczy się po bieżącej).
+   */
+  rate?: number;
 }
+
+/** Najwyższa stawka za punkt przyjmowana z dokumentu (zł). */
+export const POINT_RATE_MAX = 100_000;
 
 export const ROOM_NAME_MAX = 40;
 export const ROOMS_MAX = 30;
@@ -99,7 +107,11 @@ export function cleanPoint(raw: unknown): WaterPoint | null {
     steps[s] = at;
   }
   const by = cleanAuthor(p.by);
-  return { id: p.id, room: p.room, type, sides, ...(height !== undefined ? { height } : {}), steps, order: num(p.order), ...(by ? { by } : {}) };
+  const rate = typeof p.rate === "number" && Number.isFinite(p.rate) && p.rate > 0 && p.rate <= POINT_RATE_MAX ? Math.round(p.rate * 100) / 100 : undefined;
+  return {
+    id: p.id, room: p.room, type, sides, ...(height !== undefined ? { height } : {}), steps, order: num(p.order),
+    ...(by ? { by } : {}), ...(rate !== undefined ? { rate } : {}),
+  };
 }
 
 /** Ile kroków punktu jest zrobionych (0–3). */
@@ -167,4 +179,17 @@ export function pointsTodo(points: readonly WaterPoint[]): string | null {
     [pendingAt(points, "montaz"), "do montażu"],
   ].filter(([n]) => (n as number) > 0).map(([n, label]) => `${n} ${label}`);
   return parts.length ? parts.join(" · ") : null;
+}
+
+/**
+ * D-A4: stawka punktu po zmianie kroków. Punkt, który właśnie stał się zrobiony, dostaje stawkę z tej chwili
+ * (`currentRate`, może jej nie być); zrobiony dalej — zachowuje swoją; cofnięty — traci ją.
+ */
+export function withFrozenRate(before: Pick<WaterPoint, "steps" | "rate">, after: WaterPoint, currentRate: number | undefined): WaterPoint {
+  const { rate: _old, ...rest } = after;
+  const doneNow = pointStage(after) === POINT_STEPS.length;
+  if (!doneNow) return rest;
+  const wasDone = pointStage(before) === POINT_STEPS.length;
+  const rate = wasDone ? before.rate : currentRate;
+  return rate !== undefined ? { ...rest, rate } : rest;
 }

@@ -33,7 +33,7 @@ export function SiteBillingDues({ site, billing, hours, points }: {
   const today = localDayKey();
   const st = useMemo(() => billingStatement({
     billing, rate: site.rate, minutes: hours?.minutes ?? 0, unsplit: hours?.unsplit ?? 0,
-    points: points.map((p) => ({ type: p.type, done: pointStage(p) === POINT_STEPS.length })),
+    points: points.map((p) => ({ type: p.type, done: pointStage(p) === POINT_STEPS.length, rate: p.rate })),
     stages: siteStages(site), typeLabel: (id) => pointType(id).label,
   }), [billing, site, hours, points]);
   const [adding, setAdding] = useState(false);

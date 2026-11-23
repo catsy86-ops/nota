@@ -53,7 +53,7 @@ export function SiteMonthEarnings({ monthKey, base }: {
     // Archiwalne też — budowę zwykle archiwizuje się po końcu, a jej ostatni miesiąc ma się policzyć.
     return dir.flatMap((s) => {
       if (jobs.has(s.id)) return [];
-      const points = getSitePoints(s.id).points.map((p) => ({ type: p.type, doneAt: p.steps.montaz }));
+      const points = getSitePoints(s.id).points.map((p) => ({ type: p.type, doneAt: p.steps.montaz, rate: p.rate }));
       const e = monthSiteEarnings({ billing: getSiteBilling(s.id), points, stages: siteStages(s), archived: s.archived }, from, to);
       return e.total > 0 || e.pointsNoRate > 0 || e.lumpPending > 0 ? [{ site: s, e }] : [];
     });

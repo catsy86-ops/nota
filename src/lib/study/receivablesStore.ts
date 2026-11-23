@@ -48,7 +48,7 @@ export function useReceivables(): Receivables {
       const hours = siteMinutesInRange(study.journal, cards, site.id, "0000-01-01", today, workOf, dayKeyOf);
       statements.set(site.id, billingStatement({
         billing, rate: site.rate, minutes: hours.minutes, unsplit: hours.unsplit,
-        points: getSitePoints(site.id).points.map((p) => ({ type: p.type, done: pointStage(p) === POINT_STEPS.length })),
+        points: getSitePoints(site.id).points.map((p) => ({ type: p.type, done: pointStage(p) === POINT_STEPS.length, rate: p.rate })),
         stages: siteStages(site), typeLabel: (id) => pointType(id).label,
       }));
     }
