@@ -27,6 +27,55 @@
 
 Specyfikacje z 17.11 bez daty w nazwie (`plan-wymiana-kodu.md`, `plan-wiadomosci-i-cofniecia.md`, `plan-dane-lokalne.md`, `plan-powiadomienia.md`, `plan-zgodnosc-i-obieg.md`, `plan-zestaw-zbieznosci.md`) opisują zlecenia Z-14.5, Z-14.6, Z-15.x, Z-16.x i Z-17.x — są policzone w tabelach planów użycia Fable, a w osobnej sekcji niżej jest tylko to, co z nich wynika ponad te zlecenia. `plan-ksef-etap2.md` powstał 16.11, więc go pominięto. `plany-2026-11-15.md` to spis bez własnych punktów.
 
+### Decyzje właściciela z 2026-11-23 (zastępują tabelę niżej)
+
+Podjęte w rozmowie 2026-11-23, wszystkie według rekomendacji. Tabela „Otwarte decyzje” niżej jest historyczna.
+
+| Kod | Decyzja | Skutek dla planów |
+|---|---|---|
+| SE-1 | Serwerów **nie wdrażać teraz** — najpierw próba APK (F1.0) | S4.x, ADR-9, Q4.4, sesja F czekają; sesje E z kolejki mogą odpaść |
+| SE-2 | Adresy serwerów **stałe**, wpisane w aplikację | CSP zawężone do własnych adresów przy wdrożeniu |
+| SE-3 | **Bez** blokady całej aplikacji passkeyem — wystarczy skarbiec | S1.8 wypada |
+| SE-4 | Sygnalizacja WebRTC — **publiczne serwery** na razie | `signaling-server` czeka na wdrożenie serwerów |
+| SE-5 | Blobów **nie dopełniać**; opisać jako znane ograniczenie w modelu zagrożeń | S2.4 = wpis w dokumentacji |
+| SE-6 | Z serwerów korzysta **tylko właściciel** | S3.2, S4.4, S4.11 w wersji dla jednej osoby |
+| AR-1 | Usunąć `.claude/worktrees` (4 osierocone katalogi, 855 MB) | A5.1 |
+| AR-2 | Podzielić `opis.md` na pliki działów, `opis.md` jako spis | A5.2; CLAUDE.md do aktualizacji |
+| AR-3 | CI: pełne e2e tylko na `master`, na gałęziach `@smoke` | A4.2 |
+| RU-1 | Przejścia między działami — przenikanie | M4.1 zrobione |
+| RU-2 | Dekoracje **zostają jak są** we wszystkich stylach | — |
+| QL-1, MG-4 | Migawki i kopia OPFS **bez** szyfrowania kluczem skarbca (notatki prywatne i tak są w nich zaszyfrowane) | D1.3 bez szyfrowania |
+| QL-2 | Automatyczna kopia do pliku **raz dziennie** po jednorazowym wyborze folderu; bez API — przypomnienie | Q1.3, Z-16.3 |
+| QL-3 | Powrót na „Dziś” po **4 godzinach** nieużywania | Q3.4 |
+| PR-1 | Funkcje Pracy nieużywane 30 dni — **chować pod „Więcej”** (użycie przywraca) | R2.3 |
+| PR-2 | „Należności” — **sekcja na Dziś** | R3.1, Z-14.2 |
+| PR-3 | Tryb jednej ręki **domyślny na telefonie** | R4.1 |
+| DL-2, DL-3, D-3 | **Bez** wspólnych wydatków i **bez** walut | Etap 3 Długów, L3.1, L3.2, L5.1, 3.5 starego planu wypadają; część „grupa” Z-17.2 też |
+| CW-1 | Podpowiedź progresji **włączona domyślnie** | C2.1 |
+| CW-2 | Dieta: **kcal i białko** (bez pełnego makro) | C4.2 wypada |
+| CW-3 | **Bez** gotowych planów treningowych | C5.3 wypada |
+| MG-1 | Kopie zapasowe — wczytywanie **bezterminowo**; migracje dokumentu — **12 miesięcy** | D7.3 |
+| MG-2 | Dokument z nowszej wersji — **tylko odczyt** | D2.x |
+| MG-3 | Niewidziane urządzenie przestaje blokować nowy format po **30 dniach** | D4.x |
+| KR-1 | KDF — **zostaje PBKDF2 600 000** | K bez Argon2id |
+| KR-2 | (domyślnie) wycofany klucz trzymany 90 dni | — |
+| KR-3 | Załączniki prywatne: **20 MB / 20 plików**, powyżej 2 MB tylko lokalnie (jak jawne) | K6 |
+| KR-5 | **Wariant minimalny**: K0, K1, K2, K3 bez dopisywania wpisu dla wycofanego DK, K4; K5 odpada | plan Skarbca — krypto |
+| KR-6 | (domyślnie) reset kodem awaryjnym zawsze zachowuje stary klucz, bez wyboru z 3.3 | — |
+| WZ-2, WZ-3 | Stylów **nie łączyć** (jasną Tablicę rozsunąć od jasnych Kafli); kreska ikon **jedna** (1,75) | W6.2, W4.2 bez tokenu na styl |
+| WZ-4 | **Bez** eksportu karty jako obraz | W8.3 wypada |
+| WZ-5 | **Dwie kolumny** (lista + podgląd) na szerokim ekranie | W7.4 |
+| D-A4 | **Zamrażać** stawki we wpisach dziennika (po Z-17.3); do tego czasu ostrzeżenie przy zmianie stawki | B4 z audytu 2 |
+| Z-6.6 | Przycisk „Usuń nieużywane pliki (N)” w Ustawieniach → Kopia i dane, z potwierdzeniem | Z-6.6 |
+| D-K3 | KSeF: faktura z datą wcześniejszą — **wysyłać po potwierdzeniu** | E2.x |
+| D-K4 | Serwer KSeF **lokalnie** z kolejką w aplikacji (ADR-4 bez zmian) | E2.x |
+| D-K5 | Token KSeF **tylko `InvoiceWrite`** | E2.x |
+| G-7 | **Bez** nakładania grafików kilku osób | G4.8 wypada |
+| Precache | Próg **4,6 MiB** (zmierzone 4,57 MiB) | `e2e/bundle.spec.ts` |
+| `@visual` | Wzorce: **przejrzeć różnice działami i odświeżyć**, podejrzane pokazać właścicielowi | `e2e/visual.spec.ts-snapshots` |
+
+Nadal otwarte: KR-4 (brzmienie pytania przy zmianie hasła), C-4 (akceptacja treści 18 nowych ćwiczeń — wymaga przeczytania przez właściciela), D-Z1 (po pomiarze z Z-17.9), potwierdzenia D-F1…D-F3, D-W1, D-X1 (wdrożone domyślnie). F1.0 to próba na telefonie, nie decyzja.
+
 ### Otwarte decyzje właściciela
 
 | Kod | Pytanie | Blokuje |
