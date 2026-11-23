@@ -2,9 +2,9 @@
 
 Wskazówki dla Claude Code w tym repozytorium.
 
-## Dokumentacja techniczna (`opis.md`)
+## Dokumentacja techniczna (`opis.md` i `docs/opis/`)
 
-Po zakończeniu każdego zadania zapisz w `opis.md` (w katalogu głównym repozytorium), co zostało zrobione — jako dokumentację techniczną. Opisz każdą dodaną lub zmienioną funkcję aplikacji:
+Po zakończeniu każdego zadania zapisz w pliku działu w `docs/opis/` (np. `docs/opis/notatki.md`), co zostało zrobione — jako dokumentację techniczną. `opis.md` w katalogu głównym to spis: przy nowym rozdziale dopisz jego tytuł pod właściwym działem. Opisz każdą dodaną lub zmienioną funkcję aplikacji:
 
 - **Co robi** — z punktu widzenia użytkownika, krótko.
 - **Gdzie jest** — pliki i komponenty (`src/...`), najważniejsze funkcje i typy z nazwy.
@@ -13,7 +13,7 @@ Po zakończeniu każdego zadania zapisz w `opis.md` (w katalogu głównym repozy
 - **Testy** — które pliki testów to sprawdzają.
 - **Commit** — skrót hasha i data.
 
-Funkcje grupuj według działów aplikacji (Notatki, Grafik, Nauka, …). Gdy zmieniasz istniejącą funkcję, popraw jej opis, zamiast dopisywać nowy — plik ma opisywać aktualny stan, nie historię.
+Jeden plik na dział aplikacji (Notatki, Dziś, Terminy, Kalendarz i Grafik, Praca, Osobiste, Dane, Powłoka, Wygląd, Wspólne, Jakość) — listę plików ma spis w `opis.md`. Gdy zmieniasz istniejącą funkcję, popraw jej opis, zamiast dopisywać nowy — plik ma opisywać aktualny stan, nie historię.
 
 ## Zarządzanie kontekstem
 
@@ -29,7 +29,7 @@ Stos: Vite + React + TypeScript, Yjs (dane), Vitest (unit), Playwright (e2e, zrz
 - **Wydajność:** agent `performance-engineer` przy nowych zależnościach albo wzroście paczki (budżety w `e2e/bundle.spec.ts`: wejściowy JS ≤ 500 KB gzip, precache ≤ 4,6 MiB).
 - **Bezpieczeństwo:** agent `security-reviewer` przy Yjs, sync, udostępnianiu plików, CSP i przekaźniku.
 - **Architektura:** agent `architect` tylko przed dużą zmianą granic modułów.
-- **Dokumentacja:** skill `technical-documentation` przy `opis.md` i README.
+- **Dokumentacja:** skill `technical-documentation` przy `docs/opis/`, `opis.md` i README.
 - **Przed commitem:** `simplify` (jakość) i `code-review` (błędy) na diffie etapu.
 - **Uprawnienia:** wspólne polecenia testów, builda i git (tylko odczyt) są w `.claude/settings.json`.
 - **MCP (Playwright, context7, Chrome):** połączone na poziomie użytkownika, nie w repo — żeby nie dublować serwerów w każdym projekcie.

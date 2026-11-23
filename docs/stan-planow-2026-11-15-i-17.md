@@ -152,8 +152,8 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | A4.5 | Testy własności scalania | ✗ | — | Specyfikacja Z-17.8 jest, pomocnik Z-17.9 nie |
 | A4.6 | Wzorce starych kopii | ✗ | — | Brak `src/test/fixtures/backups/` (są tylko wzorce dokumentu z D3.1) |
 | A4.7 | Stryker | ✗ | — | |
-| A5.1 | Usunięcie porzuconych worktree | ⏸ | — | AR-1 |
-| A5.2 | `opis.md` na działy | ⏸ | — | AR-2 |
+| A5.1 | Usunięcie porzuconych worktree | ✅ | `50e3d232` | 4 katalogi, 855 MB |
+| A5.2 | `opis.md` na działy | ✅ | 2026-11-23 | `docs/opis/*.md` (11 działów), `opis.md` = spis; CLAUDE.md zaktualizowany |
 | A5.3 | Stare plany do archiwum | ✗ | — | |
 | A5.4 | Rejestr kluczy `localStorage` | ✗ | — | Brak `storageKeys.ts`; przegląd Fable czeka na szkic |
 | A5.5 | `npm audit`, `knip` | ✗ | — | |
