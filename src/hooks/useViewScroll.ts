@@ -75,6 +75,9 @@ export function useViewScroll(view: string): void {
 
   useEffect(() => {
     const onScroll = () => {
+      // W trakcie przejścia między działami (`data-vt-dir`, M4.1) Chromium zgłasza przewinięcie do 0, zanim zmieni się
+      // adres — pozycja jest tymczasowa; ostatnia prawdziwa została w `lastY` sprzed przejścia.
+      if (document.documentElement.dataset.vtDir !== undefined) return;
       if (restoring.current || window.location.pathname !== committedPath.current) return;
       lastY.current = window.scrollY;
       window.clearTimeout(timer.current);
