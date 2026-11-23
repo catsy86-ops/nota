@@ -15,6 +15,10 @@ Po zakończeniu każdego zadania zapisz w pliku działu w `docs/opis/` (np. `doc
 
 Jeden plik na dział aplikacji (Notatki, Dziś, Terminy, Kalendarz i Grafik, Praca, Osobiste, Dane, Powłoka, Wygląd, Wspólne, Jakość) — listę plików ma spis w `opis.md`. Gdy zmieniasz istniejącą funkcję, popraw jej opis, zamiast dopisywać nowy — plik ma opisywać aktualny stan, nie historię.
 
+## Zmiana kształtu danych
+
+Przed zmianą, która dodaje, przenosi albo usuwa pole, mapę Yjs, klucz `localStorage`, bazę IndexedDB albo sekcję kopii, przeczytaj `docs/dane-wersje.md` (zasady, limity pól, dziennik formatów, lista kontrolna).
+
 ## Zarządzanie kontekstem
 
 Po zakończeniu każdego zadania (taska) wyczyść kontekst poleceniem `/clear` lub `/compact`, zanim zaczniesz kolejne zadanie.

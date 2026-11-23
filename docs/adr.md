@@ -96,3 +96,17 @@ Krótki zapis decyzji, które łatwo podważyć przy następnej zmianie (Plan-no
   - **Klucz podpisu tylko w sekretach CI**, nigdy w repozytorium. Bez sekretów workflow buduje APK próbny (debug), który nie zaktualizuje poprzedniego.
 - **Niesprawdzone (wymaga telefonu, F1.0):** alarm przy zamkniętej aplikacji, po restarcie i w trybie oszczędzania; most Capacitora pod `script-src 'self'` na starszych WebView; akcje powiadomień przy zimnym starcie. Jeśli próba się nie powiedzie, wracamy do Web Push — port `ReminderSink` zostaje.
 - **Kod:** `capacitor.config.ts`, `android/`, `.github/workflows/android.yml`, `scripts/cap-prepare.mjs`, `src/lib/native/platform.ts`, `src/lib/reminders/` (`sink.ts`, `nativePlan.ts`, `nativeSink.ts`), `src/components/settings/PushSettings.tsx` (`NativeAlarmSettings`).
+
+## ADR-11. Jedna wersja formatu, wymaganie w dokumencie, rejestr migracji
+
+- **Status:** przyjęty 2026-11-23 (D7.2 planu migracji; decyzje MG-1…MG-4 tego samego dnia).
+- **Kontekst:** dane żyją w jednym dokumencie Yjs synchronizowanym między urządzeniami w różnych wersjach aplikacji. CRDT nie cofa transakcji, a starsza wersja przepisująca wpis gubiła pola dodane przez nowszą.
+- **Decyzja:**
+  - **Jedna liczba** `SCHEMA_VERSION` (`src/lib/formatSchema.ts`) opisuje format całych danych; każda zmiana ma wpis w dzienniku (`docs/dane-wersje.md`) i wzorzec dokumentu.
+  - **Wymaganie w dokumencie** (`docFormat`, na cechę): starsza wersja widzi baner i nie pisze do objętych map (MG-2: tylko odczyt).
+  - **Rejestr migracji** (`src/lib/migrations/`): migracje dokumentu wykonywane na kopii roboczej z migawką przed nimi, ze znacznikiem w `docMigrations`; idempotentne i deterministyczne.
+  - **Nieznane pola przeżywają zapis** we wszystkich mapach (wyjątki z uzasadnieniem w spisie map).
+  - **Rejestr urządzeń w dokumencie** decyduje, kiedy wolno pisać nowy format (urządzenia widziane w 30 dniach, MG-3).
+  - **Zasada trzech wydań:** dodaj → przenieś → usuń, usunięcie po 90 dniach i gdy wszystkie urządzenia czytają nowe.
+- **Konsekwencje:** zmiana kształtu danych kosztuje wpis w dzienniku, wzorzec i test; migracje dokumentu usuwane po 12 miesiącach (MG-1), kopie zapasowe czytane bezterminowo. Klienci sprzed 2026-11-18 nie znają `docFormat` — zmiany niszczące tylko przez bramkę rejestru urządzeń.
+- **Kod:** `src/lib/formatSchema.ts`, `src/lib/docFormat.ts`, `src/lib/deviceRegistry.ts`, `src/lib/migrations/`, `src/lib/extraFields.ts`.

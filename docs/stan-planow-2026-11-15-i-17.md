@@ -283,7 +283,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | D4.3, D4.4 | Lista urządzeń, test przez przekaźnik | ✅ (2) | `851a4012` | |
 | D5.1–D5.4 | Kopia i dokument jedną drogą | ◐ | 2026-11-23 | D5.1, D5.3, D5.4 zrobione; D5.2 razem z A3.1 |
 | D6.1–D6.5 | Rejestr kluczy i pamięć lokalna | ✗ (5) | — | |
-| D7.1, D7.2, D7.4 | `dane-wersje.md`, ADR-11, wpis w `CLAUDE.md` | ✗ (3) | — | |
+| D7.1, D7.2, D7.4 | `dane-wersje.md`, ADR-11, wpis w `CLAUDE.md` | ✅ | 2026-11-23 | |
 | D7.3 | Sprzątanie starych migracji | ⏸ | — | MG-1 |
 
 ## 9. `plan-security-2026-11-15.md`
