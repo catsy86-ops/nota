@@ -149,6 +149,8 @@ export default tseslint.config(
       "src/lib/debts/proofs.test.ts",
       // D1.1: Grafik, trening, foldery, właściwości — mapy Yjs w teście.
       "src/lib/extraD11rest.test.ts",
+      // D1.1: plany i listy budów — mapy Yjs w teście.
+      "src/lib/extraD11plans.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.
       "e2e/images.spec.ts",
       "src/hooks/useNotes.ts",
