@@ -451,3 +451,4 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Podział Index.tsx (Cykl 3, punkt 3.1, 2026-11-12)
 - Audyt 2026-11-15: wersja kopii, start bez Pracy, dostępność, drobne poprawki bezpieczeństwa
 - Architektura — warstwy `lib ← hooks ← components` (A1.1–A1.4, A1.6 planu architektury, 2026-11-15)
+- CI — pełne e2e tylko na master, gałęzie na @smoke (AR-3, 2026-11-23)

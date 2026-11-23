@@ -1,8 +1,9 @@
 name: CI
 
+# AR-3 (2026-11-23): CI na każdej gałęzi. Pełne e2e (ponad godzina) tylko przy pushu na master/main;
+# gałęzie robocze i PR dostają szybkie testy @smoke — wynik w kilka minut.
 on:
   push:
-    branches: [master, main]
   pull_request:
     branches: [master, main]
 
@@ -35,8 +36,13 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium webkit
 
-      - name: E2E tests
+      - name: E2E — pełne (master)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
         run: npm run test:e2e
+
+      - name: E2E — @smoke (gałęzie i PR)
+        if: "!(github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'))"
+        run: npm run test:e2e:smoke
 
   # Serwery pomocnicze mają własne testy (bezpieczeństwo: uwierzytelnianie, SSRF, limity, odporność na złośliwe pakiety).
   servers:

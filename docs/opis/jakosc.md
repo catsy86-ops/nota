@@ -503,3 +503,10 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** sekcja krytyczna to `navigator.locks` (`notatnik-faktura`) plus kolejka obietnic w module (gdy `locks` brak). Po `await` skrótu numer jest sprawdzany ponownie, a `add` i tak odmawia zajętego numeru. `deviceId` jest losowy, w localStorage `kaczy.ksef.deviceId.v1`, poza kopią.
 - **Ograniczenia:** faktury sprzed zmiany nie mają `deviceId` i nie wywołują ostrzeżenia. Nie zrobione z Z-2.4: limity 256/512 (F-6) i `qtyMilli × unitPrice ≤ MAX_SAFE_INTEGER`.
 - **Testy:** `src/lib/ksef/invoices.test.ts`.
+
+## CI — pełne e2e tylko na master, gałęzie na @smoke (AR-3, 2026-11-23)
+
+- **Co robi:** CI (`.github/workflows/ci.yml`) rusza przy pushu na każdą gałąź i przy PR do `master`/`main`. Lint, typecheck, Vitest z pokryciem i build idą zawsze. Pełne e2e (`npm run test:e2e`, ponad godzina) tylko przy pushu na `master`/`main`; gałęzie robocze i PR dostają `npm run test:e2e:smoke` (`@smoke`, 3 wątki).
+- **Jak działa:** dwa kroki z wykluczającymi się warunkami `if` na `github.event_name` i `github.ref`. Serwery (`push-server`, `relay-server`) testowane jak dotąd w osobnym zadaniu.
+- **Pułapki:** push tego samego commita na `wip` i `master` uruchamia dwa przebiegi (smoke i pełny). Wcześniej gałęzie robocze nie miały CI wcale.
+- **Commit:** zob. `git log -- .github/workflows/ci.yml`, 2026-11-23.

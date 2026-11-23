@@ -146,7 +146,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | A3.3 | `privateNotes.ts` | ✗ | — | 793 linie |
 | A3.4 | Rejestr poleceń palety | ✗ | — | |
 | A4.1 | Zielona baza pełnego e2e | ✗ | — | Brak `docs/e2e-znane.md`; według pamięci 11 starych porażek |
-| A4.2 | Podział CI na fragmenty | ⏸ | — | AR-3 |
+| A4.2 | Podział CI na fragmenty | ✅ | 2026-11-23 | AR-3: pełne e2e tylko na master, gałęzie i PR na @smoke |
 | A4.3 | Bez `waitForTimeout` | ✗ | — | |
 | A4.4 | `PW_WORKERS` lokalnie | ✗ | — | |
 | A4.5 | Testy własności scalania | ✗ | — | Specyfikacja Z-17.8 jest, pomocnik Z-17.9 nie |
