@@ -63,3 +63,4 @@ Granica (D1.4): klienci sprzed **2026-11-18** nie znają `docFormat` ani zachowy
 - `src/lib/migrations/` — rejestr (`registry.ts`), wykonawca na kopii roboczej (`runner.ts`), wzorce zmian w CRDT (`patterns.ts`).
 - `src/lib/extraFields.ts` — zachowanie nieznanych pól; spis map `src/lib/docMapsInventory.test.ts`.
 - Wzorce: `src/test/fixtures/docs/` (dokument 1–3), `src/test/fixtures/backups/` (kopia v1–v3).
+- `docs/dane-spisy.md` — spisy baz IndexedDB, kluczy `localStorage` i istniejących migracji (D0.2–D0.4).

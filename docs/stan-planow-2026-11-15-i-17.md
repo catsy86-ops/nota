@@ -268,7 +268,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | Nr | Punkt | Status | Dowód | Uwagi |
 |---|---|---|---|---|
 | D0.1 | `docs/dane-mapa.md` | ◐ | `75487586` | Spis map jako test `docMapsInventory.test.ts`; dokumentu brak |
-| D0.2–D0.4 | Spis baz IndexedDB, kluczy `localStorage`, migracji | ✗ (3) | — | |
+| D0.2–D0.4 | `docs/dane-spisy.md` | ✓ | (ten commit) | Walidacja odczytu kluczy zostaje do D6.1 |
 | D1.1 | Nieznane pola przeżywają edycję | ✅ | 2026-11-23 | Ostatnie: `plans`, `studySiteItems`; `vault` wyjęty z uzasadnieniem; `cleanDump` Pracy — D5 |
 | D1.2 | Test dla każdej mapy | ✅ | `75487586` | Spis z zapadką |
 | D1.3 | `docFormat`, baner, „Ignoruj i pisz” | ◐ | `75487586` | Bez blokady zapisu w magazynach (`docWritable`) — przyjdzie z pierwszą cechą |
@@ -506,7 +506,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 
 **Ćwiczenia (C):** C1.1–C1.3, C2.1–C2.5, C3.1–C3.5, C4.1, C4.3–C4.5; C1.5 (właściciel); C2.6 i C5.1 po F1.0; C4.2, C5.3 po CW-2, CW-3.
 
-**Migracje (D):** D0.1–D0.4 (dokumenty spisu); D1.1 dla `plans`, `vault`, `studySiteItems`; D1.3 blokada `docWritable` z pierwszą cechą; D3.2, D3.4–D3.6; D5.1–D5.4; D6.1–D6.5; D7.1, D7.2, D7.4; D7.3 po MG-1.
+**Migracje (D):** D0.1 (dokument spisu); D1.1 dla `plans`, `vault`, `studySiteItems`; D1.3 blokada `docWritable` z pierwszą cechą; D3.2, D3.4–D3.6; D5.1–D5.4; D6.1–D6.5; D7.1, D7.2, D7.4; D7.3 po MG-1.
 
 **Bezpieczeństwo (S):** S0.1–S0.3 (Z-15.0); S1.1–S1.7, S1.9, S1.10 (Z-15.10 najpierw S1.3 → S1.1 → S1.6); dokończyć S2.3 (po F2), S4.3 (serwer powiadomień), S4.7; S3.2–S3.4; S4.5, S4.6, S4.8; S5.1–S5.7 (S5.1, S5.3, S5.4 tanie, od razu); S6.1–S6.4; po decyzjach SE: S1.8, S2.4, S4.1, S4.2, S4.9–S4.11.
 

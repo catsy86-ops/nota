@@ -786,3 +786,17 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 - **Wzorce:** `src/test/fixtures/backups/v1.json`–`v3.json` (syntetyczne; generator w `backups.test.ts`: `GEN_BACKUP_FIXTURE=1 npx vitest run src/test/fixtures/backups`; v2 i v1 to kopia v3 bez sekcji, których wersja nie miała). `src/test/fixtures/docs/registry.test.ts` — każdy wzorzec dokumentu 1–3 przechodzi przez cały rejestr migracji (`DOC_MIGRATIONS`): `check` czysty, drugi przebieg pusty, dane całe. Rejestr jest dziś pusty — test to siatka dla pierwszej migracji.
 - **Ograniczenia:** D5.2 (import starej kopii przez tymczasowy dokument i rejestr) czeka na podział `exportNotes.ts` (A3.1). D3.4 (spóźniony stary klient) i D3.6 (rozmiar migracji 5000 notatek) mają sens przy pierwszej migracji dokumentu — wtedy dopisać.
 - **Testy:** `src/test/fixtures/backups/backups.test.ts` (wzorzec dla każdej wersji koperty, wczytanie v1–v3 bez utraty, Grafik od v2, `schema` w nowej kopii, odmowa nowszej), `src/test/fixtures/docs/registry.test.ts`, `src/lib/study/sitePackage.test.ts`.
+
+## Dane — spisy baz IndexedDB, kluczy `localStorage` i migracji (D0.2–D0.4, 2026-11-23)
+
+**Co robi.** Dokument dla programisty, bez zmian w działaniu aplikacji: co aplikacja trzyma poza dokumentem Yjs i jakie migracje działają przy starcie.
+
+**Gdzie jest.** `docs/dane-spisy.md`, odnośnik w `docs/dane-wersje.md` („Gdzie jest kod”).
+
+**Jak działa.** Trzy tabele: bazy IndexedDB i pamięci podręczne Service Workera (nazwa, moduł, zawartość, skutek braku); 146 kluczy `localStorage` wygenerowanych z literałów w `src/` z informacją, czy wchodzą do pełnej kopii (`SETTINGS_KEYS` + `APPEARANCE_KEYS`); 11 istniejących migracji z wyzwalaczem, znacznikiem, idempotentnością, datą i oceną, czy można je usunąć po 12 miesiącach (MG-1, D7.3).
+
+**Ograniczenia i pułapki.** Spis kluczy pomija klucze składane w całości w czasie działania (bez literału z prefiksem `kaczy`). Kolumny „kształt” i „walidacja przy odczycie” zostają do rejestru kluczy (D6.1). Spis nie jest pilnowany testem — przy nowym kluczu lub bazie trzeba go poprawić ręcznie (lista kontrolna w `docs/dane-wersje.md`).
+
+**Testy.** Brak (dokument).
+
+**Commit.** Patrz historia `docs/dane-spisy.md`, 2026-11-23.
