@@ -105,9 +105,15 @@ describe("klient przekaźnika ↔ prawdziwy serwer", () => {
     await waitForHealth();
   }, 15_000);
 
-  afterAll(() => {
-    child?.kill();
-    if (dataDir) rmSync(dataDir, { recursive: true, force: true });
+  // Serwer może jeszcze dopisywać do katalogu pokoju: najpierw czekamy na wyjście procesu, a usuwanie ponawiamy
+  // (na Linuksie w CI zdarzało się ENOTEMPTY przy rekursywnym rmdir).
+  afterAll(async () => {
+    if (child && child.exitCode === null && child.signalCode === null) {
+      const exited = once(child, "exit");
+      child.kill();
+      await exited;
+    }
+    if (dataDir) rmSync(dataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
   });
 
   it("dwa urządzenia wymieniają zmiany przez serwer", async () => {
@@ -267,7 +273,7 @@ describe("klient przekaźnika ↔ prawdziwy serwer", () => {
     const exited = once(child!, "exit");
     child!.kill();
     await exited;
-    rmSync(roomDir, { recursive: true, force: true });
+    rmSync(roomDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
     cpSync(backup, roomDir, { recursive: true });
     rmSync(backup, { recursive: true, force: true });
     startServer();

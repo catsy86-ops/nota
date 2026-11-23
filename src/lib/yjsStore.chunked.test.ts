@@ -96,10 +96,10 @@ describe("replaceAllChunked (Z-16.2)", () => {
   });
 
   it("budżet obejmuje zamknięcie transakcji: przy kosztownym obserwatorze porcje maleją", async () => {
-    const backup = Array.from({ length: 200 }, (_, i) => note(`k${i}`));
+    const backup = Array.from({ length: 600 }, (_, i) => note(`k${i}`));
     const sizes: number[] = [];
     let last = 0;
-    // Obserwator kosztujący ok. 2 ms na notatkę w porcji — porcje muszą zejść do kilku notatek.
+    // Obserwator kosztujący ok. 2 ms na notatkę w porcji — kolejne porcje muszą zmaleć.
     const slow = (events: Array<{ changes: { keys: Map<string, unknown> } }>) => {
       const n = events.reduce((s, e) => s + e.changes.keys.size, 0);
       const end = performance.now() + 2 * n;
@@ -113,8 +113,14 @@ describe("replaceAllChunked (Z-16.2)", () => {
     } finally {
       yjsStore.notesMap.unobserveDeep(slow as never);
     }
-    // Pierwsza porcja zgaduje; kolejne mają się zmieścić w budżecie razem z obserwatorem (≤ 10 notatek po 2 ms).
-    expect(Math.max(...sizes.slice(2))).toBeLessThanOrEqual(12);
+    // Pierwsza porcja zgaduje (koszt obserwatora przychodzi dopiero przy zamknięciu transakcji), kolejne mają wyraźnie
+    // zmaleć. Bezwzględny próg (≤ 12) był zależny od maszyny: dolna granica czasu wstawiania (1 ms) daje na szybkim
+    // komputerze ok. 28 notatek, a pod pokryciem v8 w CI pojedyncze porcje skakały do 16–29. Przy 200 notatkach lokalnie
+    // były tylko dwie porcje, więc `Math.max()` z pustej listy przechodził bez sprawdzenia.
+    const [first, ...rest] = sizes;
+    const later = rest.slice(1).sort((a, b) => a - b);
+    expect(later.length).toBeGreaterThanOrEqual(5);
+    expect(later[Math.floor(later.length / 2)]).toBeLessThan(first / 3);
     expect(ids()).toEqual(backup.map((n) => n.id).sort());
   });
 });
