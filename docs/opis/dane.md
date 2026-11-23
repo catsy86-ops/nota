@@ -824,3 +824,30 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 **Testy.** `src/lib/storage/migrateKey.test.ts`.
 
 **Commit.** Patrz historia `src/lib/storage/migrateKey.ts`, 2026-11-23.
+
+## Dane — rejestr kluczy `localStorage` i lista kopii z rejestru (D6.1, D6.5, 2026-11-23)
+
+**Co robi.** Jedno miejsce, które opisuje klucze `localStorage`: jak je czytać, jaka jest wartość domyślna, czy wchodzą do pełnej kopii i czy są wrażliwe. Użytkownik nie widzi zmiany — kopia ma te same ustawienia co wcześniej.
+
+**Gdzie jest.**
+- `src/lib/storage/keys.ts`:
+  - typ `KeyDef`, funkcje `defineKey`, `jsonKey` (JSON z funkcją sprawdzającą), `rawKey` (surowy tekst);
+  - odczyt i zapis: `readKey`, `writeKey`, `removeKey`;
+  - zapytania o rejestr: `backupKeyNames`, `isSensitiveKey`, `registeredKeys`.
+- `APPEARANCE_KEYS` mieszka teraz tutaj. `src/lib/appearanceCode.ts` eksportuje je dalej.
+- `SETTINGS_KEYS` w `src/lib/exportNotes.ts` to `backupKeyNames()`.
+
+**Jak działa.**
+- `readKey` przy braku dostępu do pamięci, braku wpisu albo złym kształcie zwraca wartość domyślną; zły kształt zostawia wpis w diagnostyce. `writeKey` zwraca `false` zamiast rzucać.
+- Klucz nie może być zarejestrowany dwa razy, a klucz wrażliwy nie może mieć flagi `backup` — oba przypadki rzucają przy rejestracji, więc błąd wychodzi w teście, nie u użytkownika.
+- Klucze kopii są zarejestrowane jako `rawKey` z `backup: true`. Ich kształt nadal sprawdzają moduły, które je czytają, aż do przejścia modułami (D6.2).
+- Jako wrażliwe są oznaczone: kod parowania `kaczy.sync.v1`, token push, PIN i próby skarbca, adres przekaźnika, numer konta i odciski dokumentów.
+
+**Ograniczenia i pułapki.**
+- Moduły jeszcze nie używają `readKey`/`writeKey` (D6.2), a w kodzie są literały `"kaczy.` poza rejestrem.
+- Nowy klucz kopii trzeba dodać w `keys.ts`, nie w `exportNotes.ts`.
+- `isSensitiveKey` nie ma jeszcze wywołującego. Raport diagnostyczny będzie z niego korzystał po D6.2.
+
+**Testy.** `src/lib/storage/keys.test.ts` (odczyt, wartość domyślna, zły kształt, lista kopii równa flagom, wygląd w kopii, wrażliwe poza kopią), `src/lib/fullBackup.test.ts`, `src/lib/push/token.test.ts`.
+
+**Commit.** Patrz historia `src/lib/storage/keys.ts`, 2026-11-23.

@@ -4,33 +4,10 @@
  * (localStorage), nie w Yjs. Odczyt przepuszcza tylko klucze z listy; wartości sprawdzają potem same
  * moduły przy wczytaniu (`merge` w `createPersistedStore`), więc zły kod nie zepsuje ustawień.
  */
-export const APPEARANCE_KEYS = [
-  "kaczy.skin.v1",
-  "kaczy-theme",
-  "kaczy.skinScheme.v1",
-  "kaczy.accent.v1",
-  "kaczy.shape.v1",
-  "kaczy.backdrop.v1",
-  "kaczy.font.v1",
-  "kaczy.textSize.v1",
-  "kaczy.skinSchedule.v1",
-  // Ramki i poświata (Wygląd): siła ramek, kolor krawędzi i tło kart, siła i barwa poświaty.
-  "kaczy.frames.v1",
-  "kaczy.frames.look.v1",
-  "kaczy.glow.v1",
-  // Plan motywów 2026-10-30 (1.5): tryb budowa, ruch i pora roku też są wyglądem.
-  "kaczy.siteMode.v1",
-  "kaczy.motion.v1",
-  "kaczy.seasonTheme.v1",
-  // Czarne tło w ciemnym (plan motywów 3.3).
-  "kaczy.oled.v1",
-  // Podkreślenia działów subtelne / wyraźne (plan motywów 3.4).
-  "kaczy.sectionColors.v1",
-  // Gęstość całego interfejsu (plan motywów 4.2).
-  "kaczy.uiDensity.v1",
-  // Własny motyw (plan motywów 4.1): styl bazowy i odcienie papieru, kafla, akcentu.
-  "kaczy.customTheme.v1",
-] as const;
+import { APPEARANCE_KEYS } from "@/lib/storage/keys";
+
+/** Klucze wyglądu są w rejestrze kluczy (D6.1) — tam też flaga „w kopii”. */
+export { APPEARANCE_KEYS };
 
 const PREFIX = "NOTKI1-";
 /** Górna granica długości kodu — chroni przed wklejeniem czegoś zupełnie innego. */

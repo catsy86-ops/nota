@@ -54,7 +54,7 @@ Granica (D1.4): klienci sprzed **2026-11-18** nie znają `docFormat` ani zachowy
 3. Czy starsza wersja nie powinna pisać do tych danych? Cecha w `docFormat` z wymaganą wersją i blokada w magazynie (`docWritable`).
 4. Czy trzeba przepisać istniejące dane? Migracja w `src/lib/migrations/registry.ts` (`DOC_MIGRATIONS`), z `check`, testem na wzorcach (`src/test/fixtures/docs/registry.test.ts` przechodzi przez cały rejestr) i testem spóźnionego starego klienta (D3.4) oraz rozmiaru (D3.6).
 5. `SCHEMA_VERSION` + 1, wiersz w dzienniku wyżej, nowy wzorzec dokumentu (`GEN_DOC_FIXTURE=1 npx vitest run src/test/fixtures/docs/generate.test.ts`).
-6. Nowa sekcja kopii, nowy klucz `localStorage` albo baza IndexedDB? Wpis w rejestrze sekcji kopii i w `docs/dane-spisy.md`; zmiana kształtu klucza lub bazy — zasady 10 i 11; wzorzec kopii (`GEN_BACKUP_FIXTURE=1 npx vitest run src/test/fixtures/backups`) przy zmianie koperty.
+6. Nowa sekcja kopii, nowy klucz `localStorage` albo baza IndexedDB? Wpis w rejestrze sekcji kopii, klucz w `src/lib/storage/keys.ts` (flaga `backup` dodaje go do kopii) i w `docs/dane-spisy.md`; zmiana kształtu klucza lub bazy — zasady 10 i 11; wzorzec kopii (`GEN_BACKUP_FIXTURE=1 npx vitest run src/test/fixtures/backups`) przy zmianie koperty.
 7. Opis w `docs/opis/dane.md`.
 
 ## Gdzie jest kod
@@ -67,3 +67,4 @@ Granica (D1.4): klienci sprzed **2026-11-18** nie znają `docFormat` ani zachowy
 - Wzorce: `src/test/fixtures/docs/` (dokument 1–3), `src/test/fixtures/backups/` (kopia v1–v3).
 - `docs/dane-spisy.md` — spisy baz IndexedDB, kluczy `localStorage` i istniejących migracji (D0.2–D0.4).
 - `src/lib/storage/migrateKey.ts` — przejście klucza `localStorage` na nową nazwę (D6.3).
+- `src/lib/storage/keys.ts` — rejestr kluczy `localStorage` (`defineKey`, `jsonKey`, `readKey`, `writeKey`, flagi `backup`/`sensitive`); z niego `SETTINGS_KEYS` kopii (D6.1, D6.5).

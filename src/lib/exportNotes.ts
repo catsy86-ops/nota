@@ -1,6 +1,5 @@
 import { format } from "date-fns";
 import { SCHEMA_VERSION } from "@/lib/formatSchema";
-import { APPEARANCE_KEYS } from "./appearanceCode";
 import { pl } from "date-fns/locale";
 import type { Note } from "@/lib/types/note";
 import { yjsStore } from "@/lib/yjsStore";
@@ -24,6 +23,7 @@ import { download } from "@/lib/downloadBlob";
 
 export { download };
 import { getViewPrefs } from "@/lib/viewPrefs";
+import { backupKeyNames } from "@/lib/storage/keys";
 import { APP_NAME } from "@/lib/appName";
 import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 import { clearRestoreMarker, setRestoreMarker } from "@/lib/restoreMarker";
@@ -302,32 +302,15 @@ const MAX_IMPORT_FILE_SIZE = 120 * 1024 * 1024; // 120 MB
 export const isBackupOversize = (bytes: number): boolean => bytes > MAX_IMPORT_FILE_SIZE;
 export const BACKUP_OVERSIZE_NOTE = `Kopia jest większa niż ${MAX_IMPORT_FILE_SIZE / (1024 * 1024)} MB, więc aplikacja nie da rady jej wczytać. Zmniejsz załączniki albo zdjęcia (Praca → zmniejsz zdjęcia) i zrób kopię jeszcze raz.`;
 
-/**
- * Ustawienia wchodzące do pełnego backupu. Świadomie **bez** `kaczy.sync.v1`
- * (kod parowania to sekret, a na nowym urządzeniu paruje się od nowa) i bez
- * znaczników „kiedy ostatnio przypominano”.
- */
 /** Największa wartość jednego ustawienia przy przywracaniu kopii (znaki). */
 export const SETTING_VALUE_MAX = 2_500_000;
 
-export const SETTINGS_KEYS = [
-  "kaczy.viewPrefs.v1", "kaczy.motion.v1", "kaczy.confirmPrefs.v1",
-  "kaczy.effectsSettings.v1", "kaczy.seasonTheme.v1", "kaczy.templates.v1", "kaczy.siteMode.v1",
-  // Wygląd (plan motywów 3.5): styl, jasność, akcent, schemat stylu, kształt, tło, krój, rozmiar, styl na noc.
-  ...APPEARANCE_KEYS,
-  // Dzień przeglądu, odznaka, auto-blokada skarbca — zwykłe preferencje, bez sekretów.
-  "kaczy:review.day", "kaczy:badge.enabled", "kaczy.vault.autolock.v1",
-  // Skarbiec 1.6 i 2.4: blokada po schowaniu karty i daty sprawdzenia kodu awaryjnego (bez kodu) — na tym urządzeniu.
-  "kaczy.vault.hiddenLock.v1", "kaczy.vault.recoveryCheck.v1",
-  // Dane firmy wykonawcy (Praca, W14/D10 audytu): nazwa na PDF-ach, kilometrówka dla księgowej, cennik usług i cennik
-  // kształtek, imię autora wpisów. Bez wpływu na sekrety; czyszczone przy odczycie przez swoje magazyny. Numer konta
-  // (`kaczy.study.bankAccount.v1`) i odciski dokumentów (`…fingerprints.v1`) zostają poza kopią — to dane tego urządzenia.
-  "kaczy.study.companyName.v1", "kaczy.study.seller.v1", "kaczy.study.mileage.v1", "kaczy.study.pricing.v1", "kaczy.study.quoteTerms.v1", "kaczy.study.prices.v1", "kaczy.study.author.v1",
-  // Flagi funkcji w przygotowaniu (src/lib/featureFlags.ts) — zwykłe przełączniki.
-  "kaczy.features.v1",
-  // Push: wpis jest, ale przy przywracaniu push wyłączamy (patrz `PUSH_RESTORE_KEY`) — subskrypcja jest na urządzeniu.
-  PUSH_RESTORE_KEY,
-];
+/**
+ * Ustawienia wchodzące do pełnego backupu — z rejestru kluczy (`backup: true` w `src/lib/storage/keys.ts`, D6.5).
+ * Świadomie **bez** `kaczy.sync.v1` (kod parowania to sekret, a na nowym urządzeniu paruje się od nowa) i bez
+ * znaczników „kiedy ostatnio przypominano”.
+ */
+export const SETTINGS_KEYS: string[] = backupKeyNames();
 export const ACHIEVEMENTS_KEY = "kaczy.achievements.v1";
 
 function readKeys(keys: string[]): Record<string, string> {

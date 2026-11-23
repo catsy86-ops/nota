@@ -11,7 +11,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 | Kalendarz i Grafik | [`docs/opis/kalendarz-grafik.md`](docs/opis/kalendarz-grafik.md) | 12 |
 | Praca | [`docs/opis/praca.md`](docs/opis/praca.md) | 100 |
 | Osobiste: Ćwiczenia, Długi, Skarbiec | [`docs/opis/osobiste.md`](docs/opis/osobiste.md) | 38 |
-| Dane, synchronizacja i kopie | [`docs/opis/dane.md`](docs/opis/dane.md) | 26 |
+| Dane, synchronizacja i kopie | [`docs/opis/dane.md`](docs/opis/dane.md) | 27 |
 | Powłoka, Ustawienia i telefon | [`docs/opis/powloka.md`](docs/opis/powloka.md) | 23 |
 | Wygląd i ruch | [`docs/opis/wyglad.md`](docs/opis/wyglad.md) | 57 |
 | Wspólne | [`docs/opis/wspolne.md`](docs/opis/wspolne.md) | 26 |
@@ -299,6 +299,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Dane — wersje kopii i plików wymiany, wzorce (D3.2, D3.5, D5.1, D5.3, D5.4, 2026-11-23)
 - Dane — spisy baz IndexedDB, kluczy `localStorage` i migracji (D0.2–D0.4, 2026-11-23)
 - Dane — spis map Yjs i przejście kluczy `localStorage` (D0.1, D6.3, D6.4, 2026-11-23)
+- Dane — rejestr kluczy `localStorage` i lista kopii z rejestru (D6.1, D6.5, 2026-11-23)
 
 ### Powłoka, Ustawienia i telefon — [`docs/opis/powloka.md`](docs/opis/powloka.md)
 
