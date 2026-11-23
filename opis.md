@@ -452,3 +452,4 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Audyt 2026-11-15: wersja kopii, start bez Pracy, dostępność, drobne poprawki bezpieczeństwa
 - Architektura — warstwy `lib ← hooks ← components` (A1.1–A1.4, A1.6 planu architektury, 2026-11-15)
 - CI — pełne e2e tylko na master, gałęzie na @smoke (AR-3, 2026-11-23)
+- Zrzuty `@visual` — wzorce odświeżone (2026-11-23)

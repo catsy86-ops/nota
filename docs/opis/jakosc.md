@@ -510,3 +510,8 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 - **Jak działa:** dwa kroki z wykluczającymi się warunkami `if` na `github.event_name` i `github.ref`. Serwery (`push-server`, `relay-server`) testowane jak dotąd w osobnym zadaniu.
 - **Pułapki:** push tego samego commita na `wip` i `master` uruchamia dwa przebiegi (smoke i pełny). Wcześniej gałęzie robocze nie miały CI wcale.
 - **Commit:** zob. `git log -- .github/workflows/ci.yml`, 2026-11-23.
+
+## Zrzuty `@visual` — wzorce odświeżone (2026-11-23)
+
+- 153 z 227 wzorców w `e2e/visual.spec.ts-snapshots/` odświeżone (`--update-snapshots=changed`) po przeglądzie różnic z decyzji właściciela. Wzorce były z 19.11 (`a1c616bb`); różnice pochodziły z planów po tej dacie: zakładka „Klienci” w Pracy, nowe teksty i pole tokenu w Ustawieniach (push), ikony meta 14 px i rytm strony (W4.1, W7.3), przesunięcie treści Kalendarza i Grafiku. Przejrzane przedstawiciele: lista notatek (telefon), Praca i Kalendarz (komputer), Ustawienia ogólne (telefon) — bez błędów układu.
+- Przebieg po odświeżeniu: 227/227.
