@@ -62,9 +62,17 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   const dirtyNotes = new Set<string>();
   const vaultMap = doc.getMap<unknown>("vault");
   const ctx: StoreCtx = { doc, notesMap, foldersMap, labelsMap, propDefsMap, vaultMap, noteCache, dirtyNotes, images };
-  const { textBases, beginTextEdit, getNoteText, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange } = createTextEditApi(ctx);
-  const { writeLocked, readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote, getFutureContent, getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink } = createVaultApi(ctx, textBases);
-  const { projectFolders, projectLabels, projectPropDefs, upsertPropDef, deletePropDef, upsertFolder, patchFolder, removeFolder, addLabel, removeLabelEverywhere, renameLabelEverywhere } = createTaxonomyApi(ctx);
+  const {
+    textBases, beginTextEdit, getNoteText, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange,
+  } = createTextEditApi(ctx);
+  const {
+    writeLocked, readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote,
+    getFutureContent, getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink,
+  } = createVaultApi(ctx, textBases);
+  const {
+    projectFolders, projectLabels, projectPropDefs, upsertPropDef, deletePropDef, upsertFolder, patchFolder,
+    removeFolder, addLabel, removeLabelEverywhere, renameLabelEverywhere,
+  } = createTaxonomyApi(ctx);
   const { referencedImages, noteFileRefs, referencedAttachments, syncableRefs } = createFileRefsApi(ctx);
   const { replaceAll, isBulkWriting, onBulkWriteEnd, replaceAllChunked } = createBulkReplaceApi(ctx);
   notesMap.observeDeep((events) => {

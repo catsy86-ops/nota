@@ -128,7 +128,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | F1.4 | Ustawienia, pliki w powłoce | ✅ | `0bbd8ca0`, `eb3f2812` | `src/lib/native/fileShare.ts`; niesprawdzone na telefonie |
 | F1.5 | ADR-8, opis, przegląd bezpieczeństwa | ◐ | `0bbd8ca0`, `ae1b2f3e` | ADR-8 jest; przegląd powłoki `security-reviewer` (Z-13.5) nie |
 | F2 | Przekaźnik: dziennik na pokój, LRU, limity | ✅ | `1aa8810a` | `relay-server/storage.js`; `signaling-server/Dockerfile` czeka na SE-4 |
-| F3 | Podział `yjsStore.ts` (kroki 1–6) | ✗ | — | Brak `src/lib/yjs/`; plik ma 1351 linii; warunek A4.1 niespełniony |
+| F3 | Podział `yjsStore.ts` (kroki 1–6) | ✅ | `a6d17413`…`54ff28a6` + 3 | 2026-11-23: 1374 → 358 linii, `src/lib/yjs/` (9 modułów) |
 
 ## 2. `plan-architektura-2026-11-15.md`
 

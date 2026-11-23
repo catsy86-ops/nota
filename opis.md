@@ -1022,7 +1022,7 @@ Z-15.6 (część niezależna od F2), 2026-11-18 — commit po tym wpisie.
 - `src/lib/debts/yDebts.ts` — `proofs`, `setProof`, `dropProofOf` (usunięcie wpisu zdejmuje dowód, „Cofnij” go oddaje), `dumpProofs`, `mergeProofs`.
 - `src/lib/debts/store.ts` — `useDebtProofs`, `attachDebtProof` (`prepareImage` → `imageStore.putBlob`), `setDebtProof`, `debtProofsDump`, `mergeDebtProofsDump`.
 - `src/components/debts/DebtProof.tsx` — `DebtProofThumb`, `DebtProofField`; podpięte w `DebtsView.tsx` (`PersonHistory`, `EditDebtForm`).
-- `src/lib/yjsStore.ts` (`referencedImages`, `syncableRefs`), `src/lib/plans/planRefs.ts` (`sizeCappedRefsIn`), `src/lib/exportNotes.ts` (sekcja `debtProofs`, bajty w `collectAttachmentBlobs`), `src/lib/noteSchema.ts` (`debtProofs`).
+- `src/lib/yjs/fileRefs.ts` (`referencedImages`, `syncableRefs`), `src/lib/plans/planRefs.ts` (`sizeCappedRefsIn`), `src/lib/exportNotes.ts` (sekcja `debtProofs`, bajty w `collectAttachmentBlobs`), `src/lib/noteSchema.ts` (`debtProofs`).
 
 ### Jak działa i dlaczego
 
@@ -1048,6 +1048,49 @@ Z-15.6 (część niezależna od F2), 2026-11-18 — commit po tym wpisie.
 ### Commit
 
 Z-17.6, 2026-11-18 — commit po tym wpisie.
+
+## Dane — podział magazynu `yjsStore.ts` (F3 planu Fable, 2026-11-23)
+
+### Co robi
+
+Nic nowego dla użytkownika. `src/lib/yjsStore.ts` (1374 linie) podzielony na moduły w `src/lib/yjs/`, żeby dało się czytać i zmieniać jedną część magazynu bez reszty. Publiczny kształt `YjsStore` i wszystkie ścieżki importu zostały bez zmian.
+
+### Gdzie jest
+
+| Plik | Co | Linie |
+|---|---|---|
+| `src/lib/yjsStore.ts` | Dokument i jego mapy, trwałość (`IndexeddbPersistence`, `ready`, `compactPersistence`), projekcja notatek (`projectNotes`, `noteCache`, `dirtyNotes`), operacje na notatkach (`applyPatch`, `patchNote(s)`, `upsertNote`, `importBatch`, `insertNoteCopies`, `removeNote(s)`, `setNoteOrder`), stan synchronizacji, złożenie API | 358 |
+| `src/lib/yjs/context.ts` | Typ `StoreCtx` — wspólny stan przekazywany fabrykom | 22 |
+| `src/lib/yjs/codec.ts` | Konwersje Y ↔ zwykłe obiekty (notatka, folder, lista zadań, właściwości, załączniki), listy pól (`NOTE_SCALAR_FIELDS`, `PRIVATE_FIELDS`, `PRIVATE_META`), `keepForeignKeys`, `FUTURE_CONTENT_KEY` | 394 |
+| `src/lib/yjs/textEdit.ts` | `createTextEditApi(ctx)` — sesje edycji treści (`beginTextEdit` … `onRemoteTextChange`) i wewnętrzne `textBases` | 77 |
+| `src/lib/yjs/vault.ts` | `createVaultApi(ctx, textBases)` — blokada, szyfrogramy, metadane skarbca, `rekeyVault`, ujście zapisów (`setLockedWriteSink`, wewnętrzne `writeLocked`) | 158 |
+| `src/lib/yjs/taxonomy.ts` | `createTaxonomyApi(ctx)` — foldery, etykiety, definicje właściwości | 127 |
+| `src/lib/yjs/migrations.ts` | `createMigrations(ctx, migratedKey)` — obrazy ze starych kluczy idb, notatki sprzed Yjs | 112 |
+| `src/lib/yjs/fileRefs.ts` | `createFileRefsApi(ctx)` — odwołania do bajtów dla GC i synchronizacji plików | 80 |
+| `src/lib/yjs/bulkReplace.ts` | `createBulkReplaceApi(ctx)` — `replaceAll`, `replaceAllChunked`, licznik zapisów masowych | 107 |
+| `src/lib/yjs/docFile.ts` | `readDocState`, `replacePersistedDoc` — dokument poza działającym magazynem (reeksport z `yjsStore.ts`) | 106 |
+
+### Jak działa
+
+- `createYjsStore` tworzy dokument i mapy, składa z nich `ctx: StoreCtx` i woła fabryki modułów. Wynik destrukturyzuje do lokalnych nazw, więc kod, który został w `yjsStore.ts`, woła je jak dawniej.
+- Funkcje przeniesiono dosłownie, z tym samym wcięciem. Zmieniło się tylko wywołanie ujścia skarbca w `applyPatch`: `lockedWriteSink?.(…) ?? false` → `writeLocked(…)` z tym samym wynikiem.
+- Kolejność obserwatorów Yjs bez zmian: fabryki niczego nie obserwują przy tworzeniu (`observe` tylko na żądanie w `onRemoteTextChange` i `observeVaultMeta`), a obserwator brudnych notatek (`notesMap.observeDeep`) zostaje w `yjsStore.ts`.
+- `src/lib/yjs/*.ts` są na liście modułów, którym ESLint pozwala importować `yjs` (`eslint.config.js`).
+
+### Ograniczenia i pułapki
+
+- Kolejność kroków różni się od planu: edycja tekstu przed skarbcem, bo `lockNote` kasuje bazę edycji (`textBases` idzie do `createVaultApi`).
+- Ponad plan wydzielono `docFile.ts`, `fileRefs.ts` i `bulkReplace.ts` — bez nich `yjsStore.ts` miałby 606 linii.
+- `codec.ts` ma 394 linie: to jeden spójny zbiór konwersji, dzielenie go dalej rozerwałoby pary zapis/odczyt.
+
+### Testy
+
+- `src/lib/yjsStore.shape.test.ts` — migawka posortowanych kluczy i typów API (krok 0); każdy krok ją zostawił bez zmian.
+- Pełny Vitest po każdym kroku: 4248 zaliczonych. E2e magazynu (`daily-snapshot`, `file-sync`, `import-external`, `private-notes`, `restore-*`, `sync-*`): 25 zaliczonych, 1 niezaliczony — `private-notes` „przeżywa blokadę” pada tak samo na `50e3d232` sprzed F3 (5 z 5), więc to stara porażka.
+
+### Commit
+
+`c6503671` (krok 0), `a6d17413` (1), `99416d01` (2–3), `1831c38d` (4), `0a43d279` (5), `54ff28a6` (6), dalej `docFile`, `fileRefs`, `bulkReplace` — 2026-11-23.
 
 ## Dane — wymaganie wersji w dokumencie i spis map (D1.2–D1.4 planu migracji, 2026-11-18)
 
@@ -1082,7 +1125,7 @@ Z-17.6, 2026-11-18 — commit po tym wpisie.
 - `src/lib/docMapsInventory.test.ts` — spis map i zapadka listy „do zrobienia”.
 - `src/lib/exerciseExtra.test.ts` — Ćwiczenia: plan po „Cofnij” i w kopii, ponowne ważenie, posiłek, cele z formularza, `mergeStored`.
 - `src/lib/study/extraD11.test.ts` — Praca: zestaw, pozycja auta, szablon wyceny, szef i własny punkt, pomieszczenie i punkt, statystyka rundy i karta powtórki.
-- `src/lib/extraD11rest.test.ts` — Grafik (dzień, rodzaj zmiany, wzór, premia, rejestr grafików), przypomnienie i sprzęt treningu, foldery i właściwości (mapy pól: `keepForeignKeys` w `yjsStore.ts` z jawną listą kluczy), zapisane widoki.
+- `src/lib/extraD11rest.test.ts` — Grafik (dzień, rodzaj zmiany, wzór, premia, rejestr grafików), przypomnienie i sprzęt treningu, foldery i właściwości (mapy pól: `keepForeignKeys` w `src/lib/yjs/codec.ts` z jawną listą kluczy), zapisane widoki.
 
 ### Commit
 
@@ -1423,7 +1466,7 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 
 **Właściwości (pola własne):**
 - `src/lib/noteProps.ts` — `PropDef`, `PropType` (`text | number | date | select`), `cleanPropDef(s)`, `cleanNoteProps`, `parsePropInput`, `propDisplayText`, `comparePropsForSort`, `filledPropEntries`, `PROP_LIMITS`.
-- `src/lib/yjsStore.ts` — mapa `propDefs` w korzeniu dokumentu, pole `props` na notatce, `applyPropsDiff`, `upsertPropDef`, `deletePropDef`.
+- `src/lib/yjsStore.ts` — mapa `propDefs` w korzeniu dokumentu; `src/lib/yjs/codec.ts` — pole `props` na notatce, `applyPropsDiff`; `src/lib/yjs/taxonomy.ts` — `upsertPropDef`, `deletePropDef`.
 - `src/hooks/useNotes.ts` — `Note.props`, `propDefs`, `addPropDef`, `updatePropDef`, `deletePropDef`.
 - `src/components/NoteTable.tsx` — kolumny pól, `PropCell`.
 - `src/components/PropDefsDialog.tsx` — okno „Pola notatek” (leniwe).
@@ -2296,7 +2339,7 @@ Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapi
 ### Gdzie jest
 
 - `src/lib/reminderSpec.ts` — `ReminderState` (w tym `reminderAllDay`, `reminderBase`), `REMINDER_FIELDS`, `specOf`, `readSpec`, `mergeSpec`, `projectReminder`. Całe przypomnienie to jedna wartość `reminderSpec` w Y.Map notatki.
-- `src/lib/yjsStore.ts` — `readReminderState`, zapis w `applyPatch` i przy tworzeniu notatki, projekcja w `plainFromYNote`.
+- `src/lib/yjs/codec.ts` — `readReminderState`, zapis przy tworzeniu notatki (`yNoteFromPlain`), projekcja w `plainFromYNote`; `src/lib/yjsStore.ts` — zapis w `applyPatch`.
 - `src/lib/reminderRepeat.ts` — `nextOccurrence(note, at)`, `snoozeTarget(note, at, now)`, `doneTarget`, `seriesDay`, `endOfDay(date)`.
 - `src/lib/reminderOccurrences.ts` — `expandOccurrences` (przewija do `rangeStart`, limit `MAX_SKIP_STEPS`), `isNext` tylko dla zapisanego terminu, `Occurrence.allDay`.
 - `src/lib/reminderDue.ts` — `planDueReminders` (czysta funkcja: co odpalić i ile pominięto), rejestr „już odpalone”, mapa `handled`.
@@ -2610,7 +2653,7 @@ Dział opisany w jednym miejscu. Kalendarz pokazuje terminy przypomnień (`remin
 - **Gdzie jest:**
   - `src/lib/snapshotRestore.ts` — `compareSnapshot`, `restoreSnapshotCopies`, `restoredFolderName`, `vaultDiffers`; typy `SnapshotItem` (`privacy`, `sealed`) i `RestoreDeps`.
   - `src/lib/docReplace.ts` — `requestDocReplace` (część przed przeładowaniem). `src/lib/docReplaceCore.ts` — zamiar i wynik w `localStorage`, `performDocReplace`, `startupReplace` (hak `beforeOpen` w `createYjsStore`), pokolenie dokumentu (`docGeneration`, `watchDocGeneration`), sygnał `announceDocReplace`.
-  - `src/lib/yjsStore.ts` — `readDocState`, `insertNoteCopies`, `replacePersistedDoc` (wymiana bazy IndexedDB jedną transakcją), opcja `beforeOpen`.
+  - `src/lib/yjs/docFile.ts` — `readDocState`, `replacePersistedDoc` (wymiana bazy IndexedDB jedną transakcją; oba reeksportowane z `yjsStore.ts`); `src/lib/yjsStore.ts` — `insertNoteCopies`, opcja `beforeOpen`.
   - `src/lib/privateNotes.ts` — `reencryptCopy`, `sealCopy`, `copySession`, `adoptCopy`.
   - `src/lib/dailySnapshot.ts` — `readSnapshotFile`, `saveBeforeReplace` (katalog `kopie-przed-przywroceniem/`).
   - `src/lib/tabSync.ts` (pole `g` w wiadomościach), `src/lib/sync/relayRuntime.ts` (`clearRelayState`), `src/main.tsx`.
@@ -3309,7 +3352,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `src/components/editor/cmExtensions.ts` — `buildCmExtensions({ yText, yUndoManager })`: `yCollab` (y-codemirror.next 0.3.6, przypięty) i `yUndoManagerKeymap` zamiast `history()`.
   - `src/components/editor/cmTextControl.ts` — `setRangeText` zamyka grupę cofania przed i po operacji (`stopCapturing`).
   - `src/hooks/useNoteEditSession.ts` — `collab`/`collabText`, `writeContent` (wszystkie zapisy treści), `commitDraft` bez treści w trybie wiązania, `savedContentRef` i `openContentRef` (wersja z chwili otwarcia).
-  - `src/lib/yjsStore.ts` — `getNoteText(id)`: `Y.Text` notatki, `null` dla zaszyfrowanej.
+  - `src/lib/yjs/textEdit.ts` — `getNoteText(id)`: `Y.Text` notatki, `null` dla zaszyfrowanej.
   - `src/hooks/useNotes.ts` — `getNoteYText`, `newNoteUndoManager`, typy `NoteYText`, `NoteUndoManager` (jedyne miejsce, gdzie wolno importować `yjs` w edytorze).
   - `src/components/NoteEditor.tsx` — `yText` i `key` zależny od trybu; wszystkie zapisy treści przez `writeContent`.
 - **Jak działa:**
@@ -3602,7 +3645,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie jest:**
   - `src/lib/wikiLinks.ts` — `splitWikiTarget` (zwraca `display`), `resolveWikiTarget` (tytuł, potem alias), `buildWikiIndex` (aliasy w `titles`), `backlinksOf` (po tytule i aliasach), `cleanAliases` (przycinanie, duplikaty, limity `ALIAS_MAX_COUNT` = 20, `ALIAS_MAX_LENGTH` = 200).
   - `src/hooks/useNotes.ts` — pole `aliases?: string[]` w `Note` (opcjonalne, starsze notatki go nie mają).
-  - `src/lib/noteSchema.ts`, `src/lib/safeProjection.ts` (`REMOTE_LIMITS.aliases`), `src/lib/yjsStore.ts` — zapis do Yjs (`y.set("aliases")`, tylko niepuste), odczyt w projekcji (pole dołączane tylko gdy niepuste), `aliases` w `NOTE_SCALAR_FIELDS` (patch).
+  - `src/lib/noteSchema.ts`, `src/lib/safeProjection.ts` (`REMOTE_LIMITS.aliases`), `src/lib/yjs/codec.ts` — zapis do Yjs (`y.set("aliases")`, tylko niepuste), odczyt w projekcji (pole dołączane tylko gdy niepuste), `aliases` w `NOTE_SCALAR_FIELDS` (patch).
   - `src/components/AliasPicker.tsx` — popover z polem; `src/components/NoteCardActions.tsx` — przycisk w „Więcej opcji”, nie dla zaszyfrowanych i zarchiwizowanych.
   - `src/components/WikiLinkPreview.tsx` — prop `label` (tekst wyświetlany), `src/components/MarkdownRendererImpl.tsx` przekazuje `display`.
 - **Ograniczenia:**
@@ -3620,7 +3663,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** etykieta `budowa/łazienka` to etykieta „łazienka” wewnątrz „budowa”. Pasek boczny pokazuje drzewo z wcięciem; klik w rodzica filtruje też jego dzieci; zmiana nazwy rodzica przepina całe poddrzewo (w notatkach i w zbiorze etykiet). Etykieta użyta w notatce zawsze jest w pasku bocznym, nawet gdy nie została dodana osobno (np. z importu).
 - **Gdzie jest:**
   - `src/lib/labelTree.ts` — `cleanLabelPath` (przycina segmenty, usuwa puste, limit `LABEL_MAX_DEPTH` = 6), `isUnderLabel`, `noteMatchesLabel` (filtr po rodzicu), `renameLabelBranch`, `buildLabelRows` (spłaszczone drzewo: głębokość, nazwa, czy ma dzieci).
-  - `src/lib/yjsStore.ts` — `renameLabelEverywhere` przepina poddrzewo; `projectLabels` = zbiór etykiet + etykiety używane w notatkach.
+  - `src/lib/yjs/taxonomy.ts` — `renameLabelEverywhere` przepina poddrzewo; `projectLabels` = zbiór etykiet + etykiety używane w notatkach.
   - `src/hooks/useNotes.ts` — `addLabel` i `renameLabel` czyszczą ścieżkę; `src/hooks/useFilteredNotes.ts` — filtr po rodzicu.
   - `src/components/AppSidebar.tsx` (lista z `buildLabelRows`), `src/components/sidebar/SidebarLabelItem.tsx` (prop `displayName`, `depth` → wcięcie 12 px na poziom).
 - **Ograniczenia:** brak składni `#budowa/łazienka` w treści (model etykiet to wybór z menu, nie parsowanie tekstu). Zwijania gałęzi w pasku bocznym jeszcze nie ma — drzewo jest zawsze rozwinięte.
@@ -3757,7 +3800,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie jest:**
   - `src/lib/periodNote.ts` — logika: `isoWeek` (tydzień ISO 8601, poniedziałek na początku), `periodKey(kind, now)` (`YYYY-Www` / `YYYY-MM`), `periodTitle`, `findPeriodNote`, stałe `PERIOD_LABEL` (etykiety „tydzień”, „miesiąc”) i `PERIOD_TEMPLATE`. Typ `PeriodKind = "week" | "month"`.
   - `src/lib/safeProjection.ts` — `safePeriodKey` (walidacja wartości z Yjs).
-  - `src/lib/yjsStore.ts` — pole `periodKey` w `NOTE_SCALAR_FIELDS`, zapis i odczyt.
+  - `src/lib/yjs/codec.ts` — pole `periodKey` w `NOTE_SCALAR_FIELDS`, zapis i odczyt.
   - `src/lib/noteSchema.ts` — `periodKey` w schemacie notatki (zod, `catch(undefined)`).
   - `src/hooks/useNotes.ts` — typ `Note.periodKey`; kopia notatki go pomija.
   - `src/lib/privateNotes.ts` — kopia notatki prywatnej też go pomija.
@@ -3875,7 +3918,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 ## Skrzynka — „Odłóż” (S-1, 2026-10-26)
 
 - **Co robi:** w porządkowaniu Skrzynki (`InboxTriage`) przyciski „Jutro” i „Za tydzień” odkładają notatkę do północy wskazanego dnia. Znika wtedy ze Skrzynki i z jej licznika, a po terminie wraca sama. „Cofnij” zdejmuje odłożenie.
-- **Dane:** nowe pole `snoozedUntil` (ms) w notatce. Brak albo `0` = nieodłożona. Zapis w Yjs jako zwykłe pole notatki (`yjsStore.ts`, `NOTE_SCALAR_FIELDS`), odczyt odrzuca wartości niedodatnie i nieskończone, schemat w `noteSchema.ts` (`catch(undefined)`), typ `Note` w `useNotes.ts`. Starsze dokumenty bez pola działają bez zmian.
+- **Dane:** nowe pole `snoozedUntil` (ms) w notatce. Brak albo `0` = nieodłożona. Zapis w Yjs jako zwykłe pole notatki (`src/lib/yjs/codec.ts`, `NOTE_SCALAR_FIELDS`), odczyt odrzuca wartości niedodatnie i nieskończone, schemat w `noteSchema.ts` (`catch(undefined)`), typ `Note` w `useNotes.ts`. Starsze dokumenty bez pola działają bez zmian.
 - **Reguła:** `isSnoozed` i `isInboxNote` w `src/lib/inbox.ts`. Notatka odłożona jest też poza filtrem Skrzynki w `useFilteredNotes.ts`.
 - **Ograniczenie:** pole nie jest scalane przez `mergeNotes.ts` (ta lista dotyczy przypomnień). Dwa urządzenia edytujące tę samą notatkę jednocześnie mogą wybrać inne odłożenie, zwykła zasada „ostatni zapis wygrywa”.
 - **Testy:** `src/lib/inbox.test.ts` (odłożenie i powrót po terminie), e2e `e2e/inbox-triage.spec.ts` („Jutro” i „Cofnij”).
@@ -4160,7 +4203,7 @@ Jedno miejsce z obrazem całości. Szczegóły kolejnych kroków są w wpisach �
 - **Sesja.** Klucz tylko w pamięci karty. Blokada: ręczna (kłódka w nagłówku, paleta, Ustawienia), po bezczynności (`kaczy.vault.autolock.v1`) i po schowaniu karty (`kaczy.vault.hiddenLock.v1`) — oba ustawienia na tym urządzeniu i w kopii ustawień (1.6); ostrzeżenie 30 s przed blokadą. Limit prób hasła i kodu: rosnące opóźnienie (`throttleDelayMs`, `kaczy.vault.attempts.v1`), tylko w tej przeglądarce.
 - **Kod awaryjny.** Pokazywany raz po założeniu i zmianie hasła (kopiuj, `.txt`, druk — 1.7). Pole kodu przyjmuje dowolne separatory. Sprawdzenie bez zmiany hasła („Sprawdź kod awaryjny”, 2.4) i przypomnienie co 90 dni po odblokowaniu (wyłączalne).
 - **Nie do odszyfrowania.** Szyfrogram z innym kluczem (spóźniony zapis po zmianie hasła, dwa skarbce założone offline) zostaje w dokumencie; kafel ma „Pobierz szyfrogram” (1.2 część 1). Odzysk starym hasłem — nie zrobiony, wymagania z przeglądu bezpieczeństwa w planie Skarbca.
-- **Zmiana hasła i reset kodem awaryjnym (C-1, K0 cz. 1 planu `plan-skarbiec-krypto-2026-11-15.md`, 2026-11-20).** `rekeyInner` w `src/lib/privateNotes.ts` odszyfrowuje notatki epoką z nagłówka skarbca (`m.epoch`), nie z sesji. Wcześniej reset kodem po świeżym otwarciu aplikacji (sesja nieodblokowana, `sessionEpoch` = 0) nie czytał żadnej notatki v2, a mimo to zapisywał nowy klucz — stary przepadał razem z notatkami. Teraz zmiana klucza jest przerywana przed zapisem, gdy nie da się odszyfrować jakiejkolwiek notatki v2 albo żetonu nieznanej wersji (C-28), albo wszystkich notatek; pominąć wolno tylko obcy szyfrogram v1 obok czytelnych. Nagłówek, z którego wyprowadzono stary klucz, jest porównywany (odcisk) z bieżącym po `flush()` — zmiana w trakcie daje „Skarbiec zmienił się w trakcie”. Oba okna (zmiana hasła, reset kodem w `VaultDialogs.tsx`) pokazują liczbę pominiętych. Przerwanie rzuca `VaultUnreadableError` z polem `skipped` (id nieczytelnych). **„Usuń nieczytelne i kontynuuj”:** `changePassword` i `resetPasswordWithRecovery` przyjmują `RekeyOptions` (`withRecovery`, `dropUnreadable`); z `dropUnreadable: true` nieczytelne notatki (wszystkie pominięte, też obce v1) trafiają do kosza (`trashed`, `trashedAt`) w tej samej transakcji `store.rekeyVault(meta, next, metaUnchanged, trash)` co nowy klucz — ze starym szyfrogramem, więc kafel nadal oferuje „Pobierz szyfrogram”; reszta jest przeszyfrowana. `rekeyVault` sprawdza też, czy szyfrogramy z `trash` się nie zmieniły. W oknach (`ChangeForm`, `RecoverForm`) `UnreadableNotice` pokazuje liczbę (tytuły są w szyfrogramie, więc bez listy tytułów), wyjaśnia skutek i daje przycisk `destructive` „Przenieś nieczytelne do kosza i zmień hasło” / „… i ustaw nowe hasło”, który ponawia operację z opcją. **Ograniczenie:** notatka w koszu podlega zwykłemu opróżnianiu kosza — wtedy szyfrogram przepada. **Testy:** `src/lib/privateNotes.test.ts` (C-1 na nowej instancji, przerwanie bez zapisu, C-28 `v9.`, obcy v1 obok v2, `skipped` w błędzie i `dropUnreadable` — kosz, stary szyfrogram, nowe metadane, reszta czytelna nowym hasłem), e2e `private-notes.spec.ts`; przegląd `security-reviewer` bez ustaleń krytycznych; `src/lib/privateNotes.k04.test.ts` (K0 cz. 4): własny zapis metadanych w `rekeyInner` (flaga `ownMetaWrite`) nie wyzwala już obserwatora — wcześniej skarbiec blokował się 40 ms po zmianie hasła; obcy szyfrogram z synchronizacji jest oznaczany jako nieczytelny leniwie, przy pierwszym `ensureDecrypted` (do tego czasu `stats().undecryptable` go nie liczy). K0 cz. 2 (C-14): `parseContent` przenosi nieznane pola najwyższego poziomu treści (do 64 KB JSON; więcej — odrzucone z wpisem `logDiag`), więc edycja, migracja v1→v2 i duplikat ich nie kasują; zdjęcie blokady (`removeLock`) zapisuje je jako JSON pod kluczem `futureContent` (`FUTURE_CONTENT_KEY` w `yjsStore.ts`, trzeci argument `store.unlockNote`, odczyt `store.getFutureContent`) jawnej notatki w `Y.Map` — `plainFromYNote` go nie czyta, więc nie ma go w `Note` (UI, wyszukiwarka, eksport Markdown); ponowne `lockNote` wmieszuje te pola z powrotem do treści (znane pola mają pierwszeństwo, bez `__proto__`, limit 64 KB) i usuwa klucz. Synchronizacja niesie klucz razem z dokumentem; kopia JSON i import, które idą przez projekcję `Note`, oraz `upsertNote` budujący notatkę od nowa — go nie zachowują. Test `src/lib/privateNotes.k02.test.ts`. **Commit:** zob. „Skarbiec: C-1”. `peek()` zwraca tylko znane pola treści (`knownContent`, ten sam obiekt dla tej samej treści), bo karta składa `{ ...note, ...content }` i pole z przyszłości (np. `id`, `images`) nadpisałoby notatkę; nieznane pola zostają w pamięci podręcznej i wracają przy zapisie (przegląd `security-reviewer` K0 cz. 2 i 4: bez krytycznych; drobne otwarte — limit 64 KB liczy jednostki UTF-16). `store.rekeyVault(meta, next, metaUnchanged?)` w `src/lib/yjsStore.ts` przyjmuje predykat na bieżące metadane; `rekeyInner` przekazuje porównanie odcisku z `from`, więc nagłówek zapisany przez inne urządzenie podczas `createVault` i szyfrowania nie zostaje nadpisany — zmiana hasła kończy się błędem „Skarbiec lub notatki zmieniły się w trakcie”, nic nie jest zapisane (test C-1 w `src/lib/privateNotes.k04.test.ts`). **Otwarte (2026-11-20):** `futureContent` przy jawnej notatce gubią `upsertNote` i import kopii JSON (`replaceAll`), duplikat go nie kopiuje; zachowują go edycja, kopia dzienna i synchronizacja — `src/lib/futureContent.paths.test.ts`. Naprawa wymaga decyzji (pole w `Note` trafiłoby do UI i eksportu).
+- **Zmiana hasła i reset kodem awaryjnym (C-1, K0 cz. 1 planu `plan-skarbiec-krypto-2026-11-15.md`, 2026-11-20).** `rekeyInner` w `src/lib/privateNotes.ts` odszyfrowuje notatki epoką z nagłówka skarbca (`m.epoch`), nie z sesji. Wcześniej reset kodem po świeżym otwarciu aplikacji (sesja nieodblokowana, `sessionEpoch` = 0) nie czytał żadnej notatki v2, a mimo to zapisywał nowy klucz — stary przepadał razem z notatkami. Teraz zmiana klucza jest przerywana przed zapisem, gdy nie da się odszyfrować jakiejkolwiek notatki v2 albo żetonu nieznanej wersji (C-28), albo wszystkich notatek; pominąć wolno tylko obcy szyfrogram v1 obok czytelnych. Nagłówek, z którego wyprowadzono stary klucz, jest porównywany (odcisk) z bieżącym po `flush()` — zmiana w trakcie daje „Skarbiec zmienił się w trakcie”. Oba okna (zmiana hasła, reset kodem w `VaultDialogs.tsx`) pokazują liczbę pominiętych. Przerwanie rzuca `VaultUnreadableError` z polem `skipped` (id nieczytelnych). **„Usuń nieczytelne i kontynuuj”:** `changePassword` i `resetPasswordWithRecovery` przyjmują `RekeyOptions` (`withRecovery`, `dropUnreadable`); z `dropUnreadable: true` nieczytelne notatki (wszystkie pominięte, też obce v1) trafiają do kosza (`trashed`, `trashedAt`) w tej samej transakcji `store.rekeyVault(meta, next, metaUnchanged, trash)` co nowy klucz — ze starym szyfrogramem, więc kafel nadal oferuje „Pobierz szyfrogram”; reszta jest przeszyfrowana. `rekeyVault` sprawdza też, czy szyfrogramy z `trash` się nie zmieniły. W oknach (`ChangeForm`, `RecoverForm`) `UnreadableNotice` pokazuje liczbę (tytuły są w szyfrogramie, więc bez listy tytułów), wyjaśnia skutek i daje przycisk `destructive` „Przenieś nieczytelne do kosza i zmień hasło” / „… i ustaw nowe hasło”, który ponawia operację z opcją. **Ograniczenie:** notatka w koszu podlega zwykłemu opróżnianiu kosza — wtedy szyfrogram przepada. **Testy:** `src/lib/privateNotes.test.ts` (C-1 na nowej instancji, przerwanie bez zapisu, C-28 `v9.`, obcy v1 obok v2, `skipped` w błędzie i `dropUnreadable` — kosz, stary szyfrogram, nowe metadane, reszta czytelna nowym hasłem), e2e `private-notes.spec.ts`; przegląd `security-reviewer` bez ustaleń krytycznych; `src/lib/privateNotes.k04.test.ts` (K0 cz. 4): własny zapis metadanych w `rekeyInner` (flaga `ownMetaWrite`) nie wyzwala już obserwatora — wcześniej skarbiec blokował się 40 ms po zmianie hasła; obcy szyfrogram z synchronizacji jest oznaczany jako nieczytelny leniwie, przy pierwszym `ensureDecrypted` (do tego czasu `stats().undecryptable` go nie liczy). K0 cz. 2 (C-14): `parseContent` przenosi nieznane pola najwyższego poziomu treści (do 64 KB JSON; więcej — odrzucone z wpisem `logDiag`), więc edycja, migracja v1→v2 i duplikat ich nie kasują; zdjęcie blokady (`removeLock`) zapisuje je jako JSON pod kluczem `futureContent` (`FUTURE_CONTENT_KEY` w `src/lib/yjs/codec.ts`, reeksport z `yjsStore.ts`; trzeci argument `store.unlockNote`, odczyt `store.getFutureContent`) jawnej notatki w `Y.Map` — `plainFromYNote` go nie czyta, więc nie ma go w `Note` (UI, wyszukiwarka, eksport Markdown); ponowne `lockNote` wmieszuje te pola z powrotem do treści (znane pola mają pierwszeństwo, bez `__proto__`, limit 64 KB) i usuwa klucz. Synchronizacja niesie klucz razem z dokumentem; kopia JSON i import, które idą przez projekcję `Note`, oraz `upsertNote` budujący notatkę od nowa — go nie zachowują. Test `src/lib/privateNotes.k02.test.ts`. **Commit:** zob. „Skarbiec: C-1”. `peek()` zwraca tylko znane pola treści (`knownContent`, ten sam obiekt dla tej samej treści), bo karta składa `{ ...note, ...content }` i pole z przyszłości (np. `id`, `images`) nadpisałoby notatkę; nieznane pola zostają w pamięci podręcznej i wracają przy zapisie (przegląd `security-reviewer` K0 cz. 2 i 4: bez krytycznych; drobne otwarte — limit 64 KB liczy jednostki UTF-16). `store.rekeyVault(meta, next, metaUnchanged?)` w `src/lib/yjs/vault.ts` przyjmuje predykat na bieżące metadane; `rekeyInner` przekazuje porównanie odcisku z `from`, więc nagłówek zapisany przez inne urządzenie podczas `createVault` i szyfrowania nie zostaje nadpisany — zmiana hasła kończy się błędem „Skarbiec lub notatki zmieniły się w trakcie”, nic nie jest zapisane (test C-1 w `src/lib/privateNotes.k04.test.ts`). **Otwarte (2026-11-20):** `futureContent` przy jawnej notatce gubią `upsertNote` i import kopii JSON (`replaceAll`), duplikat go nie kopiuje; zachowują go edycja, kopia dzienna i synchronizacja — `src/lib/futureContent.paths.test.ts`. Naprawa wymaga decyzji (pole w `Note` trafiłoby do UI i eksportu).
 - **Testy charakteryzujące P1 i P2 (K0 cz. 3, 2026-11-20).** `src/lib/privateNotes.p1p2.test.ts` opisuje dzisiejsze zachowanie: P1 przy wygranej szyfrogramu telefonu (wyższy `clientID`) — notatka w `failed` na obu urządzeniach; przy wygranej laptopa — edycja telefonu ginie; P2 — notatki przegranego skarbca nieczytelne, jego hasło odrzucane. Po K3/K4 pierwszy i trzeci test mają się odwrócić (odzysk z `retired:*` / `pin.prev`), drugi zostaje. Bez zmian w kodzie.
 - **Karta w Ustawieniach** (Ogólne → Prywatne notatki): stan, kod awaryjny i data sprawdzenia, liczba notatek prywatnych i nieodszyfrowywalnych, biometria, auto-blokada, opis ochrony. W wyszukiwarce `ma:prywatne` pokazuje same kafle prywatne (treść nadal poza indeksem).
 - **Otwarte w planie.** 1.2 część 2, pozycja „Prywatne” w pasku bocznym (2.3 — zamiast niej filtr i karta stanu), 3.3 (szyfrowane pliki), Etap 4 (wygląd kafla w 4 stanach).
@@ -4255,7 +4298,7 @@ Jedno miejsce z obrazem całości. Szczegóły kolejnych kroków są w wpisach �
 
 ## Skarbiec — metadane notatki prywatnej w szyfrogramie (V-3, krok 3, 2026-10-26)
 
-- **Co robi:** kolor, folder (`folderId`), rodzic (`parentId`) i ikona zablokowanej notatki są w szyfrogramie (pole `meta` treści), a nie jawnie w dokumencie. Po zablokowaniu znikają z dokumentu; po zdjęciu blokady wracają z szyfrogramu. Zmiana tych pól w odblokowanym skarbcu idzie do szyfrogramu (`PRIVATE_META` w `yjsStore.ts`, sink w `privateNotes.ts`).
+- **Co robi:** kolor, folder (`folderId`), rodzic (`parentId`) i ikona zablokowanej notatki są w szyfrogramie (pole `meta` treści), a nie jawnie w dokumencie. Po zablokowaniu znikają z dokumentu; po zdjęciu blokady wracają z szyfrogramu. Zmiana tych pól w odblokowanym skarbcu idzie do szyfrogramu (`PRIVATE_META` w `src/lib/yjs/codec.ts`, sink w `privateNotes.ts`).
 - **Zasady:**
   - Metadane idą do szyfrogramu tylko, gdy format na to pozwala (`writeFormatAllowed(METADATA_IN_CIPHERTEXT_SCHEMA)`); inaczej zostają jak dawniej.
   - Zmiana przy zablokowanym skarbcu nie ginie: zostaje jawna w dokumencie do najbliższej blokady, wtedy wraca do szyfrogramu.

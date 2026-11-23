@@ -141,6 +141,8 @@ Odrzucone: **SQLite**. Dałoby transakcje, ale to zależność natywna albo `nod
 
 ## F3. Podział `src/lib/yjsStore.ts` (1089 linii)
 
+> **Status 2026-11-23: zrobione.** `yjsStore.ts` 1374 → 358 linii; moduły w `src/lib/yjs/` (codec, context, textEdit, vault, taxonomy, migrations oraz ponad plan docFile, fileRefs, bulkReplace). Edycja tekstu przed skarbcem (lockNote kasuje bazę edycji). `toast` szedł już przez `@/lib/notify`, a reguła warstw ESLint jest z A1.6. Szczegóły w `opis.md` („Dane — podział magazynu”).
+
 ### Szwy
 
 `createYjsStore` to jedno domknięcie nad `doc`, `notesMap`, `noteCache`, `dirtyNotes`, `textBases` i `persistence`. Publiczny kształt (`YjsStore`) ma zostać **identyczny**, żeby nie ruszać żadnego miejsca wywołania.
