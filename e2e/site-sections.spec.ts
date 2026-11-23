@@ -70,6 +70,9 @@ test("na 390 px wszystkie pięć segmentów mieści się bez przewijania paska; 
   const bar = card.getByRole("tablist", { name: "Sekcje karty budowy" });
   const fits = await bar.evaluate((el) => el.scrollWidth <= el.clientWidth + 1);
   expect(fits, "pasek segmentów przewija się w bok").toBe(true);
+  // Kontrast mierzony po wejściu karty: w trakcie animacji tekst ma częściowe krycie, a WebKit (iPhone) kończy ją
+  // wolniej — axe widział wtedy wyblakłe kolory (np. 2,1:1), których w spoczynku nie ma.
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
   const result = await new AxeBuilder({ page }).include('[data-testid="site-card"]').withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
   expect(result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`)).toEqual([]);
 });
