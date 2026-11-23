@@ -823,3 +823,11 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 - **Jak działa:** do 13 rem ikony mają dopełnienie 4 px (cel 24 px, minimum WCAG 2.2 AA) i pasek bez odstępów — siedem ikon (~188 px) mieści się w jednym wierszu. Zawijanie (żeby „Więcej opcji” nie było ucięte, W7.2) zostaje dopiero od 11,75 rem w dół.
 - **Pułapki:** bardzo wąskie kafle (< 11,75 rem) nadal zawijają pasek — tam krótki kafel może mieć zakryty tytuł; dotyk tego nie dotyczy (stopka to sam „⋯”).
 - **Testy:** `e2e/note-groups.spec.ts` („Ostatnio otwierane” — klik w tytuł kafla 208 px, wcześniej przechwytywany przez pasek), `e2e/subpages.spec.ts` (dokładne nazwy przycisków: ciało kafla z `role="button"` zawiera w nazwie tekst chipu rodzica).
+
+## Notatki — krótka nazwa dostępna kafla (2026-11-23)
+
+- **Co robi:** czytnik ekranu przy fokusie na kaflu czyta tytuł notatki (albo pierwszą linię treści), a nie całą zawartość kafla razem z nazwami przycisków w środku.
+- **Gdzie jest:** `src/components/NoteCard.tsx` — `aria-label={cardLabel(note)}` na ciele kafla (`div role="button"`), funkcja `cardLabel` na końcu pliku.
+- **Jak działa:** tytuł; bez tytułu pierwsza niepusta linia treści bez przedrostków Markdown (nagłówek, cytat, punkt listy z polem wyboru, numeracja), do 60 znaków; inaczej „Notatka bez tytułu”. W trybie edycji w kaflu bez etykiety (to wtedy nie jest przycisk).
+- **Pułapki:** przyciski w kaflu (termin, „Gotowe”, chip rodzica, linki `[[…]]`) dalej są zagnieżdżone w elemencie z `role="button"` — to osobny dług dostępności (reguła axe `nested-interactive`). Wcześniej nazwa ciała kafla zawierała ich nazwy, więc selektory `getByRole("button", { name })` trafiały w dwa elementy — stąd sześć stałych porażek e2e (`card-reminder-edit`, `quick-reminder-enter`, `reminder-toast`, `reminders-phase2`, `wiki-heading`, `wikilinks`).
+- **Testy:** te sześć plików oraz `a11y`, `subpages`, `note-groups`, `editor-open`, `mobile` na wszystkich projektach — 314 zaliczonych.

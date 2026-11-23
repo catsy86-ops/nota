@@ -307,6 +307,9 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           // Klawiatura (§audyt 8): treść kafla dostaje fokus, a Enter/Spacja wykonuje to samo co klik.
           tabIndex={isEditing ? undefined : 0}
           role={isEditing ? undefined : "button"}
+          // Krótka nazwa zamiast całej treści kafla: bez niej czytnik czytał przy fokusie wszystko, łącznie z nazwami
+          // zagnieżdżonych przycisków (termin, „Gotowe”, linki), a te same nazwy dublowały się w drzewie dostępności.
+          aria-label={isEditing ? undefined : cardLabel(note)}
           aria-pressed={!isEditing && selectionMode ? !!selected : undefined}
           onKeyDown={(e) => {
             if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); e.currentTarget.click(); }
@@ -444,3 +447,15 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     </>
   );
 });
+
+/** Nazwa dostępna kafla: tytuł, a bez niego pierwsza niepusta linia treści (do 60 znaków). */
+function cardLabel(note: Pick<Note, "title" | "content">): string {
+  const title = note.title.trim();
+  if (title) return title;
+  // Bez przedrostków Markdown: nagłówek, cytat, punkt listy (z polem wyboru), numeracja.
+  const line = note.content.split("\n")
+    .map((l) => l.trim().replace(/^(#{1,6}\s+|>\s*|[-*+]\s+(\[[ xX]\]\s+)?|\d+[.)]\s+)/, "").trim())
+    .find(Boolean);
+  if (!line) return "Notatka bez tytułu";
+  return line.length > 60 ? `${line.slice(0, 59)}…` : line;
+}

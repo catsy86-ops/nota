@@ -63,6 +63,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Notatki — osadzony widok zapytania w notatce (plan 6.4, 2026-11-13)
 - Notatki — diagramy Mermaid (plan 5.5, 2026-11-13)
 - Notatki — pasek akcji wąskiego kafla nie zakrywa tytułu (2026-11-23)
+- Notatki — krótka nazwa dostępna kafla (2026-11-23)
 
 ### Dziś i Skrzynka — [`docs/opis/dzis.md`](docs/opis/dzis.md)
 
