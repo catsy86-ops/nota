@@ -39,6 +39,8 @@ test("zmiana kodu: potwierdzenie, przełączenie na kod długi, lista do sparowa
 
   const prefs = await page.evaluate(() => JSON.parse(localStorage.getItem("kaczy.sync.v1") ?? "{}") as { code: string });
   expect(prefs.code).toHaveLength(28);
+  // S1.5(b): kod jest ukryty, dopóki się go nie pokaże.
+  await page.getByRole("button", { name: "Pokaż kod i QR" }).click();
   await expect(page.getByText(prefs.code.slice(0, 4), { exact: true })).toBeVisible();
   expect(await axe(page)).toEqual([]);
 

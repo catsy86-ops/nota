@@ -679,3 +679,17 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 **Testy.** `src/lib/securityHeaders.test.ts` (6: zgodność Vercel/Netlify, CSP, HSTS, funkcje zostawione, funkcje wyłączone, COOP/CORP); e2e `csp`, `attachments`, `private-notes`, `sync-*`, `van-scanner`, `journal-*`, `voice-note`, `dictation-offline`, smoke.
 
 **Commit.** Patrz historia `vercel.json`, 2026-11-23.
+
+## Bezpieczeństwo — sekrety poza kopią i raportem, kod za przyciskiem (S1.5, 2026-11-23)
+
+**Co robi.** W Ustawieniach → Sync kod synchronizacji i jego QR są ukryte, dopóki nie klikniesz „Pokaż kod i QR”. Ukrywają się same po minucie, po „Ukryj kod” i gdy karta przechodzi w tło. Testy pilnują, że żaden sekret z `localStorage` nie trafia do kopii JSON ani do raportu diagnostycznego.
+
+**Gdzie jest.** `src/components/SyncSettings.tsx` (stan `revealed`), `src/lib/secretsLeak.test.ts`, `e2e/sync-code-reveal.spec.ts`; opis w `docs/model-zagrozen.md` (§6).
+
+**Jak działa.** Test sekretów bierze z rejestru kluczy (`registeredKeys()`) wszystkie klucze oznaczone `sensitive` (kod synchronizacji, token powiadomień, adres przekaźnika, pin i próby skarbca, numer konta, odciski dokumentów), wpisuje w każdy unikalny znacznik i szuka go w `buildFullBackup()` oraz `collectDiagReport()`. Nowy sekret dopisany do rejestru jest więc sprawdzany bez zmian w teście. Ukrycie kodu to zasłona przed podglądem przez ramię, zrzutem i udostępnianiem ekranu — nie szyfrowanie: kod nadal leży w `localStorage` (patrz model zagrożeń).
+
+**Ograniczenia i pułapki.** Przycisk „Kopiuj kod” jest dostępny dopiero po pokazaniu. Kod wciąż widać w narzędziach deweloperskich i w `localStorage`. Przy okazji SVG kodu QR dostał `title` (axe: `svg-img-alt` — wcześniej niewidoczne, bo karta Sync nie była w `a11y.spec.ts`). Prawdziwe „klucza nie da się wynieść” wymaga zmiany protokołu (podpis żądań kluczem nieeksportowalnym, tryb tylko przekaźnik) — osobna decyzja.
+
+**Testy.** `src/lib/secretsLeak.test.ts` (4), `e2e/sync-code-reveal.spec.ts` (2, w tym axe), poprawiony `e2e/sync-rekey.spec.ts`; `sync-*`, `relay-sync`, `a11y` zielone.
+
+**Commit.** Patrz historia `src/lib/secretsLeak.test.ts`, 2026-11-23.

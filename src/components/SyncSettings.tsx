@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { lazy, Suspense } from "react";
 const QrScanDialog = lazy(() => import("@/components/sync/QrScanDialog").then((m) => ({ default: m.QrScanDialog })));
-import { Wifi, WifiOff, Copy, Check, LogOut } from "lucide-react";
+import { Wifi, WifiOff, Copy, Check, LogOut, Eye, EyeOff } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleRow } from "@/components/settings/SettingsShared";
@@ -73,6 +73,16 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
   const [confirmReplace, setConfirmReplace] = useState(false);
   const [replacing, setReplacing] = useState(false);
   const [copied, setCopied] = useState(false);
+  // S1.5(b): kod i QR dają cały dokument, więc nie wiszą na ekranie bez potrzeby (podgląd przez ramię, zrzut, udostępnianie ekranu).
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    if (!revealed) return;
+    const hide = () => setRevealed(false);
+    const timer = window.setTimeout(hide, 60_000);
+    const onVisibility = () => { if (document.visibilityState === "hidden") hide(); };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { window.clearTimeout(timer); document.removeEventListener("visibilitychange", onVisibility); };
+  }, [revealed]);
   const [forgetOpen, setForgetOpen] = useState(false);
   const [legacyRoom, setLegacyRoomState] = useState(() => getLegacyRoom());
   // U-3: po 30 dniach bez urządzeń w starym pokoju przełącznik sam się wyłącza, z komunikatem.
@@ -284,17 +294,29 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
             Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
             {codeIsLong && " Oba urządzenia muszą mieć aktualną wersję aplikacji."}
           </p>
-          <div className="flex justify-center">
-            <div className="bg-white p-2 rounded-field">
-              <QRCodeSVG value={pairUrl} size={140} />
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <GroupedCode code={syncState.code} />
-            <Button type="button" size="sm" variant="ghost" onClick={handleCopy} aria-label="Kopiuj kod" className="h-7 px-2 coarse:h-11 coarse:px-3">
-              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+          {revealed ? (
+            <>
+              <div className="flex justify-center">
+                <div className="bg-white p-2 rounded-field">
+                  <QRCodeSVG value={pairUrl} size={140} title="Kod QR do sparowania urządzenia" />
+                </div>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <GroupedCode code={syncState.code} />
+                <Button type="button" size="sm" variant="ghost" onClick={handleCopy} aria-label="Kopiuj kod" className="h-7 px-2 coarse:h-11 coarse:px-3">
+                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                </Button>
+              </div>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setRevealed(false)} className="text-muted-foreground gap-1.5 coarse:h-11">
+                <EyeOff className="size-3.5" /> Ukryj kod
+              </Button>
+              <p className="ui-hint">Kod ukryje się sam po minucie.</p>
+            </>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => setRevealed(true)} className="gap-1.5 coarse:h-11">
+              <Eye className="size-4" /> Pokaż kod i QR
             </Button>
-          </div>
+          )}
           <div className="flex flex-wrap justify-center gap-x-2">
             {codeIsLong && (
               <Button type="button" variant="ghost" size="sm" onClick={() => setShortOpen(true)} className="text-muted-foreground coarse:h-11">
