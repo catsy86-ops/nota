@@ -104,9 +104,9 @@ Nie sprawdzone: zachowanie COOP z oknem passkey i `window.open` (wymaga przeglą
 
 | Nr | Punkt |
 |---|---|
-| S0.1 | `docs/model-zagrozen.md` z §2, uzupełniony o schemat przepływu danych (klient ↔ sygnalizacja ↔ urządzenie; klient ↔ przekaźnik; klient ↔ serwer powiadomień ↔ usługa push ↔ SW). |
-| S0.2 | Obserwacje 3 i 11 są rozstrzygnięte w §1a — przenieść wynik do `docs/model-zagrozen.md`. Zostaje: (a) **test-strażnik ujść HTML** — wyszukiwanie `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `srcdoc`, `document.write`, `insertAdjacentHTML`, `createContextualFragment` w `src/` z listą dozwolonych (dziś jeden wpis: `MermaidBlock.tsx`); nowe ujście bez wpisu nie przechodzi; (b) obserwacja 10 — opis w modelu zagrożeń, decyzja KR-1 w planie Skarbca; (c) rzeczy z listy „Nie sprawdzone” pod §1a. |
-| S0.3 | `SECURITY.md` w katalogu głównym: jak zgłosić błąd, co jest w zakresie, obsługiwane wersje. |
+| S0.1 ✅ 2026-11-23 | `docs/model-zagrozen.md` z §2, uzupełniony o schemat przepływu danych (klient ↔ sygnalizacja ↔ urządzenie; klient ↔ przekaźnik; klient ↔ serwer powiadomień ↔ usługa push ↔ SW). |
+| S0.2 ✅ 2026-11-23 | Obserwacje 3 i 11 są rozstrzygnięte w §1a — przenieść wynik do `docs/model-zagrozen.md`. Zostaje: (a) **test-strażnik ujść HTML** — wyszukiwanie `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `srcdoc`, `document.write`, `insertAdjacentHTML`, `createContextualFragment` w `src/` z listą dozwolonych (dziś jeden wpis: `MermaidBlock.tsx`); nowe ujście bez wpisu nie przechodzi; (b) obserwacja 10 — opis w modelu zagrożeń, decyzja KR-1 w planie Skarbca; (c) rzeczy z listy „Nie sprawdzone” pod §1a. |
+| S0.3 ✅ 2026-11-23 | `SECURITY.md` w katalogu głównym: jak zgłosić błąd, co jest w zakresie, obsługiwane wersje. |
 
 ## Etap S1: klient (Opus + `security-reviewer`)
 

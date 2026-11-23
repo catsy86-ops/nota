@@ -470,3 +470,4 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Architektura — model listy `useNotesScreen` i wspólny zapis terminów (A2.3, 2026-11-23)
 - Architektura — nakładki w `IndexOverlays` i jeden reduktor okien (A2.4, 2026-11-23)
 - Architektura — pomiar renderów strony głównej (A2.5, 2026-11-23)
+- Bezpieczeństwo — model zagrożeń, `SECURITY.md` i strażnik ujść HTML (S0, 2026-11-23)

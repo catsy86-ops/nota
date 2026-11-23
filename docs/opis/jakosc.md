@@ -603,3 +603,20 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 **Testy.** `e2e/render-count.spec.ts`.
 
 **Commit.** Patrz historia `src/lib/renderProbe.ts`, 2026-11-23.
+
+## Bezpieczeństwo — model zagrożeń, `SECURITY.md` i strażnik ujść HTML (S0, 2026-11-23)
+
+**Co robi.** Nic widocznego dla użytkownika. Zapisuje, przed kim i czego bronimy, mówi jak zgłosić lukę i pilnuje w testach, żeby w kodzie nie przybyło ujść HTML.
+
+**Gdzie jest.**
+- `docs/model-zagrozen.md` — aktywa, granice zaufania, schemat przepływu danych, przeciwnicy T1–T9, ujścia HTML, znane ograniczenia i rzeczy niesprawdzone.
+- `SECURITY.md` — zgłaszanie prywatne, zakres, obsługiwane wersje (tylko `master`).
+- `src/lib/htmlSinkGuard.test.ts` — czyta wszystkie źródła `src/` i szuka `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `srcdoc`, `document.write`, `insertAdjacentHTML`, `createContextualFragment`.
+
+**Jak działa.** Lista dozwolonych (`ALLOWED`) ma jeden wpis: `MermaidBlock.tsx`. Test padnie, gdy nowy plik użyje ujścia bez wpisu, a także gdy wpis nie ma już użycia. Komentarze są wycinane przed szukaniem, żeby opis w kodzie nie dawał fałszywych alarmów.
+
+**Ograniczenia i pułapki.** Strażnik łapie nazwy, nie przepływ danych — ujście ukryte w dynamicznym dostępie (`el["inner"+"HTML"]`) go ominie. Reszta planu klienta (S1.1 Trusted Types, S1.2 adresy serwerów, S1.3 nagłówki, S1.6 druga warstwa Mermaida) jest do zrobienia.
+
+**Testy.** `src/lib/htmlSinkGuard.test.ts` (2 przypadki; sprawdzone ręcznie, że plik z `innerHTML` go zawodzi).
+
+**Commit.** Patrz historia `docs/model-zagrozen.md`, 2026-11-23.
