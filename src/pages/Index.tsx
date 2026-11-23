@@ -528,7 +528,7 @@ const Index = () => {
         view={view}
         activeLabel={activeLabel}
         activeFolder={activeFolder}
-        onGoView={(v) => { go(v); if (isMobile) setSidebarOpen(false); }}
+        onGoView={(v) => { setView(v); if (isMobile) setSidebarOpen(false); }}
         onOpenNote={(id) => { openNote(id); if (isMobile) setSidebarOpen(false); }}
         onGoLabel={(label) => { go("label", { label }); if (isMobile) setSidebarOpen(false); }}
         onGoFolder={(id) => { go("folder", { folder: id }); if (isMobile) setSidebarOpen(false); }}
@@ -837,7 +837,7 @@ const Index = () => {
             {deferredSearch && !isAppView(view) ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
           </p>
           <AnimatePresence>
-            {!isAppView(view) && view !== "widget" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={view === "inbox" ? undefined : () => expandAddNote(view === "reminders" ? "reminder" : undefined)} onClearSearch={() => setSearch("")} />}
+            {!isAppView(view) && view !== "widget" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={setView} onNew={view === "inbox" ? undefined : () => expandAddNote(view === "reminders" ? "reminder" : undefined)} onClearSearch={() => setSearch("")} />}
           </AnimatePresence>
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
           {/* Tabliczka rysunkowa na końcu kartki (nowy plan 1.4, NP-3): po ostatniej sekcji, a przy krótkiej treści
@@ -868,7 +868,7 @@ const Index = () => {
           onNewNote={(title) => expandAddNote(undefined, title)}
           onDailyNote={openDailyNote}
           onPeriodNote={openPeriodNote}
-          onGo={(v) => go(v)}
+          onGo={setView}
           onGoFilter={goFilter}
           onToggleTheme={toggleTheme}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -926,7 +926,7 @@ const Index = () => {
     </AnimatePresence>
     <BottomNav
       view={view}
-      onGo={(v) => go(v)}
+      onGo={setView}
       onOpenPalette={() => setPaletteOpen(true)}
       onNew={(action) => expandAddNote(action)}
       onImport={handleImport}

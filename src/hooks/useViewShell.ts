@@ -22,8 +22,9 @@ export function useViewShell(route: Route) {
   // Zmiana widoku przenika się ze starym (View Transitions); bez wsparcia albo przy ograniczonym ruchu — od razu.
   const setView = useCallback((v: View) => {
     const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
-    if (canViewTransition() && !isMotionReduced()) {
-      // Kierunek przesunięcia (plan 2.2): w prawo do działów dalej w kolejności, w lewo do wcześniejszych.
+    // M4.1: dolny pasek i panel boczny też idą tędy. Stuknięcie w bieżący dział — bez przejścia (nic się nie zmienia).
+    if (v !== view && canViewTransition() && !isMotionReduced()) {
+      // Kierunek dryfu (plan 2.2, M4.1): w prawo do działów dalej w kolejności, w lewo do wcześniejszych.
       const dir = VIEW_ORDER.indexOf(v) >= VIEW_ORDER.indexOf(view) ? "fwd" : "back";
       document.documentElement.dataset.vtDir = dir;
       const t = doc.startViewTransition(() => flushSync(() => go(v)));

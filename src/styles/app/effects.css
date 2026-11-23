@@ -25,15 +25,24 @@ html[data-hidden] *::after {
   html:has([data-sticky-action]) .save-status { bottom: calc(9.5rem + env(safe-area-inset-bottom)); }
 }
 
-/* Kierunek przejścia między działami (plan 2.2): `setView` w Index ustawia `data-vt-dir`. */
-@keyframes vt-out-left { to { transform: translateX(-24px); opacity: 0; } }
-@keyframes vt-in-right { from { transform: translateX(24px); opacity: 0; } }
-@keyframes vt-out-right { to { transform: translateX(24px); opacity: 0; } }
-@keyframes vt-in-left { from { transform: translateX(-24px); opacity: 0; } }
-html[data-vt-dir="fwd"]::view-transition-old(root) { animation: vt-out-left 0.22s var(--ease-out) both; }
-html[data-vt-dir="fwd"]::view-transition-new(root) { animation: vt-in-right 0.22s var(--ease-out) both; }
-html[data-vt-dir="back"]::view-transition-old(root) { animation: vt-out-right 0.22s var(--ease-out) both; }
-html[data-vt-dir="back"]::view-transition-new(root) { animation: vt-in-left 0.22s var(--ease-out) both; }
+/* Przejście między działami (M4.1, decyzja RU-1: przenikanie). `setView` w `useViewShell` ustawia `data-vt-dir`.
+   Stara treść gaśnie szybko, nowa wchodzi z dryfem 8 px w stronę zakładki (kolejność `VIEW_ORDER`) — kierunek
+   czytelny, ale bez przesuwania całego ekranu. Nagłówek i dolny pasek mają własne nazwy tylko na czas tej zmiany,
+   więc stoją (identyczne migawki), a przejście motywu i inne przejścia `root` dalej obejmują cały ekran. */
+@keyframes vt-section-out { to { opacity: 0; } }
+@keyframes vt-section-in-fwd { from { opacity: 0; transform: translateX(8px); } }
+@keyframes vt-section-in-back { from { opacity: 0; transform: translateX(-8px); } }
+html[data-vt-dir] .app-header { view-transition-name: app-header; }
+html[data-vt-dir] [data-shell-nav] { view-transition-name: app-nav; }
+html[data-vt-dir]::view-transition-group(app-header),
+html[data-vt-dir]::view-transition-group(app-nav) { animation-duration: 0s; }
+html[data-vt-dir]::view-transition-old(app-header),
+html[data-vt-dir]::view-transition-old(app-nav) { animation: none; opacity: 0; }
+html[data-vt-dir]::view-transition-new(app-header),
+html[data-vt-dir]::view-transition-new(app-nav) { animation: none; }
+html[data-vt-dir]::view-transition-old(root) { animation: vt-section-out var(--dur-fast) var(--ease-in) both; }
+html[data-vt-dir="fwd"]::view-transition-new(root) { animation: vt-section-in-fwd var(--dur-base) var(--ease-out) both; }
+html[data-vt-dir="back"]::view-transition-new(root) { animation: vt-section-in-back var(--dur-base) var(--ease-out) both; }
 @media (prefers-reduced-motion: reduce) {
   html[data-vt-dir]::view-transition-old(root),
   html[data-vt-dir]::view-transition-new(root) { animation: none; }
