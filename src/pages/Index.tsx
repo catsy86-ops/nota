@@ -19,11 +19,8 @@ import { useReminderNotifications } from "@/hooks/useReminderNotifications";
 import { useOverdueBadge } from "@/hooks/useOverdueBadge";
 import { useTheme } from "@/hooks/useTheme";
 import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
-import { useFilteredNotes } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
-import { countDueToday, groupReminders, sortArchivedByReminder } from "@/lib/reminderAgenda";
 import { useStudyOverdueCount } from "@/lib/studyOverdueCount";
-import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
 import { resolveWikiTarget, splitWikiTarget } from "@/lib/wikiLinks";
 import { requestHeading } from "@/lib/wikiHeading";
 import { useLatestRef } from "@/hooks/useLatestRef";
@@ -57,7 +54,6 @@ import { NoteTable } from "@/components/NoteTable";
 import { NoteGallery } from "@/components/NoteGallery";
 import { columnOfNote, NONE_COLUMN, PINNED_COLUMN } from "@/lib/boardColumns";
 import { NoteGroupSection } from "@/components/NoteGroupSection";
-import { groupNotes, type GroupBy } from "@/lib/groupNotes";
 import { folderCrumbs, labelCrumbs } from "@/lib/breadcrumbs";
 import { FolderTemplateActions } from "@/components/FolderTemplateActions";
 import { EmptyState } from "@/components/EmptyState";
@@ -65,7 +61,6 @@ import { DeleteForeverDialog, EmptyTrashDialog } from "@/components/TrashConfirm
 import { sidebarItems } from "@/components/sidebar/sidebarItems";
 import { useHiddenViews, isViewShown } from "@/lib/hiddenViews";
 import { useTodayCards } from "@/lib/todayCards";
-import { useNextBoundary } from "@/hooks/useNextBoundary";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { useInboxCapture } from "@/hooks/useInboxCapture";
@@ -104,6 +99,7 @@ import { QuickPresetsHost } from "@/components/settings/QuickPresets";
 import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, CommandPalette, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, StudyOverdueSync, NoteReader } from "./indexViews";
 import { IdleWarmup, MarkOpenedSync, ReaderHistoryKeys, SearchTermsSync, UndoHandlersSync } from "./IndexEffects";
 import { useShiftsUndo, useSidebarOpen } from "./indexHooks";
+import { reminderWriters, useNotesScreen } from "./useNotesScreen";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -113,7 +109,6 @@ import { Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { requestSettingsTab } from "@/lib/settingsDeepLink";
 import type { DebtReminderApi } from "@/components/debts/DebtsView";
-import { repeatUpdate, toRule, type RepeatInput } from "@/lib/reminderRepeat";
 
 const Index = () => {
   const {
@@ -160,21 +155,30 @@ const Index = () => {
   }
 
   const openNoteRef = useRef<(id: string) => void>(() => {});
-  // Stabilna tablica: nowa w każdym renderze restartowałaby sprawdzanie przy każdym znaku w wyszukiwarce.
-  const reminderNotes = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
+  // Zmiana sortowania i układu (3.4): lista nadrabia, pasek ustawień reaguje od razu.
+  const deferredPrefs = useDeferredValue(prefs);
+  const {
+    displayNotes, pinned, others, elsewhere, reminderNotes, reminderGroups, archivedRows, reminderRowCount,
+    boardMode, tableMode, galleryMode, groupBy, showPinned, pinnedCollapsible, pinnedCollapsed, groups, visibleNotes, visibleNotesRef,
+  } = useNotesScreen({ notes, archivedNotes, trashedNotes, folders, propDefs, view, activeLabel, activeFolder, deferredSearch, deferredPrefs, prefs });
+  const groupCollapsedKey = (key: string) => `${groupBy}:${key}`;
+  const { createReminderNote, setReminder, attachReminder } = reminderWriters(addNote, updateNote, prefs.defaultNoteColor);
+  const openSettingsTab = (tab: Parameters<typeof requestSettingsTab>[0]) => { requestSettingsTab(tab); setSettingsOpen(true); };
+  // Jedna mapa zamiast liniowego `find` po trzech listach przy każdym wywołaniu (mapa Index, A2.3).
+  const byId = useMemo(() => new Map([...notes, ...archivedNotes, ...trashedNotes].map((n) => [n.id, n] as const)), [notes, archivedNotes, trashedNotes]);
   // Długi (1.1): rozliczenie zdejmuje termin notatki zwrotu; „Cofnij” oddaje poprzedni.
   const debtReminders = useMemo<DebtReminderApi>(() => ({
     clear: (id) => {
-      const n = [...notes, ...archivedNotes, ...trashedNotes].find((x) => x.id === id);
+      const n = byId.get(id);
       if (!n || n.reminder === null) return null;
       updateNote(id, { reminder: null });
       return n.reminder;
     },
     restore: (id, at) => updateNote(id, { reminder: at }),
-    get: (id) => [...notes, ...archivedNotes, ...trashedNotes].find((x) => x.id === id)?.reminder ?? null,
-    has: (id) => [...notes, ...archivedNotes, ...trashedNotes].some((x) => x.id === id),
+    get: (id) => byId.get(id)?.reminder ?? null,
+    has: (id) => byId.has(id),
     remove: (id) => deleteNote(id),
-  }), [notes, archivedNotes, trashedNotes, updateNote, deleteNote]);
+  }), [byId, updateNote, deleteNote]);
   const pushEnabled = useReminderSinkOn();
   useReminderNotifications(
     reminderNotes,
@@ -263,70 +267,9 @@ const Index = () => {
     toastWithUndo("Przywrócono wersję", () => updateNote(noteId, before), { id: `version-${noteId}` });
   }, [notesRef, updateNote, addVersion]);
 
-  // Zmiana sortowania i układu (3.4): lista nadrabia, pasek ustawień reaguje od razu.
-  const deferredPrefs = useDeferredValue(prefs);
-  const { displayNotes, pinned, others, elsewhere } = useFilteredNotes({
-    notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search: deferredSearch, prefs: deferredPrefs, propDefs,
-  });
-
   useDayDoneReward(view === "today" && !search ? displayNotes : null);
   // Przewinięcie per dział (3.6): wracając do działu, stoimy tam, gdzie z niego wyszliśmy.
   useViewScroll(view);
-  // W Terminach archiwum zostaje w liście (dzwoni), więc „Brak przypomnień” nie może mówić prawdy tylko o `displayNotes` (1d planu).
-  // Archiwum nie wchodzi do grup „Zaległe”/„Nadchodzące” (D4): ma własną sekcję na dole, z wyszukiwaniem.
-  // T 1.1: grupy przeliczają się na granicy terminu i o północy, nie tylko przy zmianie notatek.
-  const boundaryTick = useNextBoundary(others);
-  // `boundaryTick` wymusza przeliczenie na granicy terminu (groupReminders czyta bieżący czas).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const reminderGroups = useMemo(() => (view === "reminders" ? groupReminders(others) : []), [view, others, boundaryTick]);
-  // Zapis terminu z dialogu „Nowy termin” (Terminy). Kalendarz ma własne, równoważne wywołania w `ReminderCalendarView`.
-  const createReminderNote = (title: string, reminder: number, repeat: RepeatInput, allDay: boolean, until?: number) => {
-    const id = addNote(title, "", prefs.defaultNoteColor, [], reminder);
-    // `addNote` nie przyjmuje powtarzania, więc serię dostawiamy patchem po utworzeniu.
-    if (toRule(repeat).kind !== "none" || allDay) updateNote(id, { ...repeatUpdate(repeat), ...(toRule(repeat).kind !== "none" && until !== undefined ? { reminderRepeatUntil: until } : {}), ...(allDay ? { reminderAllDay: true } : {}) });
-  };
-  const attachReminder = (id: string, reminder: number, repeat: RepeatInput, allDay: boolean, base: number | undefined, until?: number) =>
-    updateNote(id, { reminder, ...repeatUpdate(repeat), reminderRepeatUntil: toRule(repeat).kind === "none" ? undefined : until, reminderBase: base, reminderAllDay: allDay ? true : undefined });
-  const searchVersion = useSearchVersion();
-  const archivedRows = useMemo(
-    // T 1.6: archiwum po terminie jak grupy — z terminem rosnąco, bez terminu na końcu.
-    () => (view === "reminders" ? (deferredSearch ? searchNotes(archivedNotes, deferredSearch) : sortArchivedByReminder(archivedNotes)) : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `searchVersion`: przeliczenie po odpowiedzi Workera wyszukiwania
-    [view, deferredSearch, archivedNotes, searchVersion],
-  );
-  // Na „Dziś” liczą się zaległe i dzisiejsze przypomnienia, żeby „Brak notatek z dzisiaj” nie stał obok ich listy.
-  // Bez `useMemo`: Index i tak renderuje się po północy (useOverdueBadge → useDayClock).
-  const reminderRowCount = view === "reminders"
-    ? reminderGroups.reduce((n, g) => n + g.notes.length, 0) + archivedRows.length
-    : view === "today" ? countDueToday(reminderNotes) : 0;
-
-  // Sekcje widoku: „Przypięte” (zwijane od 4 notatek) i reszta, opcjonalnie podzielona na grupy.
-  // `visibleNotes` = to, co faktycznie jest na ekranie (bez zwiniętych) w kolejności widoku.
-  // Tablica / tabela mają sens tylko w widokach z listą notatek (nie w agendzie, koszu, kalendarzu, grafiku).
-  const listView = view !== "reminders" && view !== "trash" && !isAppView(view) && view !== "widget";
-  const boardMode = prefs.layout === "board" && listView;
-  const tableMode = prefs.layout === "table" && listView;
-  const galleryMode = prefs.layout === "gallery" && listView;
-  // Kolumny tablicy potrzebują podziału: bez wybranego domyślnie idą po etykiecie.
-  const groupBy: GroupBy = view === "reminders" || view === "trash" ? "none" : boardMode && prefs.groupBy === "none" ? "label" : prefs.groupBy;
-  const showPinned = pinned.length > 0 && view !== "archive" && view !== "trash";
-  const pinnedCollapsible = pinned.length > 3;
-  const pinnedCollapsed = pinnedCollapsible && prefs.collapsedGroups.includes("pinned");
-  const groups = useMemo(
-    () => groupNotes(others, groupBy, { now: Date.now(), dateField: prefs.sortKey === "created" ? "createdAt" : "updatedAt", folders }),
-    [others, groupBy, prefs.sortKey, folders],
-  );
-  const groupCollapsedKey = (key: string) => `${groupBy}:${key}`;
-  const visibleNotes = useMemo(() => {
-    const out = showPinned && !pinnedCollapsed ? [...pinned] : [];
-    if (view === "reminders") return [...out, ...others];
-    for (const g of groups) {
-      if (groupBy === "none" || !prefs.collapsedGroups.includes(`${groupBy}:${g.key}`)) out.push(...g.notes);
-    }
-    return out;
-  }, [showPinned, pinnedCollapsed, pinned, others, groups, groupBy, view, prefs.collapsedGroups]);
-  const visibleNotesRef = useLatestRef(visibleNotes);
-
   const { allNotesForLinks, knownTitles, wikiIndex } = useWikiLinkIndex(notes, archivedNotes);
   const findDuplicate = useCallback((title: string) => findTitleDuplicate(title, allNotesForLinks), [allNotesForLinks]);
   const allNotesForLinksRef = useLatestRef(allNotesForLinks);
@@ -508,7 +451,7 @@ const Index = () => {
 
       <div className="flex-1 min-w-0 flex flex-col">
         <AppHeader
-          onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }}
+          onOpenSync={() => openSettingsTab("sync")}
           onOpenPalette={() => setPaletteOpen(true)}
           selectionMode={selectionMode}
           sidebarOpen={sidebarOpen}
@@ -528,12 +471,12 @@ const Index = () => {
         {/* Akcje widoków trafiają do główki przez portal (nowy plan 1.1). */}
         <PageActionsProvider>
         <main ref={mainRef} className={`flex-1 max-w-[calc(var(--page-wide)+3rem)] mx-auto w-full px-page py-6 sm:py-8 flex flex-col pb-safe ${view === "today" ? "gap-4 sm:gap-stack" : "gap-stack"}`}>
-          <RestoreInterruptedBanner onOpenBackup={() => { requestSettingsTab("backup"); setSettingsOpen(true); }} />
+          <RestoreInterruptedBanner onOpenBackup={() => openSettingsTab("backup")} />
           <DocFormatBanner />
-          <DocReplaceNotice onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }} />
-          <DataLossBanner onOpenBackup={() => { requestSettingsTab("backup"); setSettingsOpen(true); }} />
-          <OlderDeviceBanner onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }} />
-          {view === "today" && <NewCodeBanner onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }} />}
+          <DocReplaceNotice onOpenSync={() => openSettingsTab("sync")} />
+          <DataLossBanner onOpenBackup={() => openSettingsTab("backup")} />
+          <OlderDeviceBanner onOpenSync={() => openSettingsTab("sync")} />
+          {view === "today" && <NewCodeBanner onOpenSync={() => openSettingsTab("sync")} />}
           {/* Główka kartki w każdym dziale (plan wyglądu, Faza 1); lewa krawędź wspólna z treścią (nowy plan 1.2). */}
           {view !== "widget" && (
             <ViewTitle
@@ -741,16 +684,9 @@ const Index = () => {
               <Suspense fallback={<ViewSkeleton view="calendar" />}>
                 <ReminderCalendarView
                   notes={reminderNotes}
-                  onCreateNote={(title, reminder, repeat, allDay, until) => {
-                    const id = addNote(title, "", prefs.defaultNoteColor, [], reminder);
-                    // `addNote` nie przyjmuje powtarzania, więc serię dostawiamy
-                    // patchem po utworzeniu — stąd id zwracane przez `addNote`.
-                    if (toRule(repeat).kind !== "none" || allDay) updateNote(id, { ...repeatUpdate(repeat), ...(toRule(repeat).kind !== "none" && until !== undefined ? { reminderRepeatUntil: until } : {}), ...(allDay ? { reminderAllDay: true } : {}) });
-                  }}
+                  onCreateNote={createReminderNote}
                   onOpenNote={(id) => openNote(id)}
-                  onSetReminder={(id, reminder, repeat, reminderDay, reminderBase, reminderAllDay, until) =>
-                    // Koniec serii idzie z wywołania (K0.4). Bez powtarzania czyścimy go, żeby nie wrócił przy następnej serii.
-                    updateNote(id, { reminder, ...repeatUpdate(repeat), reminderRepeatUntil: toRule(repeat).kind === "none" ? undefined : until, ...(reminderDay === undefined ? {} : { reminderDay }), reminderBase, reminderAllDay: reminderAllDay === true ? true : undefined })}
+                  onSetReminder={setReminder}
                 />
               </Suspense>
             </ViewErrorBoundary>
@@ -881,8 +817,8 @@ const Index = () => {
           propDefs={propDefs}
           onUpdateProps={updateNote}
           onToggleChecklist={(noteId, itemId) => {
-            const n = [...notes, ...archivedNotes].find((x) => x.id === noteId);
-            if (!n) return;
+            const n = byId.get(noteId);
+            if (!n || n.trashed) return;
             updateNote(noteId, { checklist: toggleChecklistItem(n.checklist, itemId).items });
           }}
         />

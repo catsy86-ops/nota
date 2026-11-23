@@ -540,3 +540,21 @@ Nowe testy jednostkowe: `src/lib/study/dimensions.test.ts`, `companyPrefs.test.t
 **Testy.** `src/pages/IndexEffects.test.tsx` (9 przypadków: pasek boczny telefon/komputer, cofanie Grafiku dopiero po załadowaniu magazynu i oddanie skrótu poza Grafikiem, rozgrzewka po czasie, frazy, oba ujścia cofania, zapis otwarcia, Alt+← z pominięciem zablokowanych, brak kroku zostawia skrót przeglądarce, pole tekstowe i otwarte okno).
 
 **Commit.** Patrz historia `src/pages/IndexEffects.tsx`, 2026-11-23.
+
+## Architektura — model listy `useNotesScreen` i wspólny zapis terminów (A2.3 część, 2026-11-23)
+
+**Co robi.** Nic widocznego dla użytkownika. Wyliczanie listy notatek i Terminów wyszło z `Index.tsx` do hooka, a Terminy i Kalendarz zapisują terminy jedną funkcją.
+
+**Gdzie jest.** `src/pages/useNotesScreen.ts`:
+- `useNotesScreen(args)` — filtr (`useFilteredNotes`), `reminderNotes`, grupy i wiersze Terminów (`reminderGroups`, `archivedRows`, `reminderRowCount`), tryby układu (`boardMode`, `tableMode`, `galleryMode`), `groupBy`, sekcja przypiętych, `groups`, `visibleNotes` (+ `visibleNotesRef`);
+- `reminderWriters(addNote, updateNote, color)` — `createReminderNote`, `setReminder` (Kalendarz), `attachReminder` (Terminy, przez `setReminder`).
+
+W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchronizacji oraz mapa `byId` (notatki, archiwum, kosz) dla `debtReminders` i listy w czytniku. 941 → 876 linii.
+
+**Jak działa.** Hook nie ma własnego stanu — wynika z danych, trasy, `prefs` i odroczonych `deferredSearch`/`deferredPrefs`. Zależności `useMemo` są takie jak wcześniej w `Index`; kolejność `visibleNotes` (przypięte, potem grupy bez zwiniętych) zachowuje nawigację klawiaturą (`navOrder`). Kontroler z planu (`{ view, filtered, selection, actions }`) budujemy etapami: zaznaczenie, akcje i tworzenie zostają na razie w `Index`.
+
+**Ograniczenia i pułapki.** Lista w czytniku sprawdza teraz `byId` i pomija notatki z kosza (`trashed`) — wcześniej szukała tylko w notatkach i archiwum, wynik ten sam.
+
+**Testy.** `src/pages/useNotesScreen.test.ts` (4 przypadki zapisu terminów: bez powtarzania, cały dzień, dołączenie czyści koniec serii, `reminderDay` z Kalendarza); e2e: smoke, `calendar-phase1/2`, `reminders-*`.
+
+**Commit.** Patrz historia `src/pages/useNotesScreen.ts`, 2026-11-23.

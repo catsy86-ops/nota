@@ -467,3 +467,4 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - CI — pełne e2e tylko na master, gałęzie na @smoke (AR-3, 2026-11-23)
 - Zrzuty `@visual` — wzorce odświeżone (2026-11-23)
 - Architektura — mapa `Index.tsx` i efekty bez widoku (A2.1, A2.2, 2026-11-23)
+- Architektura — model listy `useNotesScreen` i wspólny zapis terminów (A2.3 część, 2026-11-23)
