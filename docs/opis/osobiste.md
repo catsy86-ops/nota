@@ -660,3 +660,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa:** dane to dopisane pole `seconds`; seria na czas jest zapisywana jako `{reps: 1, seconds, kg?}`. Dzięki `reps: 1` starsza wersja aplikacji (zna tylko `reps`) widzi poprawną serię z 1 powtórzeniem i nie odrzuca wpisu. Objętość i szacowany 1RM pomijają serie na czas; obciążenie dodatkowe liczy się do rekordu ciężaru.
 - **Ograniczenia:** starsza wersja pokaże taką serię jako „1” (bez sekund); własne ćwiczenia nie mają znacznika „na czas” (tryb wybiera się przełącznikiem); cały wpis jest albo na czas, albo na powtórzenia.
 - **Testy:** `src/lib/training/model.test.ts`, `TrainingSection.test.tsx`.
+
+## Skarbiec — zapis edycji notatki prywatnej przy schowaniu strony (2026-11-23)
+
+- **Co robi:** edycja notatki prywatnej jest szyfrowana i zapisywana od razu, gdy strona przestaje być widoczna (przełączenie aplikacji na telefonie, zamknięcie karty), zamiast czekać na opóźniony zapis.
+- **Gdzie jest:** `src/lib/privateNotes.ts`, na końcu pliku — słuchacze `visibilitychange` (stan `hidden`) i `pagehide` wołają `privateNotes.flush()`. Tylko dla instancji aplikacji, nie w `createPrivateNotes` (testy jednostkowe nie dostają globalnych słuchaczy).
+- **Jak działa:** zwykłe notatki trafiają do dokumentu Yjs od razu. Prywatne czekają w pamięci `writeDelayMs` (400 ms), potem szyfrowanie (WebCrypto) i `setVault`. Schowanie w tym oknie mogło zgubić ostatnią edycję. `flush` przy zablokowanym skarbcu nic nie robi.
+- **Pułapki:** przy zamknięciu karty przeglądarka nie czeka na obietnice — `pagehide` to próba, pewny jest dopiero `visibilitychange` przy przełączeniu aplikacji. Blokada (`lock`) pokazuje kafle z „Blokuję…”, zanim zapisze ostatnią edycję; koniec blokady to „Odblokuj” na kaflu — na to czeka pomocnik `lockNowFromPalette` w e2e (stary test „przeżywa blokadę” przeładowywał w tym oknie i padał 4 razy na 5).
+- **Testy:** `e2e/private-notes.spec.ts` — „schowanie strony zapisuje edycję…” (zegar strony zatrzymany przy schowaniu, więc szyfrogram może pochodzić tylko z zapisu przy schowaniu; bez poprawki test pada) i „…przeżywa blokadę”.

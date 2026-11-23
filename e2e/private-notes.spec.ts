@@ -68,6 +68,9 @@ async function lockNowFromPalette(page: Page) {
   await page.keyboard.press("Control+k");
   await page.getByRole("option", { name: /Zablokuj prywatne notatki teraz/ }).click();
   await expect(page.locator("[data-private-tile]")).toBeVisible();
+  // Kafle pojawiają się już na starcie blokady („Blokuję…”); zapis ostatniej edycji kończy się dopiero potem.
+  // Bez czekania przeładowanie w tym oknie gubiło edycję (test „przeżywa blokadę” padał 4 razy na 5).
+  await expect(page.locator("[data-private-tile]").first()).toContainText("Odblokuj");
 }
 
 async function unlockViaTile(page: Page, password: string) {
@@ -229,6 +232,41 @@ test("edycja odblokowanej notatki zapisuje się wyłącznie jako szyfrogram i pr
   // Dziennik IndexedDB: ani nowy, ani stary tekst nie leży jawnie.
   await expect.poll(async () => { const idb = await dumpDocIdb(page); return idb.includes(EDITED) || idb.includes(SECRET); }, { timeout: 15_000 }).toBe(false);
 
+  await page.reload();
+  await unlockViaTile(page, PASSWORD);
+  await expect(card(page, TITLE)).toContainText(EDITED);
+});
+
+test("schowanie strony zapisuje edycję notatki prywatnej od razu (bez czekania na opóźniony zapis)", async ({ page }) => {
+  const EDITED = "SCHOWANA7712";
+  // Zegar strony pod kontrolą testu: przy schowaniu go zatrzymujemy, więc opóźniony zapis (setTimeout) nie może
+  // zdążyć — szyfrogram w bazie może pochodzić tylko z zapisu przy schowaniu.
+  await page.clock.install();
+  await addNote(page, TITLE, `Treść z ${SECRET} do ukrycia`);
+  await setUpVaultAndLock(page);
+  await lockNowFromPalette(page);
+  await unlockViaTile(page, PASSWORD);
+
+  await card(page, TITLE).getByText(TITLE).click();
+  await card(page, TITLE).getByPlaceholder("Treść notatki...").fill(`Zmieniona treść ${EDITED}`);
+  await card(page, TITLE).getByRole("button", { name: "Zapisz" }).click();
+  await expect(card(page, TITLE)).toContainText(EDITED);
+  const before = await page.evaluate(() => new Promise<number>((resolve) => {
+    const open = indexedDB.open("kaczy-yjs-v1");
+    open.onsuccess = () => { const r = open.result.transaction("updates").objectStore("updates").count(); r.onsuccess = () => { open.result.close(); resolve(r.result); }; };
+  }));
+  // Przełączenie aplikacji: strona schowana zaraz po zapisie, przed upływem opóźnienia zapisu szyfrogramu.
+  await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now()) + 50));
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect.poll(() => page.evaluate(() => new Promise<number>((resolve) => {
+    const open = indexedDB.open("kaczy-yjs-v1");
+    open.onsuccess = () => { const r = open.result.transaction("updates").objectStore("updates").count(); r.onsuccess = () => { open.result.close(); resolve(r.result); }; };
+  })), { timeout: 2_000 }).toBeGreaterThan(before);
+
+  await page.clock.resume();
   await page.reload();
   await unlockViaTile(page, PASSWORD);
   await expect(card(page, TITLE)).toContainText(EDITED);

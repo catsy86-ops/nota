@@ -262,6 +262,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Ćwiczenia — historia ćwiczenia i szacowany 1RM (3.4, 2026-11-12)
 - Ćwiczenia — prowadzony trening (2.1, 2026-11-12)
 - Ćwiczenia — serie na czas i z obciążeniem przy masie ciała (2.7, 2026-11-12)
+- Skarbiec — zapis edycji notatki prywatnej przy schowaniu strony (2026-11-23)
 
 ### Dane, synchronizacja i kopie — [`docs/opis/dane.md`](docs/opis/dane.md)
 

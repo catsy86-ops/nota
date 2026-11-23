@@ -880,3 +880,13 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
 export type PrivateNotes = ReturnType<typeof createPrivateNotes>;
 
 export const privateNotes = createPrivateNotes(defaultStore);
+
+// Schowanie strony (przełączenie aplikacji na telefonie, zamknięcie karty): edycja notatki prywatnej czeka w pamięci
+// `writeDelayMs` i na szyfrowanie, a zwykłe notatki są w dokumencie od razu. Zapisujemy ją przy schowaniu, zanim
+// przeglądarka zamrozi albo zamknie stronę. Zablokowany skarbiec — `flush` nic nie robi.
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") void privateNotes.flush();
+  });
+  window.addEventListener("pagehide", () => { void privateNotes.flush(); });
+}
