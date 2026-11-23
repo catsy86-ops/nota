@@ -5,11 +5,8 @@ import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatS
 import { applyTextEdit } from "./yTextEdit";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { trackPersistence } from "@/lib/saveStatus";
-import { get as idbGet, del as idbDel, keys as idbKeys, getMany as idbGetMany } from "idb-keyval";
-import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
-import { hashImage } from "@/lib/imageHash";
 import { normalizeAttachments, isAttachmentSyncable, type Attachment } from "@/lib/attachments";
-import { imageStore as defaultImageStore, isDataUrl, type ImageStore } from "@/lib/imageStore";
+import { imageStore as defaultImageStore, type ImageStore } from "@/lib/imageStore";
 import type { Note, Folder } from "@/lib/types/note";
 import { logDiag } from "@/lib/diagnostics";
 import { cleanNoteProps, cleanPropDefs, type PropDef } from "@/lib/noteProps";
@@ -22,15 +19,16 @@ import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 import { startupReplace } from "@/lib/docReplaceCore";
 import { cleanLabelPath, isUnderLabel, renameLabelBranch } from "@/lib/labelTree";
 import {
-  type YNote, type YFolder, type ImagesById, imageRefs, readReminderState,
-  NOTE_SCALAR_FIELDS, FOLDER_SCALAR_FIELDS, applyTextDiff, applyChecklistDiff, applyPropsDiff, type YPropDef,
-  yPropDefFromPlain, plainPropDefFromY, plainAttachments, PRIVATE_FIELDS, PRIVATE_META, type PrivateFields,
-  yNoteFromPlain, plainFromYNote, FOLDER_KEYS, PROP_DEF_KEYS, keepForeignKeys, yFolderFromPlain,
-  plainFromYFolder,
+  type YNote, type YFolder, imageRefs, readReminderState, NOTE_SCALAR_FIELDS, FOLDER_SCALAR_FIELDS,
+  applyTextDiff, applyChecklistDiff, applyPropsDiff, type YPropDef, yPropDefFromPlain, plainPropDefFromY,
+  plainAttachments, PRIVATE_FIELDS, PRIVATE_META, type PrivateFields, yNoteFromPlain, plainFromYNote,
+  FOLDER_KEYS, PROP_DEF_KEYS, keepForeignKeys, yFolderFromPlain, plainFromYFolder,
 } from "./yjs/codec";
 import type { StoreCtx } from "./yjs/context";
 import { createTextEditApi } from "./yjs/textEdit";
 import { createVaultApi } from "./yjs/vault";
+import { createMigrations } from "./yjs/migrations";
+
 export { FUTURE_CONTENT_KEY } from "./yjs/codec";
 
 /**
@@ -46,11 +44,6 @@ export { FUTURE_CONTENT_KEY } from "./yjs/codec";
  * list of keys that syncs with the note — and that manifest IS `Note.images`
  * in the projection. Bytes travel separately (`imageSync.ts`, sync file, backup).
  */
-
-/** Stare formaty obrazów (data URL-e per notatka) — tylko do migracji. */
-const LEGACY_IMAGES_KEY = "kaczy.images.v1";
-const IMAGES_PREFIX = "kaczy.images.v2:";
-
 
 /** Stan dokumentu odczytany z kopii (Z-16.1B): tylko do porównania i kopiowania, nic nie jest scalane. */
 export interface DocState {
@@ -176,6 +169,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     }
   });
   const migratedKey = `kaczy.yjs.migrated.v1.${dbName}`;
+  const { remapImageRefs, migrateImagesToStore, migrateFromLegacyIfNeeded } = createMigrations(ctx, migratedKey);
 
   // Zwykle trwałość powstaje od razu. Przy zamiarze wymiany dokumentu — dopiero po wymianie bazy (`opened`).
   const pendingOpen = opts.beforeOpen?.(dbName) ?? null;
@@ -183,73 +177,6 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   const opened: Promise<void> = pendingOpen ? pendingOpen.then(() => { persistence = new IndexeddbPersistence(dbName, doc); }) : Promise.resolve();
   trackPersistence(doc, () => persistence);
   let readyPromise: Promise<void> | null = null;
-
-  /**
-   * Podmienia klucze w manifestach (np. stary hash FNV → SHA-256), bez ruszania
-   * `updatedAt` — to nie jest zmiana użytkownika. Zwraca liczbę notatek.
-   */
-  function remapImageRefs(map: Map<string, string>): number {
-    if (!map.size) return 0;
-    let changed = 0;
-    doc.transact(() => {
-      notesMap.forEach((y) => {
-        const refs = y.get("imageHashes");
-        if (!Array.isArray(refs)) return;
-        const next = (refs as string[]).map((r) => map.get(r) ?? r);
-        if (next.some((r, i) => r !== refs[i])) { y.set("imageHashes", next); changed++; }
-      });
-    }, "image-migration");
-    return changed;
-  }
-
-  /**
-   * Data URL-e z `kaczy.images.v1`/`v2:*` → `imageStore`, manifesty FNV → SHA-256.
-   * Notatka bez manifestu (sprzed jego istnienia) dostaje go z lokalnych obrazów.
-   * Klucze FNV, których to urządzenie nie ma, zostają — peer, który ma obraz,
-   * podmieni je u siebie. Stare klucze kasowane dopiero po zapisaniu wszystkich
-   * obrazów; przerwana migracja powtórzy się przy następnym starcie.
-   */
-  async function migrateImagesToStore(): Promise<void> {
-    const oldKeys = (await idbKeys()).filter((k): k is string => typeof k === "string" && k.startsWith(IMAGES_PREFIX));
-    const legacy = await idbGet<ImagesById>(LEGACY_IMAGES_KEY);
-    if (!oldKeys.length && !legacy) return;
-
-    const byNote: ImagesById = { ...(legacy ?? {}) };
-    const values = await idbGetMany<string[] | undefined>(oldKeys);
-    oldKeys.forEach((k, i) => { if (values[i]?.length) byNote[k.slice(IMAGES_PREFIX.length)] = values[i]!; });
-
-    const fnvToSha = new Map<string, string>();
-    const localRefs: ImagesById = {};
-    try {
-      for (const [id, imgs] of Object.entries(byNote)) {
-        const refs: string[] = [];
-        for (const img of imgs ?? []) {
-          if (!isDataUrl(img)) continue;
-          const [ref] = await images.ingest([img]);
-          if (!ref) continue;
-          fnvToSha.set(hashImage(img), ref);
-          refs.push(ref);
-        }
-        localRefs[id] = refs;
-      }
-    } catch (err) {
-      logDiag("error", "yjsStore", "image migration failed — old images kept, will retry", err);
-      return;
-    }
-
-    doc.transact(() => {
-      for (const [id, refs] of Object.entries(localRefs)) {
-        const y = notesMap.get(id);
-        if (y && !Array.isArray(y.get("imageHashes")) && refs.length) y.set("imageHashes", refs);
-      }
-    }, "image-migration");
-    remapImageRefs(fnvToSha);
-
-    try {
-      for (const k of oldKeys) await idbDel(k);
-      if (legacy) await idbDel(LEGACY_IMAGES_KEY);
-    } catch (err) { logDiag("warn", "yjsStore", "cannot delete migrated image keys", err); }
-  }
 
   /** Liczniki do raportu diagnostycznego — tylko flagi, bez treści notatek. */
   function diagStats() {
@@ -263,29 +190,6 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       counts: { notes, archived, trashed, folders: foldersMap.size, labels: labelsMap.size },
       stateVectorBytes: Y.encodeStateVector(doc).byteLength,
     };
-  }
-
-  async function migrateFromLegacyIfNeeded(): Promise<void> {
-    let migrated = false;
-    try { migrated = Boolean(localStorage.getItem(migratedKey)); } catch { /* ignore */ }
-    if (migrated) return;
-
-    if (notesMap.size > 0 || foldersMap.size > 0 || labelsMap.size > 0) {
-      // Doc already has content (e.g. persisted before the flag existed) — nothing to migrate.
-      try { localStorage.setItem(migratedKey, "1"); } catch { /* ignore */ }
-      return;
-    }
-
-    const snapshot = await loadLegacySnapshot();
-    if (snapshot.notes.length || snapshot.folders.length || snapshot.labels.length) {
-      const notes = await Promise.all(snapshot.notes.map(async (n) => ({ ...n, images: await images.ingest(n.images ?? []) })));
-      doc.transact(() => {
-        for (const note of notes) notesMap.set(note.id, yNoteFromPlain(note));
-        for (const folder of snapshot.folders) foldersMap.set(folder.id, yFolderFromPlain(folder));
-        for (const label of snapshot.labels) labelsMap.set(label, true);
-      });
-    }
-    try { localStorage.setItem(migratedKey, "1"); } catch { /* ignore */ }
   }
 
   function ready(): Promise<void> {
