@@ -145,7 +145,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | A3.2 | `AddNoteBar.tsx` (reduktor szkicu) | ✗ | — | 974 linie |
 | A3.3 | `privateNotes.ts` | ✗ | — | 793 linie |
 | A3.4 | Rejestr poleceń palety | ✗ | — | |
-| A4.1 | Zielona baza pełnego e2e | ✗ | — | Brak `docs/e2e-znane.md`; według pamięci 11 starych porażek |
+| A4.1 | Zielona baza pełnego e2e | ◐ | 2026-11-23 | Naprawione: subpages ×2, note-groups (pasek akcji zakrywał tytuł), private-notes (blokada + zapis przy schowaniu), 6 plików Terminów/linków (nazwa kafla), site-sections (axe w trakcie animacji), 3 testy czasowe Vitest w CI. Zostaje: view-change „Luźno” (niestabilny), jobs H3.5, notification-action; pełny przebieg do potwierdzenia |
 | A4.2 | Podział CI na fragmenty | ✅ | 2026-11-23 | AR-3: pełne e2e tylko na master, gałęzie i PR na @smoke |
 | A4.3 | Bez `waitForTimeout` | ✗ | — | |
 | A4.4 | `PW_WORKERS` lokalnie | ✗ | — | |
