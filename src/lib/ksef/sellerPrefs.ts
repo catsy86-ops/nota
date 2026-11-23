@@ -3,13 +3,14 @@ import { safeLine } from "@/lib/safeText";
 import { normalizeNip } from "./nip";
 import { cleanSeries } from "./numbering";
 import type { Party } from "./invoice";
+import { PRACA } from "@/lib/storage/keys";
 
 /**
  * Dane sprzedawcy na fakturze (nazwa firmy, NIP, adres) — dane firmy wykonawcy, na urządzeniu jak `companyName`
  * i wchodzą do kopii zapasowej. Seria numeracji jest osobno i NIE wchodzi do kopii: to cecha tego telefonu.
  */
-export const SELLER_KEY = "kaczy.study.seller.v1";
-export const SERIES_KEY = "kaczy.ksef.series.v1";
+export const SELLER_KEY = PRACA.seller;
+export const SERIES_KEY = PRACA.ksefSeries;
 
 export const EMPTY_SELLER: Party = { name: "", nip: "", address1: "", address2: "" };
 
@@ -32,7 +33,7 @@ export const seriesStore = createPersistedStore<string>(SERIES_KEY, "A", {
 export const useSeries = () => seriesStore.use();
 export const setSeries = (s: string) => seriesStore.set(cleanSeries(s));
 
-export const DEVICE_ID_KEY = "kaczy.ksef.deviceId.v1";
+export const DEVICE_ID_KEY = PRACA.ksefDeviceId;
 
 /** Losowy identyfikator tego urządzenia (nie wchodzi do kopii); służy do wykrycia, że dwie osoby użyły tej samej serii. */
 export function getDeviceId(): string {

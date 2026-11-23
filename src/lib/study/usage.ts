@@ -4,8 +4,9 @@
  * Służy do decyzji „co schować, co wysunąć” (plan Pracy na budowie, B2.2).
  */
 import { useEffect } from "react";
+import { PRACA } from "@/lib/storage/keys";
 
-export const USAGE_KEY = "kaczy.study.usage.v1";
+export const USAGE_KEY = PRACA.usage;
 const MAX_FEATURES = 60;
 const NAME_RE = /^[a-z0-9][a-z0-9.-]{0,39}$/;
 const DAY_MS = 86_400_000;

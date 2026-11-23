@@ -2,12 +2,13 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { safeLine } from "@/lib/safeText";
 import { cleanMileage, EMPTY_MILEAGE, type MileageEntry, type MileageStore } from "./mileage";
 import { cleanNotes, QUOTE_NOTES_MAX } from "./quoteNotes";
+import { PRACA } from "@/lib/storage/keys";
 
 /**
  * Nazwa firmy na nagłówku protokołu PDF (P2.5, Ustawienia → Praca). Pusta = bez nagłówka.
  * Trzymana na urządzeniu: to dane firmy, nie budowy, więc nie idzie do dokumentu Nauki.
  */
-export const COMPANY_NAME_KEY = "kaczy.study.companyName.v1";
+export const COMPANY_NAME_KEY = PRACA.companyName;
 export const COMPANY_NAME_MAX = 80;
 
 export const companyNameStore = createPersistedStore<string>(COMPANY_NAME_KEY, "", {
@@ -18,7 +19,7 @@ export const setCompanyName = (name: string) => companyNameStore.set(name.slice(
 export const useCompanyName = () => companyNameStore.use();
 
 /** Numer konta do przypomnień o należności (B4.2); na urządzeniu, jak nazwa firmy. Pusty = wiadomość bez konta. */
-export const BANK_ACCOUNT_KEY = "kaczy.study.bankAccount.v1";
+export const BANK_ACCOUNT_KEY = PRACA.bankAccount;
 export const BANK_ACCOUNT_MAX = 40;
 
 export const bankAccountStore = createPersistedStore<string>(BANK_ACCOUNT_KEY, "", {
@@ -33,7 +34,7 @@ export const useBankAccount = () => bankAccountStore.use();
  * przyciskiem „Wstaw domyślne warunki”, a nie dopisywane samo — zmiana domyślnego tekstu nie zmienia wycen już wysłanych.
  * Na urządzeniu, jak nazwa firmy; wchodzi do kopii zapasowej wśród ustawień.
  */
-export const QUOTE_TERMS_KEY = "kaczy.study.quoteTerms.v1";
+export const QUOTE_TERMS_KEY = PRACA.quoteTerms;
 export const quoteTermsStore = createPersistedStore<string>(QUOTE_TERMS_KEY, "", {
   merge: (def, stored) => (typeof stored === "string" ? cleanNotes(stored) : def),
 });
@@ -49,7 +50,7 @@ export const useQuoteTerms = () => quoteTermsStore.use();
  * B4.3 Kilometrówka: przejazdy i ostatnia stawka. Na urządzeniu (jak cennik) — to rozliczenie osoby, nie budowy,
  * więc nie idzie do wspólnego dokumentu ani do synchronizacji.
  */
-export const MILEAGE_KEY = "kaczy.study.mileage.v1";
+export const MILEAGE_KEY = PRACA.mileage;
 
 export const mileageStore = createPersistedStore<MileageStore>(MILEAGE_KEY, EMPTY_MILEAGE, {
   merge: (_def, stored) => cleanMileage(stored),
@@ -77,7 +78,7 @@ export function removeMileageEntry(id: string): MileageEntry | undefined {
  * H5.1 Autor: imię osoby na tym urządzeniu („Marek”) dopisywane do nowych wpisów, braków i kroków punktów
  * (pole `by`). Na urządzeniu, nie w dokumencie — każdy telefon to inna osoba. Pusty = bez autora.
  */
-export const AUTHOR_KEY = "kaczy.study.author.v1";
+export const AUTHOR_KEY = PRACA.author;
 export const AUTHOR_MAX = 40;
 export const cleanAuthor = (v: unknown): string | undefined => {
   const t = typeof v === "string" ? safeLine(v).slice(0, AUTHOR_MAX) : "";

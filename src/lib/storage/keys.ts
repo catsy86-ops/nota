@@ -111,6 +111,34 @@ export const APPEARANCE = {
   customTheme: "kaczy.customTheme.v1",
 } as const;
 
+/** Nazwy kluczy Pracy (D6.2): magazyn wpisów, firma, cennik, KSeF, przypomnienia raportów, widok tablicy. */
+export const PRACA = {
+  entryPick: "kaczy.study.entryPick.v1",
+  levelOffset: "kaczy.level.offset.v1",
+  siteArrivalAsked: "kaczy.study.siteArrivalAsked.v1",
+  boardColumn: "kaczy.study.boardColumn.v1",
+  seller: "kaczy.study.seller.v1",
+  ksefSeries: "kaczy.ksef.series.v1",
+  ksefDeviceId: "kaczy.ksef.deviceId.v1",
+  catalog: "kaczy.study.catalog.v1",
+  companyName: "kaczy.study.companyName.v1",
+  bankAccount: "kaczy.study.bankAccount.v1",
+  quoteTerms: "kaczy.study.quoteTerms.v1",
+  mileage: "kaczy.study.mileage.v1",
+  author: "kaczy.study.author.v1",
+  fingerprints: "kaczy.study.fingerprints.v1",
+  store: "kaczy.study.v1",
+  journalDraft: "kaczy.study.draft.v1",
+  pricing: "kaczy.study.pricing.v1",
+  prices: "kaczy.study.prices.v1",
+  reportNudged: "kaczy.study.reportNudged.v1",
+  weekReportNudged: "kaczy.study.weekReportNudged.v1",
+  reportNudges: "kaczy.study.reportNudges.v1",
+  siteArrival: "kaczy.study.siteArrival.v1",
+  tab: "kaczy.study.tab.v1",
+  usage: "kaczy.study.usage.v1",
+} as const;
+
 /** Miejsca na zapisane zestawy wyglądu (poza kopią — dane tego urządzenia). */
 export const appearanceSlotKey = (n: number): string => `kaczy.appearance.slot.${n}.v1`;
 

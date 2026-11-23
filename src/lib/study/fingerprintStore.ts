@@ -1,12 +1,13 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { FINGERPRINT_MIN_HEX, normalizeFingerprintInput } from "./documentFingerprint";
+import { PRACA } from "@/lib/storage/keys";
 
 /**
  * B4.4 Zapis odcisków wystawionych dokumentów — na tym urządzeniu, nie w dokumencie Pracy. Kod w stopce PDF
  * sam niczego nie dowodzi (ktoś mógłby przerobić PDF i wpisać inny kod), dopiero porównanie z zapisem
  * wystawcy mówi, czy PDF, który ktoś pokazuje, jest tym wystawionym. Wpisy nie synchronizują się.
  */
-export const FINGERPRINTS_KEY = "kaczy.study.fingerprints.v1";
+export const FINGERPRINTS_KEY = PRACA.fingerprints;
 export const FINGERPRINTS_MAX = 300;
 
 export interface StoredFingerprint {

@@ -1,3 +1,4 @@
+import { PRACA } from "@/lib/storage/keys";
 /**
  * Zapamiętana zakładka działu Praca (na tym urządzeniu — telefon i komputer
  * służą do czego innego). Bez zapisu: telefon zaczyna od „Budowy” (bieżąca budowa i trzy duże
@@ -13,7 +14,7 @@ export type StudyTab = (typeof STUDY_TABS)[number];
 export const LEARN_TABS: readonly string[] = ["quiz", "board", "list"];
 /** Pozycja głównego paska dla zakładki: Quiz, Tablica i Lista to „learn”. */
 export const studyTabGroup = (tab: string): string => (LEARN_TABS.includes(tab) ? "learn" : tab);
-export const STUDY_TAB_KEY = "kaczy.study.tab.v1";
+export const STUDY_TAB_KEY = PRACA.tab;
 
 /**
  * Zakładka z adresu: `/praca?zakladka=plany`. Plany są zakładką Pracy (2026-11-05), więc `go("plans")`, paleta,

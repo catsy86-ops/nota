@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { createPersistedStore } from "@/lib/persistedStore";
+import { PRACA } from "@/lib/storage/keys";
 
 /**
  * Katalog systemów instalacji (H1.5, plan 2026-10-29): pigułki rur i kształtek dla wybranego systemu
@@ -76,7 +77,7 @@ export function cleanCatalogPrefs(_d: CatalogPrefs, raw: unknown): CatalogPrefs 
   return { system: def.id, size };
 }
 
-const store = createPersistedStore<CatalogPrefs>("kaczy.study.catalog.v1", DEFAULT_PREFS, { merge: cleanCatalogPrefs });
+const store = createPersistedStore<CatalogPrefs>(PRACA.catalog, DEFAULT_PREFS, { merge: cleanCatalogPrefs });
 
 export const useCatalogPrefs = () => useSyncExternalStore(store.subscribe, store.get);
 

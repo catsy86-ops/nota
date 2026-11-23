@@ -12,6 +12,7 @@ import { MODULES, QUESTIONS, TOPICS, type StudyTopic } from "@/lib/study/content
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
 import { accuracyByTopic, suggestsDone } from "@/lib/study/stats";
 import { COLUMNS, columnOf, dueToday, moveTopic, practiceByTopic, useStudy, useStudyLists, type Column, type StudyState, type TopicPractice } from "@/lib/study/store";
+import { PRACA } from "@/lib/storage/keys";
 
 const COLUMN_LABEL: Record<Column, string> = { todo: "Do nauki", doing: "W trakcie", done: "Umiem" };
 const COLUMN_HINT: Record<Column, string> = {
@@ -29,7 +30,7 @@ const moduleLabel = (id: StudyTopic["module"]) => MODULES.find((m) => m.id === i
  * Przeniesienie tematu. Na telefonie widać jedną kolumnę naraz, więc karta znika
  * z ekranu — dymek mówi, dokąd poszła.
  */
-const PHONE_COLUMN_KEY = "kaczy.study.boardColumn.v1";
+const PHONE_COLUMN_KEY = PRACA.boardColumn;
 const readPhoneColumn = (): Column | null => {
   try {
     const v = localStorage.getItem(PHONE_COLUMN_KEY);

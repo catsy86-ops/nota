@@ -6,9 +6,10 @@ import { useStudyReady, yStudy } from "@/lib/study/data";
 import { arrivalSite } from "@/lib/study/siteArrival";
 import { siteArrivalStore } from "@/lib/study/siteArrivalPrefs";
 import { enterEntryCheck, useEntryCheck } from "@/lib/study/entryCheckStore";
+import { PRACA } from "@/lib/storage/keys";
 
 /** Dzień, w którym już zapytano o położenie — raz dziennie, także po odświeżeniu. */
-const ASKED_KEY = "kaczy.study.siteArrivalAsked.v1";
+const ASKED_KEY = PRACA.siteArrivalAsked;
 /** Po ile ms dajemy GPS na odpowiedź; dłużej nie czekamy przy otwarciu. */
 const LOCATE_TIMEOUT_MS = 8000;
 

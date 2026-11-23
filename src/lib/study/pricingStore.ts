@@ -5,13 +5,14 @@ import { fittingKey } from "./fittings";
 import type { PriceList } from "./materialUsage";
 import type { QuoteTemplate } from "./quoteTemplates";
 import { createYPricing } from "./yPricing";
+import { PRACA } from "@/lib/storage/keys";
 
 /** Cenniki żyją w dokumencie Yjs notatek (`yPricing.ts`); widoki zmieniają je tylko akcjami poniżej. */
 const yPricing = createYPricing(yjsStore.doc);
 
 /** Klucze `localStorage` sprzed synchronizacji cenników (4.1) — czytane już tylko do jednorazowego importu. */
-export const LEGACY_PRICING_KEY = "kaczy.study.pricing.v1";
-export const LEGACY_PRICES_KEY = "kaczy.study.prices.v1";
+export const LEGACY_PRICING_KEY = PRACA.pricing;
+export const LEGACY_PRICES_KEY = PRACA.prices;
 
 export const usePricing = (): CompanyPricing => useSyncExternalStore(yPricing.subscribe, yPricing.labor);
 export const getPricing = (): CompanyPricing => yPricing.labor();

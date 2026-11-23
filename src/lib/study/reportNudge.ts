@@ -2,6 +2,7 @@ import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
 import { dayKeyOf, shiftKey } from "./report";
 import { entrySiteId } from "./sites";
 import type { JournalEntry } from "./journalEntry";
+import { PRACA } from "@/lib/storage/keys";
 
 /**
  * Przypomnienie „Raport dnia gotowy”: raz dziennie, po końcu dzisiejszej zmiany z Grafiku
@@ -10,9 +11,9 @@ import type { JournalEntry } from "./journalEntry";
  */
 
 /** Dzień ostatniego przypomnienia („2026-10-14”) — drugi raz tego dnia nie przypominamy. */
-export const REPORT_NUDGE_KEY = "kaczy.study.reportNudged.v1";
+export const REPORT_NUDGE_KEY = PRACA.reportNudged;
 /** Tydzień ostatniego przypomnienia o raporcie tygodnia (poniedziałek: „2026-10-12”). */
-export const WEEK_REPORT_NUDGE_KEY = "kaczy.study.weekReportNudged.v1";
+export const WEEK_REPORT_NUDGE_KEY = PRACA.weekReportNudged;
 /** Godzina przypomnienia, gdy Grafik nie ma dziś zmiany (albo zmiana przechodzi przez północ). */
 export const REPORT_NUDGE_FALLBACK = "17:00";
 

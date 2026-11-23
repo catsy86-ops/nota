@@ -835,6 +835,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
   - odczyt i zapis: `readKey`, `writeKey`, `removeKey`;
   - zapytania o rejestr: `backupKeyNames`, `isSensitiveKey`, `registeredKeys`.
 - Nazwy kluczy Wyglądu: obiekt `APPEARANCE` (np. `APPEARANCE.skin`) i `appearanceSlotKey(n)`; `APPEARANCE_KEYS` to jego wartości, `src/lib/appearanceCode.ts` eksportuje je dalej. Moduły Wyglądu (`skins.ts`, `accent.ts`, `frames.ts`, `useTheme.ts`, `appearancePresets.ts` i reszta) biorą nazwę stąd.
+- Nazwy kluczy Pracy: obiekt `PRACA` (np. `PRACA.seller`, `PRACA.ksefSeries`, `PRACA.store` = `kaczy.study.v1`). Czytają je `src/lib/study/*` (firma, cennik, raporty, zakładka, użycie), `src/lib/ksef/sellerPrefs.ts` i komponenty `src/components/study/` (tablica, poziomica, przyjazd na budowę). Dotychczasowe stałe (`SELLER_KEY`, `COMPANY_NAME_KEY` …) zostały jako aliasy.
 - Strażnik D6.2: `src/lib/storage/keyLiterals.test.ts` z listą wyjątków `keyLiterals.exempt.ts`.
 - `SETTINGS_KEYS` w `src/lib/exportNotes.ts` to `backupKeyNames()`.
 
@@ -846,7 +847,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 - Jako wrażliwe są oznaczone: kod parowania `kaczy.sync.v1`, token push, PIN i próby skarbca, adres przekaźnika, numer konta i odciski dokumentów.
 
 **Ograniczenia i pułapki.**
-- D6.2 w toku: przeniesiony Wygląd; ok. 110 plików jest jeszcze na liście wyjątków. Moduły nadal czytają przez `createPersistedStore`, nie `readKey`/`writeKey`.
+- D6.2 w toku: przeniesione Wygląd i Praca; 96 plików jest jeszcze na liście wyjątków. Moduły nadal czytają przez `createPersistedStore`, nie `readKey`/`writeKey`.
 - Nowy klucz kopii trzeba dodać w `keys.ts`, nie w `exportNotes.ts`.
 - `isSensitiveKey` nie ma jeszcze wywołującego. Raport diagnostyczny będzie z niego korzystał po D6.2.
 

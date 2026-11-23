@@ -9,12 +9,13 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { slopeLabel, slopePercent, slopeZone, smooth, SLOPE_OK_MAX, SLOPE_OK_MIN } from "@/lib/study/slope";
 import { toast } from "sonner";
 import { cardVariant } from "@/components/ui/card";
+import { PRACA } from "@/lib/storage/keys";
 
 type Axis = "beta" | "gamma";
 type Status = "idle" | "waiting" | "live" | "denied" | "nosensor";
 
 /** Kalibracja: odczyt na płaskiej powierzchni, odejmowany od pomiaru (osobno dla obu osi). Na urządzeniu. */
-const offsetStore = createPersistedStore<Record<Axis, number>>("kaczy.level.offset.v1", { beta: 0, gamma: 0 }, {
+const offsetStore = createPersistedStore<Record<Axis, number>>(PRACA.levelOffset, { beta: 0, gamma: 0 }, {
   merge: (d, s) => {
     const o = (s ?? {}) as Partial<Record<Axis, unknown>>;
     const n = (v: unknown, def: number) => (typeof v === "number" && Number.isFinite(v) && Math.abs(v) <= 90 ? v : def);

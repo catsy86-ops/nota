@@ -1,6 +1,6 @@
 /**
  * D6.2: pliki z literałem klucza `"kaczy…"` poza rejestrem (`keys.ts`), jeszcze nieprzeniesione. Lista tylko maleje —
- * pilnuje tego `keyLiterals.test.ts`. Przeniesione: Wygląd (2026-11-23).
+ * pilnuje tego `keyLiterals.test.ts`. Przeniesione: Wygląd, Praca (2026-11-23).
  */
 export const KEY_LITERAL_EXEMPT: readonly string[] = [
   "src/components/AddNoteBar.tsx",
@@ -20,10 +20,6 @@ export const KEY_LITERAL_EXEMPT: readonly string[] = [
   "src/components/settings/AppearanceSettings.tsx",
   "src/components/settings/BackupSettings.tsx",
   "src/components/shifts/ShiftsView.tsx",
-  "src/components/study/EntryCheck.tsx",
-  "src/components/study/LevelMeter.tsx",
-  "src/components/study/SiteArrivalPrompt.tsx",
-  "src/components/study/StudyBoard.tsx",
   "src/components/sync/OlderDeviceBanner.tsx",
   "src/hooks/useBackupReminders.ts",
   "src/hooks/useDailyWeeklyNudges.tsx",
@@ -52,7 +48,6 @@ export const KEY_LITERAL_EXEMPT: readonly string[] = [
   "src/lib/hiddenViews.ts",
   "src/lib/imageStore.ts",
   "src/lib/import/commit.ts",
-  "src/lib/ksef/sellerPrefs.ts",
   "src/lib/lastOpened.ts",
   "src/lib/legacyRoomIdle.ts",
   "src/lib/liveTranscript.ts",
@@ -81,17 +76,7 @@ export const KEY_LITERAL_EXEMPT: readonly string[] = [
   "src/lib/shifts/ics.ts",
   "src/lib/shifts/store.ts",
   "src/lib/skinSignal.ts",
-  "src/lib/study/catalog.ts",
-  "src/lib/study/companyPrefs.ts",
   "src/lib/study/customPrefill.ts",
-  "src/lib/study/fingerprintStore.ts",
-  "src/lib/study/keys.ts",
-  "src/lib/study/pricingStore.ts",
-  "src/lib/study/reportNudge.ts",
-  "src/lib/study/reportNudgePrefs.ts",
-  "src/lib/study/siteArrivalPrefs.ts",
-  "src/lib/study/tab.ts",
-  "src/lib/study/usage.ts",
   "src/lib/swipeHint.ts",
   "src/lib/sync/rekey.ts",
   "src/lib/sync/relayRuntime.ts",

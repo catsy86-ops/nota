@@ -25,6 +25,7 @@ import { QuickLink } from "./QuickLink";
 import { toastWithUndo } from "@/lib/undoToast";
 import { formatHoursShort } from "@/lib/shifts/time";
 import { cardVariant } from "@/components/ui/card";
+import { PRACA } from "@/lib/storage/keys";
 
 const hhmm = (at: number) => new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 const pointsPl = (n: number) => `${n} ${pluralPl(n, ["punktu", "punktów", "punktów"])}`;
@@ -34,7 +35,7 @@ const endOfToday = () => { const d = new Date(); d.setHours(23, 59, 59, 999); re
 const PICK_MAX = 4;
 
 /** Budowa wybrana w karcie (id) — w `sessionStorage`, żeby przetrwała przejście na inny widok i powrót. */
-const PICK_KEY = "kaczy.study.entryPick.v1";
+const PICK_KEY = PRACA.entryPick;
 const session = () => { try { return typeof sessionStorage === "undefined" ? null : sessionStorage; } catch { return null; } };
 const readPick = () => { try { return session()?.getItem(PICK_KEY) ?? null; } catch { return null; } };
 const writePick = (id: string) => { try { session()?.setItem(PICK_KEY, id); } catch { /* bez pamięci karty wybór żyje do zmiany widoku */ } };
