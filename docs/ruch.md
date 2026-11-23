@@ -96,4 +96,4 @@ INP z `web-vitals-phone.spec.ts` (bez dławienia) po M2.1: mediana 160–176 ms,
 
 ## Do zrobienia
 
-Przejścia między działami i arkusze z gestem (M4), zrzuty z wyłączonym ruchem i film (M5.5).
+Plan ruchu zrobiony (2026-11-23). Zostaje: przegląd i odświeżenie wzorców `@visual` (różnice z układu po 19.11), pomiar na prawdziwym telefonie.
