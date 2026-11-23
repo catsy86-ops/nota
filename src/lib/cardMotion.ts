@@ -4,13 +4,27 @@ import { dur, ease } from "@/lib/motion";
 // Ruch kart notatek: kaskada wejścia, wyjście zależne od akcji i „stempel” przypięcia.
 // Same `transform`/`opacity` — bezpieczne przy setkach kart.
 
-/** Ile pierwszych kart dostaje opóźnienie kaskady; reszta wchodzi od razu. */
-const CASCADE_CARDS = 6;
-const CASCADE_STEP = 0.035;
+/** Ile pierwszych kart dostaje opóźnienie kaskady; reszta wchodzi od razu. Ostatnia rusza po 7 × 30 = 210 ms. */
+const CASCADE_CARDS = 8;
+const CASCADE_STEP = 0.03;
+/** Okno kaskady od pierwszego wywołania (ms). Po nim karty wchodzą bez opóźnienia. */
+const CASCADE_WINDOW = 400;
+let cascadeUntil: number | undefined;
 
-export function cascadeDelay(index: number, reduced: boolean): number {
+/**
+ * Opóźnienie wejścia karty. M2.3: kaskada tylko przy pierwszym pokazaniu listy w sesji — powrót do widoku
+ * (z notatki, z innego działu) i nowe karty później wchodzą od razu, bez czekania w kolejce.
+ */
+export function cascadeDelay(index: number, reduced: boolean, now = performance.now()): number {
   if (reduced || index >= CASCADE_CARDS) return 0;
+  cascadeUntil ??= now + CASCADE_WINDOW;
+  if (now > cascadeUntil) return 0;
   return index * CASCADE_STEP;
+}
+
+/** Tylko dla testów. */
+export function resetCascade() {
+  cascadeUntil = undefined;
 }
 
 export type CardExitKind = "trash" | "archive";

@@ -60,6 +60,10 @@ test("heavy optional libraries stay out of the eager page load @smoke", async ()
   expect(chunksMatching(eager, /Pobrano obraz grafiku/), "obraz miesiąca (canvas/share) loads on click").toEqual([]);
   expect(chunksMatching(eager, /Premie w tym miesiącu/), "panel premii loads with the Grafik view").toEqual([]);
   expect(chunksMatching(eager, /Telefon hurtowni/), "pola karty budowy load with the Nauka view").toEqual([]);
+  // M2.4: funkcje układu framer-motion (`domMax`, rzutowanie `layout`) tylko w leniwym `motionFeatures`.
+  const motionLayout = /isProjectionDirty|resetSkewAndRotation|measuredBox/;
+  expect(chunksMatching(eager, motionLayout), "domMax loads after start (LazyMotion, src/lib/motionFeatures.ts)").toEqual([]);
+  expect(chunksMatching(lazy, motionLayout), "domMax should be present in a lazily loaded chunk").not.toEqual([]);
 
   // And jsPDF must actually still be *somewhere* — otherwise this test would
   // also pass if PDF export had silently been dropped from the build.
