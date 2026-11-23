@@ -800,3 +800,27 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 **Testy.** Brak (dokument).
 
 **Commit.** Patrz historia `docs/dane-spisy.md`, 2026-11-23.
+
+## Dane — spis map Yjs i przejście kluczy `localStorage` (D0.1, D6.3, D6.4, 2026-11-23)
+
+**Co robi.** Narzędzia dla programisty, bez zmian w działaniu aplikacji: dokument z listą map Yjs, pomocnik do zmiany nazwy klucza `localStorage` przy zmianie kształtu i zasada dla baz IndexedDB.
+
+**Gdzie jest.**
+- `docs/dane-mapa.md` (53 mapy), generowany przez `scripts/dane-mapa.mjs`.
+- `src/lib/storage/migrateKey.ts`: `migrateKey` (pod blokadą `MIGRATION_LOCK` z `src/lib/tabLock.ts`), `migrateKeySync`, `dropOldKey`.
+- Zasady 10 i 11 oraz punkt 6 listy kontrolnej w `docs/dane-wersje.md`.
+
+**Jak działa.**
+- Skrypt czyta wywołania `getMap(…)` w `src/` i kategorie `PRESERVES`/`EXEMPT` z `src/lib/docMapsInventory.test.ts`. Źródłem prawdy jest test, a dokument tylko go pokazuje.
+- `migrateKey(stary, nowy, przekształć)` zapisuje nowy klucz tylko wtedy, gdy go jeszcze nie ma. Dzięki temu drugi przebieg albo druga karta nic nie nadpisze.
+- Gdy przekształcenie zwróci `null` albo rzuci wyjątek, nowy klucz nie powstaje, stary zostaje, a w diagnostyce pojawia się wpis.
+- Stary klucz usuwa `dropOldKey` wydanie później, i tylko gdy nowy istnieje. Powrót do starszej wersji aplikacji nie zastaje wtedy pustego klucza.
+- Zasada 11: baza IndexedDB w nowym kształcie dostaje nową nazwę i migrację kopiującą. Nie używa się `onupgradeneeded` w bazach otwieranych przez `idb-keyval` i `y-indexeddb`.
+
+**Ograniczenia i pułapki.**
+- `migrateKey` nie ma jeszcze żadnego wywołującego. Przyda się przy pierwszym kluczu `.v2`.
+- `docs/dane-mapa.md` trzeba wygenerować od nowa po zmianie kategorii albo po dodaniu mapy — test tego nie sprawdza.
+
+**Testy.** `src/lib/storage/migrateKey.test.ts`.
+
+**Commit.** Patrz historia `src/lib/storage/migrateKey.ts`, 2026-11-23.

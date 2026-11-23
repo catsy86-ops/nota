@@ -13,6 +13,8 @@ Zasady zmiany kształtu danych w Notatniku i dziennik formatów. Czytaj przed ka
 7. **Jedna wersja formatu, jeden rejestr.** `SCHEMA_VERSION` rośnie przy każdej zmianie, której stary klient nie przeżyje bez strat. Każda zmiana ma wpis w dzienniku niżej i wzorzec dokumentu w tym samym commicie.
 8. **Przed migracją migawka** stanu (14 dni, najwyżej 3).
 9. **Nie zmieniaj znaczenia pola.** Pole o nowym znaczeniu albo jednostce dostaje nową nazwę; stare dalej znaczy to samo. Wzorce: `src/lib/migrations/patterns.ts`.
+10. **Klucz `localStorage` w nowym kształcie dostaje nową nazwę** (`.v1` → `.v2`) i przechodzi przez `migrateKey` (`src/lib/storage/migrateKey.ts`): nowy zapisany raz, pod blokadą migracji, stary zostaje do następnego wydania i dopiero wtedy `dropOldKey`.
+11. **Baza IndexedDB w nowym kształcie dostaje nową nazwę** (np. `kaczy-images-v2`) i migrację kopiującą ze starej. Nie używaj `onupgradeneeded` w bazie, którą otwiera cudza biblioteka (`idb-keyval`, `y-indexeddb`) — biblioteka nie zna twojej wersji i może skasować magazyn. Starą bazę usuwasz dopiero po potwierdzonym odczycie nowej (liczba wpisów się zgadza), najwcześniej wydanie później. Spis baz: `docs/dane-spisy.md`.
 
 ### Limity pól nowszej wersji
 
@@ -52,7 +54,7 @@ Granica (D1.4): klienci sprzed **2026-11-18** nie znają `docFormat` ani zachowy
 3. Czy starsza wersja nie powinna pisać do tych danych? Cecha w `docFormat` z wymaganą wersją i blokada w magazynie (`docWritable`).
 4. Czy trzeba przepisać istniejące dane? Migracja w `src/lib/migrations/registry.ts` (`DOC_MIGRATIONS`), z `check`, testem na wzorcach (`src/test/fixtures/docs/registry.test.ts` przechodzi przez cały rejestr) i testem spóźnionego starego klienta (D3.4) oraz rozmiaru (D3.6).
 5. `SCHEMA_VERSION` + 1, wiersz w dzienniku wyżej, nowy wzorzec dokumentu (`GEN_DOC_FIXTURE=1 npx vitest run src/test/fixtures/docs/generate.test.ts`).
-6. Nowa sekcja kopii albo nowy klucz `localStorage`? Wpis w rejestrze sekcji kopii; wzorzec kopii (`GEN_BACKUP_FIXTURE=1 npx vitest run src/test/fixtures/backups`) przy zmianie koperty.
+6. Nowa sekcja kopii, nowy klucz `localStorage` albo baza IndexedDB? Wpis w rejestrze sekcji kopii i w `docs/dane-spisy.md`; zmiana kształtu klucza lub bazy — zasady 10 i 11; wzorzec kopii (`GEN_BACKUP_FIXTURE=1 npx vitest run src/test/fixtures/backups`) przy zmianie koperty.
 7. Opis w `docs/opis/dane.md`.
 
 ## Gdzie jest kod
@@ -64,3 +66,4 @@ Granica (D1.4): klienci sprzed **2026-11-18** nie znają `docFormat` ani zachowy
 - `src/lib/extraFields.ts` — zachowanie nieznanych pól; spis map `src/lib/docMapsInventory.test.ts`.
 - Wzorce: `src/test/fixtures/docs/` (dokument 1–3), `src/test/fixtures/backups/` (kopia v1–v3).
 - `docs/dane-spisy.md` — spisy baz IndexedDB, kluczy `localStorage` i istniejących migracji (D0.2–D0.4).
+- `src/lib/storage/migrateKey.ts` — przejście klucza `localStorage` na nową nazwę (D6.3).
