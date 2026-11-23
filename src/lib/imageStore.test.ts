@@ -152,3 +152,29 @@ describe("niezaufane dane obrazu (A03/A04)", () => {
   });
 });
 
+
+describe("ręczne sprzątanie nieużywanych plików (Z-6.6)", () => {
+  /** `n` różnych plików (inne bajty = inny klucz). */
+  async function files(n: number): Promise<string[]> {
+    const refs: string[] = [];
+    for (let i = 0; i < n; i++) refs.push(await store.putBytes(new Uint8Array([i, i + 1, i + 2, 7]), "image/png"));
+    return refs;
+  }
+
+  it("unusedFiles liczy tylko pliki bez odwołania i starsze niż karencja, z rozmiarem", async () => {
+    const [used, orphan] = await files(2);
+    expect(await store.unusedFiles(new Set([used]))).toEqual({ count: 0, bytes: 0 });
+    expect(await store.unusedFiles(new Set([used]), Date.now() + GC_GRACE_MS + 1)).toEqual({ count: 1, bytes: 4 });
+    expect(await store.has(orphan)).toBe(true);
+  });
+
+  it("bezpiecznik zostawia większość magazynu bez właściciela; `force` (zlecone przez użytkownika) ją usuwa, używane zostają", async () => {
+    const refs = await files(30);
+    const used = new Set(refs.slice(0, 5));
+    const later = Date.now() + GC_GRACE_MS + 1;
+    expect(await store.collectGarbage(used, later)).toBe(0);
+    expect(await store.collectGarbage(used, later, GC_GRACE_MS, { force: true })).toBe(25);
+    for (const r of refs.slice(0, 5)) expect(store.has(r)).toBe(true);
+    expect(store.has(refs[29])).toBe(false);
+  });
+});

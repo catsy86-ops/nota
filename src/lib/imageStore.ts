@@ -279,13 +279,14 @@ export function createImageStore(dbName: string) {
    * Kasuje obrazy, do których nie odwołuje się żadna notatka i które leżą
    * dłużej niż karencja. Zwraca liczbę usuniętych.
    */
-  async function collectGarbage(referenced: Set<string>, now = Date.now(), graceMs = GC_GRACE_MS): Promise<number> {
+  async function collectGarbage(referenced: Set<string>, now = Date.now(), graceMs = GC_GRACE_MS, opts: { force?: boolean } = {}): Promise<number> {
     await load();
     const candidates = [...known].filter((h) => !referenced.has(h));
     if (!candidates.length) return 0;
     // Nagle większość magazynu bez właściciela to prawie na pewno niepełna lista używanych (dokument
     // wczytany w połowie, pominięty dział), nie porządki użytkownika. Wolimy zostawić śmieci niż skasować zdjęcia.
-    if (candidates.length > GC_SUSPICIOUS_MIN && candidates.length > known.size / 2) {
+    // `force` — Z-6.6: użytkownik sam zlecił sprzątanie po obejrzeniu liczby plików (Ustawienia → Kopia i dane).
+    if (!opts.force && candidates.length > GC_SUSPICIOUS_MIN && candidates.length > known.size / 2) {
       logDiag("warn", "imageStore", `garbage collection skipped: ${candidates.length} of ${known.size} files unreferenced`);
       return 0;
     }
@@ -307,6 +308,23 @@ export function createImageStore(dbName: string) {
       }
     } catch (err) { logDiag("error", "imageStore", "garbage collection failed", err); }
     return removed;
+  }
+
+  /**
+   * Z-6.6: ile plików bez odwołania usunęłoby sprzątanie (starszych niż karencja) i ile zajmują. Czyta rekordy
+   * po jednym — wołać na żądanie (przycisk w Ustawieniach), nie przy starcie.
+   */
+  async function unusedFiles(referenced: Set<string>, now = Date.now(), graceMs = GC_GRACE_MS): Promise<{ count: number; bytes: number }> {
+    await load();
+    let count = 0, bytes = 0;
+    for (const hash of known) {
+      if (referenced.has(hash)) continue;
+      const rec = await getRecord(hash).catch(() => undefined);
+      if (!rec || now - rec.addedAt < graceMs) continue;
+      count++;
+      bytes += rec.bytes.byteLength;
+    }
+    return { count, bytes };
   }
 
   /**
@@ -401,7 +419,7 @@ export function createImageStore(dbName: string) {
 
   return {
     load, has, putBytes, putDataUrl, putBlob, ingest, get: getRecord, getDataUrl, resolve,
-    acquireUrl, releaseUrl, acquireThumbUrl, releaseThumbUrl, onAdded, collectGarbage, touch, resetForTests,
+    acquireUrl, releaseUrl, acquireThumbUrl, releaseThumbUrl, onAdded, collectGarbage, unusedFiles, touch, resetForTests,
   };
 }
 

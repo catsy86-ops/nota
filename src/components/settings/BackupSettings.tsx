@@ -19,6 +19,7 @@ import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackup
 import { toast } from "sonner";
 import { ResetSectionButton, Section } from "./SettingsShared";
 import { LastImportUndo } from "./LastImportUndo";
+import { UnusedFilesCleanup } from "./UnusedFilesCleanup";
 import { AboutPanel } from "@/components/AboutPanel";
 import { viewLabel } from "@/lib/viewMeta";
 import { DailySnapshotRestore } from "./DailySnapshotRestore";
@@ -528,6 +529,7 @@ export function BackupSettings() {
       <DailySnapshots />
       <BackupFileTarget />
       <LastImportUndo />
+      <UnusedFilesCleanup />
 
       <Section title={`Auto-backup ${prefs.autoExportDays === 0 ? "(wyłączony)" : `co ${dniPl(prefs.autoExportDays)}`}`}>
         <Slider
