@@ -17,18 +17,16 @@ import { planRefsIn } from "@/lib/plans/planRefs";
 import { debtProofRefsIn } from "@/lib/debts/proofs";
 import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 import { startupReplace } from "@/lib/docReplaceCore";
-import { cleanLabelPath, isUnderLabel, renameLabelBranch } from "@/lib/labelTree";
 import {
-  type YNote, type YFolder, imageRefs, readReminderState, NOTE_SCALAR_FIELDS, FOLDER_SCALAR_FIELDS,
-  applyTextDiff, applyChecklistDiff, applyPropsDiff, type YPropDef, yPropDefFromPlain, plainPropDefFromY,
-  plainAttachments, PRIVATE_FIELDS, PRIVATE_META, type PrivateFields, yNoteFromPlain, plainFromYNote,
-  FOLDER_KEYS, PROP_DEF_KEYS, keepForeignKeys, yFolderFromPlain, plainFromYFolder,
+  type YNote, type YFolder, imageRefs, readReminderState, NOTE_SCALAR_FIELDS, applyTextDiff, applyChecklistDiff,
+  applyPropsDiff, type YPropDef, yPropDefFromPlain, plainPropDefFromY, plainAttachments, PRIVATE_FIELDS,
+  PRIVATE_META, type PrivateFields, yNoteFromPlain, plainFromYNote, yFolderFromPlain, plainFromYFolder,
 } from "./yjs/codec";
 import type { StoreCtx } from "./yjs/context";
 import { createTextEditApi } from "./yjs/textEdit";
 import { createVaultApi } from "./yjs/vault";
 import { createMigrations } from "./yjs/migrations";
-
+import { createTaxonomyApi } from "./yjs/taxonomy";
 export { FUTURE_CONTENT_KEY } from "./yjs/codec";
 
 /**
@@ -162,6 +160,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   const ctx: StoreCtx = { doc, notesMap, foldersMap, labelsMap, propDefsMap, vaultMap, noteCache, dirtyNotes, images };
   const { textBases, beginTextEdit, getNoteText, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange } = createTextEditApi(ctx);
   const { writeLocked, readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote, getFutureContent, getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink } = createVaultApi(ctx, textBases);
+  const { projectFolders, projectLabels, projectPropDefs, upsertPropDef, deletePropDef, upsertFolder, patchFolder, removeFolder, addLabel, removeLabelEverywhere, renameLabelEverywhere } = createTaxonomyApi(ctx);
   notesMap.observeDeep((events) => {
     for (const e of events) {
       if (e.target === notesMap) e.changes.keys.forEach((_c, k) => dirtyNotes.add(k));
@@ -237,51 +236,6 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       for (const id of noteCache.keys()) if (!notesMap.has(id)) noteCache.delete(id);
     }
     return result;
-  }
-
-  function projectFolders(): Folder[] {
-    const result: Folder[] = [];
-    foldersMap.forEach((y, id) => result.push(plainFromYFolder(id, y)));
-    return result;
-  }
-
-  function projectLabels(): string[] {
-    // Zbiór etykiet + te, których używa jakaś notatka: notatka z etykietą spoza zbioru (np. z importu)
-    // nie może znikać z paska bocznego.
-    const all = new Set(labelsMap.keys());
-    notesMap.forEach((y) => {
-      const raw = y.get("labels");
-      if (Array.isArray(raw)) for (const l of raw) if (typeof l === "string" && l) all.add(l);
-    });
-    return Array.from(all).sort((a, b) => a.localeCompare(b));
-  }
-
-  /** Definicje właściwości po kolejności; uszkodzony wpis od peera jest pomijany. */
-  function projectPropDefs(): PropDef[] {
-    const list: PropDef[] = [];
-    propDefsMap.forEach((y, id) => {
-      const def = plainPropDefFromY(id, y);
-      if (def) list.push(def);
-    });
-    return cleanPropDefs(list);
-  }
-
-  /** Dodaje albo zmienia definicję (nazwa, opcje). Typ nie zmienia się po utworzeniu. */
-  function upsertPropDef(def: PropDef): void {
-    doc.transact(() => {
-      propDefsMap.set(def.id, keepForeignKeys(propDefsMap.get(def.id), yPropDefFromPlain(def), PROP_DEF_KEYS));
-    });
-  }
-
-  /** Usuwa definicję i jej wartości we wszystkich notatkach — w jednej transakcji. */
-  function deletePropDef(id: string): void {
-    doc.transact(() => {
-      propDefsMap.delete(id);
-      notesMap.forEach((y) => {
-        const props = y.get("props");
-        if (props instanceof Y.Map && props.has(id)) props.delete(id);
-      });
-    });
   }
 
   function upsertNote(note: Note): void {
@@ -451,34 +405,6 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     });
   }
 
-  function upsertFolder(folder: Folder): void {
-    doc.transact(() => { foldersMap.set(folder.id, keepForeignKeys(foldersMap.get(folder.id), yFolderFromPlain(folder), FOLDER_KEYS)); });
-  }
-
-  function patchFolder(id: string, updates: Partial<Omit<Folder, "id" | "createdAt">>): void {
-    const y = foldersMap.get(id);
-    if (!y) return;
-    doc.transact(() => {
-      for (const field of FOLDER_SCALAR_FIELDS) {
-        if (!(field in updates)) continue;
-        const value = (updates as Record<string, unknown>)[field];
-        // `undefined` = zdjęcie pola (np. domyślnego szablonu, 5.9), nie zapis „undefined” do dokumentu.
-        if (value === undefined) y.delete(field);
-        else y.set(field, value);
-      }
-      y.set("updatedAt", Date.now());
-    });
-  }
-
-  function removeFolder(id: string): void {
-    doc.transact(() => { foldersMap.delete(id); });
-  }
-
-  function addLabel(label: string): void {
-    if (labelsMap.has(label)) return;
-    doc.transact(() => { labelsMap.set(label, true); });
-  }
-
   /**
    * Kopie notatek z kopii dziennej (Z-16.1B, `docs/plan-dane-lokalne.md` §1.5) w **jednej** transakcji: folder
    * (istniejący o tej nazwie na najwyższym poziomie albo nowy), brakujące etykiety i definicje pól, potem notatki —
@@ -497,40 +423,6 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       }
     });
     return folderId;
-  }
-
-  /** Removes a label from the label set and strips it from every note, in one transaction. */
-  function removeLabelEverywhere(label: string): void {
-    doc.transact(() => {
-      labelsMap.delete(label);
-      notesMap.forEach((y) => {
-        const raw = y.get("labels");
-        const labels = Array.isArray(raw) ? (raw as string[]) : [];
-        if (labels.includes(label)) y.set("labels", labels.filter((l) => l !== label));
-      });
-    });
-  }
-
-  /** Renames a label in the label set and in every note referencing it, in one transaction. */
-  /**
-   * Zmiana nazwy etykiety wraz z jej poddrzewem (`budowa` → `dom`: także `budowa/łazienka` → `dom/łazienka`).
-   * Dotyczy zbioru etykiet i każdej notatki, która ma którąkolwiek z przepinanych etykiet.
-   */
-  function renameLabelEverywhere(oldLabel: string, newLabel: string): void {
-    const target = cleanLabelPath(newLabel);
-    if (!target || target === oldLabel) return;
-    doc.transact(() => {
-      const branch = [...labelsMap.keys()].filter((k) => isUnderLabel(k, oldLabel));
-      for (const k of branch) labelsMap.delete(k);
-      for (const k of branch) labelsMap.set(renameLabelBranch([k], oldLabel, target)[0], true);
-      if (!branch.length) labelsMap.set(target, true);
-      notesMap.forEach((y) => {
-        const raw = y.get("labels");
-        const labels = Array.isArray(raw) ? (raw as string[]) : [];
-        if (!labels.some((l) => isUnderLabel(l, oldLabel))) return;
-        y.set("labels", renameLabelBranch(labels, oldLabel, target));
-      });
-    });
   }
 
   /**
