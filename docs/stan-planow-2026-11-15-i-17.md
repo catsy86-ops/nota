@@ -140,7 +140,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | A1.4 | `sonner` poza `lib` (port `notify`) | ◐ | `b7f25e8b` | `notify.ts` bez wstrzykiwanego ujścia |
 | A1.5 | Hooki bez komponentów | ✗ | — | |
 | A1.6 | Reguła ESLint warstw | ✅ | `b7f25e8b` | |
-| A2.1–A2.5 | `Index.tsx`: mapa, efekty, kontroler, nakładki, pomiar renderów | ✗ (5) | — | Brak `docs/index-mapa.md`; `Index.tsx` 976 linii |
+| A2.1–A2.5 | `Index.tsx`: mapa, efekty, kontroler, nakładki, pomiar renderów | ◐ | 2026-11-23 | A2.1 zrobione (`docs/index-mapa.md`); A2.2 częściowo (`src/pages/IndexEffects.tsx`, 5 efektów; zostają cofnij/ponów Grafiku i pasek boczny); A2.3–A2.5 nie zaczęte; `Index.tsx` 962 linie |
 | A3.1 | `exportNotes.ts` → `lib/backup/` | ✗ | — | Brak `src/lib/backup/`; Z-18.1 zrobione bez podziału |
 | A3.2 | `AddNoteBar.tsx` (reduktor szkicu) | ✗ | — | 974 linie |
 | A3.3 | `privateNotes.ts` | ✗ | — | 793 linie |
@@ -155,7 +155,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | A5.1 | Usunięcie porzuconych worktree | ✅ | `50e3d232` | 4 katalogi, 855 MB |
 | A5.2 | `opis.md` na działy | ✅ | 2026-11-23 | `docs/opis/*.md` (11 działów), `opis.md` = spis; CLAUDE.md zaktualizowany |
 | A5.3 | Stare plany do archiwum | ✗ | — | |
-| A5.4 | Rejestr kluczy `localStorage` | ✗ | — | Brak `storageKeys.ts`; przegląd Fable czeka na szkic |
+| A5.4 | Rejestr kluczy `localStorage` | ✅ | 2026-11-23 | Zrobione jako D6.1–D6.5: `src/lib/storage/keys.ts`, `names.ts`, strażnik `keyLiterals.test.ts` |
 | A5.5 | `npm audit`, `knip` | ✗ | — | |
 
 ## 3. `plan-ruch-2026-11-15.md`

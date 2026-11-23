@@ -1,5 +1,4 @@
 import { canViewTransition } from "@/lib/viewTransition";
-import { loadShiftPresets } from "@/hooks/useShiftPresets";
 import { isAppView } from "@/lib/viewMeta";
 import { Activity, useState, useCallback, useDeferredValue, useEffect, useMemo, useRef, Suspense } from "react";
 import { flushSync } from "react-dom";
@@ -12,8 +11,6 @@ import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { InboxCapture } from "@/components/InboxCapture";
 import { InboxBar } from "@/components/InboxBar";
 import { useReaderNav } from "@/hooks/useReaderNav";
-import { setSearchTerms } from "@/lib/searchTerms";
-import { highlightTokens } from "@/lib/searchQuery";
 import { isInboxNote } from "@/lib/inbox";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
@@ -61,8 +58,6 @@ import { NoteGallery } from "@/components/NoteGallery";
 import { columnOfNote, NONE_COLUMN, PINNED_COLUMN } from "@/lib/boardColumns";
 import { NoteGroupSection } from "@/components/NoteGroupSection";
 import { groupNotes, type GroupBy } from "@/lib/groupNotes";
-import { markNoteOpened } from "@/lib/lastOpened";
-import { noteHistory } from "@/lib/noteHistory";
 import { folderCrumbs, labelCrumbs } from "@/lib/breadcrumbs";
 import { FolderTemplateActions } from "@/components/FolderTemplateActions";
 import { EmptyState } from "@/components/EmptyState";
@@ -94,7 +89,7 @@ import { PaperBackdrop } from "@/components/PaperBackdrop";
 import { QuickTemplates } from "@/components/QuickTemplates";
 import { useConfirmAction } from "@/components/ConfirmActionDialog";
 import { BulkActionBar } from "@/components/BulkActionBar";
-import { registerUndoHandlers, undoLastAction } from "@/lib/actionHistory";
+import { undoLastAction } from "@/lib/actionHistory";
 import { BottomNav } from "@/components/BottomNav";
 import { VaultHost } from "@/components/vault/VaultHost";
 import { TodayCards } from "@/components/review/TodayCards";
@@ -106,7 +101,8 @@ import { DataLossBanner, DocReplaceNotice } from "@/components/DocReplaceBanners
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
-import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, CommandPalette, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
+import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, CommandPalette, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, loadShiftsStore, StudyOverdueSync, NoteReader } from "./indexViews";
+import { IdleWarmup, MarkOpenedSync, ReaderHistoryKeys, SearchTermsSync, UndoHandlersSync } from "./IndexEffects";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -168,16 +164,6 @@ const Index = () => {
   useEffect(() => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
-
-  // Czytnik w tle po starcie — kliknięcie notatki go nie czeka.
-  useEffect(() => {
-    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
-    // Też presety Grafiku w pickerze terminu (Plan-nowy 1.5) — chipy „po zmianie” są od razu przy pierwszym otwarciu.
-    const warm = () => { void loadNoteReader(); void loadShiftPresets(); };
-    if (!w.requestIdleCallback) { const t = window.setTimeout(warm, 1500); return () => window.clearTimeout(t); }
-    const id = w.requestIdleCallback(warm, { timeout: 4000 });
-    return () => w.cancelIdleCallback?.(id);
-  }, []);
 
   const openNoteRef = useRef<(id: string) => void>(() => {});
   // Stabilna tablica: nowa w każdym renderze restartowałaby sprawdzanie przy każdym znaku w wyszukiwarce.
@@ -382,13 +368,11 @@ const Index = () => {
     } else openNote(target.id);
   }, [allNotesForLinksRef, openNote]);
 
-  // Frazy wyszukiwania dla wyróżniania w kaflach (magazyn `searchTerms`, bez przerysowania całej listy).
-  useEffect(() => { setSearchTerms(highlightTokens(search)); }, [search]);
-
   // Czytnik i prezentacja (logika w `useReaderNav`).
   const { previewId, readerId, readerNote, readerSteps, copyTarget, closeReader, showInReader, stepReader, editFromReader, splitNote, setSplit } = useReaderNav({
     notes, archivedNotes, trashedNotes, visibleNotes, presentingNoteId, setPresentingNoteId, paletteOpen, selectedIds, openNote,
   });
+  const showPreview = useCallback((id: string) => showInReader(id, "preview"), [showInReader]);
   const { toggleSelect } = useSelectionGestures({ view, visibleNotesRef, previewId, presentingNoteId, setSelectedIds, lastSelectedRef });
 
   // Czytnik/prezentacja też liczy się jako „otwarcie” (sortowanie „Ostatnio otwierane”).
@@ -424,33 +408,6 @@ const Index = () => {
     setGridNavPreviewTransitions({ open: openPreviewFromCard, close: closeReaderToCard });
     return () => setGridNavPreviewTransitions(null);
   }, [openPreviewFromCard, closeReaderToCard]);
-  useEffect(() => { if (readerId) markNoteOpened(readerId); }, [readerId]);
-  // 5.1: Alt+← / Alt+→ po historii otwieranych notatek (czytnik). Tylko gdy historia ma dokąd iść —
-  // inaczej skrót zostaje przeglądarce (wstecz). Nie w polu tekstowym i nie nad innym oknem niż czytnik.
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
-      const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
-      if (document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]')) return;
-      const known = new Set([...notesRef.current, ...archivedRef.current].filter((n) => !n.locked).map((n) => n.id));
-      const id = noteHistory.step(e.key === "ArrowLeft" ? -1 : 1, (x) => known.has(x));
-      if (!id) return;
-      e.preventDefault();
-      showInReader(id, "preview");
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [notesRef, archivedRef, showInReader]);
-
-  // Undo fallbacks so history restored from localStorage stays actionable after reload
-  useEffect(() => {
-    registerUndoHandlers({
-      trash: (ids) => bulkRestore(ids),
-      archive: (ids) => ids.forEach(unarchiveNote),
-    });
-  }, [bulkRestore, unarchiveNote]);
-
   const {
     handleTrashSingle, handleArchiveSingle, handleBulkTrash, handleBulkArchive, handleBulkColor, handleSelectAll,
   } = useNoteActions({
@@ -872,6 +829,11 @@ const Index = () => {
       </div>
     </div>
 
+    <IdleWarmup />
+    <SearchTermsSync search={search} />
+    <UndoHandlersSync restore={bulkRestore} unarchive={unarchiveNote} />
+    <MarkOpenedSync noteId={readerId} />
+    <ReaderHistoryKeys notesRef={notesRef} archivedRef={archivedRef} show={showPreview} />
     <Suspense fallback={null}>
       <DailyReportNudge onOpenWork={() => setView("study")} />
       <ShiftEveningNudge onOpenShifts={openShifts} />
