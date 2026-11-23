@@ -378,6 +378,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Wygląd — karty na odmianach: Długi, Praca, Ustawienia, Grafik, Dziś, Kalendarz, Notatki (W3.2, 2026-11-19/20)
 - Wygląd — rozmycie, gradienty, obrazy (W3.5, W3.6, W5.6, 2026-11-19)
 - Wygląd — przyciski Grafiku, Dziś i Kalendarza na `Button` (W4.5, 2026-11-20)
+- Ruch — siatka notatek bez przypadkowego przejścia odstępów (2026-11-23)
 
 ### Wspólne — [`docs/opis/wspolne.md`](docs/opis/wspolne.md)
 

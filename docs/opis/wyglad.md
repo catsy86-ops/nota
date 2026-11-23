@@ -1241,3 +1241,11 @@ typecheck, eslint działu, strażnik, e2e `shifts*`, `shift-end-action`, `calend
 ### Commit
 
 Grafik — 8b786ae3; Dziś i Kalendarz — zob. commit „W4.5 Dziś, Kalendarz” (2026-11-20).
+
+## Ruch — siatka notatek bez przypadkowego przejścia odstępów (2026-11-23)
+
+- **Co robi:** zmiana gęstości (np. „Luźno”) zmienia odstępy siatki od razu, a kafel u góry ekranu zostaje dokładnie na miejscu.
+- **Gdzie jest:** `src/components/NoteGrid.tsx`, kontener siatki — klasa `transition-none` obok `animate-in fade-in-0 duration-base`.
+- **Jak działa:** `duration-base` miało dotyczyć animacji wejścia, ale w Tailwind 4 ustawia też `transition-duration`, a domyślne `transition-property` to `all`. Zmiana gęstości animowała więc `gap` przez 220 ms; przeglądarka przesuwała ekran klatka po klatce i `changeView` (kotwica widoku) kończył 8 px obok. `transition-none` wyłącza przejścia właściwości, animacja wejścia zostaje.
+- **Pułapki:** ten sam wzorzec (`animate-in … duration-*` bez `transition-*`) jest w `ui/dialog.tsx`, `ui/alert-dialog.tsx` i `WikiLinkPreview.tsx` — tam nie szkodzi (rozmiary `auto` się nie animują), ale przy nowych klasach na tych elementach trzeba o tym pamiętać.
+- **Testy:** `e2e/view-change.spec.ts` (telefon, „Luźno”) — wcześniej 3 porażki na 5, teraz 15/15.

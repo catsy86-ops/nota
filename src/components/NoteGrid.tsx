@@ -275,7 +275,9 @@ export function NoteGrid({
           przejście i zachowanie miejsca robi `changeView`. */}
       {/* `data-cv`: kafle poza ekranem bez stylów i układu (`content-visibility`, index.css) — mozaika
           potrzebuje prawdziwych wysokości do rozpiętości, więc tylko lista, siatka i tablica. */}
-      <div ref={gridRef} data-cv={prefs.layout !== "masonry" || undefined} className={cn(containerClass, "animate-in fade-in-0 duration-base")}>
+      {/* `transition-none`: `duration-base` jest dla animacji wejścia, ale w Tailwind 4 ustawia też czas przejść, a domyślna
+          właściwość to `all` — zmiana gęstości animowała `gap`, ekran dojeżdżał 220 ms i kotwica widoku chybiała o 8 px. */}
+      <div ref={gridRef} data-cv={prefs.layout !== "masonry" || undefined} className={cn(containerClass, "animate-in fade-in-0 duration-base transition-none")}>
         <AnimatePresence mode="popLayout" custom={exitIntent}>
           {renderedNotes.map((note, i) => (
             <GridItem key={note.id} note={note} index={i} layout={prefs.layout} rowGap={rowGap} wideEditing={wideEditing} selected={selectedIds?.has(note.id) ?? false} />
