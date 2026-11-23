@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { SKARBIEC } from "@/lib/storage/keys";
 
 /**
  * Skarbiec 2.4: okresowe sprawdzenie kodu awaryjnego. Pamięta na tym urządzeniu, kiedy kod ostatnio
@@ -6,7 +7,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
  * gdy od obu dat minęło 90 dni, okno skarbca pyta „Masz zapisany kod awaryjny?”. Przypomnienie można wyłączyć.
  */
 
-export const RECOVERY_CHECK_KEY = "kaczy.vault.recoveryCheck.v1";
+export const RECOVERY_CHECK_KEY = SKARBIEC.recoveryCheck;
 export const RECOVERY_CHECK_EVERY_MS = 90 * 24 * 60 * 60 * 1000;
 
 export interface RecoveryCheckState {

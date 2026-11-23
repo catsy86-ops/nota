@@ -1,4 +1,5 @@
 import type { VaultMeta } from "@/lib/vault";
+import { SKARBIEC } from "@/lib/storage/keys";
 
 /**
  * Lokalny odcisk skarbca (przegląd V-3, W-1): zapamiętany na tym urządzeniu przy zakładaniu, odblokowaniu
@@ -27,7 +28,7 @@ export type PinVerdict =
    */
   | "changed";
 
-const KEY = "kaczy.vault.pin.v1";
+const KEY = SKARBIEC.pin;
 
 /** Pola spoza klucza, które też są pod pinem: passkeye i kod awaryjny. */
 function extraOf(m: VaultMeta): string {

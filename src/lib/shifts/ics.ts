@@ -2,6 +2,7 @@ import { escapeText, foldLine, formatLocal } from "@/lib/icsExport";
 import { dayType, isAbsence, type ShiftData } from "./model";
 import { shiftSpan } from "./time";
 import { MAIN_SCHEDULE_ID } from "./yShifts";
+import { GRAFIK } from "@/lib/storage/keys";
 
 /**
  * Grafik → iCalendar (RFC 5545), żeby zmiany były w kalendarzu telefonu.
@@ -12,7 +13,7 @@ import { MAIN_SCHEDULE_ID } from "./yShifts";
  */
 
 /** Dni wysłane do kalendarza z tego urządzenia — żeby przy następnym eksporcie odwołać wyczyszczone. */
-export const SHIFTS_EXPORTED_KEY = "kaczy:shifts.icsExported";
+export const SHIFTS_EXPORTED_KEY = GRAFIK.icsExported;
 
 /**
  * Klucz listy wysłanych dni i prefiks UID dla grafiku. Główny zostaje przy dawnych wartościach

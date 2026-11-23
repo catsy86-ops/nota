@@ -1,6 +1,6 @@
 /**
  * D6.2: pliki z literałem klucza `"kaczy…"` poza rejestrem (`keys.ts`), jeszcze nieprzeniesione. Lista tylko maleje —
- * pilnuje tego `keyLiterals.test.ts`. Przeniesione: Wygląd, Praca (2026-11-23).
+ * pilnuje tego `keyLiterals.test.ts`. Przeniesione: Wygląd, Praca, Skarbiec, Grafik, Ćwiczenia, nazwy zdarzeń (2026-11-23).
  */
 export const KEY_LITERAL_EXEMPT: readonly string[] = [
   "src/components/AddNoteBar.tsx",
@@ -19,7 +19,6 @@ export const KEY_LITERAL_EXEMPT: readonly string[] = [
   "src/components/review/TodayTimeline.tsx",
   "src/components/settings/AppearanceSettings.tsx",
   "src/components/settings/BackupSettings.tsx",
-  "src/components/shifts/ShiftsView.tsx",
   "src/components/sync/OlderDeviceBanner.tsx",
   "src/hooks/useBackupReminders.ts",
   "src/hooks/useDailyWeeklyNudges.tsx",
@@ -56,7 +55,6 @@ export const KEY_LITERAL_EXEMPT: readonly string[] = [
   "src/lib/migrations/start.ts",
   "src/lib/notesStore.ts",
   "src/lib/overdueBadge.ts",
-  "src/lib/privateNotes.ts",
   "src/lib/push/prefs.ts",
   "src/lib/push/seal.ts",
   "src/lib/push/summary.ts",
@@ -72,11 +70,7 @@ export const KEY_LITERAL_EXEMPT: readonly string[] = [
   "src/lib/resumeView.ts",
   "src/lib/savedFilters.ts",
   "src/lib/shareTarget.ts",
-  "src/lib/shifts/eveningNudge.ts",
-  "src/lib/shifts/ics.ts",
-  "src/lib/shifts/store.ts",
   "src/lib/skinSignal.ts",
-  "src/lib/study/customPrefill.ts",
   "src/lib/swipeHint.ts",
   "src/lib/sync/rekey.ts",
   "src/lib/sync/relayRuntime.ts",
@@ -84,10 +78,6 @@ export const KEY_LITERAL_EXEMPT: readonly string[] = [
   "src/lib/syncSeen.ts",
   "src/lib/tabSync.ts",
   "src/lib/todayCards.ts",
-  "src/lib/training/restPrefs.ts",
-  "src/lib/vaultAutoLock.ts",
-  "src/lib/vaultPin.ts",
-  "src/lib/vaultRecoveryCheck.ts",
   "src/lib/versionsStore.ts",
   "src/lib/viewMemory.ts",
   "src/lib/viewPrefs.ts",

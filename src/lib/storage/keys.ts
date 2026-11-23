@@ -139,6 +139,37 @@ export const PRACA = {
   usage: "kaczy.study.usage.v1",
 } as const;
 
+/** Skarbiec: PIN, próby, auto-blokada, kod awaryjny. (D6.2) */
+export const SKARBIEC = {
+  attempts: "kaczy.vault.attempts.v1",
+  autoLock: "kaczy.vault.autolock.v1",
+  hiddenLock: "kaczy.vault.hiddenLock.v1",
+  pin: "kaczy.vault.pin.v1",
+  recoveryCheck: "kaczy.vault.recoveryCheck.v1",
+} as const;
+
+/** Grafik: zmiany (stary zapis), aktywny grafik, układ, podpowiedzi, eksport .ics. (D6.2) */
+export const GRAFIK = {
+  layout: "kaczy.shifts.layout.v1",
+  moveHint: "kaczy.shifts.moveHint.v1",
+  eveningNudge: "kaczy:shifts.eveningNudge",
+  eveningNudged: "kaczy:shifts.eveningNudged",
+  icsExported: "kaczy:shifts.icsExported",
+  active: "kaczy:shifts.active",
+  shifts: "kaczy:shifts",
+} as const;
+
+/** Ćwiczenia: przerwa między seriami. (D6.2) */
+export const CWICZENIA = {
+  restSeconds: "kaczy.training.restSeconds.v1",
+} as const;
+
+/** Nazwy zdarzeń okna i kanałów BroadcastChannel — nie klucze pamięci, ale ta sama przestrzeń nazw. (D6.2) */
+export const SIGNALS = {
+  vaultChannel: "kaczy-vault",
+  studyCustomPrefill: "kaczy:study-custom-prefill",
+} as const;
+
 /** Miejsca na zapisane zestawy wyglądu (poza kopią — dane tego urządzenia). */
 export const appearanceSlotKey = (n: number): string => `kaczy.appearance.slot.${n}.v1`;
 

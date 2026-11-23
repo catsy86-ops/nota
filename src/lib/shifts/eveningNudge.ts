@@ -1,14 +1,15 @@
 import { addDays } from "date-fns";
 import { dayType, type DayEntry, type ShiftType } from "./model";
+import { GRAFIK } from "@/lib/storage/keys";
 
 /**
  * Wieczorne przypomnienie o jutrzejszej zmianie. Ustawienie jest na urządzeniu
  * (localStorage), nie w dokumencie Yjs: godzina przypomnienia jest sprawą
  * telefonu, a nie grafiku, i nie ma sensu, żeby drugie urządzenie odpalało to samo.
  */
-export const EVENING_NUDGE_KEY = "kaczy:shifts.eveningNudge";
+export const EVENING_NUDGE_KEY = GRAFIK.eveningNudge;
 /** Dzień (`yyyy-MM-dd`), o którym już przypomniano — raz na jutrzejszy dzień. */
-export const EVENING_NUDGED_KEY = "kaczy:shifts.eveningNudged";
+export const EVENING_NUDGED_KEY = GRAFIK.eveningNudged;
 
 export const EVENING_NUDGE_HOURS = [18, 19, 20, 21, 22] as const;
 

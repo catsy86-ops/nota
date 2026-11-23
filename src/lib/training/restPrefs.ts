@@ -1,10 +1,11 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { CWICZENIA } from "@/lib/storage/keys";
 
 /** Czas przerwy między seriami (1.2): wybór z krótkiej listy, zapamiętany na urządzeniu. */
 export const REST_OPTIONS = [60, 90, 120, 180] as const;
 export type RestSeconds = (typeof REST_OPTIONS)[number];
 export const REST_DEFAULT: RestSeconds = 90;
-export const REST_KEY = "kaczy.training.restSeconds.v1";
+export const REST_KEY = CWICZENIA.restSeconds;
 
 export const restStore = createPersistedStore<RestSeconds>(REST_KEY, REST_DEFAULT, {
   merge: (def, stored) => (REST_OPTIONS.includes(stored as RestSeconds) ? (stored as RestSeconds) : def),

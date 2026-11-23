@@ -836,6 +836,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
   - zapytania o rejestr: `backupKeyNames`, `isSensitiveKey`, `registeredKeys`.
 - Nazwy kluczy Wyglądu: obiekt `APPEARANCE` (np. `APPEARANCE.skin`) i `appearanceSlotKey(n)`; `APPEARANCE_KEYS` to jego wartości, `src/lib/appearanceCode.ts` eksportuje je dalej. Moduły Wyglądu (`skins.ts`, `accent.ts`, `frames.ts`, `useTheme.ts`, `appearancePresets.ts` i reszta) biorą nazwę stąd.
 - Nazwy kluczy Pracy: obiekt `PRACA` (np. `PRACA.seller`, `PRACA.ksefSeries`, `PRACA.store` = `kaczy.study.v1`). Czytają je `src/lib/study/*` (firma, cennik, raporty, zakładka, użycie), `src/lib/ksef/sellerPrefs.ts` i komponenty `src/components/study/` (tablica, poziomica, przyjazd na budowę). Dotychczasowe stałe (`SELLER_KEY`, `COMPANY_NAME_KEY` …) zostały jako aliasy.
+- Dalsze obiekty nazw: `SKARBIEC` (PIN, próby, auto-blokada, kod awaryjny), `GRAFIK` (`kaczy:shifts`, aktywny grafik, układ, podpowiedzi, eksport .ics), `CWICZENIA` (przerwa między seriami) i `SIGNALS` — nazwy zdarzeń okna i kanałów `BroadcastChannel` (`kaczy-vault`, `kaczy:study-custom-prefill`). Zdarzenia nie są kluczami pamięci, ale dzielą prefiks, więc mieszkają w rejestrze, żeby strażnik nie potrzebował wyjątku.
 - Strażnik D6.2: `src/lib/storage/keyLiterals.test.ts` z listą wyjątków `keyLiterals.exempt.ts`.
 - `SETTINGS_KEYS` w `src/lib/exportNotes.ts` to `backupKeyNames()`.
 
@@ -847,7 +848,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 - Jako wrażliwe są oznaczone: kod parowania `kaczy.sync.v1`, token push, PIN i próby skarbca, adres przekaźnika, numer konta i odciski dokumentów.
 
 **Ograniczenia i pułapki.**
-- D6.2 w toku: przeniesione Wygląd i Praca; 96 plików jest jeszcze na liście wyjątków. Moduły nadal czytają przez `createPersistedStore`, nie `readKey`/`writeKey`.
+- D6.2 w toku: przeniesione Wygląd, Praca, Skarbiec, Grafik i Ćwiczenia; 86 plików jest jeszcze na liście wyjątków. Moduły nadal czytają przez `createPersistedStore`, nie `readKey`/`writeKey`.
 - Nowy klucz kopii trzeba dodać w `keys.ts`, nie w `exportNotes.ts`.
 - `isSensitiveKey` nie ma jeszcze wywołującego. Raport diagnostyczny będzie z niego korzystał po D6.2.
 

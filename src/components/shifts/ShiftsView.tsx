@@ -50,6 +50,7 @@ import { WeekTemplateDialog } from "./WeekTemplateDialog";
 import { cyclePatterns, weekTemplates, weekTemplateSteps } from "@/lib/shifts";
 import { RangeCopyDialog } from "./RangeCopyDialog";
 import { EmptyShifts } from "./EmptyShifts";
+import { GRAFIK } from "@/lib/storage/keys";
 
 /** Co zrobi stuknięcie w dzień — widoczne pod paskiem i czytane przy siatce. */
 function brushHint(brush: Brush, typesById: Map<string, ShiftType>, hours: ShiftHours | null): string {
@@ -69,7 +70,7 @@ const exportedStoreFor = (key: string) => createPersistedStore<string[]>(key, []
 type ShiftsLayout = "month" | "week";
 
 /** Który widok Grafiku — miesiąc czy tydzień — pamiętany między wizytami. */
-const layoutStore = createPersistedStore<ShiftsLayout>("kaczy.shifts.layout.v1", "month", {
+const layoutStore = createPersistedStore<ShiftsLayout>(GRAFIK.layout, "month", {
   merge: (defaults, stored) => (stored === "week" || stored === "month" ? stored : defaults),
 });
 
@@ -82,7 +83,7 @@ const NO_REMINDERS = new Map<string, Occurrence[]>();
  * `lib/shifts/store`, obliczenia w czystych funkcjach `lib/shifts/*`,
  * a tutaj zostaje to, co lokalne dla ekranu — miesiąc, pędzel i otwarte okna.
  */
-const MOVE_HINT_KEY = "kaczy.shifts.moveHint.v1";
+const MOVE_HINT_KEY = GRAFIK.moveHint;
 
 /** Przycisk paska narzędzi Grafiku (wspólny wygląd, wysokość h-10 — §audyt 5). */
 

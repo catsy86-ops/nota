@@ -1,6 +1,7 @@
 ﻿import { createPersistedStore } from "@/lib/persistedStore";
 import { toast } from "@/lib/notify";
 import type { PrivateNotes } from "@/lib/privateNotes";
+import { SIGNALS, SKARBIEC } from "@/lib/storage/keys";
 
 /** Minuty bezczynności do automatycznej blokady; 0 = nigdy (do zamknięcia karty). */
 export const AUTOLOCK_CHOICES = [1, 5, 15, 30, 0] as const;
@@ -10,14 +11,14 @@ export const HIDDEN_LOCK_CHOICES = [1, 5, 15, 0] as const;
 export const DEFAULT_HIDDEN_LOCK_MINUTES = 1;
 export const HIDDEN_LOCK_MS = DEFAULT_HIDDEN_LOCK_MINUTES * 60_000;
 
-const store = createPersistedStore<number>("kaczy.vault.autolock.v1", DEFAULT_AUTOLOCK_MINUTES, {
+const store = createPersistedStore<number>(SKARBIEC.autoLock, DEFAULT_AUTOLOCK_MINUTES, {
   merge: (def, stored) => ((AUTOLOCK_CHOICES as readonly number[]).includes(Number(stored)) ? Number(stored) : def),
 });
 
 export const setAutoLockMinutes = (m: number) => store.set(m);
 export const useAutoLockMinutes = () => store.use();
 
-const hiddenStore = createPersistedStore<number>("kaczy.vault.hiddenLock.v1", DEFAULT_HIDDEN_LOCK_MINUTES, {
+const hiddenStore = createPersistedStore<number>(SKARBIEC.hiddenLock, DEFAULT_HIDDEN_LOCK_MINUTES, {
   merge: (def, stored) => ((HIDDEN_LOCK_CHOICES as readonly number[]).includes(Number(stored)) ? Number(stored) : def),
 });
 
@@ -27,7 +28,7 @@ export const useHiddenLockMinutes = () => hiddenStore.use();
 /** Ostrzeżenie przed auto-blokadą (1.3 planu Skarbca): tyle sekund przed blokadą. */
 export const LOCK_WARN_MS = 30_000;
 
-const CHANNEL = "kaczy-vault";
+const CHANNEL = SIGNALS.vaultChannel;
 
 /**
  * Pilnuje bezczynności i ukrycia karty, dopóki skarbiec jest odblokowany.

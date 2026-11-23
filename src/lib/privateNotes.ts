@@ -11,6 +11,7 @@ import { assertPasskey, registerPasskey } from "@/lib/passkey";
 import { MAX_PASSKEYS, unlockWithPasskey as unlockKeyWithPasskey, unwrapRawWithPassword, wrapDataKeyForPasskey, fromB64u, toB64u } from "@/lib/vault";
 import { toast } from "@/lib/notify";
 import { pluralPl } from "@/lib/plural";
+import { SKARBIEC } from "@/lib/storage/keys";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, encryptString, isValidMeta, noteAad,
   unlockWithPassword, unlockWithRecovery, VAULT_VERSION, type VaultMeta,
@@ -116,7 +117,7 @@ function encryptNoteWrite(key: CryptoKey, json: string, id: string, epoch: numbe
   return writeFormatAllowed(NOTE_FORMAT_V2_SCHEMA) ? encryptNoteStringV2(key, json, id, epoch) : encryptString(key, json, noteAad(id));
 }
 
-const THROTTLE_KEY = "kaczy.vault.attempts.v1";
+const THROTTLE_KEY = SKARBIEC.attempts;
 const FREE_ATTEMPTS = 2;
 const MAX_DELAY_MS = 5 * 60_000;
 

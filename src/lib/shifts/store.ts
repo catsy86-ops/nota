@@ -6,6 +6,7 @@ import { applyPattern, patternOverlap } from "./pattern";
 import { planMonthCopy, planPaste, planRangeCopy, planSwap, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
 import { createYShifts, MAIN_SCHEDULE_ID, SHIFTS_SYSTEM_ORIGIN, type DeletedShiftType, type YShifts } from "./yShifts";
 import { createScheduleRegistry, isScheduleId, type ShiftSchedule } from "./schedules";
+import { GRAFIK } from "@/lib/storage/keys";
 
 /**
  * Grafik żyje w dokumencie Yjs notatek (`yShifts.ts`), więc synchronizuje się
@@ -19,7 +20,7 @@ import { createScheduleRegistry, isScheduleId, type ShiftSchedule } from "./sche
 const yjsDoc = yjsStore.doc;
 const registry = createScheduleRegistry(yjsDoc);
 // Literał, nie `SHIFTS_STORAGE_KEY`: ta stała jest niżej w pliku, a tu liczymy wartość od razu.
-const ACTIVE_KEY = "kaczy:shifts.active";
+const ACTIVE_KEY = GRAFIK.active;
 
 function readActiveId(): string {
   try {
@@ -67,7 +68,7 @@ registry.subscribe(() => {
 });
 
 /** Dawny zapis Grafiku w localStorage — dziś tylko źródło jednorazowej migracji. */
-export const SHIFTS_STORAGE_KEY = "kaczy:shifts";
+export const SHIFTS_STORAGE_KEY = GRAFIK.shifts;
 const DEVICE_KEY = `${SHIFTS_STORAGE_KEY}.device`;
 
 /**
