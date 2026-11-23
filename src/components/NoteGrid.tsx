@@ -1,3 +1,4 @@
+import { countRender } from "@/lib/renderProbe";
 ﻿import { toast } from "sonner";
 import { smoothBehavior } from "@/lib/scrollBehavior";
 import { useRef, useEffect, useLayoutEffect, useCallback, memo, useMemo, useState, forwardRef } from "react";
@@ -124,6 +125,7 @@ interface NoteGridProps extends Omit<NoteViewActions, "selectionMode" | "onToggl
 export function NoteGrid({
   notes, onUpdate, onDelete: onDeleteProp, onTogglePin, onDuplicate, onArchive: onArchiveProp, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectedIds, selectionMode, onToggleSelect, navOrder = 0, reminderActions, inboxAge,
 }: NoteGridProps) {
+  countRender("NoteGrid");
   // Zapamiętujemy, co użytkownik zrobił z kartą, żeby jej wyjście (AnimatePresence `custom`)
   // „leciało” w stronę celu: kosz albo archiwum. Dotyczy też skrótów i przesunięcia palcem.
   const [exitIntent, setExitIntent] = useState<CardExitIntent | undefined>();

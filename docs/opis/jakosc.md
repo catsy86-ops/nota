@@ -578,3 +578,21 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 **Testy.** `src/hooks/useAppDialogs.test.ts` (5 przypadków: wartość i funkcja, brak zmiany = ten sam stan, triaż zostaje zamontowany, lista do usunięcia, stałe settery); e2e: smoke, `command-palette-study`, `inbox-*`, `palette-*`, `reader*`, `settings-links`, `shortcuts-settings-stats`, `wiki*`, `notes`.
 
 **Commit.** Patrz historia `src/pages/IndexOverlays.tsx`, 2026-11-23.
+
+## Architektura — pomiar renderów strony głównej (A2.5, 2026-11-23)
+
+**Co robi.** Nic widocznego dla użytkownika. Pozwala policzyć, ile razy renderują się `Index`, nagłówek, pasek boczny i siatka notatek.
+
+**Gdzie jest.** `src/lib/renderProbe.ts` (`countRender(name)`) wywoływane na początku `Index`, `AppHeader`, `AppSidebar` i `NoteGrid`; test `e2e/render-count.spec.ts`.
+
+**Jak działa.** `countRender` nic nie robi, dopóki `window.__renderProbe` nie istnieje; test ustawia go przez `addInitScript`. Profiler Reacta odpada, bo w buildzie produkcyjnym (na nim działa e2e) nie zwraca danych. Test dodaje 3 notatki, wpisuje znak w wyszukiwarkę, potem przypina notatkę, i wypisuje różnice liczników (`[render] …`).
+
+**Wynik (2026-11-23, build produkcyjny, 3 notatki).**
+- Znak w wyszukiwarce: `Index` 4, `AppHeader` 4, `AppSidebar` 4, `NoteGrid` 4.
+- Przypięcie jednej notatki: `Index` 2, `AppHeader` 2, `AppSidebar` 2, `NoteGrid` 4.
+
+**Wniosek i ograniczenia.** Cel planu („zmiana notatki nie renderuje nagłówka ani paska”) niespełniony: nagłówek i pasek renderują się tyle razy co `Index`, bo dostają nowe funkcje inline przy każdym renderze. Naprawa wymaga `useCallback` dla ok. 15 handlerów w `Index` i `memo` na obu komponentach (sam `memo` z pominięciem funkcji dałby przestarzałe domknięcia, np. `isMobile` w `onGoView`) — osobne zadanie. Test nie ma progów, tylko wypisuje liczby.
+
+**Testy.** `e2e/render-count.spec.ts`.
+
+**Commit.** Patrz historia `src/lib/renderProbe.ts`, 2026-11-23.

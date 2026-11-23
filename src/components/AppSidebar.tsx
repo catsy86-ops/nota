@@ -1,3 +1,4 @@
+import { countRender } from "@/lib/renderProbe";
 import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { folderProgress } from "@/lib/folderProgress";
@@ -157,6 +158,7 @@ export function AppSidebar({
   sidebarItems, onLogoClick, dark, onToggleTheme, onOpenPalette, onOpenActions,
   onOpenStats, onOpenFocusMode, onSettingsOpenChange,
 }: AppSidebarProps) {
+  countRender("AppSidebar");
   // Przytrzymanie „Tryb ciemny” → szybkie zestawy wyglądu (plan motywów 1.3).
   const themePress = useLongPress(openQuickPresets);
   const [moreOpen, setMoreOpen] = useState(false);

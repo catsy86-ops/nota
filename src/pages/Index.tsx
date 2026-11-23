@@ -1,3 +1,4 @@
+import { countRender } from "@/lib/renderProbe";
 import { canViewTransition } from "@/lib/viewTransition";
 import { isAppView } from "@/lib/viewMeta";
 import { Activity, useState, useCallback, useDeferredValue, useEffect, useMemo, useRef, Suspense } from "react";
@@ -105,6 +106,7 @@ import { requestSettingsTab } from "@/lib/settingsDeepLink";
 import type { DebtReminderApi } from "@/components/debts/DebtsView";
 
 const Index = () => {
+  countRender("Index");
   const {
     notes, archivedNotes, trashedNotes, allLabels, folders, propDefs,
     addNote, updateNote, deleteNote, trashNote, restoreFromTrash, togglePin, duplicateNote,

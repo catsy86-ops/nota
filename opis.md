@@ -469,3 +469,4 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Architektura — mapa `Index.tsx` i efekty bez widoku (A2.1, A2.2, 2026-11-23)
 - Architektura — model listy `useNotesScreen` i wspólny zapis terminów (A2.3, 2026-11-23)
 - Architektura — nakładki w `IndexOverlays` i jeden reduktor okien (A2.4, 2026-11-23)
+- Architektura — pomiar renderów strony głównej (A2.5, 2026-11-23)

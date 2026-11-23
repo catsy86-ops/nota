@@ -1,3 +1,4 @@
+import { countRender } from "@/lib/renderProbe";
 import { VaultStatusButton } from "@/components/vault/VaultStatusButton";
 import { isAppView, VIEW_LABEL } from "@/lib/viewMeta";
 import { SyncStatusDot } from "@/components/sync/SyncStatusDot";
@@ -42,6 +43,7 @@ export function AppHeader({
   selectionMode, sidebarOpen, onToggleSidebar, dark, onToggleTheme,
   view, activeFolder, activeLabel, search, onSearchChange, onImport, onOpenSync, onOpenPalette,
 }: AppHeaderProps) {
+  countRender("AppHeader");
   // Przytrzymanie przełącznika jasności → szybkie zestawy wyglądu (plan motywów 1.3).
   const themePress = useLongPress(openQuickPresets);
   // Stan tutaj, nie w Index: schowanie nagłówka przerysowuje tylko nagłówek, a nie całą stronę z kartami.
