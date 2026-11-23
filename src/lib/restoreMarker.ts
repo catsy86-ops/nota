@@ -1,9 +1,10 @@
+import { DANE } from "@/lib/storage/names";
 /**
  * Znacznik przywracania kopii w toku (Z-18.1 audytu 2): ustawiany przed fazą zapisu, zdejmowany po ostatnim kroku.
  * Został po starcie aplikacji = przywracanie przerwane (zamknięta karta, wywrócona przeglądarka) — część danych
  * pochodzi z kopii, część sprzed niej. Osobny, mały moduł: baner przy starcie nie ładuje kodu kopii.
  */
-export const RESTORE_MARKER_KEY = "kaczy.restore.running.v1";
+export const RESTORE_MARKER_KEY = DANE.restoreRunning;
 
 export interface RestoreMarker {
   startedAt: number;

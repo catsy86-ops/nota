@@ -825,7 +825,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 
 **Commit.** Patrz historia `src/lib/storage/migrateKey.ts`, 2026-11-23.
 
-## Dane — rejestr kluczy `localStorage` i lista kopii z rejestru (D6.1, D6.5, 2026-11-23)
+## Dane — rejestr kluczy `localStorage`, nazwy kluczy i lista kopii z rejestru (D6.1, D6.2, D6.5, 2026-11-23)
 
 **Co robi.** Jedno miejsce, które opisuje klucze `localStorage`: jak je czytać, jaka jest wartość domyślna, czy wchodzą do pełnej kopii i czy są wrażliwe. Użytkownik nie widzi zmiany — kopia ma te same ustawienia co wcześniej.
 
@@ -834,21 +834,25 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
   - typ `KeyDef`, funkcje `defineKey`, `jsonKey` (JSON z funkcją sprawdzającą), `rawKey` (surowy tekst);
   - odczyt i zapis: `readKey`, `writeKey`, `removeKey`;
   - zapytania o rejestr: `backupKeyNames`, `isSensitiveKey`, `registeredKeys`.
+- `src/lib/storage/names.ts` — same nazwy, bez importów (D6.2). `keys.ts` eksportuje je dalej, ale moduły importują z `names.ts`, bo `keys.ts` zależy od `diagnostics.ts`, a ten też potrzebuje nazwy klucza — import z `keys.ts` dawał cykl i pusty obiekt przy starcie.
 - Nazwy kluczy Wyglądu: obiekt `APPEARANCE` (np. `APPEARANCE.skin`) i `appearanceSlotKey(n)`; `APPEARANCE_KEYS` to jego wartości, `src/lib/appearanceCode.ts` eksportuje je dalej. Moduły Wyglądu (`skins.ts`, `accent.ts`, `frames.ts`, `useTheme.ts`, `appearancePresets.ts` i reszta) biorą nazwę stąd.
 - Nazwy kluczy Pracy: obiekt `PRACA` (np. `PRACA.seller`, `PRACA.ksefSeries`, `PRACA.store` = `kaczy.study.v1`). Czytają je `src/lib/study/*` (firma, cennik, raporty, zakładka, użycie), `src/lib/ksef/sellerPrefs.ts` i komponenty `src/components/study/` (tablica, poziomica, przyjazd na budowę). Dotychczasowe stałe (`SELLER_KEY`, `COMPANY_NAME_KEY` …) zostały jako aliasy.
-- Dalsze obiekty nazw: `SKARBIEC` (PIN, próby, auto-blokada, kod awaryjny), `GRAFIK` (`kaczy:shifts`, aktywny grafik, układ, podpowiedzi, eksport .ics), `CWICZENIA` (przerwa między seriami) i `SIGNALS` — nazwy zdarzeń okna i kanałów `BroadcastChannel` (`kaczy-vault`, `kaczy:study-custom-prefill`). Zdarzenia nie są kluczami pamięci, ale dzielą prefiks, więc mieszkają w rejestrze, żeby strażnik nie potrzebował wyjątku.
+- Dalsze obiekty nazw: `SYNC` (kod pary, przekaźnik, urządzenie), `DANE` (kopie, odtwarzanie, migawki, import, migracje, stare magazyny, dziennik bezpieczeństwa; prefiksy z końcówką `Prefix`, np. `DANE.versionsPrefix`), `DZIEN` (Dziś, Terminy, Kalendarz, przegląd, push, odznaki), `POWLOKA` (szkice, wskazówki, widoki, filtry, flagi funkcji), `SKARBIEC` (PIN, próby, auto-blokada, kod awaryjny), `GRAFIK` (`kaczy:shifts`, aktywny grafik, układ, podpowiedzi, eksport .ics), `CWICZENIA` (przerwa między seriami) i `SIGNALS` — nazwy zdarzeń okna i kanałów `BroadcastChannel` (`kaczy-vault`, `kaczy:study-custom-prefill`). Zdarzenia nie są kluczami pamięci, ale dzielą prefiks, więc mieszkają w rejestrze, żeby strażnik nie potrzebował wyjątku.
 - Strażnik D6.2: `src/lib/storage/keyLiterals.test.ts` z listą wyjątków `keyLiterals.exempt.ts`.
 - `SETTINGS_KEYS` w `src/lib/exportNotes.ts` to `backupKeyNames()`.
 
 **Jak działa.**
 - `readKey` przy braku dostępu do pamięci, braku wpisu albo złym kształcie zwraca wartość domyślną; zły kształt zostawia wpis w diagnostyce. `writeKey` zwraca `false` zamiast rzucać.
 - Klucz nie może być zarejestrowany dwa razy, a klucz wrażliwy nie może mieć flagi `backup` — oba przypadki rzucają przy rejestracji, więc błąd wychodzi w teście, nie u użytkownika.
-- Strażnik przegląda `src/**/*.ts(x)` bez testów i bez komentarzy. Literał `"kaczy.`, `"kaczy:` albo `"kaczy-` poza `keys.ts` jest dozwolony tylko w pliku z listy wyjątków. Lista może tylko maleć: plik bez literału, a nadal na liście, też wywraca test.
+- Strażnik przegląda `src/**/*.ts(x)` bez testów i bez komentarzy. Literał `"kaczy.` albo `"kaczy:` poza `keys.ts` i `names.ts` jest dozwolony tylko w pliku z listy wyjątków. Lista może tylko maleć: plik bez literału, a nadal na liście, też wywraca test.
 - Klucze kopii są zarejestrowane jako `rawKey` z `backup: true`. Ich kształt nadal sprawdzają moduły, które je czytają, aż do przejścia modułami (D6.2).
 - Jako wrażliwe są oznaczone: kod parowania `kaczy.sync.v1`, token push, PIN i próby skarbca, adres przekaźnika, numer konta i odciski dokumentów.
 
 **Ograniczenia i pułapki.**
-- D6.2 w toku: przeniesione Wygląd, Praca, Skarbiec, Grafik i Ćwiczenia; 86 plików jest jeszcze na liście wyjątków. Moduły nadal czytają przez `createPersistedStore`, nie `readKey`/`writeKey`.
+- Strażnik nie obejmuje `kaczy-…`: to nazwy baz IndexedDB, kanałów i stałe kryptograficzne (`kaczy-room`, `kaczy-push-v1:`, `kaczy-yjs-v1`), których zmiana zgubiłaby dane albo zerwała parowanie; dawne klucze z myślnikiem (`kaczy-theme`, `kaczy-notes-data`) i tak są w `names.ts`.
+- Na liście wyjątków został tylko `src/lib/migrations/registry.ts` — nazwa klucza w polu opisu `where`, czytanym przez człowieka.
+- Moduły nadal czytają przez `createPersistedStore` albo bezpośrednio `localStorage`, nie `readKey`/`writeKey`; walidatory w rejestrze to dalszy krok.
+- Przy wstawianiu importu na górę pliku z BOM-em BOM trafia do drugiej linii i lint zgłasza `no-irregular-whitespace`.
 - Nowy klucz kopii trzeba dodać w `keys.ts`, nie w `exportNotes.ts`.
 - `isSensitiveKey` nie ma jeszcze wywołującego. Raport diagnostyczny będzie z niego korzystał po D6.2.
 

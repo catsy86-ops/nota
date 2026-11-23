@@ -1,6 +1,6 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { FINGERPRINT_MIN_HEX, normalizeFingerprintInput } from "./documentFingerprint";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 /**
  * B4.4 Zapis odcisków wystawionych dokumentów — na tym urządzeniu, nie w dokumencie Pracy. Kod w stopce PDF

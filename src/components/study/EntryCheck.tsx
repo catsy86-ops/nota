@@ -25,7 +25,7 @@ import { QuickLink } from "./QuickLink";
 import { toastWithUndo } from "@/lib/undoToast";
 import { formatHoursShort } from "@/lib/shifts/time";
 import { cardVariant } from "@/components/ui/card";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 const hhmm = (at: number) => new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 const pointsPl = (n: number) => `${n} ${pluralPl(n, ["punktu", "punktów", "punktów"])}`;

@@ -5,10 +5,11 @@ import { isDataUrl } from "@/lib/imageStore";
 import { logDiag } from "@/lib/diagnostics";
 import { type ImagesById, yNoteFromPlain, yFolderFromPlain } from "./codec";
 import type { StoreCtx } from "./context";
+import { DANE } from "@/lib/storage/names";
 
 /** Stare formaty obrazów (data URL-e per notatka) — tylko do migracji. */
-const LEGACY_IMAGES_KEY = "kaczy.images.v1";
-const IMAGES_PREFIX = "kaczy.images.v2:";
+const LEGACY_IMAGES_KEY = DANE.images;
+const IMAGES_PREFIX = DANE.imagesV2Prefix;
 
 /**
  * Jednorazowe migracje przy starcie (F3, krok 5): obrazy ze starych kluczy idb do `imageStore` (manifesty FNV →

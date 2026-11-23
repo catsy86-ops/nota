@@ -1,6 +1,6 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import type { Skin } from "@/lib/skinList";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Jasność wybrana osobno dla każdego stylu poza Zeszytem (plan motywów 4.1, decyzja M-2: każdy styl ma

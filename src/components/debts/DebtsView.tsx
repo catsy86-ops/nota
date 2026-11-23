@@ -28,6 +28,7 @@ import { avatarHue, balances, debtsCsv, initialOf, debtSide, doubleSettle, foldN
 import { cardVariant } from "@/components/ui/card";
 import { DebtPlans } from "./DebtPlans";
 import { PLAN_MAX_RATES, PLAN_MIN_RATES, rateAmounts } from "@/lib/debts/plans";
+import { POWLOKA } from "@/lib/storage/names";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -62,7 +63,7 @@ const dueAt = (day: string) => new Date(`${day}T09:00:00`).getTime();
 const hasDue = (kind: DebtKind) => kind === "lent" || kind === "borrowed";
 
 // Formularz rozwinięty — zapamiętany na tym urządzeniu (3.6: zwijany na każdym ekranie, nie tylko na telefonie).
-const formOpenStore = createPersistedStore<boolean>("kaczy.debts.formOpen.v1", false, {
+const formOpenStore = createPersistedStore<boolean>(POWLOKA.debtsFormOpen, false, {
   merge: (defaults, stored) => (typeof stored === "boolean" ? stored : defaults),
 });
 

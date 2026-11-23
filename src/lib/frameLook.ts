@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Wygląd ramek (Ustawienia → Wygląd → „Ramki”): kolor krawędzi i kolor tła kart.

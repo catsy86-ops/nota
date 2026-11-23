@@ -2,7 +2,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { safeLine } from "@/lib/safeText";
 import { cleanMileage, EMPTY_MILEAGE, type MileageEntry, type MileageStore } from "./mileage";
 import { cleanNotes, QUOTE_NOTES_MAX } from "./quoteNotes";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 /**
  * Nazwa firmy na nagłówku protokołu PDF (P2.5, Ustawienia → Praca). Pusta = bez nagłówka.

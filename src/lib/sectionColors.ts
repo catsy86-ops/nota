@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Podkreślenia działów (plan motywów 3.4): „subtelne” — cienka kreska w kolorze działu, stonowana;

@@ -1,7 +1,7 @@
 ﻿import { createPersistedStore } from "@/lib/persistedStore";
 import { toast } from "@/lib/notify";
 import type { PrivateNotes } from "@/lib/privateNotes";
-import { SIGNALS, SKARBIEC } from "@/lib/storage/keys";
+import { SIGNALS, SKARBIEC } from "@/lib/storage/names";
 
 /** Minuty bezczynności do automatycznej blokady; 0 = nigdy (do zamknięcia karty). */
 export const AUTOLOCK_CHOICES = [1, 5, 15, 30, 0] as const;

@@ -2,7 +2,7 @@ import { applyAppearanceValues, snapshotAppearance } from "@/lib/appearanceCode"
 import { SKIN_META } from "@/lib/skinGallery";
 import { TEXT_SIZE_STEPS } from "@/lib/textSize";
 import type { Skin } from "@/lib/skins";
-import { APPEARANCE, appearanceSlotKey } from "@/lib/storage/keys";
+import { APPEARANCE, appearanceSlotKey } from "@/lib/storage/names";
 
 /**
  * Zestawy wyglądu jednym stuknięciem (plan motywów 2026-10-30, 1.3). Zestaw to wartości kluczy z

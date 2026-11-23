@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 /**
  * P2.10: podpowiedź „Jesteś przy budowie” przy otwarciu aplikacji. Domyślnie wyłączona — lokalizacja

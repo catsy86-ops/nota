@@ -59,6 +59,7 @@ const HIDEABLE_LABELS: Record<HideableView, string> = {
 import { SKIN_META } from "@/lib/skinGallery";
 import { setSiteMode, useSiteMode, type SiteMode } from "@/lib/siteMode";
 import { cardVariant } from "@/components/ui/card";
+import { POWLOKA } from "@/lib/storage/names";
 
 const themeOptions: { value: ThemeMode; label: string; Icon: typeof Sun }[] = [
   { value: "light", label: "Jasny", Icon: Sun },
@@ -118,7 +119,7 @@ const APPEARANCE_GROUPS = [
   { id: "wyglad-ruch", label: "Ruch" },
 ] as const;
 
-const ADVANCED_KEY = "kaczy.appearance.advanced.v1";
+const ADVANCED_KEY = POWLOKA.appearanceAdvanced;
 const readAdvanced = () => { try { return localStorage.getItem(ADVANCED_KEY) === "1"; } catch { return false; } };
 
 /** Pory roku: ikony zamiast emoji (spójnie z resztą Ustawień). */

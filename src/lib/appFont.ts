@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Krój tekstu aplikacji (Ustawienia → Wygląd → „Krój tekstu”). `default` = krój stylu

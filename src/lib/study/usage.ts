@@ -4,7 +4,7 @@
  * Służy do decyzji „co schować, co wysunąć” (plan Pracy na budowie, B2.2).
  */
 import { useEffect } from "react";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 export const USAGE_KEY = PRACA.usage;
 const MAX_FEATURES = 60;

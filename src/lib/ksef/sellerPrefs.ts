@@ -3,7 +3,7 @@ import { safeLine } from "@/lib/safeText";
 import { normalizeNip } from "./nip";
 import { cleanSeries } from "./numbering";
 import type { Party } from "./invoice";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 /**
  * Dane sprzedawcy na fakturze (nazwa firmy, NIP, adres) — dane firmy wykonawcy, na urządzeniu jak `companyName`

@@ -1,4 +1,4 @@
-import { SIGNALS } from "@/lib/storage/keys";
+import { SIGNALS } from "@/lib/storage/names";
 /**
  * Zamiana rozwiązanego problemu budowy w szkic własnego pytania (Etap 4 § 4.2).
  * Problem wysyła zdarzenie; jedyny egzemplarz dialogu „Moje pytania” (w `StudyView`) je odbiera.

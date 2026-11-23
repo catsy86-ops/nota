@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { POWLOKA } from "@/lib/storage/names";
 
 /**
  * Funkcje w przygotowaniu (plan rozbudowy 2026-10-23). Duże zmiany wchodzą za
@@ -35,7 +36,7 @@ export function cleanFeatureFlags(stored: unknown): FeatureFlags {
   return out;
 }
 
-const store = createPersistedStore<FeatureFlags>("kaczy.features.v1", FEATURE_DEFAULTS, {
+const store = createPersistedStore<FeatureFlags>(POWLOKA.features, FEATURE_DEFAULTS, {
   merge: (_defaults, stored) => cleanFeatureFlags(stored),
 });
 

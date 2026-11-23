@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Poświaty (Ustawienia → Wygląd → „Poświata”): siła i kolor świecenia przycisków głównych (FAB,

@@ -2,6 +2,7 @@ import type { NoteColor } from "@/lib/types/note";
 import type { NotePriority } from "@/lib/notePriority";
 import { createPersistedStore } from "@/lib/persistedStore";
 import type { GroupBy } from "@/lib/groupNotes";
+import { POWLOKA } from "@/lib/storage/names";
 
 export type Density = "compact" | "cozy" | "comfy";
 export type Layout = "masonry" | "grid" | "list" | "board" | "table" | "gallery";
@@ -72,7 +73,7 @@ const DEFAULTS: ViewPrefs = {
   readerSplitId: null,
 };
 
-const store = createPersistedStore<ViewPrefs>("kaczy.viewPrefs.v1", DEFAULTS, {
+const store = createPersistedStore<ViewPrefs>(POWLOKA.viewPrefs, DEFAULTS, {
   // Uszkodzony zapis (np. tekst zamiast obiektu) nie może rozsypać się w klucze „0”, „1”… — wtedy domyślne.
   merge: (defaults, stored) =>
     stored !== null && typeof stored === "object" && !Array.isArray(stored) ? { ...defaults, ...stored } : defaults,

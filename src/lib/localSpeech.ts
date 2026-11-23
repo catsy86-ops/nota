@@ -1,3 +1,4 @@
+import { POWLOKA } from "@/lib/storage/names";
 /**
  * H6.1 Dyktowanie bez internetu: rozpoznawanie mowy na urządzeniu w Chrome (Web Speech API,
  * `SpeechRecognition.available` / `install` i `processLocally`). Bez tego zostaje dyktowanie przez
@@ -41,7 +42,7 @@ interface LocalSpeechApi {
 }
 
 export const DICTATION_LANG = "pl-PL";
-const FLAG = "kaczy.dictation.local.v1";
+const FLAG = POWLOKA.dictationLocal;
 const KNOWN = new Set<LocalSpeechStatus>(["unavailable", "downloadable", "downloading", "available"]);
 
 function api(): LocalSpeechApi | null {

@@ -1,4 +1,5 @@
-export const CONSENT_KEY = "kaczy.dictation.consent";
+import { POWLOKA } from "@/lib/storage/names";
+export const CONSENT_KEY = POWLOKA.dictationConsent;
 
 /** Czy użytkownik zgodził się na dyktowanie (usługa przeglądarki). */
 export function hasDictationConsent(): boolean {

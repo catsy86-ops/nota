@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 /**
  * Podpowiedzi „Raport dnia/tygodnia gotowy” w aplikacji (dymek i powiadomienie systemowe).

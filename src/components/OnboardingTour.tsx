@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { INTERESTS, TOUR_SEEN_KEY, tourSteps, WELCOME_STEP, type Interest } from "@/lib/guides";
 import { GuideDialog } from "@/components/guide/GuideDialog";
+import { SIGNALS } from "@/lib/storage/names";
 
 /**
  * Samouczek na start (pierwsze uruchomienie i „Więcej → Samouczek”): karta powitalna z wyborem działów,
@@ -24,8 +25,8 @@ export function OnboardingTour() {
 
   useEffect(() => {
     function onTour() { setStep(0); setOpen(true); }
-    window.addEventListener("kaczy:tour", onTour);
-    return () => window.removeEventListener("kaczy:tour", onTour);
+    window.addEventListener(SIGNALS.tour, onTour);
+    return () => window.removeEventListener(SIGNALS.tour, onTour);
   }, []);
 
   function close() {

@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { cleanSchemaClaim, SCHEMA_VERSION } from "@/lib/formatSchema";
 import { logSecurity } from "@/lib/diagnostics";
+import { DANE } from "@/lib/storage/names";
 
 /**
  * Wymaganie wersji zapisane w dokumencie (D1.3, `docs/plan-migracje-yjs-2026-11-15.md`). Mapa `docFormat`: klucz =
@@ -23,7 +24,7 @@ import { logSecurity } from "@/lib/diagnostics";
 export const DOC_FORMAT_MAP = "docFormat";
 const FEATURE_RE = /^[a-z][a-z0-9-]{0,31}$/;
 const MAX_FEATURES = 50;
-const IGNORE_KEY = "kaczy.docformat.ignore.v1";
+const IGNORE_KEY = DANE.docformatIgnore;
 
 /** Cechy znane z nazwy: które mapy obejmuje blokada zapisu. Pusta do pierwszej cechy (planowo `vault-files`). */
 export const KNOWN_FEATURES: Readonly<Record<string, readonly string[]>> = {};

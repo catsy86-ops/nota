@@ -5,6 +5,7 @@ import { SCHEMA_VERSION } from "@/lib/formatSchema";
 import { MIGRATION_LOCK, withExclusiveLock, withLockIfFree } from "@/lib/tabLock";
 import { localDayKey } from "@/lib/dayDone";
 import { logDiag } from "@/lib/diagnostics";
+import { DANE } from "@/lib/storage/names";
 
 /**
  * Kopie dzienne w OPFS (Q1.4, Z-16.1 część A, `docs/plan-dane-lokalne.md` §1.3–1.4): raz na dzień lokalny pełny stan
@@ -33,9 +34,9 @@ const LOCK = "notatnik-kopia-dzienna";
 const EXT = ".nkopia";
 
 /** Wynik ostatniej próby — wiersz w „Trwałości danych” (lokalnie, poza kopią). */
-export const SNAPSHOT_STATUS_KEY = "kaczy.snapshot.status.v1";
+export const SNAPSHOT_STATUS_KEY = DANE.snapshotStatus;
 /** Ostatnia udana migawka — baner „dane zniknęły” z części B (§1.6). */
-export const SNAPSHOT_LAST_KEY = "kaczy.snapshot.last.v1";
+export const SNAPSHOT_LAST_KEY = DANE.snapshotLast;
 
 export interface SnapshotHeader {
   v: number;

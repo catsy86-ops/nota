@@ -5,7 +5,7 @@ import { applyCustomTheme } from "@/lib/customTheme";
 import { SKIN_SCHEME, SKIN_THEME_COLOR, SKIN_THEME_COLOR_ALT, setSkin, skinStore, useSkin, type Skin } from "@/lib/skins";
 import { setSkinScheme, skinSchemeStore, type SkinSchemeMap } from "@/lib/skinScheme";
 import { applySkinFavicon } from "@/lib/skinFavicon";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 export type ThemeMode = "system" | "light" | "dark";
 

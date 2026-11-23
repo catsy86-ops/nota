@@ -28,6 +28,7 @@ import { overlapRatio } from "@/lib/plans/tiles";
 import { suggestDiameters } from "@/lib/plans/assign";
 import type { DetectedText } from "@/lib/plans/model";
 import { DraftSection, RouteSection, RoutesList, ScaleSection, type EditorMode } from "./PlanPanel";
+import { POWLOKA } from "@/lib/storage/names";
 
 const toolBtn = "pressable inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-control px-2.5 text-sm font-medium text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40 disabled:hover:bg-transparent coarse:h-11 coarse:min-w-11";
 /** Dodatek do `<Button variant="ghost">` na pasku edytora (W4.5); przełączniki trybu zostają na `toolBtn`. */
@@ -518,7 +519,7 @@ type PanelSize = "s" | "m" | "l";
 const PANEL_HEIGHT: Record<PanelSize, string> = { s: "max-sm:h-[18%]", m: "max-sm:h-[45%]", l: "max-sm:h-[75%]" };
 const PANEL_LABEL: Record<PanelSize, string> = { s: "mała", m: "średnia", l: "duża" };
 
-const ROTATE_HINT_KEY = "kaczy.plans.rotateHint.v1";
+const ROTATE_HINT_KEY = POWLOKA.plansRotateHint;
 /** Raz: poziomy plan na pionowym telefonie zajmuje wąski pas — podpowiedź, żeby obrócić. */
 function showRotateHint(w: number, h: number): boolean {
   if (typeof window === "undefined" || window.innerWidth >= 640 || window.innerHeight <= window.innerWidth || w < h * 1.3) return false;

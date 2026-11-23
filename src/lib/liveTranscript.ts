@@ -1,5 +1,6 @@
 import { hasDictationConsent } from "@/lib/dictationConsent";
 import { DICTATION_LANG, localSpeechReady, speechRecognitionCtor as ctor, type SpeechRecognitionLike as Rec } from "./localSpeech";
+import { POWLOKA } from "@/lib/storage/names";
 
 /**
  * H6.2 Tekst na żywo podczas nagrania: rozpoznawanie mowy obok `MediaRecorder`. Nie sprawdzone na
@@ -8,7 +9,7 @@ import { DICTATION_LANG, localSpeechReady, speechRecognitionCtor as ctor, type S
  * z paskiem nagrywania (`VoiceAttachmentParts.tsx`).
  */
 
-const KEY = "kaczy.voice.liveText.v1";
+const KEY = POWLOKA.voiceLiveText;
 
 export function liveTextWanted(): boolean {
   try { return localStorage.getItem(KEY) === "1"; } catch { return false; }

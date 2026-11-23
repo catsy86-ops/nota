@@ -8,6 +8,7 @@ import { parseShareParam } from "@/lib/shareLink";
 import { logSecurity } from "@/lib/diagnostics";
 import type { ImportPlan } from "@/lib/import";
 import { LAUNCH_FILES_EVENT, takeLaunchFiles } from "@/lib/fileLaunch";
+import { SIGNALS } from "@/lib/storage/names";
 
 type AddNote = ReturnType<typeof useNotes>["addNote"];
 
@@ -59,7 +60,7 @@ export function useImportExport(importNotes: (notes: Note[]) => void, addNote: A
 }
 
 /** Zdarzenie otwierające okno importu z Google Keep / Markdown (wysyła menu Import/Eksport). */
-export const OPEN_EXTERNAL_IMPORT_EVENT = "kaczy:import-external";
+export const OPEN_EXTERNAL_IMPORT_EVENT = SIGNALS.importExternal;
 
 export type ExternalImportStage = "pick" | "reading" | "summary" | "saving";
 

@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { CWICZENIA } from "@/lib/storage/keys";
+import { CWICZENIA } from "@/lib/storage/names";
 
 /** Czas przerwy między seriami (1.2): wybór z krótkiej listy, zapamiętany na urządzeniu. */
 export const REST_OPTIONS = [60, 90, 120, 180] as const;

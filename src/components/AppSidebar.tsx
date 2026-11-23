@@ -41,6 +41,7 @@ import { getViewPrefs, useViewPrefs } from "@/lib/viewPrefs";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { APP_NAME } from "@/lib/appName";
+import { POWLOKA, SIGNALS } from "@/lib/storage/names";
 
 const MAX_FAVORITES = 10;
 /** 5.1: ostatnio otwierane notatki w pasku (grupa domyślnie zwinięta, żeby pasek nie rósł). */
@@ -48,7 +49,7 @@ const MAX_RECENT = 10;
 
 /** Zwinięte grupy paska (PW-4): zapamiętane per przeglądarka. Bez zapisu „Osobiste” są zwinięte (plan wyglądu,
  *  Faza 7) — pasek ma się mieścić na 900 px; błąd dostępu do pamięci daje ten sam stan domyślny. */
-const SIDEBAR_GROUPS_KEY = "kaczy.sidebarGroups.v1";
+const SIDEBAR_GROUPS_KEY = POWLOKA.sidebarGroups;
 const DEFAULT_COLLAPSED_GROUPS: Partial<Record<string, boolean>> = { osobiste: true };
 function readCollapsedGroups(): Partial<Record<string, boolean>> {
   try {
@@ -485,7 +486,7 @@ export function AppSidebar({
                     <SidebarRow icon={<RotateCcwClock className="size-icon-nav" />} label="Ostatnie akcje" onClick={onOpenActions} />
                     <SidebarRow icon={<Trophy className="size-icon-nav" />} label="Statystyki" tipKeys={shortcutFor("Statystyki")} onClick={onOpenStats} />
                     <SidebarRow icon={<Brain className="size-icon-nav" />} label="Tryb skupienia" onClick={onOpenFocusMode} />
-                    <SidebarRow icon={<CircleQuestionMark className="size-icon-nav" />} label="Samouczek" onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))} />
+                    <SidebarRow icon={<CircleQuestionMark className="size-icon-nav" />} label="Samouczek" onClick={() => window.dispatchEvent(new CustomEvent(SIGNALS.tour))} />
                     <SidebarRow
                       icon={<BrainCircuit className="size-icon-nav" />}
                       label="Trening mózgu"

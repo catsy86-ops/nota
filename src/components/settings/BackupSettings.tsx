@@ -27,6 +27,7 @@ import { inSyncGroup, saveCurrentLocally } from "@/lib/docReplace";
 import { listDailySnapshots, readSnapshotStatus, unpinDailySnapshot, SNAPSHOT_LAST_KEY, type SnapshotEntry } from "@/lib/dailySnapshot";
 import { cardVariant } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { PRACA } from "@/lib/storage/names";
 
 function formatBytes(bytes: number | null): string {
   if (bytes === null) return "?";
@@ -369,7 +370,7 @@ function RestoreBackup() {
     { key: "settings", label: "Ustawienia (wygląd, styl, efekty, potwierdzenia)", present: backup.settings !== undefined },
     { key: "achievements", label: "Odznaki i passa", present: backup.achievements !== undefined },
     { key: "shifts", label: viewLabel("shifts"), present: backup.shifts !== undefined },
-    { key: "study", label: "Praca i dziennik z budowy", present: backup.study !== undefined || backup.settings?.["kaczy.study.v1"] !== undefined },
+    { key: "study", label: "Praca i dziennik z budowy", present: backup.study !== undefined || backup.settings?.[PRACA.store] !== undefined },
   ] : [];
 
   return (

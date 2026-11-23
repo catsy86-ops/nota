@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/appName";
+import { POWLOKA } from "@/lib/storage/names";
 
 interface NotkiLogoProps {
   size?: "sm" | "lg";
@@ -20,7 +21,7 @@ const STROKES: { d: string; delay: number; dur: number }[] = [
 ];
 
 /** Rysowanie tylko raz na sesję: kolejne wejścia do aplikacji i zmiany widoku pokazują gotowe logo. */
-const DRAWN_KEY = "kaczy.logo.drawn.v1";
+const DRAWN_KEY = POWLOKA.logoDrawn;
 function takeFirstDraw(): boolean {
   try {
     if (sessionStorage.getItem(DRAWN_KEY)) return false;

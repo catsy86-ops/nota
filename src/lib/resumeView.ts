@@ -1,3 +1,4 @@
+import { DZIEN } from "@/lib/storage/names";
 /**
  * Q3.4 (decyzja QL-3): wznowienie zainstalowanej aplikacji. Po co najmniej 4 h przerwy start na „Dziś”, wcześniej
  * ostatni dział (także przy zimnym starcie z ikony, który zawsze otwiera `start_url` = „/”). Czyste decyzje —
@@ -6,7 +7,7 @@
 
 export const RESUME_TODAY_AFTER_MS = 4 * 60 * 60 * 1000;
 export const TODAY_PATH = "/dzis";
-const KEY = "kaczy.lastSeen.v1";
+const KEY = DZIEN.lastSeen;
 /** Adres nie dłuższy niż to — zabezpieczenie przed śmieciem w `localStorage`. */
 const MAX_PATH = 300;
 

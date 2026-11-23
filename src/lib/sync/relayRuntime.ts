@@ -9,6 +9,7 @@ import { RelayProvider, type RelayErrorCode, type RelayState, type RelayStatus, 
 import { RelayHeadCompare, relayUrlTag, type OwnRelayHead } from "@/lib/sync/relayHeadCompare";
 import { RelayBlobs } from "@/lib/sync/relayBlobs";
 import { holdTabRole, RELAY_ROLE } from "@/lib/tabLock";
+import { SYNC } from "@/lib/storage/names";
 
 /**
  * Uruchamianie przekaźnika razem z synchronizacją (`yjsSync.ts` woła `startRelay`
@@ -16,7 +17,7 @@ import { holdTabRole, RELAY_ROLE } from "@/lib/tabLock";
  * bez niego nic się nie dzieje i działa samo P2P.
  */
 
-const URL_KEY = "kaczy.relay.v1";
+const URL_KEY = SYNC.relay;
 
 /** Adres przekaźnika: `https://…` albo `http://localhost…` (do testów). Inaczej `null`. */
 export function validRelayUrl(raw: string): string | null {

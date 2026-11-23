@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Gęstość całego interfejsu (plan motywów 4.2): mnożnik odstępów, wysokości i szerokości. Tailwind v4 liczy

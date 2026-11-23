@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { DZIEN } from "@/lib/storage/names";
 
 /**
  * „Ostatnio otwierane” — tylko lokalnie. Celowo poza dokumentem Yjs: otwarcie
@@ -9,7 +10,7 @@ export type LastOpenedMap = Record<string, number>;
 
 const MAX_ENTRIES = 500;
 
-const store = createPersistedStore<LastOpenedMap>("kaczy.lastOpened.v1", {}, {
+const store = createPersistedStore<LastOpenedMap>(DZIEN.lastOpened, {}, {
   merge: (_defaults, stored) => (stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {}),
 });
 

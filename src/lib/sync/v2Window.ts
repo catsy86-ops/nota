@@ -1,5 +1,6 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { cleanDeviceName } from "@/lib/syncSeen";
+import { SYNC } from "@/lib/storage/names";
 
 /**
  * Koniec pokoi v2 (S2.6, `docs/plan-wymiana-kodu.md` §2). Pokój v2 (jeden SHA-256 kodu) jest dołączany
@@ -67,7 +68,7 @@ export function latestV2Only(map: V2OnlyMap, now: number): number | null {
   return best;
 }
 
-const store = createPersistedStore<V2OnlyMap>("kaczy.sync.v2only.v1", {}, {
+const store = createPersistedStore<V2OnlyMap>(SYNC.syncV2only, {}, {
   merge: (_d, stored) => (stored && typeof stored === "object" && !Array.isArray(stored)
     ? Object.fromEntries(Object.entries(stored as Record<string, unknown>).filter((e): e is [string, number] => typeof e[1] === "number" && e[0].length <= 40))
     : {}),

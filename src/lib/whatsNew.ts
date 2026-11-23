@@ -1,7 +1,8 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { POWLOKA } from "@/lib/storage/names";
 
 /** Ostatnio widziana wersja (per urządzenie). `null` = pierwsze uruchomienie. */
-export const lastSeenVersionStore = createPersistedStore<string | null>("kaczy.lastSeenVersion.v1", null, {
+export const lastSeenVersionStore = createPersistedStore<string | null>(POWLOKA.lastSeenVersion, null, {
   merge: (defaults, stored) => (typeof stored === "string" && stored.length <= 32 ? stored : defaults),
 });
 

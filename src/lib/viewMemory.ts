@@ -1,7 +1,8 @@
+import { POWLOKA } from "@/lib/storage/names";
 // Pamięć stanu widoku między wejściami (plan UI 3.6): ostatnia zakładka, wybrana przez użytkownika.
 // Tylko localStorage, w try/catch — bez niego widok otwiera się jak dotąd (wartość startowa).
 
-const PREFIX = "kaczy.viewMemory.v1:";
+const PREFIX = POWLOKA.viewMemoryPrefix;
 
 /** Zapamiętana wartość, o ile należy do dozwolonej listy; w przeciwnym razie `fallback`. */
 export function readViewMemory<T extends string>(key: string, allowed: readonly T[], fallback: T): T {

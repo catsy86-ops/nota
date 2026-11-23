@@ -1,6 +1,6 @@
 import { addDays } from "date-fns";
 import { dayType, type DayEntry, type ShiftType } from "./model";
-import { GRAFIK } from "@/lib/storage/keys";
+import { GRAFIK } from "@/lib/storage/names";
 
 /**
  * Wieczorne przypomnienie o jutrzejszej zmianie. Ustawienie jest na urządzeniu

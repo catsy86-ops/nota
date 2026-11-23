@@ -5,6 +5,7 @@ import type { Note } from "@/hooks/useNotes";
 import { getTodayRange, getWeekRange, inRange } from "@/lib/dateRanges";
 import { ReminderToast } from "@/components/ReminderToast";
 import { pluralPl } from "@/lib/plural";
+import { DZIEN } from "@/lib/storage/names";
 
 export interface DailyWeeklyNudgePrefs {
   todayReminderHours: number;
@@ -70,8 +71,8 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
     if ((!intervalHours || intervalHours <= 0) && !fixedTime) return;
 
     const check = createNudgeScheduler({
-      nudgeKey: "kaczy.todayNudgeAt",
-      snoozeKey: "kaczy.todaySnoozeUntil",
+      nudgeKey: DZIEN.todayNudgeAt,
+      snoozeKey: DZIEN.todaySnoozeUntil,
       getCount: () => {
         const { start, end } = getTodayRange();
         return notesRef.current.filter((n) => inRange(n, start, end)).length;
@@ -108,8 +109,8 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
     if (!fixedTime || !/^\d{1,2}:\d{2}$/.test(fixedTime)) return;
 
     const check = createNudgeScheduler({
-      nudgeKey: "kaczy.weekNudgeAt",
-      snoozeKey: "kaczy.weekSnoozeUntil",
+      nudgeKey: DZIEN.weekNudgeAt,
+      snoozeKey: DZIEN.weekSnoozeUntil,
       getCount: () => {
         const { start, end } = getWeekRange();
         return notesRef.current.filter((n) => inRange(n, start, end)).length;

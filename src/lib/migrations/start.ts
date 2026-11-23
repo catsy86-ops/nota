@@ -6,16 +6,17 @@ import { MIGRATION_LOCK, withExclusiveLock } from "@/lib/tabLock";
 import { yjsStore } from "@/lib/yjsStore";
 import { DOC_MIGRATIONS } from "./registry";
 import { runDocMigrations } from "./runner";
+import { DANE } from "@/lib/storage/names";
 
 /** Porażki na migrację (lokalnie — to wiedza tego urządzenia, nie dane). */
-const failStore = createPersistedStore<Record<string, number>>("kaczy.migrations.failures.v1", {}, {
+const failStore = createPersistedStore<Record<string, number>>(DANE.migrationsFailures, {}, {
   merge: (_d, s) => (s && typeof s === "object" && !Array.isArray(s)
     ? Object.fromEntries(Object.entries(s as Record<string, unknown>).filter((e): e is [string, number] => typeof e[1] === "number"))
     : {}),
 });
 
 /** Migracje, które trzy razy się nie udały — baner z prośbą o kopię i zgłoszenie. */
-export const giveUpStore = createPersistedStore<string[]>("kaczy.migrations.giveup.v1", [], {
+export const giveUpStore = createPersistedStore<string[]>(DANE.migrationsGiveup, [], {
   merge: (_d, s) => (Array.isArray(s) ? s.filter((x): x is string => typeof x === "string").slice(0, 20) : []),
 });
 export const useMigrationGiveUps = () => giveUpStore.use();

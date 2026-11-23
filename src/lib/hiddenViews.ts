@@ -1,5 +1,6 @@
 import type { View } from "@/lib/types/view";
 import { createPersistedStore } from "@/lib/persistedStore";
+import { POWLOKA } from "@/lib/storage/names";
 
 /**
  * Działy, które można ukryć (PW-3, plan Powłoki 2.2). Notatki, Dziś, Archiwum i Kosz zostają zawsze.
@@ -9,7 +10,7 @@ export const HIDEABLE_VIEWS = ["inbox", "reminders", "calendar", "shifts", "stud
 export type HideableView = (typeof HIDEABLE_VIEWS)[number];
 
 /** Odczyt zapisu: nieznane wartości odrzucamy, więc starsza albo uszkodzona wartość nie ukrywa niczego przypadkiem. */
-export const hiddenViewsStore = createPersistedStore<HideableView[]>("kaczy.hiddenViews.v1", [], {
+export const hiddenViewsStore = createPersistedStore<HideableView[]>(POWLOKA.hiddenViews, [], {
   merge: (defaults, stored) => (Array.isArray(stored) ? stored.filter((v): v is HideableView => (HIDEABLE_VIEWS as readonly string[]).includes(v)) : defaults),
 });
 

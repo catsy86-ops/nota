@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { SYNC } from "@/lib/storage/names";
 
 /**
  * „Ostatnio widziane” urządzenia (nowy plan 5.6). Tylko lokalnie, poza Yjs: to wiedza tego
@@ -36,7 +37,7 @@ export function seenOffline(seen: SeenMap, connected: readonly string[]): { name
   return Object.entries(seen).filter(([name]) => !now.has(name)).map(([name, at]) => ({ name, at })).sort((a, b) => b.at - a.at);
 }
 
-const store = createPersistedStore<SeenMap>("kaczy.sync.seen.v1", {}, {
+const store = createPersistedStore<SeenMap>(SYNC.syncSeen, {}, {
   merge: (_d, stored) => (stored && typeof stored === "object" && !Array.isArray(stored)
     ? Object.fromEntries(Object.entries(stored as Record<string, unknown>).filter((e): e is [string, number] => typeof e[1] === "number" && e[0].length <= 40))
     : {}),

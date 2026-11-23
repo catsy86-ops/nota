@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { DANE } from "@/lib/storage/names";
 import { toast } from "@/lib/notify";
 import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
 import { applyTextEdit } from "./yTextEdit";
@@ -81,7 +82,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       else if (typeof e.path[0] === "string") dirtyNotes.add(e.path[0]);
     }
   });
-  const migratedKey = `kaczy.yjs.migrated.v1.${dbName}`;
+  const migratedKey = `${DANE.yjsMigratedPrefix}${dbName}`;
   const { remapImageRefs, migrateImagesToStore, migrateFromLegacyIfNeeded } = createMigrations(ctx, migratedKey);
 
   // Zwykle trwałość powstaje od razu. Przy zamiarze wymiany dokumentu — dopiero po wymianie bazy (`opened`).

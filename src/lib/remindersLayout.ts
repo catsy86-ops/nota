@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { DZIEN } from "@/lib/storage/names";
 
 /**
  * Układ Terminów (2.6, decyzja T-3): kafle na komputerze, lista na telefonie, a wybór zapisany na tym
@@ -6,7 +7,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
  */
 export type RemindersLayout = "tiles" | "list";
 
-export const remindersLayoutStore = createPersistedStore<RemindersLayout | null>("kaczy.remindersLayout.v1", null, {
+export const remindersLayoutStore = createPersistedStore<RemindersLayout | null>(DZIEN.remindersLayout, null, {
   merge: (defaults, stored) => (stored === "tiles" || stored === "list" ? stored : defaults),
 });
 

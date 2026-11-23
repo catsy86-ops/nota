@@ -1,6 +1,7 @@
 import type { ChecklistItem } from "@/lib/types/note";
+import { DZIEN } from "@/lib/storage/names";
 
-const STORAGE_KEY = "kaczy.dayDone.v1";
+const STORAGE_KEY = DZIEN.dayDone;
 
 /** Zadania z notatek w widoku „Dziś”: komplet odhaczony (i jest co odhaczać). */
 export function allTodayTasksDone(notes: { checklist?: ChecklistItem[] }[]): boolean {

@@ -4,7 +4,7 @@
  * (localStorage), nie w Yjs. Odczyt przepuszcza tylko klucze z listy; wartości sprawdzają potem same
  * moduły przy wczytaniu (`merge` w `createPersistedStore`), więc zły kod nie zepsuje ustawień.
  */
-import { APPEARANCE_KEYS } from "@/lib/storage/keys";
+import { APPEARANCE_KEYS } from "@/lib/storage/names";
 
 /** Klucze wyglądu są w rejestrze kluczy (D6.1) — tam też flaga „w kopii”. */
 export { APPEARANCE_KEYS };

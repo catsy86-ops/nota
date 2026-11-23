@@ -3,6 +3,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { uploadSchedule } from "@/lib/push/client";
 import { pushPrefs } from "@/lib/push/prefs";
 import type { PushItem } from "@/lib/push/schedule";
+import { DZIEN } from "@/lib/storage/names";
 
 /**
  * Ujście harmonogramu przypomnień (F1.1): ta sama lista `PushItem` z `buildPushSchedule` trafia
@@ -35,7 +36,7 @@ export const webpushSink: ReminderSink = {
 };
 
 /** Alarmy systemowe w APK. Ustawienie urządzenia, poza kopią zapasową — zgodę daje system każdemu telefonowi osobno. */
-export const NATIVE_ALARMS_KEY = "kaczy.alarms.v1";
+export const NATIVE_ALARMS_KEY = DZIEN.alarms;
 export interface NativeAlarmPrefs {
   enabled: boolean;
   /** Wynik ostatniego planowania — dla Ustawień. */

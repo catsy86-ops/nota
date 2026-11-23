@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Natężenie tła stylu (plan motywów 1.3; Ustawienia → Wygląd → „Tło”). Niezależne od „Ruch i animacje”:

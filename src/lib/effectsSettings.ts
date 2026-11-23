@@ -1,4 +1,5 @@
-﻿import { createPersistedStore } from "@/lib/persistedStore";
+import { POWLOKA } from "@/lib/storage/names";
+import { createPersistedStore } from "@/lib/persistedStore";
 
 export type EffectKey =
   | "confetti"
@@ -57,9 +58,9 @@ const DEFAULTS: EffectsSettings = {
 
 /** Wartości, które przy pierwszym starcie tej wersji wyłączamy także u osób z już zapisanymi ustawieniami. */
 const DEFAULTS_V2_OFF: EffectKey[] = ["sparkle", "emojiShower", "fireworks", "hearts", "bubbles", "rainbow", "seasonalTheme", "dailyQuote", "badgeStamp"];
-const MIGRATION_FLAG = "kaczy.effectsSettings.defaults2";
+const MIGRATION_FLAG = POWLOKA.effectsSettingsDefaults2;
 
-const store = createPersistedStore<EffectsSettings>("kaczy.effectsSettings.v1", DEFAULTS, {
+const store = createPersistedStore<EffectsSettings>(POWLOKA.effectsSettings, DEFAULTS, {
   merge: (defaults, stored) =>
     stored !== null && typeof stored === "object" && !Array.isArray(stored) ? { ...defaults, ...stored } : defaults,
 });

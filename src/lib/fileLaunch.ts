@@ -1,3 +1,4 @@
+import { SIGNALS } from "@/lib/storage/names";
 /**
  * Otwieranie plików z systemu (File Handling API, `file_handlers` w manifeście): plik .md,
  * .json albo .zip kliknięty w Eksploratorze / Finderze trafia do importu, jeśli aplikacja jest
@@ -6,7 +7,7 @@
  * `launchQueue` może wywołać konsumenta, zanim React zamontuje import — dlatego pliki czekają
  * w buforze do `takeLaunchFiles()` i dostaje je hook `useExternalImport` przy montowaniu.
  */
-export const LAUNCH_FILES_EVENT = "kaczy:launch-files";
+export const LAUNCH_FILES_EVENT = SIGNALS.launchFiles;
 
 interface LaunchParamsLike {
   files: FileSystemFileHandle[];

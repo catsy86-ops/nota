@@ -1,3 +1,4 @@
+import { POWLOKA } from "@/lib/storage/names";
 /**
  * Jednorazowy sygnał stylu (plan rozbudowy, Faza 1b): „zapisano”. Ustawia
  * `html[data-sig]` na chwilę, a CSS w `styles/skins/signatures.css` odpala sygnał właściwego stylu
@@ -20,7 +21,7 @@ export function pulseSkinSignal(signal: SkinSignal, root: HTMLElement = document
   timer = setTimeout(() => root.removeAttribute("data-sig"), SKIN_SIGNAL_MS);
 }
 
-export const DAWN_KEY = "kaczy.sig.dawn.v1";
+export const DAWN_KEY = POWLOKA.sigDawn;
 
 /** Pierwsze uruchomienie aplikacji danego dnia — Neon rozbłyskuje nagłówek. Zwraca `true`, gdy odpalono. */
 export function pulseDawnIfNewDay(today: Date = new Date(), root?: HTMLElement): boolean {

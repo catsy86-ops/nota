@@ -1,7 +1,7 @@
 import { pulseSkinSignal } from "@/lib/skinSignal";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { SKINS, type Skin } from "@/lib/skinList";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Styl aplikacji („skórka”). Każdy ma schemat jasny i ciemny (plan motywów 4.1): Zeszyt słucha wspólnego

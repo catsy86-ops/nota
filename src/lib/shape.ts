@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Kształt interfejsu (plan motywów 1.2; Ustawienia → Wygląd → „Kształt”): mnożnik wszystkich

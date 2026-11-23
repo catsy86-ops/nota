@@ -1,5 +1,6 @@
 import { MIGRATION_LOCK, withExclusiveLock } from "@/lib/tabLock";
 import { logDiag } from "@/lib/diagnostics";
+import { DANE } from "@/lib/storage/names";
 
 /**
  * Wymiana całego dokumentu — ścieżka awaryjna (Z-16.1B, `docs/plan-dane-lokalne.md` §1.6). Część wykonywana przy
@@ -9,10 +10,10 @@ import { logDiag } from "@/lib/diagnostics";
  * Moduł bez zależności od `yjsStore` (import w drugą stronę) — plik kopii czyta leniwym importem.
  */
 
-export const REPLACE_INTENT_KEY = "kaczy.restore.pending.v1";
-export const REPLACE_RESULT_KEY = "kaczy.restore.result.v1";
+export const REPLACE_INTENT_KEY = DANE.restorePending;
+export const REPLACE_RESULT_KEY = DANE.restoreResult;
 /** Pokolenie dokumentu: inne po każdej wymianie — karty z innym pokoleniem nie wymieniają stanu (`tabSync`). */
-export const DOC_GENERATION_KEY = "kaczy.doc.generation.v1";
+export const DOC_GENERATION_KEY = DANE.docGeneration;
 
 export type ReplaceIntent =
   | { kind: "snapshot"; file: string; createdAt: number; startedAt: number; leftGroup: boolean }
@@ -71,7 +72,7 @@ export function docGeneration(): string {
 }
 
 /** Świadome wyczyszczenie danych (czas) — baner „dane zniknęły” go nie zgłasza. */
-export const DATA_CLEARED_KEY = "kaczy.data.cleared.v1";
+export const DATA_CLEARED_KEY = DANE.dataCleared;
 
 /** Zamiar starszy niż to nie jest wykonywany: wymiana ma nastąpić zaraz po potwierdzeniu, nie po dniach pracy. */
 const INTENT_MAX_AGE_MS = 60 * 60 * 1000;

@@ -1,5 +1,6 @@
 import { addDays, format, isSameDay } from "date-fns";
 import { pl } from "date-fns/locale";
+import { DZIEN } from "@/lib/storage/names";
 /**
  * Składanie terminu przypomnienia z daty i godziny „HH:mm”.
  *
@@ -81,7 +82,7 @@ export function formatReminderShort(timestamp: number, now: Date = new Date()): 
  * Ostatnio zapisana godzina terminu (plan FAB, Q2): nowy termin w pickerze zaczyna od niej, a bez
  * historii od 09:00. Per urządzenie; błąd dostępu do `localStorage` = 09:00.
  */
-const LAST_TIME_KEY = "kaczy.reminder.lastTime";
+const LAST_TIME_KEY = DZIEN.reminderLastTime;
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function readLastReminderTime(): string {

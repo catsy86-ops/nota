@@ -1,5 +1,6 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { Note } from "@/lib/types/note";
+import { DANE } from "@/lib/storage/names";
 
 export interface Achievement {
   id: string;
@@ -137,7 +138,7 @@ export function activityLastNDays(counts: Map<string, number>, days: number): { 
 
 // ------------------ Persistence ------------------
 
-const STORAGE_KEY = "kaczy.achievements.v1";
+const STORAGE_KEY = DANE.achievements;
 
 interface PersistedState {
   /** Ratcheted max-ever values per stat key. */

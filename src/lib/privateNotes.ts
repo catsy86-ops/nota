@@ -11,7 +11,7 @@ import { assertPasskey, registerPasskey } from "@/lib/passkey";
 import { MAX_PASSKEYS, unlockWithPasskey as unlockKeyWithPasskey, unwrapRawWithPassword, wrapDataKeyForPasskey, fromB64u, toB64u } from "@/lib/vault";
 import { toast } from "@/lib/notify";
 import { pluralPl } from "@/lib/plural";
-import { SKARBIEC } from "@/lib/storage/keys";
+import { SKARBIEC } from "@/lib/storage/names";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, encryptString, isValidMeta, noteAad,
   unlockWithPassword, unlockWithRecovery, VAULT_VERSION, type VaultMeta,

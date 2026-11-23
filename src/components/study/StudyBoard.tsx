@@ -12,7 +12,7 @@ import { MODULES, QUESTIONS, TOPICS, type StudyTopic } from "@/lib/study/content
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
 import { accuracyByTopic, suggestsDone } from "@/lib/study/stats";
 import { COLUMNS, columnOf, dueToday, moveTopic, practiceByTopic, useStudy, useStudyLists, type Column, type StudyState, type TopicPractice } from "@/lib/study/store";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 const COLUMN_LABEL: Record<Column, string> = { todo: "Do nauki", doing: "W trakcie", done: "Umiem" };
 const COLUMN_HINT: Record<Column, string> = {

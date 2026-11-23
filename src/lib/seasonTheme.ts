@@ -1,6 +1,6 @@
 ﻿import { getCurrentSeason, type Season } from "@/lib/season";
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 export type SeasonPref = "auto" | Season;
 

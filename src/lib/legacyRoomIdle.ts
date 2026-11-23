@@ -1,3 +1,4 @@
+import { SYNC } from "@/lib/storage/names";
 /**
  * Zgodność ze starszą wersją (U-3, plan Ustawień 2.6): po 30 dniach bez urządzenia w starym pokoju
  * przełącznik wyłącza się sam. Zapisujemy start (włączenie) i ostatnie pojawienie się urządzenia.
@@ -6,7 +7,7 @@
  */
 export const LEGACY_IDLE_MS = 30 * 24 * 60 * 60 * 1000;
 export const LEGACY_MAX_MS = 90 * 24 * 60 * 60 * 1000;
-const KEY = "kaczy.legacyRoomIdle.v1";
+const KEY = SYNC.legacyRoomIdle;
 
 export interface LegacyIdleState {
   /** Chwila włączenia przełącznika (ms). */

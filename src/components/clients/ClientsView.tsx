@@ -17,6 +17,7 @@ import { siteKey } from "@/lib/study/siteKey";
 import { prettyPhone } from "@/lib/study/contact";
 import { ClientCard } from "./ClientCard";
 import { ClientKindToggle } from "./ClientKindToggle";
+import { POWLOKA } from "@/lib/storage/names";
 
 const fieldCls = "h-9 w-full rounded-field border border-input bg-background px-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
 
@@ -77,7 +78,7 @@ function NewClientDialog({ open, onOpenChange, clients, onOpen }: {
   );
 }
 
-const DISMISS_KEY = "kaczy.clients.importDismissed.v1";
+const DISMISS_KEY = POWLOKA.clientsImportDismissed;
 // Do localStorage trafia skrót listy, nie nazwy klientów (dane osobowe nie leżą tam jawnym tekstem).
 const signature = (list: readonly ClientProposal[]) => siteKey(list.map((p) => p.key).join("|"));
 const readDismissed = () => { try { return localStorage.getItem(DISMISS_KEY); } catch { return null; } };

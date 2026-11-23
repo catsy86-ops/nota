@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { DZIEN } from "@/lib/storage/names";
 
 /**
  * Karty opcjonalne na Dziś (D-2, plan Dziś 4.1). Zapis tylko na tym urządzeniu: telefon na budowie
@@ -11,7 +12,7 @@ export interface TodayCards {
 
 export const TODAY_CARDS_DEFAULTS: TodayCards = { brainTraining: true, weeklyReview: true };
 
-export const todayCardsStore = createPersistedStore<TodayCards>("kaczy.todayCards.v1", TODAY_CARDS_DEFAULTS, {
+export const todayCardsStore = createPersistedStore<TodayCards>(DZIEN.todayCards, TODAY_CARDS_DEFAULTS, {
   merge: (defaults, stored) => {
     if (!stored || typeof stored !== "object") return defaults;
     return {

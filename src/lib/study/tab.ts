@@ -1,4 +1,4 @@
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 /**
  * Zapamiętana zakładka działu Praca (na tym urządzeniu — telefon i komputer
  * służą do czego innego). Bez zapisu: telefon zaczyna od „Budowy” (bieżąca budowa i trzy duże

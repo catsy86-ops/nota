@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { SKARBIEC } from "@/lib/storage/keys";
+import { SKARBIEC } from "@/lib/storage/names";
 
 /**
  * Skarbiec 2.4: okresowe sprawdzenie kodu awaryjnego. Pamięta na tym urządzeniu, kiedy kod ostatnio

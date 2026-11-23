@@ -50,7 +50,7 @@ import { WeekTemplateDialog } from "./WeekTemplateDialog";
 import { cyclePatterns, weekTemplates, weekTemplateSteps } from "@/lib/shifts";
 import { RangeCopyDialog } from "./RangeCopyDialog";
 import { EmptyShifts } from "./EmptyShifts";
-import { GRAFIK } from "@/lib/storage/keys";
+import { GRAFIK } from "@/lib/storage/names";
 
 /** Co zrobi stuknięcie w dzień — widoczne pod paskiem i czytane przy siatce. */
 function brushHint(brush: Brush, typesById: Map<string, ShiftType>, hours: ShiftHours | null): string {

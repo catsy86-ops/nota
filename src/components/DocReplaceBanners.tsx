@@ -7,10 +7,11 @@ import { clearReplaceResult, DATA_CLEARED_KEY, readReplaceResult, REPLACE_RESULT
 import { yjsStore } from "@/lib/yjsStore";
 import { joinWithCode } from "@/lib/yjsSync";
 import { pluralPl } from "@/lib/plural";
+import { DANE } from "@/lib/storage/names";
 
 /** Ostatnia udana kopia dzienna (`dailySnapshot.ts`, `SNAPSHOT_LAST_KEY`) — klucz powtórzony, żeby nie ładować modułu kopii. */
-const SNAPSHOT_LAST_KEY = "kaczy.snapshot.last.v1";
-const DISMISSED_KEY = "kaczy.dataloss.dismissed.v1";
+const SNAPSHOT_LAST_KEY = DANE.snapshotLast;
+const DISMISSED_KEY = DANE.datalossDismissed;
 
 const box = "flex flex-wrap items-start gap-2 px-3 py-2 text-sm";
 const when = (at: number) => format(at, "dd.MM, 'godz.' H:mm");

@@ -1,4 +1,5 @@
-const STORAGE_KEY = "kaczy.recentSearches.v1";
+import { POWLOKA } from "@/lib/storage/names";
+const STORAGE_KEY = POWLOKA.recentSearches;
 export const MAX_RECENT_SEARCHES = 5;
 
 /** Czysto: dodaje zapytanie na początek, bez duplikatów (bez rozróżniania wielkości liter), max 5. */

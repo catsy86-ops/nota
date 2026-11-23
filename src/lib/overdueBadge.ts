@@ -1,7 +1,8 @@
 ﻿import { createPersistedStore } from "@/lib/persistedStore";
 import { APP_NAME } from "@/lib/appName";
+import { DZIEN } from "@/lib/storage/names";
 
-export const BADGE_KEY = "kaczy:badge.enabled";
+export const BADGE_KEY = DZIEN.badgeEnabled;
 export const BASE_TITLE = APP_NAME;
 
 const store = createPersistedStore<boolean>(BADGE_KEY, true, {
@@ -15,7 +16,7 @@ export const useBadgeEnabled = () => store.use();
  * Skrzynka 5.3: licznik nieposortowanych notatek dokładany do znaczka aplikacji. Domyślnie wyłączony —
  * znaczek pokazuje wtedy tylko zaległe, jak dotąd.
  */
-export const INBOX_BADGE_KEY = "kaczy.badge.inbox.v1";
+export const INBOX_BADGE_KEY = DZIEN.badgeInbox;
 
 const inboxStore = createPersistedStore<boolean>(INBOX_BADGE_KEY, false, {
   merge: (defaults, stored) => (typeof stored === "boolean" ? stored : defaults),

@@ -1,9 +1,10 @@
+import { POWLOKA } from "@/lib/storage/names";
 /**
  * Podpisy w tle przesunięcia kafla („Przypnij” / „Archiwizuj”) przy pierwszych
  * gestach — potem same ikony. Licznik wykonanych gestów w localStorage
  * (na tym urządzeniu; to nauka gestu, nie dane do synchronizacji).
  */
-export const SWIPE_HINT_KEY = "kaczy.swipeHints.v1";
+export const SWIPE_HINT_KEY = POWLOKA.swipeHints;
 export const SWIPE_HINT_LIMIT = 3;
 
 function read(): number {

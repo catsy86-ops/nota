@@ -1,5 +1,6 @@
+import { DZIEN } from "@/lib/storage/names";
 /** Klucz podsumowania ostatniej wysyłki harmonogramu (tylko to urządzenie; Ustawienia go czytają). */
-export const PUSH_SUMMARY_KEY = "kaczy.push.summary.v1";
+export const PUSH_SUMMARY_KEY = DZIEN.pushSummary;
 
 export interface PushSummary {
   /** Ile pozycji poszło do serwera. */

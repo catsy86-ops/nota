@@ -1,5 +1,6 @@
 import { keys as idbKeys, getMany as idbGetMany, set as idbSet, del as idbDel } from "idb-keyval";
 import { logDiag } from "@/lib/diagnostics";
+import { DANE } from "@/lib/storage/names";
 
 export interface NoteVersion {
   id: string;
@@ -22,7 +23,7 @@ export const LEGACY_VERSIONS_KEY = "kaczy-notes-versions";
  * Odczyt jest synchroniczny z pamięci (`get`), bo karta pyta o wersje
  * w trakcie renderu; zapisy idą w tle, po kolei.
  */
-export function createVersionsStore(prefix = "kaczy.versions.") {
+export function createVersionsStore(prefix: string = DANE.versionsPrefix) {
   let byNote = new Map<string, NoteVersion[]>();
   let tick = 0;
   const listeners = new Set<() => void>();

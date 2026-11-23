@@ -1,4 +1,5 @@
 import { get as idbGet, set as idbSet, del as idbDel } from "idb-keyval";
+import { DANE } from "@/lib/storage/names";
 
 // File System Access API: TS's lib.dom.d.ts has FileSystemFileHandle itself
 // but not window.showSaveFilePicker() or the permission methods yet.
@@ -18,7 +19,7 @@ declare global {
   }
 }
 
-const HANDLE_KEY = "kaczy.backupFileHandle";
+const HANDLE_KEY = DANE.backupFileHandle;
 
 export function isFileSystemAccessSupported(): boolean {
   return typeof window !== "undefined" && typeof window.showSaveFilePicker === "function";
@@ -45,7 +46,7 @@ export async function clearBackupFile(): Promise<void> {
 }
 
 /** QL-2: ostatni udany zapis do wybranego pliku (data, rozmiar) — pokazywany w Ustawieniach. Lokalnie, poza kopią. */
-const LAST_WRITE_KEY = "kaczy.backupFileLast.v1";
+const LAST_WRITE_KEY = DANE.backupFileLast;
 export interface BackupFileWrite { at: number; bytes: number }
 
 export function readLastFileWrite(): BackupFileWrite | null {

@@ -7,6 +7,7 @@ import { AUTO_BACKUP_LOCK, withLockIfFree } from "@/lib/tabLock";
 import { isBackupDue, markBackup, daysSinceBackup, getLastBackup, oldestCreatedAt, FILE_BACKUP_DAYS } from "@/lib/backupReminder";
 import { hasBackupFile } from "@/lib/backupFileHandle";
 import { useLatestRef } from "@/hooks/useLatestRef";
+import { DANE } from "@/lib/storage/names";
 
 export interface BackupReminderPrefs {
   autoExportDays: number;
@@ -26,8 +27,8 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
     const t = setTimeout(async () => {
       // Notatki muszą być wczytane — od najstarszej liczy się zaległość pierwszej kopii.
       await whenNotesReady();
-      if (sessionStorage.getItem("kaczy.autoBackupDone") === "1" || !(await due())) return;
-      sessionStorage.setItem("kaczy.autoBackupDone", "1");
+      if (sessionStorage.getItem(DANE.autoBackupDone) === "1" || !(await due())) return;
+      sessionStorage.setItem(DANE.autoBackupDone, "1");
       const last = getLastBackup();
       // Z-7.3: jedna karta naraz; zajęte = inna karta właśnie robi kopię, ta pomija przebieg.
       void withLockIfFree(AUTO_BACKUP_LOCK, async () => {
@@ -96,10 +97,10 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
   useEffect(() => {
     // Pusta baza (np. pierwsze uruchomienie) nie ma czego backupować.
     if (!isBackupDue(prefs.backupReminderDays, oldestCreatedAt(notes, archivedNotes))) return;
-    if (sessionStorage.getItem("kaczy.backupNudge") === "1") return;
+    if (sessionStorage.getItem(DANE.backupNudge) === "1") return;
     // Auto-backup w tej sesji już o to poprosił — drugi toast o tym samym to szum.
-    if (sessionStorage.getItem("kaczy.autoBackupDone") === "1") return;
-    sessionStorage.setItem("kaczy.backupNudge", "1");
+    if (sessionStorage.getItem(DANE.autoBackupDone) === "1") return;
+    sessionStorage.setItem(DANE.backupNudge, "1");
     const t = setTimeout(() => {
       // Moduł z wyprzedzeniem: „Zrób backup” ma ruszyć od razu, w geście użytkownika.
       void loadExport();

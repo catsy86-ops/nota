@@ -1,5 +1,5 @@
 import type { VaultMeta } from "@/lib/vault";
-import { SKARBIEC } from "@/lib/storage/keys";
+import { SKARBIEC } from "@/lib/storage/names";
 
 /**
  * Lokalny odcisk skarbca (przegląd V-3, W-1): zapamiętany na tym urządzeniu przy zakładaniu, odblokowaniu

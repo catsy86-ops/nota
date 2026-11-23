@@ -5,7 +5,7 @@ import { fittingKey } from "./fittings";
 import type { PriceList } from "./materialUsage";
 import type { QuoteTemplate } from "./quoteTemplates";
 import { createYPricing } from "./yPricing";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 /** Cenniki żyją w dokumencie Yjs notatek (`yPricing.ts`); widoki zmieniają je tylko akcjami poniżej. */
 const yPricing = createYPricing(yjsStore.doc);

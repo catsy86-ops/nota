@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { createPersistedStore } from "@/lib/persistedStore";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 /**
  * Katalog systemów instalacji (H1.5, plan 2026-10-29): pigułki rur i kształtek dla wybranego systemu

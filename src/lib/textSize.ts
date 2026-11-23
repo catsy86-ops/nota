@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Rozmiar tekstu całej aplikacji (Ustawienia → Wygląd → „Rozmiar tekstu”, polecenia w palecie).

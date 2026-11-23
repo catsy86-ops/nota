@@ -6,7 +6,7 @@ import { useStudyReady, yStudy } from "@/lib/study/data";
 import { arrivalSite } from "@/lib/study/siteArrival";
 import { siteArrivalStore } from "@/lib/study/siteArrivalPrefs";
 import { enterEntryCheck, useEntryCheck } from "@/lib/study/entryCheckStore";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 /** Dzień, w którym już zapytano o położenie — raz dziennie, także po odświeżeniu. */
 const ASKED_KEY = PRACA.siteArrivalAsked;

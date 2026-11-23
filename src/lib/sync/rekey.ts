@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { SYNC } from "@/lib/storage/names";
 
 /**
  * Wymiana kodu synchronizacji z wyrzuceniem urządzenia (S2.1; projekt: `docs/plan-wymiana-kodu.md` §3).
@@ -107,7 +108,7 @@ export function pruneMarkers(doc: Y.Doc, now: number): number {
 
 // ── zapis wymiany ────────────────────────────────────────────────────────────
 
-export const REKEY_STORAGE_KEY = "kaczy.sync.rekey.v1";
+export const REKEY_STORAGE_KEY = SYNC.syncRekey;
 /** Blokada między kartami: wymianę prowadzi jedna (I-4). */
 export const REKEY_LOCK = "notatnik-wymiana-kodu";
 /** Stary pokój znika po tylu dniach od przełączenia (D-F1). */

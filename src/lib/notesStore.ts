@@ -1,15 +1,16 @@
 import { get, set, del } from "idb-keyval";
 import type { Note, Folder } from "@/lib/types/note";
+import { DANE } from "@/lib/storage/names";
 
 /**
  * IndexedDB-backed storage for notes/labels/folders.
  * Migrates one-time from localStorage on first load.
  */
 
-const NOTES_KEY = "kaczy.notes.v1";
-const LABELS_KEY = "kaczy.labels.v1";
-const FOLDERS_KEY = "kaczy.folders.v1";
-const MIGRATED_KEY = "kaczy.idb.migrated.v1";
+const NOTES_KEY = DANE.notes;
+const LABELS_KEY = DANE.labels;
+const FOLDERS_KEY = DANE.folders;
+const MIGRATED_KEY = DANE.idbMigrated;
 
 const LS_NOTES = "kaczy-notes-data";
 const LS_LABELS = "kaczy-notes-labels";

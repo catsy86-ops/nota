@@ -1,3 +1,4 @@
+import { DZIEN } from "@/lib/storage/names";
 /**
  * Warstwy kalendarza (K3.3): które rodzaje wpisów rysuje siatka i agenda. Wybór zapamiętany w tej przeglądarce;
  * błąd dostępu = wszystkie włączone. Liczniki miesiąca pokazują, ile jest każdego rodzaju.
@@ -10,7 +11,7 @@ export type CalendarLayerState = Record<CalendarLayer, boolean>;
 
 export const ALL_LAYERS_ON: CalendarLayerState = { terms: true, shifts: true, work: true, holidays: true };
 
-const KEY = "kaczy.calendar.layers";
+const KEY = DZIEN.calendarLayers;
 
 export function readLayers(): CalendarLayerState {
   try {

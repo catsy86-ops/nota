@@ -10,9 +10,10 @@ import { dayType, type ShiftType } from "@/lib/shifts/model";
 import { carryPieces } from "@/lib/dayTimeline";
 import { cn } from "@/lib/utils";
 import { cardVariant } from "@/components/ui/card";
+import { DZIEN } from "@/lib/storage/names";
 
 /** Stan zwinięcia osi na tym urządzeniu: "1" rozwinięta, "0" zwinięta; brak — domyślnie (telefon zwinięta). */
-export const TODAY_TIMELINE_KEY = "kaczy.today.timeline.v1";
+export const TODAY_TIMELINE_KEY = DZIEN.todayTimeline;
 
 function readOpen(): boolean {
   try {

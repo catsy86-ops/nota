@@ -5,8 +5,9 @@ import { olderDevices } from "@/lib/formatSchema";
 import { useSyncState } from "@/lib/yjsSync";
 import { cardVariant } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { POWLOKA } from "@/lib/storage/names";
 
-const DISMISS_KEY = "kaczy.olderDeviceBanner.v1";
+const DISMISS_KEY = POWLOKA.olderDeviceBanner;
 
 /** Klucz zestawu starszych urządzeń: ukrycie dotyczy tego zestawu, nowe starsze urządzenie pokaże baner znowu. */
 const setKey = (devices: readonly { id: string | number; schema?: number }[]) => devices.map((d) => `${d.id}:${d.schema ?? 0}`).sort().join("|");

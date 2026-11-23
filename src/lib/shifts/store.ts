@@ -6,7 +6,7 @@ import { applyPattern, patternOverlap } from "./pattern";
 import { planMonthCopy, planPaste, planRangeCopy, planSwap, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
 import { createYShifts, MAIN_SCHEDULE_ID, SHIFTS_SYSTEM_ORIGIN, type DeletedShiftType, type YShifts } from "./yShifts";
 import { createScheduleRegistry, isScheduleId, type ShiftSchedule } from "./schedules";
-import { GRAFIK } from "@/lib/storage/keys";
+import { GRAFIK } from "@/lib/storage/names";
 
 /**
  * Grafik żyje w dokumencie Yjs notatek (`yShifts.ts`), więc synchronizuje się

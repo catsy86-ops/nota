@@ -1,7 +1,7 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { isSkin, skinStore, type Skin } from "@/lib/skins";
 import { cityById, DEFAULT_CITY, isNightAt } from "@/lib/sun";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Styl na noc (plan motywów 1.4): para „styl dzienny / styl nocny”. Wieczorem aplikacja sama przechodzi

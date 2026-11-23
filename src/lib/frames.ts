@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Ramki kart i podziałów (Ustawienia → Wygląd → „Ramki”): jak mocno widać krawędź `--border`.

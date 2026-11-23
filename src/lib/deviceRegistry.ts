@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { cleanSchemaClaim, cleanVersionClaim, localDeviceSchema, type DeviceSchema } from "@/lib/formatSchema";
 import { cleanDeviceName } from "@/lib/syncSeen";
+import { SYNC } from "@/lib/storage/names";
 
 /**
  * Rejestr urządzeń w dokumencie (D4.1, `docs/plan-migracje-yjs-2026-11-15.md`). Mapa `devices`: klucz = losowy, stały
@@ -13,7 +14,7 @@ import { cleanDeviceName } from "@/lib/syncSeen";
  */
 
 export const DEVICES_MAP = "devices";
-export const DEVICE_ID_KEY = "kaczy.device.id.v1";
+export const DEVICE_ID_KEY = SYNC.deviceId;
 const ID_RE = /^[a-z0-9]{8,32}$/;
 const DAY = 86_400_000;
 /** Własny wpis odświeżany najwyżej raz na dobę — każde nadpisanie zostaje w historii dokumentu. */

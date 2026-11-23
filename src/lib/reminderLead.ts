@@ -1,4 +1,5 @@
 import type { Note } from "@/lib/types/note";
+import { DZIEN } from "@/lib/storage/names";
 
 /**
  * Wcześniejsze przypomnienie (Terminy 3.2): drugi sygnał `reminderLead` minut przed terminem.
@@ -66,7 +67,7 @@ export function planLeadReminders<N extends LeadNote>(notes: readonly N[], fired
   return out;
 }
 
-const LEADS_KEY = "kaczy.reminderLeads.v1";
+const LEADS_KEY = DZIEN.reminderLeads;
 
 export function loadFiredLeads(): Set<string> {
   try {

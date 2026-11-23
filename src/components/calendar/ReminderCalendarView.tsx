@@ -40,6 +40,7 @@ import { holidayName } from "@/lib/shifts/holidays";
 import { studySummary } from "@/lib/study/calendarMarks";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ViewSkeleton } from "@/components/ViewSkeleton";
+import { DZIEN } from "@/lib/storage/names";
 
 /**
  * Widok kalendarza przypomnień: siatka miesiąca + lista terminów wybranego dnia.
@@ -59,7 +60,7 @@ const LAYER_LABEL: Record<CalendarLayer, string> = { terms: "Terminy", shifts: "
 const NO_TERMS = new Map<string, Occurrence[]>();
 
 /** Widok telefonu zapamiętany w tej przeglądarce (K2.2, wzór panelu dnia). Błąd dostępu = miesiąc. */
-const PHONE_VIEW_KEY = "kaczy.calendar.phoneView";
+const PHONE_VIEW_KEY = DZIEN.calendarPhoneView;
 const PHONE_VIEWS: readonly PhoneView[] = ["month", "week", "agenda"];
 
 function readPhoneView(): PhoneView {

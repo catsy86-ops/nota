@@ -1,4 +1,5 @@
-const STORAGE_KEY = "kaczy.recentCommands.v1";
+import { POWLOKA } from "@/lib/storage/names";
+const STORAGE_KEY = POWLOKA.recentCommands;
 export const MAX_RECENT_COMMANDS = 3;
 
 /** Czysto: dodaje polecenie na początek, bez duplikatów, max 3. */

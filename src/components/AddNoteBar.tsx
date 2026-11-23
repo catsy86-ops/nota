@@ -49,6 +49,7 @@ import { EditorStats } from "./EditorStats";
 import { haptic } from "@/lib/haptics";
 import { pulseSkinSignal } from "@/lib/skinSignal";
 import { useLatch } from "@/hooks/useLatch";
+import { POWLOKA } from "@/lib/storage/names";
 
 /** Od czego zaczyna się nowa notatka (długie przytrzymanie „+” na telefonie). */
 export type ComposerAction = "note" | "list" | "dictate" | "image" | "draw" | "reminder";
@@ -82,8 +83,8 @@ interface AddNoteBarProps {
   onOpenDuplicate?: (id: string) => void;
 }
 
-const DRAFT_KEY = "kaczy.draft.v1";
-const PARKED_KEY = "kaczy.drafts.v1";
+const DRAFT_KEY = POWLOKA.draft;
+const PARKED_KEY = POWLOKA.drafts;
 
 interface Draft {
   title: string;

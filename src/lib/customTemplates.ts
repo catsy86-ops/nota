@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { POWLOKA } from "@/lib/storage/names";
 
 /** Własny szablon notatki: tytuł i treść mogą zawierać zmienne (`lib/templateVars.ts`). */
 export interface CustomTemplate {
@@ -32,7 +33,7 @@ function sanitize(list: unknown): CustomTemplate[] {
   return out;
 }
 
-const store = createPersistedStore<CustomTemplate[]>("kaczy.templates.v1", [], {
+const store = createPersistedStore<CustomTemplate[]>(POWLOKA.templates, [], {
   merge: (defaults, stored) => (Array.isArray(stored) ? sanitize(stored) : defaults),
 });
 

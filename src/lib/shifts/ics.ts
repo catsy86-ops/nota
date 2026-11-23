@@ -2,7 +2,7 @@ import { escapeText, foldLine, formatLocal } from "@/lib/icsExport";
 import { dayType, isAbsence, type ShiftData } from "./model";
 import { shiftSpan } from "./time";
 import { MAIN_SCHEDULE_ID } from "./yShifts";
-import { GRAFIK } from "@/lib/storage/keys";
+import { GRAFIK } from "@/lib/storage/names";
 
 /**
  * Grafik → iCalendar (RFC 5545), żeby zmiany były w kalendarzu telefonu.

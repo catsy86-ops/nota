@@ -1,7 +1,7 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { skinStore } from "@/lib/skins";
 import type { Skin } from "@/lib/skinList";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Kolor akcentu w stylu (plan motywów 1.1; Ustawienia → Wygląd → „Akcent”). Każdy styl ma pięć

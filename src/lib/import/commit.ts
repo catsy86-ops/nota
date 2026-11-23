@@ -6,6 +6,7 @@ import { yjsStore } from "@/lib/yjsStore";
 import { yieldToMain } from "@/lib/yieldToMain";
 import { imageMimeFromName } from "./keep";
 import type { ImportPlan, PlannedNote } from "./plan";
+import { DANE } from "@/lib/storage/names";
 
 export interface ImportResult {
   noteIds: string[];
@@ -24,7 +25,7 @@ export interface ImportResult {
 /** Porcja notatek na jedną transakcję Yjs (Z-18.8): jeden zapis do bazy i jedna aktualizacja synchronizacji. */
 export const IMPORT_BATCH = 500;
 /** Ostatni import — „Cofnij ostatni import” w Ustawieniach przez `LAST_IMPORT_TTL_MS`. Lokalnie, poza kopią. */
-export const LAST_IMPORT_KEY = "kaczy.import.last.v1";
+export const LAST_IMPORT_KEY = DANE.importLast;
 export const LAST_IMPORT_TTL_MS = 24 * 60 * 60 * 1000;
 
 export interface LastImport extends Pick<ImportResult, "noteIds" | "createdFolderIds" | "createdLabels" | "createdPropDefIds"> {

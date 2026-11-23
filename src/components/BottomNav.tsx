@@ -46,6 +46,7 @@ interface BottomNavProps {
 }
 
 import { viewHasSearch } from "@/lib/viewSearch";
+import { POWLOKA, SIGNALS } from "@/lib/storage/names";
 
 const slots = [
   { key: "notes" as View, label: "Notatki", Icon: StickyNote },
@@ -132,8 +133,8 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
   // nad otwartym edytorem zasłaniała podpowiedzi pod treścią (tag, przypomnienie).
   const hintOnce = () => {
     try {
-      if (localStorage.getItem("kaczy.fab.hint.v1")) return;
-      localStorage.setItem("kaczy.fab.hint.v1", "1");
+      if (localStorage.getItem(POWLOKA.fabHint)) return;
+      localStorage.setItem(POWLOKA.fabHint, "1");
     } catch { return; /* brak localStorage — bez podpowiedzi */ }
     const editorOpen = () => !!document.querySelector("[role='dialog'][aria-label='Nowa notatka']");
     const start = Date.now();
@@ -322,7 +323,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
           )}
           <SheetGroup title="Narzędzia">
             {onOpenActions && <SheetTile Icon={RotateCcwClock} label="Ostatnie akcje" onClick={() => { onOpenActions(); setMoreOpen(false); }} />}
-            <SheetTile Icon={CircleQuestionMark} label="Samouczek" onClick={() => { window.dispatchEvent(new CustomEvent("kaczy:tour")); setMoreOpen(false); }} />
+            <SheetTile Icon={CircleQuestionMark} label="Samouczek" onClick={() => { window.dispatchEvent(new CustomEvent(SIGNALS.tour)); setMoreOpen(false); }} />
             {onToggleTheme && <SheetTile Icon={dark ? Sun : Moon} label={dark ? "Tryb jasny" : "Tryb ciemny"} title="Przytrzymaj: zestawy wyglądu" {...themePress.handlers} onClick={() => { if (themePress.shouldSkipClick()) return; onToggleTheme(); setMoreOpen(false); }} />}
             {onImport && (
               <ImportExportMenu onImport={onImport} onDone={() => setMoreOpen(false)} align="start">

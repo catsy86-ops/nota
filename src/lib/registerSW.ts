@@ -4,6 +4,7 @@
  */
 import { isNativeShell } from "@/lib/native/platform";
 import { hasUnsavedWork } from "@/lib/saveStatus";
+import { SIGNALS } from "@/lib/storage/names";
 
 const SW_URL = "/sw.js";
 
@@ -41,7 +42,7 @@ async function unregisterAppSW() {
  * unsaved edit could be sitting in memory (data itself is safe in
  * IndexedDB regardless).
  */
-export const SW_UPDATE_EVENT = "kaczy:sw-update-available";
+export const SW_UPDATE_EVENT = SIGNALS.swUpdateAvailable;
 
 let reloadingAfterUpdate = false;
 

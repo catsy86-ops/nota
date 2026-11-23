@@ -1,3 +1,4 @@
+import { POWLOKA } from "@/lib/storage/names";
 /**
  * Web Share Target: „Udostępnij → G” z innej aplikacji.
  * Tekst i link: manifest kieruje GET na `/share?title=&text=&url=`; starsze
@@ -8,7 +9,7 @@
  */
 
 export const SHARE_PATH = "/share";
-const DEDUP_KEY = "kaczy.share.last";
+const DEDUP_KEY = POWLOKA.shareLast;
 const DEDUP_WINDOW_MS = 60_000;
 
 export const MAX_TITLE = 200;

@@ -299,7 +299,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Dane — wersje kopii i plików wymiany, wzorce (D3.2, D3.5, D5.1, D5.3, D5.4, 2026-11-23)
 - Dane — spisy baz IndexedDB, kluczy `localStorage` i migracji (D0.2–D0.4, 2026-11-23)
 - Dane — spis map Yjs i przejście kluczy `localStorage` (D0.1, D6.3, D6.4, 2026-11-23)
-- Dane — rejestr kluczy `localStorage` i lista kopii z rejestru (D6.1, D6.5, 2026-11-23)
+- Dane — rejestr kluczy `localStorage`, nazwy kluczy i lista kopii z rejestru (D6.1, D6.2, D6.5, 2026-11-23)
 
 ### Powłoka, Ustawienia i telefon — [`docs/opis/powloka.md`](docs/opis/powloka.md)
 

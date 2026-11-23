@@ -23,7 +23,7 @@ import { download } from "@/lib/downloadBlob";
 
 export { download };
 import { getViewPrefs } from "@/lib/viewPrefs";
-import { backupKeyNames } from "@/lib/storage/keys";
+import { DANE, PRACA, backupKeyNames } from "@/lib/storage/keys";
 import { APP_NAME } from "@/lib/appName";
 import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 import { clearRestoreMarker, setRestoreMarker } from "@/lib/restoreMarker";
@@ -311,7 +311,7 @@ export const SETTING_VALUE_MAX = 2_500_000;
  * znaczników „kiedy ostatnio przypominano”.
  */
 export const SETTINGS_KEYS: string[] = backupKeyNames();
-export const ACHIEVEMENTS_KEY = "kaczy.achievements.v1";
+export const ACHIEVEMENTS_KEY = DANE.achievements;
 
 function readKeys(keys: string[]): Record<string, string> {
   const out: Record<string, string> = {};
@@ -424,7 +424,7 @@ export const STUDY_SECTION = "Nauka i Praca";
 export function restoreScope(backup: Partial<Record<MergeKey, unknown>> & { shifts?: unknown; study?: unknown; settings?: Record<string, unknown> }, opts: RestoreOptions): { replaced: string[]; merged: string[] } {
   const replaced = ["notatki", "foldery", "etykiety"];
   if (opts.shifts && backup.shifts !== undefined) replaced.push(SHIFTS_SECTION);
-  if (opts.study && (backup.study !== undefined || backup.settings?.["kaczy.study.v1"] !== undefined)) replaced.push(STUDY_SECTION);
+  if (opts.study && (backup.study !== undefined || backup.settings?.[PRACA.store] !== undefined)) replaced.push(STUDY_SECTION);
   const merged = MERGE_SECTIONS.filter((sec) => backup[sec.key]).map((sec) => sec.label);
   return { replaced, merged };
 }
@@ -577,7 +577,7 @@ async function restoreFullBackupLocked(backup: FullBackup, opts: RestoreOptions,
     try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }
   }
   // Kopia sprzed 4.1 niesie cenniki wśród ustawień (stare klucze): wchodzą do dokumentu i znikają z localStorage.
-  if (opts.settings && backup.settings && ("kaczy.study.pricing.v1" in backup.settings || "kaczy.study.prices.v1" in backup.settings)) {
+  if (opts.settings && backup.settings && (PRACA.pricing in backup.settings || PRACA.prices in backup.settings)) {
     await import("@/lib/study/pricingStore").then((m) => m.importLegacyPricing()).catch((err) => fail("Cenniki", err));
   }
   clearRestoreMarker();

@@ -1,17 +1,18 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { DZIEN } from "@/lib/storage/names";
 
 /**
  * Powiadomienia przy zamkniętej aplikacji (Web Push przez własny serwer `push-server/`).
  * Ustawienie urządzenia (localStorage), nie dokumentu Yjs: subskrypcja należy do tej
  * przeglądarki, a dwa telefony z tym samym harmonogramem dostałyby każde przypomnienie dwa razy.
  */
-export const PUSH_PREFS_KEY = "kaczy.push.v1";
+export const PUSH_PREFS_KEY = DZIEN.push;
 
 /**
  * Token serwera powiadomień (`PUSH_TOKEN` na serwerze). Osobny klucz niż `PUSH_PREFS_KEY`, bo ten wchodzi do kopii
  * zapasowej, a token to sekret: nie ma go w plikach kopii ani w eksporcie, a na nowym telefonie wpisuje się go od nowa.
  */
-export const PUSH_TOKEN_KEY = "kaczy.push.token.v1";
+export const PUSH_TOKEN_KEY = DZIEN.pushToken;
 export const PUSH_TOKEN_MAX = 200;
 
 export const cleanPushToken = (raw: string): string => raw.replace(/\s+/g, "").slice(0, PUSH_TOKEN_MAX);

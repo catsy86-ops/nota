@@ -22,6 +22,7 @@ import {
 import { loadRekeyRecord, notifyRekeyRecord, rekeyPorts, saveRekeyRecord } from "@/lib/sync/rekeyRuntime";
 import { logDiag, logSecurity } from "@/lib/diagnostics";
 import { toast } from "@/lib/notify";
+import { SYNC } from "@/lib/storage/names";
 
 /**
  * Peer-to-peer transport for the Yjs doc (Phase 2 of the multi-device sync
@@ -34,7 +35,7 @@ import { toast } from "@/lib/notify";
  * started/stopped alongside this provider in connect()/disconnectProvider().
  */
 
-const STORAGE_KEY = "kaczy.sync.v1";
+const STORAGE_KEY = SYNC.sync;
 // Format kodu (krótki 12 / długi 28 znaków) i okno pokoju v2 mają własne moduły; tu zostają nazwy dla starszych importów.
 export {
   CODE_ALPHABET, CODE_LENGTH, CODE_LENGTH_LONG, CODE_PATTERN, codeErrorText, codeFromPaste, codeKind, formatCode, generateCode,
@@ -409,7 +410,7 @@ export function isShortCode(code: string | null): boolean {
   return !!code && code.length < 12;
 }
 
-const DEVICE_NAME_KEY = "kaczy.sync.deviceName";
+const DEVICE_NAME_KEY = SYNC.syncDeviceName;
 const DEVICE_NAME_MAX = 40;
 
 /** Nazwa z przeglądarki, gdy użytkownik nie nazwał urządzenia. */

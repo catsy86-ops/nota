@@ -1,3 +1,4 @@
+import { POWLOKA, SIGNALS } from "@/lib/storage/names";
 /**
  * Samouczek (2026-10-30): przewodnik na start z wyborem „co Cię interesuje”, osobny przewodnik
  * Pracy (przy pierwszym wejściu) i jednorazowe podpowiedzi w działach. Czyste dane i stan „widziane”;
@@ -120,11 +121,11 @@ export const WORK_STEPS: GuideStep[] = [
 // ── Stan „widziane” ───────────────────────────────────────────────────────────────────────────
 
 /** Przewodnik na start (wartość „1” jak dawniej, starsze dane i testy dalej działają). */
-export const TOUR_SEEN_KEY = "kaczy.tour.seen.v1";
+export const TOUR_SEEN_KEY = POWLOKA.tourSeen;
 /** Przewodniki działów i podpowiedzi: `{ "work": 1, "shifts-hint": 1 }`. */
-export const GUIDES_SEEN_KEY = "kaczy.guides.seen.v1";
+export const GUIDES_SEEN_KEY = POWLOKA.guidesSeen;
 /** Ustawione w testach, które sprawdzają samo pokazywanie się podpowiedzi. */
-export const GUIDES_FORCE_KEY = "kaczy.guides.force";
+export const GUIDES_FORCE_KEY = POWLOKA.guidesForce;
 
 export type GuideId = "work" | "shifts-hint";
 
@@ -161,5 +162,5 @@ function autoEnv() {
 }
 
 /** Otwiera przewodnik z dowolnego miejsca (menu, karta przewodnika na start). */
-export const GUIDE_EVENT = "kaczy:guide";
+export const GUIDE_EVENT = SIGNALS.guide;
 export const openGuide = (id: GuideId) => window.dispatchEvent(new CustomEvent(GUIDE_EVENT, { detail: id }));

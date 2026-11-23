@@ -6,8 +6,9 @@ import { NotkiLogo } from "@/components/NotkiLogo";
 import { Smartphone, X } from "lucide-react";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import { POWLOKA } from "@/lib/storage/names";
 
-const DISMISS_KEY = "kaczy.installBanner.dismissed.v1";
+const DISMISS_KEY = POWLOKA.installBannerDismissed;
 
 function readDismissed(): boolean {
   try { return localStorage.getItem(DISMISS_KEY) === "1"; } catch { return false; }

@@ -3,6 +3,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { localDayKey } from "@/lib/dayDone";
 import { termStatus } from "@/lib/dueTerms";
 import { isInboxNote } from "@/lib/inbox";
+import { DZIEN } from "@/lib/storage/names";
 
 /**
  * Cotygodniowy przegląd notatek: czysta logika (co pokazać i kiedy).
@@ -149,16 +150,16 @@ export function snoozeUntilTomorrow(now: number): number {
 
 // ---------- Ustawienia (localStorage `kaczy:review.*`) ----------
 
-const dayStore = createPersistedStore<number | "off">("kaczy:review.day", 0, {
+const dayStore = createPersistedStore<number | "off">(DZIEN.reviewDay, 0, {
   merge: (defaults, stored) => {
     if (stored === "off") return "off";
     return typeof stored === "number" && Number.isInteger(stored) && stored >= 0 && stored <= 6 ? stored : defaults;
   },
 });
-const snoozeStore = createPersistedStore<number>("kaczy:review.snoozeUntil", 0, {
+const snoozeStore = createPersistedStore<number>(DZIEN.reviewSnoozeUntil, 0, {
   merge: (d, s) => (typeof s === "number" && Number.isFinite(s) ? s : d),
 });
-const closedStore = createPersistedStore<string | null>("kaczy:review.closed", null, {
+const closedStore = createPersistedStore<string | null>(DZIEN.reviewClosed, null, {
   merge: (d, s) => (typeof s === "string" ? s : d),
 });
 

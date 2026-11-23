@@ -14,6 +14,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import { REPEAT_KIND_LABELS } from "@/lib/reminderRepeat";
 import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
+import { DZIEN } from "@/lib/storage/names";
 
 /**
  * Terminy wybranego dnia — tu mieszczą się pełne tytuły, których komórka siatki
@@ -58,7 +59,7 @@ interface DayPanelProps {
 
 type DayView = "list" | "axis";
 
-const DAY_VIEW_KEY = "kaczy.calendar.dayView";
+const DAY_VIEW_KEY = DZIEN.calendarDayView;
 
 /** Wybór listy/osi zapamiętany w tej przeglądarce (2c planu). Błąd dostępu = domyślna lista. */
 function readDayView(): DayView {

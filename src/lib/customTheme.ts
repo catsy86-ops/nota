@@ -2,7 +2,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { contrastRatio, formatOklch, parseOklch, type Oklch } from "@/lib/oklch";
 import { isSkin, skinStore } from "@/lib/skins";
 import type { Skin } from "@/lib/skinList";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Własny motyw (plan motywów 4.1, decyzja T-4): styl bazowy i trzy suwaki odcienia (0–359°) — papier,

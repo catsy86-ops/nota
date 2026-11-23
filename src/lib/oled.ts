@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { APPEARANCE } from "@/lib/storage/keys";
+import { APPEARANCE } from "@/lib/storage/names";
 
 /**
  * Czarne tło w ciemnym schemacie (plan motywów 3.3, „OLED”): na ekranach OLED czerń to zgaszony piksel,

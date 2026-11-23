@@ -1,6 +1,7 @@
+import { DANE } from "@/lib/storage/names";
 /** Shared last-backup timestamp. Reuses the auto-export key so manual & auto backups share state. */
 /** Klucz ostatniej kopii (ręcznej i automatycznej) — jedna stała, używana też w Ustawieniach (Dane). */
-export const LAST_AUTO_EXPORT_KEY = "kaczy.lastAutoExport";
+export const LAST_AUTO_EXPORT_KEY = DANE.lastAutoExport;
 const KEY = LAST_AUTO_EXPORT_KEY;
 /** QL-2: z wybranym plikiem kopia zapisuje się sama co dzień (niezależnie od interwału przypomnienia). */
 export const FILE_BACKUP_DAYS = 1;

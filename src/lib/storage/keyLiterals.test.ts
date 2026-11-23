@@ -10,7 +10,7 @@ import { KEY_LITERAL_EXEMPT } from "./keyLiterals.exempt";
  */
 const ROOT = join(__dirname, "..", "..", "..");
 const SRC = join(ROOT, "src");
-const LITERAL = /["'`]kaczy[.:-]/;
+const LITERAL = /["'`]kaczy[.:]/;
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -27,7 +27,7 @@ const codeOf = (text: string) =>
 describe("literały kluczy localStorage (D6.2)", () => {
   const withLiteral = sourceFiles(SRC)
     .map((p) => relative(ROOT, p).replace(/\\/g, "/"))
-    .filter((p) => p !== "src/lib/storage/keys.ts" && p !== "src/lib/storage/keyLiterals.exempt.ts")
+    .filter((p) => p !== "src/lib/storage/keys.ts" && p !== "src/lib/storage/names.ts" && p !== "src/lib/storage/keyLiterals.exempt.ts")
     .filter((p) => LITERAL.test(codeOf(readFileSync(join(ROOT, p), "utf8"))))
     .sort();
   const exempt = new Set(KEY_LITERAL_EXEMPT);

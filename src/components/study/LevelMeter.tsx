@@ -9,7 +9,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { slopeLabel, slopePercent, slopeZone, smooth, SLOPE_OK_MAX, SLOPE_OK_MIN } from "@/lib/study/slope";
 import { toast } from "sonner";
 import { cardVariant } from "@/components/ui/card";
-import { PRACA } from "@/lib/storage/keys";
+import { PRACA } from "@/lib/storage/names";
 
 type Axis = "beta" | "gamma";
 type Status = "idle" | "waiting" | "live" | "denied" | "nosensor";

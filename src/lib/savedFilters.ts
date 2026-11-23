@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { POWLOKA } from "@/lib/storage/names";
 
 /** Zapisane zapytanie wyszukiwarki („filtr inteligentny”). */
 export interface SavedFilter {
@@ -53,7 +54,7 @@ export function sameQuery(a: string, b: string): boolean {
   return clean(a).toLowerCase() === clean(b).toLowerCase();
 }
 
-const store = createPersistedStore<SavedFilter[]>("kaczy.savedFilters.v1", [], {
+const store = createPersistedStore<SavedFilter[]>(POWLOKA.savedFilters, [], {
   merge: (_defaults, stored) => sanitizeFilters(stored),
 });
 

@@ -1,3 +1,4 @@
+import { DANE } from "@/lib/storage/names";
 /**
  * Lokalny dziennik diagnostyczny — bez telemetrii i bez sieci.
  *
@@ -77,7 +78,7 @@ export interface SecurityEvent {
   count: number;
 }
 
-const SECURITY_KEY = "kaczy.security.log.v1";
+const SECURITY_KEY = DANE.securityLog;
 export const SECURITY_LOG_MAX = 50;
 const SECURITY_DETAIL_MAX = 160;
 let securityEvents: SecurityEvent[] | null = null;
