@@ -230,7 +230,7 @@ Nic nowego dla użytkownika. `src/lib/yjsStore.ts` (1374 linie) podzielony na mo
 
 ### Ograniczenia i pułapki
 
-- D1.1 (zachowanie nieznanych pól): zostały 3 mapy — `plans` (analizy planów), `vault` (skarbiec, robi K0 w planie krypto) i `studySiteItems` (listy karty budowy: pola opcjonalne czyszczone przez użytkownika trzeba rozpoznawać per rodzaj listy, inaczej skasowane pole wróciłoby). Kopia JSON Pracy (`cleanDump`) nadal gubi nieznane pola — to zakres D5.
+- D1.1 (zachowanie nieznanych pól): wszystkie mapy dokumentu są w spisie (`src/lib/docMapsInventory.test.ts`, lista „do zrobienia” pusta, zapadka `TODO_MAX = 0`). Ostatnie, 2026-11-23: `plans` (`src/lib/plans/yPlans.ts` — `PROJECT_KEYS`, `CAL_KEYS`, `ENTITY_KEYS`; kolory to tablica wymieniana w całości) i `studySiteItems` (`src/lib/study/yStudy.ts` — `SITE_ITEM_KEYS` per rodzaj listy) zapisują przez `mergeStored` z jawną listą znanych pól, więc pole opcjonalne skasowane przez użytkownika nie wraca, a pole nowszej wersji zostaje; test `src/lib/extraD11plans.test.ts`. `vault` jest wyjątkiem: to nagłówek kryptograficzny zapisywany tylko przy założeniu i zmianie hasła — scalanie nieznanych pól mogłoby zostawić niespójny nagłówek; przed przepisaniem nowszego formatu chroni wymaganie wersji (D1.3). Kopia JSON Pracy (`cleanDump`) nadal gubi nieznane pola — to zakres D5.
 - Mapy o nazwach składanych w locie poza Grafikiem test spisu zobaczy dopiero po dopisaniu ich listy (jak `SHIFTS_MAP_BASE_NAMES`).
 - Baner nie mówi, które dane są zagrożone, gdy cecha jest nieznana z nazwy — to zamierzone: nie wiadomo, które mapy obejmuje.
 
@@ -564,7 +564,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 - **Świadome wyjątki:**
   - Zmiana terminu w wersji sprzed Terminy 3.2 (b1beade) zdejmuje wcześniejsze przypomnienie (`reminderLead`), bo ta wersja przepisuje cały `reminderSpec` bez niego. Reguła zostaje.
   - Zmiana terminu w wersji sprzed Terminy 3.1 (01c9ac8) zdejmuje regułę. Seria trwa w zapasowym rodzaju (np. „co tydzień” zamiast „pon., śr.”).
-  - Pozycje list karty (`studySiteItems`: etapy, braki, zamówienia…), własne pytania (`studyCustom`) i powtórki (`studyReview`) są zapisywane jako cała wartość na klucz. Zmiana pozycji w starszej wersji gubi pola tej pozycji, które dodała nowsza.
+  - Pozycje list karty (`studySiteItems`: etapy, braki, zamówienia…), własne pytania (`studyCustom`) i powtórki (`studyReview`) są zapisywane jako cała wartość na klucz. Wersje sprzed D1.1 (dla `studySiteItems` — sprzed 2026-11-23) przy zmianie pozycji gubią pola, które dodała nowsza.
   - Wersja sprzed 9020901 kasowała każde nieznane pole wpisu. Tego nie da się naprawić bez aktualizacji tamtego telefonu.
 - **Testy:** `src/lib/dataCompat.test.ts`: starsza wersja to drugi `Y.Doc` piszący surowymi operacjami Yjs tak jak dawny kod (tytuł i lista, odczyt terminu, oba wyjątki przypomnień, wpis z kluczami z 9020901, karta i wpis z polem z nowszej wersji). Do tego `src/lib/study/yStudy.test.ts` (pole nieznane we wpisie).
 - **Commit:** d3acad4 (2026-11-03); wcześniej 9020901 (2026-10-22).

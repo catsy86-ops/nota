@@ -269,7 +269,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 |---|---|---|---|---|
 | D0.1 | `docs/dane-mapa.md` | ◐ | `75487586` | Spis map jako test `docMapsInventory.test.ts`; dokumentu brak |
 | D0.2–D0.4 | Spis baz IndexedDB, kluczy `localStorage`, migracji | ✗ (3) | — | |
-| D1.1 | Nieznane pola przeżywają edycję | ◐ | `ec8be170`, `d0d083e5`, `6aebf8d8`, `a2d3154b` | Zostały mapy `plans`, `vault` (K0), `studySiteItems`; `cleanDump` Pracy gubi pola (D5) |
+| D1.1 | Nieznane pola przeżywają edycję | ✅ | 2026-11-23 | Ostatnie: `plans`, `studySiteItems`; `vault` wyjęty z uzasadnieniem; `cleanDump` Pracy — D5 |
 | D1.2 | Test dla każdej mapy | ✅ | `75487586` | Spis z zapadką |
 | D1.3 | `docFormat`, baner, „Ignoruj i pisz” | ◐ | `75487586` | Bez blokady zapisu w magazynach (`docWritable`) — przyjdzie z pierwszą cechą |
 | D1.4 | Granica obowiązywania | ✅ | `75487586` | |

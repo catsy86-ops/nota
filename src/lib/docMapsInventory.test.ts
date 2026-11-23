@@ -15,6 +15,8 @@ import { SHIFTS_MAP_BASE_NAMES } from "@/lib/shifts/yShifts";
  */
 const PRESERVES: Record<string, string> = {
   debts: "src/lib/debts/yDebts.extra.test.ts",
+  plans: "src/lib/extraD11plans.test.ts",
+  studySiteItems: "src/lib/extraD11plans.test.ts",
   debtPlans: "src/lib/debts/plans.test.ts",
   studyInvoices: "src/lib/study/extra.test.ts",
   studyBilling: "src/lib/study/extra.test.ts",
@@ -50,6 +52,7 @@ const EXEMPT: Record<string, string> = {
   syncControl: "znaczniki wymiany kodu, zapis tylko przez rekey.ts",
   blobs: "bufor transportu obrazów w osobnym dokumencie w pamięci",
   docFormat: "wymagania wersji (D1.3), wartości to liczby",
+  vault: "nagłówek kryptograficzny skarbca (`meta`), zapisywany tylko przy założeniu i zmianie hasła; scalanie nieznanych pól mogłoby zostawić niespójny nagłówek — przed przepisaniem nowszego formatu chroni wymaganie wersji (D1.3)",
   docMigrations: "znaczniki migracji dokumentu (D2.2), zapis tylko przez runner.ts",
   devices: "rejestr urządzeń (D4.1); wpis zastępuje tylko jego urządzenie, wartości czyszczone przy odczycie",
   studyMigrations: "znaczniki migracji na urządzenie",
@@ -70,10 +73,8 @@ const EXEMPT: Record<string, string> = {
 };
 
 /** Do sprawdzenia w D1.1 (działami). Zmniejszaj, przenosząc do PRESERVES albo EXEMPT z uzasadnieniem. */
-const TODO = [
-  "plans", "studySiteItems", "vault",
-];
-const TODO_MAX = 3;
+const TODO: string[] = [];
+const TODO_MAX = 0;
 
 const CONSTS: Record<string, string> = { SYNC_CONTROL_MAP: "syncControl", PLANS_MAP: "plans", REGISTRY_MAP: "shiftSchedules", DOC_FORMAT_MAP: "docFormat", DEBT_PROOFS_MAP: "debtProofs", DEVICES_MAP: "devices", DOC_MIGRATIONS_MAP: "docMigrations" };
 

@@ -50,6 +50,17 @@ export * from "./journalEntry";
 export * from "./studyDump";
 
 
+/** D1.1: znane pola pozycji list budowy (`studySiteItems`) — nieznane, z nowszej wersji, przechodzą przez zapis. */
+const SITE_ITEM_KEYS: Record<SiteListKind, readonly string[]> = {
+  stage: ["name", "done", "order"],
+  short: ["id", "text", "qty", "status", "at", "changed", "due", "by"],
+  order: ["at", "items"],
+  hours: ["minutes"],
+  docs: ["name", "size", "type", "at"],
+  service: ["id", "text", "at", "due", "done", "solution"],
+  todo: ["text", "at", "doneAt"],
+};
+
 export function createYStudy(doc: Y.Doc) {
   /** Wpisy dziennika: id → mapa pól (D5), starsze zapisy to zwykłe obiekty (`journalFields`). */
   const journal = doc.getMap<unknown>("studyJournal");
@@ -275,8 +286,8 @@ export function createYStudy(doc: Y.Doc) {
       if (kind === "stage") {
         const prev = siteItems.get(k) as StageItem | undefined;
         const order = typeof prev?.order === "number" ? prev.order : (maxOrder += 1);
-        siteItems.set(k, { ...(value as object), order });
-      } else siteItems.set(k, value);
+        siteItems.set(k, mergeStored({ ...(value as object), order }, prev, SITE_ITEM_KEYS.stage));
+      } else siteItems.set(k, mergeStored(value as object, siteItems.get(k), SITE_ITEM_KEYS[kind]));
     }
     if (!siteItems.has(metaKey(siteId, kind))) siteItems.set(metaKey(siteId, kind), true);
   }

@@ -5,6 +5,7 @@ import {
   type AnalysisProject, type DetectedSymbol, type PlanColor, type DetectedText, type MaterialItem, type PipeRoute, type PlanCalibration,
 } from "./model";
 import { PLANS_MAP } from "./planRefs";
+import { mergeStored } from "@/lib/extraFields";
 
 /**
  * Analizy planów w Y.Doc notatek — synchronizacja i kopia jak reszta danych. Jedna mapa `plans`,
@@ -52,6 +53,19 @@ const colorsKey = (pid: string) => ["k", pid].join(SEP);
 const entityKey = (kind: EntityKind, pid: string, id: string) => [kind, pid, id].join(SEP);
 
 const LIST_OF: Record<EntityKind, "routes" | "texts" | "symbols" | "items"> = { r: "routes", t: "texts", s: "symbols", i: "items" };
+
+/**
+ * D1.1: znane pola wpisów mapy `plans` — nieznane (z nowszej wersji) przechodzą przez zapis (`mergeStored`).
+ * Kolory to tablica wymieniana w całości, bez pól do zachowania.
+ */
+const PROJECT_KEYS = ["id", "name", "siteId", "image", "work", "status", "createdAt", "updatedAt"];
+const CAL_KEYS = ["a", "b", "meters", "at"];
+const ENTITY_KEYS: Record<EntityKind, readonly string[]> = {
+  r: ["id", "system", "diameterMm", "pts", "source", "confidence", "verified", "estimate", "label", "at"],
+  t: ["id", "raw", "text", "box", "confidence", "verified", "at"],
+  s: ["id", "type", "x", "y", "system", "confidence", "manual", "verified", "at"],
+  i: ["id", "category", "description", "system", "diameterMm", "quantity", "unit", "verified", "at"],
+};
 
 export function createYPlans(doc: Y.Doc) {
   const map = doc.getMap<unknown>(PLANS_MAP);
@@ -143,7 +157,7 @@ export function createYPlans(doc: Y.Doc) {
     if ("siteId" in patch && !patch.siteId) delete next.siteId;
     const p = cleanProject(next);
     if (!p) return false;
-    doc.transact(() => map.set(projectKey(pid), p), PLANS_ORIGIN);
+    doc.transact(() => map.set(projectKey(pid), mergeStored(p, map.get(projectKey(pid)), PROJECT_KEYS)), PLANS_ORIGIN);
     return true;
   }
 
@@ -152,7 +166,7 @@ export function createYPlans(doc: Y.Doc) {
     if (cal === null) { doc.transact(() => map.delete(calKey(pid)), PLANS_ORIGIN); return true; }
     const c = cleanCalibration(cal);
     if (!c) return false;
-    doc.transact(() => map.set(calKey(pid), c), PLANS_ORIGIN);
+    doc.transact(() => map.set(calKey(pid), mergeStored(c, map.get(calKey(pid)), CAL_KEYS)), PLANS_ORIGIN);
     return true;
   }
 
@@ -171,7 +185,7 @@ export function createYPlans(doc: Y.Doc) {
     if (!d || !e) return false;
     const list = d[LIST_OF[kind]] as { id: string }[];
     if (!list.some((x) => x.id === e.id) && list.length >= LIMIT[kind]) return false;
-    doc.transact(() => map.set(entityKey(kind, pid, e.id), e), PLANS_ORIGIN);
+    doc.transact(() => map.set(entityKey(kind, pid, e.id), mergeStored(e, map.get(entityKey(kind, pid, e.id)), ENTITY_KEYS[kind])), PLANS_ORIGIN);
     return true;
   }
 
