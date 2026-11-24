@@ -1,0 +1,28 @@
+{
+  "$comment": "S5.5: zasoby w public/ spoza paczki Vite. Test src/test/vendoredAssets.test.ts pilnuje sum, wersji z package-lock.json i odtwarzalności. Po aktualizacji pakietu: uruchom skrypt, wpisz nową wersję i sumę.",
+  "committed": [
+    {
+      "file": "public/fonts/protokol-regular.ttf",
+      "package": "@fontsource/barlow-condensed",
+      "version": "5.3.0",
+      "license": "OFL-1.1",
+      "script": "scripts/build-pdf-font.mjs",
+      "sha256": "1b4f05ba5aa2d37c0e8c54dbe57fb959328cf475018d3732f6e56f7c86b9447c"
+    },
+    {
+      "file": "public/fonts/protokol-bold.ttf",
+      "package": "@fontsource/barlow-condensed",
+      "version": "5.3.0",
+      "license": "OFL-1.1",
+      "script": "scripts/build-pdf-font.mjs",
+      "sha256": "4c28636ad7aea9f54ebbdd983fdff385fd01ec5ba02973d06eb63a42099c8266"
+    }
+  ],
+  "copied": [
+    { "dir": "public/mermaid/12.3.0", "package": "mermaid", "version": "12.3.0", "license": "MIT", "script": "scripts/copy-mermaid.mjs" },
+    { "dir": "public/ocr/7.0.0", "package": "tesseract.js-core", "version": "7.0.0", "license": "Apache-2.0", "script": "scripts/copy-ocr.mjs" },
+    { "dir": "public/ocr/7.0.0", "package": "tesseract.js", "version": "7.0.0", "license": "Apache-2.0", "script": "scripts/copy-ocr.mjs" },
+    { "dir": "public/ocr/7.0.0", "package": "@tesseract.js-data/eng", "version": "1.0.0", "license": "MIT", "script": "scripts/copy-ocr.mjs" },
+    { "dir": "public/ocr/7.0.0", "package": "@tesseract.js-data/pol", "version": "1.0.0", "license": "MIT", "script": "scripts/copy-ocr.mjs" }
+  ]
+}

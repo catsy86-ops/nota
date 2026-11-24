@@ -169,9 +169,9 @@ Zmienia ADR-3 i ADR-4 („lokalnie, bez hostingu”) — zapisać jako **ADR-9**
 | S5.2 ✅ 2026-11-24 | Automat aktualizacji (Dependabot albo Renovate): npm w czterech katalogach, akcje GitHub, obrazy Docker; grupowanie tygodniowe; poprawki bezpieczeństwa od razu. | S |
 | S5.3 ✅ 2026-11-24 | Akcje przypięte do pełnego skrótu; `permissions: contents: read` na poziomie przepływu; brak sekretów w zadaniach uruchamianych z PR z forka. | S |
 | S5.4 ✅ 2026-11-24 (gitleaks w CI; ochrona przy wypchnięciu i skan historii lokalnie — właściciel) | Skan sekretów (ochrona przed wypchnięciem w GitHub + `gitleaks` w CI); jednorazowy skan historii. | S |
-| S5.5 | Zasoby wbudowane poza npm (Mermaid, OCR w `public/`): plik z wersją, źródłem i sumą SHA-256 każdego; test porównujący sumy. | S |
-| S5.6 | `npm ci --ignore-scripts` w CI tam, gdzie się da; lista pakietów wymagających skryptów instalacyjnych. | S |
-| S5.7 | Licencje zależności produkcyjnych — jednorazowy spis w `docs/`. | S |
+| S5.5 ✅ 2026-11-24 | Zasoby wbudowane poza npm (Mermaid, OCR w `public/`): plik z wersją, źródłem i sumą SHA-256 każdego; test porównujący sumy. | S |
+| S5.6 ✅ 2026-11-24 | `npm ci --ignore-scripts` w CI tam, gdzie się da; lista pakietów wymagających skryptów instalacyjnych. | S |
+| S5.7 ✅ 2026-11-24 (`docs/licencje-zaleznosci.md`) | Licencje zależności produkcyjnych — jednorazowy spis w `docs/`. | S |
 
 ## Etap S6: reagowanie i utrzymanie (Sonnet)
 

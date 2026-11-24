@@ -1,10 +1,11 @@
 // Kopiuje silnik OCR (tesseract.js) i dane języków do public/ocr/<wersja core>/ — serwowane z własnego
 // adresu, nigdy z CDN (obrazy planów nie wychodzą na zewnątrz). Uruchamiany w predev/prebuild.
-// Plik o tym samym rozmiarze jest pomijany: repo leży w OneDrive, więc ~9 MB synchronizuje się raz na wersję.
+// Plik o tej samej treści (rozmiar + SHA-256, `sameFile.mjs`) jest pomijany: repo leży w OneDrive, więc ~9 MB synchronizuje się raz na wersję.
 // public/ocr/ jest w .gitignore — binariów nie commitujemy.
-import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { sameFile } from "./sameFile.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const nm = (...p) => join(root, "node_modules", ...p);
@@ -26,7 +27,7 @@ let copied = 0;
 for (const [src, name] of files) {
   if (!existsSync(src)) throw new Error(`copy-ocr: brak ${src} — uruchom npm install`);
   const dst = join(out, name);
-  if (existsSync(dst) && statSync(dst).size === statSync(src).size) continue;
+  if (sameFile(src, dst)) continue;
   copyFileSync(src, dst);
   copied++;
 }

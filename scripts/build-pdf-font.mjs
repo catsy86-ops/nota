@@ -11,7 +11,8 @@ import { inflateSync } from "node:zlib";
 import { join } from "node:path";
 
 const SRC = "node_modules/@fontsource/barlow-condensed/files";
-const OUT = "public/fonts";
+// Katalog wyjściowy z argumentu: test S5.5 odtwarza czcionki do katalogu tymczasowego i porównuje sumy.
+const OUT = process.argv[2] ?? "public/fonts";
 
 function readWoff(path) {
   const b = readFileSync(path);
