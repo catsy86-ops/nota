@@ -1267,7 +1267,7 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Ograniczenia i pułapki:** punkty ukończone przed tą zmianą nie mają zapisanej stawki i liczą się po bieżącej (zalecenie audytu). Starsza wersja aplikacji (sprzed pola) przy zmianie kroków punktu nie zachowa `rate` — punkt wróci do stawki bieżącej. Stawka godzinowa budowy dalej działa wstecz (godziny nie są wpisami z kwotą). Punkt ukończony bez ustawionej stawki nie dostaje pola, więc policzy się po stawce, która pojawi się później.
 - **Testy:** `src/lib/study/pointRates.test.ts` (4: zamrażanie i cofnięcie, `cleanPoint`, dwa wiersze przy różnych stawkach, zarobek miesiąca); e2e kart budowy, rozliczenia i punktów — 69 zaliczonych.
 
-## Praca — „Zacznij dzień” i pomiar stuknięć (R2.5, R1.1, R1.4; 2026-11-24, niezacommitowane)
+## Praca — „Zacznij dzień” i pomiar stuknięć (R2.5, R1.1, R1.4; 2026-11-24, `80a9218d`)
 
 - **Co robi:** przycisk „Zacznij dzień” w Dzienniku otwiera jeden arkusz: lista budów (najbliższa z lokalizacji na górze, dalej od ostatnio używanej), godzina wejścia (domyślnie teraz, do poprawki) i plan na dziś z karty budowy. „Wchodzę” zapisuje wejście (to samo co dymek „Jesteś przy budowie”) i zamyka arkusz. Odpowiednik „Zakończ dzień” na początek dnia.
 - **Gdzie jest:** `src/components/study/StartDaySheet.tsx` (podpięty w `StudyJournal.tsx`), czysta funkcja `startDayCandidates` w `src/lib/study/startDay.ts`; godzina przez `toTimeInputValue` i `composeReminderTimestamp` z `src/lib/reminderTime.ts` (godzina z przeskoku czasu jest odrzucana).
@@ -1275,9 +1275,9 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Ograniczenia:** brak podpowiedzi budowy z Grafiku (nie ma jeszcze powiązania zmiany z kartą budowy); plan tylko do podglądu, edycja w karcie (przycisk w arkuszu). Zależność od GPS w pomieszczeniach bywa słaba — wtedy wybór ręczny.
 - **Testy:** `src/lib/study/startDay.test.ts` (4), `e2e/start-day.spec.ts` (2).
 - **Pomiar stuknięć (R1.4):** `workday.spec.ts` (chromium): wejście 2, zdjęcie 2, kształtki 3, brak materiału 3, etap 3, godziny 3, raport 2 — wszystkie w celu. Lista kontrolna sesji QA na telefonie: `docs/qa-praca-telefon.md` (R1.1).
-- **Commit:** brak (do zacommitowania).
+- **Commit:** `80a9218d`, 2026-11-24.
 
-## Praca — oś zlecenia (R3.2; 2026-11-24, niezacommitowane)
+## Praca — oś zlecenia (R3.2; 2026-11-24, `80a9218d`)
 
 - **Co robi:** w panelu „Zlecenie własne” nad statusem jest pasek siedmiu etapów: wycena → zaliczka → realizacja → protokół → faktura → zapłata → gwarancja, z podpisem „Następny krok: …”. Stuknięcie w niezrobiony etap uruchamia narzędzie: wycena i zaliczka przewijają do pól, realizacja i zapłata ustawiają status (z „Cofnij”), protokół otwiera podpis klienta, faktura — okno faktury. Gwarancja jest tylko opisem (pole w segmencie Papiery).
 - **Gdzie jest:** `src/lib/study/jobTimeline.ts` (`jobTimeline`, `TIMELINE_STEPS`, `TIMELINE_LABEL`), `src/components/study/JobTimeline.tsx`, podpięcie w `SiteJobPanel.tsx` (`timelineStep`, `TIMELINE_ACTIONS`).
@@ -1285,7 +1285,7 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Ograniczenia:** oś jest tylko w karcie zlecenia; karta klienta jej jeszcze nie pokazuje. Etapy mogą być zrobione poza kolejnością (np. faktura przed protokołem) — pasek pokazuje każdy osobno. Na telefonie podpisy etapów są ukryte (tylko pasek + „Następny krok”), pełna nazwa jest w etykiecie dostępności.
 - **Testy:** `src/lib/study/jobTimeline.test.ts` (6), `e2e/jobs.spec.ts` („R3.2 oś zlecenia”); `jobs`, `quote`, `invoice` e2e — 14 zielonych (z axe panelu).
 
-## Praca — paczka „Dla księgowej” (R3.5; 2026-11-24, niezacommitowane)
+## Praca — paczka „Dla księgowej” (R3.5; 2026-11-24, `80a9218d`)
 
 - **Co robi:** przycisk „Dla księgowej” w Dzienniku otwiera okno: miesiąc (domyślnie poprzedni), hasło, liczba faktur i dni kilometrówki. „Zapisz ZIP” zapisuje `ksiegowa-RRRR-MM.zip` z hasłem: rejestr faktur CSV (numer, daty, nabywca, NIP, netto, VAT, brutto, korekta, suma), faktury XML FA(3) i PDF w `faktury/` oraz kilometrówkę CSV.
 - **Gdzie jest:** `src/lib/study/accountantExport.ts` (`accountantPlan` — jeden plan paczki dla liczników okna i ZIP-a, `monthInvoices`, `isMonthKey`, `buildAccountantZip`, `accountantPasswordOk`, `accountantZipName`); kilometrówka miesiąca przez `monthEntries` z `mileage.ts`, `src/components/study/AccountantExportDialog.tsx` (leniwie z `StudyJournal.tsx`).
@@ -1293,7 +1293,7 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Ograniczenia i pułapki:** format WinZip wyprowadza klucz przez PBKDF2-SHA1 z 1000 iteracji, więc wymagamy hasła co najmniej „Dobre” (`passwordStrength().score >= 3`). Nazwy plików i ich liczba w ZIP-ie są jawne (to ograniczenie formatu ZIP), a treść jest zaszyfrowana. Hasło znika z okna po zamknięciu. Offline okno nie zadziała, dopóki chunk nie trafi do cache. Zestawienia zarobków z Grafiku (`SiteMonthEarnings`) jeszcze w paczce nie ma. Przegląd `security-reviewer` z 2026-11-24 nie znalazł nic krytycznego; znalezione L1–L3 i I2–I3 są poprawione.
 - **Testy:** `src/lib/study/accountantExport.test.ts` (7, w tym odczyt ZIP-a z hasłem i bez), `e2e/accountant-export.spec.ts`, `e2e/bundle.spec.ts` (budżety bez zmian).
 
-## Praca — wzorce budów i „Jak poprzednia budowa” (R4.4, poprawka B3.7; 2026-11-24, niezacommitowane)
+## Praca — wzorce budów i „Jak poprzednia budowa” (R4.4, poprawka B3.7; 2026-11-24, `80a9218d`)
 
 - **Co robi:** w karcie budowy (Papiery) jest przycisk „Zapisz jako wzorzec”. Zapisuje pod nazwą (np. „Łazienka”, „Kotłownia”) etapy i pomieszczenia z rodzajami punktów, bez odhaczeń, wpisów, zdjęć i pieniędzy. W „Nowej budowie” lista „Jak poprzednia budowa” ma grupy „Wzorce” i „Budowy”.
 - **Gdzie jest:** `src/lib/study/sitePatterns.ts` (`SitePattern`, `cleanPatterns`, `patternFromSite`, `applySitePattern`, `saveSitePattern`, `removeSitePattern`, `useSitePatterns`), `src/components/study/SavePatternDialog.tsx`, `SiteCardDialog.tsx` (przycisk), `NewSiteDialog.tsx` (stosowanie).
@@ -1302,7 +1302,7 @@ Zapłacono: 0 zł”) ani odwrócić rozszerzenia. **L3** obraz podpisu rozpozna
 - **Ograniczenia:** wzorce są ustawieniem urządzenia, wchodzą do kopii, ale nie synchronizują się przez Yjs. Wysokość i strony punktu we wzorcu nie są zapisywane. Nie ma osobnego ekranu zarządzania wzorcami; zapis tej samej nazwy nadpisuje, a „Cofnij” w toaście usuwa.
 - **Testy:** `src/lib/study/sitePatterns.test.ts` (5), `e2e/site-patterns.spec.ts` (wzorzec, zapis z karty, B3.7 z budowy).
 
-## Praca — pomiar zapisu zdjęcia (R4.2; 2026-11-24, niezacommitowane)
+## Praca — pomiar zapisu zdjęcia (R4.2; 2026-11-24, `80a9218d`)
 
 - **Co robi:** mierzy czas zmniejszania i zapisu zdjęcia przy dodawaniu do wpisu. Wynik `zdjecie-zapis` (mediana, p75) jest w Ustawienia → Diagnostyka → raport.
 - **Gdzie jest:** `measureSpan("zdjecie-zapis")` w `src/lib/study/photoEntry.ts` i `addPhotos` w `JournalEntrySheet.tsx`.
