@@ -106,4 +106,5 @@ jobs:
           tar -xzf gitleaks.tar.gz -C "$RUNNER_TEMP" gitleaks
 
       - name: Skan sekretów
-        run: '"$RUNNER_TEMP/gitleaks" git . --redact --no-banner --exit-code 1'
+        # `-v` wypisuje plik, linię, regułę i odcisk (do `.gitleaksignore`); wartości ukrywa `--redact`.
+        run: '"$RUNNER_TEMP/gitleaks" git . --redact -v --no-banner --exit-code 1'
