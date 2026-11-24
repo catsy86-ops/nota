@@ -25,6 +25,7 @@ import { hasLocalSpeechApi, installLocalSpeech, localSpeechReady, localSpeechSta
 import { setBadgeEnabled, setInboxBadgeEnabled, useBadgeEnabled, useInboxBadgeEnabled } from "@/lib/overdueBadge";
 import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
 import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
+import { setOneHand, useOneHand } from "@/lib/study/oneHandPrefs";
 import { SERIES_MAX } from "@/lib/ksef/numbering";
 import { setSeries, useSeries } from "@/lib/ksef/sellerPrefs";
 import { AUTHOR_MAX, BANK_ACCOUNT_MAX, COMPANY_NAME_MAX, setAuthor, setBankAccount, setCompanyName, setQuoteTerms, useAuthor, useBankAccount, useCompanyName, useQuoteTerms } from "@/lib/study/companyPrefs";
@@ -139,6 +140,7 @@ export function GeneralSettings() {
   const inboxBadge = useInboxBadgeEnabled();
   const reportNudges = useReportNudges();
   const siteArrival = useSiteArrival();
+  const oneHand = useOneHand();
   const companyName = useCompanyName();
   const quoteTerms = useQuoteTerms();
   const bankAccount = useBankAccount();
@@ -250,6 +252,13 @@ export function GeneralSettings() {
           desc="Przy otwarciu aplikacji jedno sprawdzenie położenia: gdy stoisz przy budowie z zapisaną lokalizacją i nie ma jeszcze wejścia dziś, pytamy „Wchodzę?”. Położenie zostaje w przeglądarce."
           checked={siteArrival}
           onCheck={setSiteArrival}
+        />
+
+        <ToggleRow
+          label="Układ do jednej ręki na zakładce Budowa"
+          desc="Wybór budowy, karta i szybkie akcje (zdjęcie, wpis głosem, brak) przesuwają się na dół ekranu, a cele mają co najmniej 56 px. Tylko na tym urządzeniu."
+          checked={oneHand}
+          onCheck={setOneHand}
         />
 
         <Section title="Nazwa firmy na protokole PDF">

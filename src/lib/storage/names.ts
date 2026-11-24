@@ -56,6 +56,8 @@ export const PRACA = {
   weekReportNudged: "kaczy.study.weekReportNudged.v1",
   reportNudges: "kaczy.study.reportNudges.v1",
   siteArrival: "kaczy.study.siteArrival.v1",
+  oneHand: "kaczy.study.oneHand.v1",
+  oneHandOffered: "kaczy.study.oneHandOffered.v1",
   tab: "kaczy.study.tab.v1",
   usage: "kaczy.study.usage.v1",
 } as const;

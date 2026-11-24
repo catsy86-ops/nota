@@ -217,7 +217,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | R3.4 | Pasek „zapłacono 40%” | ✗ | — | Dane w `receivables.ts`, brak interfejsu |
 | R3.5 | Paczka dla księgowej | ✗ | — | |
 | R3.6 | KSeF Etap 2 | ⏸ | — | Poza planem; plan `plan-ksef-etap2.md` czeka na D-K3…D-K5 |
-| R4.1 | Tryb jednej ręki | ⏸ | — | PR-3 |
+| R4.1 | Tryb jednej ręki | ✅ 2026-11-24 | — | PR-3 (nie domyślny, z podpowiedzią) |
 | R4.2 | Kolejka zdjęć w tle | ⏸ | — | Najpierw pomiar (Z-14.5) |
 | R4.3 | Raport dnia głosem | ✅ | `67d9758b` | `speak.ts` |
 | R4.4 | Wzorce budów | ✗ | — | |

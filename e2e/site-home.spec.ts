@@ -82,3 +82,51 @@ test("Budowa z danymi nie ma naruszeń dostępności (WCAG 2.2 AA) @mobile", asy
   const result = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
   expect(result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`)).toEqual([]);
 });
+
+// R4.1 (decyzja PR-3): tryb jednej ręki jest domyślnie wyłączony; po 5 wpisach pada jedna propozycja.
+test("jedna ręka: propozycja po wpisach, układ pod kciuk i cele 56 px @mobile", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("kaczy.study.usage.v1", JSON.stringify({ wpis: { n: 5, last: Date.now() } }));
+  });
+  await page.goto("/praca");
+  const home = page.getByTestId("site-home");
+  await expect(home).toBeVisible();
+  // Wyłączony: akcje nad planem, nie pod nim.
+  await expect(home).not.toHaveAttribute("data-one-hand", /.*/);
+  const photo = page.getByTestId("site-home-photo");
+  const card = page.getByTestId("site-home-card");
+  expect((await card.boundingBox())!.y).toBeLessThan((await photo.boundingBox())!.y);
+
+  const offer = page.getByTestId("one-hand-offer");
+  await expect(offer).toBeVisible();
+  await offer.getByRole("button", { name: "Włącz" }).click();
+  await expect(offer).toHaveCount(0);
+  await expect(home).toHaveAttribute("data-one-hand", "true");
+
+  // Włączony: akcje pod informacjami (bliżej kciuka), karta i akcje mają co najmniej 56 px.
+  const plan = home.getByTestId("site-plan");
+  if (await plan.count()) expect((await plan.first().boundingBox())!.y).toBeLessThan((await card.boundingBox())!.y);
+  expect((await card.boundingBox())!.y).toBeLessThan((await photo.boundingBox())!.y);
+  for (const el of [card, photo, page.getByTestId("site-home-voice"), page.getByTestId("site-home-shortage")]) {
+    expect((await el.boundingBox())!.height).toBeGreaterThanOrEqual(56);
+  }
+
+  // Wybór zostaje po przeładowaniu i nie wraca propozycja.
+  await page.reload();
+  await expect(page.getByTestId("site-home")).toHaveAttribute("data-one-hand", "true");
+  await expect(page.getByTestId("one-hand-offer")).toHaveCount(0);
+});
+
+test("jedna ręka: „Nie, dziękuję” zostawia układ i nie pyta ponownie @mobile", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("kaczy.study.usage.v1", JSON.stringify({ wpis: { n: 9, last: Date.now() } }));
+  });
+  await page.goto("/praca");
+  await page.getByTestId("one-hand-offer").getByRole("button", { name: "Nie, dziękuję" }).click();
+  await expect(page.getByTestId("one-hand-offer")).toHaveCount(0);
+  await expect(page.getByTestId("site-home")).not.toHaveAttribute("data-one-hand", /.*/);
+  await page.reload();
+  await expect(page.getByTestId("site-home")).toBeVisible();
+  await expect(page.getByTestId("one-hand-offer")).toHaveCount(0);
+});
+

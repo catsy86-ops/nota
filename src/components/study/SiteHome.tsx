@@ -12,7 +12,9 @@ import { pointsProgress } from "@/lib/study/points";
 import { useSitePoints } from "@/lib/study/pointsStore";
 import { siteTally } from "@/lib/study/siteTally";
 import { setSite, useSiteDirectory, useStudy } from "@/lib/study/store";
-import { trackUse } from "@/lib/study/usage";
+import { readUsage, trackUse } from "@/lib/study/usage";
+import { dismissOneHandOffer, setOneHand, shouldOfferOneHand, useOneHand, useOneHandOffered } from "@/lib/study/oneHandPrefs";
+import { IS_TOUCH } from "@/lib/platform";
 import { photoEntryToast, photoSaveFailed } from "./useJournalPhotoEdits";
 import { SitePlan } from "./SitePlan";
 import { SiteShortagesPanel } from "./SiteShortagesPanel";
@@ -38,6 +40,8 @@ export function SiteHome({ onOpenCard, onOpenJournal, tools }: { onOpenCard: (si
   const [busy, setBusy] = useState(false);
   const [addShortage, setAddShortage] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const oneHand = useOneHand();
+  const offered = useOneHandOffered();
 
   if (!current) {
     return (
@@ -81,12 +85,25 @@ export function SiteHome({ onOpenCard, onOpenJournal, tools }: { onOpenCard: (si
     requestAnimationFrame(() => panelRef.current?.querySelector<HTMLInputElement>('input[aria-label="Czego brakuje"], input')?.focus());
   }
 
+  // R4.1: w trybie jednej ręki informacje idą na górę, a to, czego dotyka kciuk (budowa, karta, akcje), na dół.
+  const at = (n: number) => (oneHand ? { style: { order: n } } : {});
+  const offer = shouldOfferOneHand({ usage: readUsage(), enabled: oneHand, offered, touch: IS_TOUCH });
   const showShortages = addShortage || (current.shortages?.length ?? 0) > 0;
 
   return (
-    <div className="space-y-4 md:max-w-2xl" data-testid="site-home">
+    <div className={cn("md:max-w-2xl", oneHand ? "flex flex-col gap-4" : "space-y-4")} data-testid="site-home" data-one-hand={oneHand || undefined}>
+      {offer && (
+        <div className={cn(cardVariant("inset"), "flex flex-col gap-2 p-3")} role="region" aria-label="Układ do jednej ręki" data-testid="one-hand-offer" style={{ order: -1 }}>
+          <p className="text-sm font-medium">Włączyć układ do jednej ręki?</p>
+          <p className="ui-hint">Budowa, karta i szybkie akcje przesuną się na dół ekranu, pod kciuk. Zmienisz to w Ustawieniach.</p>
+          <div className="flex gap-2">
+            <Button type="button" size="sm" onClick={() => setOneHand(true)} className="coarse:min-h-11">Włącz</Button>
+            <Button type="button" size="sm" variant="outline" onClick={dismissOneHandOffer} className="coarse:min-h-11">Nie, dziękuję</Button>
+          </div>
+        </div>
+      )}
       {sites.length > 1 && (
-        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]" role="group" aria-label="Budowa">
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]" role="group" aria-label="Budowa" {...at(5)}>
           {sites.map((s) => (
             <button
               key={s.id}
@@ -94,7 +111,7 @@ export function SiteHome({ onOpenCard, onOpenJournal, tools }: { onOpenCard: (si
               aria-pressed={s.id === current.id}
               onClick={() => select(s)}
               className={cn(
-                "pressable shrink-0 rounded-full border px-3 py-1 text-sm coarse:min-h-11",
+                "pressable shrink-0 rounded-full border px-3 py-1 text-sm coarse:min-h-11", oneHand && "coarse:min-h-14",
                 s.id === current.id ? "border-primary/50 bg-primary/10 font-medium text-foreground" : "border-border text-muted-foreground hover:bg-muted",
               )}
             >
@@ -108,8 +125,9 @@ export function SiteHome({ onOpenCard, onOpenJournal, tools }: { onOpenCard: (si
         type="button"
         onClick={() => onOpenCard(current.id)}
         aria-label={`Karta budowy: ${current.name}`}
-        className={cn(cardVariant("interactive"), "flex w-full items-center gap-3 p-4 text-left")}
+        className={cn(cardVariant("interactive"), "flex w-full items-center gap-3 p-4 text-left", oneHand && "min-h-14")}
         data-testid="site-home-card"
+        {...at(6)}
       >
         <span className="min-w-0 flex-1">
           <span className="title-section block truncate">{current.name}</span>
@@ -120,7 +138,7 @@ export function SiteHome({ onOpenCard, onOpenJournal, tools }: { onOpenCard: (si
         <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
       </button>
 
-      <div className="grid grid-cols-3 gap-2" role="group" aria-label="Szybkie akcje">
+      <div className="grid grid-cols-3 gap-2" role="group" aria-label="Szybkie akcje" {...at(7)}>
         <input
           ref={input}
           type="file"
@@ -143,9 +161,9 @@ export function SiteHome({ onOpenCard, onOpenJournal, tools }: { onOpenCard: (si
         </button>
       </div>
 
-      <SitePlan site={current} />
-      {showShortages && <div ref={panelRef}><SiteShortagesPanel site={current} /></div>}
-      {tools}
+      <div {...at(1)}><SitePlan site={current} /></div>
+      {showShortages && <div ref={panelRef} {...at(2)}><SiteShortagesPanel site={current} /></div>}
+      {tools && <div {...at(3)}>{tools}</div>}
     </div>
   );
 }

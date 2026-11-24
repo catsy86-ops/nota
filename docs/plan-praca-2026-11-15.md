@@ -67,7 +67,7 @@ Wynik Etapu 1 może zmienić kolejność Etapów 2–4.
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
-| R4.1 | **Tryb jednej ręki** na zakładce Budowa: wszystkie główne akcje w dolnej połowie ekranu, cele 56 px. Zmiana rozmiaru tylko tutaj i po uzgodnieniu — ogólne powiększenie `Button` na dotyku zostało cofnięte. | M |
+| R4.1 ✅ 2026-11-24 | **Tryb jednej ręki** na zakładce Budowa: wszystkie główne akcje w dolnej połowie ekranu, cele 56 px. Zmiana rozmiaru tylko tutaj i po uzgodnieniu — ogólne powiększenie `Button` na dotyku zostało cofnięte. | M |
 | R4.2 ◐ 2026-11-24 (pomiar `zdjecie-zapis` dodany; kolejka po sesji QA, próg p75 > 1,5 s) | **Kolejka zdjęć bez czekania:** zdjęcie zapisuje się od razu, miniatura i zmniejszanie w tle (Worker), z widocznym licznikiem „przetwarzam 3”. Najpierw pomiar, czy dziś blokuje. | M |
 | R4.3 ✅ `67d9758b` 2026-11-15 | **Raport dnia głosem:** „Zakończ dzień” czyta podsumowanie na głos (`speechSynthesis`), żeby dało się je sprawdzić z brudnymi rękami. Do wyłączenia. | S |
 | R4.4 ✅ 2026-11-24 (też poprawka B3.7) | **Wzorce powtarzalnych budów:** „Nowa budowa z poprzedniej” (B3.7) rozszerzone o zapisane wzorce („łazienka”, „kotłownia”) z etapami i punktami. | S |
@@ -79,9 +79,9 @@ Bez zmian w zakresie. Otwarte: więcej pytań (czeka na źródła od właścicie
 
 ## Decyzje właściciela
 
-- **PR-1:** co z funkcjami nieużywanymi przez 30 dni — chować czy usuwać (R2.3).
+- **PR-1 (2026-11-24: chować, nie usuwać):** funkcje nieużywane przez 30 dni trafiają do „Więcej” / „Pokaż ukryte”, dane i kod zostają, przywrócenie jednym stuknięciem (R2.3).
 - **PR-2:** czy „Należności” to nowa zakładka Pracy, czy sekcja na Dziś (R3.1).
-- **PR-3:** czy tryb jednej ręki ma być domyślny na telefonie (R4.1).
+- **PR-3 (2026-11-24: nie domyślny, z podpowiedzią):** tryb jednej ręki wyłączony na starcie; po kilku wpisach na telefonie jednorazowa propozycja włączenia; domyślną wartość można zmienić po QA R1.1 (R4.1).
 
 ## Kolejność i narzędzia
 
