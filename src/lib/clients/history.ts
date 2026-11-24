@@ -1,5 +1,6 @@
 import type { InvoiceRecord } from "@/lib/ksef/yInvoices";
-import { quoteSummary, unpaidTotal, type Job, type JobStatus } from "@/lib/study/jobs";
+import { quoteSummary, signatureValidFor, unpaidTotal, type Job, type JobStatus } from "@/lib/study/jobs";
+import type { TimelineInput } from "@/lib/study/jobTimeline";
 import type { SiteInfo } from "@/lib/study/sites";
 
 /**
@@ -14,6 +15,8 @@ export interface ClientSiteRow {
   archived: boolean;
   /** Zlecenie własne tej budowy (fucha); brak = budowa szefa. */
   job?: { status: JobStatus; total: number };
+  /** R3.2: dane osi zlecenia (`jobTimeline`), tylko gdy jest zlecenie własne. */
+  timeline?: TimelineInput;
   invoices: { id: string; number: string; issuedAt: number }[];
   /** Ostatni dzień gwarancji „RRRR-MM-DD”. */
   warranty?: string;
@@ -49,7 +52,8 @@ export function clientHistory(
     const job = jobs.get(id);
     const total = job ? quoteSummary(job).payable : 0;
     if (job?.status === "done") doneJobs.push(job);
-    const mine = invoices.filter((r) => r.siteId === id).map((r) => ({ id: r.id, number: r.number, issuedAt: r.issuedAt })).sort((a, b) => b.issuedAt - a.issuedAt);
+    const siteInvoices = invoices.filter((r) => r.siteId === id);
+    const mine = siteInvoices.map((r) => ({ id: r.id, number: r.number, issuedAt: r.issuedAt })).sort((a, b) => b.issuedAt - a.issuedAt);
     invoiceCount += mine.length;
     const open = (site.service ?? []).filter((c) => c.done === undefined).length;
     openService += open;
@@ -57,7 +61,10 @@ export function clientHistory(
       siteId: id,
       name: site.name,
       archived: site.archived !== undefined,
-      ...(job ? { job: { status: job.status, total } } : {}),
+      ...(job ? {
+        job: { status: job.status, total },
+        timeline: { job, signed: signatureValidFor(job, site.signature), warranty: site.warranty, invoiced: siteInvoices.some((r) => !r.invoice?.correction) },
+      } : {}),
       invoices: mine,
       ...(site.warranty ? { warranty: site.warranty } : {}),
       openService: open,

@@ -39,4 +39,15 @@ describe("clientHistory", () => {
     expect(h.rows.map((r) => r.siteId)).toEqual(["b", "a"]);
     expect(clientHistory([], [], new Map(), [])).toEqual({ rows: [], unpaid: 0, invoiceCount: 0, openService: 0 });
   });
+
+  it("R3.2: wiersz ze zleceniem ma dane osi — podpis ważny dla wyceny, faktura bez korekt", () => {
+    const j = { ...job("done", 200), created: 100 };
+    const sites = [site("a", { signature: { at: 150 } as SiteInfo["signature"], warranty: "2028-01-01" }), site("b", { signature: { at: 50 } as SiteInfo["signature"] }), site("c")];
+    const corr = { id: "k", number: "FV/k", issuedAt: 1, siteId: "b", invoice: { correction: {} } } as unknown as InvoiceRecord;
+    const h = clientHistory(["a", "b", "c"], sites, new Map([["a", j], ["b", j]]), [{ ...inv("1", "a", 1), invoice: {} } as InvoiceRecord, corr]);
+    const row = (id: string) => h.rows.find((r) => r.siteId === id)!;
+    expect(row("a").timeline).toMatchObject({ signed: true, invoiced: true, warranty: "2028-01-01" });
+    expect(row("b").timeline).toMatchObject({ signed: false, invoiced: false });
+    expect(row("c").timeline).toBeUndefined();
+  });
 });

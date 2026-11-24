@@ -11,6 +11,11 @@ import { balances, formatAmount } from "@/lib/debts/model";
 import { useDebts } from "@/lib/debts/store";
 import { clientHistory } from "@/lib/clients/history";
 import type { Client } from "@/lib/clients/model";
+import { JobTimeline } from "@/components/study/JobTimeline";
+import type { TimelineStep } from "@/lib/study/jobTimeline";
+
+/** Na karcie klienta oś jest tylko podglądem; etap otwiera się w karcie budowy (stuknięcie w wiersz). */
+const NO_ACTIONS: ReadonlySet<TimelineStep> = new Set();
 
 
 /**
@@ -65,12 +70,13 @@ export function ClientHistory({ client, siteIds, onOpenSite, onOpenDebts }: {
                   {onOpenSite && <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
                 </>
               );
-              const cls = "flex w-full items-center gap-2 rounded-field border border-border px-3 py-2 text-left";
+              const cls = "flex w-full items-center gap-2 px-3 py-2 text-left";
               return (
-                <li key={r.siteId} data-testid="client-history-row">
+                <li key={r.siteId} data-testid="client-history-row" className="overflow-hidden rounded-field border border-border">
                   {onOpenSite
                     ? <button type="button" onClick={() => onOpenSite(r.siteId)} className={`${cls} pressable hover:bg-muted coarse:min-h-11`}>{body}</button>
                     : <div className={cls}>{body}</div>}
+                  {r.timeline && <div className="px-3 pb-2"><JobTimeline input={r.timeline} actionable={NO_ACTIONS} onStep={() => {}} /></div>}
                 </li>
               );
             })}

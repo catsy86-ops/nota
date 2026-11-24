@@ -134,6 +134,37 @@ test("klient → „Nowa wycena” → wycena z rabatem i VAT → faktura z dany
   await expect(invoice.getByTestId("buyer-client")).toContainText("Z kartoteki: Jan Kowalski");
 });
 
+test("R3.2: karta klienta pokazuje oś zlecenia jego budowy (podgląd, bez akcji)", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await openClients(page);
+  await addClient(page, "Jan Kowalski");
+  await page.getByTestId("client-card").getByTestId("client-new-quote").click();
+  const job = page.getByTestId("site-card").getByTestId("site-job");
+  const form = job.getByRole("form", { name: "Nowa pozycja wyceny" });
+  await form.getByLabel("Nazwa pozycji").fill("Montaż");
+  await form.getByLabel("Cena za jednostkę (zł)").fill("500");
+  await form.getByRole("button", { name: "Dodaj" }).click();
+  await expect(job.getByTestId("job-total")).toHaveText(/^500 zł$/);
+  await expect(async () => {
+    if (await page.getByTestId("site-card").count()) await page.keyboard.press("Escape");
+    await expect(page.getByTestId("site-card")).toHaveCount(0, { timeout: 700 });
+  }).toPass({ timeout: 10_000 });
+
+  if (!(await page.getByTestId("client-card").count())) {
+    await page.getByRole("tab", { name: "Klienci" }).click();
+    await page.getByTestId("client-row").first().click();
+  }
+  const row = page.getByTestId("client-card").getByTestId("client-history-row");
+  await expect(row).toHaveCount(1);
+  const axis = row.getByTestId("job-timeline");
+  await expect(axis.locator('[data-step="quote"]')).toHaveAttribute("data-state", "done");
+  await expect(row.getByTestId("job-timeline-next")).toContainText("Zaliczka");
+  // Podgląd: żadnego przycisku w osi; etap otwiera się w karcie budowy.
+  await expect(axis.getByRole("button")).toHaveCount(0);
+  const axe = await new AxeBuilder({ page }).include("[data-testid='client-card']").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
+  expect(axe.violations).toEqual([]);
+});
+
 test("klient w palecie poleceń otwiera zakładkę Klienci z jego kartą", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await openClients(page);
