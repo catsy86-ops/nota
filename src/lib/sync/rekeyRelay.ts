@@ -1,6 +1,7 @@
 import * as Y from "yjs";
 import { deriveRelayKeys, openBytes, relayAad, sealBytes, RELAY_KDF_ITERATIONS, type RelayKeys } from "@/lib/sync/relayKeys";
 import { RelayProvider, type RelayStore } from "@/lib/sync/relayProvider";
+import { endpointFetch } from "@/lib/net/endpoints";
 
 /**
  * Operacje na przekaźniku potrzebne przy wymianie kodu (`rekey.ts`, `docs/plan-wymiana-kodu.md` §3.4):
@@ -28,7 +29,7 @@ class HttpError extends Error {
 
 function client(opts: RekeyRelayOptions, keys: RelayKeys) {
   const base = opts.baseUrl.replace(/\/+$/, "");
-  const fetchFn = opts.fetch ?? fetch.bind(globalThis);
+  const fetchFn = opts.fetch ?? endpointFetch;
   return async <T>(method: "GET" | "POST" | "DELETE", path: string, body?: unknown): Promise<T> => {
     const res = await fetchFn(`${base}/rooms/${keys.roomId}${path}`, {
       method,

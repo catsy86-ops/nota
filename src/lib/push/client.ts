@@ -1,3 +1,4 @@
+import { endpointFetch } from "@/lib/net/endpoints";
 import { pushPrefs, pushToken, updatePushPrefs } from "./prefs";
 import type { PushItem } from "./schedule";
 import { contentKey, sealItems, takeResendRequest } from "./seal";
@@ -40,7 +41,7 @@ async function call(server: string, path: string, method: string, body?: unknown
   if (body) headers["Content-Type"] = "application/json";
   if (token) headers.Authorization = `Bearer ${token}`;
   try {
-    res = await fetch(`${server}${path}`, {
+    res = await endpointFetch(`${server}${path}`, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,

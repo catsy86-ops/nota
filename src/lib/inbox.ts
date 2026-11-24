@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Skrzynka: notatki „do posortowania” — bez folderu, bez etykiet i nie będące podnotatką.
  * Bez osobnego pola w danych: skrzynka to reguła nad istniejącymi notatkami, więc
  * sortowanie (przeniesienie do folderu albo nadanie etykiety) od razu ją opróżnia.

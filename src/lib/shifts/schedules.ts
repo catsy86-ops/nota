@@ -1,4 +1,4 @@
-﻿import type * as Y from "yjs";
+import type * as Y from "yjs";
 import { MAIN_SCHEDULE_ID, SHIFTS_MAP_BASE_NAMES, shiftsMapName } from "./yShifts";
 import { mergeStored } from "@/lib/extraFields";
 

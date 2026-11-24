@@ -1,4 +1,4 @@
-﻿import { useState, useRef, memo, useEffect, lazy, Suspense } from "react";
+import { useState, useRef, memo, useEffect, lazy, Suspense } from "react";
 import { markNoteOpened } from "@/lib/lastOpened";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { tween, dur, ease } from "@/lib/motion";

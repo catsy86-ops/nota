@@ -1,6 +1,7 @@
 import type { Worker as TesseractWorker } from "tesseract.js";
 import { dedupeWords, isDarkBackground, OCR_OVERLAP, OCR_TILE, tileGrid, tileToImage, type Rect } from "../tiles";
 import { PAPER } from "@/lib/paint/colors";
+import { sameOriginFetch } from "@/lib/net/endpoints";
 
 /**
  * Klient OCR Analizatora planów (przeglądarka). Ładowany dynamicznie dopiero po „Rozpoznaj opisy” —
@@ -89,7 +90,7 @@ async function downloadEngine(onProgress: (p: OcrProgress) => void): Promise<voi
   let done = 0;
   for (const f of files) {
     if (cancelled) throw new OcrCancelled();
-    const res = await fetch(f);
+    const res = await sameOriginFetch(f);
     if (!res.ok || !res.body) throw new Error(`Nie udało się pobrać silnika OCR (${res.status}).`);
     const reader = res.body.getReader();
     for (;;) {

@@ -10,6 +10,7 @@ import { RelayHeadCompare, relayUrlTag, type OwnRelayHead } from "@/lib/sync/rel
 import { RelayBlobs } from "@/lib/sync/relayBlobs";
 import { holdTabRole, RELAY_ROLE } from "@/lib/tabLock";
 import { SYNC } from "@/lib/storage/names";
+import { allowedEndpoint, endpointFetch, endpointSocket } from "@/lib/net/endpoints";
 
 /**
  * Uruchamianie przekaźnika razem z synchronizacją (`yjsSync.ts` woła `startRelay`
@@ -19,14 +20,12 @@ import { SYNC } from "@/lib/storage/names";
 
 const URL_KEY = SYNC.relay;
 
-/** Adres przekaźnika: `https://…` albo `http://localhost…` (do testów). Inaczej `null`. */
+/** Adres przekaźnika: `https://…` albo `http://` na tym komputerze (`allowedEndpoint`, S1.2). Inaczej `null`. */
 export function validRelayUrl(raw: string): string | null {
   const s = raw.trim();
   if (!s) return null;
   try {
-    const u = new URL(s);
-    const local = u.hostname === "localhost" || u.hostname === "127.0.0.1";
-    if (u.protocol !== "https:" && !(u.protocol === "http:" && local)) return null;
+    if (!allowedEndpoint(new URL(s), "http")) return null;
     return s.replace(/\/+$/, "");
   } catch {
     return null;
@@ -79,7 +78,7 @@ export async function checkRelay(url: string, timeoutMs = 5000): Promise<{ ok: t
   const base = validRelayUrl(url);
   if (!base) return { ok: false, reason: "Zły adres" };
   try {
-    const res = await fetch(`${base}/health`, { cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
+    const res = await endpointFetch(`${base}/health`, { cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
     if (!res.ok) return { ok: false, reason: `Serwer odpowiedział kodem ${res.status}` };
     const json = (await res.json()) as { ok?: unknown; rooms?: unknown };
     if (json.ok !== true) return { ok: false, reason: "To nie wygląda na przekaźnik NOTKI" };
@@ -98,7 +97,7 @@ export async function deleteRelayRoom(code: string, timeoutMs = 10_000): Promise
   if (!base) return false;
   try {
     const keys = await deriveRelayKeys(code);
-    const res = await fetch(`${base}/rooms/${keys.roomId}`, {
+    const res = await endpointFetch(`${base}/rooms/${keys.roomId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${keys.token}` },
       cache: "no-store",
@@ -341,7 +340,7 @@ async function lead(code: string, url: string, token: number): Promise<void> {
         if (token === startToken) setView({ warning: p.warning });
         headListeners.forEach((l) => l());
       },
-      openSocket: (wsUrl) => new WebSocket(wsUrl),
+      openSocket: endpointSocket,
       onRemoteChange: () => {
         scheduleBlobs(0);
         // Jak w yjsSync: tylko na widocznej karcie i co 30 s, seria zmian to jedno powiadomienie.

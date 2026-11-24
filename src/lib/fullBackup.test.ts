@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { describeBackupSkipped } from "./backupSkipped";
 import { RestoreCheckError, readRestoreMarker, clearRestoreMarker } from "./exportNotes";
 import { isBackupOversize, buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, MAX_BACKUP_VERSION, MERGE_SECTIONS, SETTINGS_KEYS, SETTING_VALUE_MAX, ACHIEVEMENTS_KEY } from "./exportNotes";

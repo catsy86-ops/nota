@@ -22,6 +22,8 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      // BOM przesunięty przez wstawioną linię do środka pliku zatrzymał CI na dobę (23.11); żaden plik go nie ma.
+      "unicode-bom": ["error", "never"],
       "no-restricted-imports": [
         "error",
         {
@@ -200,6 +202,27 @@ export default tseslint.config(
           selector: "ImportDeclaration[source.value=/^@.components.+/]",
           message: "Hooki nie importują komponentów (warstwy lib ← hooks ← components).",
         },
+      ],
+    },
+  },
+  {
+    // S1.2 (plan bezpieczeństwa): połączenia z serwerami użytkownika i własnymi plikami tylko przez
+    // src/lib/net/endpoints.ts (endpointFetch, endpointSocket, sameOriginFetch) — tam jest sprawdzanie adresów.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/net/endpoints.ts", "src/**/*.test.{ts,tsx}", "src/test/**"],
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        { name: "fetch", message: "Użyj endpointFetch albo sameOriginFetch z @/lib/net/endpoints (S1.2)." },
+        { name: "WebSocket", message: "Użyj endpointSocket z @/lib/net/endpoints (S1.2)." },
+        { name: "EventSource", message: "Połączenia sieciowe tylko przez @/lib/net/endpoints (S1.2)." },
+      ],
+      "no-restricted-properties": [
+        "error",
+        ...["window", "globalThis", "self"].flatMap((object) => ["fetch", "WebSocket", "EventSource"].map((property) => ({
+          object, property, message: "Połączenia sieciowe tylko przez @/lib/net/endpoints (S1.2).",
+        }))),
+        { object: "navigator", property: "sendBeacon", message: "Połączenia sieciowe tylko przez @/lib/net/endpoints (S1.2)." },
       ],
     },
   },

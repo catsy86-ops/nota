@@ -1,5 +1,6 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { DZIEN } from "@/lib/storage/names";
+import { allowedEndpoint } from "@/lib/net/endpoints";
 
 /**
  * Powiadomienia przy zamkniętej aplikacji (Web Push przez własny serwer `push-server/`).
@@ -60,13 +61,12 @@ export function setPushCategory(id: string, on: boolean): void {
 
 export const updatePushPrefs = (patch: Partial<PushPrefs>) => pushPrefs.set({ ...pushPrefs.get(), ...patch });
 
-/** Adres serwera: https albo http na localhost; bez ścieżki zapytania i końcowego „/”. `null` = błędny. */
+/** Adres serwera: https albo http na tym komputerze (`allowedEndpoint`, S1.2); bez ścieżki zapytania i końcowego „/”. `null` = błędny. */
 export function normalizePushServer(raw: string): string | null {
   const t = raw.trim();
   if (!t) return null;
   let u: URL;
   try { u = new URL(/^[a-z]+:\/\//i.test(t) ? t : `https://${t}`); } catch { return null; }
-  const local = u.hostname === "localhost" || u.hostname === "127.0.0.1";
-  if (u.protocol !== "https:" && !(u.protocol === "http:" && local)) return null;
+  if (!allowedEndpoint(u, "http")) return null;
   return `${u.origin}${u.pathname.replace(/\/+$/, "")}`;
 }

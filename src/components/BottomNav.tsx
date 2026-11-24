@@ -1,4 +1,4 @@
-﻿import { useLongPress } from "@/hooks/useLongPress";
+import { useLongPress } from "@/hooks/useLongPress";
 import { openQuickPresets } from "@/lib/quickPresets";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { m as motion, LayoutGroup } from "framer-motion";

@@ -23,6 +23,7 @@ import { loadRekeyRecord, notifyRekeyRecord, rekeyPorts, saveRekeyRecord } from 
 import { logDiag, logSecurity } from "@/lib/diagnostics";
 import { toast } from "@/lib/notify";
 import { SYNC } from "@/lib/storage/names";
+import { allowedEndpoint } from "@/lib/net/endpoints";
 
 /**
  * Peer-to-peer transport for the Yjs doc (Phase 2 of the multi-device sync
@@ -277,7 +278,7 @@ async function deriveRoomV3(code: string): Promise<string> {
 
 /**
  * Lista serwerów z pola tekstowego: po jednym w linii (albo po przecinku),
- * tylko `ws://`/`wss://`, bez duplikatów. Zwraca też odrzucone wpisy do pokazania.
+ * tylko `wss://` (albo `ws://` na tym komputerze, S1.2), bez duplikatów. Zwraca też odrzucone wpisy do pokazania.
  */
 export function parseSignalingList(raw: string): { valid: string[]; invalid: string[] } {
   const valid: string[] = [];
@@ -286,7 +287,7 @@ export function parseSignalingList(raw: string): { valid: string[]; invalid: str
     let ok = false;
     try {
       const u = new URL(entry);
-      ok = (u.protocol === "ws:" || u.protocol === "wss:") && !!u.host;
+      ok = allowedEndpoint(u, "ws");
     } catch { /* nie URL */ }
     if (!ok) invalid.push(entry);
     else if (!valid.includes(entry)) valid.push(entry);

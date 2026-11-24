@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { openBytes, relayAad, sealBytes, type RelayKeys } from "@/lib/sync/relayKeys";
+import { endpointFetch } from "@/lib/net/endpoints";
 
 /**
  * Przekaźnik E2E po stronie przeglądarki (serwer: `relay-server/`). Zmiany z `Y.Doc`
@@ -169,7 +170,7 @@ export class RelayProvider {
   constructor(private readonly opts: RelayOptions) {
     this.base = opts.baseUrl.replace(/\/+$/, "");
     this.aad = relayAad(opts.keys.roomId);
-    this.fetchFn = opts.fetch ?? fetch.bind(globalThis); // natywny fetch wymaga właściwego this
+    this.fetchFn = opts.fetch ?? endpointFetch; // S1.2: tylko adresy dozwolone przez lib/net/endpoints
   }
 
   get cursor(): number {
@@ -237,7 +238,7 @@ export class RelayProvider {
       this.flushNow();
       if (!this.keepAliveTimer) {
         this.keepAliveTimer = setInterval(() => {
-          if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ type: "ping" }));
+          if (this.socket && this.socket.readyState === this.socket.OPEN) this.socket.send(JSON.stringify({ type: "ping" }));
         }, KEEPALIVE_MS);
       }
     } else {

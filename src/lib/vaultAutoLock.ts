@@ -1,4 +1,4 @@
-﻿import { createPersistedStore } from "@/lib/persistedStore";
+import { createPersistedStore } from "@/lib/persistedStore";
 import { toast } from "@/lib/notify";
 import type { PrivateNotes } from "@/lib/privateNotes";
 import { SIGNALS, SKARBIEC } from "@/lib/storage/names";

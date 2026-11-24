@@ -1,4 +1,4 @@
-﻿import { getCurrentSeason, type Season } from "@/lib/season";
+import { getCurrentSeason, type Season } from "@/lib/season";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { APPEARANCE } from "@/lib/storage/names";
 

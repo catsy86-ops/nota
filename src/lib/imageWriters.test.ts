@@ -26,7 +26,7 @@ const WRITERS: Record<string, string> = {
   "src/lib/imageSync.ts": "obrazy wskazane przez manifest innego urządzenia (syncableRefs)",
   "src/lib/sync/relayBlobs.ts": "obrazy wskazane przez manifest (syncableRefs)",
   "src/lib/plans/imageImport.ts": "analiza planu: image/work (planRefsIn)",
-  "src/components/study/JournalEntrySheet.tsx": "wpis dziennika: images (szkic: journalImageRefs)",
+  "src/components/study/entry/useEntryPhotos.ts": "wpis dziennika: images (szkic: journalImageRefs; z JournalEntrySheet po R2.1)",
   "src/components/study/PhotoDayDialog.tsx": "wpis dziennika: images",
   "src/components/study/SitePointsPanel.tsx": "wpis dziennika: images (punkt)",
   "src/components/study/SiteFaultsPanel.tsx": "wpis dziennika: after (usterka)",

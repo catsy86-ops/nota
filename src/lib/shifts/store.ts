@@ -1,4 +1,4 @@
-﻿import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { BONUS_MAX_AMOUNT, absenceKindOf, isAbsence, migrate, type AbsenceKind, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";

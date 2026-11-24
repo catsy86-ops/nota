@@ -1,4 +1,4 @@
-﻿import { createPersistedStore } from "@/lib/persistedStore";
+import { createPersistedStore } from "@/lib/persistedStore";
 import { APP_NAME } from "@/lib/appName";
 import { DZIEN } from "@/lib/storage/names";
 

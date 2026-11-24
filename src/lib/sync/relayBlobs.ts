@@ -1,5 +1,6 @@
 import { safeMime, MAX_PEER_BLOB_BYTES, type ImageStore } from "@/lib/imageStore";
 import { blobAad, blobIdOf, openRaw, sealRaw, type RelayKeys } from "@/lib/sync/relayKeys";
+import { endpointFetch } from "@/lib/net/endpoints";
 
 /**
  * Obrazy i załączniki przez przekaźnik. Blob to zaszyfrowany plik (surowe bajty, bez
@@ -65,7 +66,7 @@ export class RelayBlobs {
 
   constructor(private readonly opts: RelayBlobsOptions) {
     this.base = opts.baseUrl.replace(/\/+$/, "");
-    this.fetchFn = opts.fetch ?? fetch.bind(globalThis); // natywny fetch wymaga właściwego this
+    this.fetchFn = opts.fetch ?? endpointFetch; // S1.2: tylko adresy dozwolone przez lib/net/endpoints
   }
 
   async sync(): Promise<BlobSyncResult> {
