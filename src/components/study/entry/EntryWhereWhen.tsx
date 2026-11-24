@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { Clock, LocateFixed, MapPin, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DelayedSpinner } from "@/components/DelayedSpinner";
@@ -20,7 +19,8 @@ export function EntryWhereWhen(p: {
   onSiteText: (text: string) => void;
   onOpenSiteEditor: () => void;
   onCommitSite: () => void;
-  siteChipsRow: ReactNode;
+  /** Ostatnie budowy do wyboru jednym dotykiem (pigułki pod polem budowy). */
+  siteChips: readonly string[];
   geo: Geo | null;
   onClearGeo: () => void;
   locating: boolean;
@@ -36,6 +36,19 @@ export function EntryWhereWhen(p: {
   onAt: (at: number | null) => void;
 }) {
   const { site, editingSite, geo, at } = p;
+  /** Ostatnie budowy: jeden dotyk zamiast pisania adresu na rusztowaniu. */
+  const chipsRow = p.siteChips.length > 0 && (
+    <div className="flex w-full flex-wrap gap-1.5" role="group" aria-label="Ostatnie budowy" data-testid="journal-site-chips">
+      {p.siteChips.map((s) => (
+        // Bez utraty fokusu: pole nie zamyka się przed kliknięciem pigułki.
+        <Button key={s} type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => p.onPickSite(s)} variant="chip-add" size="chip" className="max-w-full">
+          <MapPin className="size-3.5 shrink-0" aria-hidden />
+          <span className="truncate">{s}</span>
+        </Button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="flex flex-wrap gap-2">
       {editingSite ? (
@@ -64,7 +77,7 @@ export function EntryWhereWhen(p: {
           <Pencil className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
         </Button>
       )}
-      {editingSite && p.siteChipsRow}
+      {editingSite && chipsRow}
       {!editingSite && (geo ? (
         <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-muted/50 pl-3 text-sm coarse:min-h-11" data-testid="journal-geo">
           <LocateFixed className="size-4 shrink-0 text-primary-ink" aria-hidden />
@@ -127,7 +140,7 @@ export function EntryWhereWhen(p: {
           <Pencil className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
         </Button>
       )}
-      {!editingSite && p.siteChipsRow}
+      {!editingSite && chipsRow}
     </div>
   );
 }

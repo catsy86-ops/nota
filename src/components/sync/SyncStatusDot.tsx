@@ -1,12 +1,6 @@
-import { useSyncExternalStore } from "react";
+import { useOnline } from "@/hooks/useOnline";
 import { useSyncState } from "@/lib/yjsSync";
 import { cn } from "@/lib/utils";
-
-function subscribeOnline(cb: () => void) {
-  window.addEventListener("online", cb);
-  window.addEventListener("offline", cb);
-  return () => { window.removeEventListener("online", cb); window.removeEventListener("offline", cb); };
-}
 
 /**
  * Kropka stanu synchronizacji w nagłówku (plan Powłoki 2.4). Tylko gdy urządzenie jest w grupie.
@@ -16,7 +10,7 @@ function subscribeOnline(cb: () => void) {
  */
 export function SyncStatusDot({ onOpenSync }: { onOpenSync: () => void }) {
   const state = useSyncState();
-  const online = useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
+  const online = useOnline();
   if (state.status === "disabled") return null;
 
   const tone = state.status === "rekeyed" ? "rekeyed" : !online ? "offline" : state.lastError ? "error" : state.status === "connected" ? "connected" : "connecting";

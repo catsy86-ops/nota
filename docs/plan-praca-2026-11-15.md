@@ -24,7 +24,7 @@ Wniosek: następny krok to nie nowe funkcje, tylko pomiar, uproszczenie i spięc
 |---|---|---|
 | Stuknięcia na „Zakończ dzień” | do zmierzenia w `workday.spec.ts` | ≤ 6 |
 | Funkcje nieużyte przez 30 dni widoczne na pierwszym ekranie | nieznane (z `usage.ts`) | 0 |
-| `JournalEntrySheet.tsx` | 1083 linie | ≤ 400 |
+| `JournalEntrySheet.tsx` | 380 linii (2026-11-24) | ≤ 400 |
 | INP p75 w Pracy (Pixel 7, CPU ×4) | 216 ms na Dzienniku | ≤ 200 ms na każdej zakładce |
 | Należności bez przypomnienia po 14 dniach | nieznane | 0 |
 
@@ -43,7 +43,7 @@ Wynik Etapu 1 może zmienić kolejność Etapów 2–4.
 
 | Nr | Punkt | Gdzie | Rozmiar |
 |---|---|---|---|
-| R2.1 | **Dokończyć podział `JournalEntrySheet.tsx`** (B1.6): reduktor szkicu w `src/lib/study/draft.ts`, sekcje etapu, zdjęć, lokalizacji i próby w `components/study/entry/`. Najpierw testy charakteryzujące reduktor. | `JournalEntrySheet.tsx` | M |
+| R2.1 ✅ 2026-11-24 (380 linii; reduktor paneli `entryPanels.ts`) | **Dokończyć podział `JournalEntrySheet.tsx`** (B1.6): reduktor szkicu w `src/lib/study/draft.ts`, sekcje etapu, zdjęć, lokalizacji i próby w `components/study/entry/`. Najpierw testy charakteryzujące reduktor. | `JournalEntrySheet.tsx` | M |
 | R2.2 ✅ `29f6b634` 2026-11-18 | **Podział `SiteCardDialog.tsx`** na pięć segmentów jako osobne, leniwie ładowane komponenty (Dziś, Materiał, Punkty, Pieniądze, Papiery). | `SiteCardDialog.tsx` | M |
 | R2.3 | **Schować nieużywane** według R1.3: jeden wiersz „Więcej narzędzi” w karcie zamiast stałych przycisków. | karta budowy, zakładka Budowa | S |
 | R2.4 | **Eksperymenty za flagą.** NFC, podsumowanie AI i poziomica dostają wspólny przełącznik „Funkcje próbne” w Ustawieniach; domyślnie wyłączone, jeśli R1.3 pokaże brak użycia. | flagi funkcji (Faza 0 planu rozbudowy) | S |

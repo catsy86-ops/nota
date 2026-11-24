@@ -1,59 +1,35 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, ImagePlus, MapPin, Mic, NotebookPen, Trash, Maximize2, QrCode, Sparkles, Radio } from "lucide-react";
-import { addRecording } from "@/lib/study/recordings";
-import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/journalEntry";
-import { EntryKitsPanel } from "./entry/EntryKitsPanel";
-import { EntryRecordings } from "./entry/EntryRecordings";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { TriangleAlert, CircleCheck, NotebookPen, Trash } from "lucide-react";
+import { EntryPhotoSection } from "./entry/EntryPhotoSection";
+import { usePhotoUi } from "./entry/usePhotoUi";
 import { EntryStageSection } from "./entry/EntryStageSection";
+import { EntryTextField } from "./entry/EntryTextField";
+import { EntryToolsSection } from "./entry/EntryToolsSection";
 import { EntryWhereWhen } from "./entry/EntryWhereWhen";
-import { EntrySupplyToggle } from "./entry/EntrySupplyToggle";
-import { EntryTopicPanel } from "./entry/EntryTopicPanel";
-import { PhotoStrip } from "./PhotoStrip";
-import { PressureTestFields } from "./PressureTestFields";
-import { LevelMeter } from "./LevelMeter";
-import { BarcodeScanner } from "./BarcodeScanner";
-import { hasNFC } from "@/lib/nfc";
-import { useSitePoints } from "@/lib/study/pointsStore";
-import { pointType } from "@/lib/study/points";
-import { slopeLabel } from "@/lib/study/slope";
-import { hasAISummarizer } from "@/lib/aiModel";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { AISummary } from "./AISummary";
-import { CameraCapture } from "./CameraCapture";
-import { NFCReader } from "./NFCReader";
-import { DimensionDrawer } from "./DimensionDrawer";
-import { FittingsFields } from "./FittingsFields";
-import { PipesFields } from "./PipesFields";
-import { applyKit, type Kit } from "@/lib/study/kits";
-import { useKits } from "@/lib/study/kitsStore";
-const KitsDialog = lazy(() => import("./KitsDialog").then((m) => ({ default: m.KitsDialog })));
-import { isRunning, TEST_TOPICS } from "@/lib/study/pressureTest";
+import { useEntryPhotos } from "./entry/useEntryPhotos";
+import { useEntrySite } from "./entry/useEntrySite";
+import { useLocate } from "./entry/useLocate";
+import type { FormFields } from "./entry/entryForm";
+import { isRunning } from "@/lib/study/pressureTest";
+import { CLOSED_PANELS, panelsReducer } from "@/lib/study/entryPanels";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { DrawingCanvas } from "@/components/DrawingCanvas";
-import { useJournalPhotoEdits, photoSaveFailed } from "./useJournalPhotoEdits";
 import { toastWithUndo } from "@/lib/undoToast";
 import { cn } from "@/lib/utils";
-import { pluralPl } from "@/lib/plural";
 import { haptic } from "@/lib/haptics";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDictation } from "@/hooks/useDictation";
-import { prepareImage } from "@/lib/imagePrepare";
-import { measureSpan } from "@/lib/study/perf";
-import { imageStore } from "@/lib/imageStore";
-import { requestPersistentStorage } from "@/lib/storagePersistence";
-import { TOPICS } from "@/lib/study/content";
-import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteStages, updateJournalEntry, useSiteDirectory, useStudy, useStudyLists, type JournalKind } from "@/lib/study/store";
-import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
+import { addJournalEntry, columnOf, removeJournalEntry, restoreJournalEntry, setSiteGeo, setSiteStages, updateJournalEntry, useSiteDirectory, useStudy, type JournalKind } from "@/lib/study/store";
+import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, freshEntry, getJournalEditBase, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
-import { KIND_LABEL, recentSiteTexts, suggestSites, yesterdaySiteText } from "@/lib/study/journalView";
+import { KIND_LABEL, recentSiteTexts, yesterdaySiteText } from "@/lib/study/journalView";
 import { findSiteByName, siteKey } from "@/lib/study/sites";
 import { setSiteSupply, useVan } from "@/lib/study/vanStore";
-import { cleanGeo, nearestSite } from "@/lib/study/geo";
-import { suggestFittingNames, sumFittings } from "@/lib/study/fittings";
+import { nearestSite } from "@/lib/study/geo";
+import { suggestFittingNames } from "@/lib/study/fittings";
 import { editDemotesTopic, editSavedMessage, newEntryMessage, shouldOfferSiteGeo } from "@/lib/study/entrySheetRules";
 import { applySpokenEntry } from "@/lib/study/spokenEntryApply";
 import { siteStages, toggleStage } from "@/lib/study/stages";
@@ -74,33 +50,14 @@ const KIND_ON: Record<JournalKind, string> = {
   note: "border-foreground/40 bg-muted",
 };
 
-// Prośba o trwały zapis przy pierwszym zdjęciu: zdjęcia z budowy to najcięższe i najcenniejsze
-// dane w przeglądarce, a Chrome chętniej przyznaje trwałość przy wyraźnym zaangażowaniu.
-let persistAsked = false;
-
-/** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "drawnFrom" | "dimensions" | "point" | "level" | "barcode" | "summary" | "recordings" | "test" | "fittings" | "pipes" | "stage" | "geo">;
-
-function useOnline() {
-  const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
-  useEffect(() => {
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    window.addEventListener("online", on);
-    window.addEventListener("offline", off);
-    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
-  }, []);
-  return online;
-}
-
 /**
  * Wpis z budowy w arkuszu: na telefonie od dołu (nad klawiaturą, kciukiem), na komputerze
  * z boku. Najpierw to, co na budowie robi się zawsze — rodzaj, tekst, zdjęcie; temat z listą
  * kontrolną jest zwinięty, chyba że wpis zaczyna się z karty tematu. Nowy wpis to szkic
  * (`draft.ts`): zamknięcie nie gubi tekstu ani zdjęć. Ten sam arkusz poprawia zapisany wpis
  * (`openJournalEdit`) — wtedy na formularzu edycji, a w stopce jest też „Usuń”.
+ * Części: miejsce i czas, etap, tekst, zdjęcia i nagrania, „Dodaj do wpisu” (`entry/`); tu zostaje zapis.
  */
-/** Błąd zapisu zdjęcia (pamięć przeglądarki pełna) — ten sam komunikat we wszystkich trzech miejscach arkusza (§5.4). */
 export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string) => void }) {
   // Fokus po otwarciu idzie na tytuł, nie na pole tekstu: na telefonie pole od razu wywołałoby klawiaturę.
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -112,92 +69,45 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const editForm = useJournalEditForm();
   const isEdit = editing !== null && editForm !== null;
   const form: FormFields = isEdit ? editForm : draft;
-  const { topic, kind, text, images, recordings } = form;
-  const checked = useMemo(() => new Set(form.checked), [form.checked]);
+  const { topic, kind, text, images } = form;
   // Czytane na świeżo (zdjęcia obrabiają się asynchronicznie); edycja zamknięta w trakcie → pusty formularz.
   const getForm = (): FormFields => (isEdit ? getJournalEditForm() ?? EMPTY_DRAFT : getJournalDraft());
   const patch: (p: Partial<FormFields>) => void = isEdit ? patchJournalEditForm : patchJournalDraft;
   const site = isEdit ? editForm.site : study.site;
   /** Moment wpisu; `null` = chwila zapisu (tylko nowy wpis). */
   const at = isEdit ? editForm.at : draft.at;
-  const [processing, setProcessing] = useState(0);
+  const photos = useEntryPhotos({ getForm, patch });
+  const { processing } = photos;
   // Pusty wpis: komunikat przy polu (czytany przez czytnik), nie tylko dymek. Znika przy pisaniu.
   const [emptyAttempt, setEmptyAttempt] = useState(false);
   // Ochrona przed podwójnym zapisem (dwa szybkie stuknięcia przy zamykaniu arkusza).
   const submittingRef = useRef(false);
-  /** Kształtki z poprzednich wpisów — podpowiedzi nazw. */
+  /** Kształtki i rury z poprzednich wpisów — podpowiedzi nazw (H1.1). */
   const fittingHistory = useMemo(() => study.journal.map((e) => e.fittings), [study.journal]);
-  /** Rury z poprzednich wpisów — podpowiedzi nazw (H1.1). */
   const pipeHistory = useMemo(() => study.journal.map((e) => e.pipes), [study.journal]);
-  /** Zdjęcie, któremu wpisujesz podpis („przed zakryciem”); `null` = pole schowane. */
-  const [captioning, setCaptioning] = useState<string | null>(null);
-  const [captionDraft, setCaptionDraft] = useState("");
-  const [topicOpen, setTopicOpen] = useState(false);
-  const [testOpen, setTestOpen] = useState(false);
-  const [levelOpen, setLevelOpen] = useState(false);
-  const [barcodeOpen, setBarcodeOpen] = useState(false);
-  const [aiOpen, setAiOpen] = useState(false);
-  const [cameraOpen, setCameraOpen] = useState(false);
-  const [nfcOpen, setNfcOpen] = useState(false);
-  const touchDevice = useMediaQuery("(pointer: coarse)");
-  const [fittingsOpen, setFittingsOpen] = useState(false);
-  const testForced = !!form.test || TEST_TOPICS.has(topic);
-  const testVisible = testOpen || testForced;
-  const levelVisible = levelOpen || form.level !== undefined;
-  const barcodeVisible = barcodeOpen || form.barcode !== undefined;
-  const aiVisible = aiOpen || form.summary !== undefined;
-  const fittingsForced = (form.fittings?.length ?? 0) > 0;
-  const fittingsVisible = fittingsOpen || fittingsForced;
-  // B1.1: trzy najczęściej używane kształtki od razu w rzędzie przycisków — 1 stuknięcie zamiast otwierania sekcji.
-  const quickFittings = useMemo(() => (fittingsVisible ? [] : sumFittings(fittingHistory).slice(0, 3).map((f) => f.name)), [fittingsVisible, fittingHistory]);
-  const [pipesOpen, setPipesOpen] = useState(false);
-  const pipesForced = (form.pipes?.length ?? 0) > 0;
-  const pipesVisible = pipesOpen || pipesForced;
-  // Zestawy materiału (H1.2): pigułki pod „+ Zestaw”, edycja w osobnym oknie (ładowanym leniwie).
-  const [kitsOpen, setKitsOpen] = useState(false);
-  const [kitsDialogOpen, setKitsDialogOpen] = useState(false);
-  const { kits } = useKits();
-  const addKit = (kit: Kit) => {
-    const f = getForm();
-    patch(applyKit(f.fittings ?? [], f.pipes ?? [], kit));
-    haptic("success");
-    // U góry — na dole leży „Zapisz wpis”.
-    toast.success(`Dodano zestaw: ${kit.name}`, { id: "kit-applied", position: "top-center" });
-    setKitsOpen(false);
-  };
-  const [editingSite, setEditingSite] = useState(false);
-  /** Budowa w chwili otwarcia pola — dopóki jej nie zmienisz, pigułki pokazują wszystkie ostatnie. */
-  const [siteAtOpen, setSiteAtOpen] = useState("");
-  /** Tekst pola budowy w trakcie pisania — do Yjs (albo formularza edycji) trafia dopiero przy zatwierdzeniu. */
-  const [siteText, setSiteText] = useState("");
-  /** Niezatwierdzona budowa i tryb, w którym ją wpisano; `null` = pole zamknięte albo już zapisane. */
-  const pendingSite = useRef<{ text: string; edit: boolean } | null>(null);
   const [editingWhen, setEditingWhen] = useState(false);
-  /** Nagrywanie w toku (pasek z licznikiem zamiast przycisku); nagranie trafia do załączników wpisu. */
-  const [recording, setRecording] = useState(false);
-  const galleryRef = useRef<HTMLInputElement>(null);
-  const cameraRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
-  const online = useOnline();
 
   const setText = (next: string | ((prev: string) => string)) =>
     patch({ text: typeof next === "function" ? next(getForm().text) : next });
 
-  useEffect(() => {
-    // Arkusz zamknięty albo przełączony w trakcie pisania budowy: nowy wpis zachowuje wpisaną budowę
-    // (jak szkic), a niezapisana poprawka wpisu przepada razem z całą edycją.
-    const pending = pendingSite.current;
-    pendingSite.current = null;
-    if (pending && !pending.edit) setSite(pending.text);
-    setEditingSite(false);
-    setEditingWhen(false);
-    if (open) setTopicOpen(topicFirst);
-  }, [open, topicFirst, editing]);
+  /** Klucz sesji arkusza: otwarcie, zamknięcie albo inny wpis zamyka pola w trakcie edycji (budowa, „Kiedy”, temat). */
+  const session = `${open}|${topicFirst}|${editing}`;
+  useEffect(() => { setEditingWhen(false); }, [session]);
+  // Panele „Dodaj do wpisu” i widok zdjęć żyją tu, nie w sekcjach: treść arkusza odmontowuje się przy zamknięciu,
+  // a otwarta sekcja i podpis w trakcie pisania mają przeżyć zamknięcie szkicu.
+  const [panels, dispatchPanels] = useReducer(panelsReducer, CLOSED_PANELS);
+  const photoUi = usePhotoUi();
+  // Arkusz otwarty z karty tematu rozwija temat; zwykłe otwarcie go zwija.
+  useEffect(() => { if (open) dispatchPanels({ type: "set", panel: "topic", open: topicFirst }); }, [session, open, topicFirst]);
 
   const dir = useSiteDirectory();
   const recentSites = useMemo(() => dir.filter((s) => s.archived === undefined).map((s) => s.name), [dir]);
-  /** Id budowy wybranej w polu (`""` = bez budowy albo nieznana nazwa) — dla podpowiedzi tekstu. */
+  const siteEditor = useEntrySite({ site, studySite: study.site, isEdit, recentSites, reset: session, getForm, patch });
+  const { commitSite, pickSite, siteChips } = siteEditor;
+  /** Karta budowy wybranej w polu (brak = bez budowy albo nieznana nazwa) — dla podpowiedzi tekstu i etapów. */
   const siteCard = useMemo(() => findSiteByName(dir, site), [dir, site]);
+  const siteId = siteCard?.id ?? "";
   // H1.3: skąd materiał — „z auta” (domyślnie, H-1) albo dostawa na budowę; karta pamięta ostatni wybór.
   const van = useVan();
   const supplySiteId = siteCard?.id ?? (site.trim() ? siteKey(site) : "");
@@ -207,16 +117,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const supply: "site" | "van" = supplyChoice ?? (isEdit ? editedEntry?.supply ?? "van" : van.siteSupply[supplySiteId] ?? "van");
   const hasMaterial = (form.fittings?.length ?? 0) > 0 || (form.pipes?.length ?? 0) > 0;
   const rememberSupply = () => { if (hasMaterial && supplySiteId) setSiteSupply(supplySiteId, supply); };
-  const siteId = siteCard?.id ?? "";
-  // Punkty budowy do wyboru w aparacie (B3.9): „Łazienka · WC (stelaż)”.
-  const sitePoints = useSitePoints(siteId);
-  const cameraPoints = useMemo(() => {
-    const roomName = new Map(sitePoints.rooms.map((r) => [r.id, r.name] as const));
-    return sitePoints.points.map((p) => ({ id: p.id, label: `${roomName.get(p.room) ?? "Pomieszczenie"} · ${pointType(p.type).label}` }));
-  }, [sitePoints]);
   /** Najbliższe nieodhaczone etapy budowy — przy „Zrobione” do odhaczenia jednym stuknięciem. */
   const nextStages = useMemo(() => (siteCard ? siteStages(siteCard).filter((s) => s.done === undefined).slice(0, 3) : []), [siteCard]);
-
   /** Etap zamknięty tym wpisem (nazwa z karty); `null` = bez etapu albo etap usunięty z karty. */
   const entryStage = form.stage && siteCard ? siteStages(siteCard).find((s) => s.id === form.stage) ?? null : null;
 
@@ -237,68 +139,11 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   /** Podpowiedzi tekstu tylko dla nowego, pustego wpisu z wybraną budową. */
   const textSuggestions = useMemo(() => (isEdit ? [] : recentSiteTexts(study.journal, siteId)), [isEdit, study.journal, siteId]);
   const yesterdayText = useMemo(() => (isEdit ? null : yesterdaySiteText(study.journal, siteId)), [isEdit, study.journal, siteId]);
-  const siteChips = editingSite
-    ? suggestSites(recentSites, siteText === siteAtOpen ? "" : siteText, siteText)
-    : !site ? suggestSites(recentSites, "", "", 3) : [];
 
-  function openSiteEditor() {
-    setSiteAtOpen(site);
-    setSiteText(site);
-    pendingSite.current = { text: site, edit: isEdit };
-    setEditingSite(true);
-  }
-
-  function writeSite(next: string) {
-    pendingSite.current = null;
-    if (isEdit) patchJournalEditForm({ site: next });
-    else if (next !== study.site) {
-      setSite(next);
-      // Punkt wybrany w aparacie należy do poprzedniej budowy — przy innej zostałby cudzym punktem we wpisie.
-      if (getForm().point) patch({ point: undefined });
-    }
-  }
-
-  /** Zatwierdza wpisaną budowę (blur, Enter, zapis wpisu) — jeden zapis zamiast zapisu przy każdym klawiszu. */
-  function commitSite() {
-    if (pendingSite.current) writeSite(pendingSite.current.text);
-    setEditingSite(false);
-  }
-
-  function pickSite(next: string) {
-    writeSite(next);
-    haptic("selection");
-    setEditingSite(false);
-  }
-
-  // „Tu jestem”: pozycja tylko po stuknięciu, nigdy w tle; widać ją w aplikacji, raport jej nie zawiera.
-  const [locating, setLocating] = useState(false);
   const geo = form.geo ?? null;
+  const { locating, locate } = useLocate((g) => patch({ geo: g }));
   /** Budowa z zapisaną lokalizacją w promieniu 300 m — jeden dotyk zamiast wybierania. */
   const nearby = useMemo(() => (geo ? nearestSite(dir, geo) : null), [geo, dir]);
-  function locate() {
-    if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
-      toast.error("Ta przeglądarka nie udostępnia lokalizacji");
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocating(false);
-        const g = cleanGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy });
-        if (!g) return;
-        patch({ geo: g });
-        haptic("success");
-      },
-      (err) => {
-        setLocating(false);
-        haptic("warn");
-        toast.error(err.code === err.PERMISSION_DENIED
-          ? "Brak zgody na lokalizację — włącz ją w ustawieniach przeglądarki"
-          : "Nie udało się ustalić lokalizacji — spróbuj bliżej okna albo na zewnątrz");
-      },
-      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 },
-    );
-  }
 
   /** Nazwy kształtek do dopasowania dyktowania (historia i podpowiedzi). */
   const knownFittings = useMemo(() => suggestFittingNames(fittingHistory, []), [fittingHistory]);
@@ -318,64 +163,9 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (voice && dictationSupported) toggleDictation();
   }, [open, dictationSupported, toggleDictation]);
 
-  const lists = useStudyLists();
-  const items = useMemo(() => lists.checklist.filter((c) => c.topic === topic), [lists, topic]);
-  const current = TOPICS.find((t) => t.id === topic) ?? null;
-
-  function toggle(id: string) {
-    const prev = getForm().checked;
-    patch({ checked: prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id] });
-  }
-
-  /** Inny temat = inna lista kontrolna, więc zaznaczone punkty się zerują; tekst i zdjęcia zostają. */
-  function setTopic(next: string) {
-    if (next !== getForm().topic) patch({ topic: next, checked: [] });
-  }
-
   function setAt(next: number | null) {
     if (isEdit) patchJournalEditForm({ at: next ?? Date.now() });
     else patchJournalDraft({ at: next });
-  }
-
-  const { saveCaption, drawing, setDrawing, openDrawing, saveDrawing, undoDrawing, measuring, setMeasuring, openDimensions, saveDimensions } = useJournalPhotoEdits({ getForm, patch, setProcessing, setCaptioning, setCaptionDraft });
-
-  /** Zwraca, ile zdjęć faktycznie trafiło do wpisu (licznik zdjęć z aparatu liczy tylko te). */
-  async function addPhotos(files: File[]): Promise<number> {
-    let skipped = 0;
-    let added = 0;
-    // Miejsca liczone z góry: dwa szybkie wybory zdjęć nie przekroczą limitu wpisu.
-    const room = JOURNAL_MAX_IMAGES - getForm().images.length - processing;
-    if (files.length > room) toast(`Wpis mieści maksymalnie ${JOURNAL_MAX_IMAGES} ${pluralPl(JOURNAL_MAX_IMAGES, ["zdjęcie", "zdjęcia", "zdjęć"])}`);
-    const batch = files.slice(0, Math.max(0, room));
-    if (batch.length === 0) return 0;
-    if (!persistAsked) { persistAsked = true; void requestPersistentStorage(); }
-    setProcessing((n) => n + batch.length);
-    // Ile zdjęć z paczki jeszcze nie oddało swojej części licznika: wyjątek przerywa pętlę, a przycisk „Zapisz wpis”
-    // czeka na `processing === 0` — bez tego zostawał zablokowany na stałe.
-    let unreleased = batch.length;
-    try {
-      for (const file of batch) {
-        try {
-          const done = measureSpan("zdjecie-zapis");
-          const prepared = await prepareImage(file);
-          if (!prepared) { skipped += 1; continue; }
-          const ref = await imageStore.putBlob(prepared);
-          done();
-          // Szkic czytany na świeżo: w trakcie obróbki mogło zniknąć inne zdjęcie albo zmienić się tekst.
-          const now = getForm().images;
-          if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) { patch({ images: [...now, ref] }); added += 1; haptic("tap"); }
-        } finally {
-          unreleased -= 1;
-          setProcessing((n) => n - 1);
-        }
-      }
-    } catch {
-      photoSaveFailed();
-    } finally {
-      if (unreleased > 0) setProcessing((n) => n - unreleased);
-    }
-    if (skipped > 0) toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB");
-    return added;
   }
 
   function submit() {
@@ -394,14 +184,15 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     commitSite();
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, captions: form.captions, drawnFrom: form.drawnFrom, recordings: form.recordings, at, test: form.test, fittings: form.fittings, pipes: form.pipes, supply, stage: form.stage, geo: form.geo ?? null, level: form.level, barcode: form.barcode, summary: form.summary, dimensions: form.dimensions, ...(form.point ? { point: form.point } : {}) });
-    if (entry) { freshEntry.id = entry.id; rememberSupply(); }
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...new Set(form.checked)], images, captions: form.captions, drawnFrom: form.drawnFrom, recordings: form.recordings, at, test: form.test, fittings: form.fittings, pipes: form.pipes, supply, stage: form.stage, geo: form.geo ?? null, level: form.level, barcode: form.barcode, summary: form.summary, dimensions: form.dimensions, ...(form.point ? { point: form.point } : {}) });
     if (!entry) {
       haptic("warn");
       setEmptyAttempt(true);
       textRef.current?.focus();
       return;
     }
+    freshEntry.id = entry.id;
+    rememberSupply();
     haptic("success");
     clearJournalDraft();
     closeJournalSheet();
@@ -445,51 +236,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (entry) toastWithUndo("Usunięto wpis", () => restoreJournalEntry(entry), { id: "journal-removed" });
   }
 
-  /** Gotowe nagranie z `VoiceRecorder`: przypinamy do szkicu albo edytowanego wpisu. */
-  async function addRecordingFile(file: File) {
-    const { added, message } = await addRecording(file, getForm().recordings);
-    if (added) {
-      patch({ recordings: [...getForm().recordings, added] });
-      haptic("success");
-    }
-    if (message) toast.error(message);
-  }
-
-  const fileInput = (props: { ref: React.RefObject<HTMLInputElement | null>; testId: string; capture?: boolean }) => (
-    <input
-      ref={props.ref}
-      type="file"
-      accept="image/*"
-      multiple={!props.capture}
-      capture={props.capture ? "environment" : undefined}
-      className="hidden"
-      data-testid={props.testId}
-      onChange={(e) => { const f = Array.from(e.target.files ?? []); e.target.value = ""; void addPhotos(f); }}
-    />
-  );
-
-  /** Ostatnie budowy: jeden dotyk zamiast pisania adresu na rusztowaniu. */
-  const siteChipsRow = siteChips.length > 0 && (
-    <div className="flex w-full flex-wrap gap-1.5" role="group" aria-label="Ostatnie budowy" data-testid="journal-site-chips">
-      {siteChips.map((s) => (
-        <Button
-          key={s}
-          type="button"
-          // Bez utraty fokusu: pole nie zamyka się przed kliknięciem pigułki.
-          onPointerDown={(e) => e.preventDefault()}
-          onClick={() => pickSite(s)}
-          variant="chip-add" size="chip" className="max-w-full"
-        >
-          <MapPin className="size-3.5 shrink-0" aria-hidden />
-          <span className="truncate">{s}</span>
-        </Button>
-      ))}
-    </div>
-  );
-
-  const dictationHint = !dictation.supported
-    ? "Dyktuj mikrofonem na klawiaturze telefonu."
-    : !online ? "Bez internetu dyktuj mikrofonem na klawiaturze telefonu — przycisk obok działa tylko online." : null;
+  const entryForm = { form, getForm, patch };
 
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) closeJournalSheet(); }}>
@@ -509,12 +256,12 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-4">
           <EntryWhereWhen
             site={site}
-            editingSite={editingSite}
-            siteText={siteText}
-            onSiteText={(t) => { setSiteText(t); pendingSite.current = { text: t, edit: isEdit }; }}
-            onOpenSiteEditor={openSiteEditor}
+            editingSite={siteEditor.editingSite}
+            siteText={siteEditor.siteText}
+            onSiteText={siteEditor.onSiteText}
+            onOpenSiteEditor={siteEditor.openSiteEditor}
             onCommitSite={commitSite}
-            siteChipsRow={siteChipsRow}
+            siteChips={siteChips}
             geo={geo}
             onClearGeo={() => patch({ geo: null })}
             locating={locating}
@@ -573,313 +320,38 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             </label>
           )}
 
-          <div className="space-y-1">
-            <label className="block space-y-1 text-xs text-muted-foreground">
-              Co się dzieje?
-              <span className="relative block">
-                <textarea
-                  ref={textRef}
-                  value={text}
-                  onChange={(e) => { setText(e.target.value); setEmptyAttempt(false); }}
-                  aria-invalid={emptyAttempt || undefined}
-                  aria-describedby={emptyAttempt ? "journal-empty-hint" : undefined}
-                  onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}
-                  rows={4}
-                  placeholder={kind === "problem" ? "Co poszło nie tak i co z tym zrobisz?" : "Krótko: gdzie, co zrobione, co zauważyłeś"}
-                  className={cn(
-                    "shake-invalid w-full resize-none rounded-field border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring",
-                    dictation.supported && "pr-14",
-                  )}
-                />
-                {dictation.supported && (
-                  <button
-                    type="button"
-                    onClick={() => { haptic("tap"); dictation.toggle(); }}
-                    aria-pressed={dictation.listening}
-                    aria-label={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj"}
-                    title={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj wpis"}
-                    className={cn(
-                      "absolute right-1.5 top-1.5 grid size-10 place-items-center rounded-full transition-colors coarse:h-12 coarse:w-12",
-                      dictation.listening ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <Mic className={cn("size-5", dictation.listening && "animate-pulse")} />
-                  </button>
-                )}
-              </span>
-            </label>
-            {dictationHint && <p className="ui-hint hidden coarse:block" data-testid="dictation-hint">{dictationHint}</p>}
-            {!text.trim() && (yesterdayText || textSuggestions.length > 0) && (
-              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Podpowiedzi tekstu z tej budowy" data-testid="journal-text-suggestions">
-                {yesterdayText && (
-                  <Button
-                    type="button"
-                    onPointerDown={(e) => e.preventDefault()}
-                    onClick={() => { haptic("selection"); setText(yesterdayText); }}
-                    title={yesterdayText}
-                    variant="pill" size="chip"
-                  >
-                    Jak wczoraj
-                  </Button>
-                )}
-                {textSuggestions.map((t) => (
-                  <Button
-                    key={t}
-                    type="button"
-                    onPointerDown={(e) => e.preventDefault()}
-                    onClick={() => { haptic("selection"); setText(t); }}
-                    title={t}
-                    variant="chip-add" size="chip" className="max-w-full"
-                  >
-                    <span className="truncate">{t}</span>
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
+          <EntryTextField
+            textRef={textRef}
+            text={text}
+            onText={(t) => { setText(t); setEmptyAttempt(false); }}
+            kind={kind}
+            emptyAttempt={emptyAttempt}
+            onSubmit={submit}
+            dictation={dictation}
+            yesterdayText={yesterdayText}
+            suggestions={textSuggestions}
+          />
 
-          <div className="space-y-2">
-            {fileInput({ ref: cameraRef, testId: "journal-camera-input", capture: true })}
-            {fileInput({ ref: galleryRef, testId: "journal-photo-input" })}
-            <div className="flex gap-2 coarse:grid coarse:grid-cols-2">
-              <Button type="button" variant="outline" onClick={() => setCameraOpen(true)} className="hidden coarse:inline-flex coarse:h-12">
-                <Camera className="mr-1.5 size-5" />Aparat
-              </Button>
-              <Button type="button" variant="outline" onClick={() => galleryRef.current?.click()} className="coarse:h-12">
-                <ImagePlus className="mr-1.5 size-4 coarse:h-5 coarse:w-5" /><span className="coarse:hidden">Dodaj zdjęcie</span><span className="hidden coarse:inline">Galeria</span>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setRecording(true)}
-                disabled={recording || recordings.length >= JOURNAL_MAX_RECORDINGS}
-                className="coarse:h-12"
-              >
-                <Mic className="mr-1.5 size-4 coarse:h-5 coarse:w-5" />Nagraj
-              </Button>
-            </div>
-            <EntryRecordings
-              recording={recording}
-              onCloseRecorder={() => setRecording(false)}
-              recordings={recordings}
-              onFile={(f) => void addRecordingFile(f)}
-              onTranscript={(t) => setText((prev) => (prev.trim() ? `${prev.trimEnd()} ${t}` : t))}
-              onRemove={(hash) => patch({ recordings: getForm().recordings.filter((x) => x.hash !== hash) })}
-            />
-            {!isEdit && form.point && (
-              <p className="ui-hint flex items-center gap-2" data-testid="entry-point">
-                <span className="min-w-0 flex-1">Wpis przypiszę do punktu: {cameraPoints.find((p) => p.id === form.point)?.label ?? "punkt"}</span>
-                <button type="button" onClick={() => patch({ point: undefined })} className="pressable shrink-0 underline coarse:min-h-11">Bez punktu</button>
-              </p>
-            )}
-            <PhotoStrip
-              images={images}
-              processing={processing}
-              captioning={captioning}
-              captionDraft={captionDraft}
-              onCaptionDraft={setCaptionDraft}
-              onToggleCaption={(ref) => { setCaptioning(captioning === ref ? null : ref); setCaptionDraft(""); }}
-              onCancelCaption={() => setCaptioning(null)}
-              onSubmitCaption={(ref) => saveCaption(ref, captionDraft)}
-              captions={getForm().captions}
-              onRemoveCaption={(ref) => saveCaption(ref, "")}
-              onDraw={(ref) => void openDrawing(ref)}
-              onMeasure={(ref) => void openDimensions(ref)}
-              dimensions={getForm().dimensions}
-              drawnFrom={getForm().drawnFrom}
-              onUndoDrawing={undoDrawing}
-              onRemove={(ref) => {
-                const before = getForm().images;
-                patch({ images: before.filter((r) => r !== ref) });
-                // Cofnij: zdjęcie wraca na swoje miejsce (zapisane dopiero przy „Zapisz wpis”).
-                const at = before.indexOf(ref);
-                toastWithUndo("Usunięto zdjęcie z wpisu", () => {
-                  const cur = getForm().images;
-                  if (!cur.includes(ref)) patch({ images: [...cur.slice(0, at), ref, ...cur.slice(at)] });
-                }, { id: `photo-remove-${ref}` });
-              }}
-            />
-          </div>
+          <EntryPhotoSection
+            {...entryForm}
+            isEdit={isEdit}
+            siteId={siteId}
+            photos={photos}
+            ui={photoUi}
+            onTranscript={(t) => setText((prev) => (prev.trim() ? `${prev.trimEnd()} ${t}` : t))}
+          />
 
-          <div className="space-y-2" data-testid="journal-sections">
-            {/* Sekcje dodaje się pigułką (QoL, § D5): schowane, dopóki nie są potrzebne; te z danymi otwarte same. */}
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Dodaj do wpisu">
-              <Button
-                type="button"
-                aria-pressed={testVisible}
-                aria-controls="journal-test"
-                aria-disabled={testForced || undefined}
-                onClick={() => { if (!testForced) setTestOpen((o) => !o); }}
-                variant="chip" size="chip" className="text-foreground"
-              >
-                {form.test ? "✓ " : "+ "}Próba
-              </Button>
-              <Button
-                type="button"
-                aria-pressed={fittingsVisible}
-                aria-controls="journal-fittings"
-                aria-disabled={fittingsForced || undefined}
-                onClick={() => { if (!fittingsForced) setFittingsOpen((o) => !o); }}
-                variant="chip" size="chip" className="text-foreground"
-              >
-                {(form.fittings?.length ?? 0) > 0 ? "✓ " : "+ "}Kształtki
-              </Button>
-              {quickFittings.map((n) => (
-                <Button
-                  key={n}
-                  type="button"
-                  onClick={() => patch({ fittings: [{ name: n, qty: 1 }] })}
-                  variant="chip-soft" size="chip" className="max-w-full text-foreground"
-                >
-                  <span className="truncate">+ {n}</span>
-                </Button>
-              ))}
-              <Button
-                type="button"
-                aria-pressed={pipesVisible}
-                aria-controls="journal-pipes"
-                aria-disabled={pipesForced || undefined}
-                onClick={() => { if (!pipesForced) setPipesOpen((o) => !o); }}
-                variant="chip" size="chip" className="text-foreground"
-              >
-                {(form.pipes?.length ?? 0) > 0 ? "✓ " : "+ "}Rury
-              </Button>
-              {/* Czujniki i narzędzia (Faza 3): pigułki otwierają okna; po zapisie wartość widać w blokach poniżej. */}
-              {touchDevice && typeof DeviceOrientationEvent !== "undefined" && (
-                <Button type="button" onClick={() => setLevelOpen(true)} data-testid="pill-level"
-                  variant="chip" size="chip" className="text-foreground">
-                  {form.level !== undefined ? "✓ " : "+ "}Spadek
-                </Button>
-              )}
-              <Button type="button" onClick={() => setBarcodeOpen(true)} data-testid="pill-barcode"
-                variant="chip" size="chip" className="text-foreground">
-                {form.barcode ? "✓ " : "+ "}Kod
-              </Button>
-              {touchDevice && hasNFC() && (
-                <Button type="button" onClick={() => setNfcOpen(true)} data-testid="pill-nfc"
-                  variant="chip" size="chip" className="text-foreground">
-                  + NFC
-                </Button>
-              )}
-              {hasAISummarizer() && (
-                <Button type="button" onClick={() => setAiOpen(true)} data-testid="pill-ai"
-                  variant="chip" size="chip" className="text-foreground">
-                  {form.summary ? "✓ " : "+ "}Streszczenie
-                </Button>
-              )}
-              <Button
-                type="button"
-                aria-expanded={kitsOpen}
-                aria-controls="journal-kits"
-                onClick={() => setKitsOpen((o) => !o)}
-                variant="chip" size="chip" className="text-foreground"
-              >
-                + Zestaw
-              </Button>
-              <Button
-                type="button"
-                aria-expanded={topicOpen}
-                aria-controls="journal-topic"
-                onClick={() => setTopicOpen((o) => !o)}
-                variant="chip" size="chip" className="max-w-full text-foreground"
-              >
-                <span className="truncate">{topic ? `Temat: ${current?.title ?? topic}${checked.size > 0 ? ` · ${checked.size}/${items.length}` : ""}` : "+ Temat"}</span>
-              </Button>
-            </div>
-            {testVisible && (
-              <div id="journal-test" className={cn(cardVariant(), "p-2")}>
-                <PressureTestFields value={form.test} topic={topic} onChange={(t) => patch({ test: t })} />
-              </div>
-            )}
-            {levelVisible && (
-              <div id="journal-level" className={cn(cardVariant(), "p-2")}>
-                <button
-                  type="button"
-                  onClick={() => setLevelOpen(true)}
-                  className="pressable flex w-full items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
-                >
-                  <Maximize2 className="size-4 shrink-0" aria-hidden />
-                  {form.level !== undefined ? `Spadek: ${slopeLabel(form.level)}` : "Zmierz spadek"}
-                </button>
-              </div>
-            )}
-            <LevelMeter open={levelOpen} onOpenChange={setLevelOpen} onSelect={(angle) => patch({ level: angle })} />
-            {barcodeVisible && (
-              <div id="journal-barcode" className={cn(cardVariant(), "p-2")}>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setBarcodeOpen(true)}
-                    className="pressable flex flex-1 items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
-                  >
-                    <QrCode className="size-4 shrink-0" aria-hidden />
-                    {form.barcode ? `Kod: ${form.barcode}` : "Dodaj kod"}
-                  </button>
-                  {hasNFC() && (
-                    <button
-                      type="button"
-                      onClick={() => setNfcOpen(true)}
-                      className="pressable flex items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
-                      title="NFC tag"
-                      aria-label="Odczytaj tag NFC"
-                    >
-                      <Radio className="size-4 shrink-0" aria-hidden />
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-            <BarcodeScanner open={barcodeOpen} onOpenChange={setBarcodeOpen} onDetected={(code) => patch({ barcode: code })} />
-            <NFCReader open={nfcOpen} onOpenChange={setNfcOpen} onDetected={(tag) => patch({ barcode: tag })} />
-            {aiVisible && (
-              <div id="journal-ai" className={cn(cardVariant(), "p-2")}>
-                <button
-                  type="button"
-                  onClick={() => setAiOpen(true)}
-                  className="pressable flex w-full items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
-                >
-                  <Sparkles className="size-4 shrink-0" aria-hidden />
-                  {form.summary ? `Streszczenie: ${form.summary.slice(0, 50)}…` : "Dodaj streszczenie AI"}
-                </button>
-              </div>
-            )}
-            <AISummary open={aiOpen} onOpenChange={setAiOpen} text={form.text} onSelect={(s) => patch({ summary: s })} />
-            {/* B3.9: zdjęcia z aparatu przechodzą tę samą obróbkę co z galerii (`addPhotos`: limit 2 MB, magazyn, limit wpisu). */}
-            <CameraCapture
-              open={cameraOpen}
-              onOpenChange={setCameraOpen}
-              onCapture={(blob) => addPhotos([new File([blob], "aparat.jpg", { type: blob.type || "image/jpeg" })])}
-              count={images.length + processing}
-              max={JOURNAL_MAX_IMAGES}
-              points={isEdit ? [] : cameraPoints}
-              point={form.point}
-              onPoint={(id) => patch({ point: id })}
-            />
-            {fittingsVisible && (
-              <div id="journal-fittings" className={cn(cardVariant(), "p-2")}>
-                <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
-              </div>
-            )}
-            {kitsOpen && <EntryKitsPanel kits={kits} onAdd={addKit} onEdit={() => setKitsDialogOpen(true)} />}
-            {kitsDialogOpen && (
-              <Suspense fallback={null}>
-                <KitsDialog open={kitsDialogOpen} onOpenChange={setKitsDialogOpen} fittingHistory={fittingHistory} pipeHistory={pipeHistory} />
-              </Suspense>
-            )}
-            {pipesVisible && (
-              <div id="journal-pipes" className={cn(cardVariant(), "p-3")}>
-                <PipesFields value={form.pipes ?? []} history={pipeHistory} onChange={(p) => patch({ pipes: p })} />
-              </div>
-            )}
-            {hasMaterial && van.items.length > 0 && <EntrySupplyToggle supply={supply} onChange={setSupplyChoice} />}
-            {topicOpen && (
-              <EntryTopicPanel
-                topic={topic} current={current} items={items} checked={checked}
-                onTopic={setTopic} onToggle={toggle}
-                onPractice={(id) => { closeJournalSheet(); onPractice(id); }}
-              />
-            )}
-          </div>
+          <EntryToolsSection
+            {...entryForm}
+            fittingHistory={fittingHistory}
+            pipeHistory={pipeHistory}
+            supply={supply}
+            onSupply={setSupplyChoice}
+            showSupply={hasMaterial && van.items.length > 0}
+            onPractice={onPractice}
+            panels={panels}
+            dispatch={dispatchPanels}
+          />
         </div>
 
         {/* Przycisk poza przewijaną treścią: z klawiaturą na ekranie (`resizes-content`) wisi tuż nad nią. */}
@@ -903,21 +375,6 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           </div>
           <p className="ui-hint mt-1.5 text-center coarse:hidden">Ctrl+Enter zapisuje {isEdit ? "zmiany" : "wpis"}</p>
         </div>
-        {/* Rysowanie po zdjęciu — okno nad arkuszem; zamknięcie bez zapisu zostawia zdjęcie bez zmian. */}
-        <DrawingCanvas
-          open={drawing !== null}
-          onOpenChange={(o) => { if (!o) setDrawing(null); }}
-          initialImage={drawing?.url ?? null}
-          onSave={(dataUrl) => void saveDrawing(dataUrl)}
-        />
-        {/* B3.3 Miarka: wymiary jako dane przy zdjęciu, oryginał bez zmian. */}
-        <DimensionDrawer
-          open={measuring !== null}
-          onOpenChange={(o) => { if (!o) setMeasuring(null); }}
-          imageUrl={measuring?.url ?? ""}
-          dimensions={measuring ? getForm().dimensions?.[measuring.ref] ?? [] : []}
-          onSave={saveDimensions}
-        />
       </SheetContent>
     </Sheet>
   );
