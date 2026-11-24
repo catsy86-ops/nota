@@ -1,0 +1,33 @@
+# S5.2 (plan bezpieczeństwa): aktualizacje zależności. Zwykłe podbicia raz w tygodniu, zgrupowane w jeden PR
+# na katalog; poprawki bezpieczeństwa Dependabot otwiera od razu, poza harmonogramem (osobne PR-y).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: ["/", "/push-server", "/relay-server", "/signaling-server"]
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      npm-tydzien:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      akcje:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directories: ["/push-server", "/relay-server", "/signaling-server"]
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      obrazy:
+        patterns: ["*"]

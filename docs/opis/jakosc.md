@@ -707,3 +707,15 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 **Testy.** `src/lib/clipboardClear.test.ts` (5), `src/lib/vaultAutoLock.test.ts` (+5: zasłona w tle, zablokowany skarbiec, 0 min, zatrzymanie, zablokowanie w tle), `e2e/privacy-cover.spec.ts` (rozmycie `#root`); `private-notes` zielone.
 
 **Commit.** Patrz historia `src/lib/clipboardClear.ts`, 2026-11-23.
+
+## Bezpieczeństwo — łańcuch dostaw w CI (S5.1–S5.4, 2026-11-24)
+
+- **Co robi:** CI sprawdza zależności produkcyjne aplikacji pod kątem znanych luk, skanuje historię repozytorium w poszukiwaniu sekretów i używa akcji przypiętych do konkretnego commita. Dependabot co poniedziałek otwiera zgrupowane PR-y z aktualizacjami npm, akcji i obrazów Docker. Poprawki bezpieczeństwa otwiera od razu.
+- **Gdzie jest:** `.github/workflows/ci.yml` (zadania `audit` i `secrets`, `permissions: contents: read`), `.github/workflows/android.yml` (przypięte akcje), `.github/dependabot.yml`.
+- **Jak działa:**
+  - **S5.1:** `npm audit --omit=dev --audit-level=high` dla katalogu głównego w osobnym zadaniu, więc czerwony audyt nie zasłania wyniku testów. Serwery (`push-server`, `relay-server`) miały już audyt w zadaniu `servers`.
+  - **S5.2:** npm w `/`, `push-server`, `relay-server`, `signaling-server`; podbicia minor i patch zgrupowane w jeden PR na katalog; akcje i obrazy w osobnych grupach.
+  - **S5.3:** token przepływu CI ma tylko `contents: read`; żadne zadanie CI nie czyta sekretów, więc PR z forka nic nie dostaje. Akcje są przypięte do pełnego skrótu z komentarzem wersji (`# v4.4.0`), który Dependabot podbija razem ze skrótem.
+  - **S5.4:** gitleaks 8.30.1 z wydania GitHub, sprawdzany sumą SHA-256 zapisaną w przepływie (bez akcji `gitleaks-action`, która przy organizacjach wymaga licencji). Skan obejmuje całą historię (`fetch-depth: 0`), wynik zredagowany (`--redact`).
+- **Ograniczenia i pułapki:** jednorazowy skan historii lokalnie i włączenie ochrony przed wypchnięciem sekretów (ustawienie repozytorium) robi właściciel. Gdy gitleaks znajdzie fałszywy alarm (np. testowy klucz w testach), wpis trafia do `.gitleaksignore` (odcisk z raportu), nie do wyłączenia reguły. `signaling-server` nie ma `package-lock.json`, więc nie ma w nim audytu. Zmiana wersji gitleaks wymaga nowej sumy z pliku `checksums.txt` wydania. Audyt aplikacji pokazuje dziś 4 luki niskiej wagi (katex przez `rehype-katex`), poniżej progu.
+- **Testy:** brak testów lokalnych; poprawność YAML sprawdzona `js-yaml`. Pierwszy przebieg CI po wypchnięciu potwierdzi zadania `audit` i `secrets`.
