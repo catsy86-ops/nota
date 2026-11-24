@@ -139,6 +139,7 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.study.entryPick.v1` | `components/study/EntryCheck.tsx` | — |
 | `kaczy.study.fingerprints.v1` | `lib/study/fingerprintStore.ts` | — |
 | `kaczy.study.mileage.v1` | `lib/exportNotes.ts`, `lib/study/companyPrefs.ts` | tak |
+| `kaczy.study.sitePatterns.v1` | `lib/study/sitePatterns.ts` (R4.4, wzorce budów) | tak |
 | `kaczy.study.prices.v1` | `lib/exportNotes.ts`, `lib/study/pricingStore.ts` | tak |
 | `kaczy.study.pricing.v1` | `lib/exportNotes.ts`, `lib/study/pricingStore.ts` | tak |
 | `kaczy.study.quoteTerms.v1` | `lib/exportNotes.ts`, `lib/study/companyPrefs.ts` | tak |

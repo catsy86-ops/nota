@@ -167,7 +167,7 @@ export function QuoteDocPanel({ siteId, job, signed, onSign }: {
         )}
       </div>
 
-      <div className="space-y-1" data-testid="quote-deposit">
+      <div id={`quote-deposit-${siteId}`} className="space-y-1" data-testid="quote-deposit">
         <label className="flex items-center gap-2 text-sm">
           <span className="min-w-0 flex-1">Zaliczka przed rozpoczęciem prac</span>
           <input

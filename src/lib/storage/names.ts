@@ -45,6 +45,7 @@ export const PRACA = {
   bankAccount: "kaczy.study.bankAccount.v1",
   quoteTerms: "kaczy.study.quoteTerms.v1",
   mileage: "kaczy.study.mileage.v1",
+  sitePatterns: "kaczy.study.sitePatterns.v1",
   author: "kaczy.study.author.v1",
   fingerprints: "kaczy.study.fingerprints.v1",
   store: "kaczy.study.v1",

@@ -97,6 +97,8 @@ const BACKUP_KEYS = [
   // kształtek, imię autora wpisów. Bez wpływu na sekrety; czyszczone przy odczycie przez swoje magazyny. Numer konta
   // (`kaczy.study.bankAccount.v1`) i odciski dokumentów (`…fingerprints.v1`) zostają poza kopią — to dane tego urządzenia.
   "kaczy.study.companyName.v1", "kaczy.study.seller.v1", "kaczy.study.mileage.v1", "kaczy.study.pricing.v1", "kaczy.study.quoteTerms.v1", "kaczy.study.prices.v1", "kaczy.study.author.v1",
+  // R4.4: wzorce budów (etapy i pomieszczenia bez stanów) — ustawienie tego urządzenia.
+  "kaczy.study.sitePatterns.v1",
   // Flagi funkcji w przygotowaniu (src/lib/featureFlags.ts) — zwykłe przełączniki.
   "kaczy.features.v1",
   // Push: wpis jest, ale przy przywracaniu push wyłączamy (`exportNotes.ts`) — subskrypcja jest na urządzeniu.

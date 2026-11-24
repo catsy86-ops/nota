@@ -1,6 +1,7 @@
 import { prepareImage } from "@/lib/imagePrepare";
 import { imageStore } from "@/lib/imageStore";
 import { addJournalEntry, setSite } from "@/lib/study/store";
+import { measureSpan } from "./perf";
 
 export type PhotoEntryResult = "ok" | "too-big" | "failed";
 
@@ -14,9 +15,12 @@ export async function addPhotoEntry(
   siteName: string,
   extra: { stage?: string; caption?: string } = {},
 ): Promise<PhotoEntryResult> {
+  // R4.2: czas od wybrania zdjęcia do zapisu bajtów (zmniejszanie + IndexedDB) — do raportu diagnostyki z telefonu.
+  const done = measureSpan("zdjecie-zapis");
   const prepared = await prepareImage(file);
   if (!prepared) return "too-big";
   const ref = await imageStore.putBlob(prepared);
+  done();
   setSite(siteName);
   const entry = addJournalEntry({
     kind: "ok",

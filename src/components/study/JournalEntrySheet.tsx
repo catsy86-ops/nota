@@ -42,6 +42,7 @@ import { haptic } from "@/lib/haptics";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDictation } from "@/hooks/useDictation";
 import { prepareImage } from "@/lib/imagePrepare";
+import { measureSpan } from "@/lib/study/perf";
 import { imageStore } from "@/lib/imageStore";
 import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { TOPICS } from "@/lib/study/content";
@@ -355,9 +356,11 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     try {
       for (const file of batch) {
         try {
+          const done = measureSpan("zdjecie-zapis");
           const prepared = await prepareImage(file);
           if (!prepared) { skipped += 1; continue; }
           const ref = await imageStore.putBlob(prepared);
+          done();
           // Szkic czytany na świeżo: w trakcie obróbki mogło zniknąć inne zdjęcie albo zmienić się tekst.
           const now = getForm().images;
           if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) { patch({ images: [...now, ref] }); added += 1; haptic("tap"); }

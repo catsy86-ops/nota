@@ -256,3 +256,15 @@ test("nowe zlecenie: klient i telefon z kontaktów telefonu (B3.8)", async ({ pa
   await expect(page.getByLabel("Klient", { exact: true })).toHaveValue("Jan Kowalski");
   await expect(page.getByLabel("Telefon", { exact: true })).toHaveValue("600 100 200");
 });
+
+test("R3.2 oś zlecenia: nowe zlecenie zaczyna od wyceny, „Realizacja” ustawia status „Zrobione”", async ({ page }) => {
+  const card = await newJob(page);
+  const job = card.getByTestId("site-job");
+  const axis = job.getByTestId("job-timeline");
+  await expect(axis.locator('[data-step="quote"]')).toHaveAttribute("data-state", "current");
+  await expect(job.getByTestId("job-timeline-next")).toContainText("Wycena");
+  await axis.getByRole("button", { name: "Realizacja: do zrobienia" }).click();
+  await expect(job.getByTestId("site-job-summary")).toContainText("Zrobione");
+  await expect(axis.locator('[data-step="work"]')).toHaveAttribute("data-state", "done");
+  await expect(axis.locator('[data-step="deposit"]')).toHaveAttribute("data-state", "skipped");
+});

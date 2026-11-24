@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, Copy, FileCheck, FileCode2, FileText, PenLine, Plus, Wrench, X } from "lucide-react";
 import { InvoiceDialog } from "./InvoiceDialog";
+import { JobTimeline } from "./JobTimeline";
 import { QuoteDocPanel } from "./QuoteDocPanel";
 import { QuoteTemplates } from "./QuoteTemplates";
 import { QuoteFromSite } from "./QuoteFromSite";
@@ -27,6 +28,12 @@ import { clientAddress } from "@/lib/clients/model";
 import { getClient, getClientLinks } from "@/lib/clients/store";
 import type { SiteInfo } from "@/lib/study/sites";
 import { cardVariant } from "@/components/ui/card";
+import { useInvoices } from "@/lib/ksef/invoicesStore";
+import { smoothBehavior } from "@/lib/scrollBehavior";
+import type { TimelineStep } from "@/lib/study/jobTimeline";
+
+/** Etapy osi, które ten panel umie otworzyć (gwarancja jest w segmencie Papiery). */
+const TIMELINE_ACTIONS: ReadonlySet<TimelineStep> = new Set(["quote", "deposit", "work", "protocol", "invoice", "payment"]);
 
 const fieldCls = "h-9 rounded-field border border-input bg-background px-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
 const qtyText = (n: number) => n.toLocaleString("pl-PL", { maximumFractionDigits: 2 });
@@ -68,6 +75,20 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
   const sum = quoteSummary(job);
   /** Podpis z karty złożony po ostatniej zmianie wyceny (H3.5). */
   const signed = signatureValidFor(job, site.signature);
+  const invoices = useInvoices();
+  const invoiced = useMemo(() => invoices.some((r) => r.siteId === site.id && !r.invoice.correction), [invoices, site.id]);
+
+  function timelineStep(step: TimelineStep) {
+    if (step === "work") setStatus("done");
+    else if (step === "payment") setStatus("paid");
+    else if (step === "protocol") onSign();
+    else if (step === "invoice") setInvoiceOpen(true);
+    else {
+      const el = document.getElementById(step === "deposit" ? `quote-deposit-${site.id}` : `job-quote-${site.id}`);
+      el?.scrollIntoView({ block: "center", behavior: smoothBehavior() });
+      el?.querySelector<HTMLElement>("input")?.focus({ preventScroll: true });
+    }
+  }
 
   function setStatus(status: Job["status"]) {
     if (status === job.status) return;
@@ -201,6 +222,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
 
       {open && (
         <div id={`job-${site.id}`} className="space-y-3 border-t border-dashed border-border px-3 pb-3 pt-2.5">
+          <JobTimeline input={{ job, signed, warranty: site.warranty, invoiced }} actionable={TIMELINE_ACTIONS} onStep={timelineStep} />
           <div className="grid grid-cols-4 gap-1" role="group" aria-label="Status zlecenia">
             {JOB_STATUSES.map((s) => (
               <button key={s} type="button" onClick={() => setStatus(s)} aria-pressed={job.status === s}
@@ -261,7 +283,7 @@ export function SiteJobPanel({ site, job, onSign }: { site: SiteInfo; job: Job; 
           <QuoteTemplates siteId={site.id} job={job} />
           <QuoteFromSite site={site} job={job} />
 
-          <form className="space-y-1.5 rounded-field border border-dashed border-border p-2" onSubmit={(e) => { e.preventDefault(); addItem(); }} aria-label="Nowa pozycja wyceny">
+          <form id={`job-quote-${site.id}`} className="space-y-1.5 rounded-field border border-dashed border-border p-2" onSubmit={(e) => { e.preventDefault(); addItem(); }} aria-label="Nowa pozycja wyceny">
             <div className="flex gap-1" role="group" aria-label="Rodzaj pozycji">
               {QUOTE_KINDS.map((k) => (
                 <button key={k} type="button" onClick={() => setKind(k)} aria-pressed={kind === k}

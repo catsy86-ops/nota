@@ -1,6 +1,6 @@
 import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { weekSeparators } from "@/lib/study/journalWeeks";
-import { Archive, Car, Clock, ChevronRight, FileText, Flag, Images, MapPin, PackageCheck, Plus, Search, Truck, Wrench, X } from "lucide-react";
+import { Archive, Car, FileArchive, Clock, ChevronRight, FileText, Flag, Images, MapPin, PackageCheck, Plus, Search, Sunrise, Truck, Wrench, X } from "lucide-react";
 import { studyReminders } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
 import { Button } from "@/components/ui/button";
@@ -34,8 +34,10 @@ import type { SitePackage } from "@/lib/study/sitePackage";
 import { JobsDialog } from "./JobsDialog";
 import { WholesaleOrderDialog } from "./WholesaleOrderDialog";
 
+const AccountantExportDialog = lazy(() => import("./AccountantExportDialog").then((m) => ({ default: m.AccountantExportDialog })));
 const MileageDialog = lazy(() => import("./MileageDialog").then((m) => ({ default: m.MileageDialog })));
 import { EndDaySheet } from "./EndDaySheet";
+import { StartDaySheet } from "./StartDaySheet";
 import { VanDialog } from "./VanDialog";
 import { useVan } from "@/lib/study/vanStore";
 import { vanStock } from "@/lib/study/van";
@@ -91,6 +93,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const [report, setReport] = useState(false);
   /** Arkusz „Zakończ dzień” (B2.4). */
   const [endDayOpen, setEndDayOpen] = useState(false);
+  const [startDayOpen, setStartDayOpen] = useState(false);
   /** Budowa raportu otwartego z karty; `null` = z filtra albo ostatnia. */
   const [reportSite, setReportSite] = useState<string | null>(null);
   // Przypomnienie o raporcie (dnia albo tygodnia): okno raportu z zakresem z prośby — jedna budowa albo
@@ -156,6 +159,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   // H1.4: wspólna lista do hurtowni ze wszystkich budów w toku.
   const [wholesaleOpen, setWholesaleOpen] = useState(false);
   const [mileageOpen, setMileageOpen] = useState(false);
+  const [accountantOpen, setAccountantOpen] = useState(false);
   const wholesale = useMemo(() => wholesaleGroups(study.journal, dir), [study.journal, dir]);
   // H1.3: materiał w aucie — poniżej minimum idzie do listy hurtowni jako „Do auta”.
   const van = useVan();
@@ -355,6 +359,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   </Button>
                   <Button
                     type="button"
+                    onClick={() => setStartDayOpen(true)}
+                    data-testid="start-day-open"
+                    variant="chip-add" size="chip" className="shrink-0"
+                  >
+                    <Sunrise className="size-3.5 shrink-0" aria-hidden />Zacznij dzień
+                  </Button>
+                  <Button
+                    type="button"
                     onClick={() => setEndDayOpen(true)}
                     data-testid="end-day-open"
                     variant="chip-add" size="chip" className="shrink-0"
@@ -368,6 +380,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                     variant="chip-add" size="chip" className="shrink-0"
                   >
                     <Car className="size-3.5 shrink-0" aria-hidden />Kilometrówka
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setAccountantOpen(true)}
+                    data-testid="accountant-open"
+                    variant="chip-add" size="chip" className="shrink-0"
+                  >
+                    <FileArchive className="size-3.5 shrink-0" aria-hidden />Dla księgowej
                   </Button>
                   {wholesaleCount > 0 && (
                     <Button
@@ -538,6 +558,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
       <JournalPhotoButton siteName={photoSite} onNoSite={() => openJournalSheet()} />
       <NewSiteDialog key={newSiteJob ? "job" : "site"} open={newSiteOpen} onOpenChange={setNewSiteOpen} dir={dir} initialJob={newSiteJob} onCreated={(id) => setCard(id)} onPackage={setSitePackage} />
       <SitePackageImportDialog pkg={sitePackage} onClose={() => setSitePackage(null)} onDone={(id) => { setSitePackage(null); setCard(id); }} />
+      {accountantOpen && (
+        <Suspense fallback={null}>
+          <AccountantExportDialog open={accountantOpen} onOpenChange={setAccountantOpen} dir={dir} />
+        </Suspense>
+      )}
       {mileageOpen && (
         <Suspense fallback={null}>
           <MileageDialog open={mileageOpen} onOpenChange={setMileageOpen} dir={dir} />
@@ -550,6 +575,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         onOpen={(id) => { setJobsOpen(false); setCard(id); }}
         onNew={() => { setJobsOpen(false); setNewSiteJob(true); setNewSiteOpen(true); }} />
       <JournalReportDialog open={report} onOpenChange={setReport} journal={study.journal} sites={dir} initialSite={reportSite ?? filter.site} initialRequest={reportRequest} />
+      <StartDaySheet open={startDayOpen} onOpenChange={setStartDayOpen} sites={dir} onOpenCard={setCard} />
       <EndDaySheet
         open={endDayOpen}
         onOpenChange={setEndDayOpen}

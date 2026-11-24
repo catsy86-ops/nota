@@ -18,8 +18,11 @@ export function useSitePoints(site: string): SitePoints {
 
 export const getSitePoints = (site: string) => yPoints.get(site);
 
-/** Nowe pomieszczenie; z szablonu dostaje jego punkty. Nazwa z szablonu dostaje numer, gdy już jest („Łazienka 2”). */
-export function addRoom(site: string, name: string, templateId?: string): Room | null {
+/**
+ * Nowe pomieszczenie; z szablonu dostaje jego punkty. Nazwa z szablonu dostaje numer, gdy już jest („Łazienka 2”).
+ * `types` (wzorzec budowy, R4.4) zastępuje rodzaje z szablonu — pokój i punkty idą w jednej transakcji.
+ */
+export function addRoom(site: string, name: string, templateId?: string, types?: readonly string[], at: number = Date.now()): Room | null {
   const cur = yPoints.get(site);
   const tpl = ROOM_TEMPLATES.find((t) => t.id === templateId);
   let finalName = name.trim() || tpl?.name || "";
@@ -27,9 +30,9 @@ export function addRoom(site: string, name: string, templateId?: string): Room |
     const taken = new Set(cur.rooms.map((r) => r.name));
     for (let n = 2; taken.has(finalName); n++) finalName = `${tpl.name} ${n}`;
   }
-  const order = Date.now();
+  const order = at;
   const room: Room = { id: id("room"), name: finalName, order };
-  const points = (tpl?.types ?? []).map((t, i) => newPoint(id("pt"), room.id, t, order + i));
+  const points = (types ?? tpl?.types ?? []).map((t, i) => newPoint(id("pt"), room.id, t, order + i));
   return yPoints.addRoom(site, room, points) ? room : null;
 }
 

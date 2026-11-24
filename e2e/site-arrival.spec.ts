@@ -40,7 +40,10 @@ test("włączona podpowiedź + przy budowie bez wejścia dziś → dymek „Wcho
 });
 
 test("wyłączona podpowiedź → brak dymku nawet przy budowie", async ({ page }) => {
-  await page.goto("/");
-  await page.waitForTimeout(2500);
+  await page.goto("/praca");
+  // Dziennik widoczny = dane Pracy wczytane, więc efekt podpowiedzi już się wykonał.
+  await expect(page.getByRole("tab", { name: "Dziennik" })).toBeVisible();
+  // Wyłączona podpowiedź kończy efekt przed zapisem „dziś już pytano” i przed odczytem GPS — znacznik zostaje pusty.
+  expect(await page.evaluate(() => localStorage.getItem("kaczy.study.siteArrivalAsked.v1"))).toBeNull();
   await expect(page.getByText(/Jesteś przy budowie/)).toHaveCount(0);
 });

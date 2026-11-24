@@ -859,3 +859,10 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 **Testy.** `src/lib/storage/keyLiterals.test.ts` (strażnik literałów), `src/lib/storage/keys.test.ts` (odczyt, wartość domyślna, zły kształt, lista kopii równa flagom, wygląd w kopii, wrażliwe poza kopią), `src/lib/fullBackup.test.ts`, `src/lib/push/token.test.ts`.
 
 **Commit.** Patrz historia `src/lib/storage/keys.ts`, 2026-11-23.
+
+## Dane — klucz wzorców budów `kaczy.study.sitePatterns.v1` (R4.4, 2026-11-24)
+
+- **Co to jest:** lista wzorców budów (najwyżej 20) z planu Praca R4.4: nazwa, etapy bez `done`, pomieszczenia z rodzajami punktów. Opis funkcji jest w `opis/praca.md` („wzorce budów”).
+- **Gdzie:** nazwa `PRACA.sitePatterns` (`src/lib/storage/names.ts`), flaga `backup` w `src/lib/storage/keys.ts`, magazyn `sitePatternsStore` i czyszczenie `cleanPatterns` w `src/lib/study/sitePatterns.ts`. Wpis jest też w `docs/dane-spisy.md`.
+- **Zasady z `dane-wersje.md`:** to nowy klucz, a nie zmiana istniejącego, więc nie ma migracji i `SCHEMA_VERSION` się nie zmienia. Klucz wchodzi do kopii jako ustawienie urządzenia i nie trafia do Yjs, więc się nie synchronizuje. `cleanPatterns` odrzuca nieznane rodzaje punktów i zepsute wpisy. Zmiana kształtu wymaga nowej nazwy (`.v2`) i przejścia przez `migrateKey`.
+- **Testy:** `src/lib/study/sitePatterns.test.ts`; testy rejestru kluczy (`src/lib/storage`).

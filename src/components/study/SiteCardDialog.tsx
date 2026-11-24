@@ -1,5 +1,5 @@
 import { Activity, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Archive, ArchiveRestore, Wrench, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, PenLine, Phone, Send, Share2, Plus, Camera, PackageX } from "lucide-react";
+import { Archive, ArchiveRestore, Copy, Wrench, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, PenLine, Phone, Send, Share2, Plus, Camera, PackageX } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -46,6 +46,7 @@ import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
 import { HandoverPaper } from "./HandoverPaper";
 import { SiteSignatureDialog } from "./SiteSignatureDialog";
+import { SavePatternDialog } from "./SavePatternDialog";
 import { SitePackageExportDialog } from "./SitePackageDialogs";
 import { QuickLink } from "./QuickLink";
 import { DayHoursDialog } from "./DayHoursDialog";
@@ -95,6 +96,7 @@ export function SiteCardDialog({
   const endHandover = useCallback(() => setHandover(null), []);
   const [signOpen, setSignOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  const [patternOpen, setPatternOpen] = useState(false);
   // B2.2: pięć segmentów zamiast kilkunastu paneli pod sobą; start tam, gdzie skończyłeś (`cardSection.ts`).
   const sections = useMemo(() => visibleSections(!!job), [job]);
   const [section, setSection] = useState<CardSection>("dzis");
@@ -469,6 +471,16 @@ export function SiteCardDialog({
                 >
                   <Send className="mr-1.5 size-4" aria-hidden />Wyślij budowę pomocnikowi
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setPatternOpen(true)}
+                  title="Etapy i pomieszczenia tej budowy jako wzorzec dla następnych (bez odhaczeń, wpisów i pieniędzy)"
+                  className="col-span-2 coarse:h-11"
+                  data-testid="site-pattern-open"
+                >
+                  <Copy className="mr-1.5 size-4" aria-hidden />Zapisz jako wzorzec
+                </Button>
+                <SavePatternDialog site={site} open={patternOpen} onOpenChange={setPatternOpen} />
                 {!job && (
                   <Button variant="ghost" onClick={() => { setJobMeta(site.id, {}); toastWithUndo(`„${site.name}” to teraz zlecenie własne`, () => { removeJob(site.id); }); }} className="col-span-2 text-muted-foreground coarse:h-11"
                     title="Twoje zlecenie, nie budowa szefa: wycena, status, termin i PDF dla klienta">

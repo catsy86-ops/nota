@@ -7,10 +7,13 @@ const hours = (min: number) => (min / 60).toFixed(2).replace(".", ",");
 /** Godzina zegarowa z minut od północy; minuty poza dobą zawijają się (zmiana przez północ). */
 const clock = (min: number) => { const m = ((min % 1440) + 1440) % 1440; return `${pad(Math.floor(m / 60))}:${pad(m % 60)}`; };
 
-/** Pole CSV w cudzysłowie, gdy zawiera separator, cudzysłów albo koniec linii; chroni też przed formułami arkusza. */
+/**
+ * Pole CSV w cudzysłowie, gdy zawiera separator, cudzysłów albo koniec linii; chroni też przed formułami arkusza.
+ * Sama liczba w tekście („-12,30”) nie jest formułą — zostaje bez apostrofu, żeby arkusz liczył ujemne kwoty.
+ */
 export function cell(v: string | number): string {
   let s = String(v);
-  if (/^\s*[=+\-@＝＋－＠]|^[\t\r]/.test(s) && typeof v === "string") s = `'${s}`;
+  if (typeof v === "string" && /^\s*[=+\-@＝＋－＠]|^[\t\r]/.test(s) && !/^-\d+(?:[.,]\d+)?$/.test(s)) s = `'${s}`;
   return /[;"\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

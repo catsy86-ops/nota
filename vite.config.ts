@@ -92,6 +92,8 @@ export default defineConfig(() => ({
           // po pierwszym połączeniu zostaje w `static-assets` (2026-11-02, H1.3 — budżet precache 4 MiB).
           "**/y-webrtc-*.js",
           "**/jobPdf-*.js",
+          // Paczka dla księgowej (R3.5): ZIP z AES (@zip.js/zip.js, ~160 KB) raz w miesiącu i tak idzie przez sieć.
+          "**/{zip.js,zip-reader,AccountantExportDialog}-*.js",
           // Edytor CodeMirror (~500 KB) za flagą `cmEditor`: tylko na żądanie, poza precache (plan rozbudowy, Faza 1a).
           "**/CmEditor-*.js",
           // Wzory (KaTeX: moduł, arkusz i kroje ~0,7 MB) tylko przy `$…$` w treści; potem w `static-assets` (plan Notatek 5.4).

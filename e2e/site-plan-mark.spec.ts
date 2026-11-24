@@ -29,9 +29,17 @@ test("zaznaczony plan jest nowym dokumentem, a oryginał zostaje", async ({ page
   // Płótno zmienia rozmiar, gdy wczyta się obraz planu — rysujemy dopiero, gdy pozycja się ustali.
   const canvas = page.locator("canvas.cursor-crosshair");
   await expect(canvas).toBeVisible();
-  // Animacja otwarcia i wczytanie planu zmieniają położenie — czekamy na chwilę spokoju.
-  await page.waitForTimeout(800);
-  const box = (await canvas.boundingBox())!;
+  // Animacja otwarcia i wczytanie planu zmieniają położenie — czekamy, aż ramka płótna przestanie się ruszać
+  // między dwiema kolejnymi klatkami.
+  let box = (await canvas.boundingBox())!;
+  await expect(async () => {
+    const before = await canvas.boundingBox();
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    const after = await canvas.boundingBox();
+    expect(after).not.toBeNull();
+    expect(after).toEqual(before);
+    box = after!;
+  }).toPass();
   await page.mouse.move(box.x + 30, box.y + 30);
   await page.mouse.down();
   await page.mouse.move(box.x + 160, box.y + 90, { steps: 8 });

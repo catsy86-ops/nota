@@ -11,7 +11,9 @@ import { toast } from "sonner";
 import { ClientDatalist } from "@/components/clients/ClientDatalist";
 import { fillFromClient, findClientByName, proposeClient } from "@/lib/clients/siteClient";
 import { getClients } from "@/lib/clients/store";
-import { saveSiteCard } from "@/lib/study/store";
+import { saveSiteCard, setSiteRate } from "@/lib/study/store";
+import { getSitePoints } from "@/lib/study/pointsStore";
+import { applySitePattern, patternFromSite, useSitePatterns } from "@/lib/study/sitePatterns";
 import { JOB_SCOPE_MAX } from "@/lib/study/jobs";
 import { setJobMeta } from "@/lib/study/jobsStore";
 import type { SitePackage } from "@/lib/study/sitePackage";
@@ -30,6 +32,7 @@ interface NewSiteDialogProps {
   onPackage?: (pkg: SitePackage) => void;
 }
 
+const PATTERN_PREFIX = "w:";
 const EMPTY = { name: "", client: "", phone: "", address: "", scope: "", templateSiteId: "" };
 
 /**
@@ -41,6 +44,7 @@ const EMPTY = { name: "", client: "", phone: "", address: "", scope: "", templat
 export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob = false, onPackage }: NewSiteDialogProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState(EMPTY);
+  const patterns = useSitePatterns();
   const [job, setJob] = useState(initialJob);
   const trimmed = form.name.trim();
   const clash = trimmed ? findSiteByName(dir, trimmed) : undefined;
@@ -69,12 +73,19 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
     const base = job
       ? { name: trimmed, address: form.address.trim(), investor: form.client.trim(), ...(form.phone.trim() ? { phone: form.phone.trim() } : {}) }
       : { name: trimmed, address: "", investor: "" };
-    // B3.7: kopiuj etapy, pomieszczenia, zestawy, sposób rozliczenia i odbiorców z poprzedniej budowy.
-    const template = form.templateSiteId ? dir.find((s) => s.id === form.templateSiteId) : null;
-    const card = template
-      ? { ...base, stages: template.stages, shortages: template.shortages, rate: template.rate }
-      : base;
-    if (!saveSiteCard(id, card)) return;
+    // R4.4: wartość „w:<id>” to zapisany wzorzec; inaczej id budowy (B3.7), z której robimy wzorzec w locie.
+    // Kopiujemy etapy, pomieszczenia z punktami i stawkę; braki (mają stan), wpisy, zdjęcia i pieniądze — nie.
+    // Etapy i pomieszczenia z punktami przechodzą bez stanów; z budowy także stawka. `saveSiteCard` zapisuje tylko pola
+    // formularza, więc resztę dopisują osobne akcje.
+    const sel = form.templateSiteId;
+    const isPattern = sel.startsWith(PATTERN_PREFIX);
+    const template = !isPattern && sel ? dir.find((s) => s.id === sel) : null;
+    const pattern = isPattern
+      ? patterns.find((p) => p.id === sel.slice(PATTERN_PREFIX.length))
+      : template ? patternFromSite(template.name, template, getSitePoints(template.id), Date.now()) : null;
+    if (!saveSiteCard(id, base)) return;
+    if (pattern) applySitePattern(id, pattern);
+    if (template?.rate) setSiteRate(id, template.rate);
     if (job) setJobMeta(id, { scope: form.scope.trim() || undefined });
     if (job) proposeClient(id, { investor: base.investor, phone: form.phone.trim(), address: form.address.trim() });
     reset();
@@ -112,7 +123,14 @@ export function NewSiteDialog({ open, onOpenChange, dir, onCreated, initialJob =
               <select id="new-site-template" value={form.templateSiteId} onChange={(e) => setForm((f) => ({ ...f, templateSiteId: e.target.value }))}
                 className="w-full rounded-field border border-border bg-background px-3 py-2 text-sm">
                 <option value="">bez szablonu</option>
-                {dir.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {patterns.length > 0 && (
+                  <optgroup label="Wzorce">
+                    {patterns.map((p) => <option key={p.id} value={`${PATTERN_PREFIX}${p.id}`}>{p.name}</option>)}
+                  </optgroup>
+                )}
+                <optgroup label="Budowy">
+                  {dir.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </optgroup>
               </select>
             </div>
           )}
