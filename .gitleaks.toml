@@ -1,0 +1,11 @@
+# S5.4: konfiguracja gitleaks (CI, zadanie `secrets`). Domyślne reguły + jeden wyjątek:
+# nazwy kluczy localStorage („kaczy.…v1”) w stałych `*_KEY` reguła `generic-api-key` bierze za klucze API.
+# Pojedyncze fałszywe alarmy (wzorce regex, wektory testowe) są w `.gitleaksignore` jako odciski.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Nazwy kluczy localStorage aplikacji, nie sekrety"
+targetRules = ["generic-api-key"]
+regexTarget = "secret"
+regexes = ['''^kaczy\.[A-Za-z0-9._-]+$''']

@@ -1,0 +1,13 @@
+# S5.4: sprawdzone fałszywe alarmy gitleaks (odcisk = commit:plik:reguła:linia). Każdy dopisek z powodem w opisie commita.
+# Wzorce regex w strażniku tokenów, aria-keyshortcuts, wektor testowy RFC 6455, znacznik e2e, publiczny klucz VAPID z przykładów web-push.
+372d6fdd05a1e406a27309cc52bc98e567715580:relay-server/server.test.js:generic-api-key:54
+5aa530e00189215caab159c2be7336fad444d014:src/components/calendar/DayTimeline.tsx:generic-api-key:60
+6194933b040df67d9ff77374e0465eaa1107180a:src/test/designTokens.test.ts:generic-api-key:32
+7a9e92685a21e214fc42091cc0f9ecae27663d16:e2e/private-notes.spec.ts:generic-api-key:4
+8e3382fba4df3408b6bec0556eeb48452a470576:src/lib/storage/keys.ts:generic-api-key:134
+974281ccd22a131edb0ebeb42e59cb578c61e3c7:src/test/designTokens.test.ts:generic-api-key:43
+974281ccd22a131edb0ebeb42e59cb578c61e3c7:src/test/designTokens.test.ts:generic-api-key:45
+a26307a074e0c15c79119067ab6d931aaeabc6c0:src/test/designTokens.test.ts:generic-api-key:40
+a656bc7cd0a80dea1391f4e3e619417b75fd6a09:src/lib/push/client.test.ts:generic-api-key:6
+ae499a5dbe50941aa4393f6f45a42bfa083b3483:src/components/calendar/DayPanel.tsx:generic-api-key:81
+d1fdab3d9aa04f227c4fd20026fa5c207aa66c33:src/test/designTokens.test.ts:generic-api-key:29
