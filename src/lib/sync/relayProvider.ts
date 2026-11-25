@@ -238,7 +238,8 @@ export class RelayProvider {
       this.flushNow();
       if (!this.keepAliveTimer) {
         this.keepAliveTimer = setInterval(() => {
-          if (this.socket && this.socket.readyState === this.socket.OPEN) this.socket.send(JSON.stringify({ type: "ping" }));
+          // 1 = WebSocket.OPEN; stała zamiast globalnego WebSocket (reguła S1.2), a gniazda testowe nie mają pola OPEN
+          if (this.socket?.readyState === 1) this.socket.send(JSON.stringify({ type: "ping" }));
         }, KEEPALIVE_MS);
       }
     } else {
