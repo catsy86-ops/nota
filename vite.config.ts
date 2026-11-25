@@ -77,6 +77,9 @@ export default defineConfig(() => ({
         // potem trzyma `skin-fonts` niżej. Logo „G” używa Unbounded latin (wght), więc ten plik zostaje w precache.
         globIgnores: [
           "**/screenshot-wide.png",
+          // Ikony 512 px (zwykła i maskowalna): tylko do instalacji i podglądu linku (og:image) — system pobiera je przy
+          // instalacji, aplikacja offline ich nie używa (powiadomienia biorą `pwa-192.png`). 2026-11-25: budżet precache.
+          "**/pwa-512*.png",
           "**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2",
           "**/{barlow-condensed,fraunces,bricolage-grotesque,inter,nunito,atkinson-hyperlegible-next,literata,manrope,lexend}-*.woff2",
           "**/unbounded-latin-ext*.woff2",
