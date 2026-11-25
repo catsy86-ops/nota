@@ -54,7 +54,7 @@ describe("zestawy: włączony i opis slotu (Ustawienia, 2026-11-02)", () => {
       expect(p.desc.length).toBeGreaterThan(10);
       for (const k of Object.keys(p.values)) expect(k.startsWith("kaczy")).toBe(true);
     }
-    expect(PRESETS.map((p) => p.id)).toEqual(["site", "night", "read", "battery"]);
+    expect(PRESETS.map((p) => p.id)).toEqual(["site", "night", "read", "battery", "large"]);
   });
 
   it("slotSummary — styl, schemat, rozmiar tekstu i ruch", () => {

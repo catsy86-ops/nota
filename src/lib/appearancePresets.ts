@@ -11,7 +11,7 @@ import { APPEARANCE, appearanceSlotKey } from "@/lib/storage/names";
  */
 
 export interface AppearancePreset {
-  id: "site" | "night" | "read" | "battery";
+  id: "site" | "night" | "read" | "battery" | "large";
   label: string;
   desc: string;
   values: Record<string, string>;
@@ -69,6 +69,17 @@ export const PRESETS: readonly AppearancePreset[] = [
       [APPEARANCE.glow]: JSON.stringify({ strength: "off", color: "theme" }),
       [APPEARANCE.motion]: JSON.stringify("reduced"),
       [APPEARANCE.siteMode]: JSON.stringify("off"),
+    },
+  },
+  {
+    // Q5.4: większe cele tylko na życzenie (zamiast większego `Button` dla wszystkich, cofniętego 15.11). To tryb budowa
+    // (cele dotyku 56 px, tekst 112,5%, mocniejsze krawędzie) bez zmiany stylu, tła i ruchu — w odróżnieniu od „Budowy”.
+    id: "large",
+    label: "Duże cele",
+    desc: "Przyciski z polem dotyku 56 px, tekst o 12,5% większy i wyraźne ramki — w obecnym stylu.",
+    values: {
+      [APPEARANCE.siteMode]: JSON.stringify("on"),
+      [APPEARANCE.frames]: JSON.stringify("strong"),
     },
   },
 ];

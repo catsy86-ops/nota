@@ -303,3 +303,25 @@ describe("TrainingSection", () => {
     expect(screen.getByTestId("training-progress").textContent).toContain("rekord 14 kg");
   });
 });
+
+describe("TrainingSection — C2.1 podpowiedź progresji", () => {
+  it("cel z planu osiągnięty w ostatniej sesji → „Dołóż”, a „Wpisz” wypełnia serie", async () => {
+    const { EXERCISES } = await import("@/lib/training/catalog");
+    const id = EXERCISES[0].id;
+    fixture.plans = [{ id: "p", name: "A", exerciseIds: [id], targetSets: 2, targetReps: 10, created: 1 }];
+    fixture.entries = [{ id: "e1", day: "2026-11-20", exerciseId: id, sets: [{ reps: 10, kg: 40 }, { reps: 10, kg: 40 }], note: "", created: 1 }];
+    render(<TrainingSection />);
+    const hint = screen.getByTestId("progression-hint");
+    expect(hint.textContent).toContain("Dołóż: 41 kg × 10");
+    fireEvent.click(screen.getByRole("button", { name: "Wpisz" }));
+    expect((screen.getByLabelText("Ciężar kg, seria 1") as HTMLInputElement).value).toBe("41");
+    expect((screen.getByLabelText("Powtórki, seria 2") as HTMLInputElement).value).toBe("10");
+  });
+
+  it("bez planu i sesji nie ma celu — podpowiedzi nie ma", async () => {
+    const { EXERCISES } = await import("@/lib/training/catalog");
+    fixture.entries = [{ id: "e1", day: "2026-11-20", exerciseId: EXERCISES[0].id, sets: [{ reps: 10, kg: 40 }], note: "", created: 1 }];
+    render(<TrainingSection />);
+    expect(screen.queryByTestId("progression-hint")).toBeNull();
+  });
+});

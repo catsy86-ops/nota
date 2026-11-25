@@ -43,4 +43,11 @@ describe("manifest.webmanifest", () => {
     const qs = new URLSearchParams({ [t.params.title]: "T", [t.params.text]: "X", [t.params.url]: "https://example.com/" });
     expect(parseShare(t.action, "?" + qs.toString())).toEqual({ title: "T", content: "X\n\nhttps://example.com/" });
   });
+
+  it("Q3.7: protokół web+notatnik: przychodzi jako ?link= i trafia do protocolLinkPath", async () => {
+    const { protocolLinkPath } = await import("@/lib/protocolLink");
+    expect(manifest.protocol_handlers).toEqual([{ protocol: "web+notatnik", url: "/?link=%s" }]);
+    const url = new URL(manifest.protocol_handlers[0].url.replace("%s", encodeURIComponent("web+notatnik:notatka/n1")), "https://x.test");
+    expect(protocolLinkPath(url.searchParams.get("link"))).toBe("/notatka/n1");
+  });
 });

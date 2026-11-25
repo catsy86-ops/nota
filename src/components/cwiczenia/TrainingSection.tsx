@@ -21,6 +21,8 @@ import { useNotesContext } from "@/hooks/NotesProvider";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { listItemMotion } from "@/lib/cardMotion";
 import { useMotionPref } from "@/hooks/useMotionPref";
+import { useWakeLock } from "@/hooks/useWakeLock";
+import { progressionText, suggestNext, targetRepsFor } from "@/lib/training/progression";
 
 /** Trening w dziale Ćwiczenia: przypomnienie, plany dni, dziennik serii z przerwą, dziś i progres. */
 export function TrainingSection() {
@@ -32,6 +34,8 @@ export function TrainingSection() {
   const week = useMemo(() => trainingWeek(entries, today, (id) => exerciseById(id)?.group), [entries, today]);
   const [rest, setRest] = useState<{ until: number; total: number } | null>(null);
   const restSeconds = useRestSeconds();
+  // Q3.1: w przerwie między seriami telefon leży obok — ekran nie gaśnie, dopóki liczy się przerwa.
+  useWakeLock(rest !== null);
 
   return (
     <SectionCard icon={Dumbbell} title="Trening" bodyClassName="space-y-5">
@@ -248,6 +252,8 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
   const [newOpen, setNewOpen] = useState(false);
   /** 2.1: prowadzony trening — wybór dnia planu go rozpoczyna. */
   const [session, setSession] = useState<TrainingSession | null>(null);
+  // Q3.1: prowadzony trening — ekran nie gaśnie do końca planu.
+  useWakeLock(session !== null && !isFinished(session));
   /** 2.7: serie liczone w sekundach (deska, zwis) zamiast powtórzeń; domyślnie wg ćwiczenia, do zmiany przełącznikiem. */
   const [timed, setTimed] = useState(() => !!exerciseById(EXERCISES[0].id)?.timed);
   useEffect(() => { setTimed(!!exerciseById(exerciseId)?.timed); }, [exerciseId]);
@@ -295,6 +301,12 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
   const exercise = exerciseById(exerciseId);
   // Ostrzeżenie, nie blokada: ciężar ponad hantle z ustawienia da się zapisać (np. po zmianie hantli).
   const overLimit = parsed.some((p) => p.kg !== undefined && p.kg !== null && overDumbbell(p.kg, exercise?.equipment ?? [], equipment));
+  // C2.1: podpowiedź podwójnej progresji z ostatniej sesji; cel powtórek z sesji albo z planu z tym ćwiczeniem.
+  const sessionTarget = session && !isFinished(session) && exerciseId === currentExerciseId(session) ? session.targetReps : undefined;
+  const hint = useMemo(
+    () => (timed ? null : suggestNext(entries, exerciseId, targetRepsFor(exerciseId, plans, sessionTarget), exercise?.equipment ?? [], equipment)),
+    [timed, entries, exerciseId, plans, sessionTarget, exercise?.equipment, equipment],
+  );
 
   const save = () => {
     if (!valid) return;
@@ -381,9 +393,16 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
             Użyj ostatnich
           </Button>
         </div>
-      ) : (
-        <p className="ui-hint">To pierwszy zapis tego ćwiczenia.</p>
-      )}
+      ) : null}
+      {!last && <p className="ui-hint">To pierwszy zapis tego ćwiczenia.</p>}
+      {last && hint ? (
+        <div className="flex flex-wrap items-center gap-2 text-xs" data-testid="progression-hint">
+          <span className="font-medium text-primary-ink">{progressionText(hint)}</span>
+          <Button type="button" variant="outline" size="sm" className="coarse:h-11" onClick={() => setRows(last.sets.map(() => ({ reps: String(hint.reps), kg: String(hint.kg).replace(".", ",") })))}>
+            Wpisz
+          </Button>
+        </div>
+      ) : null}
 
       <div role="radiogroup" aria-label="Rodzaj serii" className="flex gap-1.5">
         {([false, true] as const).map((t) => (

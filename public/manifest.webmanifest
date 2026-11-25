@@ -266,5 +266,11 @@
       "form_factor": "wide",
       "label": "Widok notatek w aplikacji G"
     }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+notatnik",
+      "url": "/?link=%s"
+    }
   ]
 }

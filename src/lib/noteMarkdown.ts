@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "@/lib/notify";
 import type { Note } from "@/lib/types/note";
+import { notePath } from "@/lib/viewRoute";
 
 /**
  * Jedna notatka jako tekst do schowka. Układ zgodny z `exportToMarkdown`
@@ -50,6 +51,19 @@ export async function copyNoteToClipboard(note: Note, as: CopyFormat = "markdown
 
 /** Link do notatki w składni `[[tytuł]]` (plan Notatek 2.5) — do wklejenia w innej notatce; `null` bez tytułu. */
 export const wikiLinkOf = (note: Pick<Note, "title">): string | null => (note.title.trim() ? `[[${note.title.trim()}]]` : null);
+
+/** Q3.7: stały adres notatki (`/notatka/<id>`) — do tagu NFC, skrótu albo zakładki; otwiera ją po wczytaniu. */
+export async function copyNoteAddress(id: string, origin: string = location.origin): Promise<boolean> {
+  const url = `${origin}${notePath(id)}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.success("Skopiowano adres notatki");
+    return true;
+  } catch {
+    toast.error("Nie udało się skopiować — schowek jest niedostępny");
+    return false;
+  }
+}
 
 /** Kopiuje `[[tytuł]]` notatki do schowka i potwierdza toastem. */
 export async function copyWikiLink(note: Pick<Note, "title">): Promise<boolean> {

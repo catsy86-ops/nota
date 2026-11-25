@@ -3,6 +3,7 @@ import "@/lib/trustedTypes";
 import { createRoot } from "react-dom/client";
 import { toast } from "sonner";
 import App from "./App.tsx";
+import { applyProtocolLink } from "@/lib/protocolLink";
 import "@/lib/inputModality";
 import "./styles/fonts-latin/@fontsource-variable-plus-jakarta-sans-index.css";
 // Cyfry o stałej szerokości (rachunek w Grafiku); `wght.css` bez kursywy.
@@ -75,6 +76,8 @@ watchDocGeneration();
 // Z-13.4: w APK `navigator.share` z plikami przez wtyczkę (WebView go nie ma); PWA modułu nie pobiera.
 if (isNativeShell()) void import("@/lib/native/fileShare").then((m) => m.installShareShim());
 
+// Q3.7: `/?link=web+notatnik:…` z protokołu w manifeście → adres w aplikacji, zanim router go przeczyta.
+applyProtocolLink();
 createRoot(document.getElementById("root")!).render(<App />);
 hideBootSplash(yjsStore.ready());
 

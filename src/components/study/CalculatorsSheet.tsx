@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useTrackUse } from "@/lib/study/usage";
 import { parseNum, pipeLiters, PIPES, plNum, SLOPE_TYPICAL, slopeDrop, slopeFromDrop, slopeNote, waterTest } from "@/lib/study/calc";
 import { convertPressure, EXPANSION, PIPE_THREADS, PRESSURE_LABEL, PRESSURE_SOURCE, PRESSURE_UNITS, thermalExpansionMm, THREADS_SOURCE, type PressureUnit } from "@/lib/study/cheats";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 const fieldClass =
   "h-11 w-full min-w-0 rounded-field border border-input bg-background px-3 font-mono text-base tabular-nums outline-hidden focus:ring-2 focus:ring-ring";
@@ -20,6 +21,8 @@ const chipClass = "pressable rounded-full border px-3 py-1 text-sm coarse:min-h-
 export function CalculatorsButton({ variant = "pill", className }: { variant?: "pill" | "icon"; className?: string }) {
   const [open, setOpen] = useState(false);
   useTrackUse("kalkulatory", open);
+  // Q3.1: przy liczeniu na budowie ręce są zajęte — ekran nie gaśnie, dopóki okno jest otwarte.
+  useWakeLock(open);
   return (
     <>
       <button
