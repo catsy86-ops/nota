@@ -103,7 +103,6 @@ export function plainChecklistFromY(value: unknown): ChecklistItem[] {
   if (value instanceof Y.Map) {
     const items: (ChecklistItem & { order: number })[] = [];
     value.forEach((v, id) => {
-      if (items.length >= LIM.checklistItems) return;
       if (v instanceof Y.Map) {
         items.push({
           id: id.length > LIM.id ? id.slice(0, LIM.id) : id,
@@ -114,8 +113,11 @@ export function plainChecklistFromY(value: unknown): ChecklistItem[] {
         });
       }
     });
-    items.sort((a, b) => a.order - b.order);
-    return items.map(({ order: _order, ...rest }) => rest);
+    // A4.5: remis `order` (dwie pozycje dodane naraz na dwóch urządzeniach) rozstrzyga id — kolejność iteracji `Y.Map`
+    // to kolejność wstawienia na danym urządzeniu, więc bez tego telefon i komputer pokazywały listę inaczej.
+    // Limit liczby pozycji dopiero po sortowaniu, żeby oba urządzenia odcinały te same pozycje.
+    items.sort((a, b) => a.order - b.order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    return items.slice(0, LIM.checklistItems).map(({ order: _order, ...rest }) => rest);
   }
   // Legacy notes persisted before checklist became a Y.Map — self-heals on next patch.
   if (Array.isArray(value)) {
