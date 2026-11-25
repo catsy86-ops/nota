@@ -50,19 +50,9 @@ import { haptic } from "@/lib/haptics";
 import { pulseSkinSignal } from "@/lib/skinSignal";
 import { useLatch } from "@/hooks/useLatch";
 import { POWLOKA } from "@/lib/storage/names";
+import type { ComposerAction, ComposerExtras } from "@/lib/composerTypes";
 
-/** Od czego zaczyna się nowa notatka (długie przytrzymanie „+” na telefonie). */
-export type ComposerAction = "note" | "list" | "dictate" | "image" | "draw" | "reminder";
-
-/** Pola, których nie niesie lista pozycyjna `onAdd` — seria przypomnienia i rodzic. */
-export interface ComposerExtras {
-  reminderAllDay?: boolean;
-  reminderLead?: number;
-  reminderRepeat?: ReminderRepeat;
-  reminderRule?: RepeatRule;
-  reminderRepeatUntil?: number;
-  parentId?: string;
-}
+export type { ComposerAction, ComposerExtras };
 
 interface AddNoteBarProps {
   onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority, folderId?: string | null, attachments?: Attachment[], extras?: ComposerExtras) => void;

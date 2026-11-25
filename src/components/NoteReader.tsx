@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import type { ReaderMode } from "@/lib/composerTypes";
 import { splitWikiTarget } from "@/lib/wikiLinks";
 import { onHeadingRequest, requestHeading, scrollToHeading, takePendingHeading } from "@/lib/wikiHeading";
 import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -62,7 +63,7 @@ const SIDE_TABS: { id: SideTab; label: string }[] = [
  *
  * Edycja zawsze dzieje się w karcie — czytnik tylko do niej prowadzi.
  */
-export type ReaderMode = "preview" | "present";
+export type { ReaderMode };
 
 interface Props {
   note: Note;

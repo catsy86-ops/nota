@@ -3,14 +3,14 @@ import type { Note, NoteColor } from "@/hooks/useNotes";
 import { pushAction } from "@/lib/actionHistory";
 import { toastWithUndo } from "@/lib/undoToast";
 import { glowAtNote, glowPulse, pointOfNote } from "@/lib/glowTrail";
-import type { useConfirmAction } from "@/components/ConfirmActionDialog";
+import type { ConfirmFn } from "@/lib/confirmGate";
 import { useLatestRef } from "@/hooks/useLatestRef";
 
 export interface NoteActionsDeps {
   notes: Note[];
   archivedNotes: Note[];
   selectedIds: Set<string>;
-  confirmAction: ReturnType<typeof useConfirmAction>["confirmAction"];
+  confirmAction: ConfirmFn;
   clearSelection: () => void;
   trashNote: (id: string) => void;
   restoreFromTrash: (id: string) => void;

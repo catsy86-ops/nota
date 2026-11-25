@@ -24,7 +24,7 @@ Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapi
 - `src/lib/reminderRepeat.ts` — `nextOccurrence(note, at)`, `snoozeTarget(note, at, now)`, `doneTarget`, `seriesDay`, `endOfDay(date)`.
 - `src/lib/reminderOccurrences.ts` — `expandOccurrences` (przewija do `rangeStart`, limit `MAX_SKIP_STEPS`), `isNext` tylko dla zapisanego terminu, `Occurrence.allDay`.
 - `src/lib/reminderDue.ts` — `planDueReminders` (czysta funkcja: co odpalić i ile pominięto), rejestr „już odpalone”, mapa `handled`.
-- `src/hooks/useReminderNotifications.ts` — wykonuje efekty: dymki, powiadomienia, przesunięcie serii, `markDone`, `applyActionRef` (akcja z SW i z kolejki przy starcie).
+- `src/components/useReminderNotifications.ts` — wykonuje efekty: dymki, powiadomienia, przesunięcie serii, `markDone`, `applyActionRef` (akcja z SW i z kolejki przy starcie).
 - `src/components/ReminderDueToast.tsx` — dymek z „Odłóż” zawsze.
 - `src/components/NoteCardBody.tsx` — przyciski terminu („Gotowe”, „Jutro”, „+1 h”), `focusAfterRemoval`.
 - `src/components/ReminderPicker.tsx` — `ReminderBadge` (kolor, prefiks „Zaległe:”, `useReminderPassed`).
@@ -167,7 +167,7 @@ Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapi
 ## Dymek przypomnienia — menu „Odłóż” (T-4, 2026-10-26)
 
 - **Co robi:** w dymku, który wypadł przypomnienie (`ReminderDueToast.tsx`), menu „Odłóż” ma: „Za 10 minut”, „Za godzinę”, „Wieczorem (18:00)” (tylko do 17:30, potem pozycji nie ma), „Jutro rano (9:00)”. Gotowe i Otwórz bez zmian.
-- **Gdzie:** `src/hooks/useReminderNotifications.ts` (`onSnoozeHour`, `onSnoozeEvening`, `eveningTime(now)`); `src/lib/reminderAgenda.ts` (`eveningTime`). Odłożenie zawsze idzie przez `snoozeTarget`, więc odkłada jedno wystąpienie serii.
+- **Gdzie:** `src/components/useReminderNotifications.ts` (`onSnoozeHour`, `onSnoozeEvening`, `eveningTime(now)`); `src/lib/reminderAgenda.ts` (`eveningTime`). Odłożenie zawsze idzie przez `snoozeTarget`, więc odkłada jedno wystąpienie serii.
 - **Testy:** `src/lib/reminderAgenda.test.ts` (`eveningTime`), e2e `e2e/reminder-toast.spec.ts`.
 - **Nie zrobione z planu 2.1:** wspólna lista `SNOOZE_OPTIONS` dla kafla, Dziś i Kalendarza (tam dalej są osobne przyciski), menu „Wybierz…” z datą (2.2), i powiadomienie systemowe z dwoma przyciskami zostaje bez zmian.
 
@@ -205,7 +205,7 @@ Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapi
 ## Terminy — dymek zbiorczy (2.3, 2026-10-26)
 
 - **Co robi:** gdy wypada co najmniej dwa przypomnienia naraz, jest jeden dymek. Przycisk „Odłóż wszystkie o godzinę” odkłada każde wystąpienie o godzinę (`snoozeTarget`, po jednym na notatkę). Jedno „Cofnij” w osobnym dymku przywraca wszystkie terminy. „Zobacz” jest drugim przyciskiem dymku (prowadzi do Terminów).
-- **Gdzie:** `src/hooks/useReminderNotifications.ts` (gałąź `grouped`); cofnięcie przez `firedCbRef` z zapisanymi polami z `reminderFields`.
+- **Gdzie:** `src/components/useReminderNotifications.ts` (gałąź `grouped`); cofnięcie przez `firedCbRef` z zapisanymi polami z `reminderFields`.
 - **Testy:** `e2e/reminder-toast.spec.ts` (zbiorczy dymek, odłożenie i cofnięcie).
 
 ## Terminy — lista zamiast kafli (2.6, T-3, 2026-10-26)
@@ -230,7 +230,7 @@ Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapi
 ## Terminy — wcześniejsze przypomnienie (3.2, 2026-11-03)
 
 - **Co robi.** W wyborze terminu (kafel, menu kafla, pasek nowej notatki) jest wiersz **„Wcześniej: Nie / 15 min / 1 h / Dzień”**. Podgląd pod spodem dopisuje „· sygnał 1 h wcześniej”. O tej chwili aplikacja pokazuje dymek **„Za godzinę: <tytuł>”** (z godziną terminu i „Otwórz”) oraz powiadomienie systemowe. Sam termin dzwoni dalej o swojej porze, z „Gotowe” i „Odłóż”. W serii każde wystąpienie ma własny sygnał.
-- **Gdzie.** `src/lib/reminderLead.ts` (`LEAD_OPTIONS`, `isLeadMinutes`, `leadAt`, `planLeadReminders`, `leadPhrase`, `leadShort`, `loadFiredLeads`/`saveFiredLeads`), pole w `src/lib/reminderSpec.ts` (`REMINDER_FIELDS`, `readSpec`, `mergeSpec`), `src/lib/yjsStore.ts` (zapis i projekcja), `Note.reminderLead` w `src/hooks/useNotes.ts`, odpalanie w `src/hooks/useReminderNotifications.ts`, wybór w `src/components/ReminderPicker.tsx` (props `reminderLead`, piąty argument `onSet`), wywołania w `NoteCardBody.tsx`, `NoteCardActions.tsx`, `AddNoteBar.tsx` (`ComposerExtras.reminderLead`) i `Index.tsx` (`handleComposerAdd`), push w `src/lib/push/schedule.ts` (`noteItems`) i `src/lib/push/shown.ts` (`pushKey.noteLead`), `.ics` w `src/lib/icsExport.ts`, kopia w `noteSchema.ts` i scalanie w `mergeNotes.ts`.
+- **Gdzie.** `src/lib/reminderLead.ts` (`LEAD_OPTIONS`, `isLeadMinutes`, `leadAt`, `planLeadReminders`, `leadPhrase`, `leadShort`, `loadFiredLeads`/`saveFiredLeads`), pole w `src/lib/reminderSpec.ts` (`REMINDER_FIELDS`, `readSpec`, `mergeSpec`), `src/lib/yjsStore.ts` (zapis i projekcja), `Note.reminderLead` w `src/hooks/useNotes.ts`, odpalanie w `src/components/useReminderNotifications.ts`, wybór w `src/components/ReminderPicker.tsx` (props `reminderLead`, piąty argument `onSet`), wywołania w `NoteCardBody.tsx`, `NoteCardActions.tsx`, `AddNoteBar.tsx` (`ComposerExtras.reminderLead`) i `Index.tsx` (`handleComposerAdd`), push w `src/lib/push/schedule.ts` (`noteItems`) i `src/lib/push/shown.ts` (`pushKey.noteLead`), `.ics` w `src/lib/icsExport.ts`, kopia w `noteSchema.ts` i scalanie w `mergeNotes.ts`.
 - **Jak działa.**
   - **Dane:** `reminderLead` (minuty, liczba całkowita 1–10 080) jest tylko w `reminderSpec`, jak `reminderAllDay` i `reminderBase`. Nie ma osobnego pola w `Y.Map`. Zmiana terminu zostawia sygnał, usunięcie terminu (`reminder: null`, także „Gotowe” na jednorazowym) go czyści (`mergeSpec`). Edycja w Kalendarzu nie podaje pola, więc sygnał zostaje.
   - **Kiedy odpala:** `planLeadReminders` wybiera notatki, dla których minęła chwila `termin − sygnał`, a termin jeszcze nie. Pomija dwa przypadki: notatkę zmienioną po chwili sygnału (`updatedAt`, z minutą zapasu `UPDATE_GRACE_MS`) i odłożone wystąpienie serii (`reminderBase`). Zapas jest dla serii: przesuwa się na następny termin kilka sekund po bieżącym, a przy sygnale równym odstępowi (codziennie + „Dzień”) to dokładnie chwila następnego sygnału. Bez zapasu sygnał miałoby tylko pierwsze wystąpienie (znalazł to przegląd kodu). Dzięki temu ustawienie terminu „za 30 min” z sygnałem „1 h” albo odłożenie o 10 minut nie daje od razu fałszywego „Za 10 min”. Aplikacja otwarta między sygnałem a terminem pokaże go z opóźnieniem.

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { toast } from "sonner";
-import type { ComposerAction } from "@/components/AddNoteBar";
+import type { ComposerAction } from "@/lib/composerTypes";
 import { whenNotesReady, type useNotes } from "@/hooks/useNotes";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";

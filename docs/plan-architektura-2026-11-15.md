@@ -25,7 +25,7 @@
 | A1.2 ✅ | **`View` do `src/lib/types/view.ts`**; `isMotionReduced`/`setMotionMode` do `src/lib/motionPref.ts`; `resolveDark` do `src/lib/theme.ts`; `hasDictationConsent` do `src/lib/dictationConsent.ts`. Hooki reeksportują. | S |
 | A1.3 ✅ | **Dwa importy komponentów z `lib`** (`InvoiceDialog`, `ClientsView`): sprawdzić, co jest brane (zwykle typ albo stała) i przenieść to do `lib`. | S |
 | A1.4 ◐ (jeden plik `notify.ts`, bez wstrzykiwania) | **`sonner` poza `lib`:** port `src/lib/notify.ts` — `notify.info/success/error/undo(...)` z wstrzykiwanym ujściem (`setNotifySink`), domyślnie puste; `App.tsx` podpina `toast`. 14 plików przechodzi na `notify`. Testy `lib` przestają potrzebować atrapy `sonner`. | M |
-| A1.5 | **Hooki bez komponentów:** 9 importów — hook zwraca dane i akcje, a komponent (dialog, toast) renderuje wołający; tam, gdzie to niepraktyczne, przenieść plik do `components/` jako komponent-kontroler. | M |
+| A1.5 ✅ 2026-11-25 (`lib/composerTypes.ts`, `lib/confirmGate.ts`, dwa kontrolery toastów w `components/`; lista wyjątków ESLint pusta) | **Hooki bez komponentów:** 9 importów — hook zwraca dane i akcje, a komponent (dialog, toast) renderuje wołający; tam, gdzie to niepraktyczne, przenieść plik do `components/` jako komponent-kontroler. | M |
 | A1.6 ✅ | **Reguła ESLint** `no-restricted-imports` dla `src/lib/**`: zakaz `@/hooks/*`, `@/components/*`, `sonner`, `react` (poza jawną listą plików `*.tsx` w `lib`). Dla `src/hooks/**`: zakaz `@/components/*`. Lista wyjątków w konfiguracji, malejąca do zera. | S |
 
 Odbiór: `grep -r "@/hooks\|@/components" src/lib` = 0 poza listą wyjątków; lint 0 błędów.
@@ -56,11 +56,11 @@ Cel: strona jako złożenie, ≤ 350 linii, bez własnej logiki.
 | Nr | Punkt | Rozmiar |
 |---|---|---|
 | A4.1 | **Zielona baza:** pełne `npm run test:e2e` na obecnym `master`; każda porażka naprawiona albo opisana w `docs/e2e-znane.md` z przyczyną. Warunek startu F3, A2, A3. | M |
-| A4.2 | **Podział w CI:** macierz 4 fragmentów (`--shard=i/4`) dla e2e, osobne zadanie `@smoke` (34 testy) jako szybka bramka; pełne tylko na `master` i na żądanie. Raport blob scalany na końcu. | S |
+| A4.2 ✅ 2026-11-23 (AR-3: @smoke na gałęziach, pełne na master; bez podziału na fragmenty) | **Podział w CI:** macierz 4 fragmentów (`--shard=i/4`) dla e2e, osobne zadanie `@smoke` (34 testy) jako szybka bramka; pełne tylko na `master` i na żądanie. Raport blob scalany na końcu. | S |
 | A4.3 | **Bez `waitForTimeout`:** zamiana na oczekiwanie na stan (`expect.poll`, `toBeVisible`, zdarzenie `transitionend`); w testach pomiarowych zostają z komentarzem. Reguła lint `playwright/no-wait-for-timeout` jako ostrzeżenie, potem błąd. | M |
-| A4.4 | **Równoległość lokalnie:** sprawdzić, dlaczego `workers: 1` (wspólny IndexedDB? port?); jeśli testy są odizolowane kontekstem, podnieść do 2–3 przez `PW_WORKERS`. Pamiętać o pamięci RAM — wcześniej pełne e2e padało z jej braku. | S |
+| A4.4 ✅ (PW_WORKERS w playwright.config.ts) | **Równoległość lokalnie:** sprawdzić, dlaczego `workers: 1` (wspólny IndexedDB? port?); jeśli testy są odizolowane kontekstem, podnieść do 2–3 przez `PW_WORKERS`. Pamiętać o pamięci RAM — wcześniej pełne e2e padało z jej braku. | S |
 | A4.5 | **Testy własności dla scalania:** `fast-check` — dwa dokumenty Yjs z losowymi operacjami na notatkach, scalone w obie strony, dają tę samą projekcję; to samo dla kopii (`merge.ts`). | M |
-| A4.6 | **Test „stara kopia”:** katalog `src/test/fixtures/backups/` z kopią z każdej wersji formatu (1, 2, 3); każda musi się wczytać. Dopisywać przy każdej zmianie formatu. | S |
+| A4.6 ✅ (src/test/fixtures/backups, v1–v3) | **Test „stara kopia”:** katalog `src/test/fixtures/backups/` z kopią z każdej wersji formatu (1, 2, 3); każda musi się wczytać. Dopisywać przy każdej zmianie formatu. | S |
 | A4.7 | **Mutacyjne próbkowanie** (Stryker) tylko dla `src/lib/debts`, `src/lib/shifts/summary.ts`, `src/lib/ksef` — tam błąd w liczbach kosztuje pieniądze. Jednorazowo, wynik do `docs/`. | M |
 
 ## Etap A5: porządek repo (Sonnet)
@@ -69,8 +69,8 @@ Cel: strona jako złożenie, ≤ 350 linii, bez własnej logiki.
 |---|---|---|
 | A5.1 | **Porzucone kopie robocze:** `.claude/worktrees` (855 MB). Sprawdzić, czy nie ma w nich niezacommitowanych zmian (`git status` w każdej), pokazać listę właścicielowi i usunąć **po jego zgodzie**. | S |
 | A5.2 | **`opis.md` na działy:** `docs/opis/<dzial>.md` + `opis.md` jako spis treści z linkami. Zmienić zapis w `CLAUDE.md` (reguła dokumentacji wskazuje nowy układ). Wymaga zgody właściciela — to zmiana jego reguły. | M |
-| A5.3 | **Stare plany:** przenieść zrobione `docs/plan-*.md` do `docs/archiwum/`; w `roadmap.md` zostają tylko otwarte punkty. | S |
-| A5.4 | **119 kluczy `localStorage`:** rejestr `src/lib/storageKeys.ts` (nazwa, właściciel, czy w kopii, czy czyszczony przy resecie) + test, że żaden literał `"kaczy.*"` nie występuje poza rejestrem. Zamyka klasę błędów „ustawienie nie trafiło do kopii”. | M |
+| A5.3 ✅ 2026-11-25 (docs-zrobione/) | **Stare plany:** przenieść zrobione `docs/plan-*.md` do `docs/archiwum/`; w `roadmap.md` zostają tylko otwarte punkty. | S |
+| A5.4 ✅ (src/lib/storage/names.ts, keyLiterals.test.ts) | **119 kluczy `localStorage`:** rejestr `src/lib/storageKeys.ts` (nazwa, właściciel, czy w kopii, czy czyszczony przy resecie) + test, że żaden literał `"kaczy.*"` nie występuje poza rejestrem. Zamyka klasę błędów „ustawienie nie trafiło do kopii”. | M |
 | A5.5 | **Zależności:** `npm audit`, `knip` (martwe eksporty i pliki) — raport, usuwanie w osobnych commitach. | S |
 
 ## Kolejność

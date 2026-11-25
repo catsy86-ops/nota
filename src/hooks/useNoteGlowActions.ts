@@ -1,7 +1,7 @@
 import type { Note, useNotes } from "@/hooks/useNotes";
 import type { View } from "@/hooks/useFilteredNotes";
 import { useCallback, useMemo } from "react";
-import { type ComposerExtras } from "@/components/AddNoteBar";
+import type { ComposerExtras } from "@/lib/composerTypes";
 import { toastWithUndo } from "@/lib/undoToast";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import type { Folder, useNotes } from "@/hooks/useNotes";
-import type { InboxCaptureExtras } from "@/components/InboxCapture";
+import type { InboxCaptureExtras } from "@/lib/composerTypes";
 import { captureParts } from "@/lib/inbox";
 import { toastWithUndo } from "@/lib/undoToast";
 import { formatReminderShort } from "@/lib/reminderTime";

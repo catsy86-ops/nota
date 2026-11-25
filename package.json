@@ -10,7 +10,7 @@
     "predev": "node scripts/copy-ocr.mjs && node scripts/copy-mermaid.mjs",
     "dev": "vite",
     "prebuild": "node scripts/copy-ocr.mjs && node scripts/copy-mermaid.mjs",
-    "build": "vite build",
+    "build": "vite build && node scripts/sw-trusted-types.mjs",
     "build:android": "npm run build && node scripts/cap-prepare.mjs && cap sync android",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",

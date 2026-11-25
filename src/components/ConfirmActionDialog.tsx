@@ -3,29 +3,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Archive, Trash } from "lucide-react";
 import { getConfirmPrefs, setConfirmPref, type ConfirmKey } from "@/lib/confirmPrefs";
+import { confirmSkipped, runWithoutConfirm, type ConfirmRequest } from "@/lib/confirmGate";
 
-interface PendingAction {
-  kind: ConfirmKey;
-  title: string;
-  description: string;
-  run: () => void;
-}
+type PendingAction = ConfirmRequest;
 
 const META: Record<ConfirmKey, { heading: string; cta: string; icon: typeof Trash; tone: string }> = {
   trash: { heading: "Przenieść do kosza?", cta: "Przenieś do kosza", icon: Trash, tone: "text-destructive-ink" },
   archive: { heading: "Zarchiwizować?", cta: "Archiwizuj", icon: Archive, tone: "text-primary-ink" },
 };
 
-let skipConfirm = false;
-
-/**
- * Wykonuje akcję bez okna potwierdzenia — dla gestów (swipe kafla), które są odwracalne
- * przez „Cofnij” i same w sobie są świadomą decyzją. Działa tylko dla wywołania synchronicznego.
- */
-export function runWithoutConfirm(fn: () => void) {
-  skipConfirm = true;
-  try { fn(); } finally { skipConfirm = false; }
-}
+export { runWithoutConfirm };
 
 /**
  * Friendly confirmation gate for destructive actions.
@@ -36,7 +23,7 @@ export function useConfirmAction() {
   const [dontAsk, setDontAsk] = useState(false);
 
   const confirmAction = useCallback((action: PendingAction) => {
-    if (skipConfirm || !getConfirmPrefs()[action.kind]) {
+    if (confirmSkipped() || !getConfirmPrefs()[action.kind]) {
       action.run();
       return;
     }

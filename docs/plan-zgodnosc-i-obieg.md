@@ -1,7 +1,7 @@
 # Zgodność w przód nowych pól i obieg „rata / odhaczenie / grupa” (Z-17.1, Z-17.2)
 
 > **Status:** specyfikacja (sesja H z `plan-uzycia-fable-cz2-2026-11-17.md`), 2026-11-17. Kod bez zmian. Zlecenia dla Opusa i Sonneta w §4.
-> **Sprawdzone w kodzie:** `src/lib/debts/{model,yDebts,store,settleFromNote}.ts`, `src/lib/supplements/{model,ySupplements,store}.ts`, `src/components/cwiczenia/CwiczeniaView.tsx` (wiersze 40–102), `src/components/ReminderQuickActions.tsx`, `src/hooks/useReminderNotifications.ts` (66–93), `src/lib/reminderRepeat.ts`, `src/lib/reminderActions.ts`, `src/lib/formatSchema.ts`, `src/lib/noteSchema.ts` (pola `debts`, `supplements`). Pozostałe `clean*` — tylko sygnatury i osiem ciał (lista w §1.6).
+> **Sprawdzone w kodzie:** `src/lib/debts/{model,yDebts,store,settleFromNote}.ts`, `src/lib/supplements/{model,ySupplements,store}.ts`, `src/components/cwiczenia/CwiczeniaView.tsx` (wiersze 40–102), `src/components/ReminderQuickActions.tsx`, `src/components/useReminderNotifications.ts` (66–93), `src/lib/reminderRepeat.ts`, `src/lib/reminderActions.ts`, `src/lib/formatSchema.ts`, `src/lib/noteSchema.ts` (pola `debts`, `supplements`). Pozostałe `clean*` — tylko sygnatury i osiem ciał (lista w §1.6).
 > **Zmiana względem zalecenia D-X1:** bramka wersji z `formatSchema` nie wystarcza (§1.2). Zamiast niej reguła „mapa boczna” i „wpis niewidoczny dla starszego czytelnika”. Do potwierdzenia przez właściciela.
 
 ## 1. Z-17.1 — nowe pola a starsze wersje

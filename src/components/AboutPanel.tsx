@@ -2,7 +2,7 @@ import { useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { APP_VERSION } from "@/content/changelog";
-import { applyServiceWorkerUpdate, checkForSwUpdate, getSwInfo, subscribeSwInfo, type SwState } from "@/lib/registerSW";
+import { applyServiceWorkerUpdate, checkForSwUpdate, getSwInfo, resetAppFiles, subscribeSwInfo, type SwState } from "@/lib/registerSW";
 import { hasUnsavedWork } from "@/lib/saveStatus";
 
 declare const __APP_BUILD__: string | undefined;
@@ -32,6 +32,7 @@ const SW_TEXT: Record<SwState, string> = {
 export function AboutPanel() {
   const sw = useSyncExternalStore(subscribeSwInfo, getSwInfo, getSwInfo);
   const [checking, setChecking] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const build = formatBuild(typeof __APP_BUILD__ === "string" ? __APP_BUILD__ : undefined);
 
   async function check() {
@@ -46,6 +47,14 @@ export function AboutPanel() {
     if (!sw.registration) return;
     if (hasUnsavedWork()) { toast("Poczekaj, aż zapisze się ostatnia zmiana", { description: "Wtedy wersja podmieni się bez utraty tekstu." }); return; }
     applyServiceWorkerUpdate(sw.registration);
+  }
+
+  // S6.2: wyłącznik awaryjny — gdy po wdrożeniu aplikacja działa źle. Dwa kroki zamiast okna przeglądarki.
+  async function reinstall() {
+    if (!navigator.onLine) { toast.error("Potrzebny internet — pliki aplikacji pobiorą się od nowa"); return; }
+    if (hasUnsavedWork()) { toast("Poczekaj, aż zapisze się ostatnia zmiana"); return; }
+    await resetAppFiles();
+    location.reload();
   }
 
   return (
@@ -64,6 +73,21 @@ export function AboutPanel() {
           {checking ? "Sprawdzanie…" : "Sprawdź aktualizację"}
         </Button>
       ) : null}
+      {sw.state !== "off" && (
+        <div className="space-y-1 pt-1">
+          {confirmReset && (
+            <p className="ui-hint" role="status">
+              Aplikacja wczyta się od nowa z sieci. Notatki, ustawienia i kopie zostają na tym urządzeniu.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant={confirmReset ? "default" : "ghost"} onClick={() => (confirmReset ? void reinstall() : setConfirmReset(true))} className="coarse:h-11" data-testid="about-reinstall">
+              {confirmReset ? "Pobierz od nowa" : "Aplikacja działa źle? Pobierz pliki od nowa"}
+            </Button>
+            {confirmReset && <Button size="sm" variant="ghost" onClick={() => setConfirmReset(false)} className="coarse:h-11">Anuluj</Button>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

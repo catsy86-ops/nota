@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useGridNavPreviewId, getGridNavFocusedId, setGridNavPreview } from "@/lib/gridKeyboardNav";
 import { readerNeighbors } from "@/lib/readerStep";
 import type { Note } from "@/hooks/useNotes";
-import type { ReaderMode } from "@/components/NoteReader";
+import type { ReaderMode } from "@/lib/composerTypes";
 import { setViewPref, useViewPrefs } from "@/lib/viewPrefs";
 
 interface ReaderNavArgs {

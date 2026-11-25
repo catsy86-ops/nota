@@ -4,7 +4,7 @@ import type { Note } from "@/hooks/useNotes";
 import type { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { haptic } from "@/lib/haptics";
 import { countSwipe, showSwipeLabels } from "@/lib/swipeHint";
-import { runWithoutConfirm } from "@/components/ConfirmActionDialog";
+import { runWithoutConfirm } from "@/lib/confirmGate";
 import { markPinned } from "@/lib/cardMotion";
 import { toastWithUndo } from "@/lib/undoToast";
 

@@ -69,6 +69,19 @@ Pilnuje tego `src/lib/htmlSinkGuard.test.ts`: lista dozwolonych jest pusta, wię
 - **Kod synchronizacji ma ok. 59 bitów** (12 znaków z 31); nowe parowanie dostaje dłuższy kod (S2.2). Stałej soli w `relayKeys.ts` nie da się zmienić, bo identyfikator pokoju wynika z kodu.
 - **Operator przekaźnika może wstrzymywać wpisy** — wykrywalne dopiero przy kontakcie z drugim urządzeniem inną drogą.
 
-## 7. Niesprawdzone
+## 7. Przegląd roczny (S6.4)
 
-Zachowanie COOP z oknem passkey i `window.open` (wymaga przeglądarki), faktyczne limity wiadomości WebRTC w `y-webrtc`, `tickStore` w serwerze powiadomień.
+**Ostatni przegląd: 2026-11-25** (plan bezpieczeństwa z 15.11, punkty S0–S6). Następny: listopad 2027 albo wcześniej, po większej zmianie (nowy serwer, nowe ujście danych, zmiana szyfrowania).
+
+- [ ] Sekcje 1–6 tego pliku zgadzają się z kodem (granice zaufania, przepływ danych, znane ograniczenia).
+- [ ] Strażnik ujść HTML (`src/lib/htmlSinkGuard.test.ts`) ma tylko uzasadnione wyjątki. Polityka Trusted Types (`src/lib/trustedTypes.ts`) i CSP w `vercel.json`/`netlify.toml` nie mają nowych luzów.
+- [ ] `npm audit` dla aplikacji i obu serwerów jest przejrzany, a Dependabot nie ma zaległych PR-ów.
+- [ ] Wyjątki gitleaks (`.gitleaks.toml`) to nadal fałszywe alarmy.
+- [ ] Procedury w `docs/reagowanie.md` są przećwiczone na sucho, a nazwy przycisków aktualne.
+- [ ] Serwery: klucze VAPID i `PUSH_TOKEN` tylko ze zmiennych, dzienniki 7 dni, monitor `/health` działa (`deploy/README.md`).
+- [ ] Parametry kryptografii (PBKDF2, długość kodu, klucze) są zgodne z bieżącymi zaleceniami OWASP.
+- [ ] Data przeglądu wyżej jest zaktualizowana.
+
+## 8. Niesprawdzone
+
+Zachowanie COOP z oknem passkey i `window.open` (wymaga przeglądarki), faktyczne limity wiadomości WebRTC w `y-webrtc`. `tickStore` w serwerze powiadomień jest sprawdzony 2026-11-25 (wpisy znikają po wysyłce).

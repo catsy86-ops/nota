@@ -182,19 +182,10 @@ export default tseslint.config(
     },
   },
   {
-    // Hooki nie importują komponentów. Lista wyjątków ma malejąć do zera (plan A1.5).
+    // Hooki nie importują komponentów (plan A1.5, wyjątki zeszły do zera 2026-11-25). Typy wspólne: `lib/composerTypes.ts`,
+    // bramka potwierdzeń: `lib/confirmGate.ts`; hooki renderujące toasty z komponentami są kontrolerami w `src/components/`.
     files: ["src/hooks/**/*.{ts,tsx}"],
-    ignores: [
-      "**/*.test.{ts,tsx}",
-      "src/hooks/useCardGestures.ts",
-      "src/hooks/useDailyWeeklyNudges.tsx",
-      "src/hooks/useInboxCapture.ts",
-      "src/hooks/useLaunchIntents.ts",
-      "src/hooks/useNoteActions.ts",
-      "src/hooks/useNoteGlowActions.ts",
-      "src/hooks/useReaderNav.ts",
-      "src/hooks/useReminderNotifications.ts",
-    ],
+    ignores: ["**/*.test.{ts,tsx}"],
     rules: {
       "no-restricted-syntax": [
         "error",

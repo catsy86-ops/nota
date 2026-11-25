@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useNoteActions, type NoteActionsDeps } from "./useNoteActions";
 import type { Note } from "@/hooks/useNotes";
-import type { useConfirmAction } from "@/components/ConfirmActionDialog";
+import type { ConfirmFn } from "@/lib/confirmGate";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {
@@ -29,7 +29,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
 
 // Runs the action immediately, bypassing the confirmation dialog — matches
 // the real useConfirmAction's behavior when the "ask before X" pref is off.
-const confirmAction: ReturnType<typeof useConfirmAction>["confirmAction"] = (action) => action.run();
+const confirmAction: ConfirmFn = (action) => action.run();
 
 function setup(overrides: Partial<NoteActionsDeps> = {}) {
   const deps: NoteActionsDeps = {

@@ -1,3 +1,5 @@
+// S1.1: polityka Trusted Types przed jakimkolwiek kodem, który mógłby pisać HTML.
+import "@/lib/trustedTypes";
 import { createRoot } from "react-dom/client";
 import { toast } from "sonner";
 import App from "./App.tsx";

@@ -3,6 +3,7 @@ import { ArrowUp, Inbox, Mic, MicOff } from "lucide-react";
 import { captureParts, INBOX_TITLE_MAX, linkCapture } from "@/lib/inbox";
 import { applyCapture, extractCapture, toggledSet, type CaptureToken } from "@/lib/quickCapture";
 import type { NotePriority } from "@/lib/notePriority";
+import type { InboxCaptureExtras } from "@/lib/composerTypes";
 import { CaptureChips } from "./CaptureChips";
 import { useDictation } from "@/hooks/useDictation";
 import { cn } from "@/lib/utils";
@@ -17,14 +18,7 @@ import { cn } from "@/lib/utils";
  * przyjęte idą w `extras`. Notatka z etykietą albo folderem od razu wychodzi ze Skrzynki — to zamierzone.
  * 2.5: wklejony obraz albo upuszczony plik (obraz, PDF) idzie do `onFiles` razem z tekstem z pola (tytuł notatki).
  */
-export interface InboxCaptureExtras {
-  labels: string[];
-  /** Podzbiór `labels` do utworzenia. */
-  newLabels: string[];
-  folderId: string | null;
-  priority: NotePriority | null;
-  reminder: number | null;
-}
+export type { InboxCaptureExtras };
 
 interface InboxCaptureProps {
   onCapture: (title: string, content: string, extras: InboxCaptureExtras) => void;

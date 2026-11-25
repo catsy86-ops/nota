@@ -36,6 +36,22 @@ async function unregisterAppSW() {
   }
 }
 
+/** Pamięci z samymi plikami aplikacji (`vite.config.ts`, `runtimeCaching`). Skrzynka udostępnień i znaczniki powiadomień zostają. */
+const APP_FILE_CACHES = new Set(["ocr-engine", "mermaid-engine", "pdf-fonts", "skin-fonts", "html-navigations", "static-assets", "media-assets"]);
+export const isAppFileCache = (name: string) => APP_FILE_CACHES.has(name) || name.startsWith("workbox-precache");
+
+/**
+ * S6.2: wyłącznik awaryjny po wadliwym wdrożeniu. Wyrejestrowuje workera i kasuje pliki aplikacji,
+ * a dane (IndexedDB, localStorage, skrzynka udostępnień) zostawia. Następne wczytanie pobiera wszystko z sieci.
+ */
+export async function resetAppFiles(cacheStorage: CacheStorage | undefined = globalThis.caches): Promise<number> {
+  await unregisterAppSW();
+  if (!cacheStorage) return 0;
+  const names = (await cacheStorage.keys()).filter(isAppFileCache);
+  await Promise.allSettled(names.map((n) => cacheStorage.delete(n)));
+  return names.length;
+}
+
 /**
  * Dispatched on window when a new service worker is installed and waiting
  * to activate. The app should ask the user before reloading, since an

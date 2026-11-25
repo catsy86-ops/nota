@@ -7,7 +7,7 @@ import { doneTarget, snoozeTarget } from "@/lib/reminderRepeat";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { notePath } from "@/lib/viewRoute";
 import { toast } from "sonner";
-import type { Note } from "./useNotes";
+import type { Note } from "@/hooks/useNotes";
 import { seriesDay } from "@/lib/reminderRepeat";
 import { planDueReminders } from "@/lib/reminderDue";
 import { loadFired, saveFired, reconcileFired } from "@/lib/firedReminders";

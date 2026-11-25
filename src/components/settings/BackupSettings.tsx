@@ -21,6 +21,7 @@ import { ResetSectionButton, Section } from "./SettingsShared";
 import { LastImportUndo } from "./LastImportUndo";
 import { UnusedFilesCleanup } from "./UnusedFilesCleanup";
 import { AboutPanel } from "@/components/AboutPanel";
+import { SecurityLogPanel } from "./SecurityLogPanel";
 import { viewLabel } from "@/lib/viewMeta";
 import { DailySnapshotRestore } from "./DailySnapshotRestore";
 import { inSyncGroup, saveCurrentLocally } from "@/lib/docReplace";
@@ -609,6 +610,10 @@ export function BackupSettings() {
 
       <Section title="O aplikacji">
         <AboutPanel />
+      </Section>
+
+      <Section title="Zdarzenia bezpieczeństwa">
+        <SecurityLogPanel />
       </Section>
 
       <Section title="Diagnostyka">

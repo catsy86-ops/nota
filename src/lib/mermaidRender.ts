@@ -3,6 +3,8 @@
  * dopiero gdy w notatce jest blok ` ```mermaid `; biblioteka leży w `public/mermaid/` (poza paczką i precache).
  */
 
+import { withMermaidSink } from "@/lib/trustedTypes";
+
 type Mermaid = (typeof import("mermaid"))["default"];
 
 /**
@@ -81,7 +83,8 @@ export type MermaidResult = { ok: true; svg: string } | { ok: false; error: stri
 
 /** Rysuje diagram w aktualnym motywie. Błąd składni wraca jako wynik (nie wyjątek), z pierwszą linią komunikatu. */
 export function renderMermaid(source: string): Promise<MermaidResult> {
-  const run = async (): Promise<MermaidResult> => {
+  // S1.1: Mermaid pisze SVG przez innerHTML — tylko w tym oknie polityka Trusted Types to przepuszcza.
+  const run = (): Promise<MermaidResult> => withMermaidSink(async () => {
     try {
       const mermaid = await loadMermaid();
       const { dark, vars } = themeVariables();
@@ -104,7 +107,7 @@ export function renderMermaid(source: string): Promise<MermaidResult> {
       const message = e instanceof Error ? e.message : String(e);
       return { ok: false, error: message.split("\n").find((l) => l.trim()) ?? "Błąd składni diagramu" };
     }
-  };
+  });
   const next = queue.then(run, run);
   queue = next;
   return next;
