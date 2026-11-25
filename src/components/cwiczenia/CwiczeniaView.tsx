@@ -7,7 +7,7 @@ import { MissingHint } from "@/components/ui/missing-hint";
 import { StatusPanel } from "@/components/StatusPanel";
 import { Sketch } from "@/components/art/Sketch";
 import { SUPPLEMENTS_GLYPH } from "@/lib/emptyGlyphs";
-import { Download, Pencil, Pill, Plus, Trash } from "lucide-react";
+import { Download, Pencil, Pill, Plus, Send, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,6 +32,7 @@ import { useMotionPref } from "@/hooks/useMotionPref";
 import { useWeights } from "@/lib/weight/store";
 import { exerciseById } from "@/lib/training/catalog";
 import { downloadBlob } from "@/lib/downloadBlob";
+import { shareOrCopy } from "@/lib/shareOrCopy";
 
 /** Domyślna godzina przypomnienia dla pory dnia (edytowalna w formularzu). */
 const DEFAULT_TIME: Record<SupplementWhen, string> = { rano: "07:30", w_ciagu_dnia: "12:00", wieczorem: "20:00" };
@@ -208,7 +209,7 @@ export function CwiczeniaView() {
   );
 }
 
-/** C3.5: trening, dieta i masa jako CSV (jeden plik na rodzaj); przycisk tylko przy danych tego rodzaju. */
+/** C3.5: trening, dieta i masa jako CSV (jeden plik na rodzaj); przycisk tylko przy danych tego rodzaju. C3.3: podsumowanie miesiąca. */
 function ExportCsv() {
   const training = useTrainingEntries();
   const meals = useMeals();
@@ -225,8 +226,19 @@ function ExportCsv() {
       <Download className="size-4" aria-hidden />{label}
     </Button>
   );
+  // C3.3: bieżący miesiąc jako krótki tekst — arkusz udostępniania na telefonie, schowek na komputerze.
+  const shareMonth = async () => {
+    const { monthFitness, monthFitnessText } = await import("@/lib/fitnessMonth");
+    const text = monthFitnessText(monthFitness(training, meals, weights, localDayKey().slice(0, 7)));
+    const outcome = await shareOrCopy({ title: "Ćwiczenia — podsumowanie miesiąca", text });
+    if (outcome === "copied") toast.success("Skopiowano podsumowanie miesiąca");
+    else if (outcome === "failed") toast.error("Nie udało się udostępnić ani skopiować");
+  };
   return (
     <div className="mt-6 flex flex-wrap justify-end gap-1" data-testid="cwiczenia-export">
+      <Button variant="ghost" size="sm" className="tap-target gap-1.5 text-muted-foreground" onClick={() => void shareMonth()}>
+        <Send className="size-4" aria-hidden />Podsumowanie miesiąca
+      </Button>
       {training.length > 0 && button("trening", "Trening CSV")}
       {meals.length > 0 && button("dieta", "Dieta CSV")}
       {weights.length > 0 && button("waga", "Waga CSV")}
