@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { seedNotes } from "./helpers";
+import { seedNotes, untilStill } from "./helpers";
 import { editorBody } from "./helpers/editor";
 
 // Nowy plan 2026-11-05, Etap 6: porównanie wersji słowami i „Przywróć tylko ten akapit” (6.2),
@@ -68,7 +68,7 @@ test("galeria notatki: „Opisz na zdjęciu” dodaje opisaną kopię, oryginał
   const save = page.getByRole("button", { name: "Zapisz rysunek" });
   // Okno rysunku wjeżdża animacją — kreska narysowana w trakcie może się nie zarejestrować, więc powtarzamy aż „Zapisz” się włączy.
   await canvas.waitFor();
-  await page.waitForTimeout(400);
+  await untilStill(canvas);
   for (let i = 0; i < 3 && await save.isDisabled(); i++) {
     const box = (await canvas.boundingBox())!;
     await page.mouse.move(box.x + 30, box.y + 30);

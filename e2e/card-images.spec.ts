@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { untilStill } from "./helpers";
 
 // 1×1 px PNG.
 const PNG_B64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
@@ -61,7 +62,7 @@ test("rysunek z menu „Więcej opcji” dodaje obraz do notatki", async ({ page
   await expect.poll(async () => canvas.evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(300);
   // Okno wjeżdża z animacją, a płótno dopasowuje się do okna po 100 ms — współrzędne dopiero po ustaniu ruchu.
   await canvas.hover();
-  await page.waitForTimeout(300);
+  await untilStill(canvas);
 
   const box = (await canvas.boundingBox())!;
   await page.mouse.move(box.x + 40, box.y + 40);

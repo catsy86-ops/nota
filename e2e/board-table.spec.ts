@@ -130,7 +130,7 @@ test.describe("tablica na telefonie", () => {
     const start = (await handle.boundingBox())!;
     const sx = start.x + start.width / 2, sy = start.y + start.height / 2;
     await touch("touchStart", sx, sy);
-    await page.waitForTimeout(350);
+    await page.waitForTimeout(350); // czas: przytrzymanie palca uruchamia przeciąganie
     const to = (await target.boundingBox())!;
     const tx = Math.min(to.x + to.width / 2, 380), ty = to.y + 60;
     for (let i = 1; i <= 15; i++) await touch("touchMove", sx + ((tx - sx) * i) / 15, sy + ((ty - sy) * i) / 15);

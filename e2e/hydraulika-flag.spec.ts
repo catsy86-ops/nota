@@ -17,8 +17,7 @@ test("pokrętło „+” obraca się w czasie przytrzymania w Hydraulice @mobile
   const icon = fab.locator(":scope > span > svg");
   expect(await icon.evaluate((el) => getComputedStyle(el).transform)).toBe("none");
   await fab.dispatchEvent("pointerdown", { button: 0, isPrimary: true, pointerType: "mouse" });
-  await page.waitForTimeout(200);
-  expect(await icon.evaluate((el) => getComputedStyle(el).transform)).not.toBe("none");
+  await expect.poll(() => icon.evaluate((el) => getComputedStyle(el).transform)).not.toBe("none");
   await fab.dispatchEvent("pointerup", { button: 0, isPrimary: true, pointerType: "mouse" });
   await page.keyboard.press("Escape");
 });

@@ -19,7 +19,7 @@ test("wracając do Notatek, przewinięcie wraca do miejsca wyjścia", async ({ p
   await expect.poll(scrollY).toBeGreaterThan(200);
   const saved = await scrollY();
   // Zapis po zatrzymaniu przewijania (debounce), zanim zmienimy dział.
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(300); // czas: zapis pozycji po zatrzymaniu przewijania (debounce)
 
   await page.getByRole("button", { name: "Dziś", exact: true }).first().click();
   await expect(page.getByRole("heading", { name: "Dziś" }).first()).toBeVisible();

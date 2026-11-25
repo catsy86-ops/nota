@@ -73,7 +73,7 @@ test("kod z innym pokojem nie widzi notatki z przekaźnika", async ({ browser })
   await init(b, other);
   await b.goto("/");
   // Dajemy czas na pobranie (drugi pokój jest pusty) — notatki obcego kodu nie ma.
-  await b.waitForTimeout(3_000);
+  await b.waitForTimeout(3_000); // czas: sprawdzamy brak — czas na pobranie z przekaźnika
   await expect(b.getByText(title)).toHaveCount(0);
   await ctxB.close();
 });

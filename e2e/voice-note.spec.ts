@@ -21,7 +21,7 @@ test("nagranie notatki głosowej w nowej notatce: pasek z czasem, Zatrzymaj, za�
   const bar = page.getByTestId("voice-recording");
   await expect(bar).toBeVisible();
   await expect(bar).toContainText("/ 3:00");
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1500); // czas: nagranie musi trwać
   await bar.getByRole("button", { name: "Zatrzymaj" }).click();
 
   await expect(bar).toHaveCount(0);

@@ -86,3 +86,28 @@ export async function inPapiery(from: Page | Locator): Promise<Locator> {
   await openSection(card, "Papiery");
   return card;
 }
+
+/**
+ * A4.3: przed przeładowaniem dokument musi być już w IndexedDB. Pigułka stanu (`OfflineStatus`) pokazuje „Zapisano”
+ * po zakończonym zapisie zmian — zamiast stałego odczekania.
+ */
+export async function whenSaved(page: Page): Promise<void> {
+  await expect(page.getByText("Zapisano", { exact: true })).toBeVisible();
+}
+
+/** A4.3: element przestał się ruszać (wjazd okna, dopasowanie płótna) — prostokąt taki sam w dwóch kolejnych odczytach. */
+export async function untilStill(loc: Locator): Promise<void> {
+  let prev = "";
+  await expect.poll(async () => {
+    const box = JSON.stringify(await loc.boundingBox());
+    const same = box === prev && box !== "null";
+    prev = box;
+    return same;
+  }, { intervals: [60, 100, 150, 250] }).toBe(true);
+}
+
+/** A4.3: animacje wejścia skończone — wszystkie wskazane elementy mają pełną nieprzezroczystość (kafle wjeżdżające kaskadą). */
+export async function untilOpaque(loc: Locator): Promise<void> {
+  await expect.poll(() => loc.evaluateAll((els) => els.every((el) => getComputedStyle(el).opacity === "1"))).toBe(true);
+}
+

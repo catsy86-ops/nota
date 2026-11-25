@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { untilStill } from "./helpers";
 
 // Plan UI/UX 3.10: „Widok” na telefonie ma punkty „pół” i „pełny”; przeciągnięcie uchwytu zmienia wysokość.
 // Gest dotykowy przez CDP, jak w mobile.spec.ts — mysz na emulowanym telefonie nie daje tych zdarzeń.
@@ -16,8 +17,8 @@ test("arkusz Widok: startuje na pół ekranu, przeciągnięcie w górę otwiera 
   const vh = await page.evaluate(() => window.innerHeight);
   const height = async () => Math.round((await sheet.boundingBox())!.height);
 
-  // Pół ekranu (55 dvh), z tolerancją na pasek adresu.
-  await page.waitForTimeout(500);
+  // Pół ekranu (55 dvh), z tolerancją na pasek adresu — po wjeździe arkusza.
+  await untilStill(sheet);
   expect(await height()).toBeGreaterThan(vh * 0.5);
   expect(await height()).toBeLessThan(vh * 0.62);
 
@@ -28,10 +29,10 @@ test("arkusz Widok: startuje na pół ekranu, przeciągnięcie w górę otwiera 
     await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
     for (let i = 1; i <= 8; i++) {
       await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: y + (dist * i) / 8 }] });
-      await page.waitForTimeout(30);
+      await page.waitForTimeout(30); // czas: tempo gestu (prędkość decyduje o dociągnięciu)
     }
     await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    await page.waitForTimeout(350);
+    await untilStill(sheet);
   };
 
   // W górę: pełny ekran.

@@ -35,7 +35,7 @@ test("przytrzymanie dłużej niż 420 ms otwiera arkusz „Nowa”", async ({ pa
   const box = await fab.boundingBox();
   await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
   await page.mouse.down();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(500); // czas: długie przytrzymanie FAB otwiera „Nowa”
   await page.mouse.up();
   await expect(page.getByRole("dialog", { name: "Nowa" })).toBeVisible();
 });
@@ -46,7 +46,7 @@ test("kafel „Z przypomnieniem” otwiera kompozytor z pickerem terminu", async
   const box = await fab.boundingBox();
   await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
   await page.mouse.down();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(500); // czas: długie przytrzymanie FAB otwiera „Nowa”
   await page.mouse.up();
   const sheet = page.getByRole("dialog", { name: "Nowa" });
   await expect(sheet).toBeVisible();
@@ -64,7 +64,7 @@ test("ostatnio wybrany rodzaj jest pierwszy w arkuszu z odznaką", async ({ page
     const box = await fab.boundingBox();
     await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
     await page.mouse.down();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(500); // czas: długie przytrzymanie FAB otwiera „Nowa” // czas: długie przytrzymanie FAB otwiera „Nowa”
     await page.mouse.up();
     return page.getByRole("dialog", { name: "Nowa" });
   };
@@ -100,7 +100,7 @@ test("kafle arkusza „Nowa” mają co najmniej 44 px i opis w nazwie", async (
   const box = await fab.boundingBox();
   await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
   await page.mouse.down();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(500); // czas: długie przytrzymanie FAB otwiera „Nowa”
   await page.mouse.up();
   const tiles = page.getByRole("dialog", { name: "Nowa" }).getByRole("group", { name: "Rodzaj nowej notatki" }).locator("button");
   const n = await tiles.count();

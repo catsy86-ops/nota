@@ -255,7 +255,7 @@ for (const [skin, pseudo, sig, name] of [
 test("Zorza: fala zapisu naprawdę przelatuje przez ekran (nie zostaje poza nim)", async ({ page }) => {
   await open(page, "zorza");
   await page.evaluate(() => document.documentElement.setAttribute("data-sig", "save"));
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(900); // czas: próbka w połowie przelotu animacji
   const s = await page.locator(".sig-layer").evaluate((el) => {
     const cs = getComputedStyle(el);
     return { opacity: Number(cs.opacity), transform: cs.transform };

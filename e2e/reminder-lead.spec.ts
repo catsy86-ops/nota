@@ -26,7 +26,7 @@ test("sygnał godzinę wcześniej: dymek przed terminem, bez dymku samego termin
   // Po przeładowaniu ten sam sygnał nie wraca.
   await page.reload();
   await expect(page.getByText("Odbiór kotłowni").first()).toBeVisible();
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(1000); // czas: sprawdzamy brak — sygnał wyprzedzenia nie wraca po przeładowaniu
   await expect(lead).toHaveCount(0);
 });
 

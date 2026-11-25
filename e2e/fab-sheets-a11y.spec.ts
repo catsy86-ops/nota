@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
+import { untilOpaque } from "./helpers";
 
 // Faza 4 planu FAB: arkusz „Nowa” i arkusz terminu przechodzą axe (WCAG 2.2 AA) na telefonie.
 
@@ -13,7 +14,7 @@ async function openNowa(page: Page) {
   const box = await fab.boundingBox();
   await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
   await page.mouse.down();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(500); // czas: długie przytrzymanie FAB otwiera „Nowa”
   await page.mouse.up();
   return page.getByRole("dialog", { name: "Nowa" });
 }
@@ -27,7 +28,7 @@ test("arkusz „Nowa” przechodzi axe", async ({ page }) => {
   const sheet = await openNowa(page);
   await expect(sheet).toBeVisible();
   // Kafle wjeżdżają kaskadą (opacity od 0); mierzymy kontrast dopiero po animacjach.
-  await page.waitForTimeout(700);
+  await untilOpaque(sheet.locator("button"));
   const result = await new AxeBuilder({ page }).include('[role="dialog"]').withTags(TAGS).analyze();
   expect(result.violations.map((v) => v.id)).toEqual([]);
 });
@@ -38,7 +39,7 @@ test("arkusz terminu przechodzi axe", async ({ page }) => {
   const sheet = page.getByRole("dialog", { name: "Przypomnienie" });
   await expect(sheet).toBeVisible();
   // Kafle wjeżdżają kaskadą (opacity od 0); mierzymy kontrast dopiero po animacjach.
-  await page.waitForTimeout(700);
+  await untilOpaque(sheet.locator("button"));
   const result = await new AxeBuilder({ page }).include('[role="dialog"]').withTags(TAGS).analyze();
   expect(result.violations.map((v) => v.id)).toEqual([]);
 });

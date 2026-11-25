@@ -14,7 +14,7 @@ test("telefon: przytrzymanie „Tryb ciemny” w Więcej → zestaw Noc, Cofnij 
   const tile = page.getByRole("button", { name: "Tryb ciemny" });
   await tile.hover(); // przewija arkusz do kafelka i stawia kursor na nim
   await page.mouse.down();
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(700); // czas: długie przytrzymanie kafelka otwiera zestawy
   await page.mouse.up();
   const dialog = page.getByTestId("quick-presets");
   await expect(dialog).toBeVisible();

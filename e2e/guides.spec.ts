@@ -28,7 +28,7 @@ test("samouczek na start: wybór działów zmienia karty, Wstecz, strzałki, zam
   await expect(tour).toBeHidden();
 
   await page.reload();
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(1000); // czas: sprawdzamy brak — dłużej niż opóźnienie pokazania przewodnika
   await expect(page.getByTestId("onboarding-tour")).toHaveCount(0);
 });
 
@@ -48,7 +48,7 @@ test("przewodnik Pracy: sam przy pierwszym wejściu, raz; potem z „?” @mobil
 
   await page.reload();
   await expect(page.getByTestId("study-view")).toBeVisible();
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(900); // czas: sprawdzamy brak — dłużej niż opóźnienie pokazania przewodnika
   await expect(page.getByTestId("work-guide")).toHaveCount(0);
   await page.getByRole("button", { name: "Przewodnik po Pracy" }).click();
   await expect(page.getByTestId("work-guide").getByRole("heading", { name: "Wpis z budowy" })).toBeVisible();

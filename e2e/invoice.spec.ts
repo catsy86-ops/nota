@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
+import { whenSaved } from "./helpers";
 
 // KSeF Etap 1 (ADR-6): wystawianie faktury z wyceny zlecenia własnego, pobranie XML FA(3), niezmienność i numeracja.
 
@@ -90,7 +91,7 @@ test("faktura z wyceny: dane sprzedawcy, numer z serii, XML do pobrania, druga f
   await expect(dialog.getByTestId("invoice-list")).toContainText("FV/A/2026/002");
 
   // Po odświeżeniu faktury zostają (Yjs), a dane sprzedawcy są zapamiętane.
-  await page.waitForTimeout(1500);
+  await whenSaved(page);
   await page.reload();
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("jobs-open").click();

@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
-import { inCard, inPapiery } from "./helpers";
+import { inCard, inPapiery, whenSaved } from "./helpers";
 
 // H3.4 Zlecenia własne (fuchy): założenie z listy „Zlecenia”, wycena z marżą, statusy, „Niezapłacone”,
 // PDF wyceny, termin w Kalendarzu, „To nie jest fucha” z „Cofnij”.
@@ -77,9 +77,9 @@ test("fucha: wycena z marżą, status „Zrobione” liczy się do niezapłacony
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("jobs-open")).not.toContainText("zł");
 
-  // Po odświeżeniu wszystko zostaje (Yjs). Zapis do IndexedDB dobiega w tle — pod obciążeniem odświeżenie tuż po
-  // kliknięciu gubiło ostatnią zmianę, więc dajemy mu chwilę (nie ma zdarzenia „zapisano” do odpytania).
-  await page.waitForTimeout(1500);
+  // Po odświeżeniu wszystko zostaje (Yjs). Pod obciążeniem odświeżenie tuż po kliknięciu gubiło ostatnią zmianę —
+  // przeładowanie dopiero po „Zapisano”.
+  await whenSaved(page);
   await page.reload();
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("jobs-open").click();

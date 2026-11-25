@@ -1,5 +1,6 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { editorBody, readEditorText } from "./helpers/editor";
+import { whenSaved } from "./helpers";
 
 /**
  * Edytor CodeMirror 6 za flagą `cmEditor` (plan rozbudowy, Faza 1a).
@@ -103,8 +104,8 @@ test("tekst trafia do notatki bez „Zapisz” (zapis przez dokument Yjs)", asyn
   await body.pressSequentially("nie kliknięto Zapisz");
   // Zamknięcie edycji klawiszem Esc, bez przycisku „Zapisz”.
   await body.press("Escape");
-  // Yjs zapisuje każdą zmianę do IndexedDB; dajemy chwilę na flush przed przeładowaniem.
-  await page.waitForTimeout(1500);
+  // Yjs zapisuje każdą zmianę do IndexedDB; przeładowanie dopiero po zapisie.
+  await whenSaved(page);
   await page.reload();
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
   await page.getByRole("heading", { name: title, exact: true }).click();

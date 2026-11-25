@@ -82,8 +82,8 @@ async function settle(page: Page) {
   await page.evaluate(() => document.fonts.ready);
   // Toasty (odznaka „Pierwszy krok”, „Zapisano”) nie są częścią widoku — ukryte stylem, bez usuwania węzłów sonnera.
   await page.addStyleTag({ content: "[data-sonner-toaster]{display:none!important}" });
-  // Krój stylu dociągany przy pierwszym malowaniu (Barlow, Fraunces…) — chwila na dorysowanie.
-  await page.waitForTimeout(800);
+  // Krój stylu dociągany przy pierwszym malowaniu (Barlow, Fraunces…) — zrzut dopiero po wczytaniu fontów.
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
 }
 
 async function shoot(page: Page, name: string) {

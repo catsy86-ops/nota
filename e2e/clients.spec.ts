@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
+import { whenSaved } from "./helpers";
 
 // Plan wycen i klientów, Etapy 1–2: kartoteka klientów w Pracy, walidacja NIP, wyszukiwanie, „Nowa wycena” z karty klienta,
 // nabywca na fakturze z danych klienta, klient w palecie poleceń.
@@ -76,8 +77,8 @@ test("klienci: dodanie, skróty kontaktu, walidacja NIP i wyszukiwanie @mobile",
   await search.fill("nikt taki");
   await expect(page.getByTestId("clients-none")).toBeVisible();
 
-  // Po odświeżeniu klienci zostają (Yjs); zapis do IndexedDB dobiega w tle.
-  await page.waitForTimeout(1500);
+  // Po odświeżeniu klienci zostają (Yjs); przeładowanie dopiero po zapisie do IndexedDB.
+  await whenSaved(page);
   await page.reload();
   await page.getByRole("tab", { name: "Klienci" }).click();
   await expect(page.getByTestId("client-row")).toHaveCount(2);
@@ -170,8 +171,8 @@ test("klient w palecie poleceń otwiera zakładkę Klienci z jego kartą", async
   await openClients(page);
   await addClient(page, "Zenon Paletowy", "512 333 444");
   await closeCard(page);
-  // Zapis do IndexedDB dobiega w tle; pełne przeładowanie tuż po dodaniu klienta gubiło go pod obciążeniem.
-  await page.waitForTimeout(1500);
+  // Pełne przeładowanie tuż po dodaniu klienta gubiło go pod obciążeniem — najpierw zapis do IndexedDB.
+  await whenSaved(page);
   await page.goto("/");
   await page.keyboard.press("Control+k");
   await page.getByPlaceholder(/Szukaj|Wpisz/).first().fill("paletowy");

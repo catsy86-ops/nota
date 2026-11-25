@@ -17,7 +17,7 @@ test("telefon 390 px: każdy widoczny przycisk ma cel dotyku co najmniej 44 px @
     await page.goto(route);
     await expect(page.locator("main").first()).toBeVisible();
     // Leniwe widoki (Kalendarz, Grafik, Praca) — chwila na wyrenderowanie treści i wejście animacji.
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(1200); // czas: leniwe widoki i animacje wejścia na wielu stronach naraz
     const small = await page.evaluate(() => {
       const out: string[] = [];
       for (const el of document.querySelectorAll<HTMLElement>("button, a[href], [role=button], [role=tab], [role=radio], [role=checkbox]")) {

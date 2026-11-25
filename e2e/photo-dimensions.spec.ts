@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { untilStill } from "./helpers";
 
 // B3.3 Miarka: wymiary jako dane przy zdjęciu (nie wypalone w obraz). Dwa sposoby: przeciągnięcie i dwa stuknięcia.
 test.beforeEach(async ({ page }) => {
@@ -129,7 +130,7 @@ test("zdjęcie pionowe: wymiar zapisuje się względem obrazu, nie ramki płótn
   await expect.poll(() => canvas.evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(0);
 
   // Układ ustala się po załadowaniu obrazu (płótno zmienia rozmiar) — czekamy, aż prostokąt przestanie się zmieniać.
-  await expect.poll(async () => { const a = await canvas.boundingBox(); await page.waitForTimeout(150); const b = await canvas.boundingBox(); return JSON.stringify(a) === JSON.stringify(b); }).toBe(true);
+  await untilStill(canvas);
 
   // Prostokąt samego obrazu wewnątrz ramki (object-contain).
   const rect = await canvas.evaluate((c: HTMLCanvasElement) => {

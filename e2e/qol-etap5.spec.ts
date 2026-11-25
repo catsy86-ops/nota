@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { seedNotes } from "./helpers";
+import { seedNotes, untilStill } from "./helpers";
 import { editorBody } from "./helpers/editor";
 
 // Nowy plan 2026-11-05, Etap 5: ostatnie notatki i historia (5.1), przeciąganie listy (5.2), szukaj wszędzie (5.3),
@@ -88,8 +88,8 @@ test("lista zadań: przeciągnięcie za uchwyt zmienia kolejność (5.2)", async
   const items = page.locator("input[data-checklist-item]");
   await expect(items).toHaveCount(3);
   // Wiersze wjeżdżają z wysokości 0 — mierzymy dopiero po animacji wejścia.
-  await page.waitForTimeout(600);
   const handle = page.getByRole("button", { name: "Przeciągnij: Trzy" });
+  await untilStill(handle);
   const target = page.getByRole("button", { name: "Przeciągnij: Jeden" });
   const from = (await handle.boundingBox())!;
   const to = (await target.boundingBox())!;
@@ -97,7 +97,7 @@ test("lista zadań: przeciągnięcie za uchwyt zmienia kolejność (5.2)", async
   await page.mouse.down();
   await page.mouse.move(from.x + from.width / 2, from.y - 10, { steps: 4 });
   await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2 - 4, { steps: 10 });
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(250); // czas: przytrzymanie nad celem, zanim upuścimy (dnd-kit)
   await page.mouse.up();
   await expect(items.nth(0)).toHaveValue("Trzy");
   await expect(items.nth(1)).toHaveValue("Jeden");
@@ -155,7 +155,7 @@ test("płótno: Esc przy niezapisanych kreskach pyta; „Wyczyść” ma Cofnij 
   const save = page.getByRole("button", { name: "Zapisz rysunek" });
   // Okno rysunku wjeżdża animacją — kreska narysowana za wcześnie się nie liczy, więc powtarzamy, aż „Zapisz” się włączy.
   await canvas.waitFor();
-  await page.waitForTimeout(400);
+  await untilStill(canvas);
   for (let i = 0; i < 3 && await save.isDisabled(); i++) {
     const box = (await canvas.boundingBox())!;
     await page.mouse.move(box.x + 40, box.y + 40);

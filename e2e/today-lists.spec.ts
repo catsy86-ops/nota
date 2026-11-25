@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect } from "@playwright/test";
-import { seedNotes } from "./helpers";
+import { seedNotes, untilStill } from "./helpers";
 
 // Dziś 4.2 (Plan-nowy 2.4): pozycje list zmienionych dziś odhacza się prosto z Dziś, z „Cofnij”.
 const NOW = new Date(2026, 10, 5, 12, 0);
@@ -29,7 +29,7 @@ test("Dziś: „Listy na dziś” — odhaczenie pozycji bez otwierania notatki 
   await expect(card.getByText("mleko")).toBeVisible();
 
   // Karta przechodzi ten sam audyt co reszta (`a11y.spec.ts`, WCAG 2.2 AA) — Dziś nie ma go w tamtym zestawie.
-  await page.waitForTimeout(500);
+  await untilStill(page.getByTestId("today-lists"));
   const axe = await new AxeBuilder({ page }).include('[data-testid="today-lists"]').withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
   expect(axe.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
 });

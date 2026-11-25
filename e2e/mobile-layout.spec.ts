@@ -53,7 +53,7 @@ test("pasek zbiorczy mieści się w 390 px bez przewijania @mobile", async ({ pa
   const box = (await body.boundingBox())!;
   const at = { pointerType: "touch", isPrimary: true, pointerId: 7, clientX: box.x + 5, clientY: box.y + 5, bubbles: true };
   await body.dispatchEvent("pointerdown", at);
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(600); // czas: długie przytrzymanie zaznacza
   await body.dispatchEvent("pointerup", at);
   const clear = page.getByRole("button", { name: "Wyczyść zaznaczenie" });
   await expect(clear).toBeVisible();

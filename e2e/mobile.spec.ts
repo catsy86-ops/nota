@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { untilStill } from "./helpers";
 
 // Telefon: pasek boczny jest domyślnie zamknięty, więc wszystko, co żyło
 // tylko w nim, było nieosiągalne z dolnej nawigacji.
@@ -58,7 +59,7 @@ test("przytrzymanie kafla zaznacza go i pokazuje pasek zbiorczy @mobile", async 
   const x = box.x + box.width / 2, y = box.y + box.height / 2;
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(650); // czas: długie przytrzymanie kafla zaznacza go
   await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await expect(page.getByText(/zaznaczono/)).toBeAttached();
   await expect(page.getByRole("button", { name: "Wyczyść zaznaczenie" })).toBeVisible();
@@ -133,7 +134,7 @@ test("arkusz „Więcej” zamyka się przeciągnięciem uchwytu w dół, krótk
   await expect(sheet).toBeVisible();
   const handle = sheet.locator("[data-sheet-handle]");
   // Pozycję mierzymy po wjeździe arkusza — w trakcie animacji uchwyt jest niżej.
-  await page.waitForTimeout(500);
+  await untilStill(handle);
   const box = (await handle.boundingBox())!;
   const x = box.x + box.width / 2, y = box.y + box.height / 2;
   const cdp = await page.context().newCDPSession(page);
@@ -141,12 +142,12 @@ test("arkusz „Więcej” zamyka się przeciągnięciem uchwytu w dół, krótk
     await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
     for (let i = 1; i <= 6; i++) {
       await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: y + (dist * i) / 6 }] });
-      await page.waitForTimeout(40);
+      await page.waitForTimeout(40); // czas: tempo gestu przeciągania arkusza
     }
     await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   };
   await drag(40);
-  await page.waitForTimeout(300);
+  await untilStill(sheet);
   await expect(sheet).toBeVisible();
   await drag(220);
   await expect(sheet).toBeHidden();
@@ -196,7 +197,7 @@ test("zwykłe okno na telefonie jest wyśrodkowane z marginesem 1 rem i zaokrąg
   await page.getByRole("button", { name: "Samouczek" }).click();
   const dialog = page.getByRole("dialog").last();
   await expect(dialog).toBeVisible();
-  await page.waitForTimeout(400); // koniec animacji wejścia
+  await untilStill(dialog); // koniec animacji wejścia
   const box = (await dialog.boundingBox())!;
   expect(Math.round(box.x)).toBeGreaterThanOrEqual(16);
   expect(Math.round(390 - box.x - box.width)).toBeGreaterThanOrEqual(16);
@@ -223,11 +224,12 @@ test("dolny pasek: podpisy 12 px mieszczą się w kolumnach także na 320 px (2.
 test("formularz na telefonie to arkusz od dołu z przyklejonym „Zapisz” — także w poziomie (2.5) @mobile", async ({ page }) => {
   for (const vp of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(vp);
-    await page.goto("/grafik");
+    // Pod obciążeniem nawigacja bywa przerwana (ERR_ABORTED) przez trwające jeszcze przejście poprzedniej strony — jedno ponowienie.
+    await page.goto("/grafik").catch(() => page.goto("/grafik"));
     await page.getByRole("button", { name: "Cykl", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "Cykl zmian" });
     await expect(dialog).toBeVisible();
-    await page.waitForTimeout(400); // koniec wjazdu arkusza
+    await untilStill(dialog); // koniec wjazdu arkusza
     const box = (await dialog.boundingBox())!;
     expect(Math.round(box.y + box.height)).toBe(vp.height);
     const apply = dialog.getByRole("button", { name: "Nałóż cykl" });

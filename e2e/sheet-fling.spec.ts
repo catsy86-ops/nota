@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { untilStill } from "./helpers";
 
 // M4.3: arkusz zsunięty palcem odjeżdża od miejsca puszczenia (bez podskoku do zera), a tło przygasa razem z drogą.
 test("zsunięcie arkusza: tło przygasa z palcem, odjazd bez powrotu na górę @mobile", async ({ page, browserName, isMobile }) => {
@@ -9,7 +10,7 @@ test("zsunięcie arkusza: tło przygasa z palcem, odjazd bez powrotu na górę @
   await page.getByRole("button", { name: "Widok i kolumny" }).click();
   const sheet = page.getByRole("dialog", { name: "Widok" });
   await expect(sheet).toBeVisible();
-  await page.waitForTimeout(500);
+  await untilStill(sheet);
   const handle = sheet.locator("[data-sheet-handle]");
   const box = (await handle.boundingBox())!;
   const x = box.x + box.width / 2, y = box.y + box.height / 2;
@@ -20,7 +21,7 @@ test("zsunięcie arkusza: tło przygasa z palcem, odjazd bez powrotu na górę @
   await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
   for (let i = 1; i <= 6; i++) {
     await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: y + 30 * i }] });
-    await page.waitForTimeout(16);
+    await page.waitForTimeout(16); // czas: ruch co klatkę — test mierzy rzut (prędkość) arkusza
   }
   // W trakcie: tło przyciemnione mniej niż na starcie.
   const dim = await page.evaluate(() => Number((document.querySelector(".fixed.inset-0.z-modal") as HTMLElement | null)?.style.opacity ?? "1"));
