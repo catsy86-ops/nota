@@ -71,7 +71,7 @@ Cel: strona jako złożenie, ≤ 350 linii, bez własnej logiki.
 | A5.2 | **`opis.md` na działy:** `docs/opis/<dzial>.md` + `opis.md` jako spis treści z linkami. Zmienić zapis w `CLAUDE.md` (reguła dokumentacji wskazuje nowy układ). Wymaga zgody właściciela — to zmiana jego reguły. | M |
 | A5.3 ✅ 2026-11-25 (docs-zrobione/) | **Stare plany:** przenieść zrobione `docs/plan-*.md` do `docs/archiwum/`; w `roadmap.md` zostają tylko otwarte punkty. | S |
 | A5.4 ✅ (src/lib/storage/names.ts, keyLiterals.test.ts) | **119 kluczy `localStorage`:** rejestr `src/lib/storageKeys.ts` (nazwa, właściciel, czy w kopii, czy czyszczony przy resecie) + test, że żaden literał `"kaczy.*"` nie występuje poza rejestrem. Zamyka klasę błędów „ustawienie nie trafiło do kopii”. | M |
-| A5.5 | **Zależności:** `npm audit`, `knip` (martwe eksporty i pliki) — raport, usuwanie w osobnych commitach. | S |
+| A5.5 ◐ 2026-11-25 (raport `npm audit` w `docs/zaleznosci-2026-11-25.md`; `knip` czeka na uruchomienie przez właściciela — `npx -y` zablokowane w trybie automatycznym) | **Zależności:** `npm audit`, `knip` (martwe eksporty i pliki) — raport, usuwanie w osobnych commitach. | S |
 
 ## Kolejność
 
