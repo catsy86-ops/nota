@@ -229,7 +229,8 @@ export function cleanPropDefs(raw: unknown): PropDef[] {
     seen.add(def.id);
     out.push(def);
   }
-  return out.sort((a, b) => a.order - b.order).slice(0, PROP_LIMITS.defs);
+  // Remis `order` rozstrzyga id — kolejność z `Y.Map` zależy od urządzenia (A4.5).
+  return out.sort((a, b) => a.order - b.order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).slice(0, PROP_LIMITS.defs);
 }
 
 /** Klucz porównania nazw pól: bez spacji na brzegach i bez wielkości liter. */
@@ -273,7 +274,7 @@ export function filledPropEntries(defs: PropDef[], props: NoteProps | undefined)
   // Pola tylko do odczytu (daty notatki) są już w metadanych notatki — w eksporcie wróciłyby jako zwykły tekst.
   return [...defs]
     .filter((def) => !isReadOnlyPropType(def.type))
-    .sort((a, b) => a.order - b.order)
+    .sort((a, b) => a.order - b.order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
     .map((def): [string, string] => [def.name, formatPropValue(def, props)])
     .filter(([, text]) => text !== "");
 }

@@ -90,7 +90,8 @@ function sortNotes(list: Note[], prefs: ViewPrefs, opened: LastOpenedMap, propDe
       case "opened": return ((opened[a.id] ?? 0) - (opened[b.id] ?? 0) || a.updatedAt - b.updatedAt) * dir;
       case "color": return a.color.localeCompare(b.color) * dir;
       case "priority": return (PRIORITY_ORDER[a.priority ?? "none"] - PRIORITY_ORDER[b.priority ?? "none"]) * dir;
-      case "manual": return (a.order ?? 0) - (b.order ?? 0); // direction doesn't apply to hand-dragged order
+      // Kierunek nie dotyczy ręcznej kolejności; remis rozstrzyga id — kolejność z `Y.Map` zależy od urządzenia (A4.5).
+      case "manual": return (a.order ?? 0) - (b.order ?? 0) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
       case "updated":
       default: return (a.updatedAt - b.updatedAt) * dir;
     }

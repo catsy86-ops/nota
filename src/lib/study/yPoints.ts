@@ -47,7 +47,8 @@ export function createYPoints(doc: Y.Doc) {
     for (const s of out.values()) {
       const rooms = new Set(s.rooms.map((r) => r.id));
       // Punkt bez pomieszczenia (usunięte na drugim telefonie) nie jest pokazywany.
-      s.points = s.points.filter((p) => rooms.has(p.room)).sort((a, b) => a.order - b.order);
+      // Remis `order` (punkty dodane naraz na dwóch telefonach) rozstrzyga id — inaczej kolejność zależy od urządzenia.
+      s.points = s.points.filter((p) => rooms.has(p.room)).sort((a, b) => a.order - b.order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
       s.rooms.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name, "pl"));
     }
     snapshot = out;

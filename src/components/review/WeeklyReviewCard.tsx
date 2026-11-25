@@ -62,7 +62,7 @@ function FolderMenu({ note, folders, onMove }: { note: Note; folders: Folder[]; 
   const [open, setOpen] = useState(false);
   const rows: { folder: Folder; depth: number }[] = [];
   const walk = (parent: string | null, depth: number) => {
-    for (const f of folders.filter((x) => x.parentId === parent).sort((a, b) => a.order - b.order)) {
+    for (const f of folders.filter((x) => x.parentId === parent).sort((a, b) => a.order - b.order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
       rows.push({ folder: f, depth });
       walk(f.id, depth + 1);
     }
