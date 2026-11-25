@@ -37,6 +37,13 @@ describe("nagłówki bezpieczeństwa", () => {
     expect(csp).toContain("frame-src 'self' blob:");
   });
 
+  it("Trusted Types egzekwowane, jedyna polityka to default (S1.1)", () => {
+    const csp = vercelHeaders()["Content-Security-Policy"];
+    expect(csp).toContain("require-trusted-types-for 'script'");
+    // Poza `default` tylko polityka DOMPurify (sanitizer w Mermaidzie tworzy własną „dompurify”).
+    expect(csp).toMatch(/trusted-types default dompurify(;|$)/);
+  });
+
   it("HSTS na rok, bez includeSubDomains (S17)", () => {
     const hsts = vercelHeaders()["Strict-Transport-Security"];
     expect(hsts).toBe("max-age=31536000");

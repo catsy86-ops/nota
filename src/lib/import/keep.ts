@@ -1,5 +1,6 @@
 import type { NoteColor } from "@/lib/types/note";
 import type { AttachmentRef, ParsedNote } from "./types";
+import { parseInertHtml } from "@/lib/trustedTypes";
 
 /** Kolory Keep → kolory aplikacji (najbliższy odcień; szary i domyślny = bez koloru). */
 const KEEP_COLORS: Record<string, NoteColor> = {
@@ -183,7 +184,7 @@ export function looksLikeKeepHtml(html: string): boolean {
  */
 export function parseKeepHtml(html: string, source: string): ParsedNote | null {
   if (!looksLikeKeepHtml(html)) return null;
-  const doc = new DOMParser().parseFromString(html, "text/html");
+  const doc = parseInertHtml(html);
   const note = doc.querySelector(".note") ?? doc.body;
 
   const title = tidy(elementText(note.querySelector(".title") ?? doc.createElement("div")));

@@ -1,3 +1,5 @@
+import { parseInertHtml } from "@/lib/trustedTypes";
+
 /**
  * HTML ze schowka → Markdown dla wklejania w kompozytorze. Obsługuje to, co zwykle kopiuje się
  * ze stron i dokumentów: nagłówki, pogrubienie, kursywę, listy, linki (tylko http/https), kod i cytaty.
@@ -84,7 +86,7 @@ function blocks(node: Node, out: string[]): void {
 /** Markdown z kawałka HTML; pusty napis, gdy nie ma tekstu do wklejenia. */
 export function htmlToMarkdown(html: string): string {
   if (typeof DOMParser === "undefined") return "";
-  const doc = new DOMParser().parseFromString(html, "text/html");
+  const doc = parseInertHtml(html);
   const out: string[] = [];
   blocks(doc.body, out);
   return out.join("\n\n").replace(/\n{3,}/g, "\n\n").trim();

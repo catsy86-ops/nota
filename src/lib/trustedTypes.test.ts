@@ -31,6 +31,19 @@ describe("polityka Trusted Types (S1.1)", () => {
     });
   });
 
+  it("HTML dla DOMParser przechodzi tylko w synchronicznym oknie parseInertHtml", async () => {
+    const { mod, rules } = await load();
+    let inside: string | null = "nie wywołano";
+    const spy = vi.spyOn(DOMParser.prototype, "parseFromString").mockImplementation(function (this: DOMParser, html: string) {
+      inside = rules().createHTML(html);
+      return document.implementation.createHTMLDocument("");
+    });
+    mod.parseInertHtml("<p>x</p>");
+    spy.mockRestore();
+    expect(inside).toBe("<p>x</p>");
+    expect(rules().createHTML("<p>x</p>")).toBeNull();
+  });
+
   it("adres skryptu tylko z własnego źródła (service worker, Workery)", async () => {
     const { rules } = await load();
     expect(rules().createScriptURL("/sw.js")).toBe("/sw.js");
