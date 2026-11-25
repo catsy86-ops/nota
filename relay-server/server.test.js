@@ -146,3 +146,20 @@ test("limit nowych pokoi na adres na dobę: trzeci nowy pokój dostaje 429, zapi
   }
 });
 
+
+test("dziennik przekaźnika bez tokenu, nagłówków, treści i adresu IP (S4.5)", async () => {
+  const token = "L".repeat(43);
+  const room = "ef".repeat(32);
+  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "User-Agent": "UA-przekaznik-xyz", "X-Forwarded-For": "198.51.100.44" };
+  await fetch(`${base}/rooms/${room}/updates`, { method: "POST", headers, body: JSON.stringify({ data: "VFJFU0MtVEFKTkE" }) });
+  await fetch(`${base}/rooms/${room}/updates`, { method: "POST", headers, body: "{zly json" });
+  await fetch(`${base}/rooms/${room}`, { method: "DELETE", headers: { Authorization: `Bearer ${"Z".repeat(43)}` } });
+  await fetch(`${base}/rooms/nie-pokoj/updates`, { headers });
+  for (const leak of [token, "Z".repeat(43), "Bearer", "Authorization", "UA-przekaznik-xyz", "198.51.100.44", "VFJFU0MtVEFKTkE", room]) assert.ok(!log.includes(leak), leak);
+});
+
+test("/health zwraca tylko { ok: true } (S4.6)", async () => {
+  const r = await fetch(`${base}/health`);
+  assert.equal(r.status, 200);
+  assert.deepEqual(await r.json(), { ok: true });
+});

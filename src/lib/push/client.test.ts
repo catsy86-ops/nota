@@ -115,6 +115,24 @@ describe("push/client", () => {
     expect(pushPrefs.get().last).toMatchObject({ ok: true, count: 0 });
   });
 
+  it("uploadSchedule: ta sama lista idzie znowu po 6 h — serwer, który stracił dane, odzyskuje harmonogram (S4.7)", async () => {
+    setup({ sub: true });
+    const fetchMock = vi.fn(async () => json({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+    const schedules = () => fetchMock.mock.calls.filter((c) => String((c as unknown as [string])[0]).endsWith("/schedule")).length;
+    updatePushPrefs({ enabled: true });
+    const t0 = Date.now();
+    const now = vi.spyOn(Date, "now").mockReturnValue(t0);
+    await uploadSchedule([]);
+    now.mockReturnValue(t0 + 5 * 3_600_000);
+    await uploadSchedule([]);
+    expect(schedules()).toBe(1);
+    now.mockReturnValue(t0 + 6 * 3_600_000 + 1);
+    await uploadSchedule([]);
+    expect(schedules()).toBe(2);
+    now.mockRestore();
+  });
+
   it("uploadSchedule: błąd serwera zapisuje komunikat i pozwala ponowić; keepalive jest przekazany", async () => {
     setup({ sub: true });
     updatePushPrefs({ enabled: true });

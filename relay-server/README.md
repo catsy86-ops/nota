@@ -38,7 +38,7 @@ Stan do przeglądu: `security-review` przed wdrożeniem.
 
 | Trasa | Co robi |
 |---|---|
-| `GET /health` | `{ok, rooms}` |
+| `GET /health` | `{ok}` — bez żadnych danych (S4.6) |
 | `GET /rooms/:id/updates?since=n` | wpisy o numerze > n (najwyżej 500), `last`, `hasMore`, `epoch` |
 | `POST /rooms/:id/updates` | `{data, epoch?}` dopisuje wpis, zwraca `{seq, last, epoch}`; `412`, gdy podana `epoch` nie jest epoką pokoju (albo pokoju nie ma) |
 | `PUT /rooms/:id/snapshot` | `{upto, data, epoch?}` zastępuje wpisy ≤ upto jednym (kompaktowanie); nie zakłada pokoju (`404`); `412` przy innej `epoch` |

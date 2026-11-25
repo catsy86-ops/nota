@@ -163,6 +163,28 @@ describe("RelayProvider", () => {
     c.provider.stop();
   });
 
+  it("przekaźnik stracił dane (pusty pokój): urządzenie dosyła pełny stan, nowe dostaje wszystko (S4.7)", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const store = new MemStore();
+    const a = await device(keys, server, { store });
+    a.doc.transact(() => a.text.insert(0, "przed awarią"));
+    await until(() => [...server.rooms.values()][0]?.last === 1);
+    a.provider.stop();
+
+    server.rooms.clear(); // dysk przekaźnika przepadł, kopii nie ma
+
+    const a2 = new RelayProvider({ baseUrl: "https://relay.test", keys, doc: a.doc, store, fetch: server.fetchFn, flushMs: 5 });
+    await a2.start();
+    a.doc.transact(() => a.text.insert(a.text.length, " i po"));
+    await untilPulled(a2, () => server.rooms.size === 1);
+    a2.stop();
+
+    const b = await device(keys, server);
+    await untilPulled(b.provider, () => b.text.toString() === "przed awarią i po");
+    b.provider.stop();
+  });
+
   it("zapis offline trafia na serwer po powrocie łączności", async () => {
     const server = fakeServer();
     const keys = await deriveRelayKeys(CODE, ITER);

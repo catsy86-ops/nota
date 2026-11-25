@@ -26,6 +26,16 @@ const TRUST_PROXY = process.env.TRUST_PROXY === "1";
 const ORIGINS = parseOrigins(process.env.ALLOWED_ORIGINS);
 const envInt = (name, def) => { const n = Number(process.env[name]); return Number.isInteger(n) && n > 0 ? n : def; };
 
+// S3.3, S3.4: w produkcji bez trybu prób i bez kluczy VAPID z pliku — klucz prywatny tylko ze zmiennych środowiska.
+if (process.env.NODE_ENV === "production") {
+  const errors = [];
+  if (ALLOW_NO_AUTH) errors.push("ALLOW_NO_AUTH=1 jest tylko do prób lokalnych");
+  if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) errors.push("ustaw VAPID_PUBLIC_KEY i VAPID_PRIVATE_KEY (npx web-push generate-vapid-keys)");
+  if (errors.length) {
+    console.error(`Konfiguracja: ${errors.join("; ")}.`);
+    process.exit(1);
+  }
+}
 if (!TOKEN && !ALLOW_NO_AUTH) {
   console.error("Brak PUSH_TOKEN. Ustaw długi losowy token (min. 24 znaki), np. `openssl rand -hex 24`, i wpisz go też w aplikacji.\n" +
     "Tylko do prób lokalnych: ALLOW_NO_AUTH=1 (bez uwierzytelniania, nie wystawiaj tak serwera do internetu).");

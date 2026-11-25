@@ -3,7 +3,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer, connect as netConnect } from "node:net";
@@ -30,7 +30,7 @@ async function start(env, { expectExit = false } = {}) {
   }
   const base = `http://127.0.0.1:${port}`;
   for (let i = 0; i < 60; i++) {
-    try { if ((await fetch(`${base}/health`)).ok) return { base, stop, log: () => out }; } catch { /* jeszcze się uruchamia */ }
+    try { if ((await fetch(`${base}/health`)).ok) return { base, stop, dir, log: () => out }; } catch { /* jeszcze się uruchamia */ }
     await new Promise((r) => setTimeout(r, 100));
   }
   await stop();
@@ -190,4 +190,37 @@ test("/unsubscribe z tokenem usuwa subskrypcję, także gdy adres ma inną wielk
   // Ponowny zapis działa jak świeża subskrypcja (limit na subskrypcję nie jest „zajęty” starym wpisem).
   const again = await fetch(`${srv.base}/schedule`, json({ subscription: { ...VALID_SUB, endpoint }, items: [] }, auth));
   assert.equal(again.status, 200);
+});
+
+test("produkcja: ALLOW_NO_AUTH i brak kluczy VAPID ze zmiennych zatrzymują start (S3.3, S3.4)", async () => {
+  const noAuth = await start({ NODE_ENV: "production", ALLOW_NO_AUTH: "1", VAPID_PUBLIC_KEY: "x", VAPID_PRIVATE_KEY: "y" }, { expectExit: true });
+  assert.equal(noAuth.code, 1);
+  assert.match(noAuth.out, /Konfiguracja:.*ALLOW_NO_AUTH/);
+  const noKeys = await start({ NODE_ENV: "production", PUSH_TOKEN: TOKEN }, { expectExit: true });
+  assert.equal(noKeys.code, 1);
+  assert.match(noKeys.out, /Konfiguracja:.*VAPID_PUBLIC_KEY/);
+});
+
+test("zapis na dysku bez adresu IP, nagłówków i tokenu (S3.3)", async () => {
+  const endpoint = "https://fcm.googleapis.com/fcm/send/minimal";
+  const headers = { ...auth, "User-Agent": "Pixel-7-Unikalny-UA", "X-Forwarded-For": "203.0.113.77" };
+  assert.equal((await fetch(`${srv.base}/schedule`, json({ subscription: { ...VALID_SUB, endpoint }, items: [] }, headers))).status, 200);
+  const saved = readFileSync(join(srv.dir, "store.json"), "utf8");
+  assert.ok(saved.includes("send/minimal"));
+  for (const leak of ["127.0.0.1", "::1", "203.0.113.77", "Pixel-7-Unikalny-UA", TOKEN, "Bearer"]) assert.ok(!saved.includes(leak), leak);
+});
+
+test("dziennik serwera bez tokenu, nagłówków i adresu IP (S4.5)", async () => {
+  const headers = { ...auth, "User-Agent": "UA-do-dziennika-xyz", "X-Forwarded-For": "198.51.100.23" };
+  await fetch(`${srv.base}/schedule`, json({ subscription: { ...VALID_SUB, endpoint: "https://fcm.googleapis.com/fcm/send/log" }, items: [] }, headers));
+  await fetch(`${srv.base}/schedule`, json({ subscription: { endpoint: "nie-adres" }, items: [] }, headers));
+  await fetch(`${srv.base}/schedule`, { method: "PUT", headers: { ...headers, "Content-Type": "application/json" }, body: "{zly json" });
+  await fetch(`${srv.base}/vapid`, { headers: { Authorization: "Bearer zly-token-do-dziennika-0000000" } });
+  const out = srv.log();
+  for (const leak of [TOKEN, "zly-token-do-dziennika", "Bearer", "Authorization", "UA-do-dziennika-xyz", "198.51.100.23", "127.0.0.1"]) assert.ok(!out.includes(leak), leak);
+});
+
+test("/health zwraca tylko { ok: true } (S4.6)", async () => {
+  const r = await fetch(`${srv.base}/health`);
+  assert.deepEqual(await r.json(), { ok: true });
 });

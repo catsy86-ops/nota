@@ -277,7 +277,7 @@ async function handle(req, res) {
 
   const url = new URL(req.url, "http://relay");
   if (req.method === "GET" && url.pathname === "/health") {
-    return send(res, 200, { ok: true, rooms: Object.keys(store.rooms).length });
+    return send(res, 200, { ok: true }); // S4.6: bez liczby pokoi ani innych danych — adres jest jawny
   }
 
   const blob = url.pathname.match(/^\/rooms\/([^/]+)\/blobs\/([^/]+)$/);

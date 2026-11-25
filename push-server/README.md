@@ -54,7 +54,7 @@ Wyjątek to `http://localhost`, który działa przy testach na komputerze.
 | `PORT` | `4455` | port HTTP |
 | `DATA_DIR` | `./data` | katalog na `store.json` i `vapid.json` |
 | `PUSH_TOKEN` | — (**wymagany**) | wspólny sekret: aplikacja wysyła go w `Authorization: Bearer …`. Min. 24 znaki, losowy (`openssl rand -hex 24`) |
-| `ALLOW_NO_AUTH` | — | `1` = start bez tokenu, tylko do prób lokalnych: serwer słucha wtedy wyłącznie na `127.0.0.1` |
+| `ALLOW_NO_AUTH` | — | `1` = start bez tokenu, tylko do prób lokalnych: serwer słucha wtedy wyłącznie na `127.0.0.1`; przy `NODE_ENV=production` serwer odmawia startu |
 | `ALLOWED_ORIGINS` | puste | adresy aplikacji po przecinku (np. `https://notki.netlify.app`). Puste = żadna strona z innej domeny nie może wywołać serwera z przeglądarki. `*` działa tylko, gdy wpiszesz go wprost |
 | `TRUST_PROXY` | — | `1` TYLKO za reverse proxy, które nadpisuje `X-Forwarded-For` (Caddy i nginx domyślnie tak robią), przy porcie dostępnym wyłącznie z proxy (`127.0.0.1:`). Wtedy adres klienta do limitów to ostatni wpis `X-Forwarded-For`. **Nie włączaj, gdy port jest dostępny bezpośrednio z internetu** — klient sam ustawiłby nagłówek i obszedłby limity. Bez tej zmiennej wszyscy za proxy dzielą jeden limit adresu |
 | `MAX_CONNECTIONS` | `200` | jednoczesnych połączeń |
@@ -63,7 +63,7 @@ Wyjątek to `http://localhost`, który działa przy testach na komputerze.
 | `RATE_SCHEDULE_PER_HOUR` | `240` | wysłań harmonogramu na godzinę dla jednej subskrypcji |
 | `RATE_TEST_PER_HOUR` | `5` | próbnych powiadomień na godzinę dla jednej subskrypcji |
 | `VAPID_SUBJECT` | `mailto:admin@example.com` | kontakt dla usług push; wpisz swój e-mail |
-| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | — | własne klucze; bez nich serwer tworzy je przy pierwszym starcie w `vapid.json` |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | — | własne klucze; bez nich serwer tworzy je przy pierwszym starcie w `vapid.json`. Przy `NODE_ENV=production` są wymagane (`npx web-push generate-vapid-keys`) — bez nich serwer odmawia startu |
 
 **Nie zmieniaj kluczy VAPID** po włączeniu powiadomień na telefonach. Bez `vapid.json`, np. po
 skasowaniu wolumenu, wszystkie subskrypcje przestaną działać. Wtedy wyłącz i włącz
