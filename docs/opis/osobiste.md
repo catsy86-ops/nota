@@ -328,7 +328,7 @@ Dział opisany w jednym miejscu; zmiany z przeglądu L1–L20 są już uwzględn
 
 - **Co robi.**
   - **3.2:** przy każdej odżywce 7 kropek ostatnich dni (od najstarszego do dziś; zielona — wzięta) i „6/7”. Czytnik: „W ostatnich 7 dniach: 6 z 7”.
-  - **3.5:** w Treningu wiersz „Ten tydzień”: liczba dni z treningiem (pn–nd) i serie na partię od najczęstszej („2 treningi · serie: Klatka 6, Biceps 3”). Partii, której brakuje, nie było w tym tygodniu. Wiersza nie ma, gdy w tygodniu nie było treningu.
+  - **3.5:** w Treningu wiersz „Ten tydzień”: liczba dni z treningiem (pn–nd) i serie na partię od najczęstszej („2 treningi · serie: Klatka 6, Biceps 3”). Partii, której brakuje, nie było w tym tygodniu. Wiersza nie ma, gdy w tygodniu nie było treningu. Pod spodem (C3.2, `2c72b39e`, 2026-11-25) „W tym tygodniu bez: plecy, nogi”: duże partie (`MAJOR_GROUPS` = klatka, plecy, barki, nogi) bez ani jednej serii; trening całego ciała je pokrywa (`missedMajorGroups`, test w `src/lib/training/model.test.ts`, `training-week-missed`). Małe partie nie są wymieniane, żeby nie robić listy z dziewięciu pozycji.
 - **Gdzie.** `weekAdherence` w `src/lib/supplements/model.ts`, `WeekDots` w `CwiczeniaView.tsx`; `trainingWeek` w `src/lib/training/model.ts` (partia z `exerciseById` — katalog i własne ćwiczenia), `WeekSummary` w `TrainingSection.tsx`.
 - **Jak działa.** Bez nowych danych: zgodność z istniejących odhaczeń (`logKey(dzień, id)`), tydzień z wpisów treningu (`weekKeys` z `lib/week.ts`). Nic nie zmienia formatu, więc bez wymogu C-1.
 - **Stan planu Ćwiczeń.** 1.1 (więcej partii i sprzętu) jest już w katalogu (`catalog.ts`), 3.1 (masa ciała, C-2) zrobione wcześniej. Otwarte m.in. 1.2–1.4, 2.1–2.7, 3.3, 3.4, Etap 4 — do sprawdzenia w kodzie przed realizacją.

@@ -62,7 +62,7 @@ Znane ograniczenie z `opis.md`: odhaczenie odżywki w Ćwiczeniach i „Gotowe�
 | Nr | Punkt | Rozmiar |
 |---|---|---|
 | C3.1 | **Kalendarz regularności:** siatka 12 tygodni (trening, odżywki, dieta wpisana) w SVG, z opisem dla czytnika ekranu. | M |
-| C3.2 | **Tygodniowa objętość na partię** (serie na klatkę, plecy, nogi…) z zaznaczeniem partii pominiętych. Dane są w dzienniku i katalogu. | S |
+| C3.2 ✅ 2026-11-25 (serie na partię były od 3.5 z 02.11; dodane pominięte duże partie) | **Tygodniowa objętość na partię** (serie na klatkę, plecy, nogi…) z zaznaczeniem partii pominiętych. Dane są w dzienniku i katalogu. | S |
 | C3.3 ✅ 2026-11-25 | **Podsumowanie miesiąca:** liczba treningów, nowe rekordy, średnie kcal i białko, zmiana masy. Do udostępnienia jako tekst. | S |
 | C3.4 | **Obwody ciała** (pas, klatka, ramię, udo) w zakładce „Waga”: nowa mapa Yjs według wzoru masy ciała, wykres ten sam. | M |
 | C3.5 ✅ 2026-11-25 (`src/lib/csv.ts` wspólny z Długami, `src/lib/fitnessCsv.ts`) | **Eksport CSV** treningów, posiłków i masy — ten sam format co w Długach (średnik, BOM, ochrona przed formułami); wspólny pomocnik zamiast kopii. | S |
