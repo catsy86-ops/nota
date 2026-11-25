@@ -225,7 +225,7 @@ function GoalsForm({ goals }: { goals: DietGoals }) {
         <Input inputMode="decimal" aria-label="Cel białka (g)" aria-invalid={proteinValue === null} placeholder="np. 150" value={protein} onChange={(e) => setProtein(e.target.value)} />
       </div>
       {range && (
-        <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" data-testid="protein-from-weight">
+        <p className="ui-hint flex flex-wrap items-center gap-2" data-testid="protein-from-weight">
           <span>Przy masie {String(lastKg).replace(".", ",")} kg: {range.min}–{range.max} g białka dziennie (1,6–2,2 g na kg).</span>
           {goals.protein !== range.mid && (
             <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={() => { setProtein(String(range.mid)); setDietGoals({ kcal: goals.kcal, protein: range.mid }); toast.success(`Cel białka: ${range.mid} g`); }}>

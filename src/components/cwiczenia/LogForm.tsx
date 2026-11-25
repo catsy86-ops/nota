@@ -240,7 +240,7 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
         </div>
       ) : null}
       {!last && <p className="ui-hint">To pierwszy zapis tego ćwiczenia.</p>}
-      {warmup.length > 0 && <p className="text-xs text-muted-foreground" data-testid="warmup-hint">{warmupText(warmup)} — przed pierwszym ćwiczeniem dnia, bez zapisu.</p>}
+      {warmup.length > 0 && <p className="ui-hint" data-testid="warmup-hint">{warmupText(warmup)} — przed pierwszym ćwiczeniem dnia, bez zapisu.</p>}
       {last && hint ? (
         <div className="flex flex-wrap items-center gap-2 text-xs" data-testid="progression-hint">
           <span className="font-medium text-primary-ink">{progressionText(hint)}</span>
