@@ -85,6 +85,8 @@ export const GRAFIK = {
 /** Ćwiczenia: przerwa między seriami. (D6.2) */
 export const CWICZENIA = {
   restSeconds: "kaczy.training.restSeconds.v1",
+  /** C2.5: poniedziałek tygodnia, w którym odrzucono „tydzień lżej” (`YYYY-MM-DD`). */
+  deloadDismissed: "kaczy.training.deloadDismissed.v1",
 } as const;
 
 /** Nazwy zdarzeń okna i kanałów BroadcastChannel — nie klucze pamięci, ale ta sama przestrzeń nazw. (D6.2) */

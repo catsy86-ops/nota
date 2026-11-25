@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { EQUIPMENT_LIST, EXERCISES, exerciseById, isKnownExercise } from "./catalog";
-import { bestKg, byTrainingTime, cleanEntry, trainingWeek, cleanKg, cleanPlanDay, cleanSet, planLine, progressByExercise, volumeOf, type TrainingEntry, missedMajorGroups } from "./model";
+import { bestKg, byTrainingTime, cleanEntry, trainingWeek, cleanKg, cleanPlanDay, cleanSet, planLine, progressByExercise, volumeOf, type TrainingEntry, missedMajorGroups, trainingStreakWeeks } from "./model";
 
 const entry = (id: string, day: string, exerciseId: string, sets: { reps: number; kg?: number }[], over: Partial<TrainingEntry> = {}): TrainingEntry =>
   ({ id, day, exerciseId, sets, note: "", created: 1, ...over }) as TrainingEntry;
@@ -151,5 +151,18 @@ describe("missedMajorGroups (C3.2)", () => {
     expect(missedMajorGroups({ days: 2, setsByGroup: [{ group: "klatka", sets: 6 }, { group: "biceps", sets: 3 }] })).toEqual(["plecy", "barki", "nogi"]);
     expect(missedMajorGroups({ days: 1, setsByGroup: [{ group: "cale-cialo", sets: 4 }] })).toEqual([]);
     expect(missedMajorGroups({ days: 0, setsByGroup: [] })).toEqual([]);
+  });
+});
+
+describe("trainingStreakWeeks (C2.5)", () => {
+  const t = (day: string) => ({ id: day, day, exerciseId: "x", sets: [{ reps: 5 }], note: "", created: 1 });
+  it("pełne tygodnie z treningiem wstecz od poprzedniego; luka przerywa; bieżący się nie liczy", () => {
+    // 2026-11-25 to środa; poprzednie poniedziałki: 16.11, 09.11, 02.11, 26.10.
+    expect(trainingStreakWeeks([t("2026-11-25"), t("2026-11-18"), t("2026-11-14"), t("2026-11-02")], "2026-11-25")).toBe(3);
+    // Luka w tygodniu 09.11: liczy się tylko tydzień 16.11.
+    expect(trainingStreakWeeks([t("2026-11-18"), t("2026-11-02")], "2026-11-25")).toBe(1);
+    expect(trainingStreakWeeks([t("2026-11-25")], "2026-11-25")).toBe(0);
+    const six = ["2026-11-17", "2026-11-12", "2026-11-03", "2026-10-29", "2026-10-21", "2026-10-13"].map(t);
+    expect(trainingStreakWeeks(six, "2026-11-25")).toBe(6);
   });
 });

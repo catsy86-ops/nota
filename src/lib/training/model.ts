@@ -1,4 +1,4 @@
-import { weekKeys } from "@/lib/week";
+import { addDaysToKey, startOfWeekKey, weekKeys } from "@/lib/week";
 import { isKnownExercise } from "./catalog";
 import { extraOf, keepV, tooNew, toStored } from "@/lib/extraFields";
 
@@ -288,5 +288,20 @@ export const MAJOR_GROUPS = ["klatka", "plecy", "barki", "nogi"] as const;
 export function missedMajorGroups(week: TrainingWeek): string[] {
   if (week.days === 0 || week.setsByGroup.some((g) => g.group === "cale-cialo")) return [];
   return MAJOR_GROUPS.filter((g) => !week.setsByGroup.some((x) => x.group === g));
+}
+
+/** C2.5 Po tylu pełnych tygodniach z treningiem z rzędu podpowiadamy tydzień lżej. */
+export const DELOAD_AFTER_WEEKS = 6;
+
+/**
+ * Pełne tygodnie (pn–nd) z co najmniej jednym treningiem, liczone wstecz od tygodnia przed bieżącym; pierwszy
+ * tydzień bez treningu przerywa serię. Bieżący tydzień się nie liczy — jeszcze trwa.
+ */
+export function trainingStreakWeeks(entries: readonly TrainingEntry[], today: string): number {
+  const weeks = new Set(entries.map((e) => startOfWeekKey(e.day)));
+  let week = addDaysToKey(startOfWeekKey(today), -7);
+  let n = 0;
+  while (weeks.has(week)) { n++; week = addDaysToKey(week, -7); }
+  return n;
 }
 

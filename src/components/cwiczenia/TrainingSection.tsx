@@ -9,7 +9,7 @@ import { localDayKey } from "@/lib/dayDone";
 import { useRestSeconds } from "@/lib/training/restPrefs";
 import { nextReminderAt } from "@/lib/timeOfDay";
 import { exerciseById, MUSCLE_GROUP_LABELS, type MuscleGroup } from "@/lib/training/catalog";
-import { byTrainingTime, missedMajorGroups, trainingWeek, progressByExercise, TRAINING_REMINDER_DEFAULT, TRAINING_WINDOW_END, volumeOf, type TrainingEntry, type TrainingReminder } from "@/lib/training/model";
+import { byTrainingTime, DELOAD_AFTER_WEEKS, missedMajorGroups, trainingStreakWeeks, trainingWeek, progressByExercise, TRAINING_REMINDER_DEFAULT, TRAINING_WINDOW_END, volumeOf, type TrainingEntry, type TrainingReminder } from "@/lib/training/model";
 import { removeTrainingEntry, restoreTrainingEntry, setTrainingReminder, useTrainingEntries, useTrainingPlans, useTrainingReminder } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -20,6 +20,8 @@ import { AddPlanForm, PlanList } from "./PlanForms";
 import { ProgressList } from "./ProgressList";
 import { RestControl, RestTimer } from "./RestTimer";
 import { setsLine } from "./trainingFormat";
+import { startOfWeekKey } from "@/lib/week";
+import { dismissDeload, useDeloadDismissed } from "@/lib/training/deload";
 
 /** Trening w dziale Ćwiczenia: przypomnienie, plany dni, dziennik serii z przerwą, dziś i progres. */
 export function TrainingSection() {
@@ -29,6 +31,11 @@ export function TrainingSection() {
   const todays = useMemo(() => entries.filter((e) => e.day === today).sort(byTrainingTime), [entries, today]);
   const progress = useMemo(() => progressByExercise(entries), [entries]);
   const week = useMemo(() => trainingWeek(entries, today, (id) => exerciseById(id)?.group), [entries, today]);
+  // C2.5: po 6 pełnych tygodniach z rzędu — podpowiedź „tydzień lżej”, do odrzucenia na ten tydzień.
+  const streak = useMemo(() => trainingStreakWeeks(entries, today), [entries, today]);
+  const weekStart = startOfWeekKey(today);
+  const deloadDismissed = useDeloadDismissed();
+  const showDeload = streak >= DELOAD_AFTER_WEEKS && deloadDismissed !== weekStart;
   const [rest, setRest] = useState<{ until: number; total: number } | null>(null);
   const restSeconds = useRestSeconds();
   // Q3.1: w przerwie między seriami telefon leży obok — ekran nie gaśnie, dopóki liczy się przerwa.
@@ -51,6 +58,14 @@ export function TrainingSection() {
       )}
 
       <WeekSummary week={week} />
+      {showDeload && (
+        <div role="status" className="flex flex-wrap items-center gap-2 rounded-field border border-primary/40 bg-primary/5 px-3 py-2 text-sm" data-testid="deload-hint">
+          <span className="min-w-0 flex-1">
+            <span className="font-medium">{streak} tygodni treningu z rzędu.</span> Ten tydzień lżej: mniej o ok. 40% serii albo ciężaru — mięśnie i stawy odpoczną, a forma wróci z zapasem.
+          </span>
+          <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={() => dismissDeload(weekStart)}>Nie teraz</Button>
+        </div>
+      )}
       <ProgressList progress={progress} entries={entries} />
       <AddPlanForm />
       {/* 2.2: ustawienia rzadko zmieniane są na dole, żeby na górze karty były plan i zapis. */}

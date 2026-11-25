@@ -338,3 +338,24 @@ describe("TrainingSection — C2.1 podpowiedź progresji", () => {
     expect(screen.queryByTestId("progression-hint")).toBeNull();
   });
 });
+
+describe("TrainingSection — C2.5 tydzień lżej", () => {
+  it("po 6 pełnych tygodniach z rzędu podpowiedź; „Nie teraz” chowa ją na ten tydzień", async () => {
+    const { EXERCISES } = await import("@/lib/training/catalog");
+    const today = localDayKey();
+    fixture.entries = [1, 2, 3, 4, 5, 6].map((w) => ({ id: `w${w}`, day: addDaysToKey(today, -7 * w), exerciseId: EXERCISES[0].id, sets: [{ reps: 5, kg: 20 }], note: "", created: w }));
+    render(<TrainingSection />);
+    expect(screen.getByTestId("deload-hint").textContent).toContain("6 tygodni treningu z rzędu");
+    fireEvent.click(screen.getByRole("button", { name: "Nie teraz" }));
+    expect(screen.queryByTestId("deload-hint")).toBeNull();
+    localStorage.removeItem("kaczy.training.deloadDismissed.v1");
+  });
+
+  it("5 tygodni — jeszcze bez podpowiedzi", async () => {
+    const { EXERCISES } = await import("@/lib/training/catalog");
+    const today = localDayKey();
+    fixture.entries = [1, 2, 3, 4, 5].map((w) => ({ id: `w${w}`, day: addDaysToKey(today, -7 * w), exerciseId: EXERCISES[0].id, sets: [{ reps: 5, kg: 20 }], note: "", created: w }));
+    render(<TrainingSection />);
+    expect(screen.queryByTestId("deload-hint")).toBeNull();
+  });
+});
