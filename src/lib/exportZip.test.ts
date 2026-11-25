@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { buildNotesZip, buildZip, noteToMarkdownFile, safeFileName } from "./exportZip";
+import { describe, expect, it, vi } from "vitest";
+import { buildNotesZip, buildNotesZipAsync, buildZip, noteToMarkdownFile, safeFileName, ZIP_YIELD_EVERY } from "./exportZip";
+import * as yielding from "./yieldToMain";
 import { listZip } from "./import/zip";
 import type { Folder, Note } from "@/lib/types/note";
 import type { PropDef } from "@/lib/noteProps";
@@ -79,5 +80,19 @@ describe("ikona w frontmatterze", () => {
     const { parseFrontmatter } = await import("./import/markdown");
     const parsed = parseFrontmatter(md).data;
     expect(parsed.title).toBe("Ofert");
+  });
+});
+
+describe("buildNotesZipAsync (Q3.8)", () => {
+  it("te same bajty co wersja synchroniczna; oddaje wątek co ZIP_YIELD_EVERY notatek", async () => {
+    const spy = vi.spyOn(yielding, "yieldToMain").mockResolvedValue(undefined);
+    const notes = Array.from({ length: ZIP_YIELD_EVERY * 2 + 5 }, (_, i) => note({ id: String(i), title: `N${i}`, content: "x" }));
+    const now = new Date(2026, 10, 25, 12);
+    const sync = buildNotesZip(notes, [], now);
+    const async_ = await buildNotesZipAsync(notes, [], now);
+    expect(async_.count).toBe(sync.count);
+    expect(Array.from(async_.bytes)).toEqual(Array.from(sync.bytes));
+    expect(spy).toHaveBeenCalledTimes(2);
+    spy.mockRestore();
   });
 });

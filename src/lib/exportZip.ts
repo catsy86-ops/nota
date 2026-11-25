@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import type { Folder, Note } from "@/lib/types/note";
 import { filledPropEntries, type PropDef } from "@/lib/noteProps";
 import { downloadBlob } from "@/lib/downloadBlob";
+import { yieldToMain } from "@/lib/yieldToMain";
 
 /**
  * Eksport notatek jako ZIP z osobnymi plikami `.md` (frontmatter zgodny z importem
@@ -109,6 +110,23 @@ export interface NotesZip { bytes: Uint8Array; count: number; skippedPrivate: nu
 
 /** Archiwum z podanych notatek; foldery jako katalogi, powtórzone tytuły dostają numer. */
 export function buildNotesZip(notes: Note[], folders: Folder[], now: Date = new Date(), propDefs: PropDef[] = []): NotesZip {
+  const steps = notesZipSteps(notes, folders, propDefs);
+  let r = steps.next();
+  while (!r.done) r = steps.next();
+  return { bytes: buildZip(r.value.entries, now), count: r.value.entries.length, skippedPrivate: r.value.skippedPrivate };
+}
+
+/** Q3.8: jak `buildNotesZip`, ale co {@link ZIP_YIELD_EVERY} notatek oddaje wątek — przy tysiącach notatek ekran nie stoi. */
+export const ZIP_YIELD_EVERY = 100;
+export async function buildNotesZipAsync(notes: Note[], folders: Folder[], now: Date = new Date(), propDefs: PropDef[] = []): Promise<NotesZip> {
+  const steps = notesZipSteps(notes, folders, propDefs);
+  let r = steps.next();
+  while (!r.done) { await yieldToMain(); r = steps.next(); }
+  return { bytes: buildZip(r.value.entries, now), count: r.value.entries.length, skippedPrivate: r.value.skippedPrivate };
+}
+
+/** Pliki `.md` notatek porcjami: generator zatrzymuje się co `ZIP_YIELD_EVERY` notatek. */
+function* notesZipSteps(notes: Note[], folders: Folder[], propDefs: PropDef[]): Generator<void, { entries: ZipEntry[]; skippedPrivate: number }> {
   const byId = new Map(folders.map((f) => [f.id, f]));
   const pathOf = (id: string | null | undefined): string => {
     const parts: string[] = [];
@@ -123,7 +141,9 @@ export function buildNotesZip(notes: Note[], folders: Folder[], now: Date = new 
   const used = new Set<string>();
   const entries: ZipEntry[] = [];
   let skippedPrivate = 0;
-  for (const n of notes) {
+  for (let k = 0; k < notes.length; k++) {
+    if (k > 0 && k % ZIP_YIELD_EVERY === 0) yield;
+    const n = notes[k];
     if (n.locked) { skippedPrivate++; continue; }
     const dir = pathOf(n.folderId);
     const base = safeFileName(n.title || n.content.split("\n")[0] || "");
@@ -132,12 +152,12 @@ export function buildNotesZip(notes: Note[], folders: Folder[], now: Date = new 
     used.add(name.toLowerCase());
     entries.push({ name, data: TEXT.encode(noteToMarkdownFile(n, propDefs)) });
   }
-  return { bytes: buildZip(entries, now), count: entries.length, skippedPrivate };
+  return { entries, skippedPrivate };
 }
 
 /** Pobranie archiwum jako pliku; potwierdza toastem i zwraca liczbę zapisanych notatek. */
-export function downloadNotesZip(notes: Note[], folders: Folder[], filename: string, propDefs: PropDef[] = []): NotesZip {
-  const zip = buildNotesZip(notes, folders, new Date(), propDefs);
+export async function downloadNotesZip(notes: Note[], folders: Folder[], filename: string, propDefs: PropDef[] = []): Promise<NotesZip> {
+  const zip = await buildNotesZipAsync(notes, folders, new Date(), propDefs);
   downloadBlob(new Blob([zip.bytes as unknown as BlobPart], { type: "application/zip" }), filename);
   return zip;
 }

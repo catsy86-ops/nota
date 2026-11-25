@@ -39,8 +39,8 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
           <FileText className="size-4 mr-2" />
           Eksportuj jako Markdown
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={run(() => {
-          const zip = downloadNotesZip(all(), folders, `notatki-${new Date().toISOString().slice(0, 10)}.zip`, propDefs);
+        <DropdownMenuItem onClick={run(async () => {
+          const zip = await downloadNotesZip(all(), folders, `notatki-${new Date().toISOString().slice(0, 10)}.zip`, propDefs);
           toast.success(`Pobrano ${zip.count} notatek (ZIP z plikami .md)`, {
             description: zip.skippedPrivate ? `Pominięto ${zip.skippedPrivate} prywatnych — ich treść jest zaszyfrowana.` : "Foldery jako katalogi; bez obrazów i załączników.",
           });
