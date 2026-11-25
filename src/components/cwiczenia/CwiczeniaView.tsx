@@ -7,7 +7,8 @@ import { MissingHint } from "@/components/ui/missing-hint";
 import { StatusPanel } from "@/components/StatusPanel";
 import { Sketch } from "@/components/art/Sketch";
 import { SUPPLEMENTS_GLYPH } from "@/lib/emptyGlyphs";
-import { Pencil, Pill, Plus, Trash } from "lucide-react";
+import { Download, Pencil, Pill, Plus, Trash } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,9 @@ import { TrainingSection } from "./TrainingSection";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { listItemMotion } from "@/lib/cardMotion";
 import { useMotionPref } from "@/hooks/useMotionPref";
+import { useWeights } from "@/lib/weight/store";
+import { exerciseById } from "@/lib/training/catalog";
+import { downloadBlob } from "@/lib/downloadBlob";
 
 /** Domyślna godzina przypomnienia dla pory dnia (edytowalna w formularzu). */
 const DEFAULT_TIME: Record<SupplementWhen, string> = { rano: "07:30", w_ciagu_dnia: "12:00", wieczorem: "20:00" };
@@ -199,7 +203,34 @@ export function CwiczeniaView() {
         <TabsContent value="waga" id="cwiczenia-waga" forceMount className={panel}><WeightSection /></TabsContent>
       </div>
       </Tabs>
+      <ExportCsv />
     </section>
+  );
+}
+
+/** C3.5: trening, dieta i masa jako CSV (jeden plik na rodzaj); przycisk tylko przy danych tego rodzaju. */
+function ExportCsv() {
+  const training = useTrainingEntries();
+  const meals = useMeals();
+  const weights = useWeights();
+  if (training.length + meals.length + weights.length === 0) return null;
+  const save = async (kind: "trening" | "dieta" | "waga") => {
+    const { trainingCsv, mealsCsv, weightsCsv } = await import("@/lib/fitnessCsv");
+    const text = kind === "trening" ? trainingCsv(training, (id) => exerciseById(id)?.name) : kind === "dieta" ? mealsCsv(meals) : weightsCsv(weights);
+    downloadBlob(new Blob([text], { type: "text/csv;charset=utf-8" }), `notki-${kind}-${localDayKey()}.csv`);
+    toast.success("Zapisano plik CSV");
+  };
+  const button = (kind: "trening" | "dieta" | "waga", label: string) => (
+    <Button key={kind} variant="ghost" size="sm" className="tap-target gap-1.5 text-muted-foreground" onClick={() => void save(kind)}>
+      <Download className="size-4" aria-hidden />{label}
+    </Button>
+  );
+  return (
+    <div className="mt-6 flex flex-wrap justify-end gap-1" data-testid="cwiczenia-export">
+      {training.length > 0 && button("trening", "Trening CSV")}
+      {meals.length > 0 && button("dieta", "Dieta CSV")}
+      {weights.length > 0 && button("waga", "Waga CSV")}
+    </div>
   );
 }
 

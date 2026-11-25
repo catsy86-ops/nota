@@ -1,4 +1,5 @@
 import { extraOf, keepV, tooNew } from "@/lib/extraFields";
+import { csvDocument, csvNumber, csvText } from "@/lib/csv";
 
 /**
  * Długi — kto ile pożyczył i ile już oddał. Czysty model bez Yjs i bez DOM:
@@ -288,32 +289,18 @@ export function personReminder(p: PersonDebts, due: number | null, now: number):
   return `Cześć! Przypominam o zwrocie ${formatAmount(p.balance)}${when}. Dzięki!`;
 }
 
-const CRLF = String.fromCharCode(13, 10);
-const BOM = String.fromCharCode(0xfeff);
-
-/**
- * Pole tekstowe CSV: początek `=`, `+`, `-`, `@`, tabulator albo CR dostaje apostrof (bez wstrzykiwania formuł
- * w Excelu), średnik, cudzysłów albo nowa linia — cudzysłowy.
- */
-function textCell(v: string): string {
-  const c = v.charCodeAt(0);
-  // Pusty tekst: `"=+-@".includes("")` to `true` — bez sprawdzenia długości puste pole dostawało apostrof.
-  const s = v.length > 0 && ("=+-@".includes(v.charAt(0)) || c === 9 || c === 13) ? `'${v}` : v;
-  return /[;"]/.test(s) || s.includes(String.fromCharCode(10)) || s.includes(String.fromCharCode(13)) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
 /** Grosze → „-12,50” (liczba w polskim Excelu; bez apostrofu, to nie tekst). */
-const moneyCell = (grosze: number) => (grosze / 100).toFixed(2).replace(".", ",");
+const moneyCell = (grosze: number) => csvNumber(grosze / 100, 2);
 
 /**
- * 3.4 Wszystkie wpisy jako CSV pod polski Excel (separator „;”, BOM, CRLF, przecinek dziesiętny), od
+ * 3.4 Wszystkie wpisy jako CSV pod polski Excel (wspólny format z `src/lib/csv.ts`), od
  * najstarszego. Saldo osoby: plus — ta osoba jest nam winna, minus — my jej.
  */
 export function debtsCsv(entries: readonly DebtEntry[]): string {
   const balance = new Map(balances(entries).map((p) => [p.key, p.balance]));
-  const rows = [["Data", "Osoba", "Rodzaj", "Kwota [zł]", "Za co", "Saldo osoby [zł] (+ nam winna)"].map(textCell).join(";")];
+  const rows = [["Data", "Osoba", "Rodzaj", "Kwota [zł]", "Za co", "Saldo osoby [zł] (+ nam winna)"].map(csvText)];
   for (const e of [...entries].sort(byNewest).reverse()) {
-    rows.push([textCell(e.at), textCell(e.person), textCell(DEBT_KIND_LABEL[e.kind]), moneyCell(e.amount), textCell(e.note), moneyCell(balance.get(personKey(e.person)) ?? 0)].join(";"));
+    rows.push([csvText(e.at), csvText(e.person), csvText(DEBT_KIND_LABEL[e.kind]), moneyCell(e.amount), csvText(e.note), moneyCell(balance.get(personKey(e.person)) ?? 0)]);
   }
-  return BOM + rows.join(CRLF) + CRLF;
+  return csvDocument(rows);
 }
