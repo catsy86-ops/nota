@@ -73,4 +73,11 @@ describe("rury w zużyciu materiału (H1.1)", () => {
     expect(materialText(u, "Lipowa", prices)).toContain("- Rura PEX 16×2: 24,5 m × 4,00 zł/m = 98,00 zł");
     expect(materialCsv(u, prices)).toContain("rura (m);Rura PEX 16×2;24,50;4,00;98,00");
   });
+
+  it("W2.6: tekst ma separator tysięcy (zwykła spacja), CSV bez zmian", () => {
+    const big = { [fittingKey("Rura PEX 16×2")]: 500, [fittingKey("Kolano 16")]: 3 };
+    const u = materialUsage(withPipes, "lipowa", [], big);
+    expect(materialText(u, "Lipowa", big)).toContain("= 12 250,00 zł");
+    expect(materialCsv(u, big)).toContain(";500,00;12250,00");
+  });
 });

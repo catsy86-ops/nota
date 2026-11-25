@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
+import { formatMoney } from "@/lib/shifts/time";
 import { cell } from "@/lib/shifts/timesheet";
 import { fittingKey, sumFittings, type Fitting } from "./fittings";
 import { metersLabel, sumPipes, type Pipe } from "./pipes";
@@ -92,7 +93,8 @@ export function materialUsage(journal: readonly JournalEntry[], siteId: string, 
   return { months, total, totalPipes, ...costOf(total, prices, totalPipes) };
 }
 
-const zl = (n: number) => `${n.toFixed(2).replace(".", ",")} zł`;
+/** W2.6: wspólny `formatMoney` (pl-PL, separator tysięcy od 10 000); twarde spacje → zwykłe, żeby wklejony tekst był czytelny wszędzie. */
+const zl = (n: number) => formatMoney(n).replace(new RegExp("[\\u00A0\\u202F]", "g"), " ");
 
 /** Tekst do „Kopiuj” (szef, dostawca). */
 export function materialText(u: MaterialUsage, site: string, prices: PriceList): string {
