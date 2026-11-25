@@ -701,3 +701,20 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia i pułapki:** średnia obejmuje 7 dni widocznych na liście, razem z dzisiejszym, niepełnym dniem. Podpowiedź białka nie uwzględnia wieku, płci ani celu (redukcja czy masa): to ogólny zakres dla trenujących.
 - **Testy:** `src/lib/diet/model.test.ts` (`rangeAverage`, `proteinRangeFor`), `src/components/cwiczenia/DietSection.test.tsx` (zdanie średniej, zakres i „Przyjmij”, brak bez ważenia).
 - **Commit:** `b73a7a67`, 2026-11-25.
+
+## Ćwiczenia — podsumowanie miesiąca do udostępnienia (C3.3, 2026-11-25)
+
+- **Co robi:** przycisk „Podsumowanie miesiąca” na dole widoku Ćwiczeń, obok przycisków CSV, wysyła krótki tekst o bieżącym miesiącu. Na telefonie otwiera arkusz udostępniania, na komputerze kopiuje do schowka. Przykładowy tekst:
+  ```
+  Ćwiczenia — listopad 2026
+  Treningi: 3 dni
+  Nowe rekordy: 2
+  Średnio dziennie: 2200 kcal, 100 g białka (2 dni z wpisami)
+  Masa: 80,6 → 79,8 kg (−0,8 kg)
+  ```
+  Puste części, np. bez diety albo bez ważenia, są pomijane.
+- **Gdzie jest:** `src/lib/fitnessMonth.ts` (`monthFitness`, `monthFitnessText`, typ `MonthFitness`); przycisk w `ExportCsv` w `src/components/cwiczenia/CwiczeniaView.tsx`, wysyłka przez `shareOrCopy`. Moduł ładowany po kliknięciu.
+- **Jak działa:** rekord liczony jest tak jak toast „Nowy rekord” przy zapisie: wpis, którego najcięższa seria przewyższa wszystkie wcześniejsze w tym ćwiczeniu, także sprzed miesiąca. Pierwszy zapis ćwiczenia rekordem nie jest. Średnie kcal i białka liczone są z dni z podaną wartością. Masa to pierwsze i ostatnie ważenie w miesiącu.
+- **Ograniczenia i pułapki:** tylko bieżący miesiąc, bez wyboru innego. Odżywki nie wchodzą do podsumowania. Rekordy porównują tylko ciężar, nie powtórzenia ani 1RM.
+- **Testy:** `src/lib/fitnessMonth.test.ts`.
+- **Commit:** `6923d2f0`, 2026-11-25.

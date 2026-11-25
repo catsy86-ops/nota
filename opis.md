@@ -10,7 +10,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 | Terminy, przypomnienia i powiadomienia | [`docs/opis/terminy.md`](docs/opis/terminy.md) | 21 |
 | Kalendarz i Grafik | [`docs/opis/kalendarz-grafik.md`](docs/opis/kalendarz-grafik.md) | 12 |
 | Praca | [`docs/opis/praca.md`](docs/opis/praca.md) | 100 |
-| Osobiste: Ćwiczenia, Długi, Skarbiec | [`docs/opis/osobiste.md`](docs/opis/osobiste.md) | 42 |
+| Osobiste: Ćwiczenia, Długi, Skarbiec | [`docs/opis/osobiste.md`](docs/opis/osobiste.md) | 43 |
 | Dane, synchronizacja i kopie | [`docs/opis/dane.md`](docs/opis/dane.md) | 28 |
 | Powłoka, Ustawienia i telefon | [`docs/opis/powloka.md`](docs/opis/powloka.md) | 25 |
 | Wygląd i ruch | [`docs/opis/wyglad.md`](docs/opis/wyglad.md) | 57 |
@@ -271,6 +271,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Ćwiczenia — podpowiedź progresji przy zapisie serii (C2.1, 2026-11-25)
 - Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 - Ćwiczenia — dieta: średnia z 7 dni i cel białka z masy ciała (C4.3, C4.4, 2026-11-25)
+- Ćwiczenia — podsumowanie miesiąca do udostępnienia (C3.3, 2026-11-25)
 
 ### Dane, synchronizacja i kopie — [`docs/opis/dane.md`](docs/opis/dane.md)
 
