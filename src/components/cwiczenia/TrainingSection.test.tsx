@@ -318,6 +318,19 @@ describe("TrainingSection — C2.1 podpowiedź progresji", () => {
     expect((screen.getByLabelText("Powtórki, seria 2") as HTMLInputElement).value).toBe("10");
   });
 
+  it("C2.4: przed pierwszym ćwiczeniem dnia rozgrzewka z ciężaru z podpowiedzi; po treningu dziś — bez niej", async () => {
+    const { EXERCISES } = await import("@/lib/training/catalog");
+    const id = EXERCISES[0].id;
+    fixture.plans = [{ id: "p", name: "A", exerciseIds: [id], targetSets: 2, targetReps: 10, created: 1 }];
+    fixture.entries = [{ id: "e1", day: "2026-11-20", exerciseId: id, sets: [{ reps: 10, kg: 40 }, { reps: 10, kg: 40 }], note: "", created: 1 }];
+    render(<TrainingSection />);
+    expect(screen.getByTestId("warmup-hint").textContent).toContain("Rozgrzewka: 20,5 kg × 8, 30,5 kg × 5");
+    cleanup();
+    fixture.entries = [...fixture.entries, { id: "e2", day: localDayKey(), exerciseId: id, sets: [{ reps: 5, kg: 20 }], note: "", created: 2 }];
+    render(<TrainingSection />);
+    expect(screen.queryByTestId("warmup-hint")).toBeNull();
+  });
+
   it("bez planu i sesji nie ma celu — podpowiedzi nie ma", async () => {
     const { EXERCISES } = await import("@/lib/training/catalog");
     fixture.entries = [{ id: "e1", day: "2026-11-20", exerciseId: EXERCISES[0].id, sets: [{ reps: 10, kg: 40 }], note: "", created: 1 }];

@@ -13,7 +13,7 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { progressionText, suggestNext, targetRepsFor } from "@/lib/training/progression";
+import { progressionText, suggestNext, targetRepsFor, warmupSets, warmupText } from "@/lib/training/progression";
 import { emptyRow, nowHHMM, parseKg, parseNum, setsLine, shortDay, type SetRow } from "./trainingFormat";
 
 /** C1.2: wydzielone z `TrainingSection.tsx` bez zmian zachowania. */
@@ -143,12 +143,15 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
   const exercise = exerciseById(exerciseId);
   // Ostrzeżenie, nie blokada: ciężar ponad hantle z ustawienia da się zapisać (np. po zmianie hantli).
   const overLimit = parsed.some((p) => p.kg !== undefined && p.kg !== null && overDumbbell(p.kg, exercise?.equipment ?? [], equipment));
+  // C2.4: przed pierwszym ćwiczeniem dnia — rozgrzewka z ciężaru roboczego (podpowiedź progresji albo ostatnia sesja).
+  const firstToday = !entries.some((e) => e.day === localDayKey());
   // C2.1: podpowiedź podwójnej progresji z ostatniej sesji; cel powtórek z sesji albo z planu z tym ćwiczeniem.
   const sessionTarget = session && !isFinished(session) && exerciseId === currentExerciseId(session) ? session.targetReps : undefined;
   const hint = useMemo(
     () => (timed ? null : suggestNext(entries, exerciseId, targetRepsFor(exerciseId, plans, sessionTarget), exercise?.equipment ?? [], equipment)),
     [timed, entries, exerciseId, plans, sessionTarget, exercise?.equipment, equipment],
   );
+  const warmup = !timed && firstToday && !forYesterday ? warmupSets(hint?.kg ?? (last ? bestKg(last.sets) : undefined)) : [];
 
   const save = () => {
     if (!valid) return;
@@ -237,6 +240,7 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
         </div>
       ) : null}
       {!last && <p className="ui-hint">To pierwszy zapis tego ćwiczenia.</p>}
+      {warmup.length > 0 && <p className="text-xs text-muted-foreground" data-testid="warmup-hint">{warmupText(warmup)} — przed pierwszym ćwiczeniem dnia, bez zapisu.</p>}
       {last && hint ? (
         <div className="flex flex-wrap items-center gap-2 text-xs" data-testid="progression-hint">
           <span className="font-medium text-primary-ink">{progressionText(hint)}</span>

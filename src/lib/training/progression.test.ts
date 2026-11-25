@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { progressionText, suggestNext, targetRepsFor } from "./progression";
+import { progressionText, suggestNext, targetRepsFor, warmupSets, warmupText } from "./progression";
 import type { PlanDay, TrainingEntry, TrainingSet } from "./model";
 
 const entry = (id: string, day: string, sets: TrainingSet[], exerciseId = "bench"): TrainingEntry => ({ id, day, exerciseId, sets, note: "", created: Number(id) });
@@ -47,5 +47,14 @@ describe("suggestNext (C2.1)", () => {
     expect(progressionText({ kind: "add", kg: 8.5, reps: 12 })).toBe("Dołóż: 8,5 kg × 12");
     expect(progressionText({ kind: "reps", kg: 40, reps: 9, capped: false })).toBe("Te same 40 kg, o powtórkę więcej: 9");
     expect(progressionText({ kind: "reps", kg: 20, reps: 13, capped: true })).toBe("Hantle już na maksimum — zostań przy 20 kg, celuj w 13 powtórzeń");
+  });
+});
+
+describe("warmupSets (C2.4)", () => {
+  it("50% i 75% ciężaru roboczego, w dół do 0,5 kg; poniżej 10 kg albo bez ciężaru — nic", () => {
+    expect(warmupSets(41)).toEqual([{ kg: 20.5, reps: 8 }, { kg: 30.5, reps: 5 }]);
+    expect(warmupText(warmupSets(60))).toBe("Rozgrzewka: 30 kg × 8, 45 kg × 5");
+    expect(warmupSets(9.5)).toEqual([]);
+    expect(warmupSets(undefined)).toEqual([]);
   });
 });

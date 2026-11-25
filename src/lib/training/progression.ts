@@ -49,3 +49,17 @@ export function progressionText(h: ProgressionHint): string {
     ? `Hantle już na maksimum — zostań przy ${kgText(h.kg)} kg, celuj w ${h.reps} powtórzeń`
     : `Te same ${kgText(h.kg)} kg, o powtórkę więcej: ${h.reps}`;
 }
+
+/**
+ * C2.4 Rozgrzewka przed pierwszym ćwiczeniem dnia: dwie serie wstępne — 50% i 75% ciężaru roboczego, zaokrąglone
+ * w dół do 0,5 kg (tyle przyjmuje formularz), 8 i 5 powtórzeń. Tylko podpowiedź: nic nie zapisuje i nie liczy się
+ * do rekordów. Ciężar roboczy poniżej 10 kg — bez rozgrzewki (serie wyszłyby po 2–5 kg).
+ */
+export function warmupSets(workKg: number | undefined): { kg: number; reps: number }[] {
+  if (workKg === undefined || !Number.isFinite(workKg) || workKg < 10) return [];
+  const down = (x: number) => Math.floor(x * 2) / 2;
+  return [{ kg: down(workKg * 0.5), reps: 8 }, { kg: down(workKg * 0.75), reps: 5 }];
+}
+
+export const warmupText = (sets: readonly { kg: number; reps: number }[]) =>
+  `Rozgrzewka: ${sets.map((s) => `${String(s.kg).replace(".", ",")} kg × ${s.reps}`).join(", ")}`;
