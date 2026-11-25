@@ -66,7 +66,7 @@
 | W2.3 | **Role grubości:** 400 treść, 500 etykiety i przyciski, 600–700 tytuły. `font-bold` (41) i `font-semibold` (263) w treści wierszy zamienić na 500 + kolor; pogrubienie nie może być jedynym nośnikiem hierarchii w wierszu z trzema pogrubionymi polami. | M |
 | W2.4 | **Łamanie:** `text-wrap: balance` w `title-*`, `text-wrap: pretty` w akapitach treści i opisach pustych stanów; `hyphens: auto` z `lang="pl"` w treści notatki na wąskim ekranie (sprawdzić jakość dzielenia w Chrome i Safari); `max-width: 68ch` dla czytanej treści. | S |
 | W2.5 | **Interlinia z roli:** 93 × `leading-*` przejrzeć — zostają tylko wyjątki (jednowierszowe pigułki, liczby). | S |
-| W2.6 | **Liczby:** wszystkie kwoty, godziny, liczniki — `tabular-nums` (jest 303; dopisać brakujące w tabelach Grafiku i wycen), jednostka mniejsza i wyciszona (`12,5 <small>kWh</small>`), separator tysięcy z `Intl.NumberFormat("pl-PL")` w jednym pomocniku. | S |
+| W2.6 ✅ 2026-11-25 (`tabular-nums` w Grafiku i wycenach sprawdzone — 46 miejsc; `materialUsage.ts` na `formatMoney`, 8c05fb9c) | **Liczby:** wszystkie kwoty, godziny, liczniki — `tabular-nums` (jest 303; dopisać brakujące w tabelach Grafiku i wycen), jednostka mniejsza i wyciszona (`12,5 <small>kWh</small>`), separator tysięcy z `Intl.NumberFormat("pl-PL")` w jednym pomocniku. | S |
 | W2.7 | **Straż:** test źródeł zabrania pary `text-(xs|sm) font-(medium|semibold)` w nowych plikach widoków, gdy istnieje rola; lista wyjątków malejąca. | S |
 
 ## Etap W3: powierzchnie i karty (Sonnet)
