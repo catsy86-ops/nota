@@ -101,7 +101,7 @@ const BACKUP_KEYS = [
   "kaczy.study.sitePatterns.v1",
   // Flagi funkcji w przygotowaniu (src/lib/featureFlags.ts) — zwykłe przełączniki.
   "kaczy.features.v1",
-  // Push: wpis jest, ale przy przywracaniu push wyłączamy (`exportNotes.ts`) — subskrypcja jest na urządzeniu.
+  // Push: wpis jest, ale przy przywracaniu push wyłączamy (`src/lib/backup/merge.ts`) — subskrypcja jest na urządzeniu.
   "kaczy.push.v1",
 ];
 for (const key of new Set(BACKUP_KEYS)) rawKey(key, { backup: true });

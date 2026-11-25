@@ -17,7 +17,7 @@ const KNOWN: Record<string, number> = {
   "src/hooks/useTheme.ts": 2,
   "src/lib/accentMeta.ts": 50,
   "src/lib/celebrate.ts": 14,
-  "src/lib/exportNotes.ts": 8,
+  "src/lib/backup/download.ts": 8,
   "src/lib/frameLook.ts": 6,
   "src/lib/glowLook.ts": 5,
   "src/lib/import/__fixtures__/samples.ts": 1,

@@ -207,6 +207,43 @@ Nic nowego dla użytkownika. `src/lib/yjsStore.ts` (1374 linie) podzielony na mo
 
 `c6503671` (krok 0), `a6d17413` (1), `99416d01` (2–3), `1831c38d` (4), `0a43d279` (5), `54ff28a6` (6), dalej `docFile`, `fileRefs`, `bulkReplace` — 2026-11-23.
 
+## Dane — podział kopii `exportNotes.ts` na `src/lib/backup/` (A3.1 planu architektury, 2026-11-25)
+
+### Co robi
+
+Nic nowego dla użytkownika. Kod pełnej kopii i eksportów (732 linie w `src/lib/exportNotes.ts`) podzielony na pięć modułów według zadania. Format kopii i zachowanie bez zmian.
+
+### Gdzie jest
+
+| Plik | Co | Linie |
+|---|---|---|
+| `src/lib/backup/sections.ts` | `MERGE_SECTIONS` (rejestr sekcji scalanych), typy `MergeKey`, `Merge`, `SHIFTS_SECTION`, `STUDY_SECTION` | 35 |
+| `src/lib/backup/build.ts` | Zbieranie kopii: `withEmbeddedImages`, `withStoredImages`, `embeddableImages`, `BackupAttachmentReport`, `describeSkippedAttachments`, `collectAttachmentBlobs` (prywatna), `buildFullBackupWithReport`, `buildFullBackup`, `SETTINGS_KEYS`, `SETTING_VALUE_MAX`, `ACHIEVEMENTS_KEY`, `readKeys` (prywatna) | 249 |
+| `src/lib/backup/parse.ts` | Walidacja i wersje: `MAX_IMPORT_FILE_SIZE`, `isBackupOversize`, `BACKUP_OVERSIZE_NOTE`, `MAX_BACKUP_VERSION`, `parseFullBackup`, `loadSchemas` (leniwy zod) | 31 |
+| `src/lib/backup/merge.ts` | Przywracanie: `RestoreOptions`, `RestoreCheckError`, `restoreScope`, `RestoreRun`, `restoreFullBackup` (+ `restoreFullBackupLocked`), `pushPrefsForRestore` | 220 |
+| `src/lib/backup/download.ts` | Wszystko z DOM i plikami: `download` (reeksport z `downloadBlob`), `exportToJSON`, `exportFullBackup`, `pickFullBackup`, `shareFullBackup`, `exportToMarkdown`, `exportToHTML`, `importFromJSON` | 215 |
+| `src/lib/exportNotes.ts` | Cienki reeksport wszystkich dawnych eksportów (też `RESTORE_MARKER_KEY`, `readRestoreMarker`, `clearRestoreMarker`, `RestoreMarker` z `restoreMarker.ts`) | 13 |
+
+### Jak działa
+
+- Kierunek importów bez cykli: `sections`, `parse` → nic z katalogu; `build` → nic z katalogu; `merge` → `sections`, `build`; `download` → `build`, `parse`.
+- Funkcje przeniesione dosłownie. Jedyne nowe eksporty to `MAX_IMPORT_FILE_SIZE` i `loadSchemas` (z `parse.ts`, dla `download.ts`) oraz `pushPrefsForRestore` i typy `MergeKey`/`Merge` — nie są reeksportowane z `exportNotes.ts`.
+- `download.ts` to jedyne miejsce kopii z DOM (`document.createElement("input")`, `navigator.share`) — tu wejdzie gałąź natywna (F1.4).
+
+### Ograniczenia i pułapki
+
+- Reszta kodu nadal importuje `@/lib/exportNotes` (też dynamicznie, np. `ImportExportMenu.tsx`, `useBackupReminders.ts`) i mockuje go w testach (`vi.mock("@/lib/exportNotes")`). Zamiana importów na `@/lib/backup/*` to osobny krok; po niej `exportNotes.ts` można usunąć.
+- Strażnik kolorów `src/test/hexColors.test.ts` liczy 8 kolorów w `src/lib/backup/download.ts` (szablon eksportu HTML).
+
+### Testy
+
+- `src/lib/backup/backupSnapshot.test.ts` — migawka pełnej kopii z danych wzorcowych (dwie notatki, ustawienie, Grafik, odżywka; czas stały przez `vi.setSystemTime`, losowe UUID zamaskowane) porównywana z `src/lib/backup/__snapshots__/fullBackup.json`. Zapisana przed podziałem, po podziale przechodzi bez aktualizacji.
+- Dotychczasowe: `src/lib/fullBackup.test.ts`, `src/lib/exportNotes.test.ts`, `src/lib/restoreScope.test.ts`, `src/lib/backupConfirm.test.ts`, `src/test/fixtures/backups/backups.test.ts`, `src/lib/secretsLeak.test.ts`.
+
+### Commit
+
+`a12b32ce` (migawka), podział — commit po tym wpisie, 2026-11-25.
+
 ## Dane — wymaganie wersji w dokumencie i spis map (D1.2–D1.4 planu migracji, 2026-11-18)
 
 ### Co robi
@@ -521,7 +558,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 ## Kopia zapasowa — kopia „przed przywróceniem” w OPFS i okno z zakresem (Z-18.3, P5/P6 audytu 2, 2026-11-18)
 
 - **Co robi:** przed przywróceniem pliku kopii obecne dane zapisują się w aplikacji (OPFS, `kopie-przed-przywroceniem/`, 30 dni) i są sprawdzane po zapisie; dopiero potem rusza wymiana. Plik `notki-przed-przywroceniem-<data>.json` nadal się pobiera, jako dodatek. Bez OPFS (albo przy błędzie zapisu) okno „Czy plik się zapisał?” — „Nie, wstrzymaj” niczego nie zmienia. Okno przywracania mówi, co zostanie **zastąpione** (notatki, foldery, etykiety, Grafik, Nauka i Praca — wg zaznaczeń i zawartości pliku), a co **uzupełnione o brakujące** (sekcje `MERGE_SECTIONS` obecne w pliku). Przy sparowanych urządzeniach osobne potwierdzenie „Zmiana obejmie wszystkie sparowane urządzenia” (decyzja D-A1).
-- **Gdzie jest:** `src/components/settings/BackupSettings.tsx` (`RestoreBackup`: stany `askSaved`, `syncAsk`, `syncOk`; `restore(skip, { fileConfirmed, syncConfirmed })`), `src/lib/docReplace.ts` (`saveCurrentLocally` → `saveBeforeReplace`, `inSyncGroup`), `src/lib/exportNotes.ts` (`restoreScope`). Kopia pojawia się na liście kopii w Ustawieniach jako „sprzed przywrócenia” i da się z niej odzyskać notatki tą samą ścieżką co z kopii dziennej (etykieta przycisku: „Przywróć notatki z kopii sprzed przywrócenia, <data>”).
+- **Gdzie jest:** `src/components/settings/BackupSettings.tsx` (`RestoreBackup`: stany `askSaved`, `syncAsk`, `syncOk`; `restore(skip, { fileConfirmed, syncConfirmed })`), `src/lib/docReplace.ts` (`saveCurrentLocally` → `saveBeforeReplace`, `inSyncGroup`), `src/lib/backup/merge.ts` (`restoreScope`). Kopia pojawia się na liście kopii w Ustawieniach jako „sprzed przywrócenia” i da się z niej odzyskać notatki tą samą ścieżką co z kopii dziennej (etykieta przycisku: „Przywróć notatki z kopii sprzed przywrócenia, <data>”).
 - **Dlaczego tak:** pobranie pliku nie zwraca wyniku (iOS potrafi je zablokować po kilku `await` bez gestu), więc nie może być jedyną drogą powrotu. Grafik i Praca leżą w tym samym dokumencie Yjs, więc kopia OPFS obejmuje wszystko, co przywracanie zastępuje. Tekst okna liczony z tych samych list co `restoreFullBackup` — nowa sekcja nie zniknie z ostrzeżenia.
 - **Ograniczenia:** kopia OPFS to stan dokumentu Yjs, nie ustawienia z `localStorage`. Potwierdzenie przy synchronizacji nie ma testu e2e (wymaga sparowania).
 - **Testy:** `src/lib/restoreScope.test.ts`, `e2e/restore-before-copy.spec.ts` (zakres w oknie, plik w OPFS, ścieżka bez OPFS); `e2e/daily-snapshot.spec.ts`, `search-backup.spec.ts` bez zmian zielone.
@@ -530,7 +567,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 ## Kopia zapasowa — przywracanie: sprawdzenie przed zapisem, notatki porcjami, znacznik przerwania (Z-18.1, Z-16.2, 2026-11-17)
 
 - **Co robi:** przywracanie najpierw czyta i sprawdza wszystkie części kopii, nic nie zapisując. Uszkodzona część (np. Dieta, Grafik, „Nauka i Praca”) zatrzymuje przywracanie **przed** wymianą notatek: okno „Część kopii jest uszkodzona — nie da się odczytać: … Nic jeszcze nie zostało zmienione” z „Przywróć bez nich” i „Anuluj”. Kopia „przed przywróceniem” pobiera się raz na wybrany plik, także przy ponowieniu. Gdy przywracanie zostało przerwane (zamknięta karta, wywrócona przeglądarka), przy następnym starcie baner: „Przywracanie kopii z DD.MM zostało przerwane. Część danych pochodzi z kopii, część sprzed niej. Wczytaj tę samą kopię jeszcze raz.” z „Kopia i dane” i „Zostaw, jak jest”.
-- **Gdzie jest:** `src/lib/exportNotes.ts` — `restoreFullBackupLocked` w trzech fazach, `RestoreCheckError` (`sections`), `RestoreOptions.skip`, `MERGE_SECTIONS` z `load` (moduł działu wczytany w fazie sprawdzania, scalanie synchroniczne w fazie zapisu), `SHIFTS_SECTION`, `STUDY_SECTION`. `src/lib/restoreMarker.ts` — `RESTORE_MARKER_KEY` (`kaczy.restore.running.v1`, lokalnie, poza kopią), `readRestoreMarker`, `setRestoreMarker`, `clearRestoreMarker` (osobny moduł, żeby baner nie ładował kodu kopii). `src/components/RestoreInterruptedBanner.tsx` (w `Index.tsx`), `src/components/settings/BackupSettings.tsx` (`RestoreBackup`: okno uszkodzonych części, `savedCurrent`).
+- **Gdzie jest:** `src/lib/backup/merge.ts` — `restoreFullBackupLocked` w trzech fazach, `RestoreCheckError` (`sections`), `RestoreOptions.skip`, `MERGE_SECTIONS` z `load` (w `src/lib/backup/sections.ts`) (moduł działu wczytany w fazie sprawdzania, scalanie synchroniczne w fazie zapisu), `SHIFTS_SECTION`, `STUDY_SECTION`. `src/lib/restoreMarker.ts` — `RESTORE_MARKER_KEY` (`kaczy.restore.running.v1`, lokalnie, poza kopią), `readRestoreMarker`, `setRestoreMarker`, `clearRestoreMarker` (osobny moduł, żeby baner nie ładował kodu kopii). `src/components/RestoreInterruptedBanner.tsx` (w `Index.tsx`), `src/components/settings/BackupSettings.tsx` (`RestoreBackup`: okno uszkodzonych części, `savedCurrent`).
 - **Jak działa i dlaczego:** dawniej między pierwszym a ostatnim zapisem było kilkanaście `await` (importy działów, zapis wersji), a błąd sekcji wychodził po zniszczeniu notatek. Teraz: 1) sprawdzanie — moduły, `JSON.parse` sekcji, `migrate` Grafiku, `cleanDump` Nauki, wersje; 2) obrazy (tylko dokładają do magazynu); 3) znacznik i zapis synchroniczny bez `await` między zapisami do Yjs — metadane skarbca **przed** notatkami w tym samym zadaniu (notatki prywatne z kopii nigdy nie zostają ze skarbcem urządzenia), sekcje działów (`training` po notatkach — P8), Grafik, Nauka; 4) wersje i `localStorage`, na końcu zdjęcie znacznika.
 - **Notatki porcjami (Z-16.2):** `yjsStore.replaceAllChunked` wstawia notatki z kopii porcjami z oddaniem wątku (`src/lib/yieldToMain.ts`); stan pośredni to nadzbiór (stare plus część nowych), a usunięcie starych notatek, wymiana folderów, etykiet i pól oraz metadane skarbca (`final`) idą w jednej transakcji końcowej. Notatka dodana w trakcie zostaje. Okno pokazuje „Przywracanie notatek: N z M” i „Przerwij” — przerwanie zostawia nadzbiór i dymek „Przerwano. Notatki dodane z kopii zostają, nic nie zostało usunięte.” (znacznik przerwania jest wtedy zdejmowany). Między sekcjami działów też jest oddanie wątku.
 - **Budżet porcji (Z-16.2):** `budgetMs` (domyślnie 20 ms) to czas **całej** porcji, razem z zamknięciem transakcji — kodowaniem aktualizacji Yjs dla IndexedDB i kart oraz obserwatorami. Profil pokazał, że to ok. dwa razy więcej niż samo wstawianie, więc porcja „30 ms” trwała ok. 100 ms. Czas wstawiania (`insertBudget`, start: jedna trzecia budżetu) jest dobierany po każdej porcji proporcjonalnie do zmierzonego czasu całości.
@@ -542,9 +579,9 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 ## Kopia zapasowa — pliki budów osobno od zdjęć dziennika (D3, 2026-10-19)
 
 - **Co robi:** raport kopii rozdziela pominięte bajty na trzy kategorie: załączniki notatek, zdjęcia dziennika i pliki budów (plany, PDF). Toast po zapisie kopii podaje każdą kategorię osobno. Plan nie jest już nazywany zdjęciem dziennika.
-- **Gdzie:** `src/lib/study/journalRefs.ts` (`siteDocRefsIn`), `src/lib/exportNotes.ts` (`collectAttachmentBlobs`, `describeSkippedAttachments`, pole `siteDocs` w `BackupAttachmentReport`, opcja `attachmentBudget` w `buildFullBackupWithReport`).
+- **Gdzie:** `src/lib/study/journalRefs.ts` (`siteDocRefsIn`), `src/lib/backup/build.ts` (`collectAttachmentBlobs`, `describeSkippedAttachments`, pole `siteDocs` w `BackupAttachmentReport`, opcja `attachmentBudget` w `buildFullBackupWithReport`).
 - **Jak działa:** `collectAttachmentBlobs` bierze budżet z opcji (domyślnie `BACKUP_ATTACHMENTS_BUDGET_BYTES`, 40 MB). Każdy pominięty bajt z dziennika albo z kart budów liczy się w swojej kategorii; klucze dokumentów budów wyznacza `siteDocRefsIn` z `studySiteItems`.
-- **Okno przywracania:** liczby pominięte przy eksporcie zapisują się w pliku jako `skipped` (`BackupSkipped` w `src/lib/noteSchema.ts`, pole opcjonalne, bez treści; zawsze cztery liczby, zera, gdy nic nie pominięto — dzięki temu w `exportNotes.ts` nie ma gałęzi, a paczka startowa mieści się w budżecie 388 KB). Okno „Przywrócić ten backup?” pokazuje je jako zdanie `describeBackupSkipped` (`src/lib/backupSkipped.ts`, moduł tylko dla okna Ustawień, żeby nie wchodził do paczki startowej) nad listą sekcji (`data-testid=restore-skipped`), żeby było widać, czego w pliku nie ma. Starsze pliki bez pola: brak zdania.
+- **Okno przywracania:** liczby pominięte przy eksporcie zapisują się w pliku jako `skipped` (`BackupSkipped` w `src/lib/noteSchema.ts`, pole opcjonalne, bez treści; zawsze cztery liczby, zera, gdy nic nie pominięto — dzięki temu w `backup/build.ts` nie ma gałęzi, a paczka startowa mieści się w budżecie 388 KB). Okno „Przywrócić ten backup?” pokazuje je jako zdanie `describeBackupSkipped` (`src/lib/backupSkipped.ts`, moduł tylko dla okna Ustawień, żeby nie wchodził do paczki startowej) nad listą sekcji (`data-testid=restore-skipped`), żeby było widać, czego w pliku nie ma. Starsze pliki bez pola: brak zdania.
 - **Ograniczenie:** `skipped` to liczby z chwili eksportu. Przywrócenie nie odzyskuje pominiętych zdjęć — tylko je nazywa.
 - **Testy:** `src/lib/fullBackup.test.ts` — przekroczenie budżetu (`attachmentBudget: 0`) rozdziela załącznik, zdjęcie dziennika i plan oraz składa komunikat; bez przekroczenia plan wchodzi do kopii i nie jest raportowany. Vitest 1469/1469, typecheck czysty.
 - **Commit:** 6a97a92 (kod), testy budżetu — w commicie z tym wpisem, 2026-10-19; okno przywracania z `skipped` — 5fa3fbd, 2026-10-19.
@@ -729,7 +766,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 ## Pewność danych — blokada kart, błąd zapisu, zapełnienie magazynu (Q1.1, Q1.5, Q1.2 planu QoL, 2026-11-15)
 
 - **Co robi:** migracje przy starcie i import kopii wykonuje jedna karta naraz (druga czeka). Błąd zapisu pokazuje stały komunikat „Nie zapisano — zrób kopię, zmiany są tylko w tej karcie”. W Ustawieniach → Kopia i dane pojawia się ostrzeżenie, gdy zajęte jest ponad 80% miejsca.
-- **Gdzie jest:** `src/lib/tabLock.ts` (`withExclusiveLock`, `MIGRATION_LOCK`), użyte w `yjsStore.ts` (`ready()`) i `exportNotes.ts` (`restoreFullBackup` → `restoreFullBackupLocked`); `src/components/OfflineStatus.tsx` (etykieta błędu); `src/lib/storagePersistence.ts` (`storageFill`, `storageWarning`) i `settings/BackupSettings.tsx`.
+- **Gdzie jest:** `src/lib/tabLock.ts` (`withExclusiveLock`, `MIGRATION_LOCK`), użyte w `yjsStore.ts` (`ready()`) i `backup/merge.ts` (`restoreFullBackup` → `restoreFullBackupLocked`); `src/components/OfflineStatus.tsx` (etykieta błędu); `src/lib/storagePersistence.ts` (`storageFill`, `storageWarning`) i `settings/BackupSettings.tsx`.
 - **Jak działa:** `navigator.locks.request("notatnik-migracja", exclusive)`; bez Web Locks kolejka obietnic w obrębie jednej karty. Druga karta zastaje flagi migracji w `localStorage`, więc nic nie dubluje. Stan błędu zapisu (`saveStatus.ts`, faza `error`) istniał wcześniej i blokuje zamknięcie karty.
 - **Ograniczenia:** nie ma komunikatu „trwa w innej karcie” — druga karta po prostu czeka. Ostrzeżenia „magazyn nietrwały po 7 dniach” nie dodano (jest tylko status trwałości).
 - **Testy:** `src/lib/tabLock.test.ts`, `src/lib/storagePersistence.test.ts`, istniejące `saveStatus.test.ts`.
@@ -782,9 +819,9 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 ## Dane — wersje kopii i plików wymiany, wzorce (D3.2, D3.5, D5.1, D5.3, D5.4, 2026-11-23)
 
 - **Co robi:** pełna kopia zapisuje obok wersji koperty (`version`, 1–3) wersję formatu dokumentu (`schema` = `SCHEMA_VERSION`). Kopia z nowszego formatu albo nowszej koperty jest odrzucana przed czymkolwiek („Ta kopia pochodzi z nowszej wersji aplikacji…”). Kopie bez `schema` (wszystkie sprzed 2026-11-23) czytają się jak dotąd. Paczka budowy (`sitePackage.ts`) ma tę samą regułę co plik synchronizacji: nowsza wersja — odmowa z prośbą o aktualizację, starsza — przyjęta, brak albo zła wersja — „To nie jest plik budowy.” (wcześniej odrzucała każdą wersję różną od 1). Komunikaty o obcym pliku mówią o aplikacji `APP_NAME` zamiast dawnego „G”.
-- **Gdzie jest:** `src/lib/exportNotes.ts` (`buildFullBackupWithReport` — pole `schema`; `parseFullBackup`), `src/lib/noteSchema.ts` (`FullBackup.schema`, `fullBackupSchema`), `src/lib/study/sitePackage.ts` (`parseSitePackage`), `src/lib/yjsFileSync.ts` (bez zmian reguły).
+- **Gdzie jest:** `src/lib/backup/build.ts` (`buildFullBackupWithReport` — pole `schema`), `src/lib/backup/parse.ts` (`parseFullBackup`), `src/lib/noteSchema.ts` (`FullBackup.schema`, `fullBackupSchema`), `src/lib/study/sitePackage.ts` (`parseSitePackage`), `src/lib/yjsFileSync.ts` (bez zmian reguły).
 - **Wzorce:** `src/test/fixtures/backups/v1.json`–`v3.json` (syntetyczne; generator w `backups.test.ts`: `GEN_BACKUP_FIXTURE=1 npx vitest run src/test/fixtures/backups`; v2 i v1 to kopia v3 bez sekcji, których wersja nie miała). `src/test/fixtures/docs/registry.test.ts` — każdy wzorzec dokumentu 1–3 przechodzi przez cały rejestr migracji (`DOC_MIGRATIONS`): `check` czysty, drugi przebieg pusty, dane całe. Rejestr jest dziś pusty — test to siatka dla pierwszej migracji.
-- **Ograniczenia:** D5.2 (import starej kopii przez tymczasowy dokument i rejestr) czeka na podział `exportNotes.ts` (A3.1). D3.4 (spóźniony stary klient) i D3.6 (rozmiar migracji 5000 notatek) mają sens przy pierwszej migracji dokumentu — wtedy dopisać.
+- **Ograniczenia:** D5.2 (import starej kopii przez tymczasowy dokument i rejestr) mogło ruszyć po podziale `exportNotes.ts` (A3.1, zrobione) — wpiąć w `src/lib/backup/merge.ts`. D3.4 (spóźniony stary klient) i D3.6 (rozmiar migracji 5000 notatek) mają sens przy pierwszej migracji dokumentu — wtedy dopisać.
 - **Testy:** `src/test/fixtures/backups/backups.test.ts` (wzorzec dla każdej wersji koperty, wczytanie v1–v3 bez utraty, Grafik od v2, `schema` w nowej kopii, odmowa nowszej), `src/test/fixtures/docs/registry.test.ts`, `src/lib/study/sitePackage.test.ts`.
 
 ## Dane — spisy baz IndexedDB, kluczy `localStorage` i migracji (D0.2–D0.4, 2026-11-23)
@@ -839,7 +876,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 - Nazwy kluczy Pracy: obiekt `PRACA` (np. `PRACA.seller`, `PRACA.ksefSeries`, `PRACA.store` = `kaczy.study.v1`). Czytają je `src/lib/study/*` (firma, cennik, raporty, zakładka, użycie), `src/lib/ksef/sellerPrefs.ts` i komponenty `src/components/study/` (tablica, poziomica, przyjazd na budowę). Dotychczasowe stałe (`SELLER_KEY`, `COMPANY_NAME_KEY` …) zostały jako aliasy.
 - Dalsze obiekty nazw: `SYNC` (kod pary, przekaźnik, urządzenie), `DANE` (kopie, odtwarzanie, migawki, import, migracje, stare magazyny, dziennik bezpieczeństwa; prefiksy z końcówką `Prefix`, np. `DANE.versionsPrefix`), `DZIEN` (Dziś, Terminy, Kalendarz, przegląd, push, odznaki), `POWLOKA` (szkice, wskazówki, widoki, filtry, flagi funkcji), `SKARBIEC` (PIN, próby, auto-blokada, kod awaryjny), `GRAFIK` (`kaczy:shifts`, aktywny grafik, układ, podpowiedzi, eksport .ics), `CWICZENIA` (przerwa między seriami) i `SIGNALS` — nazwy zdarzeń okna i kanałów `BroadcastChannel` (`kaczy-vault`, `kaczy:study-custom-prefill`). Zdarzenia nie są kluczami pamięci, ale dzielą prefiks, więc mieszkają w rejestrze, żeby strażnik nie potrzebował wyjątku.
 - Strażnik D6.2: `src/lib/storage/keyLiterals.test.ts` z listą wyjątków `keyLiterals.exempt.ts`.
-- `SETTINGS_KEYS` w `src/lib/exportNotes.ts` to `backupKeyNames()`.
+- `SETTINGS_KEYS` w `src/lib/backup/build.ts` to `backupKeyNames()`.
 
 **Jak działa.**
 - `readKey` przy braku dostępu do pamięci, braku wpisu albo złym kształcie zwraca wartość domyślną; zły kształt zostawia wpis w diagnostyce. `writeKey` zwraca `false` zamiast rzucać.
@@ -853,7 +890,7 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 - Na liście wyjątków został tylko `src/lib/migrations/registry.ts` — nazwa klucza w polu opisu `where`, czytanym przez człowieka.
 - Moduły nadal czytają przez `createPersistedStore` albo bezpośrednio `localStorage`, nie `readKey`/`writeKey`; walidatory w rejestrze to dalszy krok.
 - Przy wstawianiu importu na górę pliku z BOM-em BOM trafia do drugiej linii i lint zgłasza `no-irregular-whitespace`.
-- Nowy klucz kopii trzeba dodać w `keys.ts`, nie w `exportNotes.ts`.
+- Nowy klucz kopii trzeba dodać w `keys.ts`, nie w `backup/build.ts`.
 - `isSensitiveKey` nie ma jeszcze wywołującego. Raport diagnostyczny będzie z niego korzystał po D6.2.
 
 **Testy.** `src/lib/storage/keyLiterals.test.ts` (strażnik literałów), `src/lib/storage/keys.test.ts` (odczyt, wartość domyślna, zły kształt, lista kopii równa flagom, wygląd w kopii, wrażliwe poza kopią), `src/lib/fullBackup.test.ts`, `src/lib/push/token.test.ts`.
