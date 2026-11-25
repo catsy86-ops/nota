@@ -166,6 +166,7 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.todayNudgeAt` | `hooks/useDailyWeeklyNudges.tsx` | — |
 | `kaczy.todaySnoozeUntil` | `hooks/useDailyWeeklyNudges.tsx` | — |
 | `kaczy.tour.seen.v1` | `lib/guides.ts` | — |
+| `kaczy.training.deloadDismissed.v1` | `lib/training/deload.ts` (C2.5, poniedziałek tygodnia z odrzuconą podpowiedzią) | — |
 | `kaczy.training.restSeconds.v1` | `lib/training/restPrefs.ts` | — |
 | `kaczy.uiDensity.v1` | `lib/appearanceCode.ts`, `lib/uiDensity.ts` | tak |
 | `kaczy.vault.attempts.v1` | `lib/privateNotes.ts` | — |

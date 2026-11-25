@@ -719,3 +719,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia i pułapki:** tylko bieżący miesiąc, bez wyboru innego. Odżywki nie wchodzą do podsumowania. Rekordy porównują tylko ciężar, nie powtórzenia ani 1RM.
 - **Testy:** `src/lib/fitnessMonth.test.ts`.
 - **Commit:** `6923d2f0`, 2026-11-25.
+
+## Ćwiczenia — tydzień lżej po 6 tygodniach z rzędu (C2.5, 2026-11-25)
+
+- **Co robi:** gdy przez 6 lub więcej pełnych tygodni z rzędu (pn–nd) był choć jeden trening, w Treningu pod „Ten tydzień” pojawia się podpowiedź: „6 tygodni treningu z rzędu. Ten tydzień lżej: mniej o ok. 40% serii albo ciężaru…”. „Nie teraz” chowa ją do końca bieżącego tygodnia. Jeśli seria trwa dalej, w następnym tygodniu podpowiedź wraca.
+- **Gdzie jest:** `src/lib/training/model.ts` (`trainingStreakWeeks`, `DELOAD_AFTER_WEEKS` = 6); `src/lib/training/deload.ts` (`deloadDismissedStore`, `useDeloadDismissed`, `dismissDeload`); `TrainingSection.tsx` (`deload-hint`).
+- **Jak działa:** seria liczona jest wstecz od tygodnia przed bieżącym, który jeszcze trwa. Pierwszy tydzień bez treningu ją przerywa. Odrzucenie zapisuje poniedziałek bieżącego tygodnia w `localStorage` pod kluczem `kaczy.training.deloadDismissed.v1` (`CWICZENIA.deloadDismissed`). Klucz jest per urządzenie i poza kopią. Zły zapis daje `null`, czyli podpowiedź widać.
+- **Ograniczenia i pułapki:** to tylko podpowiedź. Nie zmienia planu ani formularza i nie mierzy objętości, więc nie wie, czy tydzień faktycznie był lżejszy. Odrzucenie na jednym telefonie nie działa na drugim.
+- **Testy:** `src/lib/training/model.test.ts` (`trainingStreakWeeks`: seria, luka, bieżący tydzień), `src/components/cwiczenia/TrainingSection.test.tsx` (pokazanie po 6 tygodniach, „Nie teraz”, brak przy 5).
+- **Commit:** `c2794583`, 2026-11-25.
