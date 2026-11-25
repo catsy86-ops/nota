@@ -231,7 +231,7 @@ Dział opisany w jednym miejscu; zmiany z przeglądu L1–L20 są już uwzględn
   - `src/lib/training/model.ts` — `TrainingSet`, `TrainingEntry`, `PlanDay`, `TrainingReminder`, `TrainingEquipment`, `cleanKg`, `cleanSet`, `cleanEntry`, `cleanPlanDay`, `cleanTrainingReminder`, `cleanEquipment`, `overDumbbell`, `bestKg`, `bestKgSeries`, `volumeOf`, `byTrainingTime`, `progressByExercise`, `planLine`.
   - `src/lib/training/yTraining.ts` — `createYTraining(doc)`: mapy `trainingLog` (id → wpis) i `trainingPlans` (id → plan); meta `reminder` i `equipment` (typ `unknown`, odczyt przez `metaSnapshot` z cache). Origin `TRAINING_ORIGIN`. `setReminder` czyści przez `cleanTrainingReminder`. `mergeDump(raw, hasNote?)`.
   - `src/lib/training/store.ts` — `useTrainingEntries()`, `useTrainingPlans()`, `addTrainingEntry`, `removeTrainingEntry`, `restoreTrainingEntry`, `addPlanDay`, `removePlanDay`, `restorePlanDay`, `trainingDump`, `mergeTrainingDump(raw, hasNote?)`.
-  - `src/components/cwiczenia/TrainingSection.tsx` — karta: `TrainingReminderControl`, `EquipmentForm`, `LogForm`, `RestTimer` (`REST_SECONDS` = 90), `ProgressList` ze `Sparkline`, formularz planu.
+  - `src/components/cwiczenia/` (podział C1.2, `27fd0b5b`, 2026-11-25; wcześniej jeden plik 743 linie): `TrainingSection.tsx` (karta, `WeekSummary`, `EntryRow`, `TrainingReminderControl`), `LogForm.tsx` (`LogForm`, `NewExerciseForm`, `SessionBanner`), `RestTimer.tsx` (`RestTimer`, `RestControl`), `ProgressList.tsx` (`ProgressList`, `ExerciseHistory`, `Sparkline`), `PlanForms.tsx` (`PlanList`, `AddPlanForm`), `EquipmentForm.tsx`, `trainingFormat.ts` (`setsLine`, `parseNum`, `parseKg`, `emptyRow`, `SetRow`, `nowHHMM`, `shortDay`). Bez zmian zachowania.
 - **Kopia:** `src/lib/noteSchema.ts` (pola `supplements`, `diet`, `training` w `fullBackupSchema`, zod z `.catch(undefined)`), `src/lib/exportNotes.ts` (zapis w `buildFullBackupWithReport`, scalanie w `restoreFullBackup`; oba przez dynamiczny import, żeby nie dokładać do paczki startowej).
 - **Podłączenie działu:** `src/hooks/useFilteredNotes.ts` (typ `View`), `src/hooks/useSelectionGestures.ts`, `src/lib/viewRoute.ts` (`/cwiczenia`), `src/components/sidebar/sidebarItems.ts`, `src/components/BottomNav.tsx`, `src/components/CommandPalette.tsx`, `src/components/AppHeader.tsx`, `src/components/EmptyState.tsx`, `src/pages/Index.tsx` (leniwy import, render w `ViewErrorBoundary`).
 
@@ -678,8 +678,26 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
   - „Dołóż: 41 kg × 10” — każda seria robocza z ostatniej sesji doszła do celu powtórek;
   - „Te same 40 kg, o powtórkę więcej: 9” — nie doszła;
   - „Hantle już na maksimum — zostań przy 20 kg, celuj w 13 powtórzeń” — dołożenie przekroczyłoby hantle z „Sprzętu”.
-- **Gdzie jest:** `src/lib/training/progression.ts` (`suggestNext`, `targetRepsFor`, `progressionText`, typ `ProgressionHint`); `LogForm` w `src/components/cwiczenia/TrainingSection.tsx` (`progression-hint`).
+- **Gdzie jest:** `src/lib/training/progression.ts` (`suggestNext`, `targetRepsFor`, `progressionText`, typ `ProgressionHint`); `LogForm` w `src/components/cwiczenia/LogForm.tsx` (`progression-hint`).
 - **Jak działa:** podwójna progresja liczona tylko z ostatniej sesji ćwiczenia (`byTrainingTime`). Serie robocze to te z największym ciężarem, więc lżejsze rozgrzewkowe nie zmieniają wyniku. Krok: 0,5 kg poniżej 10 kg, wyżej 1 kg; przy hantlach sprawdzany przez `overDumbbell`. Cel powtórek bierze się z prowadzonej sesji, a bez niej z pierwszego dnia planu, który zawiera ćwiczenie. Bez celu podpowiedzi nie ma, żeby nie zgadywać zakresu.
 - **Ograniczenia i pułapki:** brak podpowiedzi dla serii na czas, ćwiczeń bez ciężaru i sesji mieszanej (część serii bez kg). RIR (C2.3) jeszcze nie zasila podpowiedzi. „Wpisz” bierze liczbę serii z ostatniej sesji, nie z planu.
 - **Testy:** `src/lib/training/progression.test.ts` (dołożenie, powtórki, rozgrzewka, limit hantli, przypadki `null`, cel z sesji/planu, teksty), `src/components/cwiczenia/TrainingSection.test.tsx` (podpowiedź i „Wpisz”, brak bez celu).
 - **Commit:** `22550d6c`, 2026-11-25.
+
+## Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
+
+- **Co robi:** na dole widoku Ćwiczeń są przyciski „Trening CSV”, „Dieta CSV” i „Waga CSV”, każdy widoczny tylko wtedy, gdy są dane tego rodzaju. Każdy zapisuje plik `notki-<rodzaj>-<dzień>.csv` do otwarcia w polskim Excelu. Trening ma jedną serię na wiersz (data, godzina, ćwiczenie, seria, powtórzenia albo sekundy, ciężar, notatka przy pierwszej serii), dieta jeden posiłek na wiersz (kcal i białko), waga jedno ważenie na wiersz.
+- **Gdzie jest:** `src/lib/csv.ts` (`csvText`, `csvNumber`, `csvDocument`) — wspólny format; `src/lib/fitnessCsv.ts` (`trainingCsv`, `mealsCsv`, `weightsCsv`); `ExportCsv` w `src/components/cwiczenia/CwiczeniaView.tsx` (`cwiczenia-export`). `debtsCsv` w `src/lib/debts/model.ts` korzysta teraz z `csv.ts` zamiast własnej kopii; wynik bez zmian.
+- **Jak działa:** separator „;”, BOM UTF-8, CRLF, przecinek dziesiętny. Tekst z wpisu zaczynający się od `=`, `+`, `-`, `@`, tabulatora albo CR dostaje apostrof, żeby arkusz nie wykonał go jako formuły. Liczby idą osobno (`csvNumber`) i nie dostają apostrofu, bo minus w liczbie to znak, nie formuła. Generator ładuje się dopiero po kliknięciu (`import("@/lib/fitnessCsv")`).
+- **Ograniczenia i pułapki:** inne eksporty CSV (Grafik, Plany, Praca) mają wciąż własne funkcje. `csvCell` w `src/lib/plans/csv.ts` dodaje apostrof także przed liczbą ujemną. Przejście ich na `csv.ts` to osobny krok, z porównaniem plików przed i po. Odżywki nie mają eksportu.
+- **Testy:** `src/lib/csv.test.ts`, `src/lib/fitnessCsv.test.ts`, dotychczasowe testy CSV Długów w `src/lib/debts/model.test.ts`.
+- **Commit:** `dfbc1e3f`, 2026-11-25.
+
+## Ćwiczenia — dieta: średnia z 7 dni i cel białka z masy ciała (C4.3, C4.4, 2026-11-25)
+
+- **Co robi:** nad listą „Ostatnie 7 dni” w Diecie jest jedno zdanie: „Średnio 2200 kcal, cel 2400 · 120 g białka, cel 150 g — z 2 dni z wpisami”. W formularzu celów, gdy w zakładce „Waga” jest ważenie, widać „Przy masie 80 kg: 128–176 g białka dziennie (1,6–2,2 g na kg)” i przycisk „Przyjmij 144 g”. Przycisk od razu zapisuje cel białka, liczony 1,8 g na kg. Gdy cel już jest równy tej liczbie, przycisku nie ma.
+- **Gdzie jest:** `src/lib/diet/model.ts` (`rangeAverage`, `proteinRangeFor`); `src/components/cwiczenia/DietSection.tsx` (`WeekList` — `diet-average`, `GoalsForm` — `protein-from-weight`, ostatnie ważenie z `useWeights`).
+- **Jak działa:** średnia liczy tylko dni, w których podano daną wartość, więc dzień bez posiłków nie zaniża wyniku. Kalorie i białko mają osobne liczniki dni, a zdanie podaje większy z nich. Zakres białka liczony jest z najnowszego ważenia (po dniu), zaokrąglony do całych gramów.
+- **Ograniczenia i pułapki:** średnia obejmuje 7 dni widocznych na liście, razem z dzisiejszym, niepełnym dniem. Podpowiedź białka nie uwzględnia wieku, płci ani celu (redukcja czy masa): to ogólny zakres dla trenujących.
+- **Testy:** `src/lib/diet/model.test.ts` (`rangeAverage`, `proteinRangeFor`), `src/components/cwiczenia/DietSection.test.tsx` (zdanie średniej, zakres i „Przyjmij”, brak bez ważenia).
+- **Commit:** `b73a7a67`, 2026-11-25.

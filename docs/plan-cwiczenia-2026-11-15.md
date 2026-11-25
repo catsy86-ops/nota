@@ -41,7 +41,7 @@ Znane ograniczenie z `opis.md`: odhaczenie odżywki w Ćwiczeniach i „Gotowe�
 | Nr | Punkt | Rozmiar |
 |---|---|---|
 | C1.1 | **Przegląd wizualny** elementów z 12.11 na 390 px, jasny i ciemny, 2–3 style; zrzuty przez `playwright.visual.config.ts`. Poprawki od razu. | S |
-| C1.2 | **Podział `TrainingSection.tsx`**: `LogForm`, `RestTimer`, `ProgressList`, `PlanForm`, `EquipmentForm` w osobnych plikach. Bez zmian zachowania. | M |
+| C1.2 ✅ 2026-11-25 (743 → 171 linii; `LogForm`, `RestTimer`, `ProgressList`, `PlanForms`, `EquipmentForm`, `trainingFormat`) | **Podział `TrainingSection.tsx`**: `LogForm`, `RestTimer`, `ProgressList`, `PlanForm`, `EquipmentForm` w osobnych plikach. Bez zmian zachowania. | M |
 | C1.3 ✅ 2026-11-25 (z Q3.1: sesja i przerwa) | **Ekran nie gaśnie w sesji** — `useWakeLock` na czas trwania `TrainingSession`. | S |
 | C1.4 ✅ `d2051d4c` 2026-11-18 | **Odhaczenie = „Gotowe”.** Odhaczenie odżywki przesuwa serię jej notatki-przypomnienia, a „Gotowe” w powiadomieniu odhacza odżywkę (po `reminderNoteId`). Jedna funkcja w `src/lib/supplements/`, wołana z obu stron. | M |
 | C1.5 | **Akceptacja katalogu** (C-4): właściciel czyta wskazówki 33 ćwiczeń; poprawki treści. | S, właściciel |
@@ -65,7 +65,7 @@ Znane ograniczenie z `opis.md`: odhaczenie odżywki w Ćwiczeniach i „Gotowe�
 | C3.2 | **Tygodniowa objętość na partię** (serie na klatkę, plecy, nogi…) z zaznaczeniem partii pominiętych. Dane są w dzienniku i katalogu. | S |
 | C3.3 | **Podsumowanie miesiąca:** liczba treningów, nowe rekordy, średnie kcal i białko, zmiana masy. Do udostępnienia jako tekst. | S |
 | C3.4 | **Obwody ciała** (pas, klatka, ramię, udo) w zakładce „Waga”: nowa mapa Yjs według wzoru masy ciała, wykres ten sam. | M |
-| C3.5 | **Eksport CSV** treningów, posiłków i masy — ten sam format co w Długach (średnik, BOM, ochrona przed formułami); wspólny pomocnik zamiast kopii. | S |
+| C3.5 ✅ 2026-11-25 (`src/lib/csv.ts` wspólny z Długami, `src/lib/fitnessCsv.ts`) | **Eksport CSV** treningów, posiłków i masy — ten sam format co w Długach (średnik, BOM, ochrona przed formułami); wspólny pomocnik zamiast kopii. | S |
 
 ## Etap 4: dieta
 
@@ -73,8 +73,8 @@ Znane ograniczenie z `opis.md`: odhaczenie odżywki w Ćwiczeniach i „Gotowe�
 |---|---|---|
 | C4.1 | **Ulubione posiłki:** przypięte pigułki nad „ostatnimi”; zapis jednym stuknięciem. Mapa Yjs `dietFavorites`. | S |
 | C4.2 | **Węglowodany i tłuszcz** jako pola opcjonalne, domyślnie ukryte (przełącznik „pełne makro”). Cele dzienne odpowiednio. | M |
-| C4.3 | **Cel białka z masy ciała:** podpowiedź „1,6–2,2 g na kg” liczona z ostatniego pomiaru, do przyjęcia jednym stuknięciem. | S |
-| C4.4 | **Średnia z 7 dni wobec celu** jako jedno zdanie nad listą („średnio 2 150 kcal, cel 2 400”). | S |
+| C4.3 ✅ 2026-11-25 | **Cel białka z masy ciała:** podpowiedź „1,6–2,2 g na kg” liczona z ostatniego pomiaru, do przyjęcia jednym stuknięciem. | S |
+| C4.4 ✅ 2026-11-25 | **Średnia z 7 dni wobec celu** jako jedno zdanie nad listą („średnio 2 150 kcal, cel 2 400”). | S |
 | C4.5 | **Etykieta ze zdjęcia** (eksperyment): OCR tabeli wartości odżywczych przez `tesseract.js`, który już jest w projekcie; wynik zawsze do poprawienia. Tylko za flagą funkcji próbnych. | M |
 
 ## Etap 5: do decyzji

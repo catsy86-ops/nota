@@ -1034,7 +1034,7 @@ Plan: `docs-zrobione/plan-ui-motywy-2026-10-27.md`. Faza 0 porządkuje, jak skó
 ## Wspólne — ekran nie gaśnie przy treningu i kalkulatorach (Q3.1, 2026-11-25)
 
 - **Co robi:** ekran telefonu nie gaśnie, gdy ręce są zajęte, a telefon leży obok. Dotyczy to prowadzonego treningu w Ćwiczeniach (do końca planu), przerwy między seriami (dopóki liczy się licznik) i otwartych kalkulatorów w Pracy. Wcześniej tak działały tylko tryb skupienia, prezentacja w czytniku, minutnik próby szczelności i karta budowy.
-- **Gdzie jest:** `src/hooks/useWakeLock.ts` (bez zmian). Nowe wywołania: `src/components/cwiczenia/TrainingSection.tsx` (`useWakeLock(session !== null && !isFinished(session))` i `useWakeLock(rest !== null)`), `src/components/study/CalculatorsSheet.tsx` (`useWakeLock(open)`).
+- **Gdzie jest:** `src/hooks/useWakeLock.ts` (bez zmian). Nowe wywołania: `src/components/cwiczenia/LogForm.tsx` (`useWakeLock(session !== null && !isFinished(session))`), `TrainingSection.tsx` (`useWakeLock(rest !== null)`), `src/components/study/CalculatorsSheet.tsx` (`useWakeLock(open)`).
 - **Jak działa:** hook żąda `navigator.wakeLock.request("screen")`, gdy warunek jest prawdziwy, zwalnia blokadę po jego zmianie i ponawia żądanie po powrocie na kartę. Bez API (Firefox, starsze Safari) albo przy odmowie systemu (oszczędzanie baterii) nic się nie dzieje.
 - **Ograniczenia i pułapki:** plan wymieniał też listę zakupów w trybie „w sklepie”. Takiego trybu w aplikacji nie ma, więc nie ma czego podpiąć. Czytnik ma blokadę tylko w trybie prezentacji, bez osobnego przełącznika.
 - **Testy:** `src/hooks/useWakeLock.test.ts` (hook). Nowe wywołania to jedna linia z warunkiem. Testy `TrainingSection` i `CalculatorsSheet` przechodzą bez zmian (w jsdom brak `wakeLock`).
