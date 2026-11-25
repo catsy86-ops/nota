@@ -20,7 +20,7 @@ export function useNoteExport({ notes, archivedNotes, trashedNotes, selectedIds,
   async function exportSelectedAs(kind: "html" | "pdf") {
     const chosen = [...notes, ...archivedNotes, ...trashedNotes].filter((n) => selectedIds.has(n.id) && !n.locked);
     if (chosen.length === 0) { toast.info("Nic do eksportu", { description: "Zaznaczone notatki są prywatne." }); return; }
-    if (kind === "html") (await import("@/lib/exportNotes")).exportToHTML(chosen);
+    if (kind === "html") (await import("@/lib/backup/download")).exportToHTML(chosen);
     else (await import("@/lib/exportPdf")).exportToPDF(chosen);
   }
 

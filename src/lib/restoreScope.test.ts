@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { MERGE_SECTIONS, restoreScope, SHIFTS_SECTION, STUDY_SECTION } from "./exportNotes";
+import { MERGE_SECTIONS, SHIFTS_SECTION, STUDY_SECTION } from "@/lib/backup/sections";
+import { restoreScope } from "@/lib/backup/merge";
 
 const all = { versions: true, settings: true, achievements: true, shifts: true, study: true };
 

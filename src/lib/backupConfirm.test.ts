@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { exportFullBackup } from "./exportNotes";
+import { exportFullBackup } from "@/lib/backup/download";
 
 // D3: pytanie przed zapisem kopii, gdy coś zostanie pominięte.
 describe("eksport kopii — potwierdzenie pominięć (D3)", () => {

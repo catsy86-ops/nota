@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { exportToJSON, exportToMarkdown, exportToHTML } from "./exportNotes";
+import { exportToJSON, exportToMarkdown, exportToHTML } from "@/lib/backup/download";
 import { noteSchema, looksLikeNoteArray } from "./noteSchema";
 import { imageStore } from "./imageStore";
 import type { Note } from "@/lib/types/note";

@@ -17,7 +17,7 @@ export function useImportExport(importNotes: (notes: Note[]) => void, addNote: A
   const handleImport = useCallback(async () => {
     try {
       // Moduł jest już w pamięci po otwarciu menu (ImportExportMenu), więc okno pliku dostaje gest użytkownika.
-      const imported = await (await import("@/lib/exportNotes")).importFromJSON();
+      const imported = await (await import("@/lib/backup/download")).importFromJSON();
       importNotes(imported);
       toast.success(`Zaimportowano ${imported.length} notatek`);
     } catch (err: unknown) {

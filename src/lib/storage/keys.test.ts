@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { backupKeyNames, defineKey, isSensitiveKey, jsonKey, readKey, registeredKeys, removeKey, writeKey } from "./keys";
-import { SETTINGS_KEYS } from "@/lib/exportNotes";
+import { SETTINGS_KEYS } from "@/lib/backup/build";
 import { APPEARANCE_KEYS } from "@/lib/appearanceCode";
 
 const count = jsonKey("kaczy.test.count.v1", (v) => (typeof v === "number" && v >= 0 ? v : null), 3);

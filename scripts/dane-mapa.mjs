@@ -51,7 +51,7 @@ Wygenerowane przez \`node scripts/dane-mapa.mjs\` z kodu (\`getMap(…)\`) i kat
 - **zachowuje nieznane pola** — wpis to zwykły obiekt, zapis scala go z surową wartością (\`mergeStored\`, \`toStored\` w \`src/lib/extraFields.ts\`); obok jest test „nieznane pole przeżywa edycję”.
 - **wyjęta** — mapa pól (\`Y.Map\` na wpis), wartości proste albo mapa sterująca; uzasadnienie w kolumnie.
 
-Mapy Grafiku (\`shift*\`) istnieją dla każdego grafiku z prefiksem identyfikatora (\`shiftsMapName\`); główny grafik jest bez prefiksu. Które sekcje pełnej kopii JSON niosą które dane — \`buildFullBackupWithReport\` w \`src/lib/exportNotes.ts\`. Bazy IndexedDB, klucze \`localStorage\` i migracje: \`docs/dane-spisy.md\`.
+Mapy Grafiku (\`shift*\`) istnieją dla każdego grafiku z prefiksem identyfikatora (\`shiftsMapName\`); główny grafik jest bez prefiksu. Które sekcje pełnej kopii JSON niosą które dane — \`buildFullBackupWithReport\` w \`src/lib/backup/build.ts\`. Bazy IndexedDB, klucze \`localStorage\` i migracje: \`docs/dane-spisy.md\`.
 
 ${where.size} map.
 

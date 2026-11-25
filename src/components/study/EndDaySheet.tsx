@@ -60,7 +60,7 @@ function EndDayBody({ onOpenChange, journal, wholesaleCount, onHours, onReport, 
 
   async function backup() {
     try {
-      const { exportFullBackup } = await import("@/lib/exportNotes");
+      const { exportFullBackup } = await import("@/lib/backup/download");
       const res = await exportFullBackup();
       markBackup();
       setBackedUp(true);

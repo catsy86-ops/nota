@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { SETTINGS_KEYS } from "@/lib/exportNotes";
+import { SETTINGS_KEYS } from "@/lib/backup/build";
 import { pushErrorText } from "./client";
 import { cleanPushToken, PUSH_PREFS_KEY, PUSH_TOKEN_KEY, PUSH_TOKEN_MAX, pushToken } from "./prefs";
 

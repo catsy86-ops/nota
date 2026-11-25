@@ -7,7 +7,10 @@ import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, Share2
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
-import { BACKUP_OVERSIZE_NOTE, buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, RestoreCheckError, restoreScope, shareFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
+import { buildFullBackup, describeSkippedAttachments, type BackupAttachmentReport } from "@/lib/backup/build";
+import { BACKUP_OVERSIZE_NOTE } from "@/lib/backup/parse";
+import { restoreFullBackup, RestoreCheckError, restoreScope, type RestoreOptions } from "@/lib/backup/merge";
+import { download, exportFullBackup, pickFullBackup, shareFullBackup } from "@/lib/backup/download";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import { dniPl, pluralPl } from "@/lib/plural";
 import type { FullBackup } from "@/lib/noteSchema";
@@ -22,6 +25,7 @@ import { LastImportUndo } from "./LastImportUndo";
 import { UnusedFilesCleanup } from "./UnusedFilesCleanup";
 import { AboutPanel } from "@/components/AboutPanel";
 import { SecurityLogPanel } from "./SecurityLogPanel";
+import { ErrorLogPanel } from "./ErrorLogPanel";
 import { viewLabel } from "@/lib/viewMeta";
 import { DailySnapshotRestore } from "./DailySnapshotRestore";
 import { inSyncGroup, saveCurrentLocally } from "@/lib/docReplace";
@@ -627,6 +631,10 @@ export function BackupSettings() {
           <Button type="button" size="sm" variant="outline" onClick={handleDownloadReport} className="shrink-0 gap-1.5">
             <FileDown className="size-3.5" />Pobierz
           </Button>
+        </div>
+        <div className="space-y-2 px-1">
+          <p className="text-sm font-semibold">Błędy na tym urządzeniu</p>
+          <ErrorLogPanel />
         </div>
         <DocFormatOverride />
         <StudyUsageStats />

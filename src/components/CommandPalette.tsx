@@ -6,7 +6,7 @@ import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, P
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
-import { copyWikiLink } from "@/lib/noteMarkdown";
+import { copyNoteAddress, copyWikiLink } from "@/lib/noteMarkdown";
 import { folderCrumbs } from "@/lib/breadcrumbs";
 import { sectionHits } from "@/lib/sectionHits";
 import { requestHeading } from "@/lib/wikiHeading";
@@ -44,6 +44,7 @@ import { recentOpenedIds, useLastOpened } from "@/lib/lastOpened";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { searchSettings } from "@/lib/settingsIndex";
 import { requestSettingsSection, requestSettingsTab, type SettingsTab } from "@/lib/settingsDeepLink";
+import { isNativeShell } from "@/lib/native/platform";
 
 const NOTE_LIMIT = 30;
 /** 5.1: tyle ostatnio otwieranych notatek pokazuje pusta paleta. */
@@ -115,9 +116,9 @@ const SETTINGS_SHORTCUTS: { tab: SettingsTab; label: string; keywords: string; i
 ];
 
 async function exportCurrent(note: Note, kind: "html" | "pdf" | "md") {
-  if (kind === "html") (await import("@/lib/exportNotes")).exportToHTML([note]);
+  if (kind === "html") (await import("@/lib/backup/download")).exportToHTML([note]);
   else if (kind === "pdf") (await import("@/lib/exportPdf")).exportToPDF([note]);
-  else (await import("@/lib/exportNotes")).exportToMarkdown([note]);
+  else (await import("@/lib/backup/download")).exportToMarkdown([note]);
 }
 
 export function CommandPalette({
@@ -280,6 +281,12 @@ export function CommandPalette({
               {currentNote.title.trim() && !currentNote.locked && (
                 <CommandItem value="ta notatka kopiuj link wiki" onSelect={() => run(() => { void copyWikiLink(currentNote); })}>
                   <Link2 className="size-4 mr-2" /> Kopiuj link [[{currentNote.title.trim()}]]
+                </CommandItem>
+              )}
+              {/* W APK adres to `https://localhost/…` — poza aplikacją nic nie otworzy, więc polecenia nie ma. */}
+              {!currentNote.trashed && !isNativeShell() && (
+                <CommandItem value="ta notatka kopiuj adres url nfc skrot" onSelect={() => run(() => { void copyNoteAddress(currentNote.id); })}>
+                  <Link2 className="size-4 mr-2" /> Kopiuj adres notatki
                 </CommandItem>
               )}
               {onMoveToFolder && !currentNote.trashed && folders.length > 0 && (

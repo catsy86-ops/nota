@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { buildFullBackup } from "@/lib/exportNotes";
+import { buildFullBackup } from "@/lib/backup/build";
 import { yjsStore } from "@/lib/yjsStore";
 import { versionsStore } from "@/lib/versionsStore";
 import { clearAllStorage } from "@/lib/notesStore";

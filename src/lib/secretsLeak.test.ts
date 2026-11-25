@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { buildFullBackup, SETTINGS_KEYS } from "./exportNotes";
+import { buildFullBackup, SETTINGS_KEYS } from "@/lib/backup/build";
 import { collectDiagReport } from "./diagnosticsReport";
 import { backupKeyNames, isSensitiveKey, registeredKeys } from "./storage/keys";
 import { clearAllStorage } from "./notesStore";

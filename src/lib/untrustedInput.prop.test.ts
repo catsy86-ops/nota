@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
-import { MAX_BACKUP_VERSION, parseFullBackup } from "@/lib/exportNotes";
+import { MAX_BACKUP_VERSION, parseFullBackup } from "@/lib/backup/parse";
 import { parseKeepHtml, parseKeepJson } from "@/lib/import/keep";
 import { parseFrontmatter, parseMarkdownNote } from "@/lib/import/markdown";
 import { parseIcs } from "@/lib/icsImport";

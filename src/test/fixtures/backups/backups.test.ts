@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { buildFullBackup, MAX_BACKUP_VERSION, parseFullBackup, restoreFullBackup } from "@/lib/exportNotes";
+import { buildFullBackup } from "@/lib/backup/build";
+import { MAX_BACKUP_VERSION, parseFullBackup } from "@/lib/backup/parse";
+import { restoreFullBackup } from "@/lib/backup/merge";
 import { yjsStore } from "@/lib/yjsStore";
 import { versionsStore } from "@/lib/versionsStore";
 import { clearAllStorage } from "@/lib/notesStore";

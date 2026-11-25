@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { describeBackupSkipped } from "./backupSkipped";
-import { RestoreCheckError, readRestoreMarker, clearRestoreMarker } from "./exportNotes";
-import { isBackupOversize, buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, MAX_BACKUP_VERSION, MERGE_SECTIONS, SETTINGS_KEYS, SETTING_VALUE_MAX, ACHIEVEMENTS_KEY } from "./exportNotes";
+import { RestoreCheckError } from "@/lib/backup/merge";
+import { readRestoreMarker, clearRestoreMarker } from "@/lib/restoreMarker";
+import { MERGE_SECTIONS } from "@/lib/backup/sections";
+import { buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, SETTINGS_KEYS, SETTING_VALUE_MAX, ACHIEVEMENTS_KEY } from "@/lib/backup/build";
+import { isBackupOversize, parseFullBackup, MAX_BACKUP_VERSION } from "@/lib/backup/parse";
+import { restoreFullBackup } from "@/lib/backup/merge";
 import { setDayShift, shiftStore } from "./shifts/store";
 import { yjsStore } from "./yjsStore";
 import { versionsStore } from "./versionsStore";

@@ -2,10 +2,10 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import jsPDF from "jspdf";
 import type { Note } from "@/lib/types/note";
-import { embeddableImages } from "@/lib/exportNotes";
+import { embeddableImages } from "@/lib/backup/build";
 import { addPdfFonts, PDF_FONT, PDF_MARGIN_MM, PDF_TYPE } from "@/lib/pdfType";
 
-// Split out from exportNotes.ts: jsPDF (+ the html2canvas it dynamically
+// Split out from the backup export (src/lib/backup/): jsPDF (+ the html2canvas it dynamically
 // pulls in) is the single heaviest dependency in the app but only used by
 // this one rarely-clicked export button — kept out of the eager main bundle
 // so daily app opens don't pay for it. Loaded on demand via dynamic import()

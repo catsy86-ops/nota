@@ -2,7 +2,12 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { whenNotesReady, type Note } from "@/hooks/useNotes";
 /** Eksport poza paczką startową (Plan-nowy 1.5) — ładowany dopiero, gdy kopia jest potrzebna. */
-const loadExport = () => import("@/lib/exportNotes");
+const loadExport = async () => {
+  const [{ exportFullBackup }, { describeSkippedAttachments }, { BACKUP_OVERSIZE_NOTE }] = await Promise.all([
+    import("@/lib/backup/download"), import("@/lib/backup/build"), import("@/lib/backup/parse"),
+  ]);
+  return { exportFullBackup, describeSkippedAttachments, BACKUP_OVERSIZE_NOTE };
+};
 import { AUTO_BACKUP_LOCK, withLockIfFree } from "@/lib/tabLock";
 import { isBackupDue, markBackup, daysSinceBackup, getLastBackup, oldestCreatedAt, FILE_BACKUP_DAYS } from "@/lib/backupReminder";
 import { hasBackupFile } from "@/lib/backupFileHandle";

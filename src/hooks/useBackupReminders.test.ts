@@ -6,11 +6,9 @@ import type { Note } from "@/hooks/useNotes";
 // (W e2e uchwyt pliku z OPFS zamyka stronę testową przy odczycie z IndexedDB — logika sprawdzana tutaj.)
 const exportFullBackup = vi.fn();
 const hasBackupFile = vi.fn();
-vi.mock("@/lib/exportNotes", () => ({
-  exportFullBackup: (...a: unknown[]) => exportFullBackup(...a),
-  describeSkippedAttachments: () => null,
-  BACKUP_OVERSIZE_NOTE: "",
-}));
+vi.mock("@/lib/backup/download", () => ({ exportFullBackup: (...a: unknown[]) => exportFullBackup(...a) }));
+vi.mock("@/lib/backup/build", () => ({ describeSkippedAttachments: () => null }));
+vi.mock("@/lib/backup/parse", () => ({ BACKUP_OVERSIZE_NOTE: "" }));
 vi.mock("@/lib/backupFileHandle", () => ({ hasBackupFile: () => hasBackupFile() }));
 vi.mock("@/lib/tabLock", () => ({ AUTO_BACKUP_LOCK: "x", withLockIfFree: (_: string, fn: () => Promise<unknown>) => fn() }));
 vi.mock("@/hooks/useNotes", () => ({ whenNotesReady: () => Promise.resolve() }));

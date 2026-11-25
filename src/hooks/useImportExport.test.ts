@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useImportExport } from "./useImportExport";
-import { importFromJSON } from "@/lib/exportNotes";
+import { importFromJSON } from "@/lib/backup/download";
 import { toast } from "sonner";
 import type { Note } from "@/hooks/useNotes";
 
-vi.mock("@/lib/exportNotes", () => ({
+vi.mock("@/lib/backup/download", () => ({
   importFromJSON: vi.fn(),
 }));
 

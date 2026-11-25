@@ -3,7 +3,7 @@ import { FileBraces, FileText, NotebookPen, Upload } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNotesContext } from "@/hooks/NotesProvider";
 /** Eksport poza paczką startową (Plan-nowy 1.5). Ładowany przy otwarciu menu, żeby klik działał w geście użytkownika. */
-const loadExport = () => import("@/lib/exportNotes");
+const loadExport = () => import("@/lib/backup/download");
 import { markBackup } from "@/lib/backupReminder";
 import { downloadNotesZip } from "@/lib/exportZip";
 import { toast } from "sonner";
