@@ -7,7 +7,7 @@ import { isLocalEndpoint } from "@/lib/net/endpoints";
 export function LocalServerNote({ urls }: { urls: readonly string[] }) {
   if (!urls.some((u) => isLocalEndpoint(u.trim()))) return null;
   return (
-    <p className="text-xs text-muted-foreground" data-testid="local-server-note">
+    <p className="ui-hint" data-testid="local-server-note">
       <span className="mr-1.5 inline-flex items-center rounded-full border border-border px-2 py-0.5 font-semibold text-foreground">
         Serwer lokalny
       </span>

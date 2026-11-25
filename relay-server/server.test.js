@@ -24,7 +24,10 @@ before(async () => {
   }
   throw new Error(`przekaźnik nie wystartował: ${log}`);
 });
-after(() => { child?.kill(); rmSync(dir, { recursive: true, force: true }); });
+// Sprzątanie po zakończeniu procesu: kill() nie czeka, a serwer mógł jeszcze dopisywać pliki pokoju (ENOTEMPTY w CI).
+const stop = async (c) => { if (c && c.exitCode === null) { const gone = new Promise((r) => c.once("exit", r)); c.kill(); await gone; } };
+const clean = (d) => rmSync(d, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+after(async () => { await stop(child); clean(dir); });
 
 const alive = async () => (await fetch(`${base}/health`)).status === 200 && child.exitCode === null;
 
@@ -138,8 +141,8 @@ test("limit nowych pokoi na adres na dobę: trzeci nowy pokój dostaje 429, zapi
     assert.equal((await post(ids[0])).status, 200); // istniejący pokój: bez limitu
     assert.equal((await post(ids[1])).status, 200);
   } finally {
-    child2.kill();
-    rmSync(dir2, { recursive: true, force: true });
+    await stop(child2);
+    clean(dir2);
   }
 });
 
