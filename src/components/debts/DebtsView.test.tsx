@@ -263,6 +263,43 @@ describe("DebtsView — plan Długów, Etap 3", () => {
   });
 });
 
+describe("DebtsView — L2.2 przypomnienie", () => {
+  it("„Przypomnij” wysyła kwotę i termin z notatki przypomnienia, bez historii", () => {
+    const due = new Date(2099, 0, 15, 9).getTime();
+    fixture.entries = [debt("1", "Ania", "lent", 10_000, { dueNoteId: "n1" }), debt("2", "Ania", "repaid", 2_000)];
+    const reminders = { clear: vi.fn(), restore: vi.fn(), get: vi.fn(() => due), has: vi.fn(() => true), remove: vi.fn() };
+    render(<DebtsView reminders={reminders} />);
+    fireEvent.click(screen.getByRole("button", { name: /Ania/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Przypomnij" }));
+    expect(reminders.get).toHaveBeenCalledWith("n1");
+    expect(shareMock).toHaveBeenCalledWith({ title: "Ania — przypomnienie", text: "Cześć! Przypominam o zwrocie 80,00 zł do 15.01.2099. Dzięki!" });
+  });
+
+  it("gdy to my jesteśmy winni, przycisku nie ma", () => {
+    fixture.entries = [debt("1", "Marek", "borrowed", 4_000)];
+    render(<DebtsView />);
+    fireEvent.click(screen.getByRole("button", { name: /Marek/ }));
+    expect(screen.queryByRole("button", { name: "Przypomnij" })).toBeNull();
+  });
+});
+
+describe("DebtsView — L4.2 miesiąc w liczbach", () => {
+  it("zwinięty pod podsumowaniem, tylko gdy w tym miesiącu są wpisy", () => {
+    const today = new Date();
+    const at = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-01`;
+    fixture.entries = [debt("1", "Ania", "lent", 10_000, { at }), debt("2", "Ania", "repaid", 2_500, { at })];
+    render(<DebtsView />);
+    const box = screen.getByTestId("debts-month");
+    expect((box as HTMLDetailsElement).open).toBe(false);
+    expect(within(box).getByText("Pożyczone").nextSibling?.textContent).toBe("100,00 zł");
+    expect(within(box).getByText("Zmiana salda").nextSibling?.textContent).toBe("+75,00 zł");
+    cleanup();
+    fixture.entries = [debt("1", "Ania", "lent", 10_000, { at: "2000-01-01" })];
+    render(<DebtsView />);
+    expect(screen.queryByTestId("debts-month")).toBeNull();
+  });
+});
+
 describe("DebtsView — plan Długów, Etap 4", () => {
   it("4.1: pasek proporcji z opisem, gdy są kwoty po obu stronach", () => {
     fixture.entries = [debt("1", "Ania", "lent", 15_000), debt("2", "Marek", "borrowed", 5_000)];

@@ -243,6 +243,51 @@ export function personStatement(p: PersonDebts): string {
   return [`${p.name} — rozliczenie`, head, "", ...lines].join(String.fromCharCode(10));
 }
 
+/**
+ * L4.2 Miesiąc w liczbach (`month` = `YYYY-MM`, po dniu wpisu): `lent` — pożyczki w obie strony, `repaid` — zwroty
+ * w obie strony, `change` — zmiana salda (plus: inni są nam winni więcej).
+ */
+export function monthNumbers(entries: readonly DebtEntry[], month: string): { lent: number; repaid: number; change: number; count: number } {
+  let lent = 0, repaid = 0, change = 0, count = 0;
+  for (const e of entries) {
+    if (!e.at.startsWith(month)) continue;
+    count++;
+    if (e.kind === "lent" || e.kind === "borrowed") lent += e.amount; else repaid += e.amount;
+    change += KIND_SIGN[e.kind] * e.amount;
+  }
+  return { lent, repaid, change, count };
+}
+
+/**
+ * Wpisy od ostatniego rozliczenia (od najnowszego): po wcześniejszych saldo spadło do zera albo poniżej, więc ich
+ * terminy zwrotu już nie obowiązują. Przy saldzie ≤ 0 — pusta lista.
+ */
+export function openEntries(p: PersonDebts): DebtEntry[] {
+  const running = runningBalances(p.entries);
+  const settled = running.findIndex((b) => b <= 0);
+  return settled === -1 ? p.entries : p.entries.slice(0, settled);
+}
+
+/** Termin z notatek przypomnień wpisów „pożyczyłem”: najbliższy nadchodzący, a gdy wszystkie minęły — ostatni miniony. */
+export function reminderDue(dues: readonly number[], now: number): number | null {
+  const ahead = dues.filter((d) => d >= now);
+  if (ahead.length) return Math.min(...ahead);
+  return dues.length ? Math.max(...dues) : null;
+}
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const plDateMs = (ms: number) => { const d = new Date(ms); return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${d.getFullYear()}`; };
+
+/**
+ * L2.2 Grzeczne przypomnienie: sama kwota do oddania i termin, bez historii wpisów. Tylko gdy osoba jest nam winna
+ * (`balance > 0`) — inaczej `null`. Termin minięty jest nazwany wprost, bez ponaglania.
+ */
+export function personReminder(p: PersonDebts, due: number | null, now: number): string | null {
+  if (p.balance <= 0) return null;
+  const when = due === null ? "" : due >= now ? ` do ${plDateMs(due)}` : ` (termin był ${plDateMs(due)})`;
+  return `Cześć! Przypominam o zwrocie ${formatAmount(p.balance)}${when}. Dzięki!`;
+}
+
 const CRLF = String.fromCharCode(13, 10);
 const BOM = String.fromCharCode(0xfeff);
 

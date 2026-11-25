@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { avatarHue, balances, cleanDebt, debtsCsv, initialOf, debtSide, doubleSettle, foldName, personStatement, formatAmount, knownPeople, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
+import { avatarHue, balances, cleanDebt, debtsCsv, initialOf, debtSide, doubleSettle, foldName, personReminder, personStatement, reminderDue, formatAmount, knownPeople, monthNumbers, openEntries, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
 
 const e = (over: Partial<DebtEntry>): DebtEntry => ({
   id: "d-1", person: "Anna", kind: "lent", amount: 10000, at: "2026-10-10", note: "", created: 1, ...over,
@@ -179,6 +179,22 @@ describe("wiadomość i CSV (3.2, 3.4)", () => {
     expect(lines[4]).toBe("01.10.2026 · Pożyczyłem · 100,00 zł · =SUMA(A1)");
   });
 
+  it("przypomnienie (L2.2): sama kwota i termin; minięty termin nazwany, bez historii; tylko gdy osoba jest winna", () => {
+    const [ania, marek] = ["Ania", "Marek"].map((n) => balances(list).find((p) => p.name === n)!);
+    const now = new Date(2026, 9, 10, 12).getTime();
+    const due = new Date(2026, 9, 20, 9).getTime();
+    expect(personReminder(ania, due, now)).toBe("Cześć! Przypominam o zwrocie 74,50 zł do 20.10.2026. Dzięki!");
+    expect(personReminder(ania, new Date(2026, 9, 1, 9).getTime(), now)).toBe("Cześć! Przypominam o zwrocie 74,50 zł (termin był 01.10.2026). Dzięki!");
+    expect(personReminder(ania, null, now)).toBe("Cześć! Przypominam o zwrocie 74,50 zł. Dzięki!");
+    expect(personReminder(marek, due, now)).toBeNull();
+  });
+
+  it("reminderDue: najbliższy nadchodzący, a gdy wszystkie minęły — ostatni", () => {
+    expect(reminderDue([30, 10, 20], 15)).toBe(20);
+    expect(reminderDue([5, 10], 15)).toBe(10);
+    expect(reminderDue([], 15)).toBeNull();
+  });
+
   it("CSV: BOM, średnik, od najstarszego, saldo osoby ze znakiem, bez formuł", () => {
     const csv = debtsCsv(list);
     expect(csv.charCodeAt(0)).toBe(0xfeff);
@@ -196,5 +212,35 @@ describe("kółko osoby (4.2)", () => {
     expect(["coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"]).toContain(avatarHue("Łukasz"));
     expect(initialOf("łukasz")).toBe("Ł");
     expect(initialOf("  ")).toBe("?");
+  });
+});
+
+describe("monthNumbers (L4.2)", () => {
+  it("liczy tylko wpisy z miesiąca: pożyczki i zwroty w obie strony, zmiana salda ze znakiem", () => {
+    const list = [
+      e({ id: "a", kind: "lent", amount: 10_000, at: "2026-11-02" }),
+      e({ id: "b", kind: "borrowed", amount: 3_000, at: "2026-11-05" }),
+      e({ id: "c", kind: "repaid", amount: 2_000, at: "2026-11-09" }),
+      e({ id: "d", kind: "returned", amount: 1_000, at: "2026-11-10" }),
+      e({ id: "x", kind: "lent", amount: 99_999, at: "2026-10-31" }),
+    ];
+    expect(monthNumbers(list, "2026-11")).toEqual({ lent: 13_000, repaid: 3_000, change: 10_000 - 3_000 - 2_000 + 1_000, count: 4 });
+    expect(monthNumbers(list, "2026-12")).toEqual({ lent: 0, repaid: 0, change: 0, count: 0 });
+  });
+});
+
+describe("openEntries (L2.2 po przeglądzie)", () => {
+  it("tylko wpisy od ostatniego wyzerowania salda; przy saldzie ≤ 0 pusto", () => {
+    const list = [
+      e({ id: "a", kind: "lent", amount: 10_000, at: "2026-09-01", created: 1, dueNoteId: "old" }),
+      e({ id: "b", kind: "repaid", amount: 10_000, at: "2026-09-20", created: 2 }),
+      e({ id: "c", kind: "lent", amount: 5_000, at: "2026-11-01", created: 3 }),
+    ];
+    const [p] = balances(list);
+    expect(openEntries(p).map((x) => x.id)).toEqual(["c"]);
+    const [settled] = balances(list.slice(0, 2));
+    expect(openEntries(settled)).toEqual([]);
+    const [never] = balances([list[0]]);
+    expect(openEntries(never).map((x) => x.id)).toEqual(["a"]);
   });
 });
