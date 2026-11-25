@@ -14,6 +14,7 @@ import { isNativeShell } from "@/lib/native/platform";
 import { loadNativeSink, nativeAlarmPrefs } from "@/lib/reminders/sink";
 import { cn } from "@/lib/utils";
 import { Section, ToggleRow } from "./SettingsShared";
+import { LocalServerNote } from "./LocalServerNote";
 import type { PushSummary } from "@/lib/push/summary";
 import { cardVariant } from "@/components/ui/card";
 
@@ -109,6 +110,7 @@ function WebPushSettings() {
                 disabled={prefs.enabled || busy !== null}
                 className="font-mono text-sm"
               />
+              <LocalServerNote urls={[server]} />
               <label htmlFor="push-token" className="sr-only">Token serwera powiadomień</label>
               <Input
                 id="push-token"

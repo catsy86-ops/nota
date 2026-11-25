@@ -22,6 +22,7 @@ import { acknowledgeRelayWarning, checkRelay, deleteRelayRoom, getRelayUrl, setR
 import { format, formatDistanceToNow } from "date-fns";
 import { syncErrorText } from "@/lib/syncErrorText";
 import { relayErrorHint } from "@/lib/sync/relayErrorHint";
+import { LocalServerNote } from "@/components/settings/LocalServerNote";
 import { seenOffline, useSeenDevices } from "@/lib/syncSeen";
 import { pl } from "date-fns/locale";
 import {
@@ -531,6 +532,7 @@ function RelayServer() {
         {draft.trim() !== "" && !valid && (
           <p className="text-destructive-ink">Adres musi zaczynać się od https:// (albo http://localhost).</p>
         )}
+        {valid && <LocalServerNote urls={[draft]} />}
         <p className="flex items-start gap-2 text-foreground" aria-live="polite">
           <span aria-hidden className={`mt-1 inline-block size-2 shrink-0 rounded-full ${relayDotClass(view.status, sync.status)}`} />
           <span>{relayStatusText(view, sync.status)}</span>
@@ -660,9 +662,10 @@ function SignalingServers() {
         />
         {invalid.length > 0 && (
           <p className="text-destructive-ink">
-            Nie zostanie zapisane (adres musi zaczynać się od wss:// albo ws://): {invalid.join(", ")}
+            Nie zostanie zapisane (adres musi zaczynać się od wss://, a ws:// tylko na tym komputerze): {invalid.join(", ")}
           </p>
         )}
+        <LocalServerNote urls={valid} />
         <div className="flex justify-end gap-2">
           {saved.length > 0 && (
             <Button type="button" size="sm" variant="ghost" onClick={() => setDraft("")}>Wyczyść</Button>
