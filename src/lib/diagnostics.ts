@@ -5,7 +5,8 @@ import { DANE } from "@/lib/storage/names";
  * Aplikacja celowo łyka wiele wyjątków (brak miejsca, tryb prywatny, zerwane
  * połączenie P2P), żeby nie wywracać UI. Tutaj te wyjątki zostawiają ślad:
  * bufor 200 ostatnich wpisów w pamięci, z którego użytkownik może na żądanie
- * pobrać raport. Nic nie trafia do `localStorage` ani do sieci.
+ * pobrać raport. Nic nie trafia do sieci; do `localStorage` idą tylko zdarzenia
+ * bezpieczeństwa i nieobsłużone błędy (oba niżej, oczyszczone).
  *
  * Prywatność: wpis zawiera tylko źródło, komunikat i nazwę błędu — nigdy
  * treści notatek. Raport dodatkowo wycina kod parowania (patrz `redact`).
@@ -133,6 +134,103 @@ export function clearSecurityForTests(): void {
   try { localStorage.removeItem(SECURITY_KEY); } catch { /* ignore */ }
 }
 
+// ── błędy z tego urządzenia (Q1.6) ───────────────────────────────────────────
+//
+// Nieobsłużone błędy i odrzucone obietnice (`installGlobalDiagHandlers`) w trwałym pierścieniu 50 wpisów — przeżywają
+// przeładowanie, więc błąd z telefonu da się skopiować i zgłosić później. Tekst czyszczony jak w zdarzeniach
+// bezpieczeństwa (`sanitizeDetail`: jedna linia, adresy bez ścieżek, 160 znaków); ten sam błąd pod rząd zwiększa `count`.
+
+export interface ErrorLogEntry {
+  at: number;
+  source: string;
+  message: string;
+  count: number;
+}
+
+const ERROR_KEY = DANE.errorLog;
+export const ERROR_LOG_MAX = 50;
+let errorLog: ErrorLogEntry[] | null = null;
+
+function loadErrors(): ErrorLogEntry[] {
+  if (errorLog) return errorLog;
+  errorLog = [];
+  try {
+    const raw = JSON.parse(localStorage.getItem(ERROR_KEY) || "[]");
+    if (Array.isArray(raw)) {
+      for (const e of raw) {
+        if (e && typeof e === "object" && typeof e.at === "number" && typeof e.source === "string" && typeof e.message === "string") {
+          errorLog.push({ at: e.at, source: sanitizeDetail(e.source).slice(0, 40), message: sanitizeDetail(e.message), count: typeof e.count === "number" && e.count > 0 ? Math.floor(e.count) : 1 });
+        }
+      }
+      errorLog = errorLog.slice(-ERROR_LOG_MAX);
+    }
+  } catch { /* uszkodzone albo brak localStorage — zaczynamy od pustego */ }
+  return errorLog;
+}
+
+function saveErrors(list: ErrorLogEntry[]): void {
+  try {
+    if (list.length) localStorage.setItem(ERROR_KEY, JSON.stringify(list));
+    else localStorage.removeItem(ERROR_KEY);
+  } catch { /* brak miejsca — zostaje w pamięci karty */ }
+}
+
+/**
+ * Komunikat błędu bez cytowanych danych: silnik wkleja do niektórych komunikatów fragment wartości
+ * (`Unexpected token 'x', "<początek tekstu>"... is not valid JSON`), a to mógłby być tekst notatki.
+ * Cytaty (w `"…"`, `'…'`, `` `…` ``) zastępujemy `…`; zostaje sam rodzaj błędu.
+ */
+export function redactErrorText(text: string): string {
+  return text.replace(/"[^"]*"|'[^']*'|`[^`]*`/g, "…");
+}
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Zapisuje błąd w trwałym dzienniku urządzenia (i w zwykłym buforze diagnostycznym). */
+export function logDeviceError(source: string, err: unknown): void {
+  const message = sanitizeDetail(redactErrorText(describe(err)));
+  logDiag("error", source, message);
+  const list = loadErrors();
+  const last = list[list.length - 1];
+  if (last && last.source === source && last.message === message) {
+    last.count++;
+    last.at = Date.now();
+  } else {
+    list.push({ at: Date.now(), source, message, count: 1 });
+    if (list.length > ERROR_LOG_MAX) list.splice(0, list.length - ERROR_LOG_MAX);
+  }
+  // Błąd w pętli klatek potrafi przyjść 60 razy na sekundę — zapis zbiorczo, najwyżej raz na pół sekundy.
+  saveTimer ??= setTimeout(() => { saveTimer = null; saveErrors(loadErrors()); }, 500);
+}
+
+/** Test-only: natychmiastowy zapis odłożonego dziennika. */
+export function flushErrorLogForTests(): void {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  saveErrors(loadErrors());
+}
+
+export function getErrorLog(): readonly ErrorLogEntry[] {
+  return loadErrors();
+}
+
+export function clearErrorLog(): void {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  errorLog = [];
+  saveErrors(errorLog);
+}
+
+/** Dziennik błędów jako tekst do schowka: od najnowszego, czas ISO, liczba powtórzeń. */
+export function errorLogText(list: readonly ErrorLogEntry[]): string {
+  return [...list].reverse().map((e) => `${new Date(e.at).toISOString()} [${e.source}]${e.count > 1 ? ` x${e.count}` : ""} ${e.message}`).join("\n");
+}
+
+/** Test-only. */
+export function clearErrorLogForTests(): void {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  errorLog = null;
+  try { localStorage.removeItem(ERROR_KEY); } catch { /* ignore */ }
+}
+
 /** Test-only. */
 export function clearDiagForTests(): void {
   entries = [];
@@ -144,8 +242,8 @@ let globalHandlersInstalled = false;
 export function installGlobalDiagHandlers(): void {
   if (globalHandlersInstalled || typeof window === "undefined") return;
   globalHandlersInstalled = true;
-  window.addEventListener("error", (e) => logDiag("error", "window", "uncaught", e.error ?? e.message));
-  window.addEventListener("unhandledrejection", (e) => logDiag("error", "window", "unhandled rejection", e.reason));
+  window.addEventListener("error", (e) => logDeviceError("uncaught", e.error ?? e.message));
+  window.addEventListener("unhandledrejection", (e) => logDeviceError("rejection", e.reason));
   // Naruszenie CSP = coś próbowało załadować/wykonać to, czego polityka nie zezwala.
   document.addEventListener("securitypolicyviolation", (e) => {
     logSecurity("csp-violation", `${e.violatedDirective} ${e.blockedURI || "inline"}`);
@@ -185,7 +283,7 @@ function redact(text: string, secrets: string[]): string {
  * Czysta funkcja: snapshot + wpisy → tekst raportu.
  * `secrets` to wartości, które nie mogą się w nim pojawić (kod parowania).
  */
-export function buildDiagReport(snapshot: DiagSnapshot, log: readonly DiagEntry[], secrets: string[] = [], security: readonly SecurityEvent[] = []): string {
+export function buildDiagReport(snapshot: DiagSnapshot, log: readonly DiagEntry[], secrets: string[] = [], security: readonly SecurityEvent[] = [], deviceErrors: readonly ErrorLogEntry[] = []): string {
   const lines = [
     "NOTKI — raport diagnostyczny",
     "(bez treści notatek i bez kodu parowania)",
@@ -207,6 +305,9 @@ export function buildDiagReport(snapshot: DiagSnapshot, log: readonly DiagEntry[
     ...(security.length
       ? security.map((e) => `${new Date(e.at).toISOString()} ${e.kind}${e.count > 1 ? ` x${e.count}` : ""}${e.detail ? ` — ${e.detail}` : ""}`)
       : ["brak"]),
+    "",
+    `błędy z tego urządzenia, także z poprzednich sesji (${deviceErrors.length}):`,
+    ...(deviceErrors.length ? errorLogText(deviceErrors).split("\n") : ["brak"]),
     "",
     `dziennik (${log.length} ostatnich wpisów):`,
     ...log.map((e) => `${new Date(e.at).toISOString()} ${e.level.toUpperCase().padEnd(5)} [${e.source}] ${e.message}`),

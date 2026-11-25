@@ -3,7 +3,7 @@ import { getSyncState, formatCode, getSignalingServers } from "@/lib/yjsSync";
 import { loadRekeyRecord } from "@/lib/sync/rekeyRuntime";
 import { readUsage, usageReportLines } from "@/lib/study/usage";
 import { perfReportLines } from "@/lib/study/perf";
-import { buildDiagReport, getDiagEntries, getSecurityEvents, type DiagSnapshot } from "@/lib/diagnostics";
+import { buildDiagReport, getDiagEntries, getErrorLog, getSecurityEvents, type DiagSnapshot } from "@/lib/diagnostics";
 
 declare const __APP_BUILD__: string | undefined;
 
@@ -63,7 +63,7 @@ export async function collectDiagReport(): Promise<string> {
   // Zapis wymiany kodu trzyma stary i nowy kod jawnie — też do zatarcia, gdyby któryś trafił do dziennika.
   const rekey = loadRekeyRecord();
   const codes = [sync.code, rekey?.oldCode, rekey?.newCode].filter((c): c is string => !!c);
-  const report = buildDiagReport(snapshot, getDiagEntries(), [...new Set(codes)].flatMap((c) => [c, formatCode(c)]), getSecurityEvents());
+  const report = buildDiagReport(snapshot, getDiagEntries(), [...new Set(codes)].flatMap((c) => [c, formatCode(c)]), getSecurityEvents(), getErrorLog());
   // Użycie funkcji Pracy (B0.1): same nazwy funkcji i liczby, nic z treści.
   return [report, "", "użycie funkcji Pracy:", ...usageReportLines(readUsage()), "", "wydajność Pracy (ten przebieg aplikacji):", ...perfReportLines()].join("\n");
 }

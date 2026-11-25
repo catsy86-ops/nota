@@ -179,6 +179,7 @@ export const DANE = {
   lastAutoExport: "kaczy.lastAutoExport",
   snapshotStatus: "kaczy.snapshot.status.v1",
   securityLog: "kaczy.security.log.v1",
+  errorLog: "kaczy.errors.log.v1",
   docformatIgnore: "kaczy.docformat.ignore.v1",
   restorePending: "kaczy.restore.pending.v1",
   restoreResult: "kaczy.restore.result.v1",
