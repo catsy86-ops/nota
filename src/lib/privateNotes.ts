@@ -1,19 +1,20 @@
-import type { Note, ChecklistItem } from "@/lib/types/note";
+import type { Note } from "@/lib/types/note";
 import { VAULT_LOCK, withExclusiveLock } from "@/lib/tabLock";
 import type { YjsStore } from "@/lib/yjsStore";
 import { yjsStore as defaultStore } from "@/lib/yjsStore";
 import { versionsStore as defaultVersions, type VersionsStore } from "@/lib/versionsStore";
 import { logDiag, logSecurity } from "@/lib/diagnostics";
-import { NOTE_COLORS } from "@/lib/safeProjection";
+import { futureFieldsJson, knownContent, parseContent, parseFutureFields, privateMetaOf, type PrivateContent, type PrivateMeta } from "@/lib/private/content";
+import { encryptNoteWrite, NOTE_FORMAT_V2_SCHEMA } from "@/lib/private/noteCipher";
+import { readThrottle, throttleDelayMs, writeThrottle } from "@/lib/private/throttle";
 import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
 import { comparePin, readVaultPin, writeVaultPin } from "@/lib/vaultPin";
 import { assertPasskey, registerPasskey } from "@/lib/passkey";
 import { MAX_PASSKEYS, unlockWithPasskey as unlockKeyWithPasskey, unwrapRawWithPassword, wrapDataKeyForPasskey, fromB64u, toB64u } from "@/lib/vault";
 import { toast } from "@/lib/notify";
 import { pluralPl } from "@/lib/plural";
-import { SKARBIEC } from "@/lib/storage/names";
 import {
-  KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, encryptString, isValidMeta, noteAad,
+  KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, isValidMeta,
   unlockWithPassword, unlockWithRecovery, VAULT_VERSION, type VaultMeta,
 } from "@/lib/vault";
 
@@ -28,16 +29,9 @@ import {
  * Treść widzi wyłącznie karta (przez `PrivateNoteGate`), po odblokowaniu.
  */
 
-export type PrivateMeta = Partial<Pick<Note, "color" | "folderId" | "parentId" | "icon">>;
-
-export interface PrivateContent {
-  title: string;
-  content: string;
-  checklist: ChecklistItem[];
-  labels: string[];
-  /** Metadane notatki w szyfrogramie (V-3, krok 3); brak w starszych treściach = metadane w dokumencie. */
-  meta?: PrivateMeta;
-}
+export type { PrivateContent, PrivateMeta } from "@/lib/private/content";
+export { NOTE_FORMAT_V2_SCHEMA } from "@/lib/private/noteCipher";
+export { throttleDelayMs } from "@/lib/private/throttle";
 
 export type VaultPhase = "none" | "locked" | "unlocked" | "locking";
 
@@ -78,131 +72,6 @@ export interface RekeyOptions {
   dropUnreadable?: boolean;
 }
 
-/** Nieznane pola treści (C-14) jako JSON do zachowania przy zdjęciu blokady; za duże albo brak — `undefined`. */
-function futureFieldsJson(c: PrivateContent): string | undefined {
-  const extra: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(c)) if (!KNOWN_CONTENT_KEYS.has(k)) extra[k] = v;
-  if (!Object.keys(extra).length) return undefined;
-  const json = JSON.stringify(extra);
-  return json.length <= MAX_EXTRA_JSON ? json : undefined;
-}
-
-/** Odwrotność `futureFieldsJson` przy ponownej blokadzie: tylko nieznane klucze, bez `__proto__`. */
-function parseFutureFields(json: string | null): Record<string, unknown> {
-  if (!json || json.length > MAX_EXTRA_JSON) return {};
-  try {
-    const raw = JSON.parse(json) as unknown;
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(raw)) if (!KNOWN_CONTENT_KEYS.has(k) && k !== "__proto__") out[k] = v;
-    return out;
-  } catch { return {}; }
-}
-
-/** Najniższy numer formatu, który wymaga zapisu v2 (V-3): dopiero gdy wszystkie widziane urządzenia go znają. */
-export const NOTE_FORMAT_V2_SCHEMA = 2;
-
-/** Zapis notatki skarbca: v2 (z epoką w AAD), gdy bramka wersji na to pozwala; inaczej v1 dla starszych urządzeń. */
-/** Metadane notatki do szyfrogramu (krok 3): tylko te, które notatka ma. */
-function privateMetaOf(n: Partial<Pick<Note, "color" | "folderId" | "parentId" | "icon">>): PrivateMeta | undefined {
-  const meta: PrivateMeta = {};
-  if (n.color !== undefined) meta.color = n.color;
-  if (n.folderId !== undefined) meta.folderId = n.folderId;
-  if (n.parentId !== undefined) meta.parentId = n.parentId;
-  if (n.icon !== undefined) meta.icon = n.icon;
-  return Object.keys(meta).length ? meta : undefined;
-}
-
-function encryptNoteWrite(key: CryptoKey, json: string, id: string, epoch: number): Promise<string> {
-  return writeFormatAllowed(NOTE_FORMAT_V2_SCHEMA) ? encryptNoteStringV2(key, json, id, epoch) : encryptString(key, json, noteAad(id));
-}
-
-const THROTTLE_KEY = SKARBIEC.attempts;
-const FREE_ATTEMPTS = 2;
-const MAX_DELAY_MS = 5 * 60_000;
-
-/** Opóźnienie po `fails` nieudanych próbach z rzędu: 0, 0, 2 s, 4 s, 8 s … max 5 min. */
-export function throttleDelayMs(fails: number): number {
-  if (fails <= FREE_ATTEMPTS) return 0;
-  return Math.min(MAX_DELAY_MS, 2000 * 2 ** (fails - FREE_ATTEMPTS - 1));
-}
-
-function readThrottle(): { fails: number; until: number } {
-  try {
-    const raw = JSON.parse(localStorage.getItem(THROTTLE_KEY) || "null");
-    if (raw && typeof raw.fails === "number" && typeof raw.until === "number") return raw;
-  } catch (err) {
-    // Uszkodzony licznik prób zeruje ochronę przed zgadywaniem hasła — musi zostawić ślad.
-    logDiag("warn", "vault", "uszkodzony licznik prób", err);
-  }
-  return { fails: 0, until: 0 };
-}
-
-function writeThrottle(v: { fails: number; until: number } | null) {
-  try {
-    if (v && v.fails > 0) localStorage.setItem(THROTTLE_KEY, JSON.stringify(v));
-    else localStorage.removeItem(THROTTLE_KEY);
-  } catch { /* brak miejsca — limit działa tylko w pamięci karty */ }
-}
-
-
-/** Metadane z treści szyfrogramu: tylko znane pola we właściwych typach; brak pól = undefined. */
-function cleanPrivateMeta(raw: unknown): PrivateMeta | undefined {
-  if (!raw || typeof raw !== "object") return undefined;
-  const r = raw as Record<string, unknown>;
-  const meta: PrivateMeta = {};
-  if (typeof r.color === "string" && (NOTE_COLORS as readonly string[]).includes(r.color)) meta.color = r.color as Note["color"];
-  if (r.folderId === null || (typeof r.folderId === "string" && r.folderId.length <= 200)) meta.folderId = r.folderId as string | null;
-  if (typeof r.parentId === "string" && r.parentId.length <= 200) meta.parentId = r.parentId;
-  if (typeof r.icon === "string" && r.icon.length <= 32) meta.icon = r.icon;
-  return Object.keys(meta).length ? meta : undefined;
-}
-
-const KNOWN_CONTENT_KEYS = new Set(["title", "content", "checklist", "labels", "meta"]);
-const MAX_EXTRA_JSON = 64 * 1024;
-
-/**
- * Widok treści bez pól z przyszłości (przegląd K0 cz. 2): karta składa `{ ...note, ...content }`, więc nieznane pole
- * (np. `id`, `images`) nadpisałoby pola notatki. Pola zostają w pamięci podręcznej i wracają przy zapisie.
- * Ten sam obiekt dla tej samej treści — `useMemo` w karcie nie liczy się od nowa.
- */
-const knownView = new WeakMap<PrivateContent, PrivateContent>();
-function knownContent(c: PrivateContent | undefined): PrivateContent | undefined {
-  if (!c) return undefined;
-  if (Object.keys(c).every((k) => KNOWN_CONTENT_KEYS.has(k))) return c;
-  let v = knownView.get(c);
-  if (!v) {
-    v = { title: c.title, content: c.content, checklist: c.checklist, labels: c.labels, ...(c.meta ? { meta: c.meta } : {}) };
-    knownView.set(c, v);
-  }
-  return v;
-}
-
-function parseContent(json: string): PrivateContent {
-  const raw = JSON.parse(json) as Partial<PrivateContent> | null;
-  if (!raw || typeof raw !== "object") throw new VaultError("bad-format");
-  const checklist = Array.isArray(raw.checklist)
-    ? raw.checklist
-      .filter((i): i is ChecklistItem => !!i && typeof i === "object" && typeof (i as ChecklistItem).id === "string")
-      .map((i) => ({ id: i.id, text: typeof i.text === "string" ? i.text : "", checked: Boolean(i.checked), ...(i.indent === 1 ? { indent: 1 as const } : {}) }))
-    : [];
-  const meta = cleanPrivateMeta(raw.meta);
-  // C-14 (K0 cz. 2): pola z przyszłych wersji przechodzą bez zmian, żeby zapis starszej wersji ich nie skasował.
-  let extra: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(raw)) if (!KNOWN_CONTENT_KEYS.has(k) && k !== "__proto__") extra[k] = v;
-  if (Object.keys(extra).length && JSON.stringify(extra).length > MAX_EXTRA_JSON) {
-    logDiag("warn", "privateNotes", "unknown fields in a private note exceed 64 KB — dropped");
-    extra = {};
-  }
-  return {
-    ...extra,
-    title: typeof raw.title === "string" ? raw.title : "",
-    content: typeof raw.content === "string" ? raw.content : "",
-    checklist,
-    labels: Array.isArray(raw.labels) ? raw.labels.filter((l): l is string => typeof l === "string") : [],
-    ...(meta ? { meta } : {}),
-  };
-}
 
 interface Entry {
   /** Szyfrogram, z którego (albo do którego) ta treść pochodzi. */
