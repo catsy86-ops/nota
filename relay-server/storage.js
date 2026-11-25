@@ -28,6 +28,7 @@ import {
   blobFits,
   cleanStore,
   commitAppend,
+  newEpoch,
   emptyStore,
   expiredRooms,
   pageCollector,
@@ -198,7 +199,7 @@ class EntryCache {
  * pokoi, wczytuje pokoje. `store.rooms[id]` to obiekty pokoi dla `core.js` (tożsamość + liczniki); `entries` w nich
  * nie ma — wpisy są na dysku i w pamięci podręcznej.
  */
-export async function openStorage({ dir, cacheBytes = 256 * 1024 * 1024, maxTotalBytes = Infinity, minFreeBytes = 0, freeBytes = diskFree, now = Date.now, log = () => undefined }) {
+export async function openStorage({ dir, cacheBytes = 256 * 1024 * 1024, maxTotalBytes = Infinity, minFreeBytes = 0, freeBytes = diskFree, now = Date.now, log = () => undefined, newEpochs = false }) {
   const roomsDir = join(dir, "rooms");
   const blobDir = join(dir, "blobs");
   const trashDir = join(dir, "trash");
@@ -319,6 +320,7 @@ export async function openStorage({ dir, cacheBytes = 256 * 1024 * 1024, maxTota
   }
 
   // ── wczytanie pokoi ──
+  let renewed = 0;
   for (const id of readdirSync(roomsDir)) {
     const rd = roomDir(id);
     if (!validRoomId(id)) continue;
@@ -338,6 +340,13 @@ export async function openStorage({ dir, cacheBytes = 256 * 1024 * 1024, maxTota
       log(`Pokój ${short(id)} bez tożsamości (${errCode(e)}), usuwam resztki`);
       rmSync(rd, { recursive: true, force: true });
       continue;
+    }
+    if (newEpochs) {
+      // S2.3: dane z kopii zapasowej mogą być starsze niż to, co klienci widzieli. Nowa epoka zamienia to
+      // w uczciwy reset (klient dosyła pełny stan) zamiast cofnięcia w tej samej epoce.
+      identity = { ...identity, epoch: newEpoch() };
+      writeAtomicSync(join(rd, "room.json"), JSON.stringify({ v: FORMAT, authHash: identity.authHash, epoch: identity.epoch, created: identity.created }));
+      renewed++;
     }
     let meta = null;
     try { meta = JSON.parse(readFileSync(join(rd, "meta.json"), "utf8")); } catch { /* odtworzymy z dziennika */ }
@@ -380,6 +389,7 @@ export async function openStorage({ dir, cacheBytes = 256 * 1024 * 1024, maxTota
     total += room.logSize + blobsOf(room);
     if (!metaOk) markDirty(id);
   }
+  if (newEpochs) log(`Nowe epoki dla ${renewed} pokoi (NEW_EPOCHS=1) — klienci wyślą pełny stan. Usuń zmienną przed kolejnym startem.`);
 
   // Bloby pokoi, których nie ma (przerwane usuwanie) — nie da się ich ani pobrać, ani rozliczyć.
   for (const id of readdirSync(blobDir)) {

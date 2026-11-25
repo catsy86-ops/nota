@@ -139,6 +139,6 @@ Część niezależna od F2 (można od razu):
 
 **Stan 2026-11-18: punkty 1–3 zrobione** (`relayProvider.ts`, `relayHeadCompare.ts`, `relayRuntime.ts`, `yjsSync.ts`, `SyncSettings.tsx`; testy `relayRollback.test.ts` i integracyjny „S2.3 wiersz 4”).
 
-Część po F2 (Z-15.8): przełącznik nowych epok po odtworzeniu, test monotoniczności po kompaktowaniu serwera.
+Część po F2 (Z-15.8): zrobiona 2026-11-25 — `NEW_EPOCHS=1` (`relay-server/config.js`, `storage.js`), testy w `relay-server/storage.test.js`.
 
 Poza zakresem: etap 2 (§2.4).

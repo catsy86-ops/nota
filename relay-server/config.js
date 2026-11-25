@@ -73,6 +73,8 @@ export function readConfig(env) {
     cacheBytes: num("CACHE_BYTES", 256 * MIB),
     maxTotalBytes: num("MAX_TOTAL_BYTES", 20 * 1024 * MIB),
     minFreeBytes: num("MIN_FREE_BYTES", 512 * MIB),
+    // S2.3 (Z-15.8): jednorazowo po odtworzeniu danych z kopii — każdy pokój dostaje nową epokę, klienci dosyłają pełny stan.
+    newEpochs: env.NEW_EPOCHS === "1",
     limits,
   };
 }

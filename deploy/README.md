@@ -29,6 +29,10 @@ Co miesiąc i po każdym alercie Dependabota dla `relay-server/` lub `push-serve
 3. Wdróż: zatrzymaj stary kontener i uruchom nowy na tym samym woluminie `/data`. Sprawdź `GET /health` i dziennik startu.
 4. **Wycofanie:** uruchom poprzedni znacznik obrazu na tym samym woluminie. Format danych na dysku jest zgodny wstecz (`storage.js`), a klienci przy kontakcie dosyłają brakujące zmiany.
 
+## Odtworzenie przekaźnika z kopii (S2.3)
+
+Po przywróceniu woluminu `/data` z kopii uruchom przekaźnik raz z `-e NEW_EPOCHS=1` (nowe epoki pokoi, klienci dosyłają pełny stan), potem bez tej zmiennej. Opis: `relay-server/README.md`.
+
 ## Serwer powiadomień w produkcji
 
 Ustaw `NODE_ENV=production`, `VAPID_PUBLIC_KEY` i `VAPID_PRIVATE_KEY` (S3.4). Bez kluczy serwer w produkcji odmawia startu, z `ALLOW_NO_AUTH=1` również (S3.3). Klucze z dotychczasowego `vapid.json` przepisz do zmiennych bez zmiany. Nowe klucze unieważniają subskrypcje, a aplikacja zapisuje się wtedy ponownie przy następnym włączeniu powiadomień.

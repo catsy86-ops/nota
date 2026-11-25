@@ -91,6 +91,8 @@ Konfiguracja produkcyjna (`NODE_ENV=production`) wymaga `ALLOWED_ORIGINS` z adre
 `MIN_FREE_BYTES`, `CACHE_BYTES`, `RATE_PER_MIN`, `ROOMS_PER_IP_PER_DAY`) muszą być dodatnimi liczbami całkowitymi;
 zła wartość też zatrzymuje start (`config.js`).
 
+**Po odtworzeniu danych z kopii zapasowej** uruchom serwer raz z `NEW_EPOCHS=1`. Każdy pokój dostaje wtedy nową epokę, a klienci przy kontakcie wysyłają pełny stan. Bez tego starsza kopia wyglądałaby u klientów jak cofnięcie stanu: dostaliby ostrzeżenie „Serwer pośredniczący cofnął się do starszego stanu” (S2.3). Przed kolejnym startem usuń zmienną.
+
 ## Dane na dysku (`storage.js`)
 
 ```

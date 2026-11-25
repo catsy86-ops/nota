@@ -51,6 +51,7 @@ mkdirSync(DATA_DIR, { recursive: true });
 const storage = await openStorage({
   dir: DATA_DIR, cacheBytes: CONFIG.cacheBytes, maxTotalBytes: CONFIG.maxTotalBytes, minFreeBytes: CONFIG.minFreeBytes,
   log: (...a) => console.error(...a),
+  newEpochs: CONFIG.newEpochs,
 });
 const store = storage.store;
 

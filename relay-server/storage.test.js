@@ -386,3 +386,35 @@ test("obciążenie: dopisanie w czasie stałym, pamięć pod limitem", { timeout
   assert.ok(l < Math.max(e * 5, 5), `początek ${e} ms, koniec ${l} ms`);
   assert.equal(s.store.rooms[id(1)].count, per);
 });
+
+test("NEW_EPOCHS: po odtworzeniu z kopii każdy pokój ma nową epokę, wpisy i token zostają (S2.3, Z-15.8)", async (t) => {
+  const dir = tmp(t);
+  const s = await openStorage({ dir });
+  await fill(s, id(1), 3);
+  await fill(s, id(2), 1);
+  const before = { a: s.store.rooms[id(1)].epoch, b: s.store.rooms[id(2)].epoch };
+  const logs = [];
+  const renewed = await openStorage({ dir, newEpochs: true, log: (m) => logs.push(m) });
+  assert.notEqual(renewed.store.rooms[id(1)].epoch, before.a);
+  assert.notEqual(renewed.store.rooms[id(2)].epoch, before.b);
+  assert.deepEqual(await seqs(renewed, id(1)), [1, 2, 3]);
+  assert.ok(openRoomForRead(renewed.store, id(1), TOKEN).room, "token działa po nowej epoce");
+  assert.ok(logs.some((m) => /Nowe epoki dla 2 pokoi/.test(m)));
+  // Bez przełącznika epoka z odnowienia jest trwała.
+  const later = await openStorage({ dir });
+  assert.equal(later.store.rooms[id(1)].epoch, renewed.store.rooms[id(1)].epoch);
+});
+
+test("numer wpisu nie maleje w epoce po kompaktowaniu i restarcie (S2.3 §2.5)", async (t) => {
+  const dir = tmp(t);
+  const s = await openStorage({ dir });
+  const room = await fill(s, id(1), 6);
+  const epoch = room.epoch;
+  await s.snapshot(id(1), room, 6, "SNAP", NOW + 10);
+  assert.equal(room.last, 6);
+  const again = await openStorage({ dir });
+  const r2 = again.store.rooms[id(1)];
+  assert.equal(r2.epoch, epoch);
+  assert.ok(r2.last >= 6, `last ${r2.last}`);
+  assert.deepEqual(await again.append(id(1), r2, data(7), NOW + 20), { seq: 7 });
+});
