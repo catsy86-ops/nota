@@ -789,3 +789,17 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 - **Ograniczenia i pułapki:** po zmianie zależności w `signaling-server/package.json` trzeba odświeżyć `package-lock.json` (`npm install --package-lock-only` w tym katalogu). Inaczej `npm ci` w kontenerze się nie uda. Serwer sygnalizacji nie ma `/health`, więc nie ma też `HEALTHCHECK`.
 - **Testy:** `src/test/dockerfiles.test.ts`. Dla każdego serwera sprawdza `USER node` przed `CMD`, `COPY package.json package-lock.json`, `npm ci --omit=dev`, brak `npm install` i istnienie pliku blokady. Obrazu nie budowano (brak Dockera w tej sesji).
 - **Commit:** `e5f8510a`, 2026-11-25.
+
+## Jakość — e2e bez zgadywania czasu (A4.3, 2026-11-25)
+
+- **Co robi:** testy e2e czekają na stan, a nie stałą liczbę milisekund. Pod obciążeniem (3 workery, pełny przebieg) stałe odczekania bywały za krótkie, a w zwykłym przebiegu wydłużały testy. `waitForTimeout`: 80 → 57, z czego 36 w testach pomiarowych.
+- **Gdzie jest:** pomocniki w `e2e/helpers.ts`:
+  - `whenSaved(page)` — czeka na pigułkę „Zapisano” (`OfflineStatus`) przed przeładowaniem: `clients`, `editor-cm`, `invoice`, `jobs`, `composer-double-save`;
+  - `untilStill(locator)` — prostokąt elementu taki sam w dwóch kolejnych odczytach, czyli koniec wjazdu okna albo dopasowania płótna: `card-images`, `mobile`, `qol-etap5`, `etap6`, `photo-dimensions`, `view-sheet-snap`, `sheet-fling`, `today-lists`;
+  - `untilOpaque(locator)` — kafle po kaskadzie wejścia mają `opacity: 1` przed pomiarem kontrastu: `fab-sheets-a11y`.
+  
+  Pozostałe zamiany: `hydraulika-flag` odpytuje transformację ikony przez `expect.poll`, a `visual` czeka na `document.fonts.ready`. Strażnik: `src/test/e2eWaits.test.ts`.
+- **Jak działa:** `waitForTimeout` zostaje tylko tam, gdzie czas jest częścią testu: przytrzymanie (długie naciśnięcie FAB, kafla, dnd), tempo gestu (rzut arkusza), sprawdzenie braku po czasie (przewodnik, przekaźnik, wyprzedzenie terminu), debounce przewijania i długość nagrania. Wtedy linia ma komentarz `// czas: <powód>`. Testy pomiarowe są na liście `MEASURING` w strażniku: `motion-frames`, `motion-video`, `web-vitals-phone`, `render-count`, `perf`, `restore-perf`. Nowe `waitForTimeout` bez komentarza zatrzymuje Vitest.
+- **Ograniczenia i pułapki:** `whenSaved` polega na tym, że po zmianie status przechodzi przez zapis. Bierze „Zapisano”, które może jeszcze wisieć po poprzedniej zmianie, więc przy dwóch zmianach tuż po sobie wystarczy jedno wywołanie po ostatniej. Wtyczki `eslint-plugin-playwright` nie dodano: strażnik w Vitest robi to samo bez nowej zależności. Przy okazji ustabilizowane pod obciążeniem: `composer-double-save` (dwa naciśnięcia przez `page.keyboard`, bez czekania na zwinięte pole) i `mobile:224` (jedno ponowienie `goto` przy ERR_ABORTED).
+- **Testy:** zmienione specy przechodzą przy `--repeat-each=2/3 --workers=3`: 208 + 144 przebiegi, bez porażek po poprawkach.
+- **Commit:** `5da191fe`, 2026-11-25.
