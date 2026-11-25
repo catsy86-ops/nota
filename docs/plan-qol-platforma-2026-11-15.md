@@ -46,7 +46,7 @@
 | Q3.5 ✅ (wcześniej, plan Notatek 5.1: „Ostatnie notatki”, ostatnie polecenia i wyszukiwania w pustej palecie) | **„Ostatnie” w palecie poleceń:** 5 ostatnio otwartych notatek i 3 ostatnie polecenia na pustym zapytaniu (sprawdzić, co już daje historia wyszukiwarki z Ustawień). | S |
 | Q3.6 | **Schowek z sensem:** wklejenie adresu na zaznaczony tekst robi link; wklejenie listy z punktorami do listy zadań robi pozycje; wklejenie obrazu wszędzie, gdzie jest załącznik. Testy na fragmentach HTML z Worda, Keep i WhatsAppa. | M |
 | Q3.7 ✅ 2026-11-25 (`web+notatnik:` dla notatki, budowy i widoków; „Kopiuj adres notatki” w palecie; osoba w Długach bez adresu) | **Głębokie linki:** `protocol_handlers` (`web+notatnik:`) i stałe adresy do notatki, budowy, osoby w Długach; „Skopiuj link” w menu. Przydaje się do tagów NFC i skrótów na ekranie głównym. | S |
-| Q3.8 | **Praca głównego wątku:** `scheduler.yield()` (z zapasem `setTimeout`) w długich pętlach: import kopii, budowa indeksu poza Workerem, eksport ZIP. Miara: żadne zadanie > 50 ms przy imporcie 2000 notatek. | M |
+| Q3.8 ✅ 2026-11-25 (`cc27b008`: eksport ZIP; import, kopia i podmiana miały `yieldToMain` wcześniej; pomiar na telefonie nie zrobiony) | **Praca głównego wątku:** `scheduler.yield()` (z zapasem `setTimeout`) w długich pętlach: import kopii, budowa indeksu poza Workerem, eksport ZIP. Miara: żadne zadanie > 50 ms przy imporcie 2000 notatek. | M |
 | Q3.9 | **Skróty aplikacji według użycia:** `shortcuts` w manifeście są stałe — przejrzeć, czy cztery najczęstsze czynności właściciela (wg `usage.ts`) tam są. | S |
 
 ## Etap Q4: synchronizacja zrozumiała dla człowieka
