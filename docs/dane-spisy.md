@@ -25,7 +25,7 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 
 ## D0.3: klucze `localStorage`
 
-146 kluczy z literałów w `src/` (bez testów), wygenerowane skryptem; nazwy z `${…}` to rodziny kluczy. Kolumna „W kopii” mówi, czy klucz wchodzi do pełnej kopii JSON (`SETTINGS_KEYS` w `src/lib/exportNotes.ts` z `APPEARANCE_KEYS` z `src/lib/appearanceCode.ts`). Walidację przy odczycie każdego klucza opisze rejestr kluczy (D6.1) — tu jej nie spisano, bo wymaga przeczytania każdego czytnika.
+146 kluczy z literałów w `src/` (bez testów), wygenerowane skryptem; nazwy z `${…}` to rodziny kluczy. Kolumna „W kopii” mówi, czy klucz wchodzi do pełnej kopii JSON (`SETTINGS_KEYS` w `src/lib/backup/build.ts` z `APPEARANCE_KEYS` z `src/lib/appearanceCode.ts`). Walidację przy odczycie każdego klucza opisze rejestr kluczy (D6.1) — tu jej nie spisano, bo wymaga przeczytania każdego czytnika.
 
 | Klucz | Moduły | W kopii |
 |---|---|---|
@@ -34,10 +34,10 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy-notes-labels` | `lib/notesStore.ts` | — |
 | `kaczy-notes-versions` | `lib/versionsStore.ts` | — |
 | `kaczy-theme` | `hooks/useTheme.ts`, `lib/appearanceCode.ts`, `lib/appearancePresets.ts` … | tak |
-| `kaczy:badge.enabled` | `lib/exportNotes.ts`, `lib/overdueBadge.ts` | tak |
+| `kaczy:badge.enabled` | `lib/storage/names.ts`, `lib/overdueBadge.ts` | tak |
 | `kaczy:guide` | `lib/guides.ts` | — |
 | `kaczy:review.closed` | `lib/weeklyReview.ts` | — |
-| `kaczy:review.day` | `lib/exportNotes.ts`, `lib/weeklyReview.ts` | tak |
+| `kaczy:review.day` | `lib/storage/names.ts`, `lib/weeklyReview.ts` | tak |
 | `kaczy:review.snoozeUntil` | `lib/weeklyReview.ts` | — |
 | `kaczy:shifts` | `lib/shifts/store.ts` | — |
 | `kaczy:shifts.active` | `lib/shifts/store.ts` | — |
@@ -45,7 +45,7 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy:shifts.eveningNudged` | `lib/shifts/eveningNudge.ts` | — |
 | `kaczy:tour` | `components/AppSidebar.tsx`, `components/BottomNav.tsx`, `components/OnboardingTour.tsx` | — |
 | `kaczy.accent.v1` | `lib/accent.ts`, `lib/appearanceCode.ts` | tak |
-| `kaczy.achievements.v1` | `lib/achievements.ts`, `lib/exportNotes.ts` | tak (osobne pole) |
+| `kaczy.achievements.v1` | `lib/achievements.ts`, `lib/storage/names.ts` | tak (osobne pole) |
 | `kaczy.alarms.v1` | `lib/reminders/sink.ts` | — |
 | `kaczy.appearance.advanced.v1` | `components/settings/AppearanceSettings.tsx` | — |
 | `kaczy.appearance.slot.${n}.v1` | `lib/appearancePresets.ts` | — |
@@ -59,7 +59,7 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.calendar.layers` | `lib/calendarLayers.ts` | — |
 | `kaczy.calendar.phoneView` | `components/calendar/ReminderCalendarView.tsx` | — |
 | `kaczy.clients.importDismissed.v1` | `components/clients/ClientsView.tsx` | — |
-| `kaczy.confirmPrefs.v1` | `lib/confirmPrefs.ts`, `lib/exportNotes.ts` | tak |
+| `kaczy.confirmPrefs.v1` | `lib/confirmPrefs.ts`, `lib/storage/names.ts` | tak |
 | `kaczy.customTheme.v1` | `lib/appearanceCode.ts`, `lib/customTheme.ts` | tak |
 | `kaczy.data.cleared.v1` | `lib/docReplaceCore.ts` | — |
 | `kaczy.dataloss.dismissed.v1` | `components/DocReplaceBanners.tsx` | — |
@@ -74,10 +74,10 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.draft.v1` | `components/AddNoteBar.tsx` | — |
 | `kaczy.drafts.v1` | `components/AddNoteBar.tsx` | — |
 | `kaczy.effectsSettings.defaults2` | `lib/effectsSettings.ts` | — |
-| `kaczy.effectsSettings.v1` | `lib/effectsSettings.ts`, `lib/exportNotes.ts` | tak |
+| `kaczy.effectsSettings.v1` | `lib/effectsSettings.ts`, `lib/storage/names.ts` | tak |
 | `kaczy.fab.hint.v1` | `components/BottomNav.tsx` | — |
 | `kaczy.fab.last.v1` | `lib/fabRecent.ts` | — |
-| `kaczy.features.v1` | `lib/exportNotes.ts`, `lib/featureFlags.ts` | tak |
+| `kaczy.features.v1` | `lib/storage/names.ts`, `lib/featureFlags.ts` | tak |
 | `kaczy.font.v1` | `lib/appearanceCode.ts`, `lib/appFont.ts` | tak |
 | `kaczy.frames.look.v1` | `lib/appearanceCode.ts`, `lib/frameLook.ts` | tak |
 | `kaczy.frames.v1` | `lib/appearanceCode.ts`, `lib/appearancePresets.ts`, `lib/frames.ts` | tak |
@@ -99,7 +99,7 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.logo.drawn.v1` | `components/NotkiLogo.tsx` | — |
 | `kaczy.migrations.failures.v1` | `lib/migrations/start.ts` | — |
 | `kaczy.migrations.giveup.v1` | `lib/migrations/start.ts` | — |
-| `kaczy.motion.v1` | `lib/appearanceCode.ts`, `lib/appearancePresets.ts`, `lib/exportNotes.ts` … | tak |
+| `kaczy.motion.v1` | `lib/appearanceCode.ts`, `lib/appearancePresets.ts`, `lib/storage/names.ts` … | tak |
 | `kaczy.olderDeviceBanner.v1` | `components/sync/OlderDeviceBanner.tsx` | — |
 | `kaczy.oled.v1` | `lib/appearanceCode.ts`, `lib/appearancePresets.ts`, `lib/oled.ts` | tak |
 | `kaczy.plans.rotateHint.v1` | `components/plans/PlanEditor.tsx` | — |
@@ -115,8 +115,9 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.restore.result.v1` | `lib/docReplaceCore.ts` | — |
 | `kaczy.restore.running.v1` | `lib/restoreMarker.ts` | — |
 | `kaczy.savedFilters.v1` | `lib/savedFilters.ts` | — |
-| `kaczy.seasonTheme.v1` | `lib/appearanceCode.ts`, `lib/exportNotes.ts`, `lib/seasonTheme.ts` | tak |
+| `kaczy.seasonTheme.v1` | `lib/appearanceCode.ts`, `lib/storage/names.ts`, `lib/seasonTheme.ts` | tak |
 | `kaczy.sectionColors.v1` | `lib/appearanceCode.ts`, `lib/sectionColors.ts` | tak |
+| `kaczy.errors.log.v1` | `lib/diagnostics.ts` (Q1.6, pierścień 50 nieobsłużonych błędów) | — |
 | `kaczy.security.log.v1` | `lib/diagnostics.ts` | — |
 | `kaczy.shape.v1` | `lib/appearanceCode.ts`, `lib/shape.ts` | tak |
 | `kaczy.share.last` | `lib/shareTarget.ts` | — |
@@ -124,41 +125,41 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.shifts.moveHint.v1` | `components/shifts/ShiftsView.tsx` | — |
 | `kaczy.sidebarGroups.v1` | `components/AppSidebar.tsx` | — |
 | `kaczy.sig.dawn.v1` | `lib/skinSignal.ts` | — |
-| `kaczy.siteMode.v1` | `lib/appearanceCode.ts`, `lib/appearancePresets.ts`, `lib/exportNotes.ts` … | tak |
+| `kaczy.siteMode.v1` | `lib/appearanceCode.ts`, `lib/appearancePresets.ts`, `lib/storage/names.ts` … | tak |
 | `kaczy.skin.v1` | `lib/appearanceCode.ts`, `lib/appearancePresets.ts`, `lib/skins.ts` | tak |
 | `kaczy.skinSchedule.v1` | `lib/appearanceCode.ts`, `lib/skinSchedule.ts` | tak |
 | `kaczy.skinScheme.v1` | `hooks/useTheme.ts`, `lib/appearanceCode.ts`, `lib/appearancePresets.ts` … | tak |
 | `kaczy.snapshot.last.v1` | `components/DocReplaceBanners.tsx`, `lib/dailySnapshot.ts` | — |
 | `kaczy.snapshot.status.v1` | `lib/dailySnapshot.ts` | — |
-| `kaczy.study.author.v1` | `lib/exportNotes.ts`, `lib/study/companyPrefs.ts` | tak |
-| `kaczy.study.bankAccount.v1` | `lib/exportNotes.ts`, `lib/study/companyPrefs.ts` | — |
+| `kaczy.study.author.v1` | `lib/storage/names.ts`, `lib/study/companyPrefs.ts` | tak |
+| `kaczy.study.bankAccount.v1` | `lib/storage/names.ts`, `lib/study/companyPrefs.ts` | — |
 | `kaczy.study.boardColumn.v1` | `components/study/StudyBoard.tsx` | — |
 | `kaczy.study.catalog.v1` | `lib/study/catalog.ts` | — |
-| `kaczy.study.companyName.v1` | `lib/exportNotes.ts`, `lib/study/companyPrefs.ts` | tak |
+| `kaczy.study.companyName.v1` | `lib/storage/names.ts`, `lib/study/companyPrefs.ts` | tak |
 | `kaczy.study.draft.v1` | `lib/study/keys.ts` | — |
 | `kaczy.study.entryPick.v1` | `components/study/EntryCheck.tsx` | — |
 | `kaczy.study.fingerprints.v1` | `lib/study/fingerprintStore.ts` | — |
-| `kaczy.study.mileage.v1` | `lib/exportNotes.ts`, `lib/study/companyPrefs.ts` | tak |
+| `kaczy.study.mileage.v1` | `lib/storage/names.ts`, `lib/study/companyPrefs.ts` | tak |
 | `kaczy.study.sitePatterns.v1` | `lib/study/sitePatterns.ts` (R4.4, wzorce budów) | tak |
-| `kaczy.study.prices.v1` | `lib/exportNotes.ts`, `lib/study/pricingStore.ts` | tak |
+| `kaczy.study.prices.v1` | `lib/storage/names.ts`, `lib/study/pricingStore.ts` | tak |
 | `kaczy.study.oneHand.v1` | `lib/study/oneHandPrefs.ts` (R4.1) | — |
 | `kaczy.study.oneHandOffered.v1` | `lib/study/oneHandPrefs.ts` (R4.1) | — |
-| `kaczy.study.pricing.v1` | `lib/exportNotes.ts`, `lib/study/pricingStore.ts` | tak |
-| `kaczy.study.quoteTerms.v1` | `lib/exportNotes.ts`, `lib/study/companyPrefs.ts` | tak |
+| `kaczy.study.pricing.v1` | `lib/storage/names.ts`, `lib/study/pricingStore.ts` | tak |
+| `kaczy.study.quoteTerms.v1` | `lib/storage/names.ts`, `lib/study/companyPrefs.ts` | tak |
 | `kaczy.study.reportNudges.v1` | `lib/study/reportNudgePrefs.ts` | — |
-| `kaczy.study.seller.v1` | `lib/exportNotes.ts`, `lib/ksef/sellerPrefs.ts` | tak |
+| `kaczy.study.seller.v1` | `lib/storage/names.ts`, `lib/ksef/sellerPrefs.ts` | tak |
 | `kaczy.study.siteArrival.v1` | `lib/study/siteArrivalPrefs.ts` | — |
 | `kaczy.study.siteArrivalAsked.v1` | `components/study/SiteArrivalPrompt.tsx` | — |
 | `kaczy.study.tab.v1` | `lib/study/tab.ts` | — |
 | `kaczy.study.usage.v1` | `lib/study/usage.ts` | — |
-| `kaczy.study.v1` | `components/settings/BackupSettings.tsx`, `lib/exportNotes.ts`, `lib/study/keys.ts` … | tak (z dokumentu) |
+| `kaczy.study.v1` | `components/settings/BackupSettings.tsx`, `lib/storage/names.ts`, `lib/study/keys.ts` … | tak (z dokumentu) |
 | `kaczy.swipeHints.v1` | `lib/swipeHint.ts` | — |
 | `kaczy.sync.deviceName` | `lib/yjsSync.ts` | — |
 | `kaczy.sync.rekey.v1` | `lib/sync/rekey.ts` | — |
 | `kaczy.sync.seen.v1` | `lib/syncSeen.ts` | — |
-| `kaczy.sync.v1` | `lib/exportNotes.ts`, `lib/yjsSync.ts` | — |
+| `kaczy.sync.v1` | `lib/storage/names.ts`, `lib/yjsSync.ts` | — |
 | `kaczy.sync.v2only.v1` | `lib/sync/v2Window.ts` | — |
-| `kaczy.templates.v1` | `lib/customTemplates.ts`, `lib/exportNotes.ts` | tak |
+| `kaczy.templates.v1` | `lib/customTemplates.ts`, `lib/storage/names.ts` | tak |
 | `kaczy.textSize.v1` | `lib/appearanceCode.ts`, `lib/appearancePresets.ts`, `lib/textSize.ts` | tak |
 | `kaczy.today.timeline.v1` | `components/review/TodayTimeline.tsx` | — |
 | `kaczy.todayCards.v1` | `lib/todayCards.ts` | — |
@@ -168,12 +169,12 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.training.restSeconds.v1` | `lib/training/restPrefs.ts` | — |
 | `kaczy.uiDensity.v1` | `lib/appearanceCode.ts`, `lib/uiDensity.ts` | tak |
 | `kaczy.vault.attempts.v1` | `lib/privateNotes.ts` | — |
-| `kaczy.vault.autolock.v1` | `lib/exportNotes.ts`, `lib/vaultAutoLock.ts` | tak |
-| `kaczy.vault.hiddenLock.v1` | `lib/exportNotes.ts`, `lib/vaultAutoLock.ts` | tak |
+| `kaczy.vault.autolock.v1` | `lib/storage/names.ts`, `lib/vaultAutoLock.ts` | tak |
+| `kaczy.vault.hiddenLock.v1` | `lib/storage/names.ts`, `lib/vaultAutoLock.ts` | tak |
 | `kaczy.vault.pin.v1` | `lib/vaultPin.ts` | — |
-| `kaczy.vault.recoveryCheck.v1` | `lib/exportNotes.ts`, `lib/vaultRecoveryCheck.ts` | tak |
+| `kaczy.vault.recoveryCheck.v1` | `lib/storage/names.ts`, `lib/vaultRecoveryCheck.ts` | tak |
 | `kaczy.viewMemory.v1:` | `lib/viewMemory.ts` | — |
-| `kaczy.viewPrefs.v1` | `lib/exportNotes.ts`, `lib/viewPrefs.ts` | tak |
+| `kaczy.viewPrefs.v1` | `lib/storage/names.ts`, `lib/viewPrefs.ts` | tak |
 | `kaczy.voice.liveText.v1` | `lib/liveTranscript.ts` | — |
 | `kaczy.weekNudgeAt` | `hooks/useDailyWeeklyNudges.tsx` | — |
 | `kaczy.weekSnoozeUntil` | `hooks/useDailyWeeklyNudges.tsx` | — |

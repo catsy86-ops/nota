@@ -7,11 +7,11 @@
 
 | Kolejność | Plan | Punkty | Uwagi |
 |---|---|---|---|
-| 1 | `plan-security-2026-11-15.md` | **S1.1** Trusted Types — włączyć egzekwowanie po obsłużeniu `DOMParser` (wklejanie HTML) i workera OCR; S3.2 | Zrobione 25.11: S2.3, S3.3, S3.4, S4.5–S4.8, S6.1–S6.4; wcześniej S0, S1.2–S1.7, S1.9, S1.10, S2.1, S2.2, S2.5, S2.6, S3.1, S4.3, S4.4, S5 |
-| 2 | `plan-architektura-2026-11-15.md` | zamiana importów `exportNotes` → `backup/*`, A3.2–A3.4, A4.3, A4.5, A4.7, A5.5 | Zrobione: A1.1, A1.4–A1.6, A2, A3.1, A4.1, A4.2, A4.4, A4.6, A5.3, A5.4 |
-| 3 | `plan-qol-platforma-2026-11-15.md` | Q1.4, Q1.6, Q2.1–Q2.3, Q3.1–Q3.3, Q3.5–Q3.9, Q4.1–Q4.3, Q5.1–Q5.5 | Zrobione: Q1.1–Q1.3, Q1.5, Q3.4 |
-| 4 | `plan-cwiczenia-2026-11-15.md` | C1.1–C1.3, C2.1–C2.5, C3.1–C3.5, C4.1, C4.3–C4.5 | Zrobione: C1.4; prawie cały plan otwarty |
-| 5 | `plan-dlugi-2026-11-15.md` | L1.1 (podział pliku), L1.2 (po Z-17.9), L2.2, L2.3, L4.1, L4.2, L4.4 | Zrobione: L2.1, L2.4, L4.3 |
+| 1 | `plan-security-2026-11-15.md` | S3.2 | Zrobione 25.11: S1.1 (Trusted Types egzekwowane), S2.3, S3.3, S3.4, S4.5–S4.8, S6.1–S6.4; wcześniej S0, S1.2–S1.7, S1.9, S1.10, S2.1, S2.2, S2.5, S2.6, S3.1, S4.3, S4.4, S5 |
+| 2 | `plan-architektura-2026-11-15.md` | A3.4, A4.3, A4.5, A4.7, A5.5 | Zrobione: A1.1, A1.4–A1.6, A2, A3.1 (z zamianą importów), A3.2, A3.3, A4.1, A4.2, A4.4, A4.6, A5.3, A5.4 |
+| 3 | `plan-qol-platforma-2026-11-15.md` | Q1.4, Q3.2, Q3.3, Q3.6, Q3.8, Q3.9, Q4.1, Q4.2, Q5.1–Q5.3, Q5.5 | Zrobione: Q1.1–Q1.3, Q1.5, Q1.6, Q2.1–Q2.3, Q3.1, Q3.4, Q3.5, Q3.7, Q4.3, Q5.4 |
+| 4 | `plan-cwiczenia-2026-11-15.md` | C1.1, C1.2, C2.2–C2.5, C3.1–C3.5, C4.1, C4.3–C4.5 | Zrobione: C1.3, C1.4, C2.1 |
+| 5 | `plan-dlugi-2026-11-15.md` | L1.2 (po Z-17.9), L2.3 | Zrobione: L1.1, L2.1, L2.2, L2.4, L4.1–L4.4 |
 | 6 | `plan-skarbiec-krypto-2026-11-15.md` | ADR-10, K1, K6.1–K6.3, K7; dokończyć K3, K4 | Zrobione: K0 (błąd C-1) |
 | 7 | `plan-migracje-yjs-2026-11-15.md` | D0.3, D1.3 | Reszta zrobiona (D6 zamknięte 23.11) |
 | 8 | `plan-warstwa-wizualna-2026-11-15.md` | W0.1, W9.2 (nowe wzorce `@visual`) — W2.6 zrobione 25.11 | Etapy W1–W6 i W8.1–W8.2 zrobione |

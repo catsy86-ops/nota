@@ -42,7 +42,7 @@ Znane ograniczenie z `opis.md`: odhaczenie odżywki w Ćwiczeniach i „Gotowe�
 |---|---|---|
 | C1.1 | **Przegląd wizualny** elementów z 12.11 na 390 px, jasny i ciemny, 2–3 style; zrzuty przez `playwright.visual.config.ts`. Poprawki od razu. | S |
 | C1.2 | **Podział `TrainingSection.tsx`**: `LogForm`, `RestTimer`, `ProgressList`, `PlanForm`, `EquipmentForm` w osobnych plikach. Bez zmian zachowania. | M |
-| C1.3 | **Ekran nie gaśnie w sesji** — `useWakeLock` na czas trwania `TrainingSession`. | S |
+| C1.3 ✅ 2026-11-25 (z Q3.1: sesja i przerwa) | **Ekran nie gaśnie w sesji** — `useWakeLock` na czas trwania `TrainingSession`. | S |
 | C1.4 ✅ `d2051d4c` 2026-11-18 | **Odhaczenie = „Gotowe”.** Odhaczenie odżywki przesuwa serię jej notatki-przypomnienia, a „Gotowe” w powiadomieniu odhacza odżywkę (po `reminderNoteId`). Jedna funkcja w `src/lib/supplements/`, wołana z obu stron. | M |
 | C1.5 | **Akceptacja katalogu** (C-4): właściciel czyta wskazówki 33 ćwiczeń; poprawki treści. | S, właściciel |
 
@@ -50,7 +50,7 @@ Znane ograniczenie z `opis.md`: odhaczenie odżywki w Ćwiczeniach i „Gotowe�
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
-| C2.1 | **Podpowiedź progresji** (podwójna progresja): gdy w ostatniej sesji wszystkie serie osiągnęły górę celu powtórek — „dołóż 0,5–1 kg”; gdy nie — „te same kg, o powtórkę więcej”. Czysta funkcja `suggestNext(history, plan, equipment)` w `src/lib/training/`, z testami; szanuje limit hantli z „Sprzętu”. | M |
+| C2.1 ✅ 2026-11-25 | **Podpowiedź progresji** (podwójna progresja): gdy w ostatniej sesji wszystkie serie osiągnęły górę celu powtórek — „dołóż 0,5–1 kg”; gdy nie — „te same kg, o powtórkę więcej”. Czysta funkcja `suggestNext(history, plan, equipment)` w `src/lib/training/`, z testami; szanuje limit hantli z „Sprzętu”. | M |
 | C2.2 | **Zapis serii jednym stuknięciem:** duży przycisk „Zrobione: 10 × 20 kg” z wartościami z podpowiedzi, obok −/+ dla powtórek i kg. Pola liczbowe zostają jako droga zapasowa. | M |
 | C2.3 | **Opcjonalne RIR** („ile zostało w zapasie”: 0–4) przy serii — jedno stuknięcie, niewymagane. Zasila C2.1: zapas 3+ oznacza „dołóż”. | S |
 | C2.4 | **Rozgrzewka:** przy pierwszym ćwiczeniu dnia propozycja 2 serii wstępnych (50% i 75% ciężaru roboczego), niezapisywanych do rekordów. | S |

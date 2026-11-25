@@ -25,27 +25,27 @@
 | Q1.3 | **(zrobione 2026-11-23: raz dziennie z wybranym plikiem, przy otwarciu i schowaniu; data i rozmiar w Ustawieniach)** **Automatyczna kopia do pliku bez pytania:** gdy wybrany jest plik (`tryWriteBackupToFile`), zapis po każdej sesji z > N zmianami, przy `visibilitychange`→ukryta; w Ustawieniach data i rozmiar ostatniego zapisu. Sprawdzić, co robi dziś `LAST_AUTO_EXPORT_KEY`, i nie dublować. | M |
 | Q1.4 | **Rotacja kopii w OPFS:** 7 ostatnich dziennych migawek w Origin Private File System (poza IndexedDB, więc przeżywa uszkodzenie bazy); „Przywróć z dnia…” w Ustawieniach. Szyfrowane kluczem skarbca, gdy skarbiec istnieje — do decyzji z `security-reviewer`. | M |
 | Q1.5 ✅ | **Błąd zapisu widoczny:** `QuotaExceededError` i odrzucone transakcje IndexedDB kończą się stałym banerem „Nie zapisano — zrób kopię”, nie toastem. Test z atrapą pełnego magazynu. | S |
-| Q1.6 | **Dziennik błędów na urządzeniu:** `error` i `unhandledrejection` do pierścienia 50 wpisów w `localStorage` (bez treści notatek), widoczny w Ustawieniach → Diagnostyka z „Skopiuj”. Ułatwia zgłaszanie błędów z telefonu. | S |
+| Q1.6 ✅ 2026-11-25 | **Dziennik błędów na urządzeniu:** `error` i `unhandledrejection` do pierścienia 50 wpisów w `localStorage` (bez treści notatek), widoczny w Ustawieniach → Diagnostyka z „Skopiuj”. Ułatwia zgłaszanie błędów z telefonu. | S |
 
 ## Etap Q2: twardnienie (Opus + `security-reviewer`)
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
-| Q2.1 | **Trusted Types:** `require-trusted-types-for 'script'` najpierw w trybie raportu (zbieranie naruszeń w teście e2e), polityka domyślna tylko dla sanitizera Markdowna; potem egzekwowanie. | M |
-| Q2.2 | **CSP z jednego źródła:** generator, który tworzy nagłówki dla `vercel.json` i `<meta>` dla powłoki APK (F1, pułapka 5); test zgodności obu. | S |
-| Q2.3 | **Otwarte punkty audytu z 15.11** (COOP/HSTS, `Dockerfile` jako root) — sprawdzić w `memory/stan-2026-11-15-audyt.md` i zamknąć. | S |
+| Q2.1 ✅ 2026-11-25 (jako S1.1 planu bezpieczeństwa: egzekwowane, polityka dla Mermaida, `DOMParser` i workerów) | **Trusted Types:** `require-trusted-types-for 'script'` najpierw w trybie raportu (zbieranie naruszeń w teście e2e), polityka domyślna tylko dla sanitizera Markdowna; potem egzekwowanie. | M |
+| Q2.2 ✅ 2026-11-25 (generator był w F1 — `scripts/cap-prepare.mjs` czyta `vercel.json`; dopisany test zgodności `src/test/capPrepareCsp.test.ts`) | **CSP z jednego źródła:** generator, który tworzy nagłówki dla `vercel.json` i `<meta>` dla powłoki APK (F1, pułapka 5); test zgodności obu. | S |
+| Q2.3 ✅ 2026-11-25 (COOP/HSTS w S1.3; `signaling-server/Dockerfile`: `node:22`, `USER node`, `npm ci` z nowym `package-lock.json`, bez skryptów; strażnik `src/test/dockerfiles.test.ts` dla trzech serwerów) | **Otwarte punkty audytu z 15.11** (COOP/HSTS, `Dockerfile` jako root) — sprawdzić w `memory/stan-2026-11-15-audyt.md` i zamknąć. | S |
 
 ## Etap Q3: codzienna wygoda
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
-| Q3.1 | **Ekran nie gaśnie tam, gdzie się czyta z rękami zajętymi:** wspólny `useWakeLock` w sesji treningu, kalkulatorach Pracy, liście zakupów w trybie „w sklepie”, czytniku notatki (przełącznik). | S |
+| Q3.1 ✅ 2026-11-25 (trening: sesja i przerwa; kalkulatory Pracy; trybu „w sklepie” nie ma) | **Ekran nie gaśnie tam, gdzie się czyta z rękami zajętymi:** wspólny `useWakeLock` w sesji treningu, kalkulatorach Pracy, liście zakupów w trybie „w sklepie”, czytniku notatki (przełącznik). | S |
 | Q3.2 | **Klawiatura ekranowa:** jeden hook na `visualViewport` — pasek akcji i przycisk zapisu zawsze nad klawiaturą we wszystkich arkuszach z polami (dziś 1 plik). Przegląd na 390 px: Długi, wpis Dziennika, posiłek, szybka notatka. | M |
 | Q3.3 | **Motyw według pory:** opcja „jasny w dzień, ciemny po zmroku” z godzin (domyślnie 7–19) — obok „jak system”. Bez lokalizacji. | S |
 | Q3.4 | **(zrobione 2026-11-23: 4 h wg QL-3; bez pozycji przewijania)** **Wznowienie:** po powrocie do aplikacji po > 30 min — ten sam dział, ta sama notatka, pozycja przewijania (`captureAnchor`/`restoreAnchor` już są dla zmiany widoku). Po > 8 h start na „Dziś”. | S |
-| Q3.5 | **„Ostatnie” w palecie poleceń:** 5 ostatnio otwartych notatek i 3 ostatnie polecenia na pustym zapytaniu (sprawdzić, co już daje historia wyszukiwarki z Ustawień). | S |
+| Q3.5 ✅ (wcześniej, plan Notatek 5.1: „Ostatnie notatki”, ostatnie polecenia i wyszukiwania w pustej palecie) | **„Ostatnie” w palecie poleceń:** 5 ostatnio otwartych notatek i 3 ostatnie polecenia na pustym zapytaniu (sprawdzić, co już daje historia wyszukiwarki z Ustawień). | S |
 | Q3.6 | **Schowek z sensem:** wklejenie adresu na zaznaczony tekst robi link; wklejenie listy z punktorami do listy zadań robi pozycje; wklejenie obrazu wszędzie, gdzie jest załącznik. Testy na fragmentach HTML z Worda, Keep i WhatsAppa. | M |
-| Q3.7 | **Głębokie linki:** `protocol_handlers` (`web+notatnik:`) i stałe adresy do notatki, budowy, osoby w Długach; „Skopiuj link” w menu. Przydaje się do tagów NFC i skrótów na ekranie głównym. | S |
+| Q3.7 ✅ 2026-11-25 (`web+notatnik:` dla notatki, budowy i widoków; „Kopiuj adres notatki” w palecie; osoba w Długach bez adresu) | **Głębokie linki:** `protocol_handlers` (`web+notatnik:`) i stałe adresy do notatki, budowy, osoby w Długach; „Skopiuj link” w menu. Przydaje się do tagów NFC i skrótów na ekranie głównym. | S |
 | Q3.8 | **Praca głównego wątku:** `scheduler.yield()` (z zapasem `setTimeout`) w długich pętlach: import kopii, budowa indeksu poza Workerem, eksport ZIP. Miara: żadne zadanie > 50 ms przy imporcie 2000 notatek. | M |
 | Q3.9 | **Skróty aplikacji według użycia:** `shortcuts` w manifeście są stałe — przejrzeć, czy cztery najczęstsze czynności właściciela (wg `usage.ts`) tam są. | S |
 
@@ -55,7 +55,7 @@
 |---|---|---|
 | Q4.1 | **Jeden wskaźnik stanu** w nagłówku: zapisane lokalnie / wysyłam / zsynchronizowane z N urządzeniami / offline od 14:02. Stuknięcie otwiera szczegóły (ostatni kontakt z każdym urządzeniem, wersja formatu z `formatSchema.ts`). Sprawdzić istniejący status zapisu i rozbudować, nie dublować. | M |
 | Q4.2 | **„Co się zmieniło, gdy mnie nie było”:** po synchronizacji po przerwie lista „3 notatki zmienione na innym urządzeniu” z przejściem do nich. Dane z porównania `updatedAt` przed i po. | M |
-| Q4.3 | **Urządzenie ze starszą wersją:** gdy `canWriteSchema` blokuje nowy format, jasny komunikat „Zaktualizuj aplikację na telefonie X” zamiast cichego wstrzymania. | S |
+| Q4.3 ✅ (wcześniej: `src/components/sync/OlderDeviceBanner.tsx` i `SyncSettings.tsx` — „X ma starszą wersję aplikacji… Zaktualizuj go”) | **Urządzenie ze starszą wersją:** gdy `canWriteSchema` blokuje nowy format, jasny komunikat „Zaktualizuj aplikację na telefonie X” zamiast cichego wstrzymania. | S |
 | Q4.4 | **Wysyłka po odzyskaniu sieci** przez Background Sync (Chrome/Android) dla przekaźnika: kolejka w IndexedDB, zdarzenie `sync` w SW. Tylko jeśli przekaźnik zostanie wdrożony (F2); inaczej nie robić. | zależne |
 
 ## Etap Q5: dostępność i wejście
@@ -65,7 +65,7 @@
 | Q5.1 | **Pełna obsługa klawiaturą** list i siatek: strzałki z jednym punktem `Tab` (roving tabindex — dziś 3 pliki) w liście notatek, Kalendarzu, Grafiku, tablicy. | M |
 | Q5.2 | **Ściąga skrótów** pod `?` generowana z rejestru poleceń palety (jedno źródło), z wyszukiwaniem. | S |
 | Q5.3 | **Menu pod prawym przyciskiem i długim przytrzymaniem** spójne w całej aplikacji (dziś 4 pliki): te same pozycje co menu „⋯”, z jednego opisu akcji. | M |
-| Q5.4 | **Tryb „duże cele”** jako zestaw w Ustawieniach (obok „Czytanie”, „Oszczędny”): cele 56 px i większe odstępy tylko po włączeniu — zamiast zmiany `Button` dla wszystkich (cofniętej 15.11). | S |
+| Q5.4 ✅ 2026-11-25 (zestaw „Duże cele” = tryb budowa + wyraźne ramki, bez zmiany stylu) | **Tryb „duże cele”** jako zestaw w Ustawieniach (obok „Czytanie”, „Oszczędny”): cele 56 px i większe odstępy tylko po włączeniu — zamiast zmiany `Button` dla wszystkich (cofniętej 15.11). | S |
 | Q5.5 | **Czytnik ekranu na telefonie:** przejście TalkBackiem przez pięć głównych ścieżek; lista braków w `docs/`. Ręczne, właściciel albo sesja z Chrome. | S |
 
 ## Decyzje właściciela

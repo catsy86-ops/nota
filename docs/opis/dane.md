@@ -211,7 +211,7 @@ Nic nowego dla użytkownika. `src/lib/yjsStore.ts` (1374 linie) podzielony na mo
 
 ### Co robi
 
-Nic nowego dla użytkownika. Kod pełnej kopii i eksportów (732 linie w `src/lib/exportNotes.ts`) podzielony na pięć modułów według zadania. Format kopii i zachowanie bez zmian.
+Nic nowego dla użytkownika. Kod pełnej kopii i eksportów (732 linie w dawnym `src/lib/exportNotes.ts`) podzielony na pięć modułów według zadania. Format kopii i zachowanie bez zmian. Po zamianie importów `exportNotes.ts` usunięty; znaczniki przywracania (`RESTORE_MARKER_KEY`, `readRestoreMarker`, `clearRestoreMarker`) importuje się z `src/lib/restoreMarker.ts`.
 
 ### Gdzie jest
 
@@ -222,17 +222,17 @@ Nic nowego dla użytkownika. Kod pełnej kopii i eksportów (732 linie w `src/li
 | `src/lib/backup/parse.ts` | Walidacja i wersje: `MAX_IMPORT_FILE_SIZE`, `isBackupOversize`, `BACKUP_OVERSIZE_NOTE`, `MAX_BACKUP_VERSION`, `parseFullBackup`, `loadSchemas` (leniwy zod) | 31 |
 | `src/lib/backup/merge.ts` | Przywracanie: `RestoreOptions`, `RestoreCheckError`, `restoreScope`, `RestoreRun`, `restoreFullBackup` (+ `restoreFullBackupLocked`), `pushPrefsForRestore` | 220 |
 | `src/lib/backup/download.ts` | Wszystko z DOM i plikami: `download` (reeksport z `downloadBlob`), `exportToJSON`, `exportFullBackup`, `pickFullBackup`, `shareFullBackup`, `exportToMarkdown`, `exportToHTML`, `importFromJSON` | 215 |
-| `src/lib/exportNotes.ts` | Cienki reeksport wszystkich dawnych eksportów (też `RESTORE_MARKER_KEY`, `readRestoreMarker`, `clearRestoreMarker`, `RestoreMarker` z `restoreMarker.ts`) | 13 |
 
 ### Jak działa
 
 - Kierunek importów bez cykli: `sections`, `parse` → nic z katalogu; `build` → nic z katalogu; `merge` → `sections`, `build`; `download` → `build`, `parse`.
-- Funkcje przeniesione dosłownie. Jedyne nowe eksporty to `MAX_IMPORT_FILE_SIZE` i `loadSchemas` (z `parse.ts`, dla `download.ts`) oraz `pushPrefsForRestore` i typy `MergeKey`/`Merge` — nie są reeksportowane z `exportNotes.ts`.
+- Funkcje przeniesione dosłownie. Jedyne nowe eksporty to `MAX_IMPORT_FILE_SIZE` i `loadSchemas` (z `parse.ts`, dla `download.ts`) oraz `pushPrefsForRestore` i typy `MergeKey`/`Merge`.
 - `download.ts` to jedyne miejsce kopii z DOM (`document.createElement("input")`, `navigator.share`) — tu wejdzie gałąź natywna (F1.4).
 
 ### Ograniczenia i pułapki
 
-- Reszta kodu nadal importuje `@/lib/exportNotes` (też dynamicznie, np. `ImportExportMenu.tsx`, `useBackupReminders.ts`) i mockuje go w testach (`vi.mock("@/lib/exportNotes")`). Zamiana importów na `@/lib/backup/*` to osobny krok; po niej `exportNotes.ts` można usunąć.
+- Każdy importuje nazwę z modułu-właściciela. Importy dynamiczne (`CommandPalette`, `ImportExportMenu`, `EndDaySheet`, `useImportExport`, `useNoteExport`) biorą `@/lib/backup/download`. `useBackupReminders.ts` ładuje równolegle `download`, `build` i `parse` (`loadExport`). Testy atrapują te same moduły (`vi.mock("@/lib/backup/download")` itd.). Atrapa musi wskazywać moduł, z którego kod naprawdę importuje: atrapa reeksportu nie podmienia funkcji w module-właścicielu.
+- `docs/dane-spisy.md` (kolumna plików z literałem klucza) wskazuje teraz `lib/storage/names.ts`, gdzie od D6.2 leżą literały kluczy.
 - Strażnik kolorów `src/test/hexColors.test.ts` liczy 8 kolorów w `src/lib/backup/download.ts` (szablon eksportu HTML).
 
 ### Testy
@@ -242,7 +242,7 @@ Nic nowego dla użytkownika. Kod pełnej kopii i eksportów (732 linie w `src/li
 
 ### Commit
 
-`a12b32ce` (migawka), podział — commit po tym wpisie, 2026-11-25.
+`cafbe36c` (migawka), `7279e022` (podział), zamiana importów i usunięcie `exportNotes.ts` — `18edca1f`, 2026-11-25.
 
 ## Dane — wymaganie wersji w dokumencie i spis map (D1.2–D1.4 planu migracji, 2026-11-18)
 

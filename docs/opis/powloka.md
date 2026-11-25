@@ -230,6 +230,7 @@ Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj nota
   - Po dwukropku innego operatora („ma:”, „brak:”) lista pokazuje pasujące operatory — dawniej była pusta.
 - **Szybkie zestawy wyglądu** (`lib/appearancePresets.ts`, `QuickPresets.tsx`, ikony w `settings/presetIcons.ts`; sekcja „Zestawy” w Ustawieniach usunięta 2026-11-03).
   - Nowe zestawy: **Czytanie** (tekst 112,5%, ciche tło, zwykłe ramki, bez poświaty i ruchu) i **Oszczędny** (ciemny Zeszyt z czarnym tłem OLED, gładkie tło, bez ruchu i poświaty).
+  - **Duże cele** (Q5.4, `22550d6c`, 2026-11-25): tryb budowa (pole dotyku 56 px dla `.tap-target`, tekst 112,5%, mocniejsze krawędzie) i wyraźne ramki, bez zmiany stylu, tła i ruchu — w odróżnieniu od „Budowy”. Zamiast większego `Button` dla wszystkich (cofniętego 15.11) większe cele są tylko po włączeniu. Ikona `Hand` (`presetIcons.ts`). Test: `src/lib/appearancePresets.test.ts`.
   - Zestawy mają ikony, a **włączony** zestaw jest oznaczony (ptaszek w okienku szybkich zestawów; `isPresetActive` porównuje wartości po sparsowanym JSON).
   - Własne „Mój 1–3” pokazują, co zapisano („Zorza, ciemny · tekst 125% · bez ruchu”, `slotSummary`).
 - **Pułapki przy tej zmianie.** `src/lib/recentSearches.ts` już istniał (historia palety) — omyłkowo nadpisany i przywrócony z gita; wyszukiwarka używa jego API. Pliki z mieszanymi końcami linii (CRLF/LF) — skrypty zmian normalizują do LF.
@@ -360,3 +361,17 @@ Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj nota
 - **Jak działa:** przy schowaniu (`visibilitychange` → `hidden`, `pagehide`) zapis `{ at, path }` lokalnie (poza kopią). Zimny start działa tylko dla wejścia z ikony — dokładnie „/” bez zapytania (skróty z ekranu głównego i udostępnianie mają parametry, link do konkretnego miejsca zostaje). Nie przywraca udostępniania (`/share`) ani jednorazowych akcji (`?new=`, `?szukaj=`, `?skrzynka=`, `?inbox=`, `?akcja=`). Przy powrocie nie przełącza, gdy otwarte jest okno (`role=dialog` z `data-state=open`) albo fokus jest w polu tekstowym.
 - **Ograniczenia:** plan Q3.4 mówił o 8 h — właściciel wybrał 4 h. Pozycja przewijania w dziale nie jest przywracana (przy zimnym starcie lista i tak buduje się od nowa).
 - **Testy:** `src/lib/resumeView.test.ts` (5), `e2e/resume-view.spec.ts` (zimny start po 3 h i 5 h, powrót po 30 min i po 4 h, zwykła karta bez zmian).
+
+## Powłoka — linki `web+notatnik:` i adres notatki (Q3.7, 2026-11-25)
+
+- **Co robi:** zainstalowana aplikacja otwiera linki `web+notatnik:` z tagu NFC, skrótu albo innej aplikacji. Obsługiwane linki:
+  - `web+notatnik:notatka/<id>` otwiera notatkę,
+  - `web+notatnik:budowa/<id>` otwiera kartę budowy,
+  - `web+notatnik:dzis` (także `kalendarz`, `grafik`, `dlugi`, `praca`, `skrzynka` i inne widoki) otwiera dział.
+  
+  W palecie poleceń przy otwartej notatce jest „Kopiuj adres notatki”. Kopiuje zwykły adres `https://…/notatka/<id>`, który działa też bez instalacji, np. do zapisania na tagu NFC albo jako zakładka. W powłoce Androida (APK) polecenia nie ma (`isNativeShell`): adres byłby `https://localhost/…` i poza aplikacją nic by nie otworzył.
+- **Gdzie jest:** `src/lib/protocolLink.ts` (`protocolLinkPath`, `applyProtocolLink`, `PROTOCOL`); wywołanie w `src/main.tsx` przed `createRoot`; `protocol_handlers` w `public/manifest.webmanifest` (`/?link=%s`); `copyNoteAddress` w `src/lib/noteMarkdown.ts`; polecenie w `src/components/CommandPalette.tsx`.
+- **Jak działa:** przeglądarka otwiera `/?link=<zakodowany link>`. `applyProtocolLink` zamienia go przez `history.replaceState`, bez nowego wpisu w historii, zanim router przeczyta adres. Dalej działa zwykła ścieżka `/notatka/:id` albo `/praca?budowa=`. Ochrona przed przekierowaniem na zewnątrz: z linku przechodzą tylko znane kształty. Identyfikator musi pasować do `[A-Za-z0-9_-]{1,100}`, a widok musi być z białej listy. Nieznany albo obcy link prowadzi na stronę główną.
+- **Ograniczenia i pułapki:** protokół działa tylko w zainstalowanej aplikacji w przeglądarkach z `protocol_handlers` (Chrome/Edge na komputerze i Androidzie). Safari i Firefox go nie obsługują, wtedy zostaje adres `https://…/notatka/<id>`. Osoba w Długach nie ma jeszcze własnego adresu (plan wspominał o nim, ale widok Długów nie czyta parametru osoby). Identyfikatory notatek z innym alfabetem niż `[A-Za-z0-9_-]` nie przejdą przez protokół, choć przejdą przez `/notatka/`.
+- **Testy:** `src/lib/protocolLink.test.ts` (kształty, obce linki, podmiana adresu), `src/lib/manifest.test.ts` (wpis w manifeście).
+- **Commit:** `22550d6c` (protokół), `18edca1f` (polecenie w palecie), 2026-11-25.

@@ -5,17 +5,17 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 
 | Dział | Plik | Rozdziałów |
 | --- | --- | --- |
-| Notatki | [`docs/opis/notatki.md`](docs/opis/notatki.md) | 41 |
+| Notatki | [`docs/opis/notatki.md`](docs/opis/notatki.md) | 42 |
 | Dziś i Skrzynka | [`docs/opis/dzis.md`](docs/opis/dzis.md) | 14 |
 | Terminy, przypomnienia i powiadomienia | [`docs/opis/terminy.md`](docs/opis/terminy.md) | 21 |
 | Kalendarz i Grafik | [`docs/opis/kalendarz-grafik.md`](docs/opis/kalendarz-grafik.md) | 12 |
 | Praca | [`docs/opis/praca.md`](docs/opis/praca.md) | 100 |
-| Osobiste: Ćwiczenia, Długi, Skarbiec | [`docs/opis/osobiste.md`](docs/opis/osobiste.md) | 38 |
+| Osobiste: Ćwiczenia, Długi, Skarbiec | [`docs/opis/osobiste.md`](docs/opis/osobiste.md) | 40 |
 | Dane, synchronizacja i kopie | [`docs/opis/dane.md`](docs/opis/dane.md) | 28 |
-| Powłoka, Ustawienia i telefon | [`docs/opis/powloka.md`](docs/opis/powloka.md) | 23 |
+| Powłoka, Ustawienia i telefon | [`docs/opis/powloka.md`](docs/opis/powloka.md) | 25 |
 | Wygląd i ruch | [`docs/opis/wyglad.md`](docs/opis/wyglad.md) | 57 |
-| Wspólne | [`docs/opis/wspolne.md`](docs/opis/wspolne.md) | 26 |
-| Jakość, architektura i testy | [`docs/opis/jakosc.md`](docs/opis/jakosc.md) | 44 |
+| Wspólne | [`docs/opis/wspolne.md`](docs/opis/wspolne.md) | 27 |
+| Jakość, architektura i testy | [`docs/opis/jakosc.md`](docs/opis/jakosc.md) | 66 |
 
 ## Rozdziały
 
@@ -64,6 +64,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Notatki — diagramy Mermaid (plan 5.5, 2026-11-13)
 - Notatki — pasek akcji wąskiego kafla nie zakrywa tytułu (2026-11-23)
 - Notatki — krótka nazwa dostępna kafla (2026-11-23)
+- Notatki — szkic kompozytora: reduktor pól w `lib/noteDraft.ts` i części paska (A3.2, 2026-11-25)
 
 ### Dziś i Skrzynka — [`docs/opis/dzis.md`](docs/opis/dzis.md)
 
@@ -267,6 +268,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Ćwiczenia — prowadzony trening (2.1, 2026-11-12)
 - Ćwiczenia — serie na czas i z obciążeniem przy masie ciała (2.7, 2026-11-12)
 - Skarbiec — zapis edycji notatki prywatnej przy schowaniu strony (2026-11-23)
+- Ćwiczenia — podpowiedź progresji przy zapisie serii (C2.1, 2026-11-25)
 
 ### Dane, synchronizacja i kopie — [`docs/opis/dane.md`](docs/opis/dane.md)
 
@@ -328,6 +330,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Powłoka — karty Ustawień w palecie (plan 2.5, 2026-11-12)
 - Powłoka — cień nagłówka przy przewijaniu (plan 4.3, 2026-11-12)
 - Powłoka — wznowienie: ostatni dział, a po 4 h „Dziś” (Q3.4, decyzja QL-3, 2026-11-23)
+- Powłoka — linki `web+notatnik:` i adres notatki (Q3.7, 2026-11-25)
 
 ### Wygląd i ruch — [`docs/opis/wyglad.md`](docs/opis/wyglad.md)
 
@@ -418,6 +421,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Wspólne — plan mobile 2026-10-28 (fala 2, wizualizacja, w toku)
 - Wspólne — plan mobile 2026-10-28 (fala 1, zamknięta)
 - Wspólne — plan mobile fala 2 (wizualizacja), stan 2026-10-28
+- Wspólne — ekran nie gaśnie przy treningu i kalkulatorach (Q3.1, 2026-11-25)
 
 ### Jakość, architektura i testy — [`docs/opis/jakosc.md`](docs/opis/jakosc.md)
 
@@ -478,3 +482,12 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Bezpieczeństwo — nagłówki COOP, CORP i pełna Permissions-Policy (S1.3, 2026-11-23)
 - Bezpieczeństwo — sekrety poza kopią i raportem, kod za przyciskiem (S1.5, 2026-11-23)
 - Bezpieczeństwo — prywatność na ekranie: zasłona w tle i czyszczenie schowka (S1.9, 2026-11-23)
+- Bezpieczeństwo — łańcuch dostaw w CI (S5.1–S5.4, 2026-11-24)
+- Bezpieczeństwo — zasoby wbudowane, instalacja bez skryptów, licencje (S5.5–S5.7, 2026-11-24)
+- Bezpieczeństwo — jedna brama do serwerów użytkownika (S1.2, 2026-11-24)
+- Jakość — BOM w plikach źródłowych i strażnik zapisu obrazów (2026-11-24)
+- Bezpieczeństwo — serwery: produkcja, dzienniki, zdrowie, odzyskanie danych (S3.3, S3.4, S4.5–S4.8, 2026-11-25)
+- Bezpieczeństwo — Trusted Types (S1.1, 2026-11-25)
+- Bezpieczeństwo — reagowanie, wyłącznik awaryjny, zdarzenia (S6.1–S6.4, 2026-11-25)
+- Jakość — dziennik błędów na urządzeniu (Q1.6, 2026-11-25)
+- Jakość — kontenery serwerów bez roota i z lockfile (Q2.3, 2026-11-25)
