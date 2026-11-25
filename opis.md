@@ -15,7 +15,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 | Powłoka, Ustawienia i telefon | [`docs/opis/powloka.md`](docs/opis/powloka.md) | 25 |
 | Wygląd i ruch | [`docs/opis/wyglad.md`](docs/opis/wyglad.md) | 57 |
 | Wspólne | [`docs/opis/wspolne.md`](docs/opis/wspolne.md) | 27 |
-| Jakość, architektura i testy | [`docs/opis/jakosc.md`](docs/opis/jakosc.md) | 67 |
+| Jakość, architektura i testy | [`docs/opis/jakosc.md`](docs/opis/jakosc.md) | 68 |
 
 ## Rozdziały
 
@@ -496,3 +496,4 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Jakość — dziennik błędów na urządzeniu (Q1.6, 2026-11-25)
 - Jakość — kontenery serwerów bez roota i z lockfile (Q2.3, 2026-11-25)
 - Jakość — e2e bez zgadywania czasu (A4.3, 2026-11-25)
+- Jakość — testy własności scalania Yjs i kolejność listy zadań (A4.5, 2026-11-25)
