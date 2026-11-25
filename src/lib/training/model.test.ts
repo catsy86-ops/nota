@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { EQUIPMENT_LIST, EXERCISES, exerciseById, isKnownExercise } from "./catalog";
-import { bestKg, byTrainingTime, cleanEntry, trainingWeek, cleanKg, cleanPlanDay, cleanSet, planLine, progressByExercise, volumeOf, type TrainingEntry } from "./model";
+import { bestKg, byTrainingTime, cleanEntry, trainingWeek, cleanKg, cleanPlanDay, cleanSet, planLine, progressByExercise, volumeOf, type TrainingEntry, missedMajorGroups } from "./model";
 
 const entry = (id: string, day: string, exerciseId: string, sets: { reps: number; kg?: number }[], over: Partial<TrainingEntry> = {}): TrainingEntry =>
   ({ id, day, exerciseId, sets, note: "", created: 1, ...over }) as TrainingEntry;
@@ -143,5 +143,13 @@ describe("serie na czas (2.7)", () => {
     expect(volumeOf(sets)).toBe(100);
     expect(estimateOneRepMax([{ reps: 1, seconds: 60, kg: 50 }])).toBeUndefined();
     expect(bestKg(sets)).toBe(20);
+  });
+});
+
+describe("missedMajorGroups (C3.2)", () => {
+  it("duże partie bez serii w tygodniu z treningiem; całe ciało pokrywa wszystko; bez treningu — nic", () => {
+    expect(missedMajorGroups({ days: 2, setsByGroup: [{ group: "klatka", sets: 6 }, { group: "biceps", sets: 3 }] })).toEqual(["plecy", "barki", "nogi"]);
+    expect(missedMajorGroups({ days: 1, setsByGroup: [{ group: "cale-cialo", sets: 4 }] })).toEqual([]);
+    expect(missedMajorGroups({ days: 0, setsByGroup: [] })).toEqual([]);
   });
 });

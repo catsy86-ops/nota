@@ -283,3 +283,10 @@ export function trainingWeek(entries: readonly TrainingEntry[], today: string, g
   return { days: days.size, setsByGroup: [...sets].map(([group, n]) => ({ group, sets: n })).sort((a, b) => b.sets - a.sets) };
 }
 
+/** C3.2 Duże partie, które w tygodniu treningowym (`days > 0`) nie dostały ani jednej serii; trening całego ciała je pokrywa. */
+export const MAJOR_GROUPS = ["klatka", "plecy", "barki", "nogi"] as const;
+export function missedMajorGroups(week: TrainingWeek): string[] {
+  if (week.days === 0 || week.setsByGroup.some((g) => g.group === "cale-cialo")) return [];
+  return MAJOR_GROUPS.filter((g) => !week.setsByGroup.some((x) => x.group === g));
+}
+

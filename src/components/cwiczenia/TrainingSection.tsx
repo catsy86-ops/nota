@@ -9,7 +9,7 @@ import { localDayKey } from "@/lib/dayDone";
 import { useRestSeconds } from "@/lib/training/restPrefs";
 import { nextReminderAt } from "@/lib/timeOfDay";
 import { exerciseById, MUSCLE_GROUP_LABELS, type MuscleGroup } from "@/lib/training/catalog";
-import { byTrainingTime, trainingWeek, progressByExercise, TRAINING_REMINDER_DEFAULT, TRAINING_WINDOW_END, volumeOf, type TrainingEntry, type TrainingReminder } from "@/lib/training/model";
+import { byTrainingTime, missedMajorGroups, trainingWeek, progressByExercise, TRAINING_REMINDER_DEFAULT, TRAINING_WINDOW_END, volumeOf, type TrainingEntry, type TrainingReminder } from "@/lib/training/model";
 import { removeTrainingEntry, restoreTrainingEntry, setTrainingReminder, useTrainingEntries, useTrainingPlans, useTrainingReminder } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -74,6 +74,7 @@ export function TrainingSection() {
  */
 function WeekSummary({ week }: { week: ReturnType<typeof trainingWeek> }) {
   if (week.days === 0) return null;
+  const missed = missedMajorGroups(week);
   return (
     <div data-testid="training-week">
       <h3 className="section-caps">Ten tydzień</h3>
@@ -83,6 +84,11 @@ function WeekSummary({ week }: { week: ReturnType<typeof trainingWeek> }) {
           <span className="text-muted-foreground"> · serie: {week.setsByGroup.map((g) => `${MUSCLE_GROUP_LABELS[g.group as MuscleGroup] ?? g.group} ${g.sets}`).join(", ")}</span>
         )}
       </p>
+      {missed.length > 0 && (
+        <p className="mt-0.5 text-xs text-warning-ink" data-testid="training-week-missed">
+          W tym tygodniu bez: {missed.map((g) => MUSCLE_GROUP_LABELS[g as MuscleGroup].toLowerCase()).join(", ")}
+        </p>
+      )}
     </div>
   );
 }
