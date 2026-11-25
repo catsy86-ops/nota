@@ -123,6 +123,24 @@ export function summarizeRange(meals: readonly Meal[], endDay: string, days: num
   return out;
 }
 
+/**
+ * C4.4 Średnia z dni z wpisami (dzień bez posiłków nie zaniża średniej): kcal z dni z podanymi kaloriami, białko
+ * z dni z podanym białkiem, zaokrąglone. `null` — żaden dzień nie ma wartości.
+ */
+export function rangeAverage(days: readonly DaySummary[]): { kcal: number | null; protein: number | null; days: number } | null {
+  const withKcal = days.filter((d) => d.kcalKnown > 0);
+  const withProtein = days.filter((d) => d.proteinKnown > 0);
+  if (withKcal.length === 0 && withProtein.length === 0) return null;
+  const avg = (xs: number[]) => (xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null);
+  return { kcal: avg(withKcal.map((d) => d.kcal)), protein: avg(withProtein.map((d) => d.protein)), days: Math.max(withKcal.length, withProtein.length) };
+}
+
+/** C4.3 Zakres białka 1,6–2,2 g na kg masy ciała i środek (1,8 g/kg) do przyjęcia jako cel; gramy całkowite. */
+export function proteinRangeFor(kg: number): { min: number; max: number; mid: number } | null {
+  if (!Number.isFinite(kg) || kg <= 0) return null;
+  return { min: Math.round(kg * 1.6), max: Math.round(kg * 2.2), mid: Math.round(kg * 1.8) };
+}
+
 /** Posiłek do szybkiego powtórzenia: sam opis i wartości, bez dnia i godziny. */
 export type MealTemplate = Pick<Meal, "text" | "kcal" | "protein">;
 

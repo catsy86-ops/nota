@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
-import { byMealOrder, DIET_KCAL_MAX, DIET_PROTEIN_MAX, DIET_TEXT_MAX, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type DaySummary, type DietGoals, type Meal, type MealTemplate } from "@/lib/diet/model";
+import { byMealOrder, proteinRangeFor, rangeAverage, DIET_KCAL_MAX, DIET_PROTEIN_MAX, DIET_TEXT_MAX, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type DaySummary, type DietGoals, type Meal, type MealTemplate } from "@/lib/diet/model";
 import { addMeal, removeMeal, restoreMeal, setDietGoals, useDietGoals, useMeals } from "@/lib/diet/store";
+import { useWeights } from "@/lib/weight/store";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 
@@ -204,6 +205,10 @@ function GoalsForm({ goals }: { goals: DietGoals }) {
   const kcalValue = parseAmountField(kcal, DIET_KCAL_MAX);
   const proteinValue = parseAmountField(protein, DIET_PROTEIN_MAX, 1);
   const valid = kcalValue !== null && proteinValue !== null;
+  // C4.3: zakres białka z ostatniego ważenia (zakładka „Waga”).
+  const weights = useWeights();
+  const lastKg = useMemo(() => [...weights].sort((a, b) => a.day.localeCompare(b.day)).at(-1)?.kg, [weights]);
+  const range = lastKg !== undefined ? proteinRangeFor(lastKg) : null;
 
   return (
     <form
@@ -219,6 +224,16 @@ function GoalsForm({ goals }: { goals: DietGoals }) {
         <Input inputMode="numeric" aria-label="Cel kalorii (kcal)" aria-invalid={kcalValue === null} placeholder="np. 2400" value={kcal} onChange={(e) => setKcal(e.target.value)} />
         <Input inputMode="decimal" aria-label="Cel białka (g)" aria-invalid={proteinValue === null} placeholder="np. 150" value={protein} onChange={(e) => setProtein(e.target.value)} />
       </div>
+      {range && (
+        <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" data-testid="protein-from-weight">
+          <span>Przy masie {String(lastKg).replace(".", ",")} kg: {range.min}–{range.max} g białka dziennie (1,6–2,2 g na kg).</span>
+          {goals.protein !== range.mid && (
+            <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={() => { setProtein(String(range.mid)); setDietGoals({ kcal: goals.kcal, protein: range.mid }); toast.success(`Cel białka: ${range.mid} g`); }}>
+              Przyjmij {range.mid} g
+            </Button>
+          )}
+        </p>
+      )}
       <Button type="submit" variant="outline" size="sm" disabled={!valid} className="coarse:h-11">Zapisz cele</Button>
     </form>
   );
@@ -229,9 +244,19 @@ function WeekList({ days, today, goals }: { days: DaySummary[]; today: string; g
   if (!hasAny) return null;
   // Słupki względem celu kalorii; bez celu — względem najwyższego dnia tygodnia.
   const scale = goals.kcal ?? Math.max(1, ...days.map((d) => d.kcal));
+  // C4.4: jedno zdanie nad listą — średnia z dni z wpisami wobec celu.
+  const average = rangeAverage(days);
   return (
     <div className="border-t border-dashed border-border pt-4">
       <p className="ui-hint font-medium">Ostatnie 7 dni</p>
+      {average && (
+        <p className="mt-1 text-sm" data-testid="diet-average">
+          Średnio{average.kcal !== null && <> <span className="font-mono tabular-nums">{average.kcal} kcal</span>{goals.kcal ? <>, cel {goals.kcal}</> : null}</>}
+          {average.kcal !== null && average.protein !== null && " ·"}
+          {average.protein !== null && <> <span className="font-mono tabular-nums">{average.protein} g</span> białka{goals.protein ? <>, cel {goals.protein} g</> : null}</>}
+          <span className="text-muted-foreground"> — z {average.days} {pluralPl(average.days, ["dnia", "dni", "dni"])} z wpisami</span>
+        </p>
+      )}
       <ul className="mt-2 space-y-1 text-sm" data-testid="diet-week">
         {[...days].reverse().map((d) => (
           <li key={d.day} className="space-y-0.5">

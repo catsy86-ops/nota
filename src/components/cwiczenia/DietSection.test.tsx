@@ -6,7 +6,7 @@ import { addDaysToKey } from "@/lib/week";
 
 // Magazyn diety podmieniamy atrapą: test sprawdza sekcję, nie Yjs.
 const { fixture, addMealMock, setGoalsMock, removeMock } = vi.hoisted(() => ({
-  fixture: { meals: [] as Meal[], goals: {} as DietGoals },
+  fixture: { meals: [] as Meal[], goals: {} as DietGoals, weights: [] as { day: string; kg: number; created: number }[] },
   addMealMock: vi.fn(),
   setGoalsMock: vi.fn(),
   removeMock: vi.fn((_id?: unknown) => null),
@@ -20,12 +20,15 @@ vi.mock("@/lib/diet/store", () => ({
   setDietGoals: (g: unknown) => setGoalsMock(g),
 }));
 
+vi.mock("@/lib/weight/store", () => ({ useWeights: () => fixture.weights }));
+
 import { DietSection } from "./DietSection";
 
 afterEach(() => {
   cleanup();
   fixture.meals = [];
   fixture.goals = {};
+  fixture.weights = [];
   addMealMock.mockReset();
   setGoalsMock.mockReset();
 });
@@ -112,5 +115,28 @@ describe("DietSection", () => {
     fixture.meals = [meal("Dzisiejszy")];
     render(<DietSection />);
     expect(screen.queryByRole("button", { name: /Powtórz wczoraj/ })).toBeNull();
+  });
+});
+
+describe("DietSection — C4.4 średnia i C4.3 białko z masy", () => {
+  it("średnia z dni z wpisami wobec celu, nad listą 7 dni", () => {
+    fixture.meals = [meal("a", { kcal: 2000, protein: 100 }), meal("b", { day: addDaysToKey(today(), -2), kcal: 2400, protein: 140 })];
+    fixture.goals = { kcal: 2400, protein: 150 };
+    render(<DietSection />);
+    expect(screen.getByTestId("diet-average").textContent).toBe("Średnio 2200 kcal, cel 2400 · 120 g białka, cel 150 g — z 2 dni z wpisami");
+  });
+
+  it("zakres białka z ostatniego ważenia i „Przyjmij” zapisuje środek jako cel", () => {
+    fixture.weights = [{ day: "2026-11-01", kg: 90, created: 1 }, { day: "2026-11-20", kg: 80, created: 2 }];
+    fixture.goals = { kcal: 2400 };
+    render(<DietSection />);
+    expect(screen.getByTestId("protein-from-weight").textContent).toContain("Przy masie 80 kg: 128–176 g białka dziennie");
+    fireEvent.click(screen.getByRole("button", { name: "Przyjmij 144 g" }));
+    expect(setGoalsMock).toHaveBeenCalledWith({ kcal: 2400, protein: 144 });
+  });
+
+  it("bez ważenia nie ma podpowiedzi białka", () => {
+    render(<DietSection />);
+    expect(screen.queryByTestId("protein-from-weight")).toBeNull();
   });
 });

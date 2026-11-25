@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { addDaysToKey } from "@/lib/week";
-import { byMealOrder, cleanAmount, cleanDecimal, cleanGoals, cleanMeal, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type Meal } from "./model";
+import { byMealOrder, cleanAmount, cleanDecimal, cleanGoals, cleanMeal, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type Meal, proteinRangeFor, rangeAverage } from "./model";
 
 const meal = (id: string, day: string, over: Partial<Meal> = {}): Meal => ({ id, day, text: id, created: 1, ...over });
 
@@ -105,5 +105,18 @@ describe("repeatDayInputs (2.4)", () => {
       { text: "Śniadanie", day: "2026-10-21", time: "08:00", protein: 20 },
       { text: "Obiad", day: "2026-10-21", time: "13:00", kcal: 700 },
     ]);
+  });
+});
+
+describe("rangeAverage i proteinRangeFor (C4.4, C4.3)", () => {
+  const d = (kcal: number, kcalKnown: number, protein: number, proteinKnown: number) => ({ day: "x", meals: kcalKnown || proteinKnown, kcal, kcalKnown, protein, proteinKnown });
+  it("średnia tylko z dni z wartością; brak danych — null", () => {
+    expect(rangeAverage([d(2000, 2, 100, 2), d(0, 0, 0, 0), d(2501, 1, 0, 0)])).toEqual({ kcal: 2251, protein: 100, days: 2 });
+    expect(rangeAverage([d(0, 0, 0, 0)])).toBeNull();
+  });
+  it("1,6–2,2 g na kg, środek 1,8; zła masa — null", () => {
+    expect(proteinRangeFor(80)).toEqual({ min: 128, max: 176, mid: 144 });
+    expect(proteinRangeFor(72.5)).toEqual({ min: 116, max: 160, mid: 131 });
+    expect(proteinRangeFor(0)).toBeNull();
   });
 });
