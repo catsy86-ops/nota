@@ -1,6 +1,6 @@
 # TODO
 
-Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs/plan-praca-2026-10-24.md`) i sesje z 2026-10-25.
+Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs-zrobione/plan-praca-2026-10-24.md`) i sesje z 2026-10-25.
 
 ## Do decyzji właściciela
 - **4.5 Wyszukiwanie bez polskich znaków.** Zrobione w zakresie listy kontrolnej (`StudyChecklist.tsx`). Pytań quizu nie przeszukuje; to osobna decyzja, jeśli będzie potrzebna.
@@ -12,7 +12,7 @@ Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs/
 
 ## Do zrobienia później
 - **4.3 Własne tematy.** Nieznany temat jest cicho odrzucany przy wczytaniu (`sanitizeStudy` w `src/lib/study/store.ts`). Obecny UI nie tworzy tematów, więc odrzucenie dotyczy tylko uszkodzonych danych. Pełne własne tematy to nowy model danych (tematy w `studyCustom`, UI tworzenia i kolumny), więc czeka na osobny projekt.
-- **Etap 6 (model danych w Yjs).** Opcje A i B zrobione 2026-10-25 (karta i odhaczenia jako mapy, zdjęcia i kształtki jako `Y.Array`, dump wersja 2). Zob. `docs/plan-dane-yjs-2026-10-25.md`. Do zrobienia: ręczne QA z dwoma telefonami (zdjęcia i odhaczenia równocześnie).
+- **Etap 6 (model danych w Yjs).** Opcje A i B zrobione 2026-10-25 (karta i odhaczenia jako mapy, zdjęcia i kształtki jako `Y.Array`, dump wersja 2). Zob. `docs-zrobione/plan-dane-yjs-2026-10-25.md`. Do zrobienia: ręczne QA z dwoma telefonami (zdjęcia i odhaczenia równocześnie).
 - **Import własnych materiałów do Nauki** (`roadmap.md`).
 
 ## Techniczne

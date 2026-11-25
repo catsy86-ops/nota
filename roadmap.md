@@ -25,7 +25,7 @@ Właściciel zatwierdził rekomendacje ze wszystkich planów działów (tabela d
 
 Otwarte z wcześniej, bez zmiany: G-1 (dodatek nocny, kadry); Web Push i hosting; QA na telefonie (5.3).
 
-## Plan rozbudowy — 2026-10-23 (`docs/plan-rozbudowa-2026-10-23.md`)
+## Plan rozbudowy — 2026-10-23 (`docs-zrobione/plan-rozbudowa-2026-10-23.md`)
 
 Plan do poziomu Notion/Obsidian, zatwierdzony. Kolejność: 0 → 1 → 2 → 3 → 4 → 6 → 5 → 7 → 8 → 9; motywy (1b) po Fazie 1.
 
@@ -303,7 +303,7 @@ Diagnoza: appka ma imponującą **szerokość** (rysowanie, gamifikacja, P2P CRD
 
 ### Świadomie NIE robimy
 
-> **Zmiany 2026-10-23:** w planie rozbudowy (`docs/plan-rozbudowa-2026-10-23.md`) właściciel odblokował: KaTeX/Mermaid/kod, etykiety zagnieżdżone i aliasy, kanwę, folder `.md` na dysku, lokalne AI (bez wysyłania danych) i przekaźnik synchronizacji E2E (zaszyfrowany, bez konta). Pozostałe wpisy z tej listy bez zmian.
+> **Zmiany 2026-10-23:** w planie rozbudowy (`docs-zrobione/plan-rozbudowa-2026-10-23.md`) właściciel odblokował: KaTeX/Mermaid/kod, etykiety zagnieżdżone i aliasy, kanwę, folder `.md` na dysku, lokalne AI (bez wysyłania danych) i przekaźnik synchronizacji E2E (zaszyfrowany, bez konta). Pozostałe wpisy z tej listy bez zmian.
 
 - **Web Push / powiadomienia przy zamkniętej appce** — wymaga serwera push i kluczy VAPID utrzymywanych bezterminowo, dla appki bez konta i bez backendu. Notification Triggers nie są wspierane. `ReminderPicker` i `useReminderNotifications` już uczciwie informują o ograniczeniu — to właściwa odpowiedź.
 - **Konto użytkownika / sync przez chmurę** — sprzeczne z tożsamością projektu; P2P + sync przez plik pokrywają realną potrzebę „mam to na telefonie i na laptopie".
@@ -1122,43 +1122,43 @@ Kolejność (po decyzjach): 3.3 Tailwind v4 + React 19 + shadcn (osobne commity:
 
 ## Plan UI/UX i QoL — 2026-10-25
 
-Pełny plan: `docs/plan-ui-ux-qol-2026-10-25.md` (Fazy 0–6: bezpieczniki zrzutów, system projektowy, nowoczesny CSS i ruch, QoL, wydajność odczuwalna, upiększenie, QA). Decyzje D-1…D-4 podjęte, plan zrobiony (stan w pamięci i `opis.md`); zostaje QA na telefonie.
+Pełny plan: `docs-zrobione/plan-ui-ux-qol-2026-10-25.md` (Fazy 0–6: bezpieczniki zrzutów, system projektowy, nowoczesny CSS i ruch, QoL, wydajność odczuwalna, upiększenie, QA). Decyzje D-1…D-4 podjęte, plan zrobiony (stan w pamięci i `opis.md`); zostaje QA na telefonie.
 
 ## Plan działu Notatki — 2026-10-25
 
-Pełny plan: `docs/plan-notatki-2026-10-25.md` (Etapy 1–8: zaległe drobiazgi, codzienna praca, wyszukiwanie, wygląd i ruch, bogate treści, bazy, porządki, QA). Pierwszy z serii „dział po dziale”. Decyzje N-2…N-4 otwarte.
+Pełny plan: `docs-zrobione/plan-notatki-2026-10-25.md` (Etapy 1–8: zaległe drobiazgi, codzienna praca, wyszukiwanie, wygląd i ruch, bogate treści, bazy, porządki, QA). Pierwszy z serii „dział po dziale”. Decyzje N-2…N-4 otwarte.
 
 ## Plan działu Skrzynka — 2026-10-25
 
-Pełny plan: `docs/plan-skrzynka-2026-10-25.md` (Etapy 1–6: zaległe drobiazgi, szybsze przechwytywanie z frazami i `Alt+K`, lepsze porządkowanie, wygląd, Skrzynka w Dziś i przeglądzie tygodnia, QA). Drugi z serii „dział po dziale”. Decyzje S-1…S-3 otwarte.
+Pełny plan: `docs-zrobione/plan-skrzynka-2026-10-25.md` (Etapy 1–6: zaległe drobiazgi, szybsze przechwytywanie z frazami i `Alt+K`, lepsze porządkowanie, wygląd, Skrzynka w Dziś i przeglądzie tygodnia, QA). Drugi z serii „dział po dziale”. Decyzje S-1…S-3 otwarte.
 
 ## Plan działu Dziś — 2026-10-25
 
-Pełny plan: `docs/plan-dzis-2026-10-25.md` (Etapy 1–5: poprawki, karta zmiany „na teraz” i plan dnia, wygląd z dwiema kolumnami na komputerze, Dziś zbiera działy, QA). Trzeci z serii „dział po dziale”. Decyzje D-1…D-4 otwarte.
+Pełny plan: `docs-zrobione/plan-dzis-2026-10-25.md` (Etapy 1–5: poprawki, karta zmiany „na teraz” i plan dnia, wygląd z dwiema kolumnami na komputerze, Dziś zbiera działy, QA). Trzeci z serii „dział po dziale”. Decyzje D-1…D-4 otwarte.
 
 ## Plan działu Kalendarz — 2026-10-25
 
-Pełny plan: `docs/plan-kalendarz-2026-10-25.md` (Etapy 1–5: poprawki — zaległy ≠ załatwiony, `.ics` cały dzień i seria, adres dnia; codzienna praca — „Otwórz notatkę”, zapamiętany widok, oś bez dziur; rozbudowa — Praca w tygodniu, filtr warstw, agenda, oś tygodnia; wygląd; QA). Czwarty z serii „dział po dziale”. Decyzje K-1…K-3 otwarte.
+Pełny plan: `docs-zrobione/plan-kalendarz-2026-10-25.md` (Etapy 1–5: poprawki — zaległy ≠ załatwiony, `.ics` cały dzień i seria, adres dnia; codzienna praca — „Otwórz notatkę”, zapamiętany widok, oś bez dziur; rozbudowa — Praca w tygodniu, filtr warstw, agenda, oś tygodnia; wygląd; QA). Czwarty z serii „dział po dziale”. Decyzje K-1…K-3 otwarte.
 
 ## Plan działu Terminy — 2026-10-25
 
-Pełny plan: `docs/plan-terminy-2026-10-25.md` (Etapy 1–5: poprawki — grupy z zegarem, DST w serii, parser dat, akcje na prywatnej notatce; jedno menu „Odłóż”, „Zakończ serię”, lista zamiast kafli; rozbudowa — więcej powtarzania, wcześniejsze przypomnienie, „przed zmianą”; wygląd; QA). Piąty z serii „dział po dziale”. Decyzje T-1…T-4 otwarte.
+Pełny plan: `docs-zrobione/plan-terminy-2026-10-25.md` (Etapy 1–5: poprawki — grupy z zegarem, DST w serii, parser dat, akcje na prywatnej notatce; jedno menu „Odłóż”, „Zakończ serię”, lista zamiast kafli; rozbudowa — więcej powtarzania, wcześniejsze przypomnienie, „przed zmianą”; wygląd; QA). Piąty z serii „dział po dziale”. Decyzje T-1…T-4 otwarte.
 
 ## Plan działu Grafik — 2026-10-25
 
-Pełny plan: `docs/plan-grafik-2026-10-25.md` (Etapy 1–6: poprawki — cykl nie zjada urlopu, dodatek za nadgodziny wprost, schowek, pędzel, kwoty; codzienna praca — Cofnij/Ponów na telefonie, odpoczynek w komórce, pusty miesiąc z akcją; rachunek — prognoza, odbiór nadgodzin, urlop w godzinach, 35 h; wiele grafików; wygląd; QA). Szósty z serii „dział po dziale”. Decyzje G-1…G-4 otwarte.
+Pełny plan: `docs-zrobione/plan-grafik-2026-10-25.md` (Etapy 1–6: poprawki — cykl nie zjada urlopu, dodatek za nadgodziny wprost, schowek, pędzel, kwoty; codzienna praca — Cofnij/Ponów na telefonie, odpoczynek w komórce, pusty miesiąc z akcją; rachunek — prognoza, odbiór nadgodzin, urlop w godzinach, 35 h; wiele grafików; wygląd; QA). Szósty z serii „dział po dziale”. Decyzje G-1…G-4 otwarte.
 
 ## Plan działu Praca — 2026-10-25
 
-Pełny plan: `docs/plan-praca-2026-10-25.md` (Etapy 1–7: zamknięcie planu z 24.10; dokumentacja i materiał — zdjęcia przed zakryciem, zużycie materiału, rysowanie na planie, podpis zdjęcia jako dane, „Plan na dziś”; dane — ostrzeżenie o starszej wersji, miejsce zajęte przez zdjęcia, odchudzanie budowy; Nauka — pytania, egzamin próbny, import; wygląd; kod; QA). Siódmy z serii „dział po dziale”. Plan z 24.10 prawie zamknięty. Decyzje P-1…P-5 otwarte.
+Pełny plan: `docs-zrobione/plan-praca-2026-10-25.md` (Etapy 1–7: zamknięcie planu z 24.10; dokumentacja i materiał — zdjęcia przed zakryciem, zużycie materiału, rysowanie na planie, podpis zdjęcia jako dane, „Plan na dziś”; dane — ostrzeżenie o starszej wersji, miejsce zajęte przez zdjęcia, odchudzanie budowy; Nauka — pytania, egzamin próbny, import; wygląd; kod; QA). Siódmy z serii „dział po dziale”. Plan z 24.10 prawie zamknięty. Decyzje P-1…P-5 otwarte.
 
 ## Plan działu Długi — 2026-10-25
 
-Pełny plan: `docs/plan-dlugi-2026-10-25.md` (Etapy 1–5: poprawki — spłata zdejmuje przypomnienie o zwrocie, notatka zwrotu poza Skrzynką, pasek spłaty po obu stronach, wybór rodzaju i edycja jak dodawanie, podwójne rozliczenie; codzienne — formularz zwinięty, saldo narastające, „Gotowe” w Terminach jako spłata; rozbudowa — łączenie osób, wyślij stan, ukrywanie kwot, CSV; wygląd; QA). Ósmy z serii „dział po dziale”. Decyzje D-1…D-4 otwarte.
+Pełny plan: `docs-zrobione/plan-dlugi-2026-10-25.md` (Etapy 1–5: poprawki — spłata zdejmuje przypomnienie o zwrocie, notatka zwrotu poza Skrzynką, pasek spłaty po obu stronach, wybór rodzaju i edycja jak dodawanie, podwójne rozliczenie; codzienne — formularz zwinięty, saldo narastające, „Gotowe” w Terminach jako spłata; rozbudowa — łączenie osób, wyślij stan, ukrywanie kwot, CSV; wygląd; QA). Ósmy z serii „dział po dziale”. Decyzje D-1…D-4 otwarte.
 
 ## Plan działu Ćwiczenia — 2026-10-25
 
-Pełny plan: `docs/plan-cwiczenia-2026-10-25.md` (Etapy 1–5: poprawki — więcej partii i sprzętu (dziś tylko klatka, biceps, triceps), przerwa po serii, cele diety, notatki przypomnień poza Skrzynką; codzienne — plan dnia prowadzi przez trening, „Wziąłem” zamyka przypomnienie, szybki posiłek, „wczoraj”, edycja odżywki, serie na czas; rozbudowa — masa ciała, 7 dni odżywek, „Nowy rekord”, historia ćwiczenia; wygląd; QA). Dziewiąty z serii „dział po dziale”. Decyzje C-1…C-4 otwarte.
+Pełny plan: `docs-zrobione/plan-cwiczenia-2026-10-25.md` (Etapy 1–5: poprawki — więcej partii i sprzętu (dziś tylko klatka, biceps, triceps), przerwa po serii, cele diety, notatki przypomnień poza Skrzynką; codzienne — plan dnia prowadzi przez trening, „Wziąłem” zamyka przypomnienie, szybki posiłek, „wczoraj”, edycja odżywki, serie na czas; rozbudowa — masa ciała, 7 dni odżywek, „Nowy rekord”, historia ćwiczenia; wygląd; QA). Dziewiąty z serii „dział po dziale”. Decyzje C-1…C-4 otwarte.
 
 ## Plan Skarbca — 2026-10-25
 
@@ -1176,14 +1176,14 @@ Pełny plan: `docs/plan-powloka-2026-10-25.md` (Etapy 1–5: logo bez pętli, je
 
 ## Plan UI, motywów i skórek — 2026-10-27
 
-Pełny plan: `docs/plan-ui-motywy-2026-10-27.md` (Fazy 0–5: fundament skórek — kontrakt tokenów, jedna lista, rozbicie `skins.css`, progi strażnika; personalizacja — akcent, kształt, ciche tło, skórka na noc; równe sygnatury i sygnatura dnia na Dziś; galeria z „Przymierz” i stylem w palecie; nowe skórki Kafle i Odblask oraz jasne schematy Planu i Hydrauliki; QA). Decyzje M-1…M-4 podjęte, Fazy 0–4 zrobione; Faza 5 (QA telefonu, pomiar klatek) ręcznie.
+Pełny plan: `docs-zrobione/plan-ui-motywy-2026-10-27.md` (Fazy 0–5: fundament skórek — kontrakt tokenów, jedna lista, rozbicie `skins.css`, progi strażnika; personalizacja — akcent, kształt, ciche tło, skórka na noc; równe sygnatury i sygnatura dnia na Dziś; galeria z „Przymierz” i stylem w palecie; nowe skórki Kafle i Odblask oraz jasne schematy Planu i Hydrauliki; QA). Decyzje M-1…M-4 podjęte, Fazy 0–4 zrobione; Faza 5 (QA telefonu, pomiar klatek) ręcznie.
 
 ## Plan Pracy, Kalendarza i Grafiku — 2026-10-27
 
-Pełny plan: `docs/plan-praca-kalendarz-grafik-2026-10-27.md`. Zastępuje otwarte części planów Kalendarza, Grafiku i Pracy z 25.10 (sprawdzone w kodzie na `73a913f`). Fala A: błędy, w tym treść notatki prywatnej w `.ics`, rysunek niszczący zdjęcie, 6 drobnych błędów Grafiku i dokumentacja. Fala B: wydajność siatki i rachunku, podział dużych plików. Dalej: Kalendarz K1–K4 (zaległe, adres dnia, otwieranie notatki, skróty, agenda, filtr warstw, konflikt ze zmianą, tydzień z osią), Grafik G2–G4 (alarm przed zmianą, kreator, wykresy roku, pasek wypłaty, import), Praca P2–P5 (zdjęcie jednym stuknięciem, zdjęcia przed zakryciem, usterki, podpis klienta, PDF, materiał, czas na budowie, FSRS, tryb rękawic) i QA z danymi. Decyzje K-4, G-1, G-6, G-7, P-6…P-11 otwarte.
+Pełny plan: `docs-zrobione/plan-praca-kalendarz-grafik-2026-10-27.md`. Zastępuje otwarte części planów Kalendarza, Grafiku i Pracy z 25.10 (sprawdzone w kodzie na `73a913f`). Fala A: błędy, w tym treść notatki prywatnej w `.ics`, rysunek niszczący zdjęcie, 6 drobnych błędów Grafiku i dokumentacja. Fala B: wydajność siatki i rachunku, podział dużych plików. Dalej: Kalendarz K1–K4 (zaległe, adres dnia, otwieranie notatki, skróty, agenda, filtr warstw, konflikt ze zmianą, tydzień z osią), Grafik G2–G4 (alarm przed zmianą, kreator, wykresy roku, pasek wypłaty, import), Praca P2–P5 (zdjęcie jednym stuknięciem, zdjęcia przed zakryciem, usterki, podpis klienta, PDF, materiał, czas na budowie, FSRS, tryb rękawic) i QA z danymi. Decyzje K-4, G-1, G-6, G-7, P-6…P-11 otwarte.
 
 ## Plan Pracy dla hydraulika — 2026-10-29
 
-Pełny plan: `docs/plan-praca-hydraulik-2026-10-29.md`. Luki wskazane przez właściciela: metry rur, materiał w aucie, punkty w pomieszczeniach, zdjęcia z aparatu, rozliczenie od punktu, ryczałt i fuchy, praca z pomocnikiem. Fale 0–6 (fundament, materiał, punkty, rozliczenia, zdjęcia, brygada, drobne), decyzje H-1…H-8. Wpięte otwarte punkty z 27.10: P0.1, P2.4, P2.11, P3.3, P6.3.
+Pełny plan: `docs-zrobione/plan-praca-hydraulik-2026-10-29.md`. Luki wskazane przez właściciela: metry rur, materiał w aucie, punkty w pomieszczeniach, zdjęcia z aparatu, rozliczenie od punktu, ryczałt i fuchy, praca z pomocnikiem. Fale 0–6 (fundament, materiał, punkty, rozliczenia, zdjęcia, brygada, drobne), decyzje H-1…H-8. Wpięte otwarte punkty z 27.10: P0.1, P2.4, P2.11, P3.3, P6.3.
 
-- Plan upiększenia motywów i dostosowania wyglądu (2026-10-30): `docs/plan-motywy-2026-10-30.md` — fale 0–4, decyzje T-1…T-10.
+- Plan upiększenia motywów i dostosowania wyglądu (2026-10-30): `docs-zrobione/plan-motywy-2026-10-30.md` — fale 0–4, decyzje T-1…T-10.

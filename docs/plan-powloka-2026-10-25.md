@@ -10,7 +10,7 @@
 
 Dwunasty i ostatni plan z serii „dział po dziale”, w tym samym układzie. Powłoka to to, co jest wokół działów: nagłówek (`AppHeader`), pasek boczny (`AppSidebar`, `sidebarItems.ts`), dolny pasek i arkusz „Więcej” (`BottomNav`), paleta poleceń (`CommandPalette`), samouczek (`OnboardingTour`), logo i nazwa, przełącznik jasności, skróty globalne.
 
-**Granica z planem przekrojowym** (`docs/plan-ui-ux-qol-2026-10-25.md`): tokeny (promienie, cienie, warstwy, typografia, OKLCH, ikony, fokus), ruch i nowoczesny CSS, reguły ładowania, arkusze, cele dotyku, wydajność — są tam i tu się nie powtarzają. Tu tylko elementy powłoki i nazwa aplikacji.
+**Granica z planem przekrojowym** (`docs-zrobione/plan-ui-ux-qol-2026-10-25.md`): tokeny (promienie, cienie, warstwy, typografia, OKLCH, ikony, fokus), ruch i nowoczesny CSS, reguły ładowania, arkusze, cele dotyku, wydajność — są tam i tu się nie powtarzają. Tu tylko elementy powłoki i nazwa aplikacji.
 
 ## Kontekst
 
@@ -114,4 +114,4 @@ Legenda: W = wartość (1–3), N = nakład (S/M/L).
 4. Fundament z planu przekrojowego, potem Etap 4.
 5. Etap 5 na koniec.
 
-**Seria „dział po dziale” zakończona.** Spis planów: Notatki, Skrzynka, Dziś, Kalendarz, Terminy, Grafik, Praca, Długi, Ćwiczenia, Skarbiec, Ustawienia i synchronizacja, powłoka (`docs/plan-*-2026-10-25.md`) oraz przekrojowy `docs/plan-ui-ux-qol-2026-10-25.md`.
+**Seria „dział po dziale” zakończona.** Spis planów: Notatki, Skrzynka, Dziś, Kalendarz, Terminy, Grafik, Praca, Długi, Ćwiczenia, Skarbiec, Ustawienia i synchronizacja, powłoka (`docs/plan-*-2026-10-25.md`) oraz przekrojowy `docs-zrobione/plan-ui-ux-qol-2026-10-25.md`.

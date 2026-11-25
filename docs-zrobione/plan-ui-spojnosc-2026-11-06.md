@@ -16,7 +16,7 @@ Dalej: zamknąć Etap 3 testami, potem Etap 4.
 ## Kontekst
 
 Trzy agenty eksploracyjne przejrzały kod. Wnioski:
-- **Tokeny są dojrzałe** (OKLCH, 10 stylów × 2 schematy, `skinContract`/`skinContrast`, `designTokens.test.ts`), a wcześniejsze plany UI (`nowyplan.md`, `docs/plan-wyglad-2026-11-01.md`, plan motywów) są zrobione. Otwarte zostało głównie QA telefonu.
+- **Tokeny są dojrzałe** (OKLCH, 10 stylów × 2 schematy, `skinContract`/`skinContrast`, `designTokens.test.ts`), a wcześniejsze plany UI (`nowyplan.md`, `docs-zrobione/plan-wyglad-2026-11-01.md`, plan motywów) są zrobione. Otwarte zostało głównie QA telefonu.
 - **Słaba jest warstwa komponentów**:
   - 435 surowych `<button className=…>` obok 412 `<Button>`;
   - ok. 64 ręcznie pisane karty `rounded-card border bg-card`, a `SectionCard` jest tylko w 9 plikach;

@@ -16,8 +16,8 @@ Pierwszy z serii planów „dział po dziale”. Kolejne działy dostaną osobne
 
 **Co już jest zrobione** (nie powtarzamy):
 - `docs/plan-notatki-2026-10-19.md`: fazy F0–F7 (tytuł, nagłówek, puste stany, pieczątka licznika, `rounded-card`).
-- `docs/plan-dzialy-2026-10-22.md` §2: sekcja „Poprawa” i większość „Dopracowania” (Fale 1–5), w tym niemodalny podgląd i dolny pasek czytnika na telefonie.
-- `docs/plan-rozbudowa-2026-10-23.md`: Fazy 0–4. Edytor CodeMirror 6 z podglądem na żywo, przekaźnik E2E, sieć wiedzy 3.1–3.9 (aliasy, etykiety zagnieżdżone, `![[…]]`, `^id`, lokalny graf, panel boczny, „Obok”, notatki okresowe, wyodrębnienie), MiniSearch z operatorami.
+- `docs-zrobione/plan-dzialy-2026-10-22.md` §2: sekcja „Poprawa” i większość „Dopracowania” (Fale 1–5), w tym niemodalny podgląd i dolny pasek czytnika na telefonie.
+- `docs-zrobione/plan-rozbudowa-2026-10-23.md`: Fazy 0–4. Edytor CodeMirror 6 z podglądem na żywo, przekaźnik E2E, sieć wiedzy 3.1–3.9 (aliasy, etykiety zagnieżdżone, `![[…]]`, `^id`, lokalny graf, panel boczny, „Obok”, notatki okresowe, wyodrębnienie), MiniSearch z operatorami.
 - Właściwości notatek 4b: typy `text`, `number`, `date`, `select` (`lib/noteProps.ts:7`), tabela, sortowanie i filtr po polu.
 
 **Co zostało otwarte (sprawdzone w kodzie 2026-10-25):**
@@ -34,7 +34,7 @@ Pierwszy z serii planów „dział po dziale”. Kolejne działy dostaną osobne
 | rozbudowa F10 | `Index.tsx` ma 1145 linii, `yjsStore.ts` 1044 | `wc -l` |
 | opis.md | Przeciąganie pozycji listy zadań odłożone; puste stany bez przycisku | `opis.md` (Notatki — stan aktualny) |
 
-**Powiązanie z planem przekrojowym** (`docs/plan-ui-ux-qol-2026-10-25.md`): ten plan stosuje tamte techniki w Notatkach. Fundament (Faza 0–1 przekrojowego: zrzuty, promienie, cienie, warstwy) robimy raz dla całej aplikacji, przed Etapem 4 tego planu.
+**Powiązanie z planem przekrojowym** (`docs-zrobione/plan-ui-ux-qol-2026-10-25.md`): ten plan stosuje tamte techniki w Notatkach. Fundament (Faza 0–1 przekrojowego: zrzuty, promienie, cienie, warstwy) robimy raz dla całej aplikacji, przed Etapem 4 tego planu.
 
 **Ograniczenia:**
 - **Paczka startowa** (próg 401 KB, mały zapas). Wszystko nowe w leniwych chunkach (`viewPreload`, `import()` na żądanie). KaTeX, Mermaid i języki kodu tylko, gdy treść ich używa.

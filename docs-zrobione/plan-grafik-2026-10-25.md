@@ -4,7 +4,7 @@
 
 Szósty plan z serii „dział po dziale” (po Notatkach, Skrzynce, Dziś, Kalendarzu i Terminach), w tym samym układzie.
 
-> **Status 2026-10-27:** Etapy 1–5 zrobione (9c34c15…bff2fdb), z resztkami i drobnymi błędami. Te resztki, Etap 6 (QA) i nowa rozbudowa są w `docs/plan-praca-kalendarz-grafik-2026-10-27.md` (Grafik G0, G2–G4) — tam aktualny stan.
+> **Status 2026-10-27:** Etapy 1–5 zrobione (9c34c15…bff2fdb), z resztkami i drobnymi błędami. Te resztki, Etap 6 (QA) i nowa rozbudowa są w `docs-zrobione/plan-praca-kalendarz-grafik-2026-10-27.md` (Grafik G0, G2–G4) — tam aktualny stan.
 
 ## Kontekst
 

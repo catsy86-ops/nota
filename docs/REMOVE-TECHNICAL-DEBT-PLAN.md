@@ -7,7 +7,7 @@ Rozpoczęte 2026-10-29. Projekt: NOTKI / „G” — PWA z notatkami, Grafikiem,
 - **System:** Vite + React + TypeScript, dane w Yjs (IndexedDB, WebRTC, lokalny przekaźnik E2E), PWA offline. Serwery tylko pomocnicze: `push-server/` i `relay-server/`. Ok. 5 tygodni, 1272 commity.
 - **Testy:** 351 plików Vitest, 210 specyfikacji Playwright (e2e, zrzuty, axe), CI w `.github/workflows/ci.yml`. Zestaw jest zielony (Vitest 2655/2655 na `51c82d8`). Pełne e2e puszczane tylko na koniec fali.
 - **Najgorszy skutek awarii:** **utrata danych** (wpisy, zdjęcia, godziny, karty budów). Priorytet: integralność danych, kopia, synchronizacja.
-- **Moduł startowy (heurystyka trzech osi):** **dane Pracy** — `src/lib/study/yStudy.ts` (873 linie) i `src/lib/study/store.ts` (644). Zmieniane jako następne (H0.2 w `docs/plan-praca-hydraulik-2026-10-29.md`), 47 zmian `store.ts` w 90 dni, rdzeń domeny (codzienne dane z budowy).
+- **Moduł startowy (heurystyka trzech osi):** **dane Pracy** — `src/lib/study/yStudy.ts` (873 linie) i `src/lib/study/store.ts` (644). Zmieniane jako następne (H0.2 w `docs-zrobione/plan-praca-hydraulik-2026-10-29.md`), 47 zmian `store.ts` w 90 dni, rdzeń domeny (codzienne dane z budowy).
 - **Inne gorące punkty** (do kolejnych przebiegów): `src/pages/Index.tsx` (1125 linii, 171 zmian w 90 dni), `src/lib/yjsStore.ts` (1077), `src/components/study/JournalEntrySheet.tsx` (882), `src/components/AddNoteBar.tsx` (805).
 - **Przepisanie od zera:** nikt nie proponuje. Spłata w miejscu.
 - **Zakres teraz:** Fazy 1–4. Fazy 5–8 odroczone.

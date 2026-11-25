@@ -161,7 +161,7 @@ Poprawki z przeglądu kodu z 2026-10-20 (`code-review-2026-10-20.md`, usunięty 
 
 ## Plan działów — Fala 1 (błędy i utrata danych, 2026-10-22)
 
-Źródło: `docs/plan-dzialy-2026-10-22.md`. Commit: 25acf6c (2026-10-25).
+Źródło: `docs-zrobione/plan-dzialy-2026-10-22.md`. Commit: 25acf6c (2026-10-25).
 
 - **Grafik — noc zmiany czasu.** Komórka siatki, okno dnia i widok tygodnia liczą czas przez `entryMinutesOn(type, entry, dzień)` (`src/components/shifts/ShiftMonthGrid.tsx`, `DayDialog.tsx`, `ShiftWeekView.tsx`), więc 25.10 pokazuje 9 h jak rachunek. Test: `src/lib/shifts/shifts.test.ts`.
 - **Grafik — start = koniec.** `ShiftTypeDialog.tsx` (`sameHours`) i `DayDialog.tsx` (`customOk`, `invalid`) odrzucają równe godziny zamiast zapisać 24 h.

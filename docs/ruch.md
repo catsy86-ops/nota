@@ -1,6 +1,6 @@
 # Ruch i animacje
 
-Jedna strona zasad dla każdego, kto dodaje animację. Plan: `docs/plan-ruch-2026-11-15.md`. Zasady wyglądu: `docs/wyglad.md`.
+Jedna strona zasad dla każdego, kto dodaje animację. Plan: `docs-zrobione/plan-ruch-2026-11-15.md`. Zasady wyglądu: `docs/wyglad.md`.
 
 ## Zasady
 

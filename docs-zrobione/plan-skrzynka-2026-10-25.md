@@ -6,7 +6,7 @@
 
 > **Status (2026-11-03):** zrobione 2.1, 2.4 (bez ikony linku na kaflu), 2.5 (2026-11-03), 1.1, 1.3, 2.2, 3.2, 4.5, 5.2, 5.3 (2026-11-02) oraz wcześniej 3.3 (S-1, „Odłóż”) i 3.5 (gesty w trybie porządkowania). Nie sprawdzone w tej rundzie: 1.2, 1.4 (część testów jest w `e2e/inbox-triage.spec.ts`), 5.1 (`e2e/inbox-today.spec.ts`). Zrobione 2.3 (2026-11-03: `Alt+K`, paleta, skrót PWA `?skrzynka=1`), 3.1, 3.4, 4.1–4.4 i 4.6 (2026-11-03). Otwarte: 1.2, ikona linku na kaflu (2.4).
 
-Drugi plan z serii „dział po dziale” (po `docs/plan-notatki-2026-10-25.md`), w tym samym układzie.
+Drugi plan z serii „dział po dziale” (po `docs-zrobione/plan-notatki-2026-10-25.md`), w tym samym układzie.
 
 ## Kontekst
 
@@ -31,7 +31,7 @@ Drugi plan z serii „dział po dziale” (po `docs/plan-notatki-2026-10-25.md`)
 | widok | Brak informacji o wieku notatki w skrzynce i kolejności „najstarsze najpierw”; sortowanie takie jak w Notatkach | `useFilteredNotes.ts:52` |
 | opis.md | Pusty stan bez przycisku (decyzja „bez przycisków”, zmieniana w N-3 planu Notatek) | `EmptyState.tsx:25,46` |
 
-**Powiązania:** fundament wyglądu i ruchu z `docs/plan-ui-ux-qol-2026-10-25.md` (Fazy 0–2). Puste stany zależą od decyzji N-3 z planu Notatek. Arkusz akcji notatki (Notatki 2.4) przyda się w trybie porządkowania.
+**Powiązania:** fundament wyglądu i ruchu z `docs-zrobione/plan-ui-ux-qol-2026-10-25.md` (Fazy 0–2). Puste stany zależą od decyzji N-3 z planu Notatek. Arkusz akcji notatki (Notatki 2.4) przyda się w trybie porządkowania.
 
 **Ograniczenia:**
 - **Paczka startowa** (próg 401 KB, zapas mały). `InboxCapture` jest w paczce startowej, więc frazy i dyktowanie ładować leniwie (`import()` po pierwszym `#`, `@` albo kliknięciu mikrofonu). Tryb porządkowania zostaje leniwy.

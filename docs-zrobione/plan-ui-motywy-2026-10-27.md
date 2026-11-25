@@ -2,7 +2,7 @@
 
 ## Kontekst
 
-Plan UI/UX z 25.10 (`docs/plan-ui-ux-qol-2026-10-25.md`) jest prawie zamknięty: tokeny są w OKLCH (D-1), promienie i cienie przeszły na tokeny, działy mają swoje odcienie (5.1), a skórki mają sygnatury ruchu (plan rozbudowy, Faza 1b). Ten plan nie powtarza tamtych punktów. Zaczyna tam, gdzie tamten się kończy: skórki są ładne, ale sztywne (jedna skórka = jeden wygląd), nierówne (każda ma inny zestaw efektów) i trudno dodać nową.
+Plan UI/UX z 25.10 (`docs-zrobione/plan-ui-ux-qol-2026-10-25.md`) jest prawie zamknięty: tokeny są w OKLCH (D-1), promienie i cienie przeszły na tokeny, działy mają swoje odcienie (5.1), a skórki mają sygnatury ruchu (plan rozbudowy, Faza 1b). Ten plan nie powtarza tamtych punktów. Zaczyna tam, gdzie tamten się kończy: skórki są ładne, ale sztywne (jedna skórka = jeden wygląd), nierówne (każda ma inny zestaw efektów) i trudno dodać nową.
 
 **Pomiar w kodzie (2026-10-27, `master` na `aac3c44`):**
 

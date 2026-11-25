@@ -2,16 +2,16 @@
 
 Siódmy plan z serii „dział po dziale” (po Notatkach, Skrzynce, Dziś, Kalendarzu, Terminach i Grafiku), w tym samym układzie. Dział Praca (`/praca`) to Dziennik budowy i Nauka.
 
-> **Status 2026-10-27:** zrobione 2.4 (P-1), 2.6 (P-5), 3.1, 3.3 (P-4), 4.2 (P-3), 5.3, 5.5; częściowo 1.2, 1.3, 2.1, 5.1. Otwarte punkty przeniesione do `docs/plan-praca-kalendarz-grafik-2026-10-27.md` (Praca P0, P2–P6) — tam aktualny stan.
+> **Status 2026-10-27:** zrobione 2.4 (P-1), 2.6 (P-5), 3.1, 3.3 (P-4), 4.2 (P-3), 5.3, 5.5; częściowo 1.2, 1.3, 2.1, 5.1. Otwarte punkty przeniesione do `docs-zrobione/plan-praca-kalendarz-grafik-2026-10-27.md` (Praca P0, P2–P6) — tam aktualny stan.
 
 ## Kontekst
 
-**Poprzedni plan działu** — `docs/plan-praca-2026-10-24.md` — jest prawie zamknięty (sprawdzone w kodzie 2026-10-25):
+**Poprzedni plan działu** — `docs-zrobione/plan-praca-2026-10-24.md` — jest prawie zamknięty (sprawdzone w kodzie 2026-10-25):
 - Etap 0 (6 błędów), Etap 1 (codzienna pętla: wpis z kontekstu, „Przed wejściem”, karta budowy, godziny, „Wychodzę”, hurtownia, etap na osi, nagrania w raporcie, odbiorcy, 40 najnowszych braków), Etap 2 (link do karty, dostawa dziś, wieczorne przypomnienie, karta na Dziś, paleta, CSV godzin).
 - Etap 3: nazwy, tryb budowy, pieczątka „OTWARTY”, ikony przypomnień (`ReminderRow.tsx:5`), podświetlenie świeżego wpisu (`journal-fresh`), pigułki w arkuszu („+ Temat”, etap), galeria z przesuwaniem i powiększaniem (`PhotoGallery.tsx`), kratki postępu quizu.
 - Etap 4: poprawa i dopracowanie Nauki, 4.1 (podpowiedź „Umiem”), 4.2 (problem → szkic pytania, `CustomQuestionsDialog.tsx:52`), 4.4 (pytania z kalkulatorów), 4.5 dla listy kontrolnej.
 - Etap 5: 5.1–5.3 (wydajność arkusza i osi), 5.5 (kartka raportu, wiersz przypomnienia, pasek zdjęć), 5.6 (testy `lib/study`).
-- Etap 6: model danych — karta i odhaczenia jako mapy, zdjęcia i kształtki jako `Y.Array`, dump wersja 2 (`docs/plan-dane-yjs-2026-10-25.md`).
+- Etap 6: model danych — karta i odhaczenia jako mapy, zdjęcia i kształtki jako `Y.Array`, dump wersja 2 (`docs-zrobione/plan-dane-yjs-2026-10-25.md`).
 
 Ten plan nie powtarza tamtego. Bierze z niego to, co zostało, i dokłada nowy przegląd działu pod kątem pracy hydraulika na telefonie.
 
@@ -49,7 +49,7 @@ Legenda: W = wartość (1–3), N = nakład (S/M/L).
 
 | # | Co | Gdzie | W | N |
 |---|----|-------|---|---|
-| 1.1 | **`opis.md` aktualny:** usunąć nieaktualne „Nie zrobione” i „Dodaj protokół nie istnieje”, dopisać szkic pytania z problemu i „Dodaj próbę”. Status w `plan-praca-2026-10-24.md`: „zamknięty, reszta w planie 2026-10-25”. | `opis.md`, `docs/plan-praca-2026-10-24.md` | 1 | S |
+| 1.1 | **`opis.md` aktualny:** usunąć nieaktualne „Nie zrobione” i „Dodaj protokół nie istnieje”, dopisać szkic pytania z problemu i „Dodaj próbę”. Status w `plan-praca-2026-10-24.md`: „zamknięty, reszta w planie 2026-10-25”. | `opis.md`, `docs-zrobione/plan-praca-2026-10-24.md` | 1 | S |
 | 1.2 | **5.4 do końca:** przejrzeć duplikaty z listy (udostępnianie → schowek, komunikaty o braku miejsca, martwe gałęzie) — co zostało, usunąć; co już usunięte, odhaczyć. | `JournalReport.tsx`, `SiteCardDialog.tsx`, `JournalEntrySheet.tsx` | 1 | S |
 | 1.3 | **Pełne e2e Pracy** jako punkt odniesienia (`site-*`, `journal-*`, `study*`, `entry-*`, `report-*`, `touch-targets`, `bundle`). | `e2e/` | 2 | S |
 

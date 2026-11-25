@@ -7,7 +7,7 @@ Prośba: przeanalizować obecne UI i ułożyć plan na telefon (UI/UX, nowe funk
 Źródła: trzy rozpoznania kodu (powłoka mobilna, wizualizacje i algorytmy, otwarte punkty w `roadmap.md`, `docs/plan-*.md`, `TODO.md`).
 Wniosek ogólny: **fundament telefonu jest gotowy.** Dalsza praca to nie „mobile od nowa”. To kilka luk w powłoce, wykresy, które nie skalują się na 390 px, oraz dokończenie planów działów, które już leżą w repo.
 
-Plan z tego dokumentu trafi do `docs/plan-mobile-2026-10-28.md` (statusy `[ ]`), z krótkim odnośnikiem w `roadmap.md`.
+Plan z tego dokumentu trafi do `docs-zrobione/plan-mobile-2026-10-28.md` (statusy `[ ]`), z krótkim odnośnikiem w `roadmap.md`.
 
 ---
 
@@ -102,7 +102,7 @@ Zasady wykresów: skill `dataviz` przed kodem, kolory z tokenów stylu (10 styl�
 5. **Ciągle:** F2 przy każdej fali, F1 na końcu fali, F3 przed A1, jeśli `Index.tsx` przeszkadza.
 
 ## 5. Wykonanie po akceptacji
-1. Zapisać ten plan jako `docs/plan-mobile-2026-10-28.md`, z checkboxami i sekcją „Decyzje otwarte”: A1 lupa w nagłówku czy w BottomNav, E1 trzy przyciski oceny czy dwa, P-7…P-11, G-1.
+1. Zapisać ten plan jako `docs-zrobione/plan-mobile-2026-10-28.md`, z checkboxami i sekcją „Decyzje otwarte”: A1 lupa w nagłówku czy w BottomNav, E1 trzy przyciski oceny czy dwa, P-7…P-11, G-1.
 2. Dopisać odnośnik w `roadmap.md`.
 3. Dodać wpis pamięci `plan-mobile-2026-10-28.md` i linię w `MEMORY.md`.
 4. Kod dopiero na osobne polecenie, fala po fali. Przy każdej zmianie wyglądu najpierw skill `frontend-design`. Przy każdym punkcie zaktualizować `opis.md`.

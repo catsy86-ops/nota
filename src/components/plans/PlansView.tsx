@@ -10,7 +10,7 @@ import { PLAN_PARAM } from "@/lib/plans/planParam";
 
 /**
  * Zakładka „Plany” w Pracy (do 2026-11-05 osobny dział) — Analizator planów hydraulicznych
- * (`docs/plan-analizator-planow-2026-11-01.md`): lista analiz albo edytor jednej. Ładowany leniwie, poza precache (D2). Otwarta analiza wynika z adresu
+ * (`docs-zrobione/plan-analizator-planow-2026-11-01.md`): lista analiz albo edytor jednej. Ładowany leniwie, poza precache (D2). Otwarta analiza wynika z adresu
  * routera, więc systemowe „wstecz” i odświeżenie działają bez własnego stanu.
  */
 export default function PlansView() {

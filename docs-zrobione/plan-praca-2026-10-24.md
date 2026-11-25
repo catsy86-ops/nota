@@ -2,13 +2,13 @@
 
 ## Kontekst
 
-Dział Praca (`/praca`: Nauka + Dziennik budowy) ma dwa starsze plany: `docs/plan-praca-2026-10-22.md` i `docs/plan-dzialy-2026-10-22.md` §8–9. Zrobione są Fazy 0–1, większość Fazy 2 i część Fal 1–5. Od `9be57d0` (2026-10-22) w `src/components/study` i `src/lib/study` nie było żadnej zmiany. Dwa przeglądy (24.10) zrobiły dwie rzeczy:
+Dział Praca (`/praca`: Nauka + Dziennik budowy) ma dwa starsze plany: `docs-zrobione/plan-praca-2026-10-22.md` i `docs-zrobione/plan-dzialy-2026-10-22.md` §8–9. Zrobione są Fazy 0–1, większość Fazy 2 i część Fal 1–5. Od `9be57d0` (2026-10-22) w `src/components/study` i `src/lib/study` nie było żadnej zmiany. Dwa przeglądy (24.10) zrobiły dwie rzeczy:
 - sprawdziły w kodzie, co z tamtych planów zostało,
 - przejrzały dział od nowa pod kątem codziennej pracy hydraulika na telefonie.
 
 Ten plan zbiera całość w jedną listę: od błędów, przez codzienną pętlę na budowie i powiązania z resztą aplikacji, po wygląd, Naukę i porządki w kodzie.
 
-**Pierwszy krok wdrożenia:** zapisać ten plan jako `docs/plan-praca-2026-10-24.md`. W starym `plan-praca-2026-10-22.md` dopisać odnośnik „zastąpiony przez”. Plan zastępuje Fazę 3 tamtego pliku i §8–9 z `plan-dzialy`.
+**Pierwszy krok wdrożenia:** zapisać ten plan jako `docs-zrobione/plan-praca-2026-10-24.md`. W starym `plan-praca-2026-10-22.md` dopisać odnośnik „zastąpiony przez”. Plan zastępuje Fazę 3 tamtego pliku i §8–9 z `plan-dzialy`.
 
 **Stan początkowy:** w drzewie leżą niezacommitowane zmiany Fazy 4 wyszukiwania (`CommandPalette.tsx`, `sectionHits.ts`, `opis.md`). Trzeba je zamknąć osobnym commitem, zanim ruszy Praca.
 
@@ -164,7 +164,7 @@ Etap 5 iść równolegle albo przed Etapem 1, jeśli ruszamy arkusz wpisu.
   - `npm run build` i `e2e/bundle.spec.ts` (paczka startowa ≤ 500 KB, `content.ts` i pola karty poza startem),
   - e2e Praca (`e2e/site-*.spec.ts`, `journal-*.spec.ts`, `touch-targets.spec.ts`, `a11y.spec.ts`) i rozszerzenie touch-targets o nowe przyciski.
 - Zmiany widoczne: sprawdzić w przeglądarce (Playwright MCP) przy 390 px i na szerokim ekranie, w skórkach Zeszyt, Matryca i Hydraulika, jasnej i ciemnej.
-- Po każdym zadaniu: wpis w `opis.md` (sekcja Praca, aktualizacja istniejących opisów) i status w `docs/plan-praca-2026-10-24.md`.
+- Po każdym zadaniu: wpis w `opis.md` (sekcja Praca, aktualizacja istniejących opisów) i status w `docs-zrobione/plan-praca-2026-10-24.md`.
 
 ## Status
 

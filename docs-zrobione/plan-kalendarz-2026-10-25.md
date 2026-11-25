@@ -4,7 +4,7 @@
 
 Czwarty plan z serii „dział po dziale” (po Notatkach, Skrzynce i Dziś), w tym samym układzie.
 
-> **Status 2026-10-27:** zrobione 1.5, 1.7, część 2.5, 2.7, 3.4, 4.1, 4.5, 4.6. Otwarte punkty przeniesione do `docs/plan-praca-kalendarz-grafik-2026-10-27.md` (Kalendarz K1–K4) — tam aktualny stan.
+> **Status 2026-10-27:** zrobione 1.5, 1.7, część 2.5, 2.7, 3.4, 4.1, 4.5, 4.6. Otwarte punkty przeniesione do `docs-zrobione/plan-praca-kalendarz-grafik-2026-10-27.md` (Kalendarz K1–K4) — tam aktualny stan.
 
 ## Kontekst
 
@@ -30,12 +30,12 @@ Czwarty plan z serii „dział po dziale” (po Notatkach, Skrzynce i Dziś), w 
 | §5 Rozb. 1 | Z kalendarza nie da się otworzyć notatki (panel dnia i dialog tylko edytują termin) | `ReminderCalendarView.tsx:60` (brak `onOpenNote` w propsach) |
 | §5 Rozb. 3–5 | Brak znaczników Pracy w `WeekStrip` i `UpcomingDays`; brak filtra warstw; brak tygodnia z osią godzin | `opis.md` (Kalendarz — Ograniczenia), `WeekStrip.tsx`, `UpcomingDays.tsx` |
 | §5 Wygląd 2–5 | Stany tylko kolorem; kontrast chipów (`bg-primary/12`, `border-primary/40`) w Neonie, Matrycy, Zorzy, ciemnym; brak linii „teraz” na osi; komórka na 320 px ma ~42 px | `ReminderChip.tsx:46-49`, `opis.md` |
-| a11y | `e2e/a11y.spec.ts` „kalendarz — hydraulika”: kontrast przy „dziś” nie przechodzi (opisany jako niestabilny w planie Praca) | `docs/plan-praca-2026-10-24.md` (log 2026-10-25) |
+| a11y | `e2e/a11y.spec.ts` „kalendarz — hydraulika”: kontrast przy „dziś” nie przechodzi (opisany jako niestabilny w planie Praca) | `docs-zrobione/plan-praca-2026-10-24.md` (log 2026-10-25) |
 | opis.md | Zmiana przez północ rysuje się na osi tylko do 24:00; przerwa bez godziny nie ma miejsca na osi | `opis.md` (Kalendarz — Ograniczenia) |
 | nowe | Brak adresu do konkretnego dnia (`/kalendarz?dzien=2026-10-26`); potrzebny dla Dziś 2.2 („Jutro: …” → Kalendarz na jutrze) i push | `lib/viewRoute.ts:23` |
 | opis.md | E2E Kalendarza od zmian z 2026-10-20 nieuruchamiane w całości | `opis.md` (Kalendarz — Testy) |
 
-**Powiązania:** Dziś 2.4 osadza `DayTimeline` — poprawki osi (2.4, 4.4 tutaj) robić przed nim. Dziś 2.2 potrzebuje adresu dnia (1.6 tutaj). Fundament wyglądu z `docs/plan-ui-ux-qol-2026-10-25.md` przed Etapem 4. Plan Terminów (następny) przejmie widok Przypomnień; tu tylko widok kalendarza.
+**Powiązania:** Dziś 2.4 osadza `DayTimeline` — poprawki osi (2.4, 4.4 tutaj) robić przed nim. Dziś 2.2 potrzebuje adresu dnia (1.6 tutaj). Fundament wyglądu z `docs-zrobione/plan-ui-ux-qol-2026-10-25.md` przed Etapem 4. Plan Terminów (następny) przejmie widok Przypomnień; tu tylko widok kalendarza.
 
 **Ograniczenia:**
 - **Paczka:** Kalendarz jest leniwy (`loadCalendarView`), więc ma luz, ale nowa oś tygodnia (3.3) w osobnym chunku ładowanym na `xl`.

@@ -1,6 +1,6 @@
 # Plan: Analizator planów hydraulicznych (2026-11-01)
 
-Zlecenie: `docs/zadanie-analizator-planow-2026-10-29.md`. Plan na podstawie przeglądu agenta `architect` (2026-11-01, bez zmian w plikach).
+Zlecenie: `docs-zrobione/zadanie-analizator-planow-2026-10-29.md`. Plan na podstawie przeglądu agenta `architect` (2026-11-01, bez zmian w plikach).
 
 ## Kluczowe ograniczenia repozytorium
 

@@ -22,7 +22,7 @@
 
 ## Kontekst
 
-Użytkownik poprosił o jeden plan dla trzech działów: Praca, Kalendarz i Grafik. Plan ma użyć najlepszych technologii, agentów i technik, a potem trafić do repozytorium. Plany z 25.10 (`docs/plan-kalendarz-2026-10-25.md`, `plan-grafik-…`, `plan-praca-…`) sprawdziłem w kodzie na HEAD `73a913f`. Wyniki:
+Użytkownik poprosił o jeden plan dla trzech działów: Praca, Kalendarz i Grafik. Plan ma użyć najlepszych technologii, agentów i technik, a potem trafić do repozytorium. Plany z 25.10 (`docs-zrobione/plan-kalendarz-2026-10-25.md`, `plan-grafik-…`, `plan-praca-…`) sprawdziłem w kodzie na HEAD `73a913f`. Wyniki:
 
 | Dział | Stan planu z 25.10 | Co wyszło przy sprawdzeniu |
 |---|---|---|
@@ -32,7 +32,7 @@ Użytkownik poprosił o jeden plan dla trzech działów: Praca, Kalendarz i Graf
 
 Do tego dokumentacja nie nadąża za kodem: `opis.md` (Kalendarz :1397, Grafik :594/:638/:676/:689/:694, Praca :1025/:1097/:1098/:2519/:2696), `roadmap.md:1153` i `TODO.md`.
 
-**Wynik:** jeden plan `docs/plan-praca-kalendarz-grafik-2026-10-27.md`, który zastępuje otwarte części trzech planów z 25.10. Ma te same zasady co reszta serii: tabela „co otwarte + dowód”, punkty z W/N, decyzje, kolejność. Numeracja ma przedrostek działu (K, G, P), a decyzje ciągną dotychczasową numerację (K-4…, G-5…, P-6…).
+**Wynik:** jeden plan `docs-zrobione/plan-praca-kalendarz-grafik-2026-10-27.md`, który zastępuje otwarte części trzech planów z 25.10. Ma te same zasady co reszta serii: tabela „co otwarte + dowód”, punkty z W/N, decyzje, kolejność. Numeracja ma przedrostek działu (K, G, P), a decyzje ciągną dotychczasową numerację (K-4…, G-5…, P-6…).
 
 **Ograniczenia (wspólne):**
 - **Paczka startowa:** próg pilnuje `e2e/bundle.spec.ts`. Wszystko nowe idzie do leniwych chunków działów. `lib/shifts/index.ts` (barrel) jest w paczce startowej, więc nowe moduły importować bezpośrednio.
