@@ -141,6 +141,10 @@ test("miesiąc razem (H3.3): gotowy punkt ze stawką widać w podsumowaniu Grafi
   await dues.getByRole("button", { name: "Wpłata (zaliczka)" }).click();
   await dues.getByLabel("Kwota wpłaty (zł)").fill("150");
   await dues.getByRole("button", { name: "Zapisz wpłatę" }).click();
+  // Przejście na Grafik dopiero po zapisanej wpłacie — inaczej przeładowanie wyprzedza zapis i wpłaty nie ma w zestawieniu.
+  await expect(dues.getByRole("button", { name: "Usuń wpłatę 150 zł z 22.10.2026" })).toBeVisible();
+  // `goto` przeładowuje stronę — dokument musi być już zapisany w IndexedDB (status „Zapisano”), jak w `reloadWhenSaved`.
+  await expect(page.getByText("Zapisano", { exact: true })).toBeVisible();
 
   await page.goto("/grafik");
   const line = page.getByTestId("site-month-earnings");
