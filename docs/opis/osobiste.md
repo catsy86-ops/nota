@@ -719,7 +719,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa:** wzór masy ciała, ale klucz mapy to `partia:dzień`, nie sam dzień — dwa telefony mierzące tego samego dnia różne partie scalają się bez strat; ten sam dzień i partia nadpisuje pomiar (pola nowszej wersji przechodzą przez `mergeStored`). Zakres 10–250 cm, co 0,1 cm. Dane i kopia: `docs/opis/dane.md`.
 - **Ograniczenia:** bez celu i bez średniej z 7 pomiarów (jak przy masie) — obwody mierzy się rzadko.
 - **Testy:** `src/lib/weight/measures.test.ts`, `src/lib/weight/yMeasures.test.ts`, `e2e/cwiczenia-tydzien.spec.ts` (zapis, pigułka, opis wykresu, axe karty).
-- **Commit:** zobacz `git log --grep "C3.4"`, 2026-11-26.
+- **Commit:** `fb08b12f`, 2026-11-26.
 
 ## Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 

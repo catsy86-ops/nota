@@ -919,5 +919,5 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 - **Co:** nowa mapa Yjs `bodyMeasures` (obwody ciała, opis w `docs/opis/osobiste.md`) i sekcja pełnej kopii `measures` („Obwody”, JSON tablica `{ day, part, cm, created }`) w `MERGE_SECTIONS` (`src/lib/backup/sections.ts`), `buildFullBackup` (`src/lib/backup/build.ts`) i `fullBackupSchema` (`src/lib/noteSchema.ts`). Scalanie dodaje brakujące pomiary, a dla tej samej partii i dnia wygrywa nowszy `created`; niczego nie kasuje.
 - **Zgodność (`docs/dane-wersje.md`, lista kontrolna pkt 1 i 6):** nowa mapa nie zmienia znaczenia istniejących danych, więc `SCHEMA_VERSION` i koperta kopii bez zmian. Starsza wersja aplikacji mapę ignoruje i jej nie rusza; z kopii z sekcją `measures` przywróci resztę (wersje od Z-18.2 ostrzegą o nieznanej sekcji). Mapa w `PRESERVES` spisu map (`docMapsInventory.test.ts`) i w `docs/dane-mapa.md`. Wzorzec zrzutu kopii (`src/lib/backup/__snapshots__/fullBackup.json`) ma nowe pole `measures: "[]"`.
 - **Testy:** `src/lib/weight/yMeasures.test.ts`, `src/lib/exerciseExtra.test.ts` (nieznane pole przez ponowny pomiar i kopię), `src/lib/fullBackup.test.ts` (rejestr sekcji pokrywa kopię), `src/lib/backup/backupSnapshot.test.ts`.
-- **Commit:** zobacz `git log --grep "C3.4"`, 2026-11-26.
+- **Commit:** `fb08b12f`, 2026-11-26.
 
