@@ -4,6 +4,15 @@
 > **Źródła:** tabele planów w `docs/`, `git log`, sprawdzenie w kodzie 26.11 (zaznaczone ✔︎ niżej).
 > **Rozmiar:** S ≈ do 1 h, M ≈ pół dnia, L ≈ dzień i więcej. Każda fala kończy się: Vitest + typecheck + lint, e2e dotkniętych działów, `docs/opis/`, commit.
 
+## Stan po 2026-11-26 (wznowienie tutaj)
+
+- **E0.1 zamknięte:** przyczyna — Avast Web Shield / Malwarebytes Web Protection opóźniały `localhost`. Po wyłączeniu: `@smoke` 43/43 (workers=3), pełne e2e 1238 zielonych / 7 porażek na starym buildzie; z nich 4 niestabilne pod obciążeniem, 2 naprawione (`6c38f552`), `pressure-timer:30` przechodzi przy powtórce. **Do zrobienia przez właściciela:** stały wyjątek w obu programach. E2E działów zmienionych w Fali 1 na nowym buildzie: 332 + 56 zielonych.
+- **Fala 1 zrobiona:** U1.2 + U1.3 (`24275fca`), Z-8.1 + Z-8.2 (`9fcaf10b`), Z-18.6 (`042f7529`), Z-18.5 (`6a3e9efb`), Z-18.2 + **naprawa sekcji Waga w kopii** (`6878a696`), Z-1.T (`e337fc49`).
+- **Okazało się już zrobione:** U5.2 (sekcje przez `SectionCard`), P4.1 (jedyne wersaliki to dozwolona linijka `ViewTitle`), D0.3 (`docs/dane-spisy.md`), Z-18.5 część „podsumowanie” (z Z-18.4), Q1.4 z Fali 5 (kopie dzienne w OPFS, 2026-11-17).
+- **Przeniesione:** P4.4 → decyzje (ukryte działy w „Więcej” przeczą PW-3; brak tokenów odcieni działów); Q3.9 → telefon (dane `usage.ts` są tylko na telefonie).
+- **Zostało z Fali 1:** C2.3 (RIR), C4.1 (ulubione posiłki, mapa `dietFavorites`) — UI, przed kodem skill `frontend-design` i `docs/dane-wersje.md`; L2.3 (numer konta/BLIK w Długach) — przed kodem `security-reviewer`.
+- **Push:** gałąź `wip/mobile-fala1` niewypchnięta (origin = `1b80d090`); push i scalenie do `master` po decyzji właściciela.
+
 ## Sprostowania po sprawdzeniu w kodzie (26.11)
 
 - **Z-14.1 zrobione** — `src/lib/study/receivables.test.ts` istnieje.

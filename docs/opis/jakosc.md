@@ -823,3 +823,11 @@ W `Index.tsx` także: `openSettingsTab(tab)` dla pasków stanu danych i synchron
 - **Ograniczenia i pułapki:** samo składanie archiwum (`buildZip`, CRC) jest jednym zadaniem. Przy tekstowych notatkach to kilkadziesiąt milisekund, ale przy bardzo długich treściach może przekroczyć 50 ms. Nie mierzono na telefonie miary z planu („żadne zadanie > 50 ms przy imporcie 2000 notatek”).
 - **Testy:** `src/lib/exportZip.test.ts` (wersja asynchroniczna: te same bajty, oddanie wątku co 100 notatek).
 - **Commit:** `cc27b008`, 2026-11-25.
+
+## Jakość — niestabilne e2e przy kilku workerach: przyczyna poza aplikacją (E0.1, 2026-11-26)
+
+- **Objaw:** przy `--workers=3` pojedyncze testy padały na `page.goto` (60 s) albo na leniwie ładowanym oknie (np. Ustawienia).
+- **Przyczyna:** żądania do `localhost` docierały do serwera z opóźnieniem 20–110 s (próbnik co 200 ms; w serwerze pętla zdarzeń wolna, a żądania przychodziły spóźnione). Wykluczone: OneDrive, `UV_THREADPOOL_SIZE`, `vite preview` (serwer z `dist/` w pamięci też stawał), WebKit, porty. Po wyłączeniu Avast Web Shield i Malwarebytes Web Protection: 20/20 w 41 s, `@smoke` 43/43, pełne e2e 1238 zielonych.
+- **Na stałe:** dodać wyjątek dla `localhost`/`127.0.0.1` (albo `node.exe` i `%LOCALAPPDATA%\ms-playwright`) w obu programach.
+- **Poprawione testy (prawdziwe niestabilności):** `e2e/today-receivables.spec.ts` (zamrożony zegar zatrzymywał przenikanie w połowie, axe liczył kontrast półprzezroczystego tekstu → test bez ruchu; czekanie na adres bez `?budowa=` przed `goto`), `e2e/reminders-calendar.spec.ts` (nagłówek miesiąca z rokiem — w trakcie przenikania były dwa `h2`).
+- **Commit:** `6c38f552` (2026-11-26).

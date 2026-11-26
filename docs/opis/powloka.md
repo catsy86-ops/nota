@@ -375,3 +375,11 @@ Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj nota
 - **Ograniczenia i pułapki:** protokół działa tylko w zainstalowanej aplikacji w przeglądarkach z `protocol_handlers` (Chrome/Edge na komputerze i Androidzie). Safari i Firefox go nie obsługują, wtedy zostaje adres `https://…/notatka/<id>`. Osoba w Długach nie ma jeszcze własnego adresu (plan wspominał o nim, ale widok Długów nie czyta parametru osoby). Identyfikatory notatek z innym alfabetem niż `[A-Za-z0-9_-]` nie przejdą przez protokół, choć przejdą przez `/notatka/`.
 - **Testy:** `src/lib/protocolLink.test.ts` (kształty, obce linki, podmiana adresu), `src/lib/manifest.test.ts` (wpis w manifeście).
 - **Commit:** `22550d6c` (protokół), `18edca1f` (polecenie w palecie), 2026-11-25.
+
+## Ustawienia — słownik „kopia”, „styl”, „krój” i odmiana urządzeń (U1.2, U1.3, 2026-11-26)
+
+- **Co robi:** w oknie Ustawień, przypomnieniach o kopii, „Koniec dnia” w Pracy i kaflu notatki prywatnej jest „kopia” zamiast „backup” (np. „Pobierz pełną kopię teraz”, „Przywróć z pliku kopii”, „Kopia automatyczna co 7 dni”), a w Wyglądzie „styl, krój tekstu” zamiast „skórka, czcionka”. Sync bez drugiego urządzenia: „wpisz na nim ten kod albo zeskanuj QR”. Liczba urządzeń odmienia się wspólnym `devicesPl` („5 urządzeń”).
+- **Gdzie jest:** `src/components/settings/*`, `SyncSettings.tsx`, `OfflineQueuePanel.tsx`, `src/hooks/useBackupReminders.ts`, `src/components/study/EndDaySheet.tsx`, `src/components/vault/LockedNoteTile.tsx`, `src/lib/plural.ts` (`devicesPl`), `src/lib/settingsIndex.ts` (tytuł „Miejsce zapisu kopii”; słowo „backup” zostaje w `words`, żeby wyszukiwanie dalej je znajdowało).
+- **Ograniczenia:** identyfikatory, klucze i nazwy plików (`backup`, `BackupSettings`) zostają — strażnik sprawdza tylko napisy ze spacją i tekst JSX.
+- **Testy:** `src/test/settingsVocabulary.test.ts` (strażnik słownika), `src/lib/plural.test.ts` (`devicesPl`); e2e z nowymi nazwami przycisków: `restore-*.spec.ts`, `search-backup.spec.ts`, `images.spec.ts`, `private-notes.spec.ts`, `daily-snapshot.spec.ts`.
+- **Commit:** `24275fca` (2026-11-26).

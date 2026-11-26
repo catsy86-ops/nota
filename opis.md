@@ -11,11 +11,11 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 | Kalendarz i Grafik | [`docs/opis/kalendarz-grafik.md`](docs/opis/kalendarz-grafik.md) | 12 |
 | Praca | [`docs/opis/praca.md`](docs/opis/praca.md) | 100 |
 | Osobiste: Ćwiczenia, Długi, Skarbiec | [`docs/opis/osobiste.md`](docs/opis/osobiste.md) | 44 |
-| Dane, synchronizacja i kopie | [`docs/opis/dane.md`](docs/opis/dane.md) | 28 |
-| Powłoka, Ustawienia i telefon | [`docs/opis/powloka.md`](docs/opis/powloka.md) | 25 |
+| Dane, synchronizacja i kopie | [`docs/opis/dane.md`](docs/opis/dane.md) | 29 |
+| Powłoka, Ustawienia i telefon | [`docs/opis/powloka.md`](docs/opis/powloka.md) | 26 |
 | Wygląd i ruch | [`docs/opis/wyglad.md`](docs/opis/wyglad.md) | 57 |
 | Wspólne | [`docs/opis/wspolne.md`](docs/opis/wspolne.md) | 27 |
-| Jakość, architektura i testy | [`docs/opis/jakosc.md`](docs/opis/jakosc.md) | 69 |
+| Jakość, architektura i testy | [`docs/opis/jakosc.md`](docs/opis/jakosc.md) | 70 |
 
 ## Rozdziały
 
@@ -307,6 +307,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Dane — spisy baz IndexedDB, kluczy `localStorage` i migracji (D0.2–D0.4, 2026-11-23)
 - Dane — spis map Yjs i przejście kluczy `localStorage` (D0.1, D6.3, D6.4, 2026-11-23)
 - Dane — rejestr kluczy `localStorage`, nazwy kluczy i lista kopii z rejestru (D6.1, D6.2, D6.5, 2026-11-23)
+- Kopia zapasowa — uwagi przed przywróceniem i sekcja Waga (Z-18.2 audytu 2, 2026-11-26)
 
 ### Powłoka, Ustawienia i telefon — [`docs/opis/powloka.md`](docs/opis/powloka.md)
 
@@ -335,6 +336,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Powłoka — cień nagłówka przy przewijaniu (plan 4.3, 2026-11-12)
 - Powłoka — wznowienie: ostatni dział, a po 4 h „Dziś” (Q3.4, decyzja QL-3, 2026-11-23)
 - Powłoka — linki `web+notatnik:` i adres notatki (Q3.7, 2026-11-25)
+- Ustawienia — słownik „kopia”, „styl”, „krój” i odmiana urządzeń (U1.2, U1.3, 2026-11-26)
 
 ### Wygląd i ruch — [`docs/opis/wyglad.md`](docs/opis/wyglad.md)
 
@@ -498,3 +500,5 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Jakość — e2e bez zgadywania czasu (A4.3, 2026-11-25)
 - Jakość — testy własności scalania Yjs i kolejność listy zadań (A4.5, 2026-11-25)
 - Jakość — wątek główny w długich pętlach: eksport ZIP (Q3.8, 2026-11-25)
+- Jakość — niestabilne e2e przy kilku workerach: przyczyna poza aplikacją (E0.1, 2026-11-26)
+
