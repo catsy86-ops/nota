@@ -685,7 +685,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Model danych (C2.3):** `TrainingSet.rir?: number`, czyszczone przez `cleanRir` (całkowite 0–`TRAINING_RIR_MAX`; złe znika, seria zostaje) w `src/lib/training/model.ts`; `rir` jest w `SET_KNOWN`, więc nie ląduje w `extra`. Zgodność: klienci od 2026-11-18 (zasada 5 z `docs/dane-wersje.md`) przechowują `rir` jako nieznane pole i go nie gubią; liczba mieści się w limitach `pickExtra`, więc `SCHEMA_VERSION` bez zmian. Starsi klienci zgubią pole przy ponownym zapisie wpisu.
 - **Ograniczenia i pułapki:** brak podpowiedzi dla serii na czas, ćwiczeń bez ciężaru i sesji mieszanej (część serii bez kg). „Wpisz” i „Użyj ostatnich” nie przenoszą zapasu. Eksport CSV treningu nie ma kolumny zapasu. „Wpisz” bierze liczbę serii z ostatniej sesji, nie z planu. Ćwiczeń nie ma w `e2e/a11y.spec.ts`.
 - **Testy:** `src/lib/training/progression.test.ts` (dołożenie, powtórki, rozgrzewka, limit hantli, zapas 3+/0–2, przypadki `null`, cel z sesji/planu, teksty), `src/lib/training/model.test.ts` (`cleanSet` z `rir`), `src/lib/training/extra.test.ts` (`rir` znany obok nieznanego `tempo` przez scalenie, „Cofnij” i kopię), `src/components/cwiczenia/TrainingSection.test.tsx` (podpowiedź i „Wpisz”, brak bez celu), `e2e/cwiczenia-tydzien.spec.ts` (wybór zapasu, „Ostatnio”, czyszczenie po zapisie).
-- **Commit:** `22550d6c`, 2026-11-25.
+- **Commit:** `22550d6c`, 2026-11-25; zapas C2.3: `61cf9395`, 2026-11-26.
 
 ## Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 
