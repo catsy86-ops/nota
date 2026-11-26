@@ -13,6 +13,7 @@ import { useConfirmPrefs, setConfirmPref } from "@/lib/confirmPrefs";
 import type { NoteColor } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
 import { ResetSectionButton, Section, ToggleRow } from "./SettingsShared";
+import { UpdateSettings } from "./UpdateSettings";
 import { ReviewSettings } from "./ReviewSettings";
 import { VaultSettings } from "./VaultSettings";
 import { ClipperSettings } from "./ClipperSettings";
@@ -46,6 +47,7 @@ const PERMISSION_TEXT = {
 
 /** Skoki do grup na górze zakładki „Ogólne” — bez wyszukiwarki, a grup jest sporo. */
 const JUMP_GROUPS = [
+  { id: "aktualizacje", label: "Aktualizacje" },
   { id: "powiadomienia", label: "Powiadomienia" },
   { id: "przypomnienia", label: "Przypomnienia" },
   { id: "edytor", label: "Edytor" },
@@ -151,6 +153,8 @@ export function GeneralSettings() {
   return (
     <div className="space-y-4">
       <JumpNav />
+
+      <UpdateSettings />
 
       <div id="ogolne-powiadomienia" className="scroll-mt-14 space-y-4">
         <NotificationStatus />

@@ -111,6 +111,8 @@ export const POWLOKA = {
   fabHint: "kaczy.fab.hint.v1",
   clientsImportDismissed: "kaczy.clients.importDismissed.v1",
   debtsFormOpen: "kaczy.debts.formOpen.v1",
+  /** Auto-aktualizacja aplikacji (`lib/autoUpdate.ts`), domyślnie włączona. */
+  autoUpdate: "kaczy.autoUpdate.v1",
   // L2.3: konto i BLIK do wiadomości o długu — wrażliwe (`keys.ts`), poza kopią.
   debtsPayment: "kaczy.debts.payment.v1",
   installBannerDismissed: "kaczy.installBanner.dismissed.v1",

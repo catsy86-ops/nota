@@ -18,6 +18,7 @@ export interface SettingsEntry {
 const ADV = "wyglad-zaawansowane-tresc";
 
 export const SETTINGS_INDEX: readonly SettingsEntry[] = [
+  { title: "Aktualizacje", tab: "general", words: "aktualizacja odśwież nowa wersja automatycznie update" },
   { title: "Galeria stylów", tab: "appearance", words: "motyw skórka wygląd zeszyt neon hydraulika" },
   { title: "Jasność", tab: "appearance", words: "ciemny jasny tryb nocny motyw" },
   { title: "Akcent", tab: "appearance", words: "kolor barwa" },

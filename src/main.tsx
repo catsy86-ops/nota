@@ -51,6 +51,7 @@ import "./lib/glowLook";
 import "./lib/skinSchedule";
 import { isNativeShell } from "@/lib/native/platform";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
+import { getAutoUpdate } from "./lib/autoUpdate";
 import { hasUnsavedWork } from "./lib/saveStatus";
 import { setupFileLaunch } from "./lib/fileLaunch";
 import { requestPersistentStorage } from "./lib/storagePersistence";
@@ -92,10 +93,13 @@ void yjsStore.ready().then(() => import("./lib/migrations/start")).then((m) => m
 window.addEventListener(SW_UPDATE_EVENT, (e) => {
   const registration = (e as CustomEvent<ServiceWorkerRegistration>).detail;
   toast("Dostępna nowa wersja aplikacji", {
-    description: "Twoje notatki są bezpieczne — zapisane dane nie zostaną utracone.",
+    // Auto-aktualizacja (`autoUpdate.ts`) mówi, kiedy wersja wejdzie sama — wtedy przycisk to tylko „teraz”.
+    description: getAutoUpdate()
+      ? "Zainstaluje się sama, gdy wyjdziesz z aplikacji albo przez minutę nic nie zrobisz. Notatki są bezpieczne."
+      : "Twoje notatki są bezpieczne — zapisane dane nie zostaną utracone.",
     duration: Infinity,
     action: {
-      label: "Odśwież",
+      label: getAutoUpdate() ? "Odśwież teraz" : "Odśwież",
       // Z niezapisaną pracą przeładowanie zgubiłoby ją: najpierw zapis, potem wersja.
       onClick: () => {
         if (hasUnsavedWork()) {

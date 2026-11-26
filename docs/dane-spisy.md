@@ -64,6 +64,7 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.data.cleared.v1` | `lib/docReplaceCore.ts` | — |
 | `kaczy.dataloss.dismissed.v1` | `components/DocReplaceBanners.tsx` | — |
 | `kaczy.dayDone.v1` | `lib/dayDone.ts` | — |
+| `kaczy.autoUpdate.v1` | `lib/storage/names.ts`, `lib/autoUpdate.ts` | tak |
 | `kaczy.debts.formOpen.v1` | `components/debts/DebtsView.tsx` | — |
 | `kaczy.debts.payment.v1` | `lib/storage/names.ts`, `lib/debts/payment.ts` | — (wrażliwy, L2.3) |
 | `kaczy.debtsHideAmounts.v1` | `lib/debts/hideAmounts.ts` | — |

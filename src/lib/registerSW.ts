@@ -5,19 +5,12 @@
 import { isNativeShell } from "@/lib/native/platform";
 import { hasUnsavedWork } from "@/lib/saveStatus";
 import { SIGNALS } from "@/lib/storage/names";
+import { AUTO_UPDATE_CHECK_MS, getAutoUpdate, idleFor, shouldAutoApply, trackActivity } from "@/lib/autoUpdate";
 
 const SW_URL = "/sw.js";
 
 /** Co tyle sprawdzamy, czy jest nowa wersja, gdy karta stoi otwarta. */
 export const UPDATE_CHECK_MS = 60 * 60_000;
-
-/**
- * Czy oczekującą wersję można już podmienić bez straty: karta jest schowana (użytkownik wyszedł)
- * i nic nie czeka na zapis. Wtedy reload nie zabierze żadnej pracy.
- */
-export function canApplyWaitingUpdate(state: { hidden: boolean; unsaved: boolean; waiting: boolean }): boolean {
-  return state.waiting && state.hidden && !state.unsaved;
-}
 
 async function unregisterAppSW() {
   if (!("serviceWorker" in navigator)) return;
@@ -93,6 +86,18 @@ export async function checkForSwUpdate(): Promise<"off" | "update" | "current" |
   return "current";
 }
 
+/**
+ * Przycisk „Odśwież aktualizacje” w Ustawieniach: sprawdza i — gdy jest nowa wersja — od razu ją instaluje (strona
+ * się przeładuje). Z niezapisaną pracą nie przeładowuje: `unsaved`, wersja czeka i wejdzie po zapisie.
+ */
+export async function refreshToLatest(): Promise<"off" | "current" | "offline" | "unsaved" | "applying"> {
+  const r = swInfo.registration?.waiting ? "update" : await checkForSwUpdate();
+  if (r !== "update") return r;
+  if (hasUnsavedWork()) return "unsaved";
+  applyServiceWorkerUpdate(swInfo.registration!);
+  return "applying";
+}
+
 /** Tell the waiting worker to take over. Reloads once it does. */
 export function applyServiceWorkerUpdate(registration: ServiceWorkerRegistration) {
   const waiting = registration.waiting;
@@ -122,14 +127,15 @@ function watchForUpdates(registration: ServiceWorkerRegistration, hadControllerA
     });
   });
 
-  // Oczekująca wersja podmienia się sama, gdy użytkownik wychodzi z aplikacji i nie ma
-  // niezapisanych zmian. Przy otwartej karcie zostaje dymek „Dostępna nowa wersja”.
-  document.addEventListener("visibilitychange", () => {
-    const hidden = document.visibilityState === "hidden";
-    if (canApplyWaitingUpdate({ hidden, unsaved: hasUnsavedWork(), waiting: !!registration.waiting })) {
-      applyServiceWorkerUpdate(registration);
-    }
-  });
+  // Auto-aktualizacja (`autoUpdate.ts`): oczekująca wersja podmienia się sama, gdy użytkownik wychodzi z aplikacji
+  // albo od minuty niczego nie dotyka — i tylko bez niezapisanych zmian. Wyłączona: dymek i przycisk w Ustawieniach.
+  trackActivity();
+  const tryAutoApply = () => {
+    const moment = { auto: getAutoUpdate(), waiting: !!registration.waiting, unsaved: hasUnsavedWork(), hidden: document.visibilityState === "hidden", idleMs: idleFor() };
+    if (shouldAutoApply(moment)) applyServiceWorkerUpdate(registration);
+  };
+  document.addEventListener("visibilitychange", tryAutoApply);
+  setInterval(tryAutoApply, 15_000);
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     // Pierwsze wejście: strona startuje bez kontrolera, a `clientsClaim: true`
@@ -174,7 +180,13 @@ export function registerServiceWorker() {
           lastCheck = Date.now();
           checkForUpdate();
         });
-        setInterval(checkForUpdate, UPDATE_CHECK_MS);
+        // Z auto-aktualizacją co 30 min, bez niej co godzinę.
+        let lastTick = Date.now();
+        setInterval(() => {
+          if (!getAutoUpdate() && Date.now() - lastTick < UPDATE_CHECK_MS - 1000) return;
+          lastTick = Date.now();
+          checkForUpdate();
+        }, AUTO_UPDATE_CHECK_MS);
       })
       .catch(() => {
         /* noop */

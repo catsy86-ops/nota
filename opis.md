@@ -339,6 +339,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Ustawienia — słownik „kopia”, „styl”, „krój” i odmiana urządzeń (U1.2, U1.3, 2026-11-26)
 - Powłoka — okno „O aplikacji”: autor, wyróżniki i wszystkie funkcje (2026-11-26)
 - Powłoka — rejestr poleceń palety (A3.4, 2026-11-26)
+- Ustawienia — „Odśwież aktualizacje” i auto-aktualizacja (2026-11-26)
 
 ### Wygląd i ruch — [`docs/opis/wyglad.md`](docs/opis/wyglad.md)
 

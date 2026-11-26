@@ -1,21 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { canApplyWaitingUpdate, resetAppFiles, UPDATE_CHECK_MS } from "./registerSW";
+import { resetAppFiles, UPDATE_CHECK_MS } from "./registerSW";
+import { AUTO_UPDATE_IDLE_MS, shouldAutoApply, type UpdateMoment } from "./autoUpdate";
 
-describe("canApplyWaitingUpdate", () => {
+const m = (over: Partial<UpdateMoment> = {}): UpdateMoment => ({ auto: true, waiting: true, unsaved: false, hidden: false, idleMs: 0, ...over });
+
+describe("shouldAutoApply — auto-aktualizacja", () => {
   it("podmienia wersję, gdy karta jest schowana, czeka wersja i nie ma niezapisanej pracy", () => {
-    expect(canApplyWaitingUpdate({ hidden: true, unsaved: false, waiting: true })).toBe(true);
+    expect(shouldAutoApply(m({ hidden: true }))).toBe(true);
   });
 
-  it("nie przeładowuje otwartej karty", () => {
-    expect(canApplyWaitingUpdate({ hidden: false, unsaved: false, waiting: true })).toBe(false);
+  it("otwarta karta: dopiero po minucie bez aktywności", () => {
+    expect(shouldAutoApply(m({ idleMs: AUTO_UPDATE_IDLE_MS - 1 }))).toBe(false);
+    expect(shouldAutoApply(m({ idleMs: AUTO_UPDATE_IDLE_MS }))).toBe(true);
   });
 
   it("nie zgubi niezapisanej pracy", () => {
-    expect(canApplyWaitingUpdate({ hidden: true, unsaved: true, waiting: true })).toBe(false);
+    expect(shouldAutoApply(m({ hidden: true, unsaved: true }))).toBe(false);
   });
 
   it("nic nie robi bez oczekującej wersji", () => {
-    expect(canApplyWaitingUpdate({ hidden: true, unsaved: false, waiting: false })).toBe(false);
+    expect(shouldAutoApply(m({ hidden: true, waiting: false }))).toBe(false);
+  });
+
+  it("wyłączona auto-aktualizacja — nigdy sama, nawet po schowaniu karty", () => {
+    expect(shouldAutoApply(m({ auto: false, hidden: true, idleMs: 10 * AUTO_UPDATE_IDLE_MS }))).toBe(false);
   });
 });
 
