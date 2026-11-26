@@ -6,7 +6,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ColorPicker } from "./ColorPicker";
 import { NoteImage } from "./NoteImage";
-import { PrimaryActions } from "./NoteCardActions";
+import { ActionBtn, PrimaryActions } from "./NoteCardActions";
+import { SquareCheck } from "lucide-react";
 
 type Actions = ReturnType<typeof useNoteViewActions>;
 
@@ -28,7 +29,10 @@ export function ActionSheet({
   onArchive,
   onUnarchive,
   onDelete,
+  onSelect,
 }: {
+  /** Q5.3: przytrzymanie kafla otwiera ten arkusz, więc wejście w tryb zaznaczania jest tutaj („Zaznacz”). */
+  onSelect?: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   note: Note;
@@ -66,6 +70,7 @@ export function ActionSheet({
               onUnarchive={onUnarchive}
               onDelete={onDelete}
             />
+            {onSelect && <ActionBtn icon={<SquareCheck className="size-4" />} onClick={() => { onOpenChange(false); onSelect(); }} title="Zaznacz" />}
           </div>
         </section>
         <section className="pt-4">

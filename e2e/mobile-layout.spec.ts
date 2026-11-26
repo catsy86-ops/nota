@@ -47,14 +47,17 @@ test("pasek zbiorczy mieści się w 390 px bez przewijania @mobile", async ({ pa
   await page.getByRole("button", { name: "Nowa notatka" }).click();
   await page.getByPlaceholder("Tytuł").fill("Do paska");
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
-  // Etap 3 (V12, NP-2): na dotyku pole wyboru jest ukryte, a zaznaczanie zaczyna przytrzymanie kafla (450 ms).
+  // Etap 3 (V12, NP-2): na dotyku pole wyboru jest ukryte. Od Q5.3 przytrzymanie (450 ms) otwiera menu „⋯”, a zaznaczanie zaczyna „Zaznacz” w nim.
   const tile = page.locator("[data-note-idx]").filter({ hasText: "Do paska" });
   const body = tile.getByRole("heading", { name: "Do paska" });
   const box = (await body.boundingBox())!;
   const at = { pointerType: "touch", isPrimary: true, pointerId: 7, clientX: box.x + 5, clientY: box.y + 5, bubbles: true };
-  await body.dispatchEvent("pointerdown", at);
-  await page.waitForTimeout(600); // czas: długie przytrzymanie zaznacza
-  await body.dispatchEvent("pointerup", at);
+  // Uchwyt zamiast lokatora po roli: otwarty arkusz ukrywa tło przed czytnikiem (`aria-hidden`), a puszczenie palca idzie w ten sam element.
+  const el = await body.elementHandle();
+  await el!.dispatchEvent("pointerdown", at);
+  await page.waitForTimeout(600); // czas: długie przytrzymanie otwiera menu
+  await el!.dispatchEvent("pointerup", at);
+  await page.getByRole("dialog").getByRole("button", { name: "Zaznacz" }).click();
   const clear = page.getByRole("button", { name: "Wyczyść zaznaczenie" });
   await expect(clear).toBeVisible();
   const bar = await clear.evaluate((el) => {

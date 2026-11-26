@@ -28,7 +28,10 @@ export function useCardGestures({
   onTogglePin,
   onArchive,
   onUnarchive,
+  onLongPress,
 }: {
+  /** Przytrzymanie poza trybem zaznaczania (Q5.3): otwiera menu „⋯”. */
+  onLongPress?: () => void;
   note: Note;
   isArchived: boolean | undefined;
   isEditing: boolean;
@@ -55,7 +58,8 @@ export function useCardGestures({
   // Podpisy w tle tylko przy pierwszych gestach (`lib/swipeHint.ts`); czytane na starcie gestu.
   const [swipeLabels, setSwipeLabels] = useState(false);
 
-  // Dotyk: przytrzymanie kafla zaznacza go (wejście w tryb zaznaczania), jak w aplikacjach systemowych.
+  // Dotyk (Q5.3, decyzja właściciela 2026-11-26): przytrzymanie otwiera menu „⋯” kafla (arkusz akcji, `onLongPress`);
+  // w trybie zaznaczania przytrzymanie dalej przełącza zaznaczenie. Wejście w zaznaczanie: „Zaznacz” w arkuszu.
   const longPressTimer = useRef<number | undefined>(undefined);
   const longPressStart = useRef<{ x: number; y: number } | null>(null);
   const longPressed = useRef(false);
@@ -64,7 +68,7 @@ export function useCardGestures({
     longPressStart.current = null;
   }
   function handleLongPressStart(e: React.PointerEvent) {
-    if (e.pointerType === "mouse" || isEditing || !onToggleSelect) return;
+    if (e.pointerType === "mouse" || isEditing || !(onToggleSelect || onLongPress)) return;
     const target = e.target as Element;
     // Zdarzenia z portali (arkusz akcji) płyną drzewem Reacta — tylko dotyk w samym kaflu.
     if (!cardRef.current?.contains(target) || target.closest("button, a, input, textarea, [role='checkbox'], [data-drag-handle]")) return;
@@ -74,7 +78,8 @@ export function useCardGestures({
       longPressed.current = true;
       longPressStart.current = null;
       haptic("selection");
-      onToggleSelect(note.id, false);
+      if (selectionMode || !onLongPress) onToggleSelect?.(note.id, false);
+      else onLongPress();
     }, 450);
   }
   function handleLongPressMove(e: React.PointerEvent) {

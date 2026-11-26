@@ -106,7 +106,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     cancelLongPress, longPressed, rotX, rotY, handleMove, handleLeave,
   } = useCardGestures({
     note, isArchived, isEditing, selectionMode, cardRef, tilt, pinSparkle: showFx && fx.sparkle,
-    onToggleSelect, onTogglePin, onArchive, onUnarchive,
+    onToggleSelect, onTogglePin, onArchive, onUnarchive, onLongPress: () => setSheetOpen(true),
   });
 
   // Ten sam zestaw w rozwinięciu „Więcej opcji” i w arkuszu — jeden element, dwa miejsca.
@@ -182,9 +182,9 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         onPointerMove={handleLongPressMove}
         onPointerUp={cancelLongPress}
         onPointerCancel={cancelLongPress}
-        // Dotyk: przytrzymanie zaznacza kafel, więc bez menu przeglądarki. Mysz (Q5.3): prawy przycisk rozwija to samo
+        // Dotyk: przytrzymanie otwiera arkusz „⋯” (albo zaznacza w trybie zaznaczania), więc bez menu przeglądarki. Mysz (Q5.3): prawy przycisk rozwija to samo
         // „Więcej opcji” co „⋯” — poza edytorem, linkami i zaznaczonym tekstem (`shouldOpenContextMenu`).
-        onContextMenu={isTouch && onToggleSelect ? (e) => e.preventDefault() : !isTouch && !isEditing ? (e) => {
+        onContextMenu={isTouch ? (e) => e.preventDefault() : !isTouch && !isEditing ? (e) => {
           if (!shouldOpenContextMenu(e, window.getSelection()?.toString() ?? "")) return;
           e.preventDefault();
           setShowMore(true);
@@ -424,7 +424,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       </motion.div>
       </div>
 
-      {sheetMounted && <ActionSheet open={sheetOpen} onOpenChange={setSheetOpen} note={note} isArchived={isArchived} pinSparkle={showFx && fx.sparkle} onAskDeleteConfirm={() => setShowDeleteConfirm(true)} more={moreActions} onUpdate={onUpdate} onTogglePin={onTogglePin} onArchive={onArchive} onUnarchive={onUnarchive} onDelete={onDelete} />}
+      {sheetMounted && <ActionSheet open={sheetOpen} onOpenChange={setSheetOpen} note={note} isArchived={isArchived} pinSparkle={showFx && fx.sparkle} onAskDeleteConfirm={() => setShowDeleteConfirm(true)} more={moreActions} onUpdate={onUpdate} onTogglePin={onTogglePin} onArchive={onArchive} onUnarchive={onUnarchive} onDelete={onDelete} onSelect={onToggleSelect && !selectionMode ? () => onToggleSelect(note.id, false) : undefined} />}
 
       {/* Dialogi montowane przy pierwszym otwarciu — 150 kart nie trzyma czterech nieużywanych okien. */}
       {editorMounted && <Dialog open={isEditing && fullEditor} onOpenChange={(open) => { if (!open) handleSave(); }}>

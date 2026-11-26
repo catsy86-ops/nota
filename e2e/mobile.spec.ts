@@ -49,7 +49,7 @@ test("na dotyku akcje kafla są schowane za „Więcej opcji” @mobile", async 
   await expect(card.getByRole("button", { name: "Przypnij" })).toBeHidden();
 });
 
-test("przytrzymanie kafla zaznacza go i pokazuje pasek zbiorczy @mobile", async ({ page, browserName }) => {
+test("przytrzymanie kafla otwiera menu „⋯”; „Zaznacz” w nim zaczyna zaznaczanie z paskiem zbiorczym @mobile", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "dotyk przez CDP jest tylko w Chromium");
   await page.getByRole("button", { name: "Nowa notatka" }).click();
   await page.getByPlaceholder("Tytuł").fill("Do zaznaczenia");
@@ -59,8 +59,9 @@ test("przytrzymanie kafla zaznacza go i pokazuje pasek zbiorczy @mobile", async 
   const x = box.x + box.width / 2, y = box.y + box.height / 2;
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
-  await page.waitForTimeout(650); // czas: długie przytrzymanie kafla zaznacza go
+  await page.waitForTimeout(650); // czas: długie przytrzymanie kafla otwiera menu „⋯” (Q5.3)
   await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await page.getByRole("dialog").getByRole("button", { name: "Zaznacz" }).click();
   await expect(page.getByText(/zaznaczono/)).toBeAttached();
   await expect(page.getByRole("button", { name: "Wyczyść zaznaczenie" })).toBeVisible();
   // Bez otwierania edytora po puszczeniu palca.
