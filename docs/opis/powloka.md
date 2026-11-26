@@ -427,4 +427,4 @@ Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj nota
 - **Jak działa:** jedno źródło klawiszy to `SHORTCUT_GROUPS`; paleta, podpowiedzi (`HoverTip`) i ściąga czytają z niego. Lista poleceń w ściądze to te same dane co w palecie, bez warunków `when` (ściąga pokazuje całość). Szukanie przez `fold` z `src/lib/fold.ts`.
 - **Ograniczenia:** polecenia z etykietą zależną od stanu (funkcja) nie trafiają do ściągi — dziś takich nie ma w grupach ściągi.
 - **Testy:** `src/lib/commands/registry.test.ts` (każdy skrót polecenia rozwiązuje się z tabeli, konkretne wartości, grupy ściągi bez stylów i krojów), `src/lib/shortcuts.test.ts`, `e2e/shortcuts-sheet.spec.ts` (`?`, szukanie bez ogonków, brak trafień, axe).
-- **Commit:** zobacz `git log --grep "Q5.2"`, 2026-11-26.
+- **Commit:** `a147713f`, 2026-11-26.
