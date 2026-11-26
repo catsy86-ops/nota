@@ -56,8 +56,8 @@ A3.4 (`src/lib/commands/` — źródła poleceń palety) → Powłoka 2.5 (więc
 
 | Punkt | Co | Rozmiar |
 |---|---|---|
-| Z-17.9 | dokończyć: pomocnik `convergence.ts`, testy długów, zmian, Pracy | M |
-| L1.2, A4.5 (`merge.ts`), Z-11 | testy własności na tym pomocniku | M |
+| Z-17.9 ✅ 2026-11-26 (Praca grupy 2–3 i notatki zostają) | dokończyć: pomocnik `convergence.ts`, testy długów, zmian, Pracy | M |
+| L1.2, A4.5 (`merge.ts`), Z-11 ✅ 2026-11-26 (Z-11 bez pkt 4) | testy własności na tym pomocniku | M |
 | C2.2 | zapis serii jednym stuknięciem (największa dźwignia w Ćwiczeniach) | M |
 | C3.1 | kalendarz regularności 12 tygodni (SVG + opis dla czytnika) | M |
 | C3.4 | obwody ciała (nowa mapa Yjs — `docs/dane-wersje.md`) | M |

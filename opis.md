@@ -437,6 +437,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 
 ### Jakość, architektura i testy — [`docs/opis/jakosc.md`](docs/opis/jakosc.md)
 
+- Zestaw zbieżności i testy własności scalania (Z-17.9, L1.2, A4.5, Z-11, 2026-11-26)
 - Dokumenty usunięte (2026-10-21)
 - Wydajność — paczka startowa i precache (2026-10-16)
 - Porządki — ostrzeżenia lintera w Notatkach, Kalendarzu i Grafiku

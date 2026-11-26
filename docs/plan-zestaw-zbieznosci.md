@@ -1,6 +1,6 @@
 # Zestaw zbieżności (Z-17.8): co porównywać, czego nie, jak generować operacje
 
-> **Status:** specyfikacja z sesji J, 2026-11-17. Kodu nie ma. Wykonanie: **Z-17.9** (Sonnet; notatki — Opus). Poprzedza A4.5, L1.2, Z-11 i resztę Z-4.T.
+> **Status (2026-11-26):** pomocnik i zestawy Długów, Grafiku i Pracy (grupa 1: dziennik i budowy) zrobione — `docs/opis/jakosc.md`; znalezione remisy W1 poprawione. Zostały: Praca grupy 2–3 (rozliczenia, punkty, etapy; auto, zlecenia, klienci), notatki (§3.1) i pomiar D-Z1. Wcześniej: specyfikacja z sesji J, 2026-11-17. Wykonanie: **Z-17.9** (Sonnet; notatki — Opus). Poprzedza A4.5, L1.2, Z-11 i resztę Z-4.T.
 > **Po co:** Yjs gwarantuje, że dwa dokumenty po wymianie aktualizacji mają ten sam stan surowy. Test, który porównuje surowe mapy, sprawdza więc bibliotekę, nie aplikację, i zawsze jest zielony. Błędy aplikacji leżą w czterech miejscach: w **projekcji** (to, co funkcje odczytu robią z dokumentu), w **zapisach przy odbiorze** (obserwator, który coś dopisuje), w **niezmiennikach, których scalanie nie pilnuje** (limity, kolejność, odwołania) i w **operacjach „odczytaj–zmień–zapisz”** (cicha utrata cudzej zmiany).
 > **Stan dziś:** `src/lib/study/properties.prop.test.ts` ma dwa testy scalania Pracy (porównuje tylko posortowane identyfikatory wpisów), `yjsStore.test.ts` i testy działów mają przykłady na dwóch dokumentach. Nie ma wspólnego pomocnika ani losowych przeplotów z dostawą częściową.
 

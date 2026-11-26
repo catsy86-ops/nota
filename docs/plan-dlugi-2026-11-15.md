@@ -36,7 +36,7 @@ Czego nie ma (sprawdzone w `src/lib/debts/` i `DebtsView.tsx`):
 | Nr | Punkt | Rozmiar |
 |---|---|---|
 | L1.1 ✅ 2026-11-25 | **Podział `DebtsView.tsx`** na `Summary`, `AddForm`, `People`, `PersonSheet`, `EditDebtForm` w osobnych plikach `src/components/debts/`. Bez zmian zachowania; testy `DebtsView.test.tsx` i `debts-plan.spec.ts` zielone. | M |
-| L1.2 | **Testy własności** (`fast-check`): saldo nie zależy od kolejności wpisów; scalenie dwóch dokumentów w obie strony daje to samo; „Cofnij” po każdej operacji przywraca stan co do wpisu. | S |
+| L1.2 ✅ 2026-11-26 | **Testy własności** (`fast-check`): saldo nie zależy od kolejności wpisów; scalenie dwóch dokumentów w obie strony daje to samo; „Cofnij” po każdej operacji przywraca stan co do wpisu. | S |
 | L1.3 | **QA na telefonie** (zaległy Etap 5): formularz przy dużym kroju, arkusz osoby, udostępnianie. | S, właściciel |
 
 ## Etap 2: spłaty i przypomnienia
