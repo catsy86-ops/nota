@@ -3,7 +3,7 @@ import { pl } from "date-fns/locale";
 import { toast } from "sonner";
 import type { DragEndEvent } from "@dnd-kit/core";
 import { composeReminderTimestamp } from "@/lib/reminderTime";
-import { nextInSeries, nextOccurrence, ruleOf, seriesDay, type RepeatInput, type RepeatRule } from "@/lib/reminderRepeat";
+import { nextInSeries, nextOccurrence, ruleOf, seriesDay, seriesMinutes, type RepeatInput, type RepeatRule } from "@/lib/reminderRepeat";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { toastWithUndo } from "@/lib/undoToast";
 import type { Note } from "@/hooks/useNotes";
@@ -34,6 +34,8 @@ export function useCalendarMoves({ notesById, onSetReminder, month, setMonth, se
       until: note?.reminderRepeatUntil,
       base: note?.reminderBase,
       allDay: note?.reminderAllDay === true,
+      // Godzina serii (Z-8.2): bez niej krok przez zmianę czasu liczy się od przesuniętej godziny, nie od 2:30 z serii.
+      minutes: note ? seriesMinutes(note) : undefined,
     };
   }
 
@@ -60,7 +62,7 @@ export function useCalendarMoves({ notesById, onSetReminder, month, setMonth, se
     const before = previousOf(noteId);
     const note = notesById.get(noteId);
     // Odłożone wystąpienie: kolejny termin liczy się od serii (`nextOccurrence`), nie od odłożonej chwili.
-    const next = note ? nextOccurrence(note, at) : nextInSeries(at, repeat, before.day, before.until);
+    const next = note ? nextOccurrence(note, at) : nextInSeries(at, repeat, before.day, before.until, before.minutes);
     // Pominięcie ostatniego terminu serii kończy ją — nie ma już czego przypominać.
     if (next === null) onSetReminder(noteId, null, "none", undefined, undefined, undefined, undefined);
     else onSetReminder(noteId, next, repeat, before.day, undefined, before.allDay, before.until);
@@ -111,7 +113,7 @@ export function useCalendarMoves({ notesById, onSetReminder, month, setMonth, se
     // o ile nowy czas wypada przed następnym terminem serii (ta sama reguła co `snoozeTarget`).
     // Dalej seria liczy się od nowego terminu, jak dotąd.
     const deferred = before.base !== undefined && before.base !== before.reminder;
-    const seriesNext = deferred ? nextInSeries(before.base as number, occ.repeat, before.day, before.until) : null;
+    const seriesNext = deferred ? nextInSeries(before.base as number, occ.repeat, before.day, before.until, before.minutes) : null;
     const keepSeries = deferred && (seriesNext === null || to.getTime() < seriesNext);
     markMoved(occ.noteId);
     onSetReminder(occ.noteId, to.getTime(), occ.repeat, undefined, keepSeries ? before.base : undefined, occ.allDay, before.until);

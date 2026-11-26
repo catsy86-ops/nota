@@ -259,3 +259,44 @@ describe("useNotes — podstrony", () => {
     expect(result.current.trashedNotes[0].trashedAt).toBe(grandAt);
   });
 });
+
+describe("useNotes — odłożenie terminu serii (Z-8.1)", () => {
+  const at = (day: number, h: number, min = 0) => new Date(2026, 5, day, h, min).getTime();
+
+  it("odłożenie zostawia godzinę serii 8:00, a krok serii wraca na jutro 8:00", async () => {
+    const { nextOccurrence } = await import("@/lib/reminderRepeat");
+    const { result } = renderHook(() => useNotes());
+    await waitFor(() => expect(result.current.notes).toEqual([]));
+    let id = "";
+    act(() => { id = result.current.addNote("Leki", "", "default", [], at(10, 8)); });
+    act(() => result.current.updateNote(id, { reminderRepeat: "daily" }));
+    expect(result.current.notes[0].reminderTime).toBe(480);
+
+    act(() => result.current.updateNote(id, { reminder: at(10, 8, 10), reminderBase: at(10, 8), reminderDay: 10 }));
+    const snoozed = result.current.notes[0];
+    expect(snoozed.reminder).toBe(at(10, 8, 10));
+    expect(snoozed.reminderTime).toBe(480);
+
+    const next = nextOccurrence(snoozed, snoozed.reminder as number);
+    expect(next).toBe(at(11, 8));
+    act(() => result.current.updateNote(id, { reminder: next, reminderBase: undefined, reminderDay: 11 }));
+    expect(result.current.notes[0].reminder).toBe(at(11, 8));
+    expect(result.current.notes[0].reminderTime).toBe(480);
+  });
+
+  it("cofnięcie odłożenia przywraca termin i godzinę sprzed odłożenia", async () => {
+    const { result } = renderHook(() => useNotes());
+    await waitFor(() => expect(result.current.notes).toEqual([]));
+    let id = "";
+    act(() => { id = result.current.addNote("Leki", "", "default", [], at(10, 8)); });
+    act(() => result.current.updateNote(id, { reminderRepeat: "daily" }));
+    const before = result.current.notes[0];
+
+    act(() => result.current.updateNote(id, { reminder: at(10, 8, 10), reminderBase: at(10, 8), reminderDay: 10 }));
+    act(() => result.current.updateNote(id, { reminder: before.reminder, reminderBase: before.reminderBase, reminderDay: before.reminderDay }));
+    const after = result.current.notes[0];
+    expect(after.reminder).toBe(at(10, 8));
+    expect(after.reminderBase).toBeUndefined();
+    expect(after.reminderTime).toBe(480);
+  });
+});
