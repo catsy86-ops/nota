@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_SHIFT_DATA, type ShiftData } from "@/lib/shifts/model";
 import type { JournalEntry } from "@/lib/study/yStudy";
-import { buildPushSchedule, outsideQuietHours, PUSH_HORIZON_DAYS, type PushNote } from "./schedule";
+import { buildPushSchedule, outsideQuietHours, PUSH_HORIZON_DAYS, PUSH_TITLE_MAX, type PushNote } from "./schedule";
 
 const at = (day: number, h: number, m = 0) => new Date(2026, 9, day, h, m).getTime();
 const note = (over: Partial<PushNote> = {}): PushNote => ({ id: "n1", title: "Zadzwonić do hurtowni", content: "", reminder: null, ...over });
@@ -166,6 +166,14 @@ describe("buildPushSchedule — koniec zmiany (G4.1)", () => {
 
   it("wyłączona kategoria „Grafik” wyłącza też koniec zmiany", () => {
     expect(ends(buildPushSchedule({ now: WED_NOON, notes: [], shifts, off: ["grafik"] }))).toEqual([]);
+  });
+
+  it("długa nazwa zmiany: tytuł przycięty do limitu serwera z wielokropkiem (S4 audytu 2)", () => {
+    const long = { ...shifts, types: shifts.types.map((t) => (t.id === "b" ? { ...t, name: "Budowa ".repeat(30).trim() } : t)) };
+    const [item] = ends(buildPushSchedule({ now: WED_NOON, notes: [], shifts: long }));
+    expect(item.title).toHaveLength(PUSH_TITLE_MAX);
+    expect(item.title.startsWith("Koniec zmiany: Budowa")).toBe(true);
+    expect(item.title.endsWith("…")).toBe(true);
   });
 });
 

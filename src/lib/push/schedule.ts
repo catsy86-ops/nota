@@ -109,6 +109,8 @@ export interface PushInput {
   off?: readonly string[];
 }
 
+/** Najdłuższy tytuł powiadomienia, jaki przyjmuje serwer (`push-server`). */
+export const PUSH_TITLE_MAX = 120;
 const clip = (s: string, max: number) => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
 const firstLine = (s: string) => s.split("\n").find((l) => l.trim())?.trim() ?? "";
 
@@ -409,7 +411,8 @@ export function buildPushSchedulePlan(input: PushInput): PushSchedulePlan {
   }
   const dropped = rest.length - kept.length;
   return {
-    items: [...fixed, ...kept].sort((a, b) => a.at - b.at),
+    // S4 audytu 2: serwer i tak tnie tytuł po cichu do 120 znaków — tniemy tu, z wielokropkiem, każdą pozycję naraz.
+    items: [...fixed, ...kept].sort((a, b) => a.at - b.at).map((i) => (i.title.length > PUSH_TITLE_MAX ? { ...i, title: clip(i.title, PUSH_TITLE_MAX) } : i)),
     total: ranked.length,
     dropped,
     droppedBy,
