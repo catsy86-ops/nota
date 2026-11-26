@@ -212,16 +212,16 @@ function AddMealForm({ favorites, recent, yesterdayCount, onRepeatYesterday }: {
         <div role="group" aria-label="Ulubione posiłki — stuknięcie zapisuje" className="flex flex-wrap gap-1.5" data-testid="diet-favorites">
           {favorites.map((f) => (
             <span key={f.id} className="inline-flex max-w-72 items-stretch overflow-hidden rounded-full border border-primary/50 bg-primary/10 text-xs">
-              <button type="button" onClick={() => logFavorite(f)} aria-label={`Zapisz ${f.text}`}
-                className="pressable flex min-w-0 items-center gap-1 py-1 pl-2.5 pr-1.5 text-foreground hover:bg-primary/15 outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring coarse:min-h-11">
-                <Star className="size-3 shrink-0 fill-primary text-primary" aria-hidden />
+              <Button type="button" variant="ghost" size="chip" onClick={() => logFavorite(f)} aria-label={`Zapisz ${f.text}`}
+                className="min-w-0 rounded-none pl-2.5 pr-1.5 font-normal text-foreground hover:bg-primary/15 focus-visible:ring-inset focus-visible:ring-offset-0">
+                <Star className="fill-primary text-primary" aria-hidden />
                 <span className="truncate">{f.text}</span>
                 {f.kcal !== undefined && <span className="shrink-0 text-muted-foreground">· {f.kcal} kcal</span>}
-              </button>
-              <button type="button" onClick={() => unpinWithUndo(f.id)} aria-label={`Odepnij: ${f.text}`}
-                className="pressable border-l border-primary/30 px-1.5 text-muted-foreground hover:bg-primary/15 hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring coarse:min-h-11 coarse:min-w-9">
-                <X className="size-3" aria-hidden />
-              </button>
+              </Button>
+              <Button type="button" variant="ghost" size="chip" onClick={() => unpinWithUndo(f.id)} aria-label={`Odepnij: ${f.text}`}
+                className="rounded-none border-l border-primary/30 px-1.5 text-muted-foreground hover:bg-primary/15 focus-visible:ring-inset focus-visible:ring-offset-0 coarse:min-w-9 coarse:px-1.5">
+                <X aria-hidden />
+              </Button>
             </span>
           ))}
         </div>

@@ -285,11 +285,10 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
         <div role="group" aria-label="Zapas po ostatniej serii (opcjonalnie)" className="flex flex-wrap items-center gap-1.5" data-testid="rir-picker">
           <span className="ui-hint mr-1">Zapas po ostatniej serii</span>
           {Array.from({ length: TRAINING_RIR_MAX + 1 }, (_, n) => (
-            <button key={n} type="button" aria-pressed={rir === n} aria-label={`Zapas ${rirLabel(n)} powtórzeń`} onClick={() => setRir(rir === n ? undefined : n)}
-              className={cn("pressable min-w-9 rounded-full border px-2.5 py-1 font-mono text-xs tabular-nums outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11 coarse:min-w-11",
-                rir === n ? "border-primary bg-primary/10 font-medium" : "border-border text-muted-foreground")}>
+            <Button key={n} type="button" variant="chip" size="chip" aria-pressed={rir === n} aria-label={`Zapas ${rirLabel(n)} powtórzeń`} onClick={() => setRir(rir === n ? undefined : n)}
+              className={cn("min-w-9 font-mono tabular-nums coarse:min-w-11", rir !== n && "text-muted-foreground")}>
               {rirLabel(n)}
-            </button>
+            </Button>
           ))}
         </div>
       )}
