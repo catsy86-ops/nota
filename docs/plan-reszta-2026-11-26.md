@@ -48,6 +48,8 @@
 
 ## Fala 2 — rejestr poleceń (łańcuch, jedna gałąź myśli)
 
+**Zamknięta 2026-11-26:** A3.4, Powłoka 2.5, Q5.2, Q5.3 (opis w `docs/opis/powloka.md`). Otwarte: decyzja, czy przytrzymanie kafla notatki na dotyku ma otwierać menu zamiast zaznaczania.
+
 A3.4 (`src/lib/commands/` — źródła poleceń palety) → Powłoka 2.5 (więcej poleceń: karty Ustawień, style, kroje, „Zrób kopię”) → Q5.2 (ściąga `?` z rejestru) → Q5.3 (menu pod prawym przyciskiem i przytrzymaniem z tego samego opisu akcji). Razem L; każdy krok osobny commit.
 
 ## Fala 3 — testy zbieżności i dział Ćwiczenia/Długi

@@ -342,6 +342,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Ustawienia — „Odśwież aktualizacje” i auto-aktualizacja (2026-11-26)
 - Powłoka — więcej poleceń w palecie: kopia, kroje, jasność, style (2.5, 2026-11-26)
 - Powłoka — ściąga skrótów z rejestru, z wyszukiwaniem (Q5.2, 2026-11-26)
+- Powłoka — prawy przycisk otwiera menu „⋯” (Q5.3, 2026-11-26)
 
 ### Wygląd i ruch — [`docs/opis/wyglad.md`](docs/opis/wyglad.md)
 

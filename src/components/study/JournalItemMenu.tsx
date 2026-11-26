@@ -3,6 +3,7 @@ import { CircleCheck, Copy, Ellipsis, Pencil, RotateCcw, Share2, Trash2 } from "
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { haptic } from "@/lib/haptics";
+import { useContextMenuTarget } from "@/hooks/useContextMenu";
 import { shareOrCopy } from "@/lib/shareOrCopy";
 import { toastWithUndo } from "@/lib/undoToast";
 import { openJournalEdit } from "@/lib/study/entrySheet";
@@ -19,6 +20,8 @@ export function JournalItemMenu({ entry: e, resolved, onToggleResolved }: {
   onToggleResolved: () => void;
 }) {
   const item = "gap-2 coarse:min-h-11";
+  // Q5.3: otwierane też prawym przyciskiem na wierszu wpisu (`JournalItem`).
+  const [open, setOpen] = useContextMenuTarget(`journal:${e.id}`);
 
   async function copy() {
     try {
@@ -43,7 +46,7 @@ export function JournalItemMenu({ entry: e, resolved, onToggleResolved }: {
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           type="button"

@@ -51,6 +51,7 @@ export function SidebarFilterItem({ name, query, count, isActive, onSelect, onRe
 
   return (
     <SidebarRow
+      menuId={`sidebar:${kind}:${name}`}
       icon={kind === "view" ? <LayoutDashboard className="size-3.5" /> : <Bookmark className="size-3.5" />}
       label={name}
       active={isActive}
@@ -58,7 +59,7 @@ export function SidebarFilterItem({ name, query, count, isActive, onSelect, onRe
       buttonProps={{ title: query }}
       trailing={count === undefined ? undefined : <SidebarCount value={count} active={isActive} />}
       actions={
-        <SidebarRowMenu label={`${noun.of} ${name}`} onCloseAutoFocus={keepInputFocus}>
+        <SidebarRowMenu label={`${noun.of} ${name}`} menuId={`sidebar:${kind}:${name}`} onCloseAutoFocus={keepInputFocus}>
           <DropdownMenuItem onSelect={() => { focusInput.current = true; setDraft(name); setEditing(true); }}>
             <Pencil className="size-4 mr-2" />Zmień nazwę
           </DropdownMenuItem>

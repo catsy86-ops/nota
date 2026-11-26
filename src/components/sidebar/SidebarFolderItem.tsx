@@ -74,6 +74,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
   return (
     <div data-folder-drop={folder.id}>
       <SidebarRow
+        menuId={`sidebar:folder:${folder.id}`}
         ref={setDropRef}
         active={isActive}
         dropActive={isOver}
@@ -116,7 +117,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
           );
         })()}
         actions={
-            <SidebarRowMenu label={`folderu ${folder.name}`} onCloseAutoFocus={keepInputFocus}>
+            <SidebarRowMenu label={`folderu ${folder.name}`} menuId={`sidebar:folder:${folder.id}`} onCloseAutoFocus={keepInputFocus}>
               <DropdownMenuItem onSelect={() => { focusInput.current = true; setEditing(true); }}>
                 <Pencil className="size-4 mr-2" />Zmień nazwę
               </DropdownMenuItem>

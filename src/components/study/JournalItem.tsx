@@ -1,3 +1,4 @@
+import { contextMenuTrigger } from "@/hooks/useContextMenu";
 import { lazy, memo, Suspense, useEffect, useState } from "react";
 import { Check, CircleCheck, Cylinder, Flag, Gauge, MapPin, Mic, Package, Play, Ruler, Wrench } from "lucide-react";
 import { fittingsLine } from "@/lib/study/fittings";
@@ -57,7 +58,8 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
 
   return (
     // Wpis jak linijka w zeszycie: godzina na marginesie, linia oddziela wpisy zamiast ramki.
-    <li className={cn("grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 border-b border-dashed border-border/70 py-3 first:pt-1 last:border-b-0", fresh && "journal-fresh")} data-fresh={fresh || undefined} data-journal-entry={e.kind} data-resolved={resolved || undefined}>
+    // Q5.3: prawy przycisk na wpisie otwiera to samo menu „⋯” (`JournalItemMenu`).
+    <li onContextMenu={contextMenuTrigger(`journal:${e.id}`)} className={cn("grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 border-b border-dashed border-border/70 py-3 first:pt-1 last:border-b-0", fresh && "journal-fresh")} data-fresh={fresh || undefined} data-journal-entry={e.kind} data-resolved={resolved || undefined}>
       <time
         dateTime={new Date(e.at).toISOString()}
         className="border-r border-primary/30 pr-2 pt-0.5 text-right font-mono text-xs tabular-nums text-muted-foreground"

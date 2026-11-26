@@ -428,3 +428,12 @@ Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj nota
 - **Ograniczenia:** polecenia z etykietą zależną od stanu (funkcja) nie trafiają do ściągi — dziś takich nie ma w grupach ściągi.
 - **Testy:** `src/lib/commands/registry.test.ts` (każdy skrót polecenia rozwiązuje się z tabeli, konkretne wartości, grupy ściągi bez stylów i krojów), `src/lib/shortcuts.test.ts`, `e2e/shortcuts-sheet.spec.ts` (`?`, szukanie bez ogonków, brak trafień, axe).
 - **Commit:** `a147713f`, 2026-11-26.
+
+## Powłoka — prawy przycisk otwiera menu „⋯” (Q5.3, 2026-11-26)
+
+- **Co robi:** prawy przycisk myszy (a na Androidzie przytrzymanie, które wysyła to samo zdarzenie) otwiera **to samo** menu „⋯” co przycisk: na wpisie dziennika budowy („Opcje wpisu”), na wierszu folderu, etykiety, filtra i widoku w pasku bocznym, a na kaflu notatki na komputerze rozwija „Więcej opcji”. Zwykłe menu przeglądarki zostaje w polach tekstowych, w edytorze, na linkach, przy zaznaczonym tekście i z wciśniętym Shiftem.
+- **Gdzie jest:** `src/lib/contextMenu.ts` (`requestContextMenu`, `subscribeContextMenu`, `shouldOpenContextMenu`), `src/hooks/useContextMenu.ts` (`contextMenuTrigger(id)` dla wiersza, `useContextMenuTarget(id)` dla menu); podpięte w `study/JournalItem.tsx` + `JournalItemMenu.tsx` (`journal:<id>`), `sidebar/SidebarRow.tsx` (`menuId` w `SidebarRow` i `SidebarRowMenu`; `SidebarFolderItem`, `SidebarLabelItem`, `SidebarFilterItem`), `NoteCard.tsx` (`onContextMenu` → `setShowMore(true)`).
+- **Jak działa:** „jeden opis akcji” to dosłownie jeden komponent: wiersz nie ma własnej listy pozycji, tylko otwiera istniejące menu przez id (menu Radix sterowane `open`), więc pozycje nie mogą się rozjechać. Menu kotwiczy się przy przycisku „⋯”, nie przy kursorze.
+- **Ograniczenia i pułapki:** na dotyku kafel notatki zostaje przy dotychczasowym przytrzymaniu = zaznaczenie (tryb zaznaczania); zamiana na menu to decyzja właściciela. iOS Safari nie wysyła `contextmenu` przy przytrzymaniu, więc tam przytrzymanie wiersza dziennika i paska nic nie otwiera. Menu przypomnień (`ReminderQuickActions`) i raportu nie dostały prawego przycisku — to przyciski, nie wiersze.
+- **Testy:** `src/lib/contextMenu.test.ts` (wiersz, pole tekstowe, edytor, link, zaznaczenie, Shift, słuchacze), `e2e/context-menu.spec.ts` (wpis dziennika, folder, kafel, brak przejęcia w polu wyszukiwania), `e2e/journal-menu.spec.ts` (menu „⋯” bez zmian).
+- **Commit:** zobacz `git log --grep "Q5.3"`, 2026-11-26.

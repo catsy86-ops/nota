@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
 import { Ellipsis } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { contextMenuTrigger, useContextMenuTarget } from "@/hooks/useContextMenu";
 
 // Jeden wiersz paska bocznego: nawigacja, etykiety, foldery i stopka.
 // Jeden stan aktywny — pomarańczowa pigułka (wspólny `layoutId`, więc przejeżdża
@@ -32,15 +33,18 @@ interface SidebarRowProps {
   tipKeys?: string;
   /** Odcień działu (plan 3.7): pigułka i kreska aktywnego wiersza biorą kolor z niego, bez niego — z motywu. */
   hue?: string;
+  /** Q5.3: prawy przycisk na wierszu otwiera jego menu „⋯” (`SidebarRowMenu` z tym samym `menuId`). */
+  menuId?: string;
 }
 
 export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function SidebarRow(
-  { icon, label, onClick, active = false, dropActive = false, trailing, before, actions, className, buttonProps, tipKeys, hue },
+  { icon, label, onClick, active = false, dropActive = false, trailing, before, actions, className, buttonProps, tipKeys, hue, menuId },
   ref,
 ) {
   return (
     <div
       ref={ref}
+      onContextMenu={menuId ? contextMenuTrigger(menuId) : undefined}
       data-active={active || undefined}
       style={hue ? ({ "--row-hue": hue } as React.CSSProperties) : undefined}
       className={cn(
@@ -97,14 +101,17 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
 });
 
 /** Menu „⋯” z akcjami wiersza (nazwa, kolor, usuń…). */
-export function SidebarRowMenu({ label, children, onCloseAutoFocus }: {
+export function SidebarRowMenu({ label, children, onCloseAutoFocus, menuId }: {
   /** Nazwa elementu, np. „folderu Praca” — trafia do etykiety przycisku. */
   label: string;
   children: React.ReactNode;
   onCloseAutoFocus?: (e: Event) => void;
+  /** Q5.3: ten sam `menuId` co w `SidebarRow` — prawy przycisk na wierszu otwiera to menu. */
+  menuId?: string;
 }) {
+  const [open, setOpen] = useContextMenuTarget(menuId ?? "");
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           type="button"

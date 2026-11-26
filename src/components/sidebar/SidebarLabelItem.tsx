@@ -42,12 +42,13 @@ export function SidebarLabelItem({ label, displayName = label, depth = 1, isActi
   return (
     <div style={{ paddingLeft: (depth - 1) * 12 }} title={label}>
     <SidebarRow
+      menuId={`sidebar:label:${label}`}
       icon={<Tag className="size-3.5" />}
       label={displayName}
       active={isActive}
       onClick={onSelect}
       actions={
-        <SidebarRowMenu label={`etykiety ${label}`} onCloseAutoFocus={keepInputFocus}>
+        <SidebarRowMenu label={`etykiety ${label}`} menuId={`sidebar:label:${label}`} onCloseAutoFocus={keepInputFocus}>
           <DropdownMenuItem onSelect={() => { focusInput.current = true; setEditing(true); }}>
             <Pencil className="size-4 mr-2" />Zmień nazwę
           </DropdownMenuItem>

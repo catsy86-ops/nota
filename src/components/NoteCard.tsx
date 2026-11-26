@@ -33,6 +33,7 @@ import { backlinksOf } from "@/lib/wikiLinks";
 import { toggleChecklistItem } from "@/lib/checklistTree";
 import { toast } from "sonner";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
+import { shouldOpenContextMenu } from "@/lib/contextMenu";
 
 const NO_TITLES: string[] = [];
 
@@ -181,7 +182,13 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         onPointerMove={handleLongPressMove}
         onPointerUp={cancelLongPress}
         onPointerCancel={cancelLongPress}
-        onContextMenu={isTouch && onToggleSelect ? (e) => e.preventDefault() : undefined}
+        // Dotyk: przytrzymanie zaznacza kafel, więc bez menu przeglądarki. Mysz (Q5.3): prawy przycisk rozwija to samo
+        // „Więcej opcji” co „⋯” — poza edytorem, linkami i zaznaczonym tekstem (`shouldOpenContextMenu`).
+        onContextMenu={isTouch && onToggleSelect ? (e) => e.preventDefault() : !isTouch && !isEditing ? (e) => {
+          if (!shouldOpenContextMenu(e, window.getSelection()?.toString() ?? "")) return;
+          e.preventDefault();
+          setShowMore(true);
+        } : undefined}
         drag={swipeEnabled ? "x" : false}
         dragControls={swipeControls}
         dragListener={false}

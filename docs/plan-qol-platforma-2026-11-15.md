@@ -64,7 +64,7 @@
 |---|---|---|
 | Q5.1 | **Pełna obsługa klawiaturą** list i siatek: strzałki z jednym punktem `Tab` (roving tabindex — dziś 3 pliki) w liście notatek, Kalendarzu, Grafiku, tablicy. | M |
 | Q5.2 ✅ 2026-11-26 | **Ściąga skrótów** pod `?` generowana z rejestru poleceń palety (jedno źródło), z wyszukiwaniem. | S |
-| Q5.3 | **Menu pod prawym przyciskiem i długim przytrzymaniem** spójne w całej aplikacji (dziś 4 pliki): te same pozycje co menu „⋯”, z jednego opisu akcji. | M |
+| Q5.3 ✅ 2026-11-26 (prawy przycisk; przytrzymanie kafla na dotyku — decyzja) | **Menu pod prawym przyciskiem i długim przytrzymaniem** spójne w całej aplikacji (dziś 4 pliki): te same pozycje co menu „⋯”, z jednego opisu akcji. | M |
 | Q5.4 ✅ 2026-11-25 (zestaw „Duże cele” = tryb budowa + wyraźne ramki, bez zmiany stylu) | **Tryb „duże cele”** jako zestaw w Ustawieniach (obok „Czytanie”, „Oszczędny”): cele 56 px i większe odstępy tylko po włączeniu — zamiast zmiany `Button` dla wszystkich (cofniętej 15.11). | S |
 | Q5.5 | **Czytnik ekranu na telefonie:** przejście TalkBackiem przez pięć głównych ścieżek; lista braków w `docs/`. Ręczne, właściciel albo sesja z Chrome. | S |
 
