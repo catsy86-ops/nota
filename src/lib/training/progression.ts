@@ -3,7 +3,7 @@ import { byTrainingTime, overDumbbell, type PlanDay, type TrainingEntry, type Tr
 /**
  * C2.1 Podwójna progresja: gdy w ostatniej sesji ćwiczenia każda seria z ciężarem doszła do celu powtórek —
  * „dołóż” (0,5 kg do 10 kg, wyżej 1 kg); gdy nie — „te same kg, o powtórkę więcej”. Limit hantli z „Sprzętu”
- * zamienia „dołóż” na powtórki. Bez celu powtórek, bez historii albo dla serii na czas / bez ciężaru — `null`.
+ * zamienia „dołóż” na powtórki. Zapas (RIR) 3+ po ostatniej serii też daje „dołóż” (C2.3). Bez celu powtórek, bez historii albo dla serii na czas / bez ciężaru — `null`.
  */
 export type ProgressionHint =
   | { kind: "add"; kg: number; reps: number }
@@ -27,7 +27,9 @@ export function suggestNext(
   const kg = Math.max(...work.map((s) => s.kg as number));
   const top = work.filter((s) => s.kg === kg);
   const minReps = Math.min(...top.map((s) => s.reps));
-  if (top.every((s) => s.reps >= targetReps)) {
+  // C2.3: zapas 3+ po ostatniej serii też znaczy „dołóż” — ciężar był za lekki, nawet gdy powtórek zabrakło.
+  const lastRir = last.sets[last.sets.length - 1].rir;
+  if (top.every((s) => s.reps >= targetReps) || (lastRir !== undefined && lastRir >= 3)) {
     const next = Math.round((kg + stepFor(kg)) * 10) / 10;
     if (!overDumbbell(next, exerciseEquipment, equipment)) return { kind: "add", kg: next, reps: targetReps };
     return { kind: "reps", kg, reps: minReps + 1, capped: true };

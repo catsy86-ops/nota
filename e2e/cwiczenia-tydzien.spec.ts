@@ -26,3 +26,15 @@ test("trening: po zapisie serii wiersz „Ten tydzień” z dniem i seriami part
   await expect(week).toContainText("1 trening");
   await expect(week).toContainText("serie:");
 });
+
+test("C2.3: zapas po ostatniej serii — jedno stuknięcie, widoczny w „Ostatnio”", async ({ page }) => {
+  await page.getByLabel("Powtórki, seria 1").fill("8");
+  await page.getByLabel("Ciężar kg, seria 1").fill("20");
+  const three = page.getByRole("button", { name: "Zapas 3 powtórzeń" });
+  await three.click();
+  await expect(three).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Zapisz serie" }).click();
+  await expect(page.getByText(/Ostatnio .*8×20 kg \(zapas 3\)/)).toBeVisible();
+  // Po zapisie wybór się czyści — następny wpis nie dziedziczy zapasu.
+  await expect(three).toHaveAttribute("aria-pressed", "false");
+});

@@ -1,13 +1,17 @@
-import { TRAINING_KG_MAX, type TrainingSet } from "@/lib/training/model";
+import { TRAINING_KG_MAX, TRAINING_RIR_MAX, type TrainingSet } from "@/lib/training/model";
 
 /** C1.2: wydzielone z `TrainingSection.tsx` bez zmian zachowania. */
 
 export function setsLine(sets: TrainingSet[]): string {
   return sets.map((s) => {
     if (s.seconds !== undefined) return s.kg !== undefined ? `${s.seconds} s +${s.kg} kg` : `${s.seconds} s`;
-    return s.kg !== undefined ? `${s.reps}×${s.kg} kg` : `${s.reps}`;
+    const base = s.kg !== undefined ? `${s.reps}×${s.kg} kg` : `${s.reps}`;
+    return s.rir !== undefined ? `${base} (zapas ${rirLabel(s.rir)})` : base;
   }).join(", ");
 }
+
+/** Zapas 4 znaczy „4 i więcej”. */
+export const rirLabel = (rir: number) => (rir >= TRAINING_RIR_MAX ? `${TRAINING_RIR_MAX}+` : String(rir));
 
 export interface SetRow { reps: string; kg: string }
 

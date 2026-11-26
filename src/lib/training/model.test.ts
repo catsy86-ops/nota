@@ -33,6 +33,14 @@ describe("cleanKg / cleanSet", () => {
     expect(cleanSet({ reps: 0 })).toBeNull();
     expect(cleanSet({ reps: 10, kg: "dużo" })).toEqual({ reps: 10 });
   });
+
+  it("C2.3: zapas (rir) 0–4 całkowity zostaje, zły znika bez odrzucenia serii i nie trafia do extra", () => {
+    expect(cleanSet({ reps: 8, kg: 40, rir: 0 })).toEqual({ reps: 8, kg: 40, rir: 0 });
+    expect(cleanSet({ reps: 8, rir: 4 })).toEqual({ reps: 8, rir: 4 });
+    expect(cleanSet({ reps: 8, rir: 5 })).toEqual({ reps: 8 });
+    expect(cleanSet({ reps: 8, rir: 1.5 })).toEqual({ reps: 8 });
+    expect(cleanSet({ reps: 8, rir: "2" })).toEqual({ reps: 8 });
+  });
 });
 
 describe("cleanEntry", () => {

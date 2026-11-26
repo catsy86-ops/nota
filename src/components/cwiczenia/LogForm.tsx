@@ -7,14 +7,14 @@ import { afterLogged, afterSkipped, currentExerciseId, isFinished, sessionMinute
 import { addDaysToKey } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { CUSTOM_HINT_MAX, CUSTOM_NAME_MAX, CUSTOM_PREFIX, EQUIPMENT_LIST, EXERCISES, exerciseById, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS, type Equipment, type MuscleGroup } from "@/lib/training/catalog";
-import { bestKg, byTrainingTime, overDumbbell, planLine, TRAINING_NOTE_MAX, TRAINING_REPS_MAX, TRAINING_SECONDS_MAX, volumeOf, type PlanDay, type TrainingEntry, type TrainingSet } from "@/lib/training/model";
+import { bestKg, byTrainingTime, overDumbbell, planLine, TRAINING_NOTE_MAX, TRAINING_REPS_MAX, TRAINING_RIR_MAX, TRAINING_SECONDS_MAX, volumeOf, type PlanDay, type TrainingEntry, type TrainingSet } from "@/lib/training/model";
 import { addTrainingEntry, useTrainingEquipment, useCustomExercises, addCustomExercise, removeCustomExercise } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { progressionText, suggestNext, targetRepsFor, warmupSets, warmupText } from "@/lib/training/progression";
-import { emptyRow, nowHHMM, parseKg, parseNum, setsLine, shortDay, type SetRow } from "./trainingFormat";
+import { emptyRow, nowHHMM, parseKg, parseNum, rirLabel, setsLine, shortDay, type SetRow } from "./trainingFormat";
 
 /** C1.2: wydzielone z `TrainingSection.tsx` bez zmian zachowania. */
 
@@ -87,6 +87,8 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
   const [rows, setRows] = useState<SetRow[]>([emptyRow(), emptyRow(), emptyRow()]);
   const [note, setNote] = useState("");
+  /** C2.3: zapas po ostatniej serii (0–4+), niewymagany; ponowne stuknięcie czyści. */
+  const [rir, setRir] = useState<number | undefined>(undefined);
   /** Dzień zapisu: dziś albo wczoraj (zapomniany trening). */
   const [forYesterday, setForYesterday] = useState(false);
   const custom = useCustomExercises();
@@ -108,6 +110,7 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
     setExerciseId(id);
     setRows(rowsFor(sess));
     setNote("");
+    setRir(undefined);
   };
 
   /** Usuwa własne ćwiczenie bez wpisów i planów; z wpisami zostaje, a komunikat mówi dlaczego. */
@@ -155,7 +158,11 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
 
   const save = () => {
     if (!valid) return;
-    const sets: TrainingSet[] = filled.map((p) => ({ ...(timed ? { reps: 1, seconds: p.reps as number } : { reps: p.reps as number }), ...(p.kg !== undefined && p.kg !== null ? { kg: p.kg } : {}) }));
+    const sets: TrainingSet[] = filled.map((p, i) => ({
+      ...(timed ? { reps: 1, seconds: p.reps as number } : { reps: p.reps as number }),
+      ...(p.kg !== undefined && p.kg !== null ? { kg: p.kg } : {}),
+      ...(!timed && rir !== undefined && i === filled.length - 1 ? { rir } : {}),
+    }));
     // 3.3: nowy rekord — cięższa seria niż dotychczasowy najcięższy ciężar tego ćwiczenia (pierwszy zapis
     // rekordem nie jest, bo nie ma czego pobić).
     const prevBest = entries.filter((e) => e.exerciseId === exerciseId).reduce<number | undefined>((best, e) => {
@@ -167,6 +174,7 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
     if (!addTrainingEntry(forYesterday ? { exerciseId, sets, note, day: addDaysToKey(localDayKey(), -1) } : { exerciseId, sets, note, time: nowHHMM() })) return;
     if (forYesterday) toast.success("Zapisano trening do wczoraj");
     setForYesterday(false);
+    setRir(undefined);
     if (newBest !== undefined && prevBest !== undefined && newBest > prevBest) {
       haptic("success");
       toast.success(`Nowy rekord: ${exerciseById(exerciseId)?.name ?? "ćwiczenie"} — ${newBest} kg`);
@@ -273,6 +281,18 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
         </div>
       </div>
 
+      {!timed && (
+        <div role="group" aria-label="Zapas po ostatniej serii (opcjonalnie)" className="flex flex-wrap items-center gap-1.5" data-testid="rir-picker">
+          <span className="ui-hint mr-1">Zapas po ostatniej serii</span>
+          {Array.from({ length: TRAINING_RIR_MAX + 1 }, (_, n) => (
+            <button key={n} type="button" aria-pressed={rir === n} aria-label={`Zapas ${rirLabel(n)} powtórzeń`} onClick={() => setRir(rir === n ? undefined : n)}
+              className={cn("pressable min-w-9 rounded-full border px-2.5 py-1 font-mono text-xs tabular-nums outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11 coarse:min-w-11",
+                rir === n ? "border-primary bg-primary/10 font-medium" : "border-border text-muted-foreground")}>
+              {rirLabel(n)}
+            </button>
+          ))}
+        </div>
+      )}
       {overLimit && (
         <p role="status" className="text-xs text-destructive-ink">
           Ciężar powyżej Twoich hantli ({equipment.dumbbellMaxKg} kg) — sprawdź wpis albo zmień ustawienie sprzętu.

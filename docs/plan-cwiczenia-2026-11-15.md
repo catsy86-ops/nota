@@ -52,7 +52,7 @@ Znane ograniczenie z `opis.md`: odhaczenie odżywki w Ćwiczeniach i „Gotowe�
 |---|---|---|
 | C2.1 ✅ 2026-11-25 | **Podpowiedź progresji** (podwójna progresja): gdy w ostatniej sesji wszystkie serie osiągnęły górę celu powtórek — „dołóż 0,5–1 kg”; gdy nie — „te same kg, o powtórkę więcej”. Czysta funkcja `suggestNext(history, plan, equipment)` w `src/lib/training/`, z testami; szanuje limit hantli z „Sprzętu”. | M |
 | C2.2 | **Zapis serii jednym stuknięciem:** duży przycisk „Zrobione: 10 × 20 kg” z wartościami z podpowiedzi, obok −/+ dla powtórek i kg. Pola liczbowe zostają jako droga zapasowa. | M |
-| C2.3 | **Opcjonalne RIR** („ile zostało w zapasie”: 0–4) przy serii — jedno stuknięcie, niewymagane. Zasila C2.1: zapas 3+ oznacza „dołóż”. | S |
+| C2.3 ✅ 2026-11-26 | **Opcjonalne RIR** („ile zostało w zapasie”: 0–4) przy serii — jedno stuknięcie, niewymagane. Zasila C2.1: zapas 3+ oznacza „dołóż”. | S |
 | C2.4 ✅ 2026-11-25 | **Rozgrzewka:** przy pierwszym ćwiczeniu dnia propozycja 2 serii wstępnych (50% i 75% ciężaru roboczego), niezapisywanych do rekordów. | S |
 | C2.5 ✅ 2026-11-25 | **Tydzień lżej:** po 6 tygodniach z rzędu bez przerwy podpowiedź „ten tydzień −40% objętości”; do odrzucenia jednym stuknięciem. | S |
 | C2.6 | **Koniec przerwy przy zgaszonym ekranie** — powiadomienie systemowe; w pełni dopiero po F1 z `plan-fable-2026-11-15.md`. | zależne |

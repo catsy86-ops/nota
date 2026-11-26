@@ -29,6 +29,15 @@ describe("suggestNext (C2.1)", () => {
     expect(suggestNext([e], "bench", 12, ["sztanga"], { dumbbellMaxKg: 20 })).toEqual({ kind: "add", kg: 21, reps: 12 });
   });
 
+  it("C2.3: zapas 3+ po ostatniej serii → dołóż, mimo braku powtórek; zapas 0–2 nic nie zmienia", () => {
+    const withRir = (rir: number) => entry("1", "2026-11-03", [s(9, 40), { reps: 8, kg: 40, rir }]);
+    expect(suggestNext([withRir(3)], "bench", 10, [], {})).toEqual({ kind: "add", kg: 41, reps: 10 });
+    expect(suggestNext([withRir(4)], "bench", 10, [], {})).toEqual({ kind: "add", kg: 41, reps: 10 });
+    expect(suggestNext([withRir(2)], "bench", 10, [], {})).toEqual({ kind: "reps", kg: 40, reps: 9, capped: false });
+    // Limit hantli nadal wygrywa.
+    expect(suggestNext([entry("2", "2026-11-03", [{ reps: 8, kg: 20, rir: 3 }])], "bench", 10, ["hantle"], { dumbbellMaxKg: 20 })).toEqual({ kind: "reps", kg: 20, reps: 9, capped: true });
+  });
+
   it("bez celu, bez historii, serie na czas albo bez ciężaru → null", () => {
     const e = entry("1", "2026-11-03", [s(10, 40)]);
     expect(suggestNext([e], "bench", undefined, [], {})).toBeNull();

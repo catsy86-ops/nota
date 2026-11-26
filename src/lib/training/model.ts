@@ -11,6 +11,7 @@ export const TRAINING_MAX_SETS = 30;
 export const TRAINING_REPS_MAX = 100;
 export const TRAINING_KG_MAX = 500;
 export const TRAINING_SECONDS_MAX = 3600;
+export const TRAINING_RIR_MAX = 4;
 export const TRAINING_NOTE_MAX = 200;
 export const TRAINING_MAX_ENTRIES = 5_000;
 export const PLAN_NAME_MAX = 40;
@@ -27,7 +28,9 @@ export interface TrainingSet {
   seconds?: number;
   /** Ciężar w kg (co 0,5 kg); brak = bez ciężaru (ćwiczenie z masą ciała albo nieznany). */
   kg?: number;
-  /** Pola z nowszej wersji (np. RIR, C2.3) — przeżywają zapis (Z-17.3). */
+  /** C2.3 „Zapas”: ile powtórek zostało w rezerwie (0–4, 4 = 4 i więcej); brak = niepodane. */
+  rir?: number;
+  /** Pola z nowszej wersji — przeżywają zapis (Z-17.3). */
   extra?: Record<string, unknown>;
 }
 
@@ -47,7 +50,7 @@ export interface TrainingEntry {
 }
 
 export const TRAINING_ENTRY_V = 1;
-const SET_KNOWN = ["reps", "seconds", "kg"] as const;
+const SET_KNOWN = ["reps", "seconds", "kg", "rir"] as const;
 const ENTRY_KNOWN = ["id", "day", "time", "exerciseId", "sets", "note", "created"] as const;
 export const PLAN_KNOWN = ["id", "name", "exerciseIds", "targetSets", "targetReps", "created"] as const;
 const withExtra = (raw: object, known: readonly string[]) => { const extra = extraOf(raw, known); return extra ? { extra } : {}; };
@@ -127,6 +130,11 @@ export function cleanSeconds(v: unknown): number | undefined {
   return typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= TRAINING_SECONDS_MAX ? v : undefined;
 }
 
+/** Zapas powtórek: całkowite 0–4; inaczej `undefined`. */
+export function cleanRir(v: unknown): number | undefined {
+  return typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= TRAINING_RIR_MAX ? v : undefined;
+}
+
 /**
  * Seria: powtórki całkowite 1–100 albo czas 1–3600 s (wtedy `reps` = 1), ciężar opcjonalny (przy masie ciała to
  * obciążenie dodatkowe). Zła seria = `null`.
@@ -135,7 +143,8 @@ export function cleanSet(raw: unknown): TrainingSet | null {
   const s = raw as Partial<TrainingSet> | null;
   if (!s || typeof s !== "object") return null;
   const extra = extraOf(s, SET_KNOWN);
-  const more = extra ? { extra } : {};
+  const rir = cleanRir(s.rir);
+  const more = { ...(rir !== undefined ? { rir } : {}), ...(extra ? { extra } : {}) };
   const seconds = cleanSeconds(s.seconds);
   if (seconds !== undefined) {
     const kgT = cleanKg(s.kg);
