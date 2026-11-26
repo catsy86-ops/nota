@@ -1,5 +1,8 @@
 import { addDays } from "date-fns";
-import { BookOpen, Brain, Calendar, CalendarRange, Copy, HardHat, Inbox, Keyboard, Lock, LockOpen, Moon, Network, Palette, Plus, RotateCcw, Settings, Trophy, ZoomIn, ZoomOut } from "lucide-react";
+import { BookOpen, Brain, Calendar, CalendarRange, Copy, Download, HardHat, Inbox, Keyboard, Lock, LockOpen, Moon, Network, Palette, Plus, RotateCcw, Settings, Share2, SunMoon, Trophy, Type, ZoomIn, ZoomOut } from "lucide-react";
+import { APP_FONTS, APP_FONT_META, setAppFont } from "@/lib/appFont";
+import { canShareBackupFile } from "@/lib/backup/canShare";
+import { toast } from "@/lib/notify";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import { privateNotes } from "@/lib/privateNotes";
 import { lockEverywhere } from "@/lib/vaultAutoLock";
@@ -28,8 +31,25 @@ const nextSkin = (ctx: CommandContext) => SKINS[(SKINS.indexOf(ctx.skin) + 1) % 
 const SETTINGS_SHORTCUTS: { tab: SettingsTab; label: string; keywords: string; icon: Command["icon"] }[] = [
   { tab: "appearance", label: "Ustawienia: Wygląd", keywords: "styl motyw krój jasność kolor", icon: Palette },
   { tab: "general", label: "Ustawienia: Ogólne", keywords: "przypomnienia praca seria faktury", icon: Settings },
-  { tab: "backup", label: "Zrób kopię zapasową (Kopia i dane)", keywords: "backup kopia eksport przywróć dane", icon: Copy },
+  { tab: "backup", label: "Ustawienia: Kopia i dane", keywords: "backup kopia eksport przywróć dane", icon: Copy },
   { tab: "sync", label: "Połącz urządzenie (Sync)", keywords: "synchronizacja telefon komputer parowanie kod qr", icon: Network },
+];
+
+/**
+ * „Zrób kopię teraz” z palety: gdy kopia pominęłaby załączniki, paleta nie decyduje za użytkownika —
+ * otwiera Ustawienia → Kopia i dane, gdzie jest pytanie z wyborem (D3).
+ */
+const confirmInSettings = (ctx: CommandContext) => async () => {
+  toast("Kopia pominęłaby część załączników", { description: "Zdecyduj w Ustawieniach → Kopia i dane." });
+  requestSettingsTab("backup");
+  ctx.openSettings();
+  return false;
+};
+
+const THEME_MODES: { mode: "light" | "dark" | "system"; label: string; keywords: string }[] = [
+  { mode: "light", label: "Jasność: jasna", keywords: "jasny tryb dzienny" },
+  { mode: "dark", label: "Jasność: ciemna", keywords: "ciemny tryb nocny" },
+  { mode: "system", label: "Jasność: jak w systemie", keywords: "systemowy automatyczny auto" },
 ];
 
 let registered = false;
@@ -86,6 +106,8 @@ export function registerBuiltinCommands(): void {
       { id: "akcje.ustawienia", label: "Ustawienia", icon: Settings, run: (c) => c.openSettings() },
       // Powłoka 2.5: od razu na karcie Ustawień (te same karty co link `?settings=`).
       ...SETTINGS_SHORTCUTS.map((t): Command => ({ id: `ustawienia.${t.tab}`, label: t.label, icon: t.icon, keywords: `ustawienia ${t.keywords}`, run: (c) => { requestSettingsTab(t.tab); c.openSettings(); } })),
+      { id: "akcje.zrob-kopie", label: "Zrób kopię teraz", icon: Download, keywords: "backup kopia zapasowa pobierz eksport", run: (c) => { void import("@/lib/backup/actions").then((m) => m.exportNow(confirmInSettings(c))); } },
+      { id: "akcje.wyslij-kopie", label: "Wyślij kopię", icon: Share2, keywords: "backup kopia udostępnij wyślij telefon", when: () => canShareBackupFile(), run: (c) => { void import("@/lib/backup/actions").then((m) => m.shareNow(confirmInSettings(c))); } },
       { id: "akcje.statystyki", label: "Statystyki i osiągnięcia", icon: Trophy, run: (c) => c.openStats() },
       { id: "akcje.graf", label: "Graf powiązań", icon: Network, run: (c) => { requestLinkGraph(); c.openStats(); } },
       { id: "akcje.skupienie", label: "Tryb skupienia", icon: Brain, run: (c) => c.openFocusMode() },
@@ -95,6 +117,33 @@ export function registerBuiltinCommands(): void {
       { id: "akcje.motyw", label: "Przełącz motyw jasny/ciemny", icon: Moon, run: (c) => c.toggleTheme() },
       { id: "akcje.nastepny-styl", label: "Następny styl", icon: Palette, keywords: "nastepny styl motyw skorka wyglad", hint: (c) => SKIN_META[nextSkin(c)].label, run: (c) => trySkin(nextSkin(c)) },
       { id: "akcje.skroty", label: "Skróty klawiszowe", icon: Keyboard, shortcut: "?", run: (c) => c.openShortcuts() },
+    ],
+  });
+
+  // Plan motywów 3.3 i Powłoka 2.5: długie listy dopiero po wpisaniu tekstu, żeby nie zasłaniały pustej palety.
+  // Zmiana stylu przez `trySkin` — z „Cofnij”.
+  registerCommandSource({
+    group: "Styl",
+    order: 50,
+    commands: SKINS.map((s): Command => ({
+      id: `styl.${s}`, label: `Styl: ${SKIN_META[s].label}`, icon: Palette, keywords: `styl motyw skorka ${s}`,
+      hint: () => SKIN_META[s].blurb, when: (c) => c.hasQuery && c.skin !== s, run: () => trySkin(s),
+    })),
+  });
+
+  registerCommandSource({
+    group: "Krój i jasność",
+    order: 60,
+    commands: [
+      ...APP_FONTS.map((f): Command => ({
+        id: `kroj.${f}`, label: `Krój: ${APP_FONT_META[f].label}`, icon: Type, keywords: `kroj czcionka font pismo ${f}`,
+        hint: () => APP_FONT_META[f].blurb, when: (c) => c.hasQuery && c.font !== f,
+        run: () => { setAppFont(f); toast.success(`Krój: ${APP_FONT_META[f].label}`); },
+      })),
+      ...THEME_MODES.map((t): Command => ({
+        id: `jasnosc.${t.mode}`, label: t.label, icon: SunMoon, keywords: `jasnosc motyw ${t.keywords}`, when: (c) => c.hasQuery,
+        run: (c) => c.setThemeMode(t.mode),
+      })),
     ],
   });
 }

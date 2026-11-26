@@ -68,7 +68,7 @@ Legenda: W = wartość (1–3), N = nakład (S/M/L).
 | 2.2 | **Ukrywanie działów:** „Dostosuj” w pasku bocznym — przełączniki przy działach (Długi, Ćwiczenia, Praca, Grafik można ukryć; Notatki, Dziś nie). Ukryty dział znika z paska, dolnego paska i palety, dane zostają; link `/dlugi` dalej działa. | 3 | M |
 | 2.3 | **4. pozycja dolnego paska do wyboru:** Przypomnienia (domyślnie), Grafik, Praca, Kalendarz, Skrzynka — długie przytrzymanie pozycji albo w „Dostosuj”. | 2 | S |
 | 2.4 | **Kropka stanu w nagłówku** (tylko gdy urządzenie jest w grupie): zielona — połączono, szara — łączenie, żółta — offline z kolejką, czerwona — błąd; stuknięcie otwiera Ustawienia → Sync. Plus baner „starsza wersja” z Ustawień 2.1. | 2 | S |
-| 2.5 | **Paleta: więcej poleceń** (leniwie): karty Ustawień („Ustawienia: Kopia”), „Styl: Matryca”, „Krój: …”, „Jasność”, „Zrób kopię teraz”, „Wyślij kopię”, „Połącz urządzenie”, „Zablokuj skarbiec”, „Do skrzynki…” (Alt+K). | 2 | S |
+| 2.5 ✅ 2026-11-26 | **Paleta: więcej poleceń** (leniwie): karty Ustawień („Ustawienia: Kopia”), „Styl: Matryca”, „Krój: …”, „Jasność”, „Zrób kopię teraz”, „Wyślij kopię”, „Połącz urządzenie”, „Zablokuj skarbiec”, „Do skrzynki…” (Alt+K). | 2 | S |
 | 2.6 | **Okruszki w nagłówku** dla zagnieżdżeń (folder → podfolder, notatka → podnotatka, Praca → budowa) zamiast samej nazwy widoku; na telefonie skrócone do „‹ Rodzic”. | 1 | M |
 
 ## Etap 3: pierwsze uruchomienie

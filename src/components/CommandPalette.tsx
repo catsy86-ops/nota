@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
-import { Ruler, Inbox, StickyNote, Star, Archive, Bell, Trash, Plus, Settings, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, RotateCcwClock, Bookmark, Copy, Heading, Hash, Pin, Clock, Palette, Camera, PackageSearch, FileText, Link2, FolderInput, Download, ArrowLeft, Folder as FolderIcon, UserRound } from "lucide-react";
+import { Ruler, Inbox, StickyNote, Star, Archive, Bell, Trash, Plus, Settings, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, RotateCcwClock, Bookmark, Copy, Heading, Hash, Pin, Clock, Camera, PackageSearch, FileText, Link2, FolderInput, Download, ArrowLeft, Folder as FolderIcon, UserRound } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
 import { copyNoteAddress, copyWikiLink } from "@/lib/noteMarkdown";
@@ -27,15 +27,15 @@ import { useWorkSearch, type WorkHit } from "@/lib/study/workSearch";
 import { entrySiteId, foldName } from "@/lib/study/siteKey";
 import { isViewShown, useHiddenViews } from "@/lib/hiddenViews";
 import { viewLabel } from "@/lib/viewMeta";
-import { SKINS, useSkin } from "@/lib/skins";
-import { SKIN_META } from "@/lib/skinGallery";
-import { trySkin } from "@/lib/skinTry";
+import { useSkin } from "@/lib/skins";
 import { recentOpenedIds, useLastOpened } from "@/lib/lastOpened";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { searchSettings } from "@/lib/settingsIndex";
 import { requestSettingsSection } from "@/lib/settingsDeepLink";
 import { isNativeShell } from "@/lib/native/platform";
 import { cn } from "@/lib/utils";
+import { useAppFont } from "@/lib/appFont";
+import { setThemeMode } from "@/hooks/useTheme";
 import { commandGroups, resolveLabel, resolveShortcut, type CommandContext, type GoView } from "@/lib/commands/registry";
 import { registerBuiltinCommands } from "@/lib/commands/builtin";
 
@@ -199,14 +199,14 @@ export function CommandPalette({
     onGo(id);
   }
 
-  // Style (plan motywów 3.3): „Następny styl” zawsze w Akcjach, lista stylów dopiero po wpisaniu tekstu,
-  // żeby siedem pozycji nie zasłaniało pustej palety. Zmiana przez `trySkin` — z „Cofnij”.
+  // Styl i krój do kontekstu poleceń: „Następny styl” w Akcjach, listy stylów i krojów z rejestru po wpisaniu tekstu.
   const skin = useSkin();
+  const font = useAppFont();
 
   const cmdCtx: CommandContext = {
     navigate, go: onGo, newNote: () => onNewNote(), quickInbox: onQuickInbox, dailyNote: onDailyNote, periodNote: onPeriodNote,
     openSettings: onOpenSettings, openStats: onOpenStats, openFocusMode: onOpenFocusMode, openShortcuts: onOpenShortcuts,
-    toggleTheme: onToggleTheme, copyNote: onCopyNote, vaultPhase: vault.phase, skin, view,
+    toggleTheme: onToggleTheme, setThemeMode, copyNote: onCopyNote, vaultPhase: vault.phase, skin, view, hasQuery: !!search.trim(), font,
   };
 
   function run(fn: () => void) {
@@ -449,16 +449,6 @@ export function CommandPalette({
           </CommandGroup>
         ))}
         <CommandSeparator />
-        {search.trim() && (
-          <CommandGroup heading="Styl">
-            {SKINS.filter((s) => s !== skin).map((s) => (
-              <CommandItem key={s} value={`styl motyw skorka ${SKIN_META[s].label} ${s}`} onSelect={() => run(() => trySkin(s))}>
-                <Palette className="size-4 mr-2" /> Styl: {SKIN_META[s].label}
-                <span className="ml-auto pl-3 truncate text-xs text-muted-foreground max-w-[50%]">{SKIN_META[s].blurb}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        )}
         <CommandGroup heading="Nawigacja">
           {NAV_ITEMS.filter((n) => isViewShown(hiddenViews, n.id)).map((n) => (
             <CommandItem key={n.id} value={`nawigacja ${n.label}`} onSelect={() => run(() => goNav(n.id))}>

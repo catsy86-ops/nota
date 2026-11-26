@@ -7,10 +7,10 @@ import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, Share2
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
-import { buildFullBackup, describeSkippedAttachments, type BackupAttachmentReport } from "@/lib/backup/build";
-import { BACKUP_OVERSIZE_NOTE, backupIssues, describeBackupIssues } from "@/lib/backup/parse";
+import { buildFullBackup, describeSkippedAttachments } from "@/lib/backup/build";
+import { backupIssues, describeBackupIssues } from "@/lib/backup/parse";
 import { restoreFullBackup, RestoreCheckError, restoreScope, type RestoreOptions } from "@/lib/backup/merge";
-import { download, exportFullBackup, pickFullBackup, shareFullBackup } from "@/lib/backup/download";
+import { download, pickFullBackup } from "@/lib/backup/download";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import { dniPl, pluralPl } from "@/lib/plural";
 import type { FullBackup } from "@/lib/noteSchema";
@@ -22,6 +22,7 @@ import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackup
 import { toast } from "sonner";
 import { ResetSectionButton, Section } from "./SettingsShared";
 import { LastImportUndo } from "./LastImportUndo";
+import { canShareBackupFile, exportNow, shareNow, type SkipConfirm } from "@/lib/backup/actions";
 import { UnusedFilesCleanup } from "./UnusedFilesCleanup";
 import { AboutPanel } from "@/components/AboutPanel";
 import { SecurityLogPanel } from "./SecurityLogPanel";
@@ -263,23 +264,6 @@ function handleAutoExportChange(v: number) {
   }
 }
 
-/** D3: pytanie, gdy kopia pominie załączniki. Zwraca `true`, gdy użytkownik chce zapisać mimo to. */
-type SkipConfirm = (report: BackupAttachmentReport) => Promise<boolean>;
-
-async function exportNow(confirm: SkipConfirm) {
-  try {
-    const res = await exportFullBackup(undefined, { confirm });
-    if (res.cancelled) return;
-    const { savedToFile, attachments } = res;
-    try { localStorage.setItem(LAST_AUTO_EXPORT_KEY, String(Date.now())); } catch { /* ignore */ }
-    const skipped = describeSkippedAttachments(attachments);
-    if (res.oversize) toast.warning(savedToFile ? "Kopia zapisana, ale jest za duża do wczytania" : "Kopia pobrana, ale jest za duża do wczytania", { description: BACKUP_OVERSIZE_NOTE, duration: 15000 });
-    else toast.success(savedToFile ? "Kopia zapisana 💾" : "Kopia pobrana 💾", skipped ? { description: skipped, duration: 12000 } : undefined);
-  } catch {
-    toast.error("Nie udało się zrobić kopii");
-  }
-}
-
 /**
  * Przywracanie w dwóch krokach: najpierw plik jest tylko czytany, potem
  * użytkownik widzi, co w nim jest, i wybiera sekcje poza notatkami.
@@ -493,26 +477,6 @@ function RestoreBackup() {
       </AlertDialog>
     </>
   );
-}
-
-/** Udostępnianie pliku kopii działa tylko tam, gdzie przeglądarka umie wysłać plik (telefon). */
-function canShareBackupFile(): boolean {
-  if (typeof navigator === "undefined" || typeof navigator.share !== "function" || typeof navigator.canShare !== "function") return false;
-  try {
-    return navigator.canShare({ files: [new File(["{}"], "kopia.json", { type: "application/json" })] });
-  } catch {
-    return false;
-  }
-}
-
-async function shareNow(confirm: SkipConfirm) {
-  try {
-    const res = await shareFullBackup(confirm);
-    if (res === "unsupported") toast.error("Ta przeglądarka nie udostępnia plików — pobierz kopię");
-    else if (res === "shared") toast.success("Wysłano kopię");
-  } catch {
-    toast.error("Nie udało się wysłać kopii");
-  }
 }
 
 async function handleDownloadReport() {

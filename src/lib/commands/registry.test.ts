@@ -6,8 +6,8 @@ import { registerBuiltinCommands } from "./builtin";
 
 const ctx = (over: Partial<CommandContext> = {}): CommandContext => ({
   navigate: vi.fn(), go: vi.fn(), newNote: vi.fn(), quickInbox: vi.fn(), dailyNote: vi.fn(), periodNote: vi.fn(),
-  openSettings: vi.fn(), openStats: vi.fn(), openFocusMode: vi.fn(), openShortcuts: vi.fn(), toggleTheme: vi.fn(),
-  vaultPhase: "none", skin: "zeszyt", ...over,
+  openSettings: vi.fn(), openStats: vi.fn(), openFocusMode: vi.fn(), openShortcuts: vi.fn(), toggleTheme: vi.fn(), setThemeMode: vi.fn(),
+  vaultPhase: "none", skin: "zeszyt", hasQuery: false, font: "default", ...over,
 });
 
 registerBuiltinCommands();
@@ -51,5 +51,38 @@ describe("rejestr poleceń (A3.4)", () => {
   it("polecenia ze skrótem — dla ściągi (Q5.2)", () => {
     const ids = commandsWithShortcuts().map((x) => x.command.id);
     expect(ids).toEqual(expect.arrayContaining(["akcje.nowa-notatka", "akcje.do-skrzynki", "akcje.skroty"]));
+  });
+});
+
+describe("więcej poleceń (Powłoka 2.5)", () => {
+  const ids = (c: CommandContext) => commandGroups(c).flatMap((g) => g.commands.map((x) => x.id));
+
+  it("pusta paleta: bez list stylów, krojów i jasności; „Zrób kopię teraz” zawsze", () => {
+    const all = ids(ctx());
+    expect(all).toContain("akcje.zrob-kopie");
+    expect(all.some((id) => id.startsWith("styl.") || id.startsWith("kroj.") || id.startsWith("jasnosc."))).toBe(false);
+  });
+
+  it("z tekstem: style i kroje bez bieżącego, trzy tryby jasności", () => {
+    const all = ids(ctx({ hasQuery: true, skin: "neon", font: "inter" }));
+    expect(all).toContain("styl.zeszyt");
+    expect(all).not.toContain("styl.neon");
+    expect(all).toContain("kroj.lexend");
+    expect(all).not.toContain("kroj.inter");
+    expect(all.filter((id) => id.startsWith("jasnosc."))).toEqual(["jasnosc.light", "jasnosc.dark", "jasnosc.system"]);
+  });
+
+  it("jasność idzie przez kontekst palety", () => {
+    const c = ctx({ hasQuery: true });
+    commandGroups(c).flatMap((g) => g.commands).find((x) => x.id === "jasnosc.dark")!.run(c);
+    expect(c.setThemeMode).toHaveBeenCalledWith("dark");
+  });
+
+  it("„Wyślij kopię” tylko tam, gdzie przeglądarka udostępnia pliki", () => {
+    expect(ids(ctx())).not.toContain("akcje.wyslij-kopie");
+    const nav = navigator as unknown as { share?: unknown; canShare?: unknown };
+    nav.share = () => Promise.resolve();
+    nav.canShare = () => true;
+    try { expect(ids(ctx())).toContain("akcje.wyslij-kopie"); } finally { delete nav.share; delete nav.canShare; }
   });
 });

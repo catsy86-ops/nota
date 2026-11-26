@@ -1,6 +1,7 @@
 import type { ElementType } from "react";
 import type { PeriodKind } from "@/lib/periodNote";
 import type { Skin } from "@/lib/skins";
+import type { AppFont } from "@/lib/appFont";
 
 /**
  * A3.4 Rejestr poleceń palety: dział dopisuje polecenia źródłem (`registerCommandSource`), bez edycji
@@ -23,12 +24,17 @@ export interface CommandContext {
   openFocusMode: () => void;
   openShortcuts: () => void;
   toggleTheme: () => void;
+  /** Jasność: jasna, ciemna albo jak w systemie (`useTheme.ts` — warstwa hooks, więc przez kontekst). */
+  setThemeMode: (mode: "light" | "dark" | "system") => void;
   /** Tylko przy bieżącej notatce. */
   copyNote?: (format: "markdown" | "text") => void;
   vaultPhase: "locked" | "unlocked" | string;
   skin: Skin;
   /** Widok z adresu (np. `shifts`). */
   view?: string;
+  /** Czy w palecie jest wpisany tekst — długie listy (style, kroje, jasność) tylko wtedy. */
+  hasQuery: boolean;
+  font: AppFont;
 }
 
 export interface Command {
