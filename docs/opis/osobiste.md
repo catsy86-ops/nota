@@ -726,7 +726,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Co:** zrzuty `@visual` (`playwright.visual.config.ts`, `e2e/visual.spec.ts`) Ćwiczeń na komputerze i telefonie w Zeszycie jasnym i ciemnym oraz Hydraulice jasnej, po zmianach z 26.11 (zapas, ulubione, „Zrobione”, regularność, obwody), plus doraźne zrzuty kart 390 px przy każdym punkcie.
 - **Poprawione od razu:** pusty odstęp 24 px pod sekcjami, gdy siatki regularności nie ma (margines przeniesiony do `RegularityGrid`); w Ustawieniach → Kopia i dane napis „Poproś przeglądarkę o trwałe przechowywanie” wychodził poza obramowanie przycisku na 390 px — przycisk zawija tekst (`BackupSettings.tsx`). Wykres masy i obwodów odmienia rzeczownik w opisie dla czytnika („1 ważenie”, „3 pomiary” zamiast „1 ważeń”).
 - **Wzorce:** odświeżone 16 zrzutów po przejrzeniu różnic — Ćwiczenia (komputer), Ustawienia → Ogólne (blok „Aktualizacje”), Kopia i dane (słownik „kopia” z U1.2 i zawijany przycisk), puste wyszukiwanie na telefonie (baner instalacji i przycisk „Wyczyść wyszukiwanie” z wcześniejszych commitów). Przebieg 227/227.
-- **Commit:** zobacz `git log --grep "C1.1"`, 2026-11-26.
+- **Commit:** `2382e280`, 2026-11-26.
 
 ## Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 
