@@ -710,7 +710,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa:** dni treningu z wpisów, dni odżywek z kluczy odhaczeń (`parseLogKey`), dni diety z posiłków. Tygodnie pn–nd od poniedziałku 11 tygodni wstecz; dni po dziś w bieżącym tygodniu nie są rysowane ani liczone. Kolory z akcentu stylu (`color-mix` z `--primary`), więc siatka pasuje do każdego stylu i schematu.
 - **Ograniczenia:** siatka nie rozróżnia, którą z trzech rzeczy zrobiono (poza treningiem) — szczegół jest w `<title>`; dotyk nie pokazuje `<title>`.
 - **Testy:** `src/lib/fitnessRegularity.test.ts`, `e2e/cwiczenia-tydzien.spec.ts` (zdanie, komórka dnia, axe siatki).
-- **Commit:** zobacz `git log --grep "C3.1"`, 2026-11-26.
+- **Commit:** `d6ae75ea`, 2026-11-26.
 
 ## Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 
