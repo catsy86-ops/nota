@@ -70,3 +70,14 @@ test("C2.2: „Zrobione” wpisuje serię jednym stuknięciem, −/+ zmieniają 
   const axe = await new AxeBuilder({ page }).include('[data-testid="quick-set"]').withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
 });
+
+test("C3.1: po zapisie treningu kalendarz regularności liczy dzień i ma opis dla czytnika", async ({ page }) => {
+  await page.getByLabel("Powtórki, seria 1").fill("10");
+  await page.getByRole("button", { name: "Zapisz serie" }).click();
+  await expect(page.getByTestId("regularity-summary")).toContainText("trening 1 dzień");
+  const grid = page.getByRole("img", { name: /Ostatnie 12 tygodni: trening 1 dzień/ });
+  await expect(grid).toBeVisible();
+  await expect(grid.locator("[data-level='1']")).toHaveCount(1);
+  const axe = await new AxeBuilder({ page }).include('[data-testid="regularity-grid"]').withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+  expect(axe.violations.map((v) => v.id)).toEqual([]);
+});

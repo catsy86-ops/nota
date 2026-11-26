@@ -33,6 +33,7 @@ import { useWeights } from "@/lib/weight/store";
 import { exerciseById } from "@/lib/training/catalog";
 import { downloadBlob } from "@/lib/downloadBlob";
 import { shareOrCopy } from "@/lib/shareOrCopy";
+import { RegularityGrid } from "./RegularityGrid";
 
 /** Domyślna godzina przypomnienia dla pory dnia (edytowalna w formularzu). */
 const DEFAULT_TIME: Record<SupplementWhen, string> = { rano: "07:30", w_ciagu_dnia: "12:00", wieczorem: "20:00" };
@@ -204,6 +205,8 @@ export function CwiczeniaView() {
         <TabsContent value="waga" id="cwiczenia-waga" forceMount className={panel}><WeightSection /></TabsContent>
       </div>
       </Tabs>
+      {/* C3.1: regularność pod sekcjami — widoczna przy każdej zakładce. */}
+      <div className="mt-6"><RegularityGrid /></div>
       <ExportCsv />
     </section>
   );

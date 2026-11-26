@@ -703,6 +703,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy:** `src/components/cwiczenia/trainingFormat.test.ts` (krok ciężaru), `src/components/cwiczenia/TrainingSection.test.tsx` (stuknięcia wypełniają kolejne wiersze, −/+), `e2e/cwiczenia-tydzien.spec.ts` (zapis dwóch serii i „Ostatnio”, axe bloku).
 - **Commit:** `02bd1cb0`, 2026-11-26.
 
+## Ćwiczenia — kalendarz regularności 12 tygodni (C3.1, 2026-11-26)
+
+- **Co robi:** pod sekcjami Ćwiczeń (przy każdej zakładce na telefonie) jest karta „Regularność”: siatka 12 tygodni × 7 dni. Nasycenie komórki mówi, ile z trzech rzeczy zrobiono danego dnia (trening, odżywka odhaczona, posiłek wpisany), kropka — trening, obrys — dziś. Nad siatką zdanie „Ostatnie 12 tygodni: trening 14 dni, odżywki 60 dni, dieta wpisana 30 dni.” — to samo zdanie jest nazwą obrazka dla czytnika ekranu (`role="img"`, `aria-labelledby`), a każda komórka ma `<title>` („wt 24.11: trening, dieta”). Bez żadnych danych w tym okresie karty nie ma.
+- **Gdzie jest:** `src/lib/fitnessRegularity.ts` (`regularityWeeks`, `regularityCounts`, `regularityLevel`, `REGULARITY_WEEKS`), `src/components/cwiczenia/RegularityGrid.tsx`, podpięcie w `CwiczeniaView.tsx` (nad eksportem CSV).
+- **Jak działa:** dni treningu z wpisów, dni odżywek z kluczy odhaczeń (`parseLogKey`), dni diety z posiłków. Tygodnie pn–nd od poniedziałku 11 tygodni wstecz; dni po dziś w bieżącym tygodniu nie są rysowane ani liczone. Kolory z akcentu stylu (`color-mix` z `--primary`), więc siatka pasuje do każdego stylu i schematu.
+- **Ograniczenia:** siatka nie rozróżnia, którą z trzech rzeczy zrobiono (poza treningiem) — szczegół jest w `<title>`; dotyk nie pokazuje `<title>`.
+- **Testy:** `src/lib/fitnessRegularity.test.ts`, `e2e/cwiczenia-tydzien.spec.ts` (zdanie, komórka dnia, axe siatki).
+- **Commit:** zobacz `git log --grep "C3.1"`, 2026-11-26.
+
 ## Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 
 - **Co robi:** na dole widoku Ćwiczeń są przyciski „Trening CSV”, „Dieta CSV” i „Waga CSV”, każdy widoczny tylko wtedy, gdy są dane tego rodzaju. Każdy zapisuje plik `notki-<rodzaj>-<dzień>.csv` do otwarcia w polskim Excelu. Trening ma jedną serię na wiersz (data, godzina, ćwiczenie, seria, powtórzenia albo sekundy, ciężar, notatka przy pierwszej serii), dieta jeden posiłek na wiersz (kcal i białko), waga jedno ważenie na wiersz.
