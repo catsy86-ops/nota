@@ -40,7 +40,7 @@ Znane ograniczenie z `opis.md`: odhaczenie odżywki w Ćwiczeniach i „Gotowe�
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
-| C1.1 | **Przegląd wizualny** elementów z 12.11 na 390 px, jasny i ciemny, 2–3 style; zrzuty przez `playwright.visual.config.ts`. Poprawki od razu. | S |
+| C1.1 ✅ 2026-11-26 | **Przegląd wizualny** elementów z 12.11 na 390 px, jasny i ciemny, 2–3 style; zrzuty przez `playwright.visual.config.ts`. Poprawki od razu. | S |
 | C1.2 ✅ 2026-11-25 (743 → 171 linii; `LogForm`, `RestTimer`, `ProgressList`, `PlanForms`, `EquipmentForm`, `trainingFormat`) | **Podział `TrainingSection.tsx`**: `LogForm`, `RestTimer`, `ProgressList`, `PlanForm`, `EquipmentForm` w osobnych plikach. Bez zmian zachowania. | M |
 | C1.3 ✅ 2026-11-25 (z Q3.1: sesja i przerwa) | **Ekran nie gaśnie w sesji** — `useWakeLock` na czas trwania `TrainingSession`. | S |
 | C1.4 ✅ `d2051d4c` 2026-11-18 | **Odhaczenie = „Gotowe”.** Odhaczenie odżywki przesuwa serię jej notatki-przypomnienia, a „Gotowe” w powiadomieniu odhacza odżywkę (po `reminderNoteId`). Jedna funkcja w `src/lib/supplements/`, wołana z obu stron. | M |

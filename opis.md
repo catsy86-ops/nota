@@ -272,6 +272,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Ćwiczenia — zapis serii jednym stuknięciem (C2.2, 2026-11-26)
 - Ćwiczenia — kalendarz regularności 12 tygodni (C3.1, 2026-11-26)
 - Ćwiczenia — obwody ciała w zakładce „Waga” (C3.4, 2026-11-26)
+- Ćwiczenia — przegląd wizualny 390 px (C1.1, 2026-11-26)
 - Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 - Ćwiczenia — dieta: średnia z 7 dni i cel białka z masy ciała (C4.3, C4.4, 2026-11-25)
 - Ćwiczenia — podsumowanie miesiąca do udostępnienia (C3.3, 2026-11-25)

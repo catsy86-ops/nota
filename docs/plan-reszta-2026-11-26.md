@@ -54,14 +54,16 @@ A3.4 (`src/lib/commands/` — źródła poleceń palety) → Powłoka 2.5 (więc
 
 ## Fala 3 — testy zbieżności i dział Ćwiczenia/Długi
 
+**Zamknięta 2026-11-26** (zostają poza falą: Praca grupy 2–3 i notatki w zestawie zbieżności, Z-11 pkt 4).
+
 | Punkt | Co | Rozmiar |
 |---|---|---|
 | Z-17.9 ✅ 2026-11-26 (Praca grupy 2–3 i notatki zostają) | dokończyć: pomocnik `convergence.ts`, testy długów, zmian, Pracy | M |
 | L1.2, A4.5 (`merge.ts`), Z-11 ✅ 2026-11-26 (Z-11 bez pkt 4) | testy własności na tym pomocniku | M |
-| C2.2 | zapis serii jednym stuknięciem (największa dźwignia w Ćwiczeniach) | M |
-| C3.1 | kalendarz regularności 12 tygodni (SVG + opis dla czytnika) | M |
-| C3.4 | obwody ciała (nowa mapa Yjs — `docs/dane-wersje.md`) | M |
-| C1.1 | przegląd wizualny Ćwiczeń 390 px przez `playwright.visual.config.ts` | S |
+| C2.2 ✅ 2026-11-26 | zapis serii jednym stuknięciem (największa dźwignia w Ćwiczeniach) | M |
+| C3.1 ✅ 2026-11-26 | kalendarz regularności 12 tygodni (SVG + opis dla czytnika) | M |
+| C3.4 ✅ 2026-11-26 | obwody ciała (nowa mapa Yjs — `docs/dane-wersje.md`) | M |
+| C1.1 ✅ 2026-11-26 | przegląd wizualny Ćwiczeń 390 px przez `playwright.visual.config.ts` | S |
 
 ## Fala 4 — Ustawienia i synchronizacja
 

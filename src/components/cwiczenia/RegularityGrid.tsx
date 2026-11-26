@@ -44,6 +44,7 @@ export function RegularityGrid() {
   const labelW = 20;
 
   return (
+    <div className="mt-6">
     <SectionCard icon={CalendarCheck} title="Regularność" bodyClassName="space-y-3">
       <p id={labelId} className="ui-hint" data-testid="regularity-summary">{summary}</p>
       <svg role="img" aria-labelledby={labelId} width={labelW + REGULARITY_WEEKS * STEP} height={7 * STEP} viewBox={`0 0 ${labelW + REGULARITY_WEEKS * STEP} ${7 * STEP}`} className="max-w-full" data-testid="regularity-grid">
@@ -61,5 +62,6 @@ export function RegularityGrid() {
         <span className="flex items-center gap-1"><span className="relative inline-block size-3 rounded-[3px] bg-primary"><span className="absolute inset-[3.5px] rounded-full bg-background" /></span> trening</span>
       </div>
     </SectionCard>
+    </div>
   );
 }

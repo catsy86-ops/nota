@@ -206,8 +206,8 @@ export function CwiczeniaView() {
         <TabsContent value="waga" id="cwiczenia-waga" forceMount className={panel}><div className="space-y-6"><WeightSection /><MeasuresSection /></div></TabsContent>
       </div>
       </Tabs>
-      {/* C3.1: regularność pod sekcjami — widoczna przy każdej zakładce. */}
-      <div className="mt-6"><RegularityGrid /></div>
+      {/* C3.1: regularność pod sekcjami — widoczna przy każdej zakładce; bez danych nic nie rysuje (też odstępu). */}
+      <RegularityGrid />
       <ExportCsv />
     </section>
   );

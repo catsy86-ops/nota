@@ -87,7 +87,7 @@ function StoragePersistenceStatus() {
         )}
         <DailySnapshotHealth />
         {!info.persisted && (
-          <Button size="sm" variant="outline" onClick={handleRequest} disabled={requesting} className="w-full">
+          <Button size="sm" variant="outline" onClick={handleRequest} disabled={requesting} className="h-auto min-h-9 w-full whitespace-normal py-2 coarse:min-h-11">
             Poproś przeglądarkę o trwałe przechowywanie
           </Button>
         )}
