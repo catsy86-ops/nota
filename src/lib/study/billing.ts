@@ -32,9 +32,19 @@ export interface SiteBilling {
   payments: Payment[];
 }
 
-/** Kwota z dokumentu; `undefined` = brak albo śmieć. Zaokrąglona do groszy. */
-export function cleanAmount(v: unknown): number | undefined {
-  return typeof v === "number" && Number.isFinite(v) && v > 0 && v <= AMOUNT_MAX ? Math.round(v * 100) / 100 : undefined;
+/**
+ * Złote → grosze jako liczba całkowita. `toPrecision(15)` zdejmuje błąd zapisu binarnego
+ * (1,005 × 100 = 100,49999… → 100,5 → 101), zanim zaokrąglenie go utrwali (B1 audytu 2).
+ */
+export const toGr = (zl: number) => Math.round(Number((zl * 100).toPrecision(15)));
+const fromGr = (gr: number) => gr / 100;
+
+/**
+ * Kwota z dokumentu; `undefined` = brak albo śmieć. Zaokrąglona do groszy.
+ * `allowZero` — stawka rodzaju pracy może być 0 („bezpłatnie”, B5 audytu 2); kwoty i wpłaty nie.
+ */
+export function cleanAmount(v: unknown, allowZero = false): number | undefined {
+  return typeof v === "number" && Number.isFinite(v) && (v > 0 || (allowZero && v === 0)) && v <= AMOUNT_MAX ? fromGr(toGr(v)) : undefined;
 }
 
 /** Sposoby w stałej kolejności, bez powtórzeń i nieznanych; `undefined` = nie zapisano. */
@@ -47,11 +57,11 @@ export function cleanModes(raw: unknown): BillingMode[] | undefined {
  * Kwota wpisana w polu: „1 250,50” → 1250.5; pusty tekst → `null` (usuń); zły tekst → `undefined`.
  * Spacje (`\s` obejmuje też twarde z formatowania) i „zł” są pomijane.
  */
-export function parseAmount(raw: string): number | null | undefined {
+export function parseAmount(raw: string, allowZero = false): number | null | undefined {
   const t = raw.replace(/\s/g, "").replace(/zł$/i, "").replace(",", ".");
   if (t === "") return null;
   if (!/^\d+(\.\d{0,2})?$/.test(t)) return undefined;
-  return cleanAmount(Number(t));
+  return cleanAmount(Number(t), allowZero);
 }
 
 /** Stawka za punkt danego typu: własna typu albo domyślna; `undefined` = bez stawki. */
@@ -118,9 +128,11 @@ export interface BillingLine {
   kind: "hours" | "points" | "lump" | "stage";
   /** „Godziny”, „Umywalka”, „Ryczałt za budowę”, nazwa etapu. */
   label: string;
-  /** „42,5 h × 45 zł/h”, „3 × 150 zł”, „odhaczony 20.10.2026”. */
+  /** „42 h 30 min × 45 zł/h”, „3 × 150 zł”, „odhaczony 20.10.2026”. */
   detail: string;
   amount: number;
+  /** Tylko pozycja godzinowa: minuty, z których liczy się kwota (kolumna w CSV). */
+  minutes?: number;
 }
 
 export interface BillingInput {
@@ -155,7 +167,19 @@ export const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** „2026-11-13” → „13.11.2026”. */
 export const dmyKey = (key: string) => key.split("-").reverse().join(".");
-const hoursNum = (min: number) => round2(min / 60).toLocaleString("pl-PL", { maximumFractionDigits: 2 });
+/**
+ * Czas w opisie pozycji: „50 min”, „2 h”, „2 h 15 min” (B2 audytu 2). Ułamek godziny („0,83 h”) nie dawał się
+ * przeliczyć na kwotę, która liczy się z minut.
+ */
+export function durationPl(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h === 0 ? `${m} min` : m === 0 ? `${h} h` : `${h} h ${m} min`;
+}
+
+/** Kwota za minuty po stawce godzinowej, w groszach: mnożenie przed dzieleniem, jedno zaokrąglenie (B1). */
+const hoursGr = (minutes: number, rate: number) => Math.round((minutes * toGr(rate)) / 60);
+const sumGr = (amounts: readonly number[]) => amounts.reduce((s, n) => s + toGr(n), 0);
 const dmy = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 /**
@@ -170,8 +194,8 @@ export function billingStatement(input: BillingInput): BillingStatement {
   const warnings: string[] = [];
 
   if (on("hours")) {
-    if (!rate) { if (minutes > 0) warnings.push(`Brak stawki godzinowej — ${hoursNum(minutes)} h bez kwoty`); }
-    else if (minutes > 0) lines.push({ kind: "hours", label: MODE_LABEL.hours, detail: `${hoursNum(minutes)} h × ${money(rate)}/h`, amount: round2((minutes / 60) * rate) });
+    if (!rate) { if (minutes > 0) warnings.push(`Brak stawki godzinowej — ${durationPl(minutes)} bez kwoty`); }
+    else if (minutes > 0) lines.push({ kind: "hours", label: MODE_LABEL.hours, detail: `${durationPl(minutes)} × ${money(rate)}/h`, amount: fromGr(hoursGr(minutes, rate)), minutes });
     if (unsplit > 0) warnings.push(`Dni z kilkoma budowami bez podziału godzin: ${unsplit}`);
   }
 
@@ -189,7 +213,7 @@ export function billingStatement(input: BillingInput): BillingStatement {
     let noRate = 0;
     for (const { type, rate: r, count } of groups.values()) {
       if (r === undefined) { noRate += count; continue; }
-      lines.push({ kind: "points", label: typeLabel(type), detail: `${count} × ${money(r)}`, amount: round2(count * r) });
+      lines.push({ kind: "points", label: typeLabel(type), detail: `${count} × ${money(r)}`, amount: fromGr(count * toGr(r)) });
     }
     if (noRate > 0) warnings.push(`Gotowe punkty bez stawki: ${noRate}`);
     const pending = points.length - points.filter((p) => p.done).length;
@@ -205,9 +229,10 @@ export function billingStatement(input: BillingInput): BillingStatement {
   }
 
   const payments = sortPayments([...b.payments]);
-  const accrued = round2(lines.reduce((s, l) => s + l.amount, 0));
-  const paid = round2(payments.reduce((s, p) => s + p.amount, 0));
-  return { lines, accrued, paid, due: round2(accrued - paid), payments, warnings };
+  // Po pozycji, potem suma — w groszach, żeby suma zgadzała się z pozycjami, które odbiorca widzi w zestawieniu.
+  const accruedGr = sumGr(lines.map((l) => l.amount));
+  const paidGr = sumGr(payments.map((p) => p.amount));
+  return { lines, accrued: fromGr(accruedGr), paid: fromGr(paidGr), due: fromGr(accruedGr - paidGr), payments, warnings };
 }
 
 const dayDmy = (key: string) => key.split("-").reverse().join(".");
@@ -229,15 +254,15 @@ export function billingText(siteName: string, st: BillingStatement, today: strin
 
 const csvNum = (n: number) => String(n).replace(".", ",");
 
-/** CSV (separator `;`, BOM, przecinek dziesiętny — jak `siteMonthCsv`): pozycje, wpłaty, suma. */
+/** CSV (separator `;`, BOM, przecinek dziesiętny — jak `siteMonthCsv`): pozycje (godziny także w minutach), wpłaty, suma. */
 export function billingCsv(st: BillingStatement): string {
-  const rows: string[][] = [["Rodzaj", "Pozycja", "Szczegóły", "Kwota (zł)"]];
-  for (const l of st.lines) rows.push(["Naliczone", l.label, l.detail, csvNum(l.amount)]);
-  for (const p of st.payments) rows.push(["Otrzymane", p.day, p.note ?? "", csvNum(p.amount)]);
+  const rows: string[][] = [["Rodzaj", "Pozycja", "Szczegóły", "Minuty", "Kwota (zł)"]];
+  for (const l of st.lines) rows.push(["Naliczone", l.label, l.detail, l.minutes === undefined ? "" : String(l.minutes), csvNum(l.amount)]);
+  for (const p of st.payments) rows.push(["Otrzymane", p.day, p.note ?? "", "", csvNum(p.amount)]);
   rows.push([]);
-  rows.push(["Razem", "Naliczone", "", csvNum(st.accrued)]);
-  rows.push(["Razem", "Otrzymane", "", csvNum(st.paid)]);
-  rows.push(["Razem", st.due >= 0 ? "Zostało do zapłaty" : "Nadpłata", "", csvNum(Math.abs(st.due))]);
+  rows.push(["Razem", "Naliczone", "", "", csvNum(st.accrued)]);
+  rows.push(["Razem", "Otrzymane", "", "", csvNum(st.paid)]);
+  rows.push(["Razem", st.due >= 0 ? "Zostało do zapłaty" : "Nadpłata", "", "", csvNum(Math.abs(st.due))]);
   return "\uFEFF" + rows.map((r) => r.map(cell).join(";")).join("\r\n") + "\r\n";
 }
 
@@ -276,13 +301,13 @@ export function monthSiteEarnings(
       const r = p.rate ?? pointRateFor(b, p.type);
       if (r === undefined) { out.pointsNoRate++; continue; }
       out.points.count++;
-      out.points.amount = round2(out.points.amount + r);
+      out.points.amount = fromGr(toGr(out.points.amount) + toGr(r));
     }
   }
   if (b.modes.includes("lump")) {
     for (const s of stages) {
       const amount = own(b.stageAmounts, s.id);
-      if (amount !== undefined && inMonth(s.done)) { out.stages.count++; out.stages.amount = round2(out.stages.amount + amount); }
+      if (amount !== undefined && inMonth(s.done)) { out.stages.count++; out.stages.amount = fromGr(toGr(out.stages.amount) + toGr(amount)); }
     }
     const finished = stages.length > 0 && stages.every((s) => s.done !== undefined);
     if (b.lump !== undefined && finished && inMonth(Math.max(...stages.map((s) => s.done!)))) out.lump = b.lump;
@@ -291,6 +316,6 @@ export function monthSiteEarnings(
       else if (inMonth(input.archived)) out.lump = b.lump;
     }
   }
-  out.total = round2(out.points.amount + out.stages.amount + out.lump);
+  out.total = fromGr(sumGr([out.points.amount, out.stages.amount, out.lump]));
   return out;
 }

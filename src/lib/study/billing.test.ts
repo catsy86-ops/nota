@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
-import { billingCsv, billingStatement, monthSiteEarnings, billingSummary, billingText, cleanModes, cleanPayment, money, parseAmount, pointRateFor, stagesTotal, type BillingInput, type SiteBilling } from "./billing";
+import fc from "fast-check";
+import { billingCsv, billingStatement, cleanAmount, durationPl, monthSiteEarnings, billingSummary, billingText, cleanModes, cleanPayment, money, parseAmount, pointRateFor, stagesTotal, type BillingInput, type SiteBilling } from "./billing";
 import { createYBilling } from "./yBilling";
 
 const bill = (over: Partial<SiteBilling> = {}): SiteBilling => ({ modes: ["hours"], typeRates: {}, stageAmounts: {}, payments: [], ...over });
@@ -103,7 +104,7 @@ const done = (type: string, n: number, isDone = true) => Array.from({ length: n 
 describe("należności (H3.2)", () => {
   it.each([
     { name: "godziny × stawka", over: { rate: 45, minutes: 600 }, accrued: 450, lines: ["10 h × 45 zł/h"] },
-    { name: "godziny bez stawki — ostrzeżenie, 0 zł", over: { minutes: 90 }, accrued: 0, lines: [], warn: "Brak stawki godzinowej — 1,5 h bez kwoty" },
+    { name: "godziny bez stawki — ostrzeżenie, 0 zł", over: { minutes: 90 }, accrued: 0, lines: [], warn: "Brak stawki godzinowej — 1 h 30 min bez kwoty" },
     { name: "gotowe punkty: stawka typu i domyślna; niegotowe nie liczone",
       over: { billing: bill({ modes: ["points"], pointRate: 150, typeRates: { wc: 250 } }), points: [...done("umyw", 3), ...done("wc", 2), ...done("umyw", 1, false)] },
       accrued: 950, lines: ["3 × 150 zł", "2 × 250 zł"], warn: "Punkty przed białym montażem (jeszcze nie liczone): 1" },
@@ -114,7 +115,7 @@ describe("należności (H3.2)", () => {
       accrued: 9500, lines: ["umówiona kwota", "etap odhaczony 20.10.2026"] },
     { name: "wyłączony sposób się nie liczy", over: { billing: bill({ modes: ["lump"], lump: 100 }), rate: 45, minutes: 600 }, accrued: 100, lines: ["umówiona kwota"] },
     { name: "łączone: ryczałt + godziny; dni bez podziału", over: { billing: bill({ modes: ["hours", "lump"], lump: 5000 }), rate: 50, minutes: 150, unsplit: 2 },
-      accrued: 5125, lines: ["2,5 h × 50 zł/h", "umówiona kwota"], warn: "Dni z kilkoma budowami bez podziału godzin: 2" },
+      accrued: 5125, lines: ["2 h 30 min × 50 zł/h", "umówiona kwota"], warn: "Dni z kilkoma budowami bez podziału godzin: 2" },
   ])("$name", ({ over, accrued, lines, warn }) => {
     const st = billingStatement(input(over));
     expect(st.accrued).toBe(accrued);
@@ -143,9 +144,69 @@ describe("należności (H3.2)", () => {
     expect(text).toContain("• 01.10.2026: 3000 zł (=zaliczka)");
     expect(text).toContain("*Zostało do zapłaty: 5000 zł*");
     const csv = billingCsv(st);
-    expect(csv.startsWith("﻿Rodzaj;Pozycja;Szczegóły;Kwota (zł)\r\n")).toBe(true);
-    expect(csv).toContain("Otrzymane;2026-10-01;'=zaliczka;3000");
-    expect(csv).toContain("Razem;Zostało do zapłaty;;5000");
+    expect(csv.startsWith("﻿Rodzaj;Pozycja;Szczegóły;Minuty;Kwota (zł)\r\n")).toBe(true);
+    expect(csv).toContain("Otrzymane;2026-10-01;'=zaliczka;;3000");
+    expect(csv).toContain("Razem;Zostało do zapłaty;;;5000");
+  });
+
+  it("CSV: pozycja godzinowa ma minuty w osobnej kolumnie (B2 audytu 2)", () => {
+    const csv = billingCsv(billingStatement(input({ rate: 60, minutes: 50 })));
+    expect(csv).toContain("Naliczone;Godziny;50 min × 60 zł/h;50;50");
+  });
+
+  // B1 audytu 2: kwoty w groszach, mnożenie przed dzieleniem; najpierw pozycje, potem suma.
+  it.each([
+    [57, 20.5, 19.48], [99, 20.5, 33.83], [50, 60, 50], [1, 100, 1.67], [20, 100, 33.33],
+  ])("%i min × %s zł/h = %s zł", (minutes, rate, want) => {
+    expect(billingStatement(input({ rate, minutes })).lines[0].amount).toBe(want);
+  });
+
+  it("czas w opisie jak w kwocie: 50 min, 2 h, 2 h 15 min (B2)", () => {
+    expect(durationPl(50)).toBe("50 min");
+    expect(durationPl(120)).toBe("2 h");
+    expect(durationPl(135)).toBe("2 h 15 min");
+    expect(billingStatement(input({ rate: 60, minutes: 50 })).lines[0].detail).toBe("50 min × 60 zł/h");
+  });
+
+  it("trzy pozycje po 33,33 zł dają 99,99, nie 100 — suma pozycji, nie pozycja od sumy", () => {
+    const st = billingStatement(input({ billing: bill({ modes: ["points"], pointRate: 33.33 }), points: done("x", 3) }));
+    expect(st.accrued).toBe(99.99);
+  });
+
+  it("parseAmount odrzuca kropkę tysięcy; 0 tylko ze zgodą (stawka rodzaju, B5)", () => {
+    expect(parseAmount("1.250")).toBeUndefined();
+    expect(parseAmount("1.250,50")).toBeUndefined();
+    expect(parseAmount("0")).toBeUndefined();
+    expect(parseAmount("0", true)).toBe(0);
+    expect(cleanAmount(1.005)).toBe(1.01);
+  });
+
+  it("stawka rodzaju 0 = bezpłatnie: wiersz za 0 zł zamiast stawki domyślnej", () => {
+    const st = billingStatement(input({ billing: bill({ modes: ["points"], pointRate: 150, typeRates: { gratis: 0 } }), points: done("gratis", 2) }));
+    expect(st.lines.map((l) => [l.detail, l.amount])).toEqual([["2 × 0 zł", 0]]);
+    expect(st.accrued).toBe(0);
+  });
+
+  it("stawka rodzaju 0 przechodzi przez Yjs i kopię, a kwota ryczałtu 0 nie", () => {
+    const store = createYBilling(new Y.Doc());
+    expect(store.setPointRate("site", "gratis", 0)).toBe(true);
+    expect(store.setLump("site", 0)).toBe(false);
+    expect(store.get("site").typeRates.gratis).toBe(0);
+    const copy = createYBilling(new Y.Doc());
+    copy.mergeDump(store.dump());
+    expect(copy.get("site").typeRates.gratis).toBe(0);
+  });
+
+  it("własność: kwota godzinowa zgodna z rachunkiem na BigInt, suma = suma groszy pozycji", () => {
+    fc.assert(fc.property(fc.integer({ min: 1, max: 6000 }), fc.integer({ min: 1, max: 100_000 }), fc.integer({ min: 1, max: 20 }), (minutes, rateGr, count) => {
+      const rate = rateGr / 100;
+      const st = billingStatement(input({ billing: bill({ modes: ["hours", "points"], pointRate: rate }), rate, minutes, points: done("x", count) }));
+      // Zaokrąglenie połówki w górę na liczbach całkowitych: (2·a + b) div (2·b).
+      const exact = (2n * BigInt(minutes) * BigInt(rateGr) + 60n) / 120n;
+      expect(BigInt(Math.round(st.lines[0].amount * 100))).toBe(exact);
+      const linesGr = st.lines.reduce((s, l) => s + Math.round(l.amount * 100), 0);
+      expect(Math.round(st.accrued * 100)).toBe(linesGr);
+    }));
   });
 
   it("cleanPayment: zły dzień, kwota, za długa notatka", () => {

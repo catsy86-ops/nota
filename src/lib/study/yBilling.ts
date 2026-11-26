@@ -45,7 +45,8 @@ export function createYBilling(doc: Y.Doc) {
       if (!site || !isId(site)) continue;
       if (kind === "m") { const m = cleanModes(v); if (m) of(site).modes = m; continue; }
       if (kind === "p") { const pay = id && isId(id) ? cleanPayment(v, id) : null; if (pay) of(site).payments.push(pay); continue; }
-      const n = cleanAmount(v);
+      // Stawka rodzaju pracy może być 0 (bezpłatnie, B5); pozostałe kwoty — tylko dodatnie.
+      const n = cleanAmount(v, kind === "t");
       if (n === undefined) continue;
       if (kind === "d") of(site).pointRate = n;
       else if (kind === "l") of(site).lump = n;
@@ -75,7 +76,7 @@ export function createYBilling(doc: Y.Doc) {
       if (map.has(k)) doc.transact(() => map.delete(k), BILLING_ORIGIN);
       return true;
     }
-    const n = cleanAmount(amount);
+    const n = cleanAmount(amount, k.startsWith(`t${SEP}`));
     if (n === undefined) return false;
     if (map.get(k) !== n) doc.transact(() => map.set(k, n), BILLING_ORIGIN);
     return true;
@@ -126,7 +127,7 @@ export function createYBilling(doc: Y.Doc) {
         put(key("m", site), cleanModes(d.modes));
         put(key("d", site), cleanAmount(d.pointRate));
         put(key("l", site), cleanAmount(d.lump));
-        for (const [t, v] of entries(d.typeRates).slice(0, DUMP_MAP_MAX)) if (isId(t)) put(key("t", site, t), cleanAmount(v));
+        for (const [t, v] of entries(d.typeRates).slice(0, DUMP_MAP_MAX)) if (isId(t)) put(key("t", site, t), cleanAmount(v, true));
         for (const [s, v] of entries(d.stageAmounts).slice(0, DUMP_MAP_MAX)) if (isId(s)) put(key("s", site, s), cleanAmount(v));
         // Razem z wpłatami, które budowa już ma, nie więcej niż `PAYMENTS_MAX` (D3 audytu — inaczej „Dodaj wpłatę” przestawało działać).
         let room = PAYMENTS_MAX - get(site).payments.length;

@@ -14,16 +14,18 @@ import { SiteBillingDues } from "./SiteBillingDues";
 import { cardVariant } from "@/components/ui/card";
 
 /** Pole kwoty: zapis przy wyjściu z pola; pusty tekst usuwa, zły tekst wraca do poprzedniej wartości. */
-function AmountField({ label, value, onSave, placeholder, unit = "zł" }: {
+function AmountField({ label, value, onSave, placeholder, unit = "zł", allowZero = false }: {
   label: string;
   value: number | undefined;
   /** `false` = kwota poza zakresem. */
   onSave: (amount: number | null) => boolean;
   placeholder?: string;
   unit?: string;
+  /** Stawka rodzaju pracy: 0 = bezpłatnie (B5 audytu 2). */
+  allowZero?: boolean;
 }) {
   function commit(input: HTMLInputElement) {
-    const n = parseAmount(input.value);
+    const n = parseAmount(input.value, allowZero);
     if (n === (value ?? null)) return;
     if (n === undefined || !onSave(n)) {
       toast.error(`${label}: wpisz kwotę, np. 150 albo 1250,50`);
@@ -112,10 +114,10 @@ export function SiteBillingPanel({ site, hours }: { site: SiteInfo; /** Godziny 
               <AmountField label="Za punkt (domyślnie)" value={billing.pointRate} onSave={(n) => setPointRate(site.id, null, n)} placeholder="np. 150" />
               {used.map((t) => (
                 <AmountField key={t.id} label={`${t.label} ×${t.count}`} value={billing.typeRates[t.id]}
-                  onSave={(n) => setPointRate(site.id, t.id, n)} placeholder={billing.pointRate !== undefined ? amountInput(billing.pointRate) : "—"} />
+                  onSave={(n) => setPointRate(site.id, t.id, n)} allowZero placeholder={billing.pointRate !== undefined ? amountInput(billing.pointRate) : "—"} />
               ))}
               <p className="text-2xs text-muted-foreground">
-                {used.length > 0 ? "Puste pole typu = stawka domyślna." : "Stawki na typ (np. WC na stelażu) pojawią się po dodaniu punktów w panelu „Punkty”."}
+                {used.length > 0 ? "Puste pole typu = stawka domyślna, 0 = bezpłatnie." : "Stawki na typ (np. WC na stelażu) pojawią się po dodaniu punktów w panelu „Punkty”."}
                 {" "}Zmiana stawki liczy się dla punktów kończonych od teraz — gotowe zachowują stawkę z dnia ukończenia.
               </p>
             </fieldset>
