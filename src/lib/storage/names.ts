@@ -94,6 +94,8 @@ export const SIGNALS = {
   vaultChannel: "kaczy-vault",
   studyCustomPrefill: "kaczy:study-custom-prefill",
   tour: "kaczy:tour",
+  /** Okno „O aplikacji” (`components/about/AboutHost.tsx`). */
+  about: "kaczy:about",
   importExternal: "kaczy:import-external",
   launchFiles: "kaczy:launch-files",
   guide: "kaczy:guide",

@@ -5,7 +5,7 @@ import { folderProgress } from "@/lib/folderProgress";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import {
-  Settings as SettingsIcon, LayoutDashboard, CircleQuestionMark, Tag, Moon, Sun, FolderOpen, Command, RotateCcwClock, Trophy, Brain, BrainCircuit, ExternalLink, Ellipsis, ChevronDown, Funnel, Star,
+  Settings as SettingsIcon, Info, LayoutDashboard, CircleQuestionMark, Tag, Moon, Sun, FolderOpen, Command, RotateCcwClock, Trophy, Brain, BrainCircuit, ExternalLink, Ellipsis, ChevronDown, Funnel, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sectionIconClass } from "@/lib/sections";
@@ -34,8 +34,6 @@ import { preloadView } from "@/lib/viewPreload";
 import { groupSidebarItems, type SidebarItem } from "@/components/sidebar/sidebarItems";
 import { NEUROKLIK_URL } from "@/lib/neuroklik";
 import { APP_VERSION } from "@/content/changelog";
-import { AboutPanel } from "@/components/AboutPanel";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { recentOpenedIds, useLastOpened } from "@/lib/lastOpened";
 import { removeView, renameView, sameSource, saveView, useSavedViews, viewFromCurrent, viewSummary, type SavedView, type ViewSource } from "@/lib/savedViews";
 import { getViewPrefs, useViewPrefs } from "@/lib/viewPrefs";
@@ -171,7 +169,8 @@ function AppSidebarImpl({
     });
   };
   const isMobile = useIsMobile();
-  const [aboutOpen, setAboutOpen] = useState(false);
+  // „O aplikacji” (components/about): na telefonie pasek jest oknem z własną pułapką fokusu, więc zamykamy go przed otwarciem.
+  const openAbout = () => { if (isMobile) onClose(); window.dispatchEvent(new CustomEvent(SIGNALS.about)); };
   const asideRef = useRef<HTMLElement>(null);
   // Telefon: pasek to okno modalne — fokus wchodzi do środka, Tab zapętla się w nim, Esc zamyka,
   // a po zamknięciu fokus wraca na przycisk, który go otworzył.
@@ -473,6 +472,8 @@ function AppSidebarImpl({
                     icon={dark ? <Sun className="size-icon-nav" /> : <Moon className="size-icon-nav" />} />
                   <FooterIcon label="Ustawienia" title={`Ustawienia (${shortcutFor("Ustawienia")})`} onClick={() => onSettingsOpenChange(true)}
                     icon={<SettingsIcon className="size-icon-nav" />} />
+                  <FooterIcon label="O aplikacji" title="O aplikacji: autor i wszystkie funkcje" onClick={openAbout}
+                    icon={<Info className="size-icon-nav" />} />
                 </div>
 
                 {/* Akcje drugorzędne zwinięte — sidebar ma się mieścić na 900 px. */}
@@ -499,8 +500,8 @@ function AppSidebarImpl({
                     <InstallAppButton />
                   </div>
                 )}
-                {/* 5.7: wersja, build i stan pracy offline w oknie; tu tylko wejście. */}
-                <button type="button" onClick={() => { if (isMobile) onClose(); setAboutOpen(true); }}
+                {/* 5.7: wersja, build i stan pracy offline są na dole okna „O aplikacji”; tu tylko wejście. */}
+                <button type="button" onClick={openAbout}
                   className="mx-3 mt-1 rounded-control text-left text-2xs text-muted-foreground hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11">
                   O aplikacji · wersja {APP_VERSION}
                 </button>
@@ -509,16 +510,6 @@ function AppSidebarImpl({
           </motion.aside>
         )}
       </AnimatePresence>
-      {/* Poza paskiem: na telefonie pasek jest oknem z własną pułapką fokusu, więc zamykamy go przed otwarciem. */}
-      <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>O aplikacji</DialogTitle>
-            <DialogDescription>NOTKI — notatki, grafik i praca w jednym miejscu, także bez internetu.</DialogDescription>
-          </DialogHeader>
-          <AboutPanel />
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

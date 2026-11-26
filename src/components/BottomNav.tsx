@@ -2,7 +2,7 @@ import { useLongPress } from "@/hooks/useLongPress";
 import { openQuickPresets } from "@/lib/quickPresets";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { m as motion, LayoutGroup } from "framer-motion";
-import { Ruler, StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, FolderOpen, Tag, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Inbox, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
+import { Ruler, StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, FolderOpen, Tag, Settings as SettingsIcon, Info, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Inbox, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { openJournalSheet } from "@/lib/study/entrySheet";
@@ -331,6 +331,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
               </ImportExportMenu>
             )}
             <SheetTile Icon={SettingsIcon} label="Ustawienia" onClick={() => { onOpenSettings(); setMoreOpen(false); }} />
+            <SheetTile Icon={Info} label="O aplikacji" onClick={() => { window.dispatchEvent(new CustomEvent(SIGNALS.about)); setMoreOpen(false); }} />
             <InstallAppButton variant="tile" onDone={() => setMoreOpen(false)} />
           </SheetGroup>
         </SheetContent>

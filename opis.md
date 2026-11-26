@@ -337,6 +337,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Powłoka — wznowienie: ostatni dział, a po 4 h „Dziś” (Q3.4, decyzja QL-3, 2026-11-23)
 - Powłoka — linki `web+notatnik:` i adres notatki (Q3.7, 2026-11-25)
 - Ustawienia — słownik „kopia”, „styl”, „krój” i odmiana urządzeń (U1.2, U1.3, 2026-11-26)
+- Powłoka — okno „O aplikacji”: autor, wyróżniki i wszystkie funkcje (2026-11-26)
 
 ### Wygląd i ruch — [`docs/opis/wyglad.md`](docs/opis/wyglad.md)
 

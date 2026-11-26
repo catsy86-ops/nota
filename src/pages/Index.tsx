@@ -90,6 +90,8 @@ import { DataLossBanner, DocReplaceNotice } from "@/components/DocReplaceBanners
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport";
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
+// Nasłuch „O aplikacji” od startu — leniwy host gubiłby kliknięcie sprzed doładowania; samo okno jest leniwe.
+import { AboutHost } from "@/components/about/AboutHost";
 import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, StudyView, DebtsView, CwiczeniaView, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, StudyOverdueSync } from "./indexViews";
 import { IdleWarmup, MarkOpenedSync, ReaderHistoryKeys, SearchTermsSync, UndoHandlersSync } from "./IndexEffects";
 import { useShiftsUndo, useSidebarOpen } from "./indexHooks";
@@ -768,6 +770,8 @@ const Index = () => {
       onDeleteForever={() => setConfirmDeleteIds(Array.from(selectedIds))}
       onExport={exportSelectedZip}
     />
+    {/* Poza Suspense: leniwe sąsiedztwo (samouczek) odkładałoby montaż i gubiło kliknięcie „O aplikacji”. */}
+    <AboutHost />
     <Suspense fallback={null}>
       <OnboardingTour />
       <AppearanceLinkImport />
