@@ -135,8 +135,12 @@ export interface PersonDebts {
   entries: DebtEntry[];
 }
 
-/** Najnowsze pierwsze: dzień, potem kolejność dodania. */
-export const byNewest = (a: DebtEntry, b: DebtEntry) => (a.at === b.at ? b.created - a.created : a.at < b.at ? 1 : -1);
+/**
+ * Najnowsze pierwsze: dzień, potem kolejność dodania, a przy remisie (ten sam dzień i `created` z dwóch telefonów) — id.
+ * Bez rozstrzygnięcia kolejność zależała od kolejności odbioru i różniła się między urządzeniami (Z-17.9, §6.2).
+ */
+export const byNewest = (a: DebtEntry, b: DebtEntry) =>
+  a.at !== b.at ? (a.at < b.at ? 1 : -1) : b.created !== a.created ? b.created - a.created : a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 
 /**
  * Salda po osobach. Najpierw ci, którzy są nam winni (największa kwota pierwsza),

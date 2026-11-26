@@ -77,13 +77,13 @@ const debts: ConvergenceDomain<Store, Op> = {
 };
 
 describe("zbieżność Długów (Z-17.9)", () => {
-  // ZNANA PORAŻKA (§6.2 specyfikacji, potwierdzona 2026-11-26): `byNewest` nie rozstrzyga remisu przy tym samym dniu
-  // i `created`, więc kolejność wpisów zależy od kolejności odbioru (W1). Poprawka osobnym commitem.
-  it.fails("losowe przebiegi na 2–3 telefonach: projekcja, zimny start, spokój, niezmienniki, nic nie ginie", () => {
+  // §6.2 specyfikacji: remis w `byNewest` (ten sam dzień i `created`) dawał różną kolejność na telefonach (W1) —
+  // znalezione tym zestawem 2026-11-26, poprawione rozstrzygnięciem po id.
+  it("losowe przebiegi na 2–3 telefonach: projekcja, zimny start, spokój, niezmienniki, nic nie ginie", () => {
     fc.assert(convergenceProperty(debts), { numRuns: convergenceRuns() });
   });
 
-  it.fails("przypadek obowiązkowy: dwa telefony dodają wpisy z tym samym dniem i `created` — kolejność wszędzie ta sama", () => {
+  it("przypadek obowiązkowy: dwa telefony dodają wpisy z tym samym dniem i `created` — kolejność wszędzie ta sama", () => {
     const e = (id: string): DebtEntry => ({ id, person: "Ania", kind: "lent", amount: 100, at: "2026-11-02", note: "", created: 2 });
     const steps: Step<Op>[] = [
       { k: "op", d: 0, op: { k: "add", e: e("d0-0") } },
