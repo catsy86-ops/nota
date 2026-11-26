@@ -701,7 +701,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa:** wartości startowe: podpowiedź progresji (C2.1), a bez niej pierwsza seria ostatniej sesji, a bez niej cel powtórzeń z planu (domyślnie 10) bez ciężaru. Krok ciężaru jak w podpowiedzi: 0,5 kg do 10 kg, wyżej 1 kg; w dół symetrycznie przez granicę; „−” przy 0,5 kg daje „bez kg”.
 - **Ograniczenia:** blok nie zapisuje wpisu sam — to celowe, bo jeden wpis to całe ćwiczenie z wieloma seriami. Przerwa (minutnik) startuje po „Zapisz serie”, nie po każdej serii.
 - **Testy:** `src/components/cwiczenia/trainingFormat.test.ts` (krok ciężaru), `src/components/cwiczenia/TrainingSection.test.tsx` (stuknięcia wypełniają kolejne wiersze, −/+), `e2e/cwiczenia-tydzien.spec.ts` (zapis dwóch serii i „Ostatnio”, axe bloku).
-- **Commit:** zobacz `git log --grep "C2.2"`, 2026-11-26.
+- **Commit:** `02bd1cb0`, 2026-11-26.
 
 ## Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 
