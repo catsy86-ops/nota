@@ -25,6 +25,7 @@ import { useTrainingEntries } from "@/lib/training/store";
 import { pluralPl } from "@/lib/plural";
 import { DietSection } from "./DietSection";
 import { WeightSection } from "./WeightSection";
+import { MeasuresSection } from "./MeasuresSection";
 import { TrainingSection } from "./TrainingSection";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { listItemMotion } from "@/lib/cardMotion";
@@ -202,7 +203,7 @@ export function CwiczeniaView() {
       <div className="mt-6 space-y-6 max-sm:mt-0">
         <TabsContent value="trening" id="cwiczenia-trening" forceMount className={panel}><TrainingSection /></TabsContent>
         <TabsContent value="dieta" id="cwiczenia-dieta" forceMount className={panel}><DietSection /></TabsContent>
-        <TabsContent value="waga" id="cwiczenia-waga" forceMount className={panel}><WeightSection /></TabsContent>
+        <TabsContent value="waga" id="cwiczenia-waga" forceMount className={panel}><div className="space-y-6"><WeightSection /><MeasuresSection /></div></TabsContent>
       </div>
       </Tabs>
       {/* C3.1: regularność pod sekcjami — widoczna przy każdej zakładce. */}

@@ -81,3 +81,14 @@ test("C3.1: po zapisie treningu kalendarz regularności liczy dzień i ma opis d
   const axe = await new AxeBuilder({ page }).include('[data-testid="regularity-grid"]').withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
 });
+
+test("C3.4: pomiar obwodu pasa zapisuje się, pigułka pokazuje wynik, wykres ma opis", async ({ page }) => {
+  const box = page.getByTestId("measures");
+  await box.getByLabel("Obwód: Pas w centymetrach").fill("88,5");
+  await box.getByRole("button", { name: "Zapisz pomiar" }).click();
+  await expect(box.getByRole("button", { name: /Pas.*88,5/ })).toHaveAttribute("aria-pressed", "true");
+  await expect(box.getByRole("img", { name: /Obwód: Pas, ostatnie 30 dni: 1 pomiar od/ })).toBeVisible();
+  await expect(box.getByTestId("measures-list")).toContainText("88,5 cm");
+  const axe = await new AxeBuilder({ page }).include('[data-testid="measures"]').withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+  expect(axe.violations.map((v) => v.id)).toEqual([]);
+});

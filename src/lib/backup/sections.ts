@@ -5,12 +5,13 @@ import { yjsStore } from "@/lib/yjsStore";
  * i budowie kopii. `load` wczytuje moduł w fazie sprawdzania; zwrócona funkcja scala **synchronicznie** w fazie zapisu.
  * Kolejność ma znaczenie (P8): `training` sprawdza notatki, więc idzie po wymianie notatek.
  */
-export type MergeKey = "supplements" | "diet" | "weight" | "training" | "debts" | "debtPlans" | "debtProofs" | "entryCheck" | "kits" | "views" | "points" | "plans" | "billing" | "van" | "invoices" | "pricing" | "clients" | "jobs";
+export type MergeKey = "supplements" | "diet" | "weight" | "measures" | "training" | "debts" | "debtPlans" | "debtProofs" | "entryCheck" | "kits" | "views" | "points" | "plans" | "billing" | "van" | "invoices" | "pricing" | "clients" | "jobs";
 export type Merge = (dump: never) => unknown;
 export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; load: () => Promise<Merge> }[] = [
   { key: "supplements", label: "Suplementy", load: async () => (await import("@/lib/supplements/store")).mergeSupplementDump },
   { key: "diet", label: "Dieta", load: async () => (await import("@/lib/diet/store")).mergeDietDump },
   { key: "weight", label: "Waga", load: async () => (await import("@/lib/weight/store")).mergeWeightDump },
+  { key: "measures", label: "Obwody", load: async () => (await import("@/lib/weight/store")).mergeMeasuresDump },
   // Notatki z kopii są już wczytane, więc można sprawdzić, czy przypomnienie ma swoją notatkę.
   { key: "training", label: "Trening", load: async () => { const m = await import("@/lib/training/store"); return (d: never) => m.mergeTrainingDump(d, (id: string) => yjsStore.projectNotes().some((n) => n.id === id)); } },
   { key: "debts", label: "Długi", load: async () => (await import("@/lib/debts/store")).mergeDebtsDump },

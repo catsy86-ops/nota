@@ -26,6 +26,7 @@ const PRESERVES: Record<string, string> = {
   trainingPlans: "src/lib/exerciseExtra.test.ts",
   trainingExercises: "src/lib/exerciseExtra.test.ts",
   weightEntries: "src/lib/exerciseExtra.test.ts",
+  bodyMeasures: "src/lib/exerciseExtra.test.ts",
   dietMeals: "src/lib/exerciseExtra.test.ts",
   dietMeta: "src/lib/exerciseExtra.test.ts",
   dietFavorites: "src/lib/exerciseExtra.test.ts",

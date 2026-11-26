@@ -271,6 +271,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Ćwiczenia — podpowiedź progresji przy zapisie serii (C2.1, 2026-11-25)
 - Ćwiczenia — zapis serii jednym stuknięciem (C2.2, 2026-11-26)
 - Ćwiczenia — kalendarz regularności 12 tygodni (C3.1, 2026-11-26)
+- Ćwiczenia — obwody ciała w zakładce „Waga” (C3.4, 2026-11-26)
 - Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 - Ćwiczenia — dieta: średnia z 7 dni i cel białka z masy ciała (C4.3, C4.4, 2026-11-25)
 - Ćwiczenia — podsumowanie miesiąca do udostępnienia (C3.3, 2026-11-25)
@@ -310,6 +311,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Dane — spis map Yjs i przejście kluczy `localStorage` (D0.1, D6.3, D6.4, 2026-11-23)
 - Dane — rejestr kluczy `localStorage`, nazwy kluczy i lista kopii z rejestru (D6.1, D6.2, D6.5, 2026-11-23)
 - Kopia zapasowa — uwagi przed przywróceniem i sekcja Waga (Z-18.2 audytu 2, 2026-11-26)
+- Dane — mapa `bodyMeasures` i sekcja kopii „Obwody” (C3.4, 2026-11-26)
 
 ### Powłoka, Ustawienia i telefon — [`docs/opis/powloka.md`](docs/opis/powloka.md)
 

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { localDayKey } from "@/lib/dayDone";
 import { weightSeries, type WeightRange } from "@/lib/weight/chart";
 import type { WeightEntry } from "@/lib/weight/model";
+import { pluralPl } from "@/lib/plural";
 
 const W = 320;
 const H = 120;
@@ -12,7 +13,15 @@ const H = 120;
  * Recharts (mały, bez ładowania paczki). Oś X od dnia, Y z zapasem 0,5 kg. Podsumowanie liczbowe
  * jest w `aria-label`, a lista ważeń pod wykresem to jednocześnie tabela dla czytnika.
  */
-export function WeightChart({ entries }: { entries: WeightEntry[] }) {
+export function WeightChart({ entries, unit = "kg", label = "Masa ciała", noun = ["ważenie", "ważenia", "ważeń"], empty = "Brak ważeń" }: {
+  entries: WeightEntry[];
+  /** C3.4: ten sam wykres dla obwodów (cm) — jednostka, nazwa serii i rzeczownik do opisu dla czytnika. */
+  unit?: string;
+  label?: string;
+  /** Odmiana rzeczownika (1, 2–4, 5+) — „1 ważenie”, „3 pomiary”. */
+  noun?: [string, string, string];
+  empty?: string;
+}) {
   const [range, setRange] = useState<WeightRange>(30);
   const series = weightSeries(entries, range, localDayKey(), W, H);
   const ranges: WeightRange[] = [30, 90];
@@ -36,7 +45,7 @@ export function WeightChart({ entries }: { entries: WeightEntry[] }) {
         </div>
         {series && (
           <p className="ui-meta">
-            {series.min.toFixed(1)}–{series.max.toFixed(1)} kg
+            {series.min.toFixed(1)}–{series.max.toFixed(1)} {unit}
           </p>
         )}
       </div>
@@ -45,7 +54,7 @@ export function WeightChart({ entries }: { entries: WeightEntry[] }) {
         <svg
           viewBox={`0 0 ${W} ${H}`}
           role="img"
-          aria-label={`Masa ciała, ostatnie ${range} dni: ${series.points.length} ważeń od ${series.points[0].kg.toFixed(1)} kg do ${series.points[series.points.length - 1].kg.toFixed(1)} kg, zakres ${series.min.toFixed(1)}–${series.max.toFixed(1)} kg.`}
+          aria-label={`${label}, ostatnie ${range} dni: ${series.points.length} ${pluralPl(series.points.length, noun)} od ${series.points[0].kg.toFixed(1)} ${unit} do ${series.points[series.points.length - 1].kg.toFixed(1)} ${unit}, zakres ${series.min.toFixed(1)}–${series.max.toFixed(1)} ${unit}.`}
           className="block h-auto w-full overflow-visible text-primary-ink"
         >
           {series.points.length > 1 && (
@@ -60,13 +69,13 @@ export function WeightChart({ entries }: { entries: WeightEntry[] }) {
           )}
           {series.points.map((p) => (
             <circle key={p.day} cx={p.x} cy={p.y} r={3} fill="var(--card)" stroke="currentColor" strokeWidth={1.5}>
-              <title>{`${p.day}: ${p.kg.toFixed(1)} kg`}</title>
+              <title>{`${p.day}: ${p.kg.toFixed(1)} ${unit}`}</title>
             </circle>
           ))}
         </svg>
       ) : (
         <p className="ui-hint rounded-control border border-dashed border-border/70 px-3 py-6 text-center">
-          Brak ważeń w ostatnich {range} dniach.
+          {empty} w ostatnich {range} dniach.
         </p>
       )}
       {series && (

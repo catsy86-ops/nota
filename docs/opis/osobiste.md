@@ -712,6 +712,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy:** `src/lib/fitnessRegularity.test.ts`, `e2e/cwiczenia-tydzien.spec.ts` (zdanie, komórka dnia, axe siatki).
 - **Commit:** `d6ae75ea`, 2026-11-26.
 
+## Ćwiczenia — obwody ciała w zakładce „Waga” (C3.4, 2026-11-26)
+
+- **Co robi:** pod „Masą ciała” jest karta „Obwody”: pigułki Pas, Klatka, Ramię, Udo (z ostatnim wynikiem i zmianą, np. „Pas 88,5 (−1,5)”), pole w cm i dzień, „Zapisz pomiar”. Dla wybranej partii ten sam wykres co masa (30/90 dni) i lista ostatnich 10 pomiarów z usuwaniem i „Cofnij”.
+- **Gdzie jest:** `src/lib/weight/measures.ts` (`Measure`, `MEASURE_PARTS`, `MEASURE_LABEL`, `parseCm`, `cleanMeasure`, `measureTrend`, `measureKey`), `src/lib/weight/yMeasures.ts` (`createYMeasures`), funkcje w `src/lib/weight/store.ts` (`useMeasures`, `setMeasure`, `removeMeasure`, `restoreMeasure`, `measuresDump`, `mergeMeasuresDump`), `src/components/cwiczenia/MeasuresSection.tsx`. `WeightChart` dostał `unit`, `label`, `noun` (odmiana: „1 ważenie”, „3 pomiary”) i `empty` — domyślne wartości dla masy bez zmian.
+- **Jak działa:** wzór masy ciała, ale klucz mapy to `partia:dzień`, nie sam dzień — dwa telefony mierzące tego samego dnia różne partie scalają się bez strat; ten sam dzień i partia nadpisuje pomiar (pola nowszej wersji przechodzą przez `mergeStored`). Zakres 10–250 cm, co 0,1 cm. Dane i kopia: `docs/opis/dane.md`.
+- **Ograniczenia:** bez celu i bez średniej z 7 pomiarów (jak przy masie) — obwody mierzy się rzadko.
+- **Testy:** `src/lib/weight/measures.test.ts`, `src/lib/weight/yMeasures.test.ts`, `e2e/cwiczenia-tydzien.spec.ts` (zapis, pigułka, opis wykresu, axe karty).
+- **Commit:** zobacz `git log --grep "C3.4"`, 2026-11-26.
+
 ## Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 
 - **Co robi:** na dole widoku Ćwiczeń są przyciski „Trening CSV”, „Dieta CSV” i „Waga CSV”, każdy widoczny tylko wtedy, gdy są dane tego rodzaju. Każdy zapisuje plik `notki-<rodzaj>-<dzień>.csv` do otwarcia w polskim Excelu. Trening ma jedną serię na wiersz (data, godzina, ćwiczenie, seria, powtórzenia albo sekundy, ciężar, notatka przy pierwszej serii), dieta jeden posiłek na wiersz (kcal i białko), waga jedno ważenie na wiersz.

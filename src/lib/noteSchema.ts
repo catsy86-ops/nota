@@ -132,6 +132,8 @@ export interface FullBackup {
   diet?: string;
   /** Masa ciała (C-2, `lib/weight/yWeight.ts`, JSON tablica `{ day, kg, created }`); czyszczona przy scalaniu. */
   weight?: string;
+  /** Obwody ciała (C3.4, `lib/weight/yMeasures.ts`, JSON tablica `{ day, part, cm, created }`); czyszczone przy scalaniu. */
+  measures?: string;
   /** Trening: dziennik serii i plany dni (`lib/training/yTraining.ts`, JSON `{ entries, plans }`); kształt waliduje `mergeTrainingDump`. */
   training?: string;
   /** Długi (lib/debts/yDebts.ts, JSON tablica pożyczek); kształt waliduje cleanDebt przy scalaniu. */
@@ -214,6 +216,7 @@ export const fullBackupSchema = z.object({
   supplements: z.catch(z.optional(z.string()), undefined),
   diet: z.catch(z.optional(z.string()), undefined),
   weight: z.catch(z.optional(z.string()), undefined),
+  measures: z.catch(z.optional(z.string()), undefined),
   training: z.catch(z.optional(z.string()), undefined),
   debts: z.catch(z.optional(z.string()), undefined),
   debtPlans: z.catch(z.optional(z.string()), undefined),

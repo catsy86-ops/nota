@@ -89,6 +89,8 @@ export default tseslint.config(
       "src/lib/sync/rekeyRelay.ts",
       // Masa ciała (C-2): warstwa Yjs w dokumencie notatek (wzorem diety), testy na własnym Y.Doc.
       "src/lib/weight/yWeight.ts",
+      "src/lib/weight/yMeasures.ts",
+      "src/lib/weight/yMeasures.test.ts",
       "src/lib/weight/yWeight.test.ts",
       "src/lib/study/yStudy.ts",
       "src/lib/study/yStudy.test.ts",

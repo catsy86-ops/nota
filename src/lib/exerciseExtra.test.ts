@@ -3,6 +3,7 @@ import * as Y from "yjs";
 import { createYTraining } from "@/lib/training/yTraining";
 import { EXERCISES } from "@/lib/training/catalog";
 import { createYWeight } from "@/lib/weight/yWeight";
+import { createYMeasures } from "@/lib/weight/yMeasures";
 import { createYDiet } from "@/lib/diet/yDiet";
 import { mergeStored } from "@/lib/extraFields";
 
@@ -34,6 +35,15 @@ describe("D1.1 Ćwiczenia: nieznane pola", () => {
     expect(doc.getMap("weightEntries").get("2026-11-18")).toEqual({ day: "2026-11-18", kg: 79.5, created: 2, xFuture: 3 });
     const dump = json(y.dump());
     expect(dump[0]).toEqual({ day: "2026-11-18", kg: 79.5, created: 2, xFuture: 3 });
+  });
+
+  it("obwody (C3.4): ponowny pomiar tej partii tego dnia nie gubi pola; kopia też", () => {
+    const doc = new Y.Doc();
+    doc.getMap("bodyMeasures").set("pas:2026-11-18", { day: "2026-11-18", part: "pas", cm: 90, created: 1, xFuture: 3 });
+    const y = createYMeasures(doc);
+    expect(y.set({ day: "2026-11-18", part: "pas", cm: 89.5, created: 2 })).toBe(true);
+    expect(doc.getMap("bodyMeasures").get("pas:2026-11-18")).toEqual({ day: "2026-11-18", part: "pas", cm: 89.5, created: 2, xFuture: 3 });
+    expect(json(y.dump())[0]).toEqual({ day: "2026-11-18", part: "pas", cm: 89.5, created: 2, xFuture: 3 });
   });
 
   it("dieta: posiłek po „Cofnij”, cele nadpisane z formularza, kopia", () => {

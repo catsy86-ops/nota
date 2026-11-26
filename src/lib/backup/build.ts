@@ -154,7 +154,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   // Dane działu Praca ładowane dopiero tu — nie wchodzą do paczki startowej.
   const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }, { trainingDump }, { debtsDump, debtPlansDump, debtProofsDump }, { entryCheckDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store"), import("@/lib/training/store"), import("@/lib/debts/store"), import("@/lib/study/entryCheckStore")]);
   await studyReady();
-  const { weightDump } = await import("@/lib/weight/store");
+  const { weightDump, measuresDump } = await import("@/lib/weight/store");
   const { kitsDump } = await import("@/lib/study/kitsStore");
   const { pointsDump } = await import("@/lib/study/pointsStore");
   const { billingDump } = await import("@/lib/study/billingStore");
@@ -196,6 +196,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     diet: JSON.stringify(dietDump()),
     // Masa ciała (C-2): jeden wpis na dzień, scalana przy przywracaniu.
     weight: JSON.stringify(weightDump()),
+    measures: JSON.stringify(measuresDump()),
     training: JSON.stringify(trainingDump()),
     // Długi: pożyczki są w dokumencie Yjs, więc bez tej sekcji kopia by je gubiła.
     debts: JSON.stringify(debtsDump()),

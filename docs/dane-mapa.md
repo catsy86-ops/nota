@@ -65,3 +65,4 @@ Mapy Grafiku (`shift*`) istnieją dla każdego grafiku z prefiksem identyfikator
 | `vault` | `lib/yjs/docFile.ts`, `lib/yjsStore.ts` | wyjęta | nagłówek kryptograficzny skarbca (`meta`), zapisywany tylko przy założeniu i zmianie hasła; scalanie nieznanych pól mogłoby zostawić niespójny nagłówek — przed przepisaniem nowszego formatu chroni wymaganie wersji (D1.3) |
 | `views` | `lib/savedViews.ts` | zachowuje nieznane pola | test: `src/lib/extraD11rest.test.ts` |
 | `weightEntries` | `lib/weight/yWeight.ts` | zachowuje nieznane pola | test: `src/lib/exerciseExtra.test.ts` |
+| `bodyMeasures` | `lib/weight/yMeasures.ts` | zachowuje nieznane pola | obwody ciała (C3.4), klucz `partia:dzień`; test: `src/lib/exerciseExtra.test.ts` |
