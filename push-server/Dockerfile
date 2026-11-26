@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:26-alpine
 WORKDIR /app
 # Zależności z lockfile, żeby kolejne budowy dawały te same wersje.
 COPY package.json package-lock.json ./
