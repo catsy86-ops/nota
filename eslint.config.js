@@ -58,6 +58,9 @@ export default tseslint.config(
       "src/lib/migrations/registry.ts",
       "src/lib/migrations/runner.test.ts",
       "src/test/fixtures/docs/*.test.ts",
+      // Z-17.9: pomocnik zestawu zbieżności i jego test na atrapie — repliki to dokumenty Yjs.
+      "src/test/convergence.ts",
+      "src/test/convergence.test.ts",
       "src/lib/imageSync.ts",
       "src/lib/imageSync.test.ts",
       "src/lib/shifts/yShifts.ts",
