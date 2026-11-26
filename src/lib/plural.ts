@@ -21,3 +21,6 @@ export const wordsPl = (n: number) => `${n} ${pluralPl(n, ["słowo", "słowa", "
 
 /** „1 znak”, „3 znaki”, „5 znaków”. */
 export const charsPl = (n: number) => `${n} ${pluralPl(n, ["znak", "znaki", "znaków"])}`;
+
+/** „1 urządzenie”, „3 urządzenia”, „5 urządzeń”. */
+export const devicesPl = (n: number) => `${n} ${pluralPl(n, ["urządzenie", "urządzenia", "urządzeń"])}`;

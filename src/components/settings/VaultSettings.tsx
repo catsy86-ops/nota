@@ -21,7 +21,7 @@ const CHOICE_LABEL = (m: number) => (m === 0 ? "Nigdy (do zamknięcia karty)" : 
 
 const STATUS = {
   none: "Skarbiec nie jest jeszcze ustawiony. Pojawi się przy pierwszym zablokowaniu notatki.",
-  corrupt: "Metadane skarbca w dokumencie są uszkodzone. Nie założę nowego skarbca, żeby nie nadpisać starego i nie stracić notatek prywatnych. Przywróć pełny backup albo zsynchronizuj urządzenie, na którym skarbiec działa.",
+  corrupt: "Metadane skarbca w dokumencie są uszkodzone. Nie założę nowego skarbca, żeby nie nadpisać starego i nie stracić notatek prywatnych. Przywróć pełną kopię albo zsynchronizuj urządzenie, na którym skarbiec działa.",
   locked: "Skarbiec jest zablokowany — prywatne notatki pokazują się jako kłódki.",
   locking: "Blokuję skarbiec…",
   unlocked: "Skarbiec jest odblokowany w tej karcie.",
@@ -108,7 +108,7 @@ export function VaultSettings() {
             <li>Zostają jawne: kolor, przypięcie, folder, daty utworzenia i zmiany, termin przypomnienia (bez tekstu), sam fakt istnienia notatki i jej przybliżony rozmiar.</li>
             <li>Słabe hasło da się złamać offline, jeśli ktoś zdobędzie kopię zapasową albo dokument synchronizacji (sól i opakowany klucz są w nich zapisane).</li>
             <li>Zapomnianego hasła nie da się odzyskać; pomaga tylko kod awaryjny, jeśli go zapisano.</li>
-            <li>Nie usuwa wcześniejszych jawnych kopii: starsze backupy, inne urządzenia i pliki synchronizacji sprzed zablokowania mogą zawierać tekst.</li>
+            <li>Nie usuwa wcześniejszych jawnych kopii: starsze kopie, inne urządzenia i pliki synchronizacji sprzed zablokowania mogą zawierać tekst.</li>
             <li>Notatka z obrazami lub załącznikami nie może być zablokowana — pliki nie są szyfrowane.</li>
             <li>Zablokowana notatka to jeden blok bez współdzielonej edycji: przy zmianach na dwóch urządzeniach naraz wygra ostatni zapis.</li>
             <li>Limit prób hasła działa tylko po stronie tej przeglądarki i nie zatrzyma kogoś, kto ma kopię danych.</li>

@@ -14,11 +14,11 @@ async function openRestore(page: Page) {
   await page.getByRole("tab", { name: "Dane" }).click();
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("button", { name: "Pobierz pełny backup teraz" }).click(),
+    page.getByRole("button", { name: "Pobierz pełną kopię teraz" }).click(),
   ]);
   const [chooser] = await Promise.all([
     page.waitForEvent("filechooser"),
-    page.getByRole("button", { name: "Przywróć z pliku backupu" }).click(),
+    page.getByRole("button", { name: "Przywróć z pliku kopii" }).click(),
   ]);
   await chooser.setFiles((await download.path())!);
   return title;
@@ -29,7 +29,7 @@ test("okno wymienia zastąpione i uzupełnione części; kopia w OPFS przed przy
   const title = await openRestore(page);
   const dialog = page.getByRole("alertdialog");
   await expect(dialog.getByTestId("restore-replaced")).toContainText("notatki, foldery, etykiety");
-  await dialog.getByRole("button", { name: "Przywróć backup" }).click();
+  await dialog.getByRole("button", { name: "Przywróć kopię" }).click();
   await expect(page.getByText(/Przywrócono kopię/)).toBeVisible();
   await page.waitForLoadState("load");
   await expect(page.locator("[data-note-id]").filter({ hasText: title })).toBeVisible();
@@ -48,7 +48,7 @@ test("bez OPFS: pytanie „Czy plik się zapisał?”, „Nie” wstrzymuje przy
     Object.defineProperty(navigator.storage, "getDirectory", { value: () => Promise.reject(new Error("brak")) });
   });
   await openRestore(page);
-  await page.getByRole("alertdialog").getByRole("button", { name: "Przywróć backup" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Przywróć kopię" }).click();
   const ask = page.getByRole("alertdialog").filter({ hasText: "Czy plik się zapisał?" });
   await expect(ask).toBeVisible();
   await ask.getByRole("button", { name: "Nie, wstrzymaj" }).click();

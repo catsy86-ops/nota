@@ -4,16 +4,8 @@ import {
   CloudOff, Check, HardDrive, Wifi, WifiOff, } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSyncState } from "@/lib/yjsSync";
+import { devicesPl } from "@/lib/plural";
 import { DelayedSpinner } from "@/components/DelayedSpinner";
-
-/** Polish plural of "urządzenie" (device) for a count. */
-function deviceWord(n: number): string {
-  if (n === 1) return "urządzenie";
-  const lastDigit = n % 10;
-  const lastTwo = n % 100;
-  if (lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14)) return "urządzenia";
-  return "urządzeń";
-}
 
 interface OfflineQueuePanelProps {
   open: boolean;
@@ -31,7 +23,7 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
 
   const peerLabel =
     syncState.status === "connected" && syncState.peerCount > 0
-      ? `Połączono — ${syncState.peerCount} ${deviceWord(syncState.peerCount)}`
+      ? `Połączono — ${devicesPl(syncState.peerCount)}`
       : syncState.status === "connected" || syncState.status === "connecting"
         ? "Szukanie urządzeń…"
         : syncState.status === "rekeyed"

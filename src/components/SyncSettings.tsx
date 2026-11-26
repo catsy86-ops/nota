@@ -32,11 +32,12 @@ import {
 } from "@/lib/yjsSync";
 import { cardVariant } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { devicesPl } from "@/lib/plural";
 
 /** Jedno zdanie o tym, na którym etapie synchronizacja stoi (bez żargonu). */
 function diagnosis(s: SyncState): string {
   if (s.lastError) return syncErrorText(s.lastError);
-  if (s.status === "connected" && s.peerCount === 0) return "Połączono z serwerami. Drugie urządzenie jeszcze nie dołączyło — otwórz tu sam kod na nim.";
+  if (s.status === "connected" && s.peerCount === 0) return "Połączono z serwerami. Drugie urządzenie jeszcze nie dołączyło — wpisz na nim ten kod albo zeskanuj QR.";
   if (s.signalingTotal > 0 && s.signalingUp === 0) return "Nie ma połączenia z serwerem łączącym urządzenia. Sprawdź internet; połączenie wznowi się samo.";
   if (s.status === "connecting") return `Łączenie z serwerami (${s.signalingUp} z ${s.signalingTotal || "?"}).`;
   return "";
@@ -46,15 +47,6 @@ interface Props {
   prefillCode?: string;
   /** Link parowania miał `v=3` — grupa nie ma pokoju v2. */
   prefillV3?: boolean;
-}
-
-/** Polish plural of "urządzenie" (device) for a count — e.g. 1 urządzenie, 2 urządzenia, 5 urządzeń. */
-function deviceWord(n: number): string {
-  if (n === 1) return "urządzenie";
-  const lastDigit = n % 10;
-  const lastTwo = n % 100;
-  if (lastDigit >= 2 && lastDigit <= 4 && !(lastTwo >= 12 && lastTwo <= 14)) return "urządzenia";
-  return "urządzeń";
 }
 
 export function SyncSettings({ prefillCode, prefillV3 }: Props) {
@@ -193,7 +185,7 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
     syncState.status === "rekeyed"
       ? "Wstrzymana — kod zmieniono na innym urządzeniu"
       : syncState.status === "connected" && syncState.peerCount > 0
-      ? `Połączono — ${syncState.peerCount} ${deviceWord(syncState.peerCount)}`
+      ? `Połączono — ${devicesPl(syncState.peerCount)}`
       : syncState.status === "connected" || syncState.status === "connecting"
         ? "Aktywna — szukanie urządzeń…"
         : "Wyłączona";

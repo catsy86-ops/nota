@@ -40,20 +40,20 @@ test("pełny backup przywraca się z wyborem sekcji", async ({ page }) => {
   await page.getByRole("tab", { name: "Dane" }).click();
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("button", { name: "Pobierz pełny backup teraz" }).click(),
+    page.getByRole("button", { name: "Pobierz pełną kopię teraz" }).click(),
   ]);
   const file = (await download.path())!;
 
   const [chooser] = await Promise.all([
     page.waitForEvent("filechooser"),
-    page.getByRole("button", { name: "Przywróć z pliku backupu" }).click(),
+    page.getByRole("button", { name: "Przywróć z pliku kopii" }).click(),
   ]);
   await chooser.setFiles(file);
   const dialog = page.getByRole("alertdialog");
-  await expect(dialog.getByText("Przywrócić ten backup?")).toBeVisible();
+  await expect(dialog.getByText("Przywrócić tę kopię?")).toBeVisible();
   await expect(dialog.getByText(/Historia wersji/)).toBeVisible();
   await expect(dialog.getByText("Odznaki i passa")).toBeVisible();
-  await dialog.getByRole("button", { name: "Przywróć backup" }).click();
+  await dialog.getByRole("button", { name: "Przywróć kopię" }).click();
   await expect(page.getByText(/Przywrócono kopię/)).toBeVisible();
   await page.waitForLoadState("load");
   await expect(page.getByText(title)).toBeVisible();

@@ -157,7 +157,7 @@ test("backup, localStorage i IndexedDB nie zawierają jawnego tekstu; reload zac
   await page.getByRole("tab", { name: "Dane" }).click();
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("button", { name: "Pobierz pełny backup teraz" }).click(),
+    page.getByRole("button", { name: "Pobierz pełną kopię teraz" }).click(),
   ]);
   const text = readFileSync((await download.path())!, "utf8");
   expect(text).not.toContain(SECRET);

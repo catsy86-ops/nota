@@ -65,9 +65,9 @@ function EndDayBody({ onOpenChange, journal, wholesaleCount, onHours, onReport, 
       markBackup();
       setBackedUp(true);
       haptic("success");
-      toast.success(res.savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾");
+      toast.success(res.savedToFile ? "Kopia zapisana 💾" : "Kopia pobrana 💾");
     } catch {
-      toast.error("Nie udało się wygenerować backupu");
+      toast.error("Nie udało się zrobić kopii");
     }
   }
 

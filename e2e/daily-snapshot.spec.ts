@@ -53,10 +53,10 @@ test("przywracanie z kopii dziennej: notatka usunięta przez przywrócenie pliku
   await page.getByRole("button", { name: "Ustawienia" }).first().click();
   await page.getByRole("tab", { name: "Kopia i dane" }).click();
   const chooser = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Przywróć z pliku backupu" }).click();
+  await page.getByRole("button", { name: "Przywróć z pliku kopii" }).click();
   await (await chooser).setFiles({ name: "kopia.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify({ version: 3, exportedAt: now, notes: [mk("zos", "Zostaje")], folders: [], labels: [] })) });
   const reloaded = page.waitForEvent("load", { timeout: 30_000 });
-  await page.getByRole("button", { name: "Przywróć backup" }).click();
+  await page.getByRole("button", { name: "Przywróć kopię" }).click();
   await reloaded;
   await expect(page.getByText("Zostaje").first()).toBeVisible();
   await expect(page.getByText("Notatka do odzyskania")).toHaveCount(0);

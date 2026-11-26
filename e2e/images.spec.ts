@@ -85,7 +85,7 @@ test("pełny backup niesie bajty obrazu i odtwarza je na czystym urządzeniu", a
   await openDataTab(a);
   const [download] = await Promise.all([
     a.waitForEvent("download"),
-    a.getByRole("button", { name: "Pobierz pełny backup teraz" }).click(),
+    a.getByRole("button", { name: "Pobierz pełną kopię teraz" }).click(),
   ]);
   const file = (await download.path())!;
 
@@ -94,10 +94,10 @@ test("pełny backup niesie bajty obrazu i odtwarza je na czystym urządzeniu", a
   await openDataTab(b);
   const [chooser] = await Promise.all([
     b.waitForEvent("filechooser"),
-    b.getByRole("button", { name: "Przywróć z pliku backupu" }).click(),
+    b.getByRole("button", { name: "Przywróć z pliku kopii" }).click(),
   ]);
   await chooser.setFiles(file);
-  await b.getByRole("alertdialog").getByRole("button", { name: "Przywróć backup" }).click();
+  await b.getByRole("alertdialog").getByRole("button", { name: "Przywróć kopię" }).click();
   await expect(b.getByText(/Przywrócono kopię/)).toBeVisible();
   await b.waitForLoadState("load");
   await expect(cardImage(b, title)).toHaveCount(1);

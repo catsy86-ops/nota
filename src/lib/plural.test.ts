@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dniPl, godzinPl, pluralPl } from "./plural";
+import { devicesPl, dniPl, godzinPl, pluralPl } from "./plural";
 
 const F: [string, string, string] = ["notatka", "notatki", "notatek"];
 
@@ -11,6 +11,14 @@ describe("pluralPl", () => {
 });
 
 describe("odmiana w ustawieniach", () => {
+  it("urządzenia: 1 urządzenie, 2–4 urządzenia, reszta urządzeń (12 — urządzeń)", () => {
+    expect(devicesPl(1)).toBe("1 urządzenie");
+    expect(devicesPl(3)).toBe("3 urządzenia");
+    expect(devicesPl(5)).toBe("5 urządzeń");
+    expect(devicesPl(12)).toBe("12 urządzeń");
+    expect(devicesPl(22)).toBe("22 urządzenia");
+  });
+
   it("dni: 1 dzień, reszta dni", () => {
     expect(dniPl(1)).toBe("1 dzień");
     expect(dniPl(2)).toBe("2 dni");

@@ -50,14 +50,14 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
             markBackup();
             const kb = Math.max(1, Math.round(size / 1024));
             const skipped = describeSkippedAttachments(attachments);
-            if (oversize) { toast.warning("Auto-backup zapisany, ale jest za duży do wczytania", { description: BACKUP_OVERSIZE_NOTE, duration: 20000 }); return; }
+            if (oversize) { toast.warning("Kopia automatyczna zapisana, ale jest za duża do wczytania", { description: BACKUP_OVERSIZE_NOTE, duration: 20000 }); return; }
             // Codzienny zapis do pliku jest cichy — komunikat tylko, gdy kopia pominęła załączniki.
-            if (skipped) toast.success("Auto-backup zapisany", { description: `${filename} • ${kb} KB • ${count} notatek — ${skipped}`, duration: 14000 });
+            if (skipped) toast.success("Kopia automatyczna zapisana", { description: `${filename} • ${kb} KB • ${count} notatek — ${skipped}`, duration: 14000 });
             return;
           }
           // Plik wybrany, ale przeglądarka cofnęła zgodę na zapis (wymaga kliknięcia) — prośba jak bez pliku.
           if (!isBackupDue(latest.current.prefs.autoExportDays, oldest())) return;
-          toast("Czas na backup", {
+          toast("Czas na kopię", {
             id: "auto-backup",
             description: last
               ? `Minęło ${latest.current.prefs.autoExportDays} dni od ostatniego. Pobierz plik z ${count} ${count === 1 ? "notatką" : "notatkami"}.`
@@ -70,15 +70,15 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
                 try {
                   const res = await exportFullBackup();
                   markBackup();
-                  toast.success(res.savedToFile ? "Backup zapisany" : "Backup pobrany", { description: res.filename });
+                  toast.success(res.savedToFile ? "Kopia zapisana" : "Kopia pobrana", { description: res.filename });
                 } catch {
-                  toast.error("Nie udało się wygenerować backupu");
+                  toast.error("Nie udało się zrobić kopii");
                 }
               },
             },
           });
         } catch {
-          toast.error("Auto-backup nie powiódł się");
+          toast.error("Kopia automatyczna nie powiodła się");
         }
       });
     }, 2500);
@@ -107,24 +107,24 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
     if (sessionStorage.getItem(DANE.autoBackupDone) === "1") return;
     sessionStorage.setItem(DANE.backupNudge, "1");
     const t = setTimeout(() => {
-      // Moduł z wyprzedzeniem: „Zrób backup” ma ruszyć od razu, w geście użytkownika.
+      // Moduł z wyprzedzeniem: „Zrób kopię” ma ruszyć od razu, w geście użytkownika.
       void loadExport();
       const days = daysSinceBackup();
       const desc = days === null
         ? "Nie masz jeszcze żadnej kopii zapasowej."
-        : `Ostatni backup: ${days === 0 ? "dziś" : `${days} dni temu`}.`;
-      toast("💾 Czas na backup", {
+        : `Ostatnia kopia: ${days === 0 ? "dziś" : `${days} dni temu`}.`;
+      toast("💾 Czas na kopię", {
         description: desc,
         duration: 12000,
         action: {
-          label: "Zrób backup",
+          label: "Zrób kopię",
           onClick: async () => {
             try {
               const { savedToFile } = await (await loadExport()).exportFullBackup();
               markBackup();
-              toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾");
+              toast.success(savedToFile ? "Kopia zapisana 💾" : "Kopia pobrana 💾");
             } catch {
-              toast.error("Nie udało się wygenerować backupu");
+              toast.error("Nie udało się zrobić kopii");
             }
           },
         },

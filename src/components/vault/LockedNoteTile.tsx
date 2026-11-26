@@ -42,7 +42,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
 
   function unlock() {
     if (noVault) {
-      toast.info("Brak skarbca na tym urządzeniu", { description: "Zsynchronizuj urządzenia albo przywróć pełny backup — wtedy pojawi się okno odblokowania." });
+      toast.info("Brak skarbca na tym urządzeniu", { description: "Zsynchronizuj urządzenia albo przywróć pełną kopię — wtedy pojawi się okno odblokowania." });
       return;
     }
     if (phase === "unlocked") return;

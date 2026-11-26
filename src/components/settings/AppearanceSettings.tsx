@@ -499,7 +499,7 @@ export function AppearanceSettings() {
             <AlertDialogTitle>Przywrócić domyślne ustawienia widoku?</AlertDialogTitle>
             <AlertDialogDescription>
               Zmienią się: {changedViewPrefs().map((k) => VIEW_PREF_LABELS[k]).join(", ") || "nic — wszystko już jest domyślne"}.
-              Nie zmienią się: skórka, czcionka, tryb ruchu, styl sezonowy, efekty, potwierdzenia, sync, sejf i powiadomienia push.
+              Nie zmienią się: styl, krój tekstu, tryb ruchu, styl sezonowy, efekty, potwierdzenia, sync, sejf i powiadomienia push.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

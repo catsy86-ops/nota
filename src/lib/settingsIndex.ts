@@ -52,7 +52,7 @@ export const SETTINGS_INDEX: readonly SettingsEntry[] = [
   { title: "Dyktowanie głosem", tab: "general", words: "mikrofon mowa" },
   { title: "Funkcje w przygotowaniu", tab: "general", words: "eksperymenty flagi" },
   { title: "Trwałość danych w tej przeglądarce", tab: "backup", words: "pamięć miejsce" },
-  { title: "Miejsce zapisu backupu", tab: "backup", words: "kopia zapasowa folder plik" },
+  { title: "Miejsce zapisu kopii", tab: "backup", words: "backup kopia zapasowa folder plik" },
   { title: "Miejsce na zdjęcia budów", tab: "backup", words: "pamięć zdjęcia" },
   { title: "Przywracanie z kopii", tab: "backup", words: "backup import odtwórz" },
   { title: "O aplikacji", tab: "backup", words: "wersja aktualizacja build offline" },

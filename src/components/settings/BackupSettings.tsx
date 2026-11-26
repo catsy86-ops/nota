@@ -75,7 +75,7 @@ function StoragePersistenceStatus() {
           <p className="text-foreground">
             {info.persisted
               ? "Przeglądarka nie będzie automatycznie czyścić danych aplikacji pod presją miejsca."
-              : "Przeglądarka może sama wyczyścić dane aplikacji, gdy zabraknie miejsca na dysku — to jedyna kopia notatek, jeśli nie robisz backupów."}
+              : "Przeglądarka może sama wyczyścić dane aplikacji, gdy zabraknie miejsca na dysku — to jedyna kopia notatek, jeśli nie robisz innych kopii."}
           </p>
         </div>
         <p className="text-muted-foreground">
@@ -220,20 +220,20 @@ function BackupFileTarget() {
   async function handleForget() {
     await clearBackupFile();
     setFileName(null);
-    toast("Backup wróci do pobierania nowego pliku za każdym razem");
+    toast("Kopia wróci do pobierania nowego pliku za każdym razem");
   }
 
   if (!loaded) return null;
 
   return (
-    <Section title="Miejsce zapisu backupu">
+    <Section title="Miejsce zapisu kopii">
       <div className={cn(cardVariant("inset"), "p-3 text-xs space-y-2")}>
         <div className="flex items-center gap-2">
           <FileCog className="size-4 text-muted-foreground shrink-0" />
           <p className="text-foreground">
             {fileName
               ? <>Kopie nadpisują <span className="font-semibold">{fileName}</span> zamiast pobierać nowy plik. Kopia zapisuje się tam sama raz dziennie — przy otwarciu albo schowaniu aplikacji. Każdy zapis zastępuje poprzedni; starsze stany są w kopiach dziennych wyżej.</>
-              : "Domyślnie każdy backup to nowy plik w Pobranych. Możesz zamiast tego wskazać jeden plik, który będzie nadpisywany — wtedy każdy kolejny backup, także automatyczny, zastąpi poprzedni, a starsze kopie przepadną."}
+              : "Domyślnie każda kopia to nowy plik w Pobranych. Możesz zamiast tego wskazać jeden plik, który będzie nadpisywany — wtedy każda kolejna kopia, także automatyczna, zastąpi poprzednią, a starsze przepadną."}
           </p>
         </div>
         {fileName && <LastFileWrite />}
@@ -273,10 +273,10 @@ async function exportNow(confirm: SkipConfirm) {
     const { savedToFile, attachments } = res;
     try { localStorage.setItem(LAST_AUTO_EXPORT_KEY, String(Date.now())); } catch { /* ignore */ }
     const skipped = describeSkippedAttachments(attachments);
-    if (res.oversize) toast.warning(savedToFile ? "Backup zapisany, ale jest za duży do wczytania" : "Backup pobrany, ale jest za duży do wczytania", { description: BACKUP_OVERSIZE_NOTE, duration: 15000 });
-    else toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾", skipped ? { description: skipped, duration: 12000 } : undefined);
+    if (res.oversize) toast.warning(savedToFile ? "Kopia zapisana, ale jest za duża do wczytania" : "Kopia pobrana, ale jest za duża do wczytania", { description: BACKUP_OVERSIZE_NOTE, duration: 15000 });
+    else toast.success(savedToFile ? "Kopia zapisana 💾" : "Kopia pobrana 💾", skipped ? { description: skipped, duration: 12000 } : undefined);
   } catch {
-    toast.error("Nie udało się wygenerować backupu");
+    toast.error("Nie udało się zrobić kopii");
   }
 }
 
@@ -308,7 +308,7 @@ function RestoreBackup() {
       setBroken(null);
     } catch (err) {
       if (err instanceof Error && err.message !== "Nie wybrano pliku") {
-        toast.error("Nie udało się wczytać backupu: " + err.message);
+        toast.error("Nie udało się wczytać kopii: " + err.message);
       }
     }
   }
@@ -366,7 +366,7 @@ function RestoreBackup() {
       }
       // Nic jeszcze nie zapisano — pytamy, czy przywrócić bez uszkodzonych części.
       if (err instanceof RestoreCheckError) { setBroken(err.sections); return; }
-      toast.error("Nie udało się przywrócić backupu" + (err instanceof Error ? ": " + err.message : ""));
+      toast.error("Nie udało się przywrócić kopii" + (err instanceof Error ? ": " + err.message : ""));
     }
   }
 
@@ -381,12 +381,12 @@ function RestoreBackup() {
   return (
     <>
       <Button onClick={pick} variant="outline" className="w-full gap-2">
-        <Database className="size-4" /> Przywróć z pliku backupu
+        <Database className="size-4" /> Przywróć z pliku kopii
       </Button>
       <AlertDialog open={!!backup} onOpenChange={(o) => { if (!o && !busy) setBackup(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Przywrócić ten backup?</AlertDialogTitle>
+            <AlertDialogTitle>Przywrócić tę kopię?</AlertDialogTitle>
             <AlertDialogDescription>
               {backup && <>Z {new Date(backup.exportedAt).toLocaleString("pl-PL")}: {backup.notes.length} notatek, {backup.folders.length} folderów. </>}
               {backup && (() => {
@@ -439,7 +439,7 @@ function RestoreBackup() {
             ) : (
               <AlertDialogCancel disabled={busy}>Anuluj</AlertDialogCancel>
             )}
-            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} disabled={busy} onClick={(e) => { e.preventDefault(); void restore(); }}>Przywróć backup</AlertDialogAction>
+            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} disabled={busy} onClick={(e) => { e.preventDefault(); void restore(); }}>Przywróć kopię</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -537,11 +537,11 @@ export function BackupSettings() {
       <LastImportUndo />
       <UnusedFilesCleanup />
 
-      <Section title={`Auto-backup ${prefs.autoExportDays === 0 ? "(wyłączony)" : `co ${dniPl(prefs.autoExportDays)}`}`}>
+      <Section title={`Kopia automatyczna ${prefs.autoExportDays === 0 ? "(wyłączony)" : `co ${dniPl(prefs.autoExportDays)}`}`}>
         <Slider
           value={[prefs.autoExportDays]}
           min={0} max={30} step={1}
-          aria-label="Auto-backup: co ile dni"
+          aria-label="Kopia automatyczna: co ile dni"
           onValueChange={([v]) => handleAutoExportChange(v)}
         />
         <p className="ui-hint mt-1.5">
@@ -559,8 +559,8 @@ export function BackupSettings() {
         <p className="ui-hint mt-1.5">
           {(() => {
             const d = daysSinceBackup();
-            if (d === null) return "Nie ma jeszcze backupu.";
-            return `Ostatni backup: ${d === 0 ? "dziś" : `${dniPl(d)} temu`}.`;
+            if (d === null) return "Nie ma jeszcze kopii.";
+            return `Ostatnia kopia: ${d === 0 ? "dziś" : `${dniPl(d)} temu`}.`;
           })()}
         </p>
       </Section>
@@ -578,7 +578,7 @@ export function BackupSettings() {
       </label>
 
       <Button onClick={() => exportNow(askSkip)} className="w-full gap-2">
-        <Download className="size-4" /> Pobierz pełny backup teraz
+        <Download className="size-4" /> Pobierz pełną kopię teraz
       </Button>
       {canShareBackupFile() && (
         <Button variant="outline" onClick={() => shareNow(askSkip)} className="w-full gap-2">
@@ -609,7 +609,7 @@ export function BackupSettings() {
 
       <div className={cn(cardVariant("inset"), "p-3 text-xs text-muted-foreground space-y-1")}>
         <p className="font-semibold text-foreground">💡 Wskazówka</p>
-        <p>Pełny backup zawiera wszystkie notatki (w tym archiwum i kosz), etykiety, foldery, historię wersji, ustawienia oraz odznaki. Nie zawiera kodu parowania urządzeń. Przywrócenie zastąpi notatki w tej przeglądarce i odświeży aplikację.</p>
+        <p>Pełna kopia zawiera wszystkie notatki (w tym archiwum i kosz), etykiety, foldery, historię wersji, ustawienia oraz odznaki. Nie zawiera kodu parowania urządzeń. Przywrócenie zastąpi notatki w tej przeglądarce i odświeży aplikację.</p>
       </div>
 
       <Section title="O aplikacji">

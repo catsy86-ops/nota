@@ -31,15 +31,15 @@ test("przywracanie 2000 notatek: długie zadania", async ({ page, browserName })
   await page.getByRole("button", { name: "Ustawienia" }).first().click();
   await page.getByRole("tab", { name: "Kopia i dane" }).click();
   const chooser = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Przywróć z pliku backupu" }).click();
+  await page.getByRole("button", { name: "Przywróć z pliku kopii" }).click();
   await (await chooser).setFiles({ name: "perf.json", mimeType: "application/json", buffer: Buffer.from(backup) });
-  await expect(page.getByText("Przywrócić ten backup?")).toBeVisible();
+  await expect(page.getByText("Przywrócić tę kopię?")).toBeVisible();
 
   await page.evaluate(() => { (window as unknown as { __long: number[] }).__long.length = 0; });
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
   const t0 = Date.now();
   const download = page.waitForEvent("download").catch(() => null);
-  await page.getByRole("button", { name: "Przywróć backup" }).click();
+  await page.getByRole("button", { name: "Przywróć kopię" }).click();
   await download;
   await expect(page.getByText(/Przywrócono kopię/)).toBeVisible({ timeout: 200_000 });
   const ms = Date.now() - t0;
