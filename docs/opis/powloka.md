@@ -436,4 +436,4 @@ Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj nota
 - **Jak działa:** „jeden opis akcji” to dosłownie jeden komponent: wiersz nie ma własnej listy pozycji, tylko otwiera istniejące menu przez id (menu Radix sterowane `open`), więc pozycje nie mogą się rozjechać. Menu kotwiczy się przy przycisku „⋯”, nie przy kursorze.
 - **Ograniczenia i pułapki:** na dotyku kafel notatki zostaje przy dotychczasowym przytrzymaniu = zaznaczenie (tryb zaznaczania); zamiana na menu to decyzja właściciela. iOS Safari nie wysyła `contextmenu` przy przytrzymaniu, więc tam przytrzymanie wiersza dziennika i paska nic nie otwiera. Menu przypomnień (`ReminderQuickActions`) i raportu nie dostały prawego przycisku — to przyciski, nie wiersze.
 - **Testy:** `src/lib/contextMenu.test.ts` (wiersz, pole tekstowe, edytor, link, zaznaczenie, Shift, słuchacze), `e2e/context-menu.spec.ts` (wpis dziennika, folder, kafel, brak przejęcia w polu wyszukiwania), `e2e/journal-menu.spec.ts` (menu „⋯” bez zmian).
-- **Commit:** zobacz `git log --grep "Q5.3"`, 2026-11-26.
+- **Commit:** `5cccec88`, 2026-11-26.
