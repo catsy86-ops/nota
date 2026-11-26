@@ -39,7 +39,7 @@ export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenC
         <DialogHeader>
           <DialogTitle>Skróty klawiszowe</DialogTitle>
         </DialogHeader>
-        <Input type="search" aria-label="Szukaj skrótu lub polecenia" placeholder="Szukaj, np. kopia, skrzynka, Alt…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <Input type="search" enterKeyHint="search" aria-label="Szukaj skrótu lub polecenia" placeholder="Szukaj, np. kopia, skrzynka, Alt…" value={query} onChange={(e) => setQuery(e.target.value)} />
         <div className="space-y-5">
           {shown.length === 0 && <p className="ui-hint">Nic nie pasuje do „{query.trim()}”. Spróbuj innego słowa albo klawisza.</p>}
           {shown.map((group) => (
