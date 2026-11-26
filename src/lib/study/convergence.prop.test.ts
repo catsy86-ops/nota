@@ -3,6 +3,7 @@ import fc from "fast-check";
 import { convergenceProperty, convergenceRuns, runScript, type ConvergenceDomain, type Step } from "@/test/convergence";
 import { createYStudy, type JournalEntry } from "./yStudy";
 import type { SiteCard } from "./sites";
+import { entryNewestFirst } from "./journalEntry";
 import type { Shortage } from "./shortages";
 
 /**
@@ -74,8 +75,8 @@ const study: ConvergenceDomain<Store, Op> = {
   },
   project: (s) => {
     const d = s.y.dump();
-    // Kolejność dziennika jak w interfejsie (`journalView.ts`: `sort((a, b) => b.at - a.at)`).
-    return { journal: [...d.journal].sort((a, b) => b.at - a.at), sites: d.sites, site: d.site };
+    // Kolejność dziennika jak w interfejsie (`journalView.ts`: `entryNewestFirst`).
+    return { journal: [...d.journal].sort(entryNewestFirst), sites: d.sites, site: d.site };
   },
   invariants: (p) => {
     const { journal } = p as { journal: JournalEntry[] };
@@ -89,9 +90,9 @@ const study: ConvergenceDomain<Store, Op> = {
 };
 
 describe("zbieżność Pracy: dziennik i budowy (Z-17.9)", () => {
-  // ZNANA PORAŻKA (potwierdzona 2026-11-26): dziennik w interfejsie sortowany `b.at - a.at` bez rozstrzygnięcia remisu —
-  // dwa wpisy z tą samą chwilą z dwóch telefonów stoją w różnej kolejności (W1). Poprawka osobnym commitem.
-  it.fails("losowe przebiegi na 2–3 telefonach", () => {
+  // Dziennik sortowany `b.at - a.at` bez rozstrzygnięcia remisu stawiał dwa wpisy z tą samą chwilą z dwóch telefonów
+  // w różnej kolejności (W1) — znalezione tym zestawem 2026-11-26; teraz `entryNewestFirst` (remis po id).
+  it("losowe przebiegi na 2–3 telefonach", () => {
     fc.assert(convergenceProperty(study), { numRuns: convergenceRuns() });
   });
 

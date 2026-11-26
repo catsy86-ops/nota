@@ -7,7 +7,7 @@ import { cleanCard, type ReviewCard } from "./srs";
 import { cleanBoss, cleanGroup } from "./boss";
 import { cleanSite, entrySiteId, siteDirectory, type SiteCard, type SiteInfo } from "./sites";
 import { cleanShortagesCounted } from "./shortages";
-import { cleanEntry, SITE_MAX, type JournalEntry } from "./journalEntry";
+import { cleanEntry, entryOldestFirst, SITE_MAX, type JournalEntry } from "./journalEntry";
 import { type Column, type StudyState } from "./studyDump";
 import { cleanExam, keepLatestExams, type ExamResult } from "./exam";
 
@@ -51,7 +51,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     const topic = base.topic && topicIds.has(base.topic) ? base.topic : null;
     journal.push({ ...base, topic, checked: base.checked.filter((id) => itemIds.has(id)) });
   }
-  journal.sort((a, b) => a.at - b.at);
+  journal.sort(entryOldestFirst);
   const sites: Record<string, SiteCard> = {};
   for (const [id, raw] of Object.entries(s.sites ?? {})) {
     const card = cleanSite(raw);

@@ -250,3 +250,10 @@ export function cleanDimensions(raw: unknown, images: readonly string[]): Record
   }
   return out;
 }
+
+/**
+ * Kolejność wpisów po czasie, przy remisie (ta sama chwila z dwóch telefonów) po id — bez tego kolejność zależała od
+ * kolejności odbioru i różniła się między urządzeniami (Z-17.9). `entryOldestFirst` rosnąco, `entryNewestFirst` malejąco.
+ */
+export const entryOldestFirst = (a: { at: number; id: string }, b: { at: number; id: string }) => a.at - b.at || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+export const entryNewestFirst = (a: { at: number; id: string }, b: { at: number; id: string }) => b.at - a.at || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);

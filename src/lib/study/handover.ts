@@ -3,7 +3,7 @@ import { readingsLine, testLine } from "./pressureTest";
 import { slopeLabel } from "./slope";
 import { dayKeyOf, periodLabel } from "./report";
 import { siteStages, type SiteStage } from "./stages";
-import type { JournalEntry } from "./journalEntry";
+import { entryOldestFirst, type JournalEntry } from "./journalEntry";
 import type { SiteSignature } from "./signature";
 import { pointsProgress, pointType, POINT_STEPS, sidesLabel, STEP_LABEL, type Room, type WaterPoint } from "./points";
 
@@ -103,7 +103,7 @@ export function buildHandover(
   /** Pomieszczenia i punkty budowy (`pointsStore.ts`); brak = protokół bez sekcji punktów. */
   sitePoints?: { rooms: readonly Room[]; points: readonly WaterPoint[] },
 ): Handover {
-  const entries = journal.filter((e) => entrySiteId(e) === site.id).sort((a, b) => a.at - b.at);
+  const entries = journal.filter((e) => entrySiteId(e) === site.id).sort(entryOldestFirst);
   // Najpierw zdjęcia przypięte do etapów (w kolejności etapów), potem reszta — limit wydruku tnie od końca.
   // Karta bez własnej listy ma domyślne etapy — wpis mógł zostać przypięty do jednego z nich.
   const stageList = siteStages(site);

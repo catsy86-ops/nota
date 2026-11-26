@@ -1,5 +1,5 @@
 import { pluralPl } from "@/lib/plural";
-import type { JournalEntry, JournalKind } from "./journalEntry";
+import { entryNewestFirst, type JournalEntry, type JournalKind } from "./journalEntry";
 import { entrySiteId, fold } from "./sites";
 import { fittingsLine } from "./fittings";
 import { pipesLine } from "./pipes";
@@ -141,7 +141,7 @@ const dayKey = (at: number) => {
  * najnowszego. Kolejność wejścia nie ma znaczenia.
  */
 export function groupJournal<E extends JournalEntry>(entries: readonly E[], now: number = Date.now()): JournalDay<E>[] {
-  const sorted = [...entries].sort((a, b) => b.at - a.at);
+  const sorted = [...entries].sort(entryNewestFirst);
   const days: JournalDay<E>[] = [];
   for (const e of sorted) {
     const key = dayKey(e.at);
@@ -170,7 +170,7 @@ export function splitRecent<E extends JournalEntry>(entries: readonly E[], now: 
   const since = new Date(d.getFullYear(), d.getMonth(), d.getDate() - (RECENT_DAYS - 1)).getTime();
   const recent = entries.filter((e) => e.at >= since);
   if (extra <= 0) return { recent, older: entries.length - recent.length };
-  const older = entries.filter((e) => e.at < since).sort((a, b) => b.at - a.at);
+  const older = entries.filter((e) => e.at < since).sort(entryNewestFirst);
   let n = Math.min(extra, older.length);
   while (n > 0 && n < older.length && dayKey(older[n].at) === dayKey(older[n - 1].at)) n++;
   return { recent: [...recent, ...older.slice(0, n)], older: older.length - n };
@@ -184,7 +184,7 @@ export function recentSiteTexts(journal: readonly JournalEntry[], siteId: string
   if (!siteId) return [];
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const e of [...journal].sort((a, b) => b.at - a.at)) {
+  for (const e of [...journal].sort(entryNewestFirst)) {
     const text = e.text.trim();
     if (!text || entrySiteId(e) !== siteId || seen.has(text)) continue;
     seen.add(text);

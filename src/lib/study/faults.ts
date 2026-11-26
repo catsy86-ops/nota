@@ -1,4 +1,4 @@
-import type { JournalEntry } from "./journalEntry";
+import { entryOldestFirst, type JournalEntry } from "./journalEntry";
 import { entrySiteId } from "./siteKey";
 
 /**
@@ -13,7 +13,7 @@ export type FaultStatus = "open" | "overdue" | "no-date";
 export function openFaults(journal: readonly JournalEntry[], siteId: string): JournalEntry[] {
   return journal
     .filter((e) => e.kind === "problem" && e.resolved === undefined && entrySiteId(e) === siteId)
-    .sort((a, b) => a.at - b.at);
+    .sort(entryOldestFirst);
 }
 
 /** Status terminu względem dnia `today` (`YYYY-MM-DD`). Brak terminu nie jest przeterminowany. */
