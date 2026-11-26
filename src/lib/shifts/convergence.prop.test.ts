@@ -80,13 +80,13 @@ const shifts: ConvergenceDomain<Store, Op> = {
 };
 
 describe("zbieżność Grafiku (Z-17.9)", () => {
-  // ZNANA PORAŻKA (§6.1, potwierdzona 2026-11-26): `nextOrder` liczy z lokalnego stanu, więc dwa telefony bez łączności
-  // nadają ten sam `order`, a `byOrder` nie rozstrzyga remisu — kolejność rodzajów zależy od kolejności odbioru (W1).
-  it.fails("losowe przebiegi na 2–3 telefonach: projekcja z podsumowaniem miesiąca, zimny start, spokój, niezmienniki", () => {
+  // §6.1: dwa telefony bez łączności nadają ten sam `order` (`nextOrder` z lokalnego stanu); bez rozstrzygnięcia remisu
+  // kolejność rodzajów zależała od kolejności odbioru (W1) — znalezione tym zestawem 2026-11-26, remis rozstrzyga id.
+  it("losowe przebiegi na 2–3 telefonach: projekcja z podsumowaniem miesiąca, zimny start, spokój, niezmienniki", () => {
     fc.assert(convergenceProperty(shifts), { numRuns: convergenceRuns() });
   });
 
-  it.fails("obowiązkowy: dwa telefony bez łączności dodają po rodzaju zmiany (ten sam `order`) — kolejność wszędzie ta sama", () => {
+  it("obowiązkowy: dwa telefony bez łączności dodają po rodzaju zmiany (ten sam `order`) — kolejność wszędzie ta sama", () => {
     const steps: Step<Op>[] = [
       { k: "op", d: 0, op: { k: "newType", id: "t0a" } },
       { k: "op", d: 1, op: { k: "newType", id: "t1a" } },

@@ -50,7 +50,10 @@ const localDayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).
 
 /** Kolejność wpisu; od peera może przyjść cokolwiek, więc nie-liczba to 0. */
 const orderOf = (v: { order?: unknown }) => (typeof v.order === "number" && Number.isFinite(v.order) ? v.order : 0);
-const byOrder = <T extends { order?: unknown }>(a: T, b: T) => orderOf(a) - orderOf(b);
+// Remis (dwa telefony bez łączności nadają ten sam `order` z `nextOrder`) rozstrzyga id — inaczej kolejność zależała
+// od kolejności odbioru i różniła się między urządzeniami (Z-17.9, §6.1).
+const byOrder = <T extends { order?: unknown; id?: unknown }>(a: T, b: T) =>
+  orderOf(a) - orderOf(b) || (String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0);
 /** Wartości mapy bez śmieci od peera (`null`, napisy) — `migrate` dostaje same obiekty, sortowanie się nie wywraca. */
 const objectValues = <T extends object>(m: Y.Map<T>): T[] => Array.from(m.values()).filter((v): v is T => !!v && typeof v === "object");
 
