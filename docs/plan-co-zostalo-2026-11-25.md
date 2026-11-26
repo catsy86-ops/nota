@@ -1,5 +1,7 @@
 # Co zostało do zrobienia — stan 2026-11-25
 
+> **NIEAKTUALNE od 2026-11-26** — plan wykonania w `plan-reszta-2026-11-26.md`.
+
 > **Źródła:** linie „Status” w planach, numery punktów w `git log` od 14.11, pamięć sesji. Zastępuje sekcję „Co zostało do zrobienia” w `stan-planow-2026-11-15-i-17.md` (stan z 20.11).
 > Plany z zrobionym kodem są w `docs-zrobione/` (spis: `docs-zrobione/README.md`).
 
