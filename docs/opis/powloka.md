@@ -419,3 +419,12 @@ Prośba właściciela: „W ustawieniach napraw i dopracuj, rozbuduj szukaj nota
 - **Ograniczenia:** listy stylów, krojów i jasności tylko po wpisaniu tekstu. Bieżąca jasność nie jest zaznaczona.
 - **Testy:** `src/lib/commands/registry.test.ts` (pusta paleta bez list, listy bez bieżącego, jasność przez kontekst, „Wyślij kopię” zależne od `navigator.canShare`), `e2e/palette-settings-tabs.spec.ts` („Krój: Lexend” zapamiętany, „Zrób kopię teraz” pobiera `.json`); kopia z Ustawień bez zmian: `search-backup.spec.ts`, `restore-before-copy.spec.ts`, `images.spec.ts`, `private-notes.spec.ts`.
 - **Commit:** `0c41849a`, 2026-11-26.
+
+## Powłoka — ściąga skrótów z rejestru, z wyszukiwaniem (Q5.2, 2026-11-26)
+
+- **Co robi:** okno „Skróty klawiszowe” (klawisz `?`, paleta, pasek boczny) ma pole „Szukaj skrótu lub polecenia”, które filtruje po nazwie, klawiszu i grupie, także bez polskich znaków („zrob kopie”). Pod grupami klawiszy są grupy „Paleta poleceń (Ctrl+K): Akcje / Praca / Kalendarz / Grafik” — wszystkie polecenia z rejestru, ze skrótem, jeśli go mają. Brak trafień: „Nic nie pasuje do „…”. Spróbuj innego słowa albo klawisza.”
+- **Gdzie jest:** `src/components/ShortcutsDialog.tsx`; `cheatSheetGroups`, `staticLabel` w `src/lib/commands/registry.ts`; flaga `cheatSheet: false` w `CommandSource` (style i kroje nie trafiają do ściągi). `shortcut` polecenia to teraz funkcja `() => shortcutFor("…")` z `src/lib/shortcuts.ts` — dawne „Alt+K”, `modShortcut("N")`, „?” i „Alt+T” przy „Dziś” w nawigacji palety nie są już wpisane na sztywno.
+- **Jak działa:** jedno źródło klawiszy to `SHORTCUT_GROUPS`; paleta, podpowiedzi (`HoverTip`) i ściąga czytają z niego. Lista poleceń w ściądze to te same dane co w palecie, bez warunków `when` (ściąga pokazuje całość). Szukanie przez `fold` z `src/lib/fold.ts`.
+- **Ograniczenia:** polecenia z etykietą zależną od stanu (funkcja) nie trafiają do ściągi — dziś takich nie ma w grupach ściągi.
+- **Testy:** `src/lib/commands/registry.test.ts` (każdy skrót polecenia rozwiązuje się z tabeli, konkretne wartości, grupy ściągi bez stylów i krojów), `src/lib/shortcuts.test.ts`, `e2e/shortcuts-sheet.spec.ts` (`?`, szukanie bez ogonków, brak trafień, axe).
+- **Commit:** zobacz `git log --grep "Q5.2"`, 2026-11-26.

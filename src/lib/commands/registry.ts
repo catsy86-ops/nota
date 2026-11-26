@@ -14,7 +14,9 @@ export function registerCommandSource(source: CommandSource): () => void {
 }
 
 export const resolveLabel = (c: Command, ctx: CommandContext) => (typeof c.label === "function" ? c.label(ctx) : c.label);
-export const resolveShortcut = (c: Command) => (typeof c.shortcut === "function" ? c.shortcut() : c.shortcut);
+export const resolveShortcut = (c: Command) => c.shortcut?.();
+/** Etykieta bez kontekstu (ściąga): napis albo `null`, gdy zależy od stanu palety. */
+export const staticLabel = (c: Command) => (typeof c.label === "string" ? c.label : null);
 export const groupName = (s: CommandSource) => (typeof s.group === "function" ? s.group() : s.group);
 
 export interface ResolvedGroup {
@@ -31,7 +33,19 @@ export function commandGroups(ctx: CommandContext): ResolvedGroup[] {
     .filter((g) => g.commands.length > 0);
 }
 
-/** Wszystkie polecenia ze skrótem — dla ściągi skrótów (Q5.2); bez `when`, bo ściąga pokazuje całość. */
+/** Wszystkie polecenia ze skrótem — bez `when`, bo ściąga pokazuje całość. */
 export function commandsWithShortcuts(): { group: string; command: Command }[] {
   return [...sources].sort((a, b) => a.order - b.order).flatMap((s) => s.commands.filter((c) => c.shortcut).map((command) => ({ group: groupName(s), command })));
+}
+
+/** Q5.2: grupy poleceń do ściągi `?` — bez `when` i bez grup z `cheatSheet: false`; tylko etykiety stałe. */
+export function cheatSheetGroups(): { heading: string; items: { id: string; label: string; shortcut?: string }[] }[] {
+  return [...sources]
+    .filter((s) => s.cheatSheet !== false)
+    .sort((a, b) => a.order - b.order)
+    .map((s) => ({
+      heading: groupName(s),
+      items: s.commands.flatMap((c) => { const label = staticLabel(c); return label ? [{ id: c.id, label, shortcut: resolveShortcut(c) }] : []; }),
+    }))
+    .filter((g) => g.items.length > 0);
 }

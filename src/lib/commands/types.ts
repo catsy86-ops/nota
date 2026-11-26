@@ -44,8 +44,8 @@ export interface Command {
   icon?: ElementType;
   /** Dodatkowe słowa wyszukiwania (bez polskich znaków też, bo filtr cmdk ich nie zna). */
   keywords?: string;
-  /** Skrót klawiszowy do pokazania po prawej i w ściądze (np. „Ctrl+N”, „?”). */
-  shortcut?: string | (() => string);
+  /** Skrót klawiszowy (np. „Ctrl+N”, „?”) — z tabeli `lib/shortcuts.ts` przez `shortcutFor`, nie wpisany na sztywno (Q5.2). */
+  shortcut?: () => string | undefined;
   /** Tekst po prawej zamiast skrótu (np. nazwa następnego stylu). */
   hint?: (ctx: CommandContext) => string;
   /** Kiedy polecenie jest widoczne; brak = zawsze. */
@@ -60,5 +60,7 @@ export interface CommandSource {
   order: number;
   /** Ikony wyciszone (grupy skrótów do działów) albo w kolorze tekstu (akcje). */
   mutedIcons?: boolean;
+  /** `false` — grupa nie trafia do ściągi skrótów (długie listy: style, kroje). Domyślnie trafia. */
+  cheatSheet?: boolean;
   commands: Command[];
 }

@@ -7,7 +7,7 @@ import { requestLinkGraph } from "@/lib/graphRequest";
 import { privateNotes } from "@/lib/privateNotes";
 import { lockEverywhere } from "@/lib/vaultAutoLock";
 import { vaultUi } from "@/lib/vaultUi";
-import { modShortcut } from "@/lib/platform";
+import { shortcutFor } from "@/lib/shortcuts";
 import { dayKey } from "@/lib/reminderOccurrences";
 import { requestSettingsTab, type SettingsTab } from "@/lib/settingsDeepLink";
 import { requestShiftAction } from "@/lib/shifts/shiftActions";
@@ -94,8 +94,8 @@ export function registerBuiltinCommands(): void {
     group: "Akcje",
     order: 40,
     commands: [
-      { id: "akcje.nowa-notatka", label: "Nowa notatka", icon: Plus, shortcut: () => modShortcut("N"), run: (c) => c.newNote() },
-      { id: "akcje.do-skrzynki", label: "Do skrzynki…", icon: Inbox, keywords: "do skrzynki zapisz pomysl przechwyc", shortcut: "Alt+K", run: (c) => c.quickInbox() },
+      { id: "akcje.nowa-notatka", label: "Nowa notatka", icon: Plus, shortcut: () => shortcutFor("Nowa notatka"), run: (c) => c.newNote() },
+      { id: "akcje.do-skrzynki", label: "Do skrzynki…", icon: Inbox, keywords: "do skrzynki zapisz pomysl przechwyc", shortcut: () => shortcutFor("Do skrzynki (z każdego miejsca)"), run: (c) => c.quickInbox() },
       { id: "akcje.notatka-dnia", label: "Notatka dnia", icon: BookOpen, run: (c) => c.dailyNote() },
       { id: "akcje.notatka-tygodnia", label: "Notatka tygodnia", icon: CalendarRange, keywords: "notatka tygodnia", run: (c) => c.periodNote("week") },
       { id: "akcje.notatka-miesiaca", label: "Notatka miesiąca", icon: CalendarRange, keywords: "notatka miesiaca", run: (c) => c.periodNote("month") },
@@ -103,12 +103,12 @@ export function registerBuiltinCommands(): void {
       { id: "akcje.kopiuj-tekst", label: "Kopiuj notatkę jako tekst", icon: Copy, keywords: "kopiuj notatke jako tekst", when: (c) => !!c.copyNote, run: (c) => c.copyNote?.("text") },
       { id: "akcje.zablokuj", label: "Zablokuj prywatne notatki teraz", icon: Lock, keywords: "zablokuj prywatne notatki teraz", when: (c) => c.vaultPhase === "unlocked", run: () => { void lockEverywhere(privateNotes); } },
       { id: "akcje.odblokuj", label: "Odblokuj prywatne notatki", icon: LockOpen, keywords: "odblokuj prywatne notatki", when: (c) => c.vaultPhase === "locked", run: () => vaultUi.open("unlock") },
-      { id: "akcje.ustawienia", label: "Ustawienia", icon: Settings, run: (c) => c.openSettings() },
+      { id: "akcje.ustawienia", label: "Ustawienia", icon: Settings, shortcut: () => shortcutFor("Ustawienia"), run: (c) => c.openSettings() },
       // Powłoka 2.5: od razu na karcie Ustawień (te same karty co link `?settings=`).
       ...SETTINGS_SHORTCUTS.map((t): Command => ({ id: `ustawienia.${t.tab}`, label: t.label, icon: t.icon, keywords: `ustawienia ${t.keywords}`, run: (c) => { requestSettingsTab(t.tab); c.openSettings(); } })),
       { id: "akcje.zrob-kopie", label: "Zrób kopię teraz", icon: Download, keywords: "backup kopia zapasowa pobierz eksport", run: (c) => { void import("@/lib/backup/actions").then((m) => m.exportNow(confirmInSettings(c))); } },
       { id: "akcje.wyslij-kopie", label: "Wyślij kopię", icon: Share2, keywords: "backup kopia udostępnij wyślij telefon", when: () => canShareBackupFile(), run: (c) => { void import("@/lib/backup/actions").then((m) => m.shareNow(confirmInSettings(c))); } },
-      { id: "akcje.statystyki", label: "Statystyki i osiągnięcia", icon: Trophy, run: (c) => c.openStats() },
+      { id: "akcje.statystyki", label: "Statystyki i osiągnięcia", icon: Trophy, shortcut: () => shortcutFor("Statystyki"), run: (c) => c.openStats() },
       { id: "akcje.graf", label: "Graf powiązań", icon: Network, run: (c) => { requestLinkGraph(); c.openStats(); } },
       { id: "akcje.skupienie", label: "Tryb skupienia", icon: Brain, run: (c) => c.openFocusMode() },
       { id: "akcje.tekst-wiekszy", label: "Powiększ tekst", icon: ZoomIn, run: () => changeTextSize(1) },
@@ -116,7 +116,7 @@ export function registerBuiltinCommands(): void {
       { id: "akcje.tekst-domyslny", label: "Domyślny rozmiar tekstu", icon: RotateCcw, run: () => resetTextSize() },
       { id: "akcje.motyw", label: "Przełącz motyw jasny/ciemny", icon: Moon, run: (c) => c.toggleTheme() },
       { id: "akcje.nastepny-styl", label: "Następny styl", icon: Palette, keywords: "nastepny styl motyw skorka wyglad", hint: (c) => SKIN_META[nextSkin(c)].label, run: (c) => trySkin(nextSkin(c)) },
-      { id: "akcje.skroty", label: "Skróty klawiszowe", icon: Keyboard, shortcut: "?", run: (c) => c.openShortcuts() },
+      { id: "akcje.skroty", label: "Skróty klawiszowe", icon: Keyboard, shortcut: () => shortcutFor("Pokaż tę listę skrótów"), run: (c) => c.openShortcuts() },
     ],
   });
 
@@ -125,6 +125,7 @@ export function registerBuiltinCommands(): void {
   registerCommandSource({
     group: "Styl",
     order: 50,
+    cheatSheet: false,
     commands: SKINS.map((s): Command => ({
       id: `styl.${s}`, label: `Styl: ${SKIN_META[s].label}`, icon: Palette, keywords: `styl motyw skorka ${s}`,
       hint: () => SKIN_META[s].blurb, when: (c) => c.hasQuery && c.skin !== s, run: () => trySkin(s),
@@ -134,6 +135,7 @@ export function registerBuiltinCommands(): void {
   registerCommandSource({
     group: "Krój i jasność",
     order: 60,
+    cheatSheet: false,
     commands: [
       ...APP_FONTS.map((f): Command => ({
         id: `kroj.${f}`, label: `Krój: ${APP_FONT_META[f].label}`, icon: Type, keywords: `kroj czcionka font pismo ${f}`,

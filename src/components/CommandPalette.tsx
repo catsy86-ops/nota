@@ -35,6 +35,7 @@ import { requestSettingsSection } from "@/lib/settingsDeepLink";
 import { isNativeShell } from "@/lib/native/platform";
 import { cn } from "@/lib/utils";
 import { useAppFont } from "@/lib/appFont";
+import { shortcutFor } from "@/lib/shortcuts";
 import { setThemeMode } from "@/hooks/useTheme";
 import { commandGroups, resolveLabel, resolveShortcut, type CommandContext, type GoView } from "@/lib/commands/registry";
 import { registerBuiltinCommands } from "@/lib/commands/builtin";
@@ -90,7 +91,7 @@ type NavItem = { id: Parameters<Props["onGo"]>[0]; label: string; Icon: typeof S
 const NAV_ITEMS: NavItem[] = [
   { id: "notes", label: viewLabel("notes"), Icon: StickyNote },
   { id: "inbox", label: viewLabel("inbox"), Icon: Inbox },
-  { id: "today", label: viewLabel("today"), Icon: Calendar, hint: "Alt+T" },
+  { id: "today", label: viewLabel("today"), Icon: Calendar, hint: shortcutFor("Przejdź do „Dziś”") },
   { id: "reminders", label: viewLabel("reminders"), Icon: Bell },
   { id: "calendar", label: viewLabel("calendar"), Icon: CalendarRange },
   { id: "shifts", label: viewLabel("shifts"), Icon: BriefcaseBusiness },

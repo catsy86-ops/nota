@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { commandGroups, commandsWithShortcuts, registerCommandSource, resolveLabel, type CommandContext } from "./registry";
+import { cheatSheetGroups, commandGroups, commandsWithShortcuts, registerCommandSource, resolveLabel, resolveShortcut, type CommandContext } from "./registry";
 import { registerBuiltinCommands } from "./builtin";
 
 // A3.4: rejestr poleceń palety — kolejność grup, `when`, duplikaty, wycofanie źródła, skróty dla ściągi.
@@ -84,5 +84,23 @@ describe("więcej poleceń (Powłoka 2.5)", () => {
     nav.share = () => Promise.resolve();
     nav.canShare = () => true;
     try { expect(ids(ctx())).toContain("akcje.wyslij-kopie"); } finally { delete nav.share; delete nav.canShare; }
+  });
+});
+
+describe("ściąga skrótów z rejestru (Q5.2)", () => {
+  it("każdy skrót polecenia rozwiązuje się z tabeli `shortcuts.ts` — bez rozjazdu", () => {
+    for (const { command } of commandsWithShortcuts()) expect(resolveShortcut(command), command.id).toBeTruthy();
+    const by = new Map(commandsWithShortcuts().map((x) => [x.command.id, resolveShortcut(x.command)]));
+    expect(by.get("akcje.do-skrzynki")).toBe("Alt+K");
+    expect(by.get("akcje.statystyki")).toBe("Alt+I");
+    expect(by.get("akcje.skroty")).toBe("?");
+    expect(by.get("akcje.nowa-notatka")).toMatch(/\+N$/);
+  });
+
+  it("grupy ściągi: bez stylów i krojów, z akcjami i Pracą", () => {
+    const headings = cheatSheetGroups().map((g) => g.heading);
+    expect(headings).toEqual(expect.arrayContaining(["Akcje", "Praca", "Kalendarz", "Grafik"]));
+    expect(headings).not.toContain("Styl");
+    expect(headings).not.toContain("Krój i jasność");
   });
 });
