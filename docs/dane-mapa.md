@@ -19,6 +19,7 @@ Mapy Grafiku (`shift*`) istnieją dla każdego grafiku z prefiksem identyfikator
 | `devices` | `lib/deviceRegistry.ts` | wyjęta | rejestr urządzeń (D4.1); wpis zastępuje tylko jego urządzenie, wartości czyszczone przy odczycie |
 | `dietMeals` | `lib/diet/yDiet.ts` | zachowuje nieznane pola | test: `src/lib/exerciseExtra.test.ts` |
 | `dietMeta` | `lib/diet/yDiet.ts` | zachowuje nieznane pola | test: `src/lib/exerciseExtra.test.ts` |
+| `dietFavorites` | `lib/diet/yDiet.ts` | zachowuje nieznane pola | ulubione posiłki (C4.1), klucz z opisu; test: `src/lib/exerciseExtra.test.ts` |
 | `docFormat` | `lib/docFormat.ts` | wyjęta | wymagania wersji (D1.3), wartości to liczby |
 | `docMigrations` | `lib/migrations/runner.ts` | wyjęta | znaczniki migracji dokumentu (D2.2), zapis tylko przez runner.ts |
 | `folders` | `lib/yjs/docFile.ts`, `lib/yjsStore.ts` | zachowuje nieznane pola | test: `src/lib/extraD11rest.test.ts` |

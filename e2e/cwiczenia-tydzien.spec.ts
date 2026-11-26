@@ -38,3 +38,21 @@ test("C2.3: zapas po ostatniej serii — jedno stuknięcie, widoczny w „Ostatn
   // Po zapisie wybór się czyści — następny wpis nie dziedziczy zapasu.
   await expect(three).toHaveAttribute("aria-pressed", "false");
 });
+
+test("C4.1: gwiazdka przypina posiłek, pigułka „Ulubione” zapisuje go jednym stuknięciem", async ({ page }) => {
+  const name = `Kefir ${Date.now()}`;
+  await page.getByLabel("Co zjedzono").fill(name);
+  await page.getByLabel("Kalorie (kcal)").fill("120");
+  await page.getByRole("button", { name: "Dodaj posiłek", exact: true }).click();
+  const today = page.getByTestId("diet-today");
+  await expect(today.getByText(name)).toHaveCount(1);
+  await page.getByRole("button", { name: `Ulubiony: ${name}` }).click();
+  const favorites = page.getByTestId("diet-favorites");
+  await expect(favorites.getByRole("button", { name: `Zapisz ${name}` })).toBeVisible();
+  await favorites.getByRole("button", { name: `Zapisz ${name}` }).click();
+  await expect(today.getByText(name)).toHaveCount(2);
+  // Odpięcie zdejmuje pigułkę; posiłki dnia zostają.
+  await favorites.getByRole("button", { name: `Odepnij: ${name}` }).click();
+  await expect(page.getByTestId("diet-favorites")).toHaveCount(0);
+  await expect(today.getByText(name)).toHaveCount(2);
+});

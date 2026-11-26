@@ -1,12 +1,14 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import type { DietGoals, Meal } from "@/lib/diet/model";
+import { favoriteId, type DietGoals, type Meal, type MealFavorite } from "@/lib/diet/model";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 
 // Magazyn diety podmieniamy atrapą: test sprawdza sekcję, nie Yjs.
-const { fixture, addMealMock, setGoalsMock, removeMock } = vi.hoisted(() => ({
-  fixture: { meals: [] as Meal[], goals: {} as DietGoals, weights: [] as { day: string; kg: number; created: number }[] },
+const { fixture, addMealMock, setGoalsMock, removeMock, pinMock, unpinMock } = vi.hoisted(() => ({
+  fixture: { meals: [] as Meal[], goals: {} as DietGoals, weights: [] as { day: string; kg: number; created: number }[], favorites: [] as MealFavorite[] },
+  pinMock: vi.fn((_t?: unknown) => ({})),
+  unpinMock: vi.fn((_id?: unknown) => null),
   addMealMock: vi.fn(),
   setGoalsMock: vi.fn(),
   removeMock: vi.fn((_id?: unknown) => null),
@@ -18,6 +20,10 @@ vi.mock("@/lib/diet/store", () => ({
   removeMeal: (id: unknown) => removeMock(id),
   restoreMeal: vi.fn(),
   setDietGoals: (g: unknown) => setGoalsMock(g),
+  useMealFavorites: () => fixture.favorites,
+  pinMeal: (t: unknown) => pinMock(t),
+  unpinMeal: (id: unknown) => unpinMock(id),
+  repinMeal: vi.fn(),
 }));
 
 vi.mock("@/lib/weight/store", () => ({ useWeights: () => fixture.weights }));
@@ -29,6 +35,9 @@ afterEach(() => {
   fixture.meals = [];
   fixture.goals = {};
   fixture.weights = [];
+  fixture.favorites = [];
+  pinMock.mockClear();
+  unpinMock.mockClear();
   addMealMock.mockReset();
   setGoalsMock.mockReset();
 });
@@ -138,5 +147,37 @@ describe("DietSection — C4.4 średnia i C4.3 białko z masy", () => {
   it("bez ważenia nie ma podpowiedzi białka", () => {
     render(<DietSection />);
     expect(screen.queryByTestId("protein-from-weight")).toBeNull();
+  });
+});
+
+describe("DietSection — ulubione (C4.1)", () => {
+  it("gwiazdka przy posiłku przypina opis z wartościami", () => {
+    fixture.meals = [meal("Kefir", { kcal: 120, protein: 10 })];
+    render(<DietSection />);
+    const star = screen.getByRole("button", { name: "Ulubiony: Kefir" });
+    expect(star.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(star);
+    expect(pinMock).toHaveBeenCalledWith({ text: "Kefir", kcal: 120, protein: 10 });
+  });
+
+  it("przypięty: gwiazdka wciśnięta, drugi klik odpina; pigułka zapisuje od razu i znika z ostatnich", () => {
+    fixture.meals = [meal("Kefir", { kcal: 120 })];
+    fixture.favorites = [{ id: favoriteId("Kefir"), text: "Kefir", kcal: 120, created: 1 }];
+    addMealMock.mockReturnValue({ id: "m-new", text: "Kefir", day: today(), created: 2 });
+    render(<DietSection />);
+    const star = screen.getByRole("button", { name: "Ulubiony: Kefir" });
+    expect(star.getAttribute("aria-pressed")).toBe("true");
+    expect(screen.queryByTestId("diet-recent")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz Kefir" }));
+    expect(addMealMock).toHaveBeenCalledWith(expect.objectContaining({ text: "Kefir", kcal: 120 }));
+    fireEvent.click(star);
+    expect(unpinMock).toHaveBeenCalledWith(favoriteId("Kefir"));
+  });
+
+  it("× przy pigułce odpina", () => {
+    fixture.favorites = [{ id: "f-1", text: "Owsianka", created: 1 }];
+    render(<DietSection />);
+    fireEvent.click(within(screen.getByTestId("diet-favorites")).getByRole("button", { name: "Odepnij: Owsianka" }));
+    expect(unpinMock).toHaveBeenCalledWith("f-1");
   });
 });

@@ -19,6 +19,10 @@ vi.mock("@/lib/diet/store", () => ({
   removeMeal: vi.fn(),
   restoreMeal: vi.fn(),
   setDietGoals: vi.fn(),
+  useMealFavorites: () => [],
+  pinMeal: vi.fn(),
+  unpinMeal: vi.fn(),
+  repinMeal: vi.fn(),
 }));
 vi.mock("@/lib/supplements/store", () => ({
   useSupplements: () => fixture.list,

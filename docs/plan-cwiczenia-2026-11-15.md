@@ -71,7 +71,7 @@ Znane ograniczenie z `opis.md`: odhaczenie odżywki w Ćwiczeniach i „Gotowe�
 
 | Nr | Punkt | Rozmiar |
 |---|---|---|
-| C4.1 | **Ulubione posiłki:** przypięte pigułki nad „ostatnimi”; zapis jednym stuknięciem. Mapa Yjs `dietFavorites`. | S |
+| C4.1 ✅ 2026-11-26 | **Ulubione posiłki:** przypięte pigułki nad „ostatnimi”; zapis jednym stuknięciem. Mapa Yjs `dietFavorites`. | S |
 | C4.2 | **Węglowodany i tłuszcz** jako pola opcjonalne, domyślnie ukryte (przełącznik „pełne makro”). Cele dzienne odpowiednio. | M |
 | C4.3 ✅ 2026-11-25 | **Cel białka z masy ciała:** podpowiedź „1,6–2,2 g na kg” liczona z ostatniego pomiaru, do przyjęcia jednym stuknięciem. | S |
 | C4.4 ✅ 2026-11-25 | **Średnia z 7 dni wobec celu** jako jedno zdanie nad listą („średnio 2 150 kcal, cel 2 400”). | S |

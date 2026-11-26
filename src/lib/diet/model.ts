@@ -11,6 +11,8 @@ export const DIET_KCAL_MAX = 10_000;
 export const DIET_PROTEIN_MAX = 1_000;
 /** Limit posiłków w dokumencie — zabezpieczenie przed zalaniem. */
 export const DIET_MAX_MEALS = 5_000;
+/** C4.1 Ulubione posiłki: tyle pigułek mieści się nad „ostatnimi” bez przewijania. */
+export const DIET_MAX_FAVORITES = 12;
 
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -144,15 +146,19 @@ export function proteinRangeFor(kg: number): { min: number; max: number; mid: nu
 /** Posiłek do szybkiego powtórzenia: sam opis i wartości, bez dnia i godziny. */
 export type MealTemplate = Pick<Meal, "text" | "kcal" | "protein">;
 
+/** Klucz „tego samego posiłku”: opis bez wielkości liter i nadmiarowych spacji. */
+export const mealKey = (text: string) => text.trim().replace(/\s+/g, " ").toLowerCase();
+
 /**
  * Ćwiczenia 2.4: ostatnie różne posiłki, najnowszy pierwszy. „Różne” po opisie bez wielkości liter
  * i nadmiarowych spacji — „Owsianka” i „owsianka ” to ten sam posiłek; zostaje jego najnowszy wpis.
+ * Opisy z `skip` (C4.1: przypięte ulubione) pomijamy — są już wyżej.
  */
-export function recentMeals(meals: readonly Meal[], limit = 5): MealTemplate[] {
-  const seen = new Set<string>();
+export function recentMeals(meals: readonly Meal[], limit = 5, skip: ReadonlySet<string> = new Set()): MealTemplate[] {
+  const seen = new Set<string>(skip);
   const out: MealTemplate[] = [];
   for (const m of [...meals].sort((a, b) => b.created - a.created)) {
-    const key = m.text.trim().replace(/\s+/g, " ").toLowerCase();
+    const key = mealKey(m.text);
     if (seen.has(key)) continue;
     seen.add(key);
     out.push({ text: m.text, ...(m.kcal !== undefined ? { kcal: m.kcal } : {}), ...(m.protein !== undefined ? { protein: m.protein } : {}) });
@@ -170,4 +176,42 @@ export function repeatDayInputs(meals: readonly Meal[], from: string, to: string
     ...(m.kcal !== undefined ? { kcal: m.kcal } : {}),
     ...(m.protein !== undefined ? { protein: m.protein } : {}),
   }));
+}
+
+/** C4.1 Ulubiony posiłek: opis i wartości do zapisu jednym stuknięciem. */
+export interface MealFavorite extends MealTemplate {
+  /** `f-` + skrót klucza opisu — ten sam posiłek przypięty na dwóch telefonach daje jeden wpis po scaleniu. */
+  id: string;
+  created: number;
+  extra?: Record<string, unknown>;
+}
+
+export const FAVORITE_KNOWN = ["id", "text", "kcal", "protein", "created"] as const;
+
+/** Id ulubionego z opisu (FNV-1a 32 bit, szesnastkowo): deterministyczne, bez losowania. */
+export function favoriteId(text: string): string {
+  let h = 0x811c9dc5;
+  for (const ch of mealKey(text)) {
+    h ^= ch.codePointAt(0)!;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return `f-${h.toString(16).padStart(8, "0")}`;
+}
+
+/** Wejście → ulubiony; `null` gdy brakuje id albo opisu. */
+export function cleanFavorite(raw: unknown): MealFavorite | null {
+  const f = raw as Partial<MealFavorite> | null;
+  if (!f || typeof f !== "object") return null;
+  if (typeof f.id !== "string" || !f.id || f.id.length > 64) return null;
+  if (typeof f.text !== "string" || !f.text.trim()) return null;
+  const kcal = cleanAmount(f.kcal, DIET_KCAL_MAX);
+  const protein = cleanDecimal(f.protein, DIET_PROTEIN_MAX);
+  return {
+    id: f.id,
+    text: f.text.trim().slice(0, DIET_TEXT_MAX),
+    created: typeof f.created === "number" && Number.isFinite(f.created) ? f.created : 0,
+    ...(kcal !== undefined ? { kcal } : {}),
+    ...(protein !== undefined ? { protein } : {}),
+    ...withExtra(f, FAVORITE_KNOWN),
+  };
 }

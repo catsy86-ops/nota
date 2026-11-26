@@ -50,6 +50,19 @@ describe("D1.1 Ćwiczenia: nieznane pola", () => {
     expect(dump.goals).toEqual({ kcal: 2200, protein: 120, xFuture: "x" });
   });
 
+  it("dieta, ulubione (C4.1): „Cofnij” odpięcia i kopia", () => {
+    const doc = new Y.Doc();
+    doc.getMap("dietFavorites").set("f-1", { id: "f-1", text: "kefir", created: 1, xFuture: 2 });
+    const y = createYDiet(doc);
+    y.repin(y.unpin("f-1")!);
+    expect(doc.getMap("dietFavorites").get("f-1")).toEqual({ id: "f-1", text: "kefir", created: 1, xFuture: 2 });
+    const dump = json(y.dump());
+    expect(dump.favorites![0]).toEqual({ id: "f-1", text: "kefir", created: 1, xFuture: 2 });
+    const other = createYDiet(new Y.Doc());
+    other.mergeDump(dump);
+    expect(other.getFavorites()[0].extra).toEqual({ xFuture: 2 });
+  });
+
   it("mergeStored: nowe pola wygrywają, limity jak w pickExtra, bez klucza extra", () => {
     const next: { a: number; extra?: Record<string, unknown> } = { a: 1, extra: { y: 2 } };
     const out = mergeStored(next, { a: 0, x: 1, y: 1, __proto__x: 5, big: "z".repeat(500) }, ["a"]);

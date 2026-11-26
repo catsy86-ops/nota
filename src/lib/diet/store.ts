@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { localDayKey } from "@/lib/dayDone";
-import { cleanMeal, DIET_TEXT_MAX, type DietGoals, type Meal } from "./model";
+import { cleanMeal, DIET_TEXT_MAX, type DietGoals, type Meal, type MealFavorite, type MealTemplate } from "./model";
 import { createYDiet } from "./yDiet";
 
 /**
@@ -16,6 +16,23 @@ export function useMeals(): Meal[] {
 
 export function useDietGoals(): DietGoals {
   return useSyncExternalStore(yDiet.subscribe, yDiet.getGoals);
+}
+
+export function useMealFavorites(): MealFavorite[] {
+  return useSyncExternalStore(yDiet.subscribe, yDiet.getFavorites);
+}
+
+/** C4.1 Przypięcie do ulubionych; `null` — lista pełna. */
+export function pinMeal(t: MealTemplate): MealFavorite | null {
+  return yDiet.pin(t, Date.now());
+}
+
+export function unpinMeal(id: string): MealFavorite | null {
+  return yDiet.unpin(id);
+}
+
+export function repinMeal(f: MealFavorite): void {
+  yDiet.repin(f);
 }
 
 export interface NewMealInput {

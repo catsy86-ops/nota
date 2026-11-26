@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
 import { createYDiet, DIET_ORIGIN } from "./yDiet";
-import type { Meal } from "./model";
+import { DIET_MAX_FAVORITES, favoriteId, type Meal } from "./model";
 
 const meal = (id: string, over: Partial<Meal> = {}): Meal => ({ id, day: "2026-10-20", text: id, created: 1, ...over });
 
@@ -66,5 +66,46 @@ describe("createYDiet", () => {
     y.setGoals({ kcal: 2600 });
     y.mergeDump({ meals: [], goals: { kcal: 1800 } });
     expect(y.getGoals()).toEqual({ kcal: 2600 });
+  });
+});
+
+describe("createYDiet — ulubione (C4.1)", () => {
+  it("przypięcie tego samego opisu drugi raz nic nie dodaje; kolejność przypięcia", () => {
+    const y = createYDiet(new Y.Doc());
+    y.pin({ text: "Kefir", protein: 10 }, 2);
+    y.pin({ text: "owsianka", kcal: 450 }, 3);
+    expect(y.pin({ text: "kefir ", kcal: 999 }, 4)).toMatchObject({ text: "Kefir", protein: 10 });
+    expect(y.getFavorites().map((f) => f.text)).toEqual(["Kefir", "owsianka"]);
+  });
+
+  it("dwa urządzenia przypinają ten sam posiłek — po scaleniu jeden wpis", () => {
+    const a = new Y.Doc(), b = new Y.Doc();
+    createYDiet(a).pin({ text: "Kefir" }, 1);
+    createYDiet(b).pin({ text: "kefir" }, 2);
+    Y.applyUpdate(a, Y.encodeStateAsUpdate(b));
+    expect(createYDiet(a).getFavorites()).toHaveLength(1);
+  });
+
+  it("limit 12, odpięcie i „Cofnij”", () => {
+    const y = createYDiet(new Y.Doc());
+    for (let i = 0; i < DIET_MAX_FAVORITES; i++) expect(y.pin({ text: `p${i}` }, i)).not.toBeNull();
+    expect(y.pin({ text: "nadmiar" }, 99)).toBeNull();
+    const prev = y.unpin(favoriteId("p0"))!;
+    expect(y.getFavorites()).toHaveLength(DIET_MAX_FAVORITES - 1);
+    y.repin(prev);
+    expect(y.getFavorites()[0]).toEqual(prev);
+  });
+
+  it("kopia niesie ulubione, scalenie ich nie dubluje; kopia bez pola `favorites` działa", () => {
+    const y = createYDiet(new Y.Doc());
+    y.pin({ text: "Kefir", protein: 10 }, 1);
+    const dump = JSON.parse(JSON.stringify(y.dump()));
+    const other = createYDiet(new Y.Doc());
+    other.mergeDump(dump);
+    other.mergeDump(dump);
+    expect(other.getFavorites()).toEqual(y.getFavorites());
+    const old = createYDiet(new Y.Doc());
+    old.mergeDump({ meals: [], goals: {} });
+    expect(old.getFavorites()).toEqual([]);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { addDaysToKey } from "@/lib/week";
-import { byMealOrder, cleanAmount, cleanDecimal, cleanGoals, cleanMeal, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type Meal, proteinRangeFor, rangeAverage } from "./model";
+import { byMealOrder, cleanAmount, cleanFavorite, favoriteId, cleanDecimal, cleanGoals, cleanMeal, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type Meal, proteinRangeFor, rangeAverage } from "./model";
 
 const meal = (id: string, day: string, over: Partial<Meal> = {}): Meal => ({ id, day, text: id, created: 1, ...over });
 
@@ -118,5 +118,27 @@ describe("rangeAverage i proteinRangeFor (C4.4, C4.3)", () => {
     expect(proteinRangeFor(80)).toEqual({ min: 128, max: 176, mid: 144 });
     expect(proteinRangeFor(72.5)).toEqual({ min: 116, max: 160, mid: 131 });
     expect(proteinRangeFor(0)).toBeNull();
+  });
+});
+
+describe("ulubione posiłki (C4.1)", () => {
+  it("id z opisu: to samo bez wielkości liter i spacji, inne dla innego opisu", () => {
+    expect(favoriteId("Owsianka  z bananem")).toBe(favoriteId(" owsianka z BANANEM"));
+    expect(favoriteId("owsianka")).not.toBe(favoriteId("kefir"));
+    expect(favoriteId("owsianka")).toMatch(/^f-[0-9a-f]{8}$/);
+  });
+
+  it("cleanFavorite: bez opisu albo id — null; złe wartości znikają, nieznane pola zostają w extra", () => {
+    expect(cleanFavorite({ id: "f-1", text: "  ", created: 1 })).toBeNull();
+    expect(cleanFavorite({ text: "kefir", created: 1 })).toBeNull();
+    expect(cleanFavorite({ id: "f-1", text: " kefir ", kcal: -5, protein: 10.04, created: 1, xFuture: 1 })).toEqual({ id: "f-1", text: "kefir", protein: 10, created: 1, extra: { xFuture: 1 } });
+  });
+
+  it("recentMeals pomija przypięte opisy", () => {
+    const meals: Meal[] = [
+      { id: "a", day: "2026-11-01", text: "Owsianka", created: 2 },
+      { id: "b", day: "2026-11-01", text: "kefir", created: 1 },
+    ];
+    expect(recentMeals(meals, 5, new Set(["owsianka"]))).toEqual([{ text: "kefir" }]);
   });
 });

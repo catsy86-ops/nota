@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { SectionCard } from "@/components/ui/section-card";
-import { Salad, Trash } from "lucide-react";
+import { Salad, Star, Trash, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
-import { byMealOrder, proteinRangeFor, rangeAverage, DIET_KCAL_MAX, DIET_PROTEIN_MAX, DIET_TEXT_MAX, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type DaySummary, type DietGoals, type Meal, type MealTemplate } from "@/lib/diet/model";
-import { addMeal, removeMeal, restoreMeal, setDietGoals, useDietGoals, useMeals } from "@/lib/diet/store";
+import { byMealOrder, favoriteId, mealKey, proteinRangeFor, rangeAverage, DIET_KCAL_MAX, DIET_PROTEIN_MAX, DIET_TEXT_MAX, recentMeals, repeatDayInputs, summarizeDay, summarizeRange, type DaySummary, type DietGoals, type Meal, type MealFavorite, type MealTemplate } from "@/lib/diet/model";
+import { addMeal, pinMeal, removeMeal, repinMeal, restoreMeal, setDietGoals, unpinMeal, useDietGoals, useMealFavorites, useMeals } from "@/lib/diet/store";
 import { useWeights } from "@/lib/weight/store";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
@@ -23,7 +23,10 @@ export function DietSection() {
   const todays = useMemo(() => meals.filter((m) => m.day === today).sort(byMealOrder), [meals, today]);
   const summary = summarizeDay(meals, today);
   const week = useMemo(() => summarizeRange(meals, today, 7, addDaysToKey), [meals, today]);
-  const recent = useMemo(() => recentMeals(meals), [meals]);
+  const favorites = useMealFavorites();
+  const favoriteIds = useMemo(() => new Set(favorites.map((f) => f.id)), [favorites]);
+  // C4.1: przypięte nie powtarzają się w „ostatnich”.
+  const recent = useMemo(() => recentMeals(meals, 5, new Set(favorites.map((f) => mealKey(f.text)))), [meals, favorites]);
   const yesterday = addDaysToKey(today, -1);
   const yesterdayCount = useMemo(() => meals.filter((m) => m.day === yesterday).length, [meals, yesterday]);
 
@@ -36,11 +39,11 @@ export function DietSection() {
         <p className="text-sm text-muted-foreground">Dziś bez posiłków. Dodaj pierwszy poniżej.</p>
       ) : (
         <ul className="divide-y divide-border/50" data-testid="diet-today">
-          {todays.map((m) => <MealRow key={m.id} meal={m} />)}
+          {todays.map((m) => <MealRow key={m.id} meal={m} pinned={favoriteIds.has(favoriteId(m.text))} />)}
         </ul>
       )}
 
-      <AddMealForm recent={recent} yesterdayCount={yesterdayCount} onRepeatYesterday={() => repeatYesterday(meals, yesterday, today)} />
+      <AddMealForm favorites={favorites} recent={recent} yesterdayCount={yesterdayCount} onRepeatYesterday={() => repeatYesterday(meals, yesterday, today)} />
       <GoalsForm goals={goals} />
       <WeekList days={week} today={today} goals={goals} />
     </SectionCard>
@@ -78,7 +81,7 @@ function Stat({ label, value, goal, note, ratio }: { label: string; value: strin
   );
 }
 
-function MealRow({ meal }: { meal: Meal }) {
+function MealRow({ meal, pinned }: { meal: Meal; pinned: boolean }) {
   const details = [meal.kcal !== undefined ? `${meal.kcal} kcal` : null, meal.protein !== undefined ? `${meal.protein} g białka` : null].filter(Boolean).join(" · ");
   return (
     <li className="flex items-center gap-3 py-2">
@@ -87,6 +90,9 @@ function MealRow({ meal }: { meal: Meal }) {
         <p className="truncate text-sm">{meal.text}</p>
         {details && <p className="ui-hint">{details}</p>}
       </div>
+      <Button variant="ghost" size="sm" className="coarse:h-11" aria-pressed={pinned} aria-label={`Ulubiony: ${meal.text}`} onClick={() => togglePin(meal, pinned)}>
+        <Star className={cn("size-4", pinned && "fill-primary text-primary")} aria-hidden />
+      </Button>
       <Button variant="ghost" size="sm" className="coarse:h-11" aria-label={`Usuń posiłek: ${meal.text}`} onClick={() => deleteWithUndo(meal)}>
         <Trash className="size-4" aria-hidden />
       </Button>
@@ -99,6 +105,18 @@ function deleteWithUndo(meal: Meal) {
   const prev = removeMeal(meal.id);
   if (!prev) return;
   toastWithUndo("Usunięto posiłek", () => restoreMeal(prev), { description: prev.text });
+}
+
+/** C4.1 Gwiazdka przy posiłku: przypina opis z wartościami albo odpina (z „Cofnij”). */
+function togglePin(meal: Meal, pinned: boolean) {
+  if (pinned) { unpinWithUndo(favoriteId(meal.text)); return; }
+  const t: MealTemplate = { text: meal.text, ...(meal.kcal !== undefined ? { kcal: meal.kcal } : {}), ...(meal.protein !== undefined ? { protein: meal.protein } : {}) };
+  if (!pinMeal(t)) toast.error("Nie udało się przypiąć", { description: "Ulubionych jest już 12. Odepnij któryś (×) i spróbuj ponownie." });
+}
+
+function unpinWithUndo(id: string) {
+  const prev = unpinMeal(id);
+  if (prev) toastWithUndo("Odpięto z ulubionych", () => repinMeal(prev), { description: prev.text });
 }
 
 /** „Powtórz wczoraj” (2.4): wczorajsze posiłki jako nowe wpisy na dziś; „Cofnij” usuwa wszystkie dodane. */
@@ -126,7 +144,7 @@ function nowHHMM(): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-function AddMealForm({ recent, yesterdayCount, onRepeatYesterday }: { recent: MealTemplate[]; yesterdayCount: number; onRepeatYesterday: () => void }) {
+function AddMealForm({ favorites, recent, yesterdayCount, onRepeatYesterday }: { favorites: MealFavorite[]; recent: MealTemplate[]; yesterdayCount: number; onRepeatYesterday: () => void }) {
   const [text, setText] = useState("");
   const [time, setTime] = useState(nowHHMM);
   const [kcal, setKcal] = useState("");
@@ -148,6 +166,16 @@ function AddMealForm({ recent, yesterdayCount, onRepeatYesterday }: { recent: Me
     setKcal("");
     setProtein("");
     setTime(nowHHMM());
+  };
+
+  // C4.1: ulubiony zapisuje się od razu — z godziną i dniem z formularza; „Cofnij” usuwa wpis.
+  const logFavorite = (f: MealFavorite) => {
+    const day = forYesterday ? addDaysToKey(localDayKey(), -1) : undefined;
+    const meal = addMeal({ text: f.text, day, time: time || undefined, kcal: f.kcal, protein: f.protein });
+    if (!meal) { toast.error("Nie udało się dodać posiłku", { description: "Lista posiłków może być pełna. Usuń stare wpisy i spróbuj ponownie." }); return; }
+    setForYesterday(false);
+    setTime(nowHHMM());
+    toastWithUndo(forYesterday ? "Dodano posiłek do wczoraj" : "Dodano posiłek", () => removeMeal(meal.id), { description: meal.text });
   };
 
   // Pigułka ostatniego posiłku wypełnia formularz; zapis i godzina zostają w rękach użytkownika.
@@ -180,6 +208,24 @@ function AddMealForm({ recent, yesterdayCount, onRepeatYesterday }: { recent: Me
           </button>
         ))}
       </div>
+      {favorites.length > 0 && (
+        <div role="group" aria-label="Ulubione posiłki — stuknięcie zapisuje" className="flex flex-wrap gap-1.5" data-testid="diet-favorites">
+          {favorites.map((f) => (
+            <span key={f.id} className="inline-flex max-w-72 items-stretch overflow-hidden rounded-full border border-primary/50 bg-primary/10 text-xs">
+              <button type="button" onClick={() => logFavorite(f)} aria-label={`Zapisz ${f.text}`}
+                className="pressable flex min-w-0 items-center gap-1 py-1 pl-2.5 pr-1.5 text-foreground hover:bg-primary/15 outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring coarse:min-h-11">
+                <Star className="size-3 shrink-0 fill-primary text-primary" aria-hidden />
+                <span className="truncate">{f.text}</span>
+                {f.kcal !== undefined && <span className="shrink-0 text-muted-foreground">· {f.kcal} kcal</span>}
+              </button>
+              <button type="button" onClick={() => unpinWithUndo(f.id)} aria-label={`Odepnij: ${f.text}`}
+                className="pressable border-l border-primary/30 px-1.5 text-muted-foreground hover:bg-primary/15 hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring coarse:min-h-11 coarse:min-w-9">
+                <X className="size-3" aria-hidden />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
       {recent.length > 0 && (
         <div role="group" aria-label="Ostatnie posiłki" className="flex flex-wrap gap-1.5" data-testid="diet-recent">
           {recent.map((m) => (
