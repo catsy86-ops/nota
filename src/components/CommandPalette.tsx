@@ -2,8 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
-import { Ruler, Inbox, Lock, LockOpen, StickyNote, Star, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette, Camera, PackageSearch, FileText, Link2, FolderInput, Download, ArrowLeft, Folder as FolderIcon, UserRound } from "lucide-react";
-import { requestLinkGraph } from "@/lib/graphRequest";
+import { Ruler, Inbox, StickyNote, Star, Archive, Bell, Trash, Plus, Settings, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, RotateCcwClock, Bookmark, Copy, Heading, Hash, Pin, Clock, Palette, Camera, PackageSearch, FileText, Link2, FolderInput, Download, ArrowLeft, Folder as FolderIcon, UserRound } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchVersion } from "@/lib/searchNotes";
 import { copyNoteAddress, copyWikiLink } from "@/lib/noteMarkdown";
@@ -14,14 +13,9 @@ import type { PeriodKind } from "@/lib/periodNote";
 import { loadRecentSearches, saveRecentSearch } from "@/lib/recentSearches";
 import { loadRecentCommands, saveRecentCommand } from "@/lib/recentCommands";
 import { requestShiftDay, searchShiftDays, useShifts } from "@/lib/shifts";
-import { requestShiftAction } from "@/lib/shifts/shiftActions";
-import { modShortcut } from "@/lib/platform";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useSavedFilters } from "@/lib/savedFilters";
 import { useVault } from "@/hooks/usePrivateNotes";
-import { privateNotes } from "@/lib/privateNotes";
-import { lockEverywhere } from "@/lib/vaultAutoLock";
-import { vaultUi } from "@/lib/vaultUi";
 import { useSiteDirectory, useStudy, useStudyLists } from "@/lib/study/store";
 import { searchQuestions, STUDY_TOPIC_PARAM } from "@/lib/study/questionSearch";
 import { topicTitle } from "@/lib/study/content";
@@ -30,21 +24,22 @@ import { clientUrl } from "@/lib/study/tab";
 import { searchClients } from "@/lib/clients/model";
 import { useClients } from "@/lib/clients/store";
 import { useWorkSearch, type WorkHit } from "@/lib/study/workSearch";
-import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId, foldName } from "@/lib/study/siteKey";
 import { isViewShown, useHiddenViews } from "@/lib/hiddenViews";
 import { viewLabel } from "@/lib/viewMeta";
-import { changeTextSize, resetTextSize } from "@/lib/textSize";
-import { dayKey } from "@/lib/reminderOccurrences";
-import { addDays } from "date-fns";
 import { SKINS, useSkin } from "@/lib/skins";
 import { SKIN_META } from "@/lib/skinGallery";
 import { trySkin } from "@/lib/skinTry";
 import { recentOpenedIds, useLastOpened } from "@/lib/lastOpened";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { searchSettings } from "@/lib/settingsIndex";
-import { requestSettingsSection, requestSettingsTab, type SettingsTab } from "@/lib/settingsDeepLink";
+import { requestSettingsSection } from "@/lib/settingsDeepLink";
 import { isNativeShell } from "@/lib/native/platform";
+import { cn } from "@/lib/utils";
+import { commandGroups, resolveLabel, resolveShortcut, type CommandContext, type GoView } from "@/lib/commands/registry";
+import { registerBuiltinCommands } from "@/lib/commands/builtin";
+
+registerBuiltinCommands();
 
 const NOTE_LIMIT = 30;
 /** 5.1: tyle ostatnio otwieranych notatek pokazuje pusta paleta. */
@@ -66,7 +61,7 @@ interface Props {
   onNewNote: (title?: string) => void;
   onDailyNote: () => void;
   onPeriodNote: (kind: PeriodKind) => void;
-  onGo: (view: "notes" | "inbox" | "today" | "week" | "archive" | "reminders" | "calendar" | "shifts" | "study" | "debts" | "cwiczenia" | "plans" | "trash" | "widget") => void;
+  onGo: (view: GoView) => void;
   onToggleTheme: () => void;
   onOpenSettings: () => void;
   onOpenStats: () => void;
@@ -105,14 +100,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: "plans", label: viewLabel("plans"), Icon: Ruler },
   { id: "archive", label: viewLabel("archive"), Icon: Archive },
   { id: "trash", label: viewLabel("trash"), Icon: Trash },
-];
-
-/** Skróty do kart Ustawień w palecie (Powłoka 2.5). `keywords` — słowa, po których da się je znaleźć. */
-const SETTINGS_SHORTCUTS: { tab: SettingsTab; label: string; keywords: string; icon: typeof Settings }[] = [
-  { tab: "appearance", label: "Ustawienia: Wygląd", keywords: "styl motyw krój jasność kolor", icon: Palette },
-  { tab: "general", label: "Ustawienia: Ogólne", keywords: "przypomnienia praca seria faktury", icon: Settings },
-  { tab: "backup", label: "Zrób kopię zapasową (Kopia i dane)", keywords: "backup kopia eksport przywróć dane", icon: Copy },
-  { tab: "sync", label: "Połącz urządzenie (Sync)", keywords: "synchronizacja telefon komputer parowanie kod qr", icon: Network },
 ];
 
 async function exportCurrent(note: Note, kind: "html" | "pdf" | "md") {
@@ -215,7 +202,12 @@ export function CommandPalette({
   // Style (plan motywów 3.3): „Następny styl” zawsze w Akcjach, lista stylów dopiero po wpisaniu tekstu,
   // żeby siedem pozycji nie zasłaniało pustej palety. Zmiana przez `trySkin` — z „Cofnij”.
   const skin = useSkin();
-  const nextSkin = SKINS[(SKINS.indexOf(skin) + 1) % SKINS.length];
+
+  const cmdCtx: CommandContext = {
+    navigate, go: onGo, newNote: () => onNewNote(), quickInbox: onQuickInbox, dailyNote: onDailyNote, periodNote: onPeriodNote,
+    openSettings: onOpenSettings, openStats: onOpenStats, openFocusMode: onOpenFocusMode, openShortcuts: onOpenShortcuts,
+    toggleTheme: onToggleTheme, copyNote: onCopyNote, vaultPhase: vault.phase, skin, view,
+  };
 
   function run(fn: () => void) {
     onOpenChange(false);
@@ -441,108 +433,21 @@ export function CommandPalette({
             <CommandSeparator />
           </>
         )}
-        {/* Adres dnia kalendarza (K1.5): „Dziś” i „Jutro” z palety otwierają kalendarz na właściwym dniu. */}
-        <CommandGroup heading={viewLabel("calendar")}>
-          <CommandItem value="kalendarz terminy dziś" onSelect={() => run(() => navigate(`/kalendarz?dzien=${dayKey(new Date())}`))}>
-            <Calendar className="size-4 mr-2 text-muted-foreground" /> Terminy na dziś
-          </CommandItem>
-          <CommandItem value="kalendarz terminy jutro" onSelect={() => run(() => navigate(`/kalendarz?dzien=${dayKey(addDays(new Date(), 1))}`))}>
-            <Calendar className="size-4 mr-2 text-muted-foreground" /> Terminy na jutro
-          </CommandItem>
-        </CommandGroup>
-        <CommandGroup heading="Praca">
-          <CommandItem value="praca nowy wpis" onSelect={() => run(() => navigate("/praca?wpis=1"))}>
-            <Plus className="size-4 mr-2 text-muted-foreground" /> Nowy wpis w Pracy
-          </CommandItem>
-          <CommandItem value="praca raport dnia" onSelect={() => run(() => navigate(`/praca?${JOURNAL_REPORT_PARAM}=${reportParam({ range: "day", allSites: false })}`))}>
-            <HardHat className="size-4 mr-2 text-muted-foreground" /> Raport dnia
-          </CommandItem>
-        </CommandGroup>
-        <CommandGroup heading={viewLabel("shifts")}>
-          <CommandItem value="grafik dodaj zmiane dzis" onSelect={() => run(() => { requestShiftAction("addToday"); onGo("shifts"); })}>
-            Dodaj zmianę dziś
-          </CommandItem>
-          <CommandItem value="grafik nałóż cykl" onSelect={() => run(() => { requestShiftAction("pattern"); onGo("shifts"); })}>
-            Nałóż cykl zmian
-          </CommandItem>
-          <CommandItem value="grafik obraz miesiaca png" onSelect={() => run(() => { requestShiftAction("image"); onGo("shifts"); })}>
-            Obraz miesiąca (PNG)
-          </CommandItem>
-        </CommandGroup>
-        <CommandGroup heading="Akcje">
-          <CommandItem onSelect={() => run(onNewNote)}>
-            <Plus className="size-4 mr-2" /> Nowa notatka <span className="ml-auto text-xs text-muted-foreground">{modShortcut("N")}</span>
-          </CommandItem>
-          <CommandItem value="do skrzynki zapisz pomysl przechwyc" onSelect={() => run(onQuickInbox)}>
-            <Inbox className="size-4 mr-2" /> Do skrzynki… <span className="ml-auto text-xs text-muted-foreground">Alt+K</span>
-          </CommandItem>
-          <CommandItem onSelect={() => run(onDailyNote)}>
-            <BookOpen className="size-4 mr-2" /> Notatka dnia
-          </CommandItem>
-          <CommandItem value="notatka tygodnia" onSelect={() => run(() => onPeriodNote("week"))}>
-            <CalendarRange className="size-4 mr-2" /> Notatka tygodnia
-          </CommandItem>
-          <CommandItem value="notatka miesiaca" onSelect={() => run(() => onPeriodNote("month"))}>
-            <CalendarRange className="size-4 mr-2" /> Notatka miesiąca
-          </CommandItem>
-          {onCopyNote && (
-            <>
-              <CommandItem value="kopiuj notatke jako markdown" onSelect={() => run(() => onCopyNote("markdown"))}>
-                <Copy className="size-4 mr-2" /> Kopiuj notatkę jako Markdown
-              </CommandItem>
-              <CommandItem value="kopiuj notatke jako tekst" onSelect={() => run(() => onCopyNote("text"))}>
-                <Copy className="size-4 mr-2" /> Kopiuj notatkę jako tekst
-              </CommandItem>
-            </>
-          )}
-          {vault.phase === "unlocked" && (
-            <CommandItem value="zablokuj prywatne notatki teraz" onSelect={() => run(() => { void lockEverywhere(privateNotes); })}>
-              <Lock className="size-4 mr-2" /> Zablokuj prywatne notatki teraz
-            </CommandItem>
-          )}
-          {vault.phase === "locked" && (
-            <CommandItem value="odblokuj prywatne notatki" onSelect={() => run(() => vaultUi.open("unlock"))}>
-              <LockOpen className="size-4 mr-2" /> Odblokuj prywatne notatki
-            </CommandItem>
-          )}
-          <CommandItem onSelect={() => run(onOpenSettings)}>
-            <Settings className="size-4 mr-2" /> Ustawienia
-          </CommandItem>
-          {/* Powłoka 2.5: od razu na karcie Ustawień (te same karty co link `?settings=`). */}
-          {SETTINGS_SHORTCUTS.map((t) => (
-            <CommandItem key={`tab-${t.tab}`} value={`ustawienia ${t.label} ${t.keywords}`} onSelect={() => run(() => { requestSettingsTab(t.tab); onOpenSettings(); })}>
-              <t.icon className="size-4 mr-2" /> {t.label}
-            </CommandItem>
-          ))}
-          <CommandItem onSelect={() => run(onOpenStats)}>
-            <Trophy className="size-4 mr-2" /> Statystyki i osiągnięcia
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => { requestLinkGraph(); onOpenStats(); })}>
-            <Network className="size-4 mr-2" /> Graf powiązań
-          </CommandItem>
-          <CommandItem onSelect={() => run(onOpenFocusMode)}>
-            <Brain className="size-4 mr-2" /> Tryb skupienia
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => changeTextSize(1))}>
-            <ZoomIn className="size-4 mr-2" /> Powiększ tekst
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => changeTextSize(-1))}>
-            <ZoomOut className="size-4 mr-2" /> Pomniejsz tekst
-          </CommandItem>
-          <CommandItem onSelect={() => run(resetTextSize)}>
-            <ResetText className="size-4 mr-2" /> Domyślny rozmiar tekstu
-          </CommandItem>
-          <CommandItem onSelect={() => run(onToggleTheme)}>
-            <Moon className="size-4 mr-2" /> Przełącz motyw jasny/ciemny
-          </CommandItem>
-          <CommandItem value="nastepny styl motyw skorka wyglad" onSelect={() => run(() => trySkin(nextSkin))}>
-            <Palette className="size-4 mr-2" /> Następny styl
-            <span className="ml-auto text-xs text-muted-foreground">{SKIN_META[nextSkin].label}</span>
-          </CommandItem>
-          <CommandItem onSelect={() => run(onOpenShortcuts)}>
-            <Keyboard className="size-4 mr-2" /> Skróty klawiszowe <span className="ml-auto text-xs text-muted-foreground">?</span>
-          </CommandItem>
-        </CommandGroup>
+        {/* A3.4: grupy Kalendarz, Praca, Grafik i Akcje z rejestru poleceń (`src/lib/commands/`). */}
+        {commandGroups(cmdCtx).map((g) => (
+          <CommandGroup key={g.heading} heading={g.heading}>
+            {g.commands.map((c) => {
+              const label = resolveLabel(c, cmdCtx);
+              const right = c.hint?.(cmdCtx) ?? resolveShortcut(c);
+              return (
+                <CommandItem key={c.id} value={`${label} ${c.keywords ?? ""}`} data-command-id={c.id} onSelect={() => run(() => c.run(cmdCtx))}>
+                  {c.icon && <c.icon className={cn("size-4 mr-2", g.mutedIcons && "text-muted-foreground")} />} {label}
+                  {right && <span className="ml-auto pl-3 truncate text-xs text-muted-foreground">{right}</span>}
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
+        ))}
         <CommandSeparator />
         {search.trim() && (
           <CommandGroup heading="Styl">
