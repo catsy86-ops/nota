@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { test, expect } from "@playwright/test";
 
 // Plan Ćwiczeń 3.2 (7 dni zgodności odżywki) i 3.5 (tydzień treningowy).
@@ -55,4 +56,17 @@ test("C4.1: gwiazdka przypina posiłek, pigułka „Ulubione” zapisuje go jedn
   await favorites.getByRole("button", { name: `Odepnij: ${name}` }).click();
   await expect(page.getByTestId("diet-favorites")).toHaveCount(0);
   await expect(today.getByText(name)).toHaveCount(2);
+});
+
+test("C2.2: „Zrobione” wpisuje serię jednym stuknięciem, −/+ zmieniają powtórzenia", async ({ page }) => {
+  const quick = page.getByTestId("quick-set");
+  await quick.getByRole("button", { name: "Powtórzenia: więcej" }).click();
+  await quick.getByRole("button", { name: /^Zrobione:/ }).click();
+  await expect(page.getByLabel("Powtórki, seria 1")).toHaveValue("11");
+  await quick.getByRole("button", { name: /^Zrobione:/ }).click();
+  await expect(page.getByLabel("Powtórki, seria 2")).toHaveValue("11");
+  await page.getByRole("button", { name: "Zapisz serie" }).click();
+  await expect(page.getByText(/Ostatnio .*11, 11/)).toBeVisible();
+  const axe = await new AxeBuilder({ page }).include('[data-testid="quick-set"]').withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+  expect(axe.violations.map((v) => v.id)).toEqual([]);
 });

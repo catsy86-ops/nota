@@ -694,6 +694,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy:** `src/lib/training/progression.test.ts` (dołożenie, powtórki, rozgrzewka, limit hantli, zapas 3+/0–2, przypadki `null`, cel z sesji/planu, teksty), `src/lib/training/model.test.ts` (`cleanSet` z `rir`), `src/lib/training/extra.test.ts` (`rir` znany obok nieznanego `tempo` przez scalenie, „Cofnij” i kopię), `src/components/cwiczenia/TrainingSection.test.tsx` (podpowiedź i „Wpisz”, brak bez celu), `e2e/cwiczenia-tydzien.spec.ts` (wybór zapasu, „Ostatnio”, czyszczenie po zapisie).
 - **Commit:** `22550d6c`, 2026-11-25; zapas C2.3: `61cf9395`, 2026-11-26.
 
+## Ćwiczenia — zapis serii jednym stuknięciem (C2.2, 2026-11-26)
+
+- **Co robi:** nad wierszami serii w „Zapisz trening” jest blok z dużym przyciskiem „Zrobione: 10 × 20 kg” i krokami −/+ dla powtórzeń i ciężaru. Stuknięcie wpisuje serię do pierwszego pustego wiersza, a gdy wszystkie są pełne — do nowego (do 30). Pod przyciskiem: „Wpisanych serii: 2. Na koniec „Zapisz serie”.” (`role="status"`). Pola liczbowe zostają jako droga zapasowa; cały wpis dalej zapisuje „Zapisz serie”. Przy seriach na czas bloku nie ma.
+- **Gdzie jest:** `src/components/cwiczenia/QuickSet.tsx` (`QuickSet`, `Stepper`), `kgStep` i `stepKg` w `src/components/cwiczenia/trainingFormat.ts`, podpięcie w `LogForm.tsx` (`quickStart`, `logQuick`; `key={exerciseId}` — zmiana ćwiczenia ustawia wartości od nowa).
+- **Jak działa:** wartości startowe: podpowiedź progresji (C2.1), a bez niej pierwsza seria ostatniej sesji, a bez niej cel powtórzeń z planu (domyślnie 10) bez ciężaru. Krok ciężaru jak w podpowiedzi: 0,5 kg do 10 kg, wyżej 1 kg; w dół symetrycznie przez granicę; „−” przy 0,5 kg daje „bez kg”.
+- **Ograniczenia:** blok nie zapisuje wpisu sam — to celowe, bo jeden wpis to całe ćwiczenie z wieloma seriami. Przerwa (minutnik) startuje po „Zapisz serie”, nie po każdej serii.
+- **Testy:** `src/components/cwiczenia/trainingFormat.test.ts` (krok ciężaru), `src/components/cwiczenia/TrainingSection.test.tsx` (stuknięcia wypełniają kolejne wiersze, −/+), `e2e/cwiczenia-tydzien.spec.ts` (zapis dwóch serii i „Ostatnio”, axe bloku).
+- **Commit:** zobacz `git log --grep "C2.2"`, 2026-11-26.
+
 ## Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 
 - **Co robi:** na dole widoku Ćwiczeń są przyciski „Trening CSV”, „Dieta CSV” i „Waga CSV”, każdy widoczny tylko wtedy, gdy są dane tego rodzaju. Każdy zapisuje plik `notki-<rodzaj>-<dzień>.csv` do otwarcia w polskim Excelu. Trening ma jedną serię na wiersz (data, godzina, ćwiczenie, seria, powtórzenia albo sekundy, ciężar, notatka przy pierwszej serii), dieta jeden posiłek na wiersz (kcal i białko), waga jedno ważenie na wiersz.

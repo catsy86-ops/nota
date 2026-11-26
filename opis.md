@@ -269,6 +269,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Ćwiczenia — serie na czas i z obciążeniem przy masie ciała (2.7, 2026-11-12)
 - Skarbiec — zapis edycji notatki prywatnej przy schowaniu strony (2026-11-23)
 - Ćwiczenia — podpowiedź progresji przy zapisie serii (C2.1, 2026-11-25)
+- Ćwiczenia — zapis serii jednym stuknięciem (C2.2, 2026-11-26)
 - Ćwiczenia — eksport CSV treningu, diety i masy; wspólny CSV z Długami (C3.5, 2026-11-25)
 - Ćwiczenia — dieta: średnia z 7 dni i cel białka z masy ciała (C4.3, C4.4, 2026-11-25)
 - Ćwiczenia — podsumowanie miesiąca do udostępnienia (C3.3, 2026-11-25)

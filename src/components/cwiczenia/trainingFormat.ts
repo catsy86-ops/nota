@@ -43,3 +43,12 @@ export function shortDay(key: string): string {
   const [, m, d] = key.split("-");
   return d && m ? `${d}.${m}` : key;
 }
+
+/** C2.2 Krok ciężaru jak w podpowiedzi progresji (C2.1): 0,5 kg do 10 kg, wyżej 1 kg. */
+export const kgStep = (kg: number) => (kg < 10 ? 0.5 : 1);
+
+/** C2.2 Następna wartość ciężaru po −/+ (nie poniżej zera, nie ponad limit, co pół kilo). */
+export function stepKg(kg: number, dir: 1 | -1): number {
+  const next = dir > 0 ? kg + kgStep(kg) : kg - kgStep(Math.max(0, kg - 0.5));
+  return Math.min(TRAINING_KG_MAX, Math.max(0, Math.round(next * 2) / 2));
+}

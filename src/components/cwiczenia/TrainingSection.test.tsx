@@ -189,7 +189,7 @@ describe("TrainingSection", () => {
     render(<TrainingSection />);
     fireEvent.change(screen.getByLabelText("Ciężar kg, seria 1"), { target: { value: "26" } });
     fireEvent.change(screen.getByLabelText("Powtórki, seria 1"), { target: { value: "8" } });
-    expect(screen.getByRole("status").textContent).toContain("powyżej Twoich hantli (20 kg)");
+    expect(screen.getAllByRole("status").some((el) => el.textContent?.includes("powyżej Twoich hantli (20 kg)"))).toBe(true);
     expect((screen.getByRole("button", { name: "Zapisz serie" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
@@ -357,5 +357,25 @@ describe("TrainingSection — C2.5 tydzień lżej", () => {
     fixture.entries = [1, 2, 3, 4, 5].map((w) => ({ id: `w${w}`, day: addDaysToKey(today, -7 * w), exerciseId: EXERCISES[0].id, sets: [{ reps: 5, kg: 20 }], note: "", created: w }));
     render(<TrainingSection />);
     expect(screen.queryByTestId("deload-hint")).toBeNull();
+  });
+});
+
+describe("TrainingSection — zapis serii jednym stuknięciem (C2.2)", () => {
+  it("„Zrobione” wpisuje serię do kolejnych pustych wierszy, −/+ zmieniają wartości", () => {
+    fixture.entries = [{ id: "a", day: "2026-10-10", exerciseId: "klatka-hantle-plasko", note: "", created: 1, sets: [{ reps: 8, kg: 20 }] }];
+    render(<TrainingSection />);
+    fireEvent.change(screen.getAllByRole("combobox").find((el) => (el as HTMLSelectElement).querySelector("option[value='klatka-hantle-plasko']"))!, { target: { value: "klatka-hantle-plasko" } });
+    const done = () => screen.getByRole("button", { name: /^Zrobione:/ });
+    expect(done().textContent).toBe("Zrobione: 8 × 20 kg");
+    fireEvent.click(done());
+    expect((screen.getByLabelText("Powtórki, seria 1") as HTMLInputElement).value).toBe("8");
+    expect((screen.getByLabelText("Ciężar kg, seria 1") as HTMLInputElement).value).toBe("20");
+    fireEvent.click(screen.getByRole("button", { name: "Powtórzenia: mniej" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ciężar: więcej" }));
+    expect(done().textContent).toBe("Zrobione: 7 × 21 kg");
+    fireEvent.click(done());
+    expect((screen.getByLabelText("Powtórki, seria 2") as HTMLInputElement).value).toBe("7");
+    expect((screen.getByLabelText("Ciężar kg, seria 2") as HTMLInputElement).value).toBe("21");
+    expect(screen.getByText(/Wpisanych serii: 2/)).toBeTruthy();
   });
 });

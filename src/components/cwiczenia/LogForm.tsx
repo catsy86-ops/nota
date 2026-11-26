@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { progressionText, suggestNext, targetRepsFor, warmupSets, warmupText } from "@/lib/training/progression";
+import { QuickSet } from "./QuickSet";
 import { emptyRow, nowHHMM, parseKg, parseNum, rirLabel, setsLine, shortDay, type SetRow } from "./trainingFormat";
 
 /** C1.2: wydzielone z `TrainingSection.tsx` bez zmian zachowania. */
@@ -155,6 +156,16 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
     [timed, entries, exerciseId, plans, sessionTarget, exercise?.equipment, equipment],
   );
   const warmup = !timed && firstToday && !forYesterday ? warmupSets(hint?.kg ?? (last ? bestKg(last.sets) : undefined)) : [];
+  // C2.2: wartości startowe „Zrobione: …” — podpowiedź progresji, a bez niej pierwsza seria ostatniej sesji, a bez niej cel planu.
+  const lastFirst = last && !last.sets.some((x) => x.seconds !== undefined) ? last.sets[0] : undefined;
+  const quickStart = hint ? { reps: hint.reps, kg: hint.kg } : lastFirst ? { reps: lastFirst.reps, kg: lastFirst.kg } : { reps: targetRepsFor(exerciseId, plans, sessionTarget) ?? 10, kg: undefined };
+  /** Seria z „Zrobione”: do pierwszego pustego wiersza, a gdy wszystkie pełne — do nowego (limit 30). */
+  const logQuick = (reps: number, kg: number | undefined) => {
+    const row = { reps: String(reps), kg: kg !== undefined ? String(kg).replace(".", ",") : "" };
+    const i = rows.findIndex((x) => !x.reps.trim());
+    if (i >= 0) setRows(rows.map((x, j) => (j === i ? row : x)));
+    else if (rows.length < 30) setRows([...rows, row]);
+  };
 
   const save = () => {
     if (!valid) return;
@@ -267,6 +278,7 @@ export function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[];
           </button>
         ))}
       </div>
+      {!timed && <QuickSet key={exerciseId} start={quickStart} done={filled.length} onDone={logQuick} />}
       <div className="space-y-2">
         {rows.map((r, i) => (
           <div key={i} className="grid grid-cols-[auto_1fr_1fr] items-center gap-2">
