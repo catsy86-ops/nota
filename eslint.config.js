@@ -49,6 +49,8 @@ export default tseslint.config(
       "src/lib/yTextEdit.test.ts",
       // Test limitów scalania: dwa dokumenty Yjs i Y.applyUpdate.
       "src/lib/study/mergeLimits.test.ts",
+      // Z-11: Praca na dwóch dokumentach Yjs bez łączności.
+      "src/lib/study/concurrency.test.ts",
       "src/lib/yjsSync.ts",
       "src/lib/yjsSync.test.ts",
       "src/lib/deviceRegistry.test.ts",
@@ -113,6 +115,8 @@ export default tseslint.config(
       "src/lib/clients/clients.test.ts",
       "src/lib/debts/yDebts.test.ts",
       "src/lib/debts/yDebts.edit.test.ts",
+      // L1.2: własności Długów na dokumencie Yjs.
+      "src/lib/debts/properties.prop.test.ts",
       "src/lib/debts/yDebts.extra.test.ts",
       "src/lib/debts/plans.test.ts",
       "src/lib/docReplace.test.ts",
