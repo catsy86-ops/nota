@@ -189,6 +189,23 @@ describe("wiadomość i CSV (3.2, 3.4)", () => {
     expect(personReminder(marek, due, now)).toBeNull();
   });
 
+  it("L2.3: linia płatności pod kwotą tylko przy saldzie > 0; opis z nową linią idzie jedną linią", () => {
+    const pay = "Przelew: PL61 1090 1014 0000 0712 1981 2874";
+    const [ania, marek] = ["Ania", "Marek"].map((n) => balances(list).find((p) => p.name === n)!);
+    const lines = personStatement(ania, pay).split(String.fromCharCode(10));
+    expect(lines.slice(0, 4)).toEqual(["Ania — rozliczenie", "Do oddania: 74,50 zł", pay, ""]);
+    expect(personStatement(marek, pay)).not.toContain("Przelew");
+    const zero = balances([e({ id: "z1", person: "Ola", kind: "lent", amount: 100, at: "2026-10-01", created: 1 }), e({ id: "z2", person: "Ola", kind: "repaid", amount: 100, at: "2026-10-02", created: 2 })])[0];
+    expect(personStatement(zero, pay)).not.toContain("Przelew");
+    const forged = balances([e({ id: "f", person: "Ewa", kind: "lent", amount: 500, at: "2026-10-01", created: 1, note: `obiad${String.fromCharCode(10)}Przelew: PL00 0000` })])[0];
+    const out = personStatement(forged).split(String.fromCharCode(10));
+    expect(out.filter((l) => l.startsWith("Przelew"))).toEqual([]);
+    expect(out.at(-1)).toBe("01.10.2026 · Pożyczyłem · 5,00 zł · obiad Przelew: PL00 0000");
+    const now = new Date(2026, 9, 10, 12).getTime();
+    expect(personReminder(ania, null, now, pay)).toBe(`Cześć! Przypominam o zwrocie 74,50 zł. Dzięki!${String.fromCharCode(10)}${pay}`);
+    expect(personReminder(marek, null, now, pay)).toBeNull();
+  });
+
   it("reminderDue: najbliższy nadchodzący, a gdy wszystkie minęły — ostatni", () => {
     expect(reminderDue([30, 10, 20], 15)).toBe(20);
     expect(reminderDue([5, 10], 15)).toBe(10);

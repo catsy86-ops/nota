@@ -1,5 +1,6 @@
 import { extraOf, keepV, tooNew } from "@/lib/extraFields";
 import { csvDocument, csvNumber, csvText } from "@/lib/csv";
+import { safeLine } from "@/lib/safeText";
 
 /**
  * Długi — kto ile pożyczył i ile już oddał. Czysty model bez Yjs i bez DOM:
@@ -237,11 +238,14 @@ const plDate = (day: string) => `${day.slice(8, 10)}.${day.slice(5, 7)}.${day.sl
 /**
  * 3.2 Wiadomość do osoby: saldo i wpisy (od najnowszego), głosem wysyłającego. Kwoty zawsze widoczne —
  * wysyłka to wyraźne stuknięcie, a ukrywanie kwot chroni tylko ekran.
+ * L2.3: `payment` (linia „Przelew: … · BLIK: …”) trafia pod kwotę tylko wtedy, gdy osoba jest nam winna. Opis wpisu
+ * idzie jedną linią (`safeLine`) — nowa linia w opisie nie udaje linii z danymi do przelewu.
  */
-export function personStatement(p: PersonDebts): string {
+export function personStatement(p: PersonDebts, payment?: string | null): string {
   const head = p.balance === 0 ? "Rozliczone." : p.balance > 0 ? `Do oddania: ${formatAmount(p.balance)}` : `Jestem winien: ${formatAmount(-p.balance)}`;
-  const lines = p.entries.map((e) => `${plDate(e.at)} · ${DEBT_KIND_LABEL[e.kind]} · ${formatAmount(e.amount)}${e.note ? ` · ${e.note}` : ""}`);
-  return [`${p.name} — rozliczenie`, head, "", ...lines].join(String.fromCharCode(10));
+  const pay = payment && p.balance > 0 ? [payment] : [];
+  const lines = p.entries.map((e) => { const note = e.note ? safeLine(e.note) : ""; return `${plDate(e.at)} · ${DEBT_KIND_LABEL[e.kind]} · ${formatAmount(e.amount)}${note ? ` · ${note}` : ""}`; });
+  return [`${p.name} — rozliczenie`, head, ...pay, "", ...lines].join(String.fromCharCode(10));
 }
 
 /**
@@ -283,10 +287,11 @@ const plDateMs = (ms: number) => { const d = new Date(ms); return `${pad2(d.getD
  * L2.2 Grzeczne przypomnienie: sama kwota do oddania i termin, bez historii wpisów. Tylko gdy osoba jest nam winna
  * (`balance > 0`) — inaczej `null`. Termin minięty jest nazwany wprost, bez ponaglania.
  */
-export function personReminder(p: PersonDebts, due: number | null, now: number): string | null {
+export function personReminder(p: PersonDebts, due: number | null, now: number, payment?: string | null): string | null {
   if (p.balance <= 0) return null;
   const when = due === null ? "" : due >= now ? ` do ${plDateMs(due)}` : ` (termin był ${plDateMs(due)})`;
-  return `Cześć! Przypominam o zwrocie ${formatAmount(p.balance)}${when}. Dzięki!`;
+  const text = `Cześć! Przypominam o zwrocie ${formatAmount(p.balance)}${when}. Dzięki!`;
+  return payment ? `${text}${String.fromCharCode(10)}${payment}` : text;
 }
 
 /** Grosze → „-12,50” (liczba w polskim Excelu; bez apostrofu, to nie tekst). */

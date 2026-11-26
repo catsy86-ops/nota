@@ -115,6 +115,18 @@ describe("pełny backup v2", () => {
     expect(localStorage.getItem("kaczy.study.bankAccount.v1")).toBeNull();
   });
 
+  it("L2.3: dane do przelewu Długów poza kopią; obcy klucz w ustawieniach kopii nie trafia do localStorage", async () => {
+    localStorage.setItem("kaczy.debts.payment.v1", JSON.stringify({ account: "PL61109010140000071219812874", blik: "600123456" }));
+    const text = JSON.stringify(await buildFullBackup());
+    expect(text).not.toContain("PL61109010140000071219812874");
+    expect(text).not.toContain("600123456");
+    const backup = await parseFullBackup(text);
+    (backup as unknown as { settings: Record<string, string> }).settings["kaczy.debts.payment.v1"] = JSON.stringify({ account: "PL27114020040000300201355387" });
+    localStorage.clear();
+    await restoreFullBackup(backup, ALL);
+    expect(localStorage.getItem("kaczy.debts.payment.v1")).toBeNull();
+  });
+
   it("ustawienie ponad limit albo nie-tekst jest pomijane przy przywracaniu (S15)", async () => {
     const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
     localStorage.setItem("kaczy.viewPrefs.v1", "stare");

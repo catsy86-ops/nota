@@ -10,7 +10,7 @@
 - **Fala 1 zrobiona:** U1.2 + U1.3 (`24275fca`), Z-8.1 + Z-8.2 (`9fcaf10b`), Z-18.6 (`042f7529`), Z-18.5 (`6a3e9efb`), Z-18.2 + **naprawa sekcji Waga w kopii** (`6878a696`), Z-1.T (`e337fc49`).
 - **Okazało się już zrobione:** U5.2 (sekcje przez `SectionCard`), P4.1 (jedyne wersaliki to dozwolona linijka `ViewTitle`), D0.3 (`docs/dane-spisy.md`), Z-18.5 część „podsumowanie” (z Z-18.4), Q1.4 z Fali 5 (kopie dzienne w OPFS, 2026-11-17).
 - **Przeniesione:** P4.4 → decyzje (ukryte działy w „Więcej” przeczą PW-3; brak tokenów odcieni działów); Q3.9 → telefon (dane `usage.ts` są tylko na telefonie).
-- **Zostało z Fali 1:** L2.3 (numer konta/BLIK w Długach) — przed kodem `security-reviewer`.
+- **Fala 1 zamknięta** (L2.3 26.11, po przeglądzie `security-reviewer`: dane do przelewu poza kopią).
 - **Push:** gałąź `wip/mobile-fala1` niewypchnięta (origin = `1b80d090`); push i scalenie do `master` po decyzji właściciela.
 
 ## Sprostowania po sprawdzeniu w kodzie (26.11)

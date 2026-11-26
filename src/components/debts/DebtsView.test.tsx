@@ -29,6 +29,7 @@ const { shareMock } = vi.hoisted(() => ({ shareMock: vi.fn(async () => "copied")
 vi.mock("@/lib/shareOrCopy", () => ({ shareOrCopy: shareMock }));
 
 import { DebtsView } from "./DebtsView";
+import { setDebtPayment } from "@/lib/debts/payment";
 
 afterEach(() => {
   cleanup();
@@ -36,6 +37,8 @@ afterEach(() => {
   updateMock.mockReset();
   addMock.mockReset();
   removeMock.mockReset();
+  shareMock.mockClear();
+  setDebtPayment({});
 });
 
 const debt = (id: string, person: string, kind: DebtEntry["kind"], amount: number, over: Partial<DebtEntry> = {}): DebtEntry =>
@@ -273,6 +276,31 @@ describe("DebtsView — L2.2 przypomnienie", () => {
     fireEvent.click(screen.getByRole("button", { name: "Przypomnij" }));
     expect(reminders.get).toHaveBeenCalledWith("n1");
     expect(shareMock).toHaveBeenCalledWith({ title: "Ania — przypomnienie", text: "Cześć! Przypominam o zwrocie 80,00 zł do 15.01.2099. Dzięki!" });
+  });
+
+  it("L2.3: dane do przelewu dopisane do „Wyślij” i „Przypomnij”; odznaczenie je zdejmuje", () => {
+    setDebtPayment({ account: "PL61109010140000071219812874", blik: "600123456" });
+    fixture.entries = [debt("1", "Ania", "lent", 10_000)];
+    render(<DebtsView />);
+    fireEvent.click(screen.getByRole("button", { name: /Ania/ }));
+    const line = "Przelew: PL61 1090 1014 0000 0712 1981 2874 · BLIK: 600 123 456";
+    fireEvent.click(screen.getByRole("button", { name: "Wyślij" }));
+    expect(shareMock).toHaveBeenLastCalledWith({ title: "Ania — rozliczenie", text: expect.stringContaining(line) });
+    fireEvent.click(screen.getByRole("button", { name: "Przypomnij" }));
+    expect(shareMock).toHaveBeenLastCalledWith({ title: "Ania — przypomnienie", text: expect.stringContaining(line) });
+    fireEvent.click(within(screen.getByTestId("debt-payment-toggle")).getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Wyślij" }));
+    expect(shareMock).toHaveBeenLastCalledWith({ title: "Ania — rozliczenie", text: expect.not.stringContaining("Przelew") });
+  });
+
+  it("L2.3: gdy to my jesteśmy winni, przełącznika i linii płatności nie ma", () => {
+    setDebtPayment({ blik: "600123456" });
+    fixture.entries = [debt("1", "Marek", "borrowed", 4_000)];
+    render(<DebtsView />);
+    fireEvent.click(screen.getByRole("button", { name: /Marek/ }));
+    expect(screen.queryByTestId("debt-payment-toggle")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Wyślij" }));
+    expect(shareMock).toHaveBeenLastCalledWith({ title: "Marek — rozliczenie", text: expect.not.stringContaining("BLIK") });
   });
 
   it("gdy to my jesteśmy winni, przycisku nie ma", () => {

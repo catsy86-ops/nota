@@ -21,7 +21,7 @@ beforeEach(async () => {
 
 describe("sekrety poza kopią i raportem (S1.5)", () => {
   it("rejestr oznacza jako wrażliwe: kod synchronizacji, token powiadomień, adres przekaźnika, pin i próby skarbca", () => {
-    for (const k of ["kaczy.sync.v1", "kaczy.push.token.v1", "kaczy.relay.v1", "kaczy.vault.pin.v1", "kaczy.vault.attempts.v1"]) {
+    for (const k of ["kaczy.sync.v1", "kaczy.push.token.v1", "kaczy.relay.v1", "kaczy.vault.pin.v1", "kaczy.vault.attempts.v1", "kaczy.debts.payment.v1", "kaczy.study.bankAccount.v1"]) {
       expect(isSensitiveKey(k), k).toBe(true);
     }
   });

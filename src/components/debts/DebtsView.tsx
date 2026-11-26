@@ -18,6 +18,7 @@ import { People } from "./People";
 import { PersonSheet } from "./PersonSheet";
 import { Summary } from "./Summary";
 import type { AddReminderNote, DebtReminderApi } from "./debtTypes";
+import { PaymentSettings } from "./PaymentSettings";
 
 export type { DebtReminderApi } from "./debtTypes";
 
@@ -100,6 +101,8 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: Ad
           </Button>
         </div>
       )}
+
+      <PaymentSettings />
 
       <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} reminders={reminders} addReminderNote={addReminderNote} people={entries} hidden={hidden} onNewEntry={newEntryFor} others={people} onRekey={setOpenKey} />
     </section>

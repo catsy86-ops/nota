@@ -1,6 +1,6 @@
 # Plan: Długi — ulepszenie, dopracowanie, rozwój (2026-11-15)
 
-> **Status:** realizacja w toku (2026-11-25): L1.1, L2.1, L2.2, L2.4, L4.1–L4.4 zrobione; zostają L1.2 (po Z-17.9) i L2.3 (nowe pole w kopii — `security-reviewer`). Poprzedni plan (`plan-dlugi-2026-10-25.md`) ma zrobione Etapy 1–4; z niego zostają tylko QA na telefonie (Etap 5) i punkt 3.5 (decyzja D-3).
+> **Status:** realizacja w toku (2026-11-25): L1.1, L2.1, L2.2, L2.4, L4.1–L4.4 zrobione; zostaje L1.2 (po Z-17.9). L2.3 zrobione 26.11 po przeglądzie `security-reviewer`: dane do przelewu **poza** kopią (klucz wrażliwy, jak konto Pracy). Poprzedni plan (`plan-dlugi-2026-10-25.md`) ma zrobione Etapy 1–4; z niego zostają tylko QA na telefonie (Etap 5) i punkt 3.5 (decyzja D-3).
 
 ## 1. Diagnoza
 
@@ -45,7 +45,7 @@ Czego nie ma (sprawdzone w `src/lib/debts/` i `DebtsView.tsx`):
 |---|---|---|
 | L2.1 ✅ `42f7502a` 2026-11-18 | **Raty.** Przy „Pożyczyłem” i „Pożyczyłem od” opcja „w ratach”: liczba rat i dzień miesiąca. Powstaje jedna notatka z przypomnieniem miesięcznym do daty końca (mechanizm serii już jest: `reminderRepeat`, `reminderRepeatUntil`). W arkuszu osoby: „rata 2 z 6 · 200 zł”, przycisk „Rata wpłacona” dopisuje spłatę. | M |
 | L2.2 ✅ 2026-11-25 | **Grzeczne przypomnienie.** W „Wyślij” drugi wzór wiadomości: krótkie przypomnienie z kwotą i terminem, zamiast pełnej historii. | S |
-| L2.3 | **Dane do przelewu.** Opcjonalny numer konta i telefon do BLIK-a z ustawień (dla Pracy są już w `companyPrefs.ts`; tu osobne, prywatne pole) dopisywane do wiadomości. | S |
+| L2.3 ✅ 2026-11-26 | **Dane do przelewu.** Opcjonalny numer konta i telefon do BLIK-a z ustawień (dla Pracy są już w `companyPrefs.ts`; tu osobne, prywatne pole) dopisywane do wiadomości. | S |
 | L2.4 ✅ `2a2cf5d0` 2026-11-18 | **Zaległe na Dziś.** Termin zwrotu po dacie pokazuje się na Dziś jako „Ania: 300 zł, 5 dni po terminie” z akcjami „Oddane” i „Przypomnij”. Sprawdzić, co już daje notatka z etykietą `długi`, i nie dublować. | S |
 
 ## Etap 3: wspólne wydatki

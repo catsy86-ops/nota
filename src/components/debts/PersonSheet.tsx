@@ -14,6 +14,9 @@ import { cn } from "@/lib/utils";
 import { addDebt, removeDebt, renamePeople, restoreDebt, restoreDebts, useDebtProofs } from "@/lib/debts/store";
 import { DebtProofThumb } from "./DebtProof";
 import { shareOrCopy } from "@/lib/shareOrCopy";
+import { paymentLine } from "@/lib/paymentDetails";
+import { useDebtPayment } from "@/lib/debts/payment";
+import { Checkbox } from "@/components/ui/checkbox";
 import { amountText } from "@/lib/debts/hideAmounts";
 import { doubleSettle, openEntries, personKey, personReminder, personStatement, reminderDue, runningBalances, DEBT_KIND_LABEL, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, type DebtEntry, type PersonDebts } from "@/lib/debts/model";
 import { cardVariant } from "@/components/ui/card";
@@ -223,9 +226,13 @@ function PersonTools({ person, others, onRekey, reminders }: { person: PersonDeb
   const [mergeKey, setMergeKey] = useState<string | null>(null);
   const merge = others.find((p) => p.key === mergeKey) ?? null;
   const candidates = others.filter((p) => p.key !== person.key);
+  // L2.3: dane do przelewu z ustawień Długów — tylko gdy ta osoba jest nam winna; przełącznik żyje do zamknięcia arkusza.
+  const payment = paymentLine(useDebtPayment());
+  const [withPayment, setWithPayment] = useState(true);
+  const pay = person.balance > 0 && withPayment ? payment : null;
 
   const send = async () => {
-    const outcome = await shareOrCopy({ title: `${person.name} — rozliczenie`, text: personStatement(person) });
+    const outcome = await shareOrCopy({ title: `${person.name} — rozliczenie`, text: personStatement(person, pay) });
     if (outcome === "copied") toast.success("Skopiowano rozliczenie — wklej je w wiadomości");
     else if (outcome === "failed") toast.error("Nie udało się wysłać ani skopiować");
   };
@@ -246,7 +253,7 @@ function PersonTools({ person, others, onRekey, reminders }: { person: PersonDeb
     const now = Date.now();
     // Tylko wpisy od ostatniego rozliczenia — termin spłaconej pożyczki nie dotyczy obecnego salda.
     const dues = openEntries(person).flatMap((e) => (e.kind === "lent" && e.dueNoteId ? [reminders?.get(e.dueNoteId) ?? null] : [])).filter((d): d is number => d !== null);
-    const text = personReminder(person, reminderDue(dues, now), now);
+    const text = personReminder(person, reminderDue(dues, now), now, pay);
     if (!text) return;
     const outcome = await shareOrCopy({ title: `${person.name} — przypomnienie`, text });
     if (outcome === "copied") toast.success("Skopiowano przypomnienie — wklej je w wiadomości");
@@ -276,6 +283,12 @@ function PersonTools({ person, others, onRekey, reminders }: { person: PersonDeb
 
   return (
     <div className="mt-3 space-y-2">
+      {payment && person.balance > 0 && (
+        <label className="flex w-full items-center gap-2 text-xs text-muted-foreground" data-testid="debt-payment-toggle">
+          <Checkbox checked={withPayment} onCheckedChange={(v) => setWithPayment(v === true)} />
+          <span>Dołącz dane do przelewu <span className="font-mono">({payment})</span></span>
+        </label>
+      )}
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" className="tap-target gap-1.5" onClick={() => void send()}>
           <Send className="size-4" aria-hidden />Wyślij
