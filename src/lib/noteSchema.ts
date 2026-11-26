@@ -108,6 +108,10 @@ export interface FullBackup {
   version: 1 | 2 | 3;
   /** D5.1: wersja formatu dokumentu (`SCHEMA_VERSION`) w chwili zapisu; brak w kopiach sprzed 2026-11-23. */
   schema?: number;
+  /** Z-18.2: wersja aplikacji, która zrobiła kopię (`__APP_BUILD__`) — do komunikatu przy nieznanych sekcjach. */
+  appVersion?: string;
+  /** Z-18.2: sekcje zapisane w kopii; starsza aplikacja nazywa te, których nie zna, zamiast gubić je po cichu. */
+  sections?: string[];
   exportedAt: number;
   notes: Note[];
   labels: string[];
@@ -193,6 +197,8 @@ function tolerantArray<T extends z.ZodMiniType>(item: T) {
 export const fullBackupSchema = z.object({
   version: z.catch(z.union([z.literal(1), z.literal(2), z.literal(3)]), 1),
   schema: z.catch(z.optional(z.number()), undefined),
+  appVersion: z.catch(z.optional(z.string().check(z.maxLength(64))), undefined),
+  sections: z.catch(z.optional(z.array(z.string().check(z.maxLength(40))).check(z.maxLength(100))), undefined),
   exportedAt: z.catch(z.number(), () => Date.now()),
   // Element po elemencie: jeden uszkodzony wpis odpada, reszta zostaje. Wcześniej `z.catch` na całej tablicy zerował ją
   // przy pierwszym złym elemencie, a „Przywróć” kasowało wszystkie notatki użytkownika.
@@ -207,6 +213,7 @@ export const fullBackupSchema = z.object({
   study: z.catch(z.optional(z.string()), undefined),
   supplements: z.catch(z.optional(z.string()), undefined),
   diet: z.catch(z.optional(z.string()), undefined),
+  weight: z.catch(z.optional(z.string()), undefined),
   training: z.catch(z.optional(z.string()), undefined),
   debts: z.catch(z.optional(z.string()), undefined),
   debtPlans: z.catch(z.optional(z.string()), undefined),
@@ -229,3 +236,6 @@ export const fullBackupSchema = z.object({
   propDefs: z.optional(z.pipe(z.unknown(), z.transform((v) => cleanPropDefs(v)))),
   vault: z.optional(z.unknown()),
 }) satisfies z.ZodMiniType<FullBackup, unknown>;
+
+/** Klucze najwyższego poziomu, które ta wersja zna (Z-18.2): reszta to sekcje z nowszej aplikacji. */
+export const FULL_BACKUP_KEYS: readonly string[] = Object.keys(fullBackupSchema.def.shape);

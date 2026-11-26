@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { buildFullBackup } from "@/lib/backup/build";
+import { FULL_BACKUP_KEYS } from "@/lib/noteSchema";
 import { yjsStore } from "@/lib/yjsStore";
 import { versionsStore } from "@/lib/versionsStore";
 import { clearAllStorage } from "@/lib/notesStore";
@@ -38,5 +39,11 @@ describe("migawka pełnej kopii (A3.1)", () => {
     // Identyfikatory losowe (np. odżywek) zastąpione stałym znakiem — porównujemy kształt i treść.
     const text = JSON.stringify(backup, null, 2).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, "<uuid>");
     await expect(text).toMatchFileSnapshot("./__snapshots__/fullBackup.json");
+  });
+
+  it("każda sekcja eksportu jest w schemacie wczytywania — inaczej przywracanie gubi ją po cichu (Z-18.2, `weight`)", async () => {
+    const backup = await buildFullBackup();
+    expect(Object.keys(backup).filter((k) => !FULL_BACKUP_KEYS.includes(k))).toEqual([]);
+    expect(backup.sections).toEqual(Object.keys(backup).filter((k) => k !== "sections"));
   });
 });

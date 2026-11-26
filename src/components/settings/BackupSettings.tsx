@@ -8,7 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
 import { buildFullBackup, describeSkippedAttachments, type BackupAttachmentReport } from "@/lib/backup/build";
-import { BACKUP_OVERSIZE_NOTE } from "@/lib/backup/parse";
+import { BACKUP_OVERSIZE_NOTE, backupIssues, describeBackupIssues } from "@/lib/backup/parse";
 import { restoreFullBackup, RestoreCheckError, restoreScope, type RestoreOptions } from "@/lib/backup/merge";
 import { download, exportFullBackup, pickFullBackup, shareFullBackup } from "@/lib/backup/download";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
@@ -403,6 +403,9 @@ function RestoreBackup() {
             {backup && describeBackupSkipped(backup.skipped) && (
               <p className="text-sm text-warning-ink" data-testid="restore-skipped">{describeBackupSkipped(backup.skipped)}</p>
             )}
+            {backup && describeBackupIssues(backupIssues(backup)).map((line) => (
+              <p key={line} className="text-sm text-warning-ink" data-testid="restore-issues">{line}</p>
+            ))}
             {sections.map((sec) => (
               <label key={sec.key} className="flex items-center gap-2 text-sm text-foreground">
                 <Checkbox

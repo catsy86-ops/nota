@@ -10,6 +10,8 @@ import { STUDY_STORAGE_KEY } from "@/lib/study/keys";
 import { extraSchedulesDump, mainShiftData, shiftsReady } from "@/lib/shifts/store";
 import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
 import { getViewPrefs } from "@/lib/viewPrefs";
+
+declare const __APP_BUILD__: string | undefined;
 import { DANE, backupKeyNames } from "@/lib/storage/keys";
 
 /**
@@ -169,6 +171,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     version: 3,
     // D5.1: wersja formatu dokumentu obok wersji koperty — kopia z nowszego formatu nie wczyta się w starszej aplikacji.
     schema: SCHEMA_VERSION,
+    // Z-18.2: kto zrobił kopię; listę `sections` dopisujemy niżej, gdy kopia jest już złożona.
+    ...(typeof __APP_BUILD__ === "string" ? { appVersion: __APP_BUILD__.slice(0, 64) } : {}),
     exportedAt: Date.now(),
     // Notatki prywatne są w projekcji puste i niosą tylko szyfrogram (`vault`).
     notes: await withEmbeddedImages(yjsStore.projectNotes()),
@@ -222,6 +226,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     // Same liczby (bez treści) — okno przywracania mówi, czego w pliku nie ma; zera = nic nie pominięto.
     skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings, plans: report.plans + (report.plansExcluded ?? 0) },
   };
+  // Z-18.2: spis sekcji w samej kopii — starsza wersja aplikacji wymieni te, których nie zna (bez zmiany koperty 3).
+  backup.sections = Object.keys(backup).filter((k) => k !== "sections");
   return { backup, attachments: report };
 }
 

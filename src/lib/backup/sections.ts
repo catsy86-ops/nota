@@ -33,3 +33,6 @@ export const MERGE_SECTIONS: readonly { key: MergeKey; label: string; load: () =
 
 export const SHIFTS_SECTION = "Grafik";
 export const STUDY_SECTION = "Nauka i Praca";
+/** Nazwy w raporcie przywracania (`failed`), gdy zapis do `localStorage` się nie uda albo wartość przekracza limit (P7). */
+export const SETTINGS_SECTION = "Ustawienia";
+export const ACHIEVEMENTS_SECTION = "Odznaki i passa";

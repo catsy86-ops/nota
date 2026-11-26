@@ -123,6 +123,28 @@ describe("pełny backup v2", () => {
     expect(localStorage.getItem("kaczy.viewPrefs.v1")).toBe("stare");
   });
 
+  it("odznaki ponad limit nie wchodzą, a raport to mówi (P7 audytu 2)", async () => {
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    localStorage.setItem(ACHIEVEMENTS_KEY, "stare");
+    const evil = { ...backup, achievements: "x".repeat(SETTING_VALUE_MAX + 1) };
+    const { failed } = await restoreFullBackup(evil, ALL);
+    expect(failed).toContain("Odznaki i passa");
+    expect(localStorage.getItem(ACHIEVEMENTS_KEY)).toBe("stare");
+  });
+
+  it("nieudany zapis ustawień do localStorage trafia do raportu raz, nie tylko do dziennika (P7)", async () => {
+    localStorage.setItem("kaczy.viewPrefs.v1", "{}");
+    localStorage.setItem("kaczy:review.day", "5");
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new DOMException("pełno", "QuotaExceededError"); });
+    try {
+      const { failed } = await restoreFullBackup(backup, ALL);
+      expect(failed.filter((s) => s === "Ustawienia")).toHaveLength(1);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it("carries versions, settings and achievements — but never the pairing code", async () => {
     yjsStore.upsertNote(makeNote());
     versionsStore.add("n1", "stara wersja", "…");

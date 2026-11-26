@@ -12,7 +12,7 @@ import { PRACA } from "@/lib/storage/keys";
 import { withExclusiveLock, MIGRATION_LOCK } from "@/lib/tabLock";
 import { clearRestoreMarker, setRestoreMarker } from "@/lib/restoreMarker";
 import { yieldToMain } from "@/lib/yieldToMain";
-import { MERGE_SECTIONS, SHIFTS_SECTION, STUDY_SECTION, type Merge, type MergeKey } from "./sections";
+import { ACHIEVEMENTS_SECTION, MERGE_SECTIONS, SETTINGS_SECTION, SHIFTS_SECTION, STUDY_SECTION, type Merge, type MergeKey } from "./sections";
 import { ACHIEVEMENTS_KEY, SETTINGS_KEYS, SETTING_VALUE_MAX, withStoredImages } from "./build";
 
 const PUSH_RESTORE_KEY = PUSH_PREFS_KEY;
@@ -171,7 +171,11 @@ async function restoreFullBackupLocked(backup: FullBackup, opts: RestoreOptions,
       writes[k] = k === PUSH_RESTORE_KEY ? pushPrefsForRestore(value) : value;
     }
   }
-  if (opts.achievements && backup.achievements !== undefined) writes[ACHIEVEMENTS_KEY] = backup.achievements;
+  // P7 audytu 2: odznaki pod tym samym limitem co ustawienia; za długie nie wchodzą, ale raport to mówi.
+  if (opts.achievements && backup.achievements !== undefined) {
+    if (backup.achievements.length <= SETTING_VALUE_MAX) writes[ACHIEVEMENTS_KEY] = backup.achievements;
+    else fail(ACHIEVEMENTS_SECTION, new RangeError("achievements too long"));
+  }
 
   if (broken.length) throw new RestoreCheckError(broken);
 
@@ -208,8 +212,13 @@ async function restoreFullBackupLocked(backup: FullBackup, opts: RestoreOptions,
     versionsStore.replaceAll(backup.versions);
     await versionsStore.flush();
   }
+  // P7: nieudany zapis (brak miejsca, tryb prywatny) to część kopii, która nie wróciła — do raportu, raz na sekcję.
   for (const [k, v] of Object.entries(writes)) {
-    try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }
+    try { localStorage.setItem(k, v); } catch (err) {
+      const section = k === ACHIEVEMENTS_KEY ? ACHIEVEMENTS_SECTION : SETTINGS_SECTION;
+      if (failed.includes(section)) logDiag("warn", "backup", `cannot restore ${k}`, errName(err));
+      else fail(section, err);
+    }
   }
   // Kopia sprzed 4.1 niesie cenniki wśród ustawień (stare klucze): wchodzą do dokumentu i znikają z localStorage.
   if (opts.settings && backup.settings && (PRACA.pricing in backup.settings || PRACA.prices in backup.settings)) {
