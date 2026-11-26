@@ -48,12 +48,17 @@ async function addItem(card: ReturnType<Page["getByTestId"]>, kind: "Robocizna" 
 // R3.1 (PR-2): „Należności” na Dziś — zlecenie „zrobione” bez wpłaty, kwota, wiersz otwiera kartę budowy.
 test("Należności na Dziś: zrobione zlecenie czeka na zapłatę, wiersz otwiera kartę budowy, „Zapłacone” je zdejmuje @mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  // Zegar stoi (`setFixedTime`), więc przenikanie działu zamiera w połowie, a axe liczył kontrast półprzezroczystego
+  // tekstu (`color-contrast` raz tak, raz nie). Bez ruchu sekcja na Dziś jest od razu w pełni widoczna.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const card = await newJob(page);
   const job = card.getByTestId("site-job");
   await addItem(card, "Robocizna", "Wymiana baterii", "150");
   await job.getByRole("group", { name: "Status zlecenia" }).getByRole("button", { name: "Zrobione" }).click();
   await page.keyboard.press("Escape");
   await expect(card).toBeHidden();
+  // Zamknięcie karty cofa adres `?budowa=` — `goto` w tej samej chwili przerywał nawigację (ERR_ABORTED).
+  await expect(page).not.toHaveURL(/budowa=/);
 
   await page.goto("/dzis");
   const section = page.getByTestId("today-receivables");
@@ -70,6 +75,8 @@ test("Należności na Dziś: zrobione zlecenie czeka na zapłatę, wiersz otwier
   await expect(opened).toBeVisible();
   await opened.getByTestId("site-job").getByRole("group", { name: "Status zlecenia" }).getByRole("button", { name: "Zapłacone" }).click();
   await page.keyboard.press("Escape");
+  await expect(opened).toBeHidden();
+  await expect(page).not.toHaveURL(/budowa=/);
   await page.goto("/dzis");
   await expect(page.getByRole("heading", { name: "Dziś" }).first()).toBeVisible();
   await expect(page.getByTestId("today-receivables")).toHaveCount(0);

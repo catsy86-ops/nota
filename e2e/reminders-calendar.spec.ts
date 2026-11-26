@@ -8,8 +8,9 @@ test.beforeEach(async ({ page }) => {
 test("kalendarz otwiera się z paska bocznego i pozwala przechodzić po miesiącach", async ({ page }) => {
   await page.getByRole("button", { name: /Kalendarz/ }).first().click();
 
-  const heading = page.getByRole("heading", { level: 2 });
-  // Najpierw nagłówek miesiąca kalendarza (z rokiem) — wcześniej mógł się trafić nagłówek pustych Notatek.
+  // Nagłówek miesiąca (z rokiem): w trakcie przenikania działów na stronie jest jeszcze nagłówek pustych Notatek,
+  // więc sam poziom `h2` trafiał w dwa elementy.
+  const heading = page.getByRole("heading", { level: 2, name: / 20[0-9][0-9]$/ });
   await expect(heading).toHaveText(/ 20[0-9][0-9]$/);
   const startMonth = (await heading.textContent())?.trim();
 
