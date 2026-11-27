@@ -68,6 +68,9 @@ export function useCardGestures({
     longPressStart.current = null;
   }
   function handleLongPressStart(e: React.PointerEvent) {
+    // Po przytrzymaniu z arkuszem „⋯” przeglądarka nie wysyła `click`, który zdjąłby znacznik —
+    // bez tego następne stuknięcie w kafel było połykane i notatka się nie otwierała.
+    longPressed.current = false;
     if (e.pointerType === "mouse" || isEditing || !(onToggleSelect || onLongPress)) return;
     const target = e.target as Element;
     // Zdarzenia z portali (arkusz akcji) płyną drzewem Reacta — tylko dotyk w samym kaflu.

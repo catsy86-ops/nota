@@ -68,6 +68,25 @@ test("przytrzymanie kafla otwiera menu „⋯”; „Zaznacz” w nim zaczyna za
   await expect(page.getByRole("dialog", { name: /Edycja notatki/ })).toHaveCount(0);
 });
 
+test("po przytrzymaniu i zamknięciu menu „⋯” zwykłe stuknięcie otwiera notatkę @mobile", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "dotyk przez CDP jest tylko w Chromium");
+  await page.getByRole("button", { name: "Nowa notatka" }).click();
+  await page.getByPlaceholder("Tytuł").fill("Po menu");
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  const body = page.locator("[data-note-idx]").filter({ hasText: "Po menu" }).getByRole("heading", { name: "Po menu" });
+  const box = (await body.boundingBox())!;
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  await page.waitForTimeout(650); // czas: długie przytrzymanie otwiera menu „⋯”
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await body.tap();
+  await expect(page.getByPlaceholder("Tytuł")).toBeVisible();
+});
+
 test("Przypomnienia mają własną zakładkę w dolnym pasku, Archiwum jest w „Więcej” @mobile", async ({ page }) => {
   const nav = page.getByRole("navigation");
   await nav.getByRole("button", { name: "Terminy" }).click();
