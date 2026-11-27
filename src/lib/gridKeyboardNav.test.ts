@@ -6,6 +6,7 @@ import {
   handleGridNavKey,
   handleGridNavPointerDown,
   hasGridNavFocus,
+  isGridNavTabStop,
   __resetGridNavForTests,
   type GridNavHandlers,
 } from "./gridKeyboardNav";
@@ -209,3 +210,48 @@ describe("gridKeyboardNav", () => {
     expect(hasGridNavFocus()).toBe(false);
   });
 });
+
+describe("Q5.1: jeden punkt Tab w siatce (roving tabindex)", () => {
+  beforeEach(() => __resetGridNavForTests());
+  afterEach(() => { __resetGridNavForTests(); document.body.innerHTML = ""; });
+
+  it("bez fokusu siatki punktem Tab jest pierwszy kafel wszystkich sekcji; z fokusem — kafel z fokusem", () => {
+    registerGridNavSection(1, ["c", "d"], handlers());
+    registerGridNavSection(0, ["a", "b"], handlers());
+    expect(["a", "b", "c", "d"].map(isGridNavTabStop)).toEqual([true, false, false, false]);
+    setGridNavFocus("c");
+    expect(["a", "b", "c", "d"].map(isGridNavTabStop)).toEqual([false, false, true, false]);
+    // Kafel spoza siatki (Tablica, tabela) zostaje zwykłym punktem Tab.
+    expect(isGridNavTabStop("obcy")).toBe(true);
+  });
+
+  it("strzałka przenosi fokus przeglądarki na nowy kafel, gdy fokus był w siatce", () => {
+    document.body.innerHTML = ["a", "b"].map((id) => `<div data-note-id-wrap="${id}"><div data-grid-tab tabindex="0" id="t-${id}"></div></div>`).join("");
+    registerGridNavSection(0, ["a", "b"], handlers());
+    setGridNavFocus("a");
+    (document.getElementById("t-a") as HTMLElement).focus();
+    key("ArrowRight");
+    expect(document.activeElement?.id).toBe("t-b");
+  });
+
+  it("fokus poza siatką zostaje na miejscu (strzałki z pola szukania nie wciągają do kafli)", () => {
+    document.body.innerHTML = '<button id="poza"></button><div data-note-id-wrap="a"><div data-grid-tab tabindex="0"></div></div><div data-note-id-wrap="b"><div data-grid-tab tabindex="0"></div></div>';
+    registerGridNavSection(0, ["a", "b"], handlers());
+    (document.getElementById("poza") as HTMLElement).focus();
+    key("ArrowRight");
+    expect(document.activeElement?.id).toBe("poza");
+  });
+
+  it("tablica: ←/→ przechodzą między kolumnami na tej samej pozycji, pusta kolumna jest pomijana", () => {
+    const col = () => ({ ...probe, colsCount: () => 1, columns: true });
+    registerGridNavSection(0, ["a1", "a2", "a3"], col());
+    registerGridNavSection(1, [], col());
+    registerGridNavSection(2, ["c1", "c2"], col());
+    setGridNavFocus("a3");
+    expect(focusedIdAfter("ArrowRight")).toBe("c2");
+    expect(focusedIdAfter("ArrowRight")).toBe("c2");
+    expect(focusedIdAfter("ArrowUp")).toBe("c1");
+    expect(focusedIdAfter("ArrowLeft")).toBe("a1");
+  });
+});
+

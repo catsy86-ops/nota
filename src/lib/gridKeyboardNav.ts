@@ -32,6 +32,8 @@ export interface GridNavHandlers {
   scrollToNote: (id: string) => void;
   /** Liczba kolumn w tej sekcji — decyduje o skoku dla ↑/↓. */
   colsCount: () => number;
+  /** Q5.1: sekcja to kolumna tablicy — ←/→ przechodzą do sąsiedniej kolumny (ta sama pozycja), nie do sąsiedniego kafla. */
+  columns?: boolean;
 }
 
 interface Section {
@@ -47,6 +49,8 @@ interface NavState {
 }
 
 const sections = new Set<Section>();
+/** Lista notatek wszystkich sekcji, liczona raz na zmianę sekcji — czyta ją każdy kafel (`useIsGridNavTabStop`). */
+let flatCache: string[] | null = null;
 let state: NavState = { focusedId: null, previewId: null };
 const listeners = new Set<() => void>();
 let previewScrollEl: HTMLElement | null = null;
@@ -70,7 +74,8 @@ function orderedSections(): Section[] {
 
 /** Wszystkie notatki wszystkich sekcji jako jedna lista w kolejności widoku. */
 function flatIds(): string[] {
-  return orderedSections().flatMap((s) => s.noteIds);
+  flatCache ??= orderedSections().flatMap((s) => s.noteIds);
+  return flatCache;
 }
 
 function sectionOf(id: string): Section | undefined {
@@ -80,9 +85,13 @@ function sectionOf(id: string): Section | undefined {
 export function registerGridNavSection(order: number, noteIds: string[], handlers: GridNavHandlers): () => void {
   const section: Section = { order, seq: seqCounter++, noteIds, handlers };
   sections.add(section);
+  flatCache = null;
   attachKeyListener();
+  // Q5.1: pierwszy kafel listy jest punktem `Tab` — po zmianie sekcji kafle pytają o to od nowa.
+  queueMicrotask(emit);
   return () => {
     sections.delete(section);
+    flatCache = null;
     // Zmiana listy kafli to odrejestrowanie i ponowna rejestracja w jednym commicie Reacta. Sprawdzamy dopiero
     // po mikrozadaniu, żeby nie zdjąć podglądu notatki, która zaraz wraca w tej samej sekcji. Fokus na notatce,
     // której już nie ma, zostawiłby martwy pierścień.
@@ -149,6 +158,33 @@ export function useGridNavPreviewId(): string | null {
 export function useIsGridNavFocused(id: string): boolean {
   const get = () => state.focusedId === id;
   return useSyncExternalStore(subscribe, get, get);
+}
+
+/**
+ * Q5.1 (roving tabindex): w siatce jeden kafel jest punktem `Tab` — ten z fokusem siatki, a bez niego pierwszy.
+ * Resztę osiąga się strzałkami. Kafel spoza siatki (np. Tablica, tabela) zostaje zwykłym punktem `Tab`.
+ */
+export function isGridNavTabStop(id: string): boolean {
+  const ids = flatIds();
+  if (!ids.includes(id)) return true;
+  const f = state.focusedId;
+  return f !== null && ids.includes(f) ? f === id : ids[0] === id;
+}
+
+export function useIsGridNavTabStop(id: string): boolean {
+  const get = () => isGridNavTabStop(id);
+  return useSyncExternalStore(subscribe, get, get);
+}
+
+/** Atrybut elementu kafla, który przyjmuje fokus klawiatury (treść kafla w `NoteCard`). */
+export const GRID_TAB_ATTR = "data-grid-tab";
+
+/** Q5.1: strzałka przenosi też fokus przeglądarki, gdy jest on w siatce — inaczej `Tab` wracałby do starego kafla. */
+function moveDomFocus(id: string) {
+  const active = typeof document !== "undefined" ? document.activeElement : null;
+  if (!(active instanceof Element) || !active.closest("[data-note-id-wrap]")) return;
+  const wrap = document.querySelector(`[data-note-id-wrap="${CSS.escape(id)}"]`);
+  wrap?.querySelector<HTMLElement>(`[${GRID_TAB_ATTR}]`)?.focus({ preventScroll: true });
 }
 
 // --- obsługa klawiatury ---
@@ -224,6 +260,15 @@ export function handleGridNavKey(e: KeyboardEvent) {
   const cols = () => section?.handlers.colsCount() ?? 1;
 
   let next = curIdx;
+  if ((e.key === "ArrowRight" || e.key === "ArrowLeft") && section?.handlers.columns) {
+    const target = neighbourColumnId(section, hasFocus ? (focusedId as string) : ids[0], e.key === "ArrowRight" ? 1 : -1);
+    e.preventDefault();
+    if (!target) return;
+    setGridNavFocus(target);
+    moveDomFocus(target);
+    sectionOf(target)?.handlers.scrollToNote(target);
+    return;
+  }
   switch (e.key) {
     case "ArrowRight": next = Math.min(ids.length - 1, curIdx + 1); break;
     case "ArrowLeft": next = Math.max(0, curIdx - 1); break;
@@ -278,7 +323,19 @@ export function handleGridNavKey(e: KeyboardEvent) {
   e.preventDefault();
   const nextId = ids[next];
   setGridNavFocus(nextId);
+  moveDomFocus(nextId);
   sectionOf(nextId)?.handlers.scrollToNote(nextId);
+}
+
+/** Kafel na tej samej pozycji w najbliższej niepustej kolumnie w kierunku `dir` (krótsza kolumna — ostatni kafel). */
+function neighbourColumnId(section: Section, id: string, dir: 1 | -1): string | null {
+  const cols = orderedSections();
+  const row = section.noteIds.indexOf(id);
+  for (let i = cols.indexOf(section) + dir; i >= 0 && i < cols.length; i += dir) {
+    const ids = cols[i].noteIds;
+    if (ids.length) return ids[Math.min(Math.max(row, 0), ids.length - 1)];
+  }
+  return null;
 }
 
 /**
@@ -310,6 +367,7 @@ function detachKeyListener() {
 /** Tylko dla testów — czyści globalny stan między przypadkami. */
 export function __resetGridNavForTests() {
   sections.clear();
+  flatCache = null;
   state = { focusedId: null, previewId: null };
   previewScrollEl = null;
   seqCounter = 0;

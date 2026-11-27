@@ -11,7 +11,8 @@ import { useViewPrefs, type Layout } from "@/lib/viewPrefs";
 import { PrivateNoteGate } from "@/components/vault/PrivateNoteGate";
 import { NoteViewActionsProvider, type NoteViewActions } from "@/hooks/NoteViewActionsContext";
 import type { useNotes } from "@/hooks/useNotes";
-import { registerGridNavSection, useIsGridNavFocused, setGridNavFocus, type GridNavHandlers } from "@/lib/gridKeyboardNav";
+import { GRID_TAB_ATTR, registerGridNavSection, useIsGridNavFocused, useIsGridNavTabStop, setGridNavFocus, type GridNavHandlers } from "@/lib/gridKeyboardNav";
+import { suppressTabStops } from "@/lib/rovingTabStops";
 import { useMasonrySpans } from "@/hooks/useMasonrySpans";
 
 /** Odstępy kafli dla każdej gęstości — jedna tabela zamiast czterech warunków. Domyślna na krok 4 px (12/16 px zamiast 10/12 px). */
@@ -238,6 +239,7 @@ export function NoteGrid({
     openNote: (id) => whenRendered(id, (el) => (el.querySelector(".cursor-pointer") as HTMLElement | null)?.click()),
     scrollToNote: (id) => whenRendered(id, (el) => el.scrollIntoView({ block: "nearest", behavior: smoothBehavior() })),
     colsCount,
+    columns: boardColumn,
   };
   });
   useEffect(() => {
@@ -301,12 +303,22 @@ export function NoteGrid({
 // forwardRef: `AnimatePresence mode="popLayout"` mierzy bezpośrednie dziecko przez ref.
 const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps & { rowGap: string; wideEditing: boolean }>(function GridItem({ note, index, layout, rowGap, wideEditing, selected }, ref) {
   const focused = useIsGridNavFocused(note.id);
+  // Q5.1: przyciski nieaktywnego kafla poza kolejką Tab — do siatki wchodzi się jednym Tab, dalej strzałki.
+  const tabStop = useIsGridNavTabStop(note.id);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => (tabStop || !wrapRef.current ? undefined : suppressTabStops(wrapRef.current)), [tabStop]);
   return (
     <div
-      ref={ref}
+      ref={(el) => {
+        wrapRef.current = el;
+        if (typeof ref === "function") ref(el);
+        else if (ref) ref.current = el;
+      }}
       data-note-idx={index}
       data-note-id-wrap={note.id}
       onClickCapture={() => setGridNavFocus(note.id)}
+      // Q5.1: wejście na kafel klawiszem `Tab` ustawia fokus siatki — strzałki ruszają od niego.
+      onFocus={(e) => { if (e.target.hasAttribute(GRID_TAB_ATTR)) setGridNavFocus(note.id); }}
       className={cn(
         "note-lift rounded-card transition-shadow",
         note.wide && layout !== "list" && "sm:col-span-2",

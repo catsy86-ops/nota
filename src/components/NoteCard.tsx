@@ -34,6 +34,7 @@ import { toggleChecklistItem } from "@/lib/checklistTree";
 import { toast } from "sonner";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import { shouldOpenContextMenu } from "@/lib/contextMenu";
+import { useIsGridNavTabStop } from "@/lib/gridKeyboardNav";
 
 const NO_TITLES: string[] = [];
 
@@ -62,6 +63,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     wikiTitles: wikiIndex?.titles ?? NO_TITLES,
   });
   const { isEditing, fullEditor, setFullEditor, wiki, slash, handleSave, begin } = session;
+  const tabStop = useIsGridNavTabStop(note.id);
   const [showColors, setShowColors] = useState(false);
   const [showMore, setShowMore] = useState(false);
   // Dotyk: „⋯” otwiera arkusz akcji od dołu zamiast rozkładać ~18 ikon w wąskim kaflu.
@@ -260,6 +262,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           <div
             {...dragAttributes}
             {...dragListeners}
+            // Q5.1: uchwyt nieaktywnego kafla poza kolejką Tab (dnd-kit daje mu tabIndex 0).
+            tabIndex={tabStop ? 0 : -1}
             aria-label="Przeciągnij, aby zmienić kolejność"
             data-drag-handle
             // Na dotyku tylko przy sortowaniu ręcznym — przy innym porządku był szumem na każdym kaflu.
@@ -284,7 +288,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                 className="relative group/img cursor-pointer overflow-hidden rounded-control focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 onClick={() => setPreviewImage(img)}
                 role={isEditing ? undefined : "button"}
-                tabIndex={isEditing ? undefined : 0}
+                tabIndex={isEditing ? undefined : tabStop ? 0 : -1}
                 aria-label={isEditing ? undefined : `Powiększ obraz ${i + 1} z ${note.images.length}`}
                 onKeyDown={(e) => {
                   if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); setPreviewImage(img); }
@@ -312,7 +316,9 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
 
         <div
           // Klawiatura (§audyt 8): treść kafla dostaje fokus, a Enter/Spacja wykonuje to samo co klik.
-          tabIndex={isEditing ? undefined : 0}
+          // Q5.1: w siatce tylko jeden kafel jest punktem `Tab` (`useIsGridNavTabStop`), resztę osiąga się strzałkami.
+          tabIndex={isEditing ? undefined : tabStop ? 0 : -1}
+          data-grid-tab=""
           role={isEditing ? undefined : "button"}
           // Krótka nazwa zamiast całej treści kafla: bez niej czytnik czytał przy fokusie wszystko, łącznie z nazwami
           // zagnieżdżonych przycisków (termin, „Gotowe”, linki), a te same nazwy dublowały się w drzewie dostępności.
