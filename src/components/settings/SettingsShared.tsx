@@ -44,9 +44,13 @@ export function ResetSectionButton({ title, keys }: { title: string; keys: reado
 /** Poziom nagłówka sekcji: 3 na karcie, 4 wewnątrz `SettingsGroup` (hierarchia dla czytnika ekranu). */
 const SectionLevel = createContext<3 | 4>(3);
 
-/** Sekcja każdej zakładki Ustawień: jedna karta (`SectionCard`, nowy plan 5.1). Tytuł to nagłówek, nie akapit. */
-export function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return <SectionCard level={useContext(SectionLevel)} title={title} bodyClassName="space-y-2">{children}</SectionCard>;
+/**
+ * Sekcja każdej zakładki Ustawień: jedna karta (`SectionCard`, nowy plan 5.1; U5.1). Tytuł to nagłówek, nie akapit;
+ * jedno zdanie wyjaśnienia idzie w `description` (pod tytułem), a nie jako akapit z ujemnym marginesem w treści.
+ * Reset („Przywróć domyślne…”) jest na grupę sekcji, nie na kartę — `ResetSectionButton` pod grupą.
+ */
+export function Section({ title, description, children }: { title: string; description?: React.ReactNode; children?: React.ReactNode }) {
+  return <SectionCard level={useContext(SectionLevel)} title={title} description={description} bodyClassName="space-y-2">{children}</SectionCard>;
 }
 
 /**

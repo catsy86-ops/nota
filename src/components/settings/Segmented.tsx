@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 export interface SegmentedOption<T extends string> {
   value: T;
   label: string;
-  Icon: LucideIcon;
+  /** Bez ikony pozycja to sam tekst (krótkie wartości, np. „5 min”). */
+  Icon?: LucideIcon;
 }
 
 interface SegmentedProps<T extends string> {
@@ -55,7 +56,7 @@ export function Segmented<T extends string>({ options, value, onChange, disabled
                 aria-hidden
               />
             )}
-            <Icon className="relative size-4" aria-hidden />
+            {Icon && <Icon className="relative size-4" aria-hidden />}
             <span className="relative">{l}</span>
           </ToggleGroupItem>
         ))}

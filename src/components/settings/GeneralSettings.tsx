@@ -85,8 +85,7 @@ function WorkSettingsLink() {
   const data = useShifts();
   const [open, setOpen] = useState(false);
   return (
-    <Section title="Praca i Grafik">
-      <p className="ui-hint">Norma, nadgodziny i zarobek liczą się z ustawień Grafiku. Zmiany zapisują się od razu.</p>
+    <Section title="Praca i Grafik" description="Norma, nadgodziny i zarobek liczą się z ustawień Grafiku. Zmiany zapisują się od razu.">
       <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-1.5 coarse:h-11">
         Ustawienia grafiku
       </Button>

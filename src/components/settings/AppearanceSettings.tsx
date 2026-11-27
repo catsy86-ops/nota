@@ -336,20 +336,17 @@ export function AppearanceSettings() {
       </SettingsGroup>
 
       <SettingsGroup id="wyglad-uklad" title="Układ">
-        <Section title="Działy na pasku">
-          <p className="ui-hint -mt-1">Ukryty dział znika z paska, z „Więcej” i z palety. Dane zostają, a adres działa dalej. Notatki, Dziś, Archiwum i Kosz są zawsze widoczne.</p>
+        <Section title="Działy na pasku" description="Ukryty dział znika z paska, z „Więcej” i z palety. Dane zostają, a adres działa dalej. Notatki, Dziś, Archiwum i Kosz są zawsze widoczne.">
           {HIDEABLE_VIEWS.map((v) => (
             <ToggleRow key={v} label={HIDEABLE_LABELS[v]} desc={hiddenViews.includes(v) ? "Ukryty" : "Widoczny"} checked={!hiddenViews.includes(v)} onCheck={(on) => setViewHidden(v, !on)} />
           ))}
         </Section>
 
-        <Section title="Dolny pasek">
-          <p className="ui-hint -mt-1">Prawa pozycja obok „+”. Wybór zapisuje się na tym urządzeniu.</p>
+        <Section title="Dolny pasek" description="Prawa pozycja obok „+”. Wybór zapisuje się na tym urządzeniu.">
           <Segmented label="Czwarta pozycja dolnego paska" options={BOTTOM_SLOT_OPTIONS} value={bottomSlot} onChange={(v) => setBottomSlot(v)} />
         </Section>
 
-        <Section title="Karty na Dziś">
-          <p className="ui-hint -mt-1">Zapisuje się tylko na tym urządzeniu, więc telefon i komputer mogą mieć inne karty.</p>
+        <Section title="Karty na Dziś" description="Zapisuje się tylko na tym urządzeniu, więc telefon i komputer mogą mieć inne karty.">
           <ToggleRow label="Trening mózgu" desc={todayCards.brainTraining ? "Pokazana" : "Ukryta"} checked={todayCards.brainTraining} onCheck={(on) => setTodayCard("brainTraining", on)} />
           <ToggleRow label="Przegląd tygodnia" desc={todayCards.weeklyReview ? "Pokazany" : "Ukryty"} checked={todayCards.weeklyReview} onCheck={(on) => setTodayCard("weeklyReview", on)} />
         </Section>
@@ -390,19 +387,12 @@ export function AppearanceSettings() {
                 {BASE_SORTS.map((s) => <option key={s.v} value={s.v}>{s.label}</option>)}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-              Grupuj wg
-              <select
-                value={prefs.groupBy}
-                onChange={(e) => changeView(() => setViewPref("groupBy", e.target.value as typeof prefs.groupBy))}
-                className="h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm text-foreground"
-              >
-                <option value="none">Brak</option>
-                <option value="date">Data</option>
-                <option value="label">Etykieta</option>
-                <option value="folder">Folder</option>
-              </select>
-            </label>
+            <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+              <span aria-hidden>Grupuj wg</span>
+              {/* U5.3: cztery wybory — przełącznik zamiast listy rozwijanej. */}
+              <Segmented label="Grupuj wg" value={prefs.groupBy} onChange={(v) => changeView(() => setViewPref("groupBy", v))}
+                options={[{ value: "none", label: "Brak" }, { value: "date", label: "Data" }, { value: "label", label: "Etykieta" }, { value: "folder", label: "Folder" }]} />
+            </div>
           </div>
           <p className="ui-hint mt-1.5">Ustawienie startowe widoku. Własne pola notatek sortuje się w widoku.</p>
         </Section>

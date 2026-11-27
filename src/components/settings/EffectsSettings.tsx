@@ -37,9 +37,7 @@ export function EffectsSettings() {
   const keys = Object.keys(EFFECT_LABELS) as EffectKey[];
   return (
     <div className="space-y-4">
-      <div className="pt-2"><Section title="Efekty i zabawa">
-        <p className="ui-hint mb-2">Małe mikrointerakcje i sezonowe kolory. Wszystko respektuje tryb ograniczonego ruchu.</p>
-      </Section></div>
+      <div className="pt-2"><Section title="Efekty i zabawa" description="Małe mikrointerakcje i sezonowe kolory. Wszystko respektuje tryb ograniczonego ruchu." /></div>
       <div className="space-y-3">
         {keys.map((key) => {
           const meta = EFFECT_LABELS[key];

@@ -1,3 +1,4 @@
+import { Segmented } from "./Segmented";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import { cardVariant } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 const HIDDEN_LABEL = (m: number) => (m === 0 ? "Nie blokuj" : m === 1 ? "Po 1 minucie" : `Po ${m} minutach`);
+const SHORT_LABEL = (m: number, never: string) => (m === 0 ? never : `${m} min`);
 const CHOICE_LABEL = (m: number) => (m === 0 ? "Nigdy (do zamknięcia karty)" : m === 1 ? "Po 1 minucie" : `Po ${m} minutach`);
 
 const STATUS = {
@@ -65,27 +67,18 @@ export function VaultSettings() {
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <label htmlFor="vault-autolock" className="text-sm font-semibold">Blokuj automatycznie <span className="font-normal text-muted-foreground">(na tym urządzeniu)</span></label>
-          <select
-            id="vault-autolock"
-            value={minutes}
-            onChange={(e) => setAutoLockMinutes(Number(e.target.value))}
-            className="h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm"
-          >
-            {AUTOLOCK_CHOICES.map((m) => <option key={m} value={m}>{CHOICE_LABEL(m)}</option>)}
-          </select>
+        {/* U5.3: 5 i 4 wybory — przełączniki z krótkimi nazwami zamiast list rozwijanych. */}
+        <div className="space-y-1.5">
+          <p className="text-sm font-semibold" aria-hidden>Blokuj automatycznie <span className="font-normal text-muted-foreground">(na tym urządzeniu)</span></p>
+          <Segmented label="Blokuj automatycznie" value={String(minutes)} onChange={(v) => setAutoLockMinutes(Number(v))}
+            options={AUTOLOCK_CHOICES.map((m) => ({ value: String(m), label: SHORT_LABEL(m, "Nigdy") }))} />
+          <p className="text-2xs text-muted-foreground">{CHOICE_LABEL(minutes)}.</p>
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <label htmlFor="vault-hidden-lock" className="text-sm font-semibold">Blokuj po schowaniu karty <span className="font-normal text-muted-foreground">(na tym urządzeniu)</span></label>
-          <select
-            id="vault-hidden-lock"
-            value={hiddenMinutes}
-            onChange={(e) => setHiddenLockMinutes(Number(e.target.value))}
-            className="h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm"
-          >
-            {HIDDEN_LOCK_CHOICES.map((m) => <option key={m} value={m}>{HIDDEN_LABEL(m)}</option>)}
-          </select>
+        <div className="space-y-1.5">
+          <p className="text-sm font-semibold" aria-hidden>Blokuj po schowaniu karty <span className="font-normal text-muted-foreground">(na tym urządzeniu)</span></p>
+          <Segmented label="Blokuj po schowaniu karty" value={String(hiddenMinutes)} onChange={(v) => setHiddenLockMinutes(Number(v))}
+            options={HIDDEN_LOCK_CHOICES.map((m) => ({ value: String(m), label: SHORT_LABEL(m, "Nie") }))} />
+          <p className="text-2xs text-muted-foreground">{HIDDEN_LABEL(hiddenMinutes)}.</p>
         </div>
         <p className="text-2xs text-muted-foreground">Skarbiec blokuje się też, gdy karta jest ukryta dłużej niż wybrany czas.</p>
       </div>
