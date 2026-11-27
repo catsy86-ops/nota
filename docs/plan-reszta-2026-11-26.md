@@ -97,25 +97,26 @@ A3.4 (`src/lib/commands/` — źródła poleceń palety) → Powłoka 2.5 (więc
 - **Macierz `@visual`** (W0.1 → W9.2): 12 ekranów × 3 style × 2 szerokości. M.
 - **C4.5** OCR etykiety (`tesseract.js`, za flagą). M.
 
-## Czeka na telefon (jedna sesja odblokowuje najwięcej)
+## Telefon i decyzje — stan po 2026-11-27
 
-`qa-praca-telefon.md` (R1.1), B0.2/B0.3 → Faza 5 i B6 Pracy na budowie; R4.2, R2.3; F1.0 (APK z alarmami) → R4.5, C2.6, C5.1, Z-14.6; W7.5, W9.3; Q5.5 (TalkBack); Plan-nowy 3.5 (`<Activity>` po pomiarze pamięci); ręczne QA z `docs-zrobione/`.
+**Telefon:** właściciel zgłosił 27.11, że sprawdził wszystko z tej listy na telefonie i działa („Robiłem wszystko ok”): `qa-praca-telefon.md` (R1.1), B0.2/B0.3, R4.2, R2.3, próba APK z alarmami (F1.0), W7.5, W9.3, TalkBack (Q5.5), pomiar pamięci (Plan-nowy 3.5), ręczne QA z `docs-zrobione/`. Odblokowane do kodu: Faza 5 i B6 Pracy na budowie, R4.5, C2.6, C5.1, Z-14.6. Liczb z pomiarów B0.2/B0.3 i 3.5 nie ma w repozytorium — punkty, które ich potrzebują, zaczynają się od prośby o nie.
 
-## Czeka na decyzję właściciela
+**Decyzje (właściciel 27.11: „zatwierdzam” — według rekomendacji):**
 
-| Decyzja | Odblokowuje |
-|---|---|
-| SE-1, SE-3 i pozostałe SE | S1.8, S2.4, S4.1, S4.2, S4.9–S4.11, Q4.4, Q1.4 (szyfrowanie), sesja F |
-| SE-2 (hosting) | G4.1 alarm push, wdrożenie przekaźnika i serwera powiadomień |
-| Q3.3 | motyw według pory (kod S, gotowy do zrobienia po „tak”) |
-| AR-1, AR-2 | A5.1, A5.2 |
-| QL-2 | Z-16.3 |
-| DL-2, DL-3, D-3 | L3.x, L5.x, Dziś 3.4, Długi 3.5 |
-| CW-2, CW-3 | C4.2, C5.3 |
-| MG-1 | D7.3 (D3.4, D3.6, D5.2 czekają na warunki z planu) |
-| WZ-2, WZ-4, WZ-5 | jasna Tablica, W8.3, W7.4 |
-| G-7 | Grafik G4.8 |
-| D-A4 | audyt 2 |
+| Kod | Przyjęte | Skutek |
+|---|---|---|
+| SE-1 | serwerów nadal nie wdrażać; F1.0 przeszła, więc sesje E z kolejki odpadają (alarmy lokalne w APK) | S4.x czekają tylko na hosting |
+| Q3.3 | **tak** — motyw według pory (7–19) obok „jak system” | do zrobienia (S) |
+| WZ-2 | stylów nie łączyć; rozsunąć jasną Tablicę od jasnych Kafli (zieleń w tle i akcencie) | do zrobienia |
+| DL-3, D-3 | **bez** waluty | L5.1, L5.3 wypadają |
+| DL-2 | — | **pytanie do właściciela:** czy dzielisz rachunki z kimś? (tak → Etap 3 Długów, nie → wypada) |
+| QL-1 | kopie OPFS bez szyfrowania — potwierdzone | Q1.4 bez zmian |
+| D-F1…D-F3, D-W1, D-X1 | wdrożone domyślnie — potwierdzone | — |
+| C-4 | treść katalogu ćwiczeń zaakceptowana | C1.5 zamknięte |
+| KR-4 | pytanie przy każdej zmianie hasła bez wartości domyślnej (C-2); brzmienie przy K3/K5 | Skarbiec krypto |
+| D-Z1 | bez zmian — rozstrzyga pomiar z Z-17.9 | — |
+
+Wcześniej rozstrzygnięte (2026-11-23, `stan-planow-2026-11-15-i-17.md`): SE-2…SE-6, AR-1…AR-3 (A5.1, A5.2 zrobione), QL-2, QL-3, PR-1…PR-3, CW-1…CW-3, MG-1…MG-3, KR-1…KR-6 bez KR-4, WZ-4, WZ-5, G-7, D-A4, D-K3…D-K5, Z-6.6.
 
 ## Kolejność w skrócie
 
