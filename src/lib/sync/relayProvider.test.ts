@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import * as Y from "yjs";
 import { RelayProvider, COMPACT_AFTER, KEEPALIVE_MS, MAX_ENTRY_CHARS, MAX_ENTRY_RAW_BYTES, packPending, splitByAuthor, takeBatch, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
-import { deriveRelayKeys, type RelayKeys } from "@/lib/sync/relayKeys";
+import { deriveRelayKeys, relayAad, sealBytes, type RelayKeys } from "@/lib/sync/relayKeys";
 
 /** Atrapa serwera o tym samym protokole co `relay-server/server.js` (bez limitów rozmiaru). */
 const PAGE = 500;
@@ -640,4 +640,103 @@ describe("U2.5: dzielenie zaległości (po przeglądzie)", () => {
     expect(packed.every((p) => p.length <= 700)).toBe(true);
     expect(packPending([twoAuthors()], 3000).length).toBe(2);
   });
+});
+
+describe("U2.5: części zależne i migawka po wysyłce dzielonej", () => {
+  it("odbiorca nie zapisuje kursora za częścią czekającą na drugą — po przeładowaniu pobiera ją jeszcze raz", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const a = new Y.Doc();
+    a.getText("t").insert(0, "A");
+    const b = new Y.Doc();
+    Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+    b.getText("t").insert(1, "B");
+    const onlyB = Y.diffUpdate(Y.encodeStateAsUpdate(b), Y.encodeStateVector(a)); // zależy od wstawki A
+    const room: FakeRoom = { token: keys.token, last: 0, entries: [] };
+    server.rooms.set(keys.roomId, room);
+    const put = async (u: Uint8Array) => { room.last += 1; room.entries.push({ seq: room.last, data: await sealBytes(keys.dataKey, u, relayAad(keys.roomId)) }); };
+    await put(onlyB);
+
+    const store = new MemStore();
+    const first = await device(keys, server, { store });
+    await until(() => first.provider.cursor === 1);
+    await first.provider.settle();
+    expect(first.text.toString()).toBe("");
+    expect(store.state.cursor).toBe(0);
+    first.provider.stop();
+
+    // Przeładowanie: część B była tylko w pamięci dokumentu, zapis przekaźnika zostaje.
+    await put(Y.encodeStateAsUpdate(a));
+    const again = await device(keys, server, { store });
+    await untilPulled(again.provider, () => again.text.toString() === "AB");
+    await until(() => store.state.cursor === 2);
+    again.provider.stop();
+  });
+
+  it("kursor staje także wtedy, gdy w dokumencie coś czekało już wcześniej (np. z WebRTC)", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const dependent = (name: string) => {
+      const base = new Y.Doc();
+      base.getText(name).insert(0, "A");
+      const next = new Y.Doc();
+      Y.applyUpdate(next, Y.encodeStateAsUpdate(base));
+      next.getText(name).insert(1, "B");
+      return Y.diffUpdate(Y.encodeStateAsUpdate(next), Y.encodeStateVector(base));
+    };
+    const room: FakeRoom = { token: keys.token, last: 1, entries: [{ seq: 1, data: await sealBytes(keys.dataKey, dependent("t"), relayAad(keys.roomId)) }] };
+    server.rooms.set(keys.roomId, room);
+    const doc = new Y.Doc();
+    Y.applyUpdate(doc, dependent("w")); // oczekuje przed przekaźnikiem
+    const store = new MemStore();
+    const provider = new RelayProvider({ baseUrl: "https://relay.test", keys, doc, store, fetch: server.fetchFn, flushMs: 5 });
+    await provider.start();
+    await until(() => provider.cursor >= 1); // własne oczekujące zmiany też idą na serwer
+    await provider.settle();
+    expect(store.state.cursor).toBe(0);
+    provider.stop();
+  });
+
+  it("pełny stan po resecie idzie częściami, a migawka większa niż wpis nie jest wysyłana", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const methods: string[] = [];
+    const fetchSpy = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      methods.push(init?.method ?? "GET");
+      return server.fetchFn(input, init);
+    }) as typeof fetch;
+    const doc = new Y.Doc();
+    const other = new Y.Doc();
+    doc.getText("t").insert(0, "A".repeat(2000));
+    other.getText("u").insert(0, "B".repeat(2000));
+    Y.applyUpdate(doc, Y.encodeStateAsUpdate(other));
+    const provider = new RelayProvider({ baseUrl: "https://relay.test", keys, doc, store: new MemStore(), fetch: fetchSpy, flushMs: 5, maxEntryBytes: 1000 });
+    await provider.start();
+    expect(await provider.settle()).toBe(true);
+    expect(methods.filter((m) => m === "POST").length).toBe(2);
+
+    // Pokój zniknął: reset wysyła pełny stan znowu dwiema częściami.
+    server.rooms.delete(keys.roomId);
+    methods.length = 0;
+    provider.sync();
+    await until(() => methods.filter((m) => m === "POST").length === 2);
+    expect(await provider.settle()).toBe(true);
+    expect(server.rooms.get(keys.roomId)?.entries.map((e) => e.seq)).toEqual([1, 2]);
+
+    // Próg migawki przekroczony, ale pełny stan nie mieści się we wpisie: bez PUT i bez błędu.
+    for (let i = 0; i < COMPACT_AFTER; i++) {
+      doc.transact(() => doc.getText("t").insert(0, "."));
+      provider.flushNow();
+      await until(() => provider.cursor === i + 3);
+    }
+    expect(await provider.settle()).toBe(true);
+    expect(methods).not.toContain("PUT");
+    expect(provider.currentStatus).toBe("online");
+    provider.stop();
+
+    const reader = await device(keys, server);
+    await untilPulled(reader.provider, () => reader.doc.getText("u").length === 2000);
+    await untilPulled(reader.provider, () => reader.doc.getText("t").toString() === doc.getText("t").toString());
+    reader.provider.stop();
+ }, 60_000);
 });

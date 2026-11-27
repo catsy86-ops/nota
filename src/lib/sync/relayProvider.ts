@@ -92,6 +92,8 @@ export interface RelayOptions {
   now?: () => number;
   /** Limit czasu jednego żądania (ms); domyślnie `REQUEST_TIMEOUT_MS`. */
   requestTimeoutMs?: number;
+  /** Surowe bajty jednego wpisu; domyślnie `MAX_ENTRY_RAW_BYTES` (mniejsze tylko w testach dzielenia). */
+  maxEntryBytes?: number;
 }
 
 export const FLUSH_MS = 1000;
@@ -150,6 +152,9 @@ export function packPending(parts: readonly Uint8Array[], maxBytes: number): Uin
   }
   return out;
 }
+/** U2.5: zatrzymanie kursora (`heldCursor`) najwyżej o tyle wpisów — dalej przesuwa się na bieżący. */
+const HOLD_MAX = 2 * COMPACT_AFTER;
+type CompactResult = "done" | "skipped" | "too-big";
 const TOO_BIG = "Dane są za duże dla przekaźnika (limit 16 MB na wpis)";
 const ROOM_FULL = "Pokój na przekaźniku jest pełny — migawka nie zwolniła miejsca";
 const RETRY_MIN_MS = 2000;
@@ -214,11 +219,25 @@ export class RelayProvider {
   private started = false;
   private status: RelayStatus = "idle";
   private headSeen: RelayHead | null = null;
+  /**
+   * U2.5: kursor, za który zapis na dysk nie wychodzi, póki dokument trzyma niezastosowane struktury z naszych wpisów
+   * (część jednego autora czekająca na część drugiego). Yjs trzyma je tylko w pamięci — po przeładowaniu między częściami
+   * przepadłyby, a zapisany kursor byłby już za nimi. Po przeładowaniu pobieramy od tego miejsca jeszcze raz.
+   * Zależność, która nie dotrze nigdy, nie może kazać pobierać wszystkiego przy każdym starcie: po `HOLD_MAX` wpisach
+   * zatrzymanie przesuwa się na bieżący wpis.
+   */
+  private heldCursor: number | undefined;
+  /** Kursor, przy którym pełny stan nie zmieścił się w migawce — następna próba dopiero `COMPACT_AFTER` wpisów dalej. */
+  private compactTooBigAt: number | undefined;
 
   constructor(private readonly opts: RelayOptions) {
     this.base = opts.baseUrl.replace(/\/+$/, "");
     this.aad = relayAad(opts.keys.roomId);
     this.fetchFn = opts.fetch ?? endpointFetch; // S1.2: tylko adresy dozwolone przez lib/net/endpoints
+  }
+
+  private get maxEntry(): number {
+    return Math.min(this.opts.maxEntryBytes ?? MAX_ENTRY_RAW_BYTES, MAX_ENTRY_RAW_BYTES);
   }
 
   get cursor(): number {
@@ -270,7 +289,7 @@ export class RelayProvider {
     // Pusta różnica to dwa bajty (`[0,0]`) i jej nie wysyłamy. Pakowane razem z zapisem — oba mogą być duże.
     const initial = Y.encodeStateAsUpdate(this.opts.doc, this.state.sv);
     const loaded = [...(pending ? [pending] : []), ...(initial.length > 2 ? [initial] : [])];
-    if (loaded.length > 0) this.pending = packPending(loaded, MAX_ENTRY_RAW_BYTES);
+    if (loaded.length > 0) this.pending = packPending(loaded, this.maxEntry);
     this.setStatus("connecting");
     this.opts.doc.on("update", this.onLocalUpdate);
     this.connectSocket();
@@ -459,7 +478,7 @@ export class RelayProvider {
     if (this.persistTimer) clearTimeout(this.persistTimer);
     this.persistTimer = null;
     const task = async () => {
-      if (this.pending.length > 1) this.pending = packPending(this.pending, MAX_ENTRY_RAW_BYTES);
+      if (this.pending.length > 1) this.pending = packPending(this.pending, this.maxEntry);
       const all = this.pending.length > 1 ? Y.mergeUpdates(this.pending) : this.pending[0] ?? null;
       await this.opts.store.savePending(all);
     };
@@ -469,7 +488,16 @@ export class RelayProvider {
   }
 
   private async persistState(): Promise<void> {
-    await this.opts.store.saveState(this.state);
+    // Brakująca część mogła dotrzeć inną drogą (WebRTC, zapis lokalny) — wtedy zatrzymanie nic już nie chroni.
+    if (this.heldCursor !== undefined && !this.docHasPending()) this.heldCursor = undefined;
+    const held = this.heldCursor;
+    await this.opts.store.saveState(held !== undefined && held < this.state.cursor ? { ...this.state, cursor: held } : this.state);
+  }
+
+  /** Czy dokument trzyma aktualizacje czekające na brakujące poprzedniki (pola wewnętrzne `StructStore`). */
+  private docHasPending(): boolean {
+    const store = this.opts.doc.store as { pendingStructs: unknown; pendingDs: unknown };
+    return store.pendingStructs != null || store.pendingDs != null;
   }
 
   private async pullTask(): Promise<void> {
@@ -522,6 +550,10 @@ export class RelayProvider {
           } catch {
             throw new RelayFatalError("Wpis z przekaźnika jest uszkodzony i nie da się go zastosować");
           }
+          // Wpis zostawił struktury bez poprzedników: kursor na dysku staje przed nim, aż brakująca część dotrze.
+          // Także gdy coś czekało już wcześniej (np. z WebRTC) — fałszywe zatrzymanie kosztuje tylko ponowne pobranie.
+          if (!this.docHasPending()) this.heldCursor = undefined;
+          else if (this.heldCursor === undefined || entry.seq - this.heldCursor > HOLD_MAX) this.heldCursor = this.state.cursor;
           this.state = { ...this.state, cursor: entry.seq };
         }
         if (!page.hasMore || page.entries.length === 0) break;
@@ -540,7 +572,8 @@ export class RelayProvider {
   private async flushTask(): Promise<void> {
     if (!this.started || this.pending.length === 0 || !this.maySend()) return;
     // U2.5: duża zaległość idzie kilkoma wpisami; reszta czeka na początku kolejki i rusza zaraz po tym.
-    const { batch: parts, rest } = takeBatch(this.pending, MAX_ENTRY_RAW_BYTES);
+    // Bez migawki po ostatniej części: podział oznacza dane większe niż wpis, więc pełny stan i tak by się nie zmieścił.
+    const { batch: parts, rest } = takeBatch(this.pending, this.maxEntry);
     // Wektor stanu jak dotąd: niewysłana reszta jest w `pending` (zapisywanym), więc po restarcie nie przepada,
     // a start nie skleja jej z resztą dokumentu w jeden za duży wpis.
     const sv = Y.encodeStateVector(this.opts.doc);
@@ -566,16 +599,18 @@ export class RelayProvider {
           return;
         }
         // Log pełny (409): jedna próba migawki mimo progu i ponowienie wysyłki.
+        let compact: CompactResult | undefined;
         if (attempt === 0 && err instanceof RelayHttpError && err.status === 409) {
           try {
-            await this.compactTask(true);
-            continue;
+            compact = await this.compactTask(true);
+            if (compact === "done") continue;
           } catch {
             // migawka się nie udała — wracamy z pierwotnym błędem
           }
         }
-        // 409 po udanej migawce: pokój nie mieści nawet pełnego stanu — ponawianie nic nie da.
-        const fatal = attempt > 0 && err instanceof RelayHttpError && err.status === 409 ? new RelayFatalError(ROOM_FULL, "ROOM_FULL") : err;
+        // 409 po udanej migawce albo pełny stan większy niż migawka: ponawianie nic nie da.
+        const full = err instanceof RelayHttpError && err.status === 409 && (attempt > 0 || compact === "too-big");
+        const fatal = full ? new RelayFatalError(ROOM_FULL, "ROOM_FULL") : err;
         // Wysłanie się nie udało: wracamy z tym, co zebraliśmy, przed to, co doszło w międzyczasie.
         this.pending = [...parts, ...this.pending];
         await this.persistPending();
@@ -602,28 +637,40 @@ export class RelayProvider {
     await this.persistState();
     this.retryMs = RETRY_MIN_MS;
     this.setStatus("online");
-    if (rest.length > 0) { this.run(() => this.flushTask()); return; }
+    if (this.pending.length > 0) { this.run(() => this.flushTask()); return; }
     await this.compactTask();
   }
 
-  private async compactTask(force = false): Promise<void> {
-    if (!this.started || this.state.cursor < 1 || !this.maySend()) return;
-    if (!force && this.state.cursor - this.state.compactedAt < COMPACT_AFTER) return;
+  /**
+   * Migawka pełnego stanu. Za duża (większa niż wpis — serwer ma ten sam limit dla obu) nie idzie wcale: wysyłka
+   * kończyłaby się 413 albo zerwanym połączeniem i ponawianiem po kilkanaście MB. Kolejna próba po `COMPACT_AFTER` wpisach.
+   */
+  private async compactTask(force = false): Promise<CompactResult> {
+    if (!this.started || this.state.cursor < 1 || !this.maySend()) return "skipped";
+    if (!force && this.state.cursor - this.state.compactedAt < COMPACT_AFTER) return "skipped";
+    if (!force && this.compactTooBigAt !== undefined && this.state.cursor - this.compactTooBigAt < COMPACT_AFTER) return "skipped";
     const upto = this.state.cursor;
-    const data = await sealBytes(this.opts.keys.dataKey, Y.encodeStateAsUpdate(this.opts.doc), this.aad);
-    if (!this.maySend()) return;
+    const full = Y.encodeStateAsUpdate(this.opts.doc);
+    if (full.length > this.maxEntry) {
+      this.compactTooBigAt = upto;
+      return "too-big";
+    }
+    this.compactTooBigAt = undefined;
+    const data = await sealBytes(this.opts.keys.dataKey, full, this.aad);
+    if (!this.maySend()) return "skipped";
     try {
       await this.http(`${this.roomPath}/snapshot`, { method: "PUT", body: { upto, data, epoch: this.state.epoch } });
     } catch (err) {
       // Pokój zniknął (404) albo ma inną epokę (412) między pobraniem a migawką.
       if (err instanceof RelayHttpError && (err.status === 412 || err.status === 404)) {
         await this.resetRoom(undefined);
-        return;
+        return "skipped";
       }
       throw err;
     }
     this.state = { ...this.state, compactedAt: upto };
     await this.persistState();
+    return "done";
   }
 
   private maySend(): boolean {
@@ -676,7 +723,10 @@ export class RelayProvider {
    */
   private async resetRoom(epoch: string | undefined, count = true): Promise<void> {
     const full = Y.encodeStateAsUpdate(this.opts.doc);
-    this.pending = full.length > 2 ? [full] : [];
+    // Pełny stan duży jak zaległość: kilka wpisów według autora (U2.5).
+    this.pending = full.length > 2 ? packPending([full], this.maxEntry) : [];
+    this.heldCursor = undefined;
+    this.compactTooBigAt = undefined;
     const now = this.now();
     // Licznik resetów (wiersz 3): dwa urządzenia z różnym obrazem pokoju mogłyby zakładać go sobie nawzajem bez końca.
     const resets = [...(this.state.resets ?? []), ...(count ? [now] : [])].filter((t) => now - t < RESET_WINDOW_MS).slice(-RESET_KEEP);
