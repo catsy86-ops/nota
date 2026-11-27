@@ -8,14 +8,14 @@ import { futureFieldsJson, knownContent, parseContent, parseFutureFields, privat
 import { encryptNoteWrite, NOTE_FORMAT_V2_SCHEMA } from "@/lib/private/noteCipher";
 import { readThrottle, throttleDelayMs, writeThrottle } from "@/lib/private/throttle";
 import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
-import { comparePin, readVaultPin, writeVaultPin } from "@/lib/vaultPin";
+import { comparePin, readVaultPin, rememberPrevHeader, trimPrevHeaders, withPinnedIter, writeVaultPin } from "@/lib/vaultPin";
 import { assertPasskey, registerPasskey } from "@/lib/passkey";
 import { MAX_PASSKEYS, unlockWithPasskey as unlockKeyWithPasskey, unwrapRawWithPassword, wrapDataKeyForPasskey, fromB64u, toB64u } from "@/lib/vault";
 import { toast } from "@/lib/notify";
 import { pluralPl } from "@/lib/plural";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, isValidMeta,
-  unlockWithPassword, unlockWithRecovery, VAULT_VERSION, type VaultMeta,
+  unlockWithPassword, unlockWithRecovery, VAULT_VERSION, MAX_EPOCH, type VaultMeta,
 } from "@/lib/vault";
 
 /**
@@ -329,9 +329,28 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     return { recoveryCode: created.recoveryCode };
   }
 
+  /**
+   * K1: metadane do KDF — przy `iter` podmienionym w dokumencie (klucz zgodny z pinem) `iter` z pinu i wpis
+   * bezpieczeństwa. Bez tego podmiana dawała fałszywe „złe hasło” i dławienie (P4).
+   */
+  function kdfMeta(m: VaultMeta): VaultMeta {
+    const { meta: fixed, rejected } = withPinnedIter(m);
+    if (rejected) logSecurity("vault-meta-rejected", "iter changed in the document without a key change — pinned value used");
+    return fixed;
+  }
+
+  /** Sama epoka zmieniona przy kluczu z pinu: odmowa przed KDF i bez nabijania licznika prób (K1, przegląd M-1). */
+  function refuseEpochOnly(m: VaultMeta): void {
+    if (comparePin(readVaultPin(), m) !== "epoch-only") return;
+    logSecurity("vault-meta-rejected", "epoch changed in the document without a key change — refused");
+    throw new VaultError("bad-format", "Skarbiec w dokumencie ma inny numer epoki niż ten, który zna to urządzenie. Nie odblokowano.");
+  }
+
   async function unlock(password: string): Promise<void> {
-    const m = meta();
-    if (!m) throw new Error("Brak skarbca");
+    const m0 = meta();
+    if (!m0) throw new Error("Brak skarbca");
+    const m = kdfMeta(m0);
+    refuseEpochOnly(m);
     checkThrottle();
     let k: CryptoKey;
     try {
@@ -341,7 +360,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       throw err;
     }
     recordSuccess();
-    await adoptVerifiedMeta(k, m, true);
+    await adoptVerifiedMeta(k, m, true, true);
   }
 
   /**
@@ -349,7 +368,9 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
    * tylko-epoka → odrzucamy (nie da się tego wytłumaczyć zmianą hasła); zmienione opakowanie przy poprawnym
    * haśle → przyjmujemy i informujemy (zwykła zmiana hasła na innym urządzeniu). Po przyjęciu pin się aktualizuje.
    */
-  async function adoptVerifiedMeta(k: CryptoKey, m: VaultMeta, provedSecret: boolean): Promise<void> {
+  async function adoptVerifiedMeta(k: CryptoKey, m0: VaultMeta, provedSecret: boolean, iterVerified = false): Promise<void> {
+    // K1: biometria nie liczy KDF, ale pin nie może przyjąć `iter` podmienionego w dokumencie.
+    const m = kdfMeta(m0);
     const verdict = comparePin(readVaultPin(), m);
     if (verdict === "epoch-only") {
       logSecurity("vault-meta-rejected", "epoch changed in the document without a key change — refused");
@@ -361,9 +382,16 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       logSecurity("vault-meta-rejected", "changed meta refused on biometric unlock");
       throw new VaultError("bad-format", "Skarbiec został zmieniony na innym urządzeniu. Odblokuj hasłem, aby przyjąć zmianę.");
     }
-    if (verdict === "changed") toast.info("Skarbiec w dokumencie różni się od zapisanego na tym urządzeniu — odblokowano Twoim hasłem");
+    if (verdict === "changed") {
+      toast.info("Skarbiec w dokumencie różni się od zapisanego na tym urządzeniu — odblokowano Twoim hasłem");
+      // K1: nagłówek z pinu zostaje na odzysk notatek drugiego skarbca (K4) — przed odblokowaniem, nic nie jest wypierane.
+      if (!rememberPrevHeader(readVaultPin(), m)) logDiag("warn", "vault", "poprzednie nagłówki skarbca: limit, nowy pominięty");
+    }
     await adoptKey(k, m.epoch);
-    writeVaultPin(m);
+    // Pin przyjmuje `iter` tylko po KDF z hasłem — biometria i kod awaryjny go nie sprawdzają (przegląd M-2).
+    writeVaultPin(m, { iterVerified });
+    // Blokada w trakcie odblokowania zostawia `failed` niepełne — wtedy bez przycinania (przegląd L-2).
+    if (key === k && !locking) trimPrevHeaders(failed.size === 0);
   }
 
   /** Czy skarbiec ma zapisany choć jeden passkey (V-4). */
@@ -387,7 +415,10 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       throw new VaultError("bad-format", "Skarbiec w dokumencie ma inny numer epoki niż ten, który zna to urządzenie. Nie dodano biometrii.");
     }
     const startJson = JSON.stringify(m);
-    const raw = await unwrapRawWithPassword(m, password, minIterations);
+    // Przegląd H-1: nowy nagłówek z `iter` potwierdzonym hasłem, nie z dokumentu — inaczej podmieniona wartość
+    // trafiałaby do pinu i z powrotem do dokumentu.
+    const verified = kdfMeta(m);
+    const raw = await unwrapRawWithPassword(verified, password, minIterations);
     try {
       const salt = m.passkeys?.salt ?? toB64u(crypto.getRandomValues(new Uint8Array(32)));
       const { id, prf } = await registerPasskey(userName, fromB64u(salt));
@@ -396,7 +427,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       if (JSON.stringify(store.getVaultMeta()) !== startJson) {
         throw new Error("Skarbiec zmienił się w trakcie dodawania biometrii — spróbuj ponownie");
       }
-      const next: VaultMeta = { ...m, passkeys: { salt, entries: [...entries.filter((e) => e.id !== id), { id, wrapped }] } };
+      const next: VaultMeta = { ...verified, passkeys: { salt, entries: [...entries.filter((e) => e.id !== id), { id, wrapped }] } };
       store.setVaultMeta(next);
       writeVaultPin(next);
     } finally {
@@ -651,6 +682,8 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     }
     // Z `dropUnreadable` nieczytelne idą do kosza w tej samej transakcji co nowy klucz (szyfrogram zostaje do pobrania).
     if (!dropUnreadable && (unsafe > 0 || (skipped.length > 0 && plain.size === 0))) throw new VaultUnreadableError(skipped);
+    // Epoka ma górną granicę walidacji (K1) — nowy skarbiec ponad nią byłby odrzucony przy odczycie.
+    if (m.epoch >= MAX_EPOCH) throw new Error("Osiągnięto limit zmian hasła tego skarbca");
     const created = await createVault(newPassword, { iterations, withRecovery, epoch: m.epoch + 1 });
     const next = new Map<string, { expected: string; vault: string }>();
     for (const [id, p] of plain) next.set(id, { expected: p.expected, vault: await encryptNoteWrite(created.dataKey, p.json, id, created.meta.epoch) });
@@ -686,7 +719,8 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     if (!m) throw new Error("Brak skarbca");
     checkThrottle();
     let oldKey: CryptoKey;
-    try { oldKey = await unlockWithPassword(m, oldPassword, minIterations); } catch (err) {
+    refuseEpochOnly(m);
+    try { oldKey = await unlockWithPassword(kdfMeta(m), oldPassword, minIterations); } catch (err) {
       if (err instanceof VaultError && err.code === "bad-password") recordFailure();
       throw err;
     }

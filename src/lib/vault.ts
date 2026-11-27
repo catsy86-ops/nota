@@ -227,8 +227,12 @@ export function isValidMeta(m: unknown): m is VaultMeta {
     && typeof x.wrapped === "string" && x.wrapped.length <= 256 && typeof x.check === "string" && x.check.length <= 256
     && (x.recovery === undefined || (typeof x.recovery === "string" && x.recovery.length <= 256))
     && (x.passkeys === undefined || isValidPasskeyMeta(x.passkeys))
-    && typeof x.epoch === "number" && Number.isFinite(x.epoch);
+    // K1: epoka to licznik zmian hasła — całkowita 1…1 000 000 (1,5, −3 i 1e300 z dokumentu odpadają).
+    && typeof x.epoch === "number" && Number.isSafeInteger(x.epoch) && x.epoch >= 1 && x.epoch <= MAX_EPOCH;
 }
+
+/** Górna granica epoki z metadanych (K1). */
+export const MAX_EPOCH = 1_000_000;
 
 /** Nowy skarbiec (albo nowy klucz danych przy zmianie hasła). */
 export async function createVault(password: string, { iterations = KDF_ITERATIONS, withRecovery = true, epoch = 1 }: VaultOptions & { withRecovery?: boolean; epoch?: number } = {}): Promise<CreatedVault> {

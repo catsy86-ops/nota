@@ -109,4 +109,4 @@ const BACKUP_KEYS = [
 for (const key of new Set(BACKUP_KEYS)) rawKey(key, { backup: true });
 
 // Wrażliwe: nigdy do kopii ani raportu (sekrety synchronizacji, push, skarbiec, dane urządzenia).
-for (const key of ["kaczy.sync.v1", "kaczy.push.token.v1", "kaczy.vault.pin.v1", "kaczy.vault.attempts.v1", "kaczy.relay.v1", "kaczy.study.bankAccount.v1", "kaczy.study.fingerprints.v1", "kaczy.debts.payment.v1"]) rawKey(key, { sensitive: true });
+for (const key of ["kaczy.sync.v1", "kaczy.push.token.v1", "kaczy.vault.pin.v1", "kaczy.vault.pin.prev.v1", "kaczy.vault.attempts.v1", "kaczy.relay.v1", "kaczy.study.bankAccount.v1", "kaczy.study.fingerprints.v1", "kaczy.debts.payment.v1"]) rawKey(key, { sensitive: true });

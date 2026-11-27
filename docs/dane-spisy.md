@@ -176,6 +176,7 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.vault.autolock.v1` | `lib/storage/names.ts`, `lib/vaultAutoLock.ts` | tak |
 | `kaczy.vault.hiddenLock.v1` | `lib/storage/names.ts`, `lib/vaultAutoLock.ts` | tak |
 | `kaczy.vault.pin.v1` | `lib/vaultPin.ts` | — |
+| `kaczy.vault.pin.prev.v1` | `lib/vaultPin.ts` (K1: poprzednie nagłówki skarbca, wrażliwe) | — |
 | `kaczy.vault.recoveryCheck.v1` | `lib/storage/names.ts`, `lib/vaultRecoveryCheck.ts` | tak |
 | `kaczy.viewMemory.v1:` | `lib/viewMemory.ts` | — |
 | `kaczy.viewPrefs.v1` | `lib/storage/names.ts`, `lib/viewPrefs.ts` | tak |

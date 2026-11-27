@@ -70,6 +70,8 @@ export const SKARBIEC = {
   autoLock: "kaczy.vault.autolock.v1",
   hiddenLock: "kaczy.vault.hiddenLock.v1",
   pin: "kaczy.vault.pin.v1",
+  /** K1: poprzednie nagłówki skarbca sprzed werdyktu `changed` (odzysk drugiego skarbca, K4). */
+  pinPrev: "kaczy.vault.pin.prev.v1",
   recoveryCheck: "kaczy.vault.recoveryCheck.v1",
 } as const;
 
