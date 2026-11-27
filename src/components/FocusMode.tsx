@@ -84,7 +84,7 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
-      <DialogContent className="max-w-none max-sm:max-w-none max-h-none w-screen h-dvh p-0 rounded-none border-0 bg-background flex flex-col gap-0 sm:rounded-none">
+      <DialogContent className="max-w-none max-sm:max-w-none max-h-none w-screen h-[calc(100dvh-var(--kb-inset,0px))] p-0 rounded-none border-0 bg-background flex flex-col gap-0 sm:rounded-none">
         <DialogTitle className="sr-only">Tryb skupienia</DialogTitle>
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
           <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">

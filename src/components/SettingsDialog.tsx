@@ -95,7 +95,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* Stała wysokość: okno nie skacze przy zmianie zakładki. Na telefonie pełny ekran. */}
-      <DialogContent className="h-dvh max-h-none max-sm:max-w-none rounded-none border-0 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:h-[min(88dvh,44rem)] sm:max-w-2xl sm:rounded-card sm:border sm:py-6 overflow-hidden flex flex-col">
+      <DialogContent className="h-[calc(100dvh-var(--kb-inset,0px))] max-h-none max-sm:max-w-none rounded-none border-0 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:h-[min(88dvh,44rem)] sm:max-w-2xl sm:rounded-card sm:border sm:py-6 overflow-hidden flex flex-col">
         <DialogHeader className="text-left">
           <DialogTitle className="flex items-center gap-2">
             <Settings className="size-5 text-primary-ink" />
