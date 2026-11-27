@@ -5,7 +5,7 @@ import { mergeStored } from "@/lib/extraFields";
 
 /** Pola znane tej wersji (D1.1): reszta wpisu z dokumentu przechodzi przy zapisie (`mergeStored`). */
 const DAY_KNOWN = ["type", "note", "extraMin", "offSchedule", "inLieu", "plannedMin", "timeOff", "hours", "customHours"];
-const TYPE_KNOWN = ["id", "name", "short", "color", "start", "end", "breakMin", "breakAt", "alarmMin", "rate", "kind", "absenceKind", "order"];
+const TYPE_KNOWN = ["id", "name", "short", "color", "start", "end", "breakMin", "breakAt", "alarmMin", "rate", "kind", "absenceKind", "dayOff", "order"];
 const PATTERN_KNOWN = ["id", "name", "steps", "order", "anchor", "appliedUntil", "kind"];
 const BONUS_KNOWN = ["id", "month", "name", "amount"];
 

@@ -1,5 +1,5 @@
 import { shiftSpan } from "./time";
-import type { ShiftType } from "./model";
+import { isWorkType, type ShiftType } from "./model";
 
 /** Minuty od północy czasu lokalnego dla chwili `at`. */
 function minutesOf(at: number): number {
@@ -13,7 +13,7 @@ function minutesOf(at: number): number {
  * Część nocki z poprzedniego dnia nie jest tu sprawdzana.
  */
 export function atWorkingHours(at: number, shift: ShiftType | undefined): boolean {
-  if (!shift || shift.kind === "absence") return false;
+  if (!shift || !isWorkType(shift)) return false;
   const span = shiftSpan(shift);
   if (!span) return false;
   const m = minutesOf(at);

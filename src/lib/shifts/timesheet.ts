@@ -1,4 +1,4 @@
-import { dayType, isAbsence, type ShiftData } from "./model";
+import { dayType, isWorkType, type ShiftData } from "./model";
 import { entryMinutesOn, nightMinutes, parseHm } from "./time";
 import { monthSummary } from "./summary";
 
@@ -31,7 +31,7 @@ export function buildTimesheetCsv(data: ShiftData, year: number, month: number):
     const base = entry && typesById.get(entry.type);
     if (!base) continue;
     const t = dayType(base, entry);
-    const absence = isAbsence(t);
+    const absence = !isWorkType(t);
     rows.push([
       key,
       t.name,

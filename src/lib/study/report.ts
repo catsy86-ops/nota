@@ -2,7 +2,7 @@ import { pluralPl } from "@/lib/plural";
 import { fittingsLine, sumFittings, type Fitting } from "./fittings";
 import { metersLabel, pipesLine, sumPipes, type Pipe } from "./pipes";
 import { testLine } from "./pressureTest";
-import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
+import { dayType, isWorkType, type ShiftData } from "@/lib/shifts/model";
 import { entryMinutesOn, formatDuration } from "@/lib/shifts/time";
 import { entriesPl, entryHeadline, KIND_LABEL } from "./journalView";
 import { entrySiteId, type SiteCard } from "./sites";
@@ -169,7 +169,7 @@ export function workOn(shifts: ShiftData | null | undefined, key: string): Repor
   const base = entry && shifts.types.find((t) => t.id === entry.type);
   if (!base) return null;
   const t = dayType(base, entry);
-  if (isAbsence(t)) return { label: t.name, minutes: 0 };
+  if (!isWorkType(t)) return { label: t.name, minutes: 0 };
   return { label: `${t.name} ${t.start}–${t.end}`, minutes: entryMinutesOn(t, entry, key) };
 }
 

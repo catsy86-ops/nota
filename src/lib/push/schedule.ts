@@ -1,7 +1,7 @@
 import { addDays } from "date-fns";
 import { nextOccurrence, ruleOf, type ReminderRepeat, type RepeatRule } from "@/lib/reminderRepeat";
 import { eveningNudgeFor } from "@/lib/shifts/eveningNudge";
-import { dayType, SHIFT_ALARM_DEFAULT_MIN, type ShiftData, type ShiftType } from "@/lib/shifts/model";
+import { dayType, isWorkType, SHIFT_ALARM_DEFAULT_MIN, type ShiftData, type ShiftType } from "@/lib/shifts/model";
 import { shiftSpan } from "@/lib/shifts/time";
 import { REMINDER_ORDER_DAYS, REMINDER_PROBLEM_DAYS } from "@/lib/study/reminders";
 import { reportDueMinute } from "@/lib/study/reportNudge";
@@ -181,7 +181,7 @@ function shiftEndItems(input: PushInput, now: number): PushItem[] {
     const base = entry && typesById.get(entry.type);
     if (!entry || !base || entry.extraMin !== undefined) continue;
     const t = dayType(base, entry);
-    if (t.kind !== "work") continue;
+    if (!isWorkType(t)) continue;
     const span = shiftSpan(t);
     if (!span) continue;
     // `to` może przekroczyć dobę (zmiana nocna): dzień początku plus minuty daje właściwą chwilę.
@@ -199,7 +199,7 @@ function shiftEndItems(input: PushInput, now: number): PushItem[] {
 
 /**
  * Alarm przed zmianą (G4.1): push `alarmBeforeMin` minut przed początkiem zmiany tego dnia.
- * Domyślnie godzina (`SHIFT_ALARM_DEFAULT_MIN`), 0 wyłącza. Urlop i dzień bez godzin nie mają alarmu.
+ * Domyślnie godzina (`SHIFT_ALARM_DEFAULT_MIN`), 0 wyłącza. Urlop, dzień wolny i dzień bez godzin nie mają alarmu.
  */
 function shiftAlarmItems(input: PushInput, now: number): PushItem[] {
   const { shifts } = input;
@@ -215,7 +215,7 @@ function shiftAlarmItems(input: PushInput, now: number): PushItem[] {
     const base = entry && typesById.get(entry.type);
     if (!entry || !base) continue;
     const t = dayType(base, entry);
-    if (t.kind !== "work") continue;
+    if (!isWorkType(t)) continue;
     const span = shiftSpan(t);
     if (!span) continue;
     const start = wallClock(day, span.from);
@@ -250,7 +250,7 @@ function eveningItems(input: PushInput, now: number): PushItem[] {
   const todayBase = todayEntry && typesById.get(todayEntry.type);
   const nowDate = new Date(now);
   const at = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), h, m).getTime();
-  if (todayBase && dayType(todayBase, todayEntry).kind === "work" && at > now) {
+  if (todayBase && isWorkType(dayType(todayBase, todayEntry)) && at > now) {
     const journalToday = (input.journal ?? []).some((e) => dayKeyOf(e.at) === todayKey);
     const hoursToday = Object.values(input.sites ?? {}).some((c) => c.hours?.some((x) => x.id === todayKey));
     if (!journalToday || !hoursToday) {

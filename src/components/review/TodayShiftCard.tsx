@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { localDayKey } from "@/lib/dayDone";
 import { useShifts, useShiftsReady } from "@/lib/shifts";
 import { shiftInk } from "@/lib/shifts/color";
-import { dayType } from "@/lib/shifts/model";
+import { dayType, isWorkType } from "@/lib/shifts/model";
 import { useShiftNow } from "@/lib/shifts/useShiftNow";
 import { finishShiftNow } from "@/lib/shifts/finishNow";
 import { readEveningNudgeTime } from "@/lib/shifts/eveningNudge";
@@ -69,7 +69,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
   if (!ready) return <div aria-busy="true" aria-label="Wczytuję grafik"><CardSkeleton variant="hero" /></div>;
 
   const t = type ? dayType(type, entry) : undefined;
-  const working = !!t && t.kind !== "absence";
+  const working = !!t && isWorkType(t);
   // Znaczek: zmiana w swoim kolorze; nieobecność i wolne — spokojnie, w barwach karty.
   const badge = t ? t.short : "—";
   const badgeStyle = working ? { backgroundColor: t!.color, color: shiftInk(t!.color) } : undefined;
@@ -99,7 +99,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote, dailyNote = null, re
               : !entry ? "Dziś nie ma zmiany w grafiku."
               : !t ? "Zaplanowana zmiana (rodzaj usunięty)."
               // Godziny wpisane na ten dzień wygrywają z godzinami rodzaju (tak jak w Kalendarzu); nieobecność bez godzin.
-              : t.kind === "absence" ? <span className="font-semibold">{t.name}</span>
+              : !isWorkType(t) ? <span className="font-semibold">{t.name}</span>
               : <><span className="font-semibold">{t.name}</span>, <span className="font-mono tabular-nums">{t.start}–{t.end}</span></>}
           </p>
         </div>

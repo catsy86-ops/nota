@@ -1,4 +1,4 @@
-import { dayType, type DayEntry, type ShiftType } from "@/lib/shifts/model";
+import { dayType, isWorkType, type DayEntry, type ShiftType } from "@/lib/shifts/model";
 import { pluralPl } from "@/lib/plural";
 
 /**
@@ -26,7 +26,7 @@ export function tomorrowLine(entry: DayEntry | undefined, types: readonly ShiftT
   let shift = "wolne";
   if (type) {
     const t = dayType(type, entry);
-    shift = t.kind === "absence" ? t.name : `${t.short} ${t.start}–${t.end}`;
+    shift = !isWorkType(t) ? t.name : `${t.short} ${t.start}–${t.end}`;
   }
   const parts = [shift];
   if (terms > 0) parts.push(`${terms} ${pluralPl(terms, ["termin", "terminy", "terminów"])}`);

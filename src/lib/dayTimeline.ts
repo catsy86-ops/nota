@@ -1,5 +1,5 @@
 import { breakOffset, shiftSpan } from "@/lib/shifts/time";
-import type { ShiftType } from "@/lib/shifts/model";
+import { isWorkType, type ShiftType } from "@/lib/shifts/model";
 
 /**
  * Oś godzin dnia — czysta logika (zakres godzin, paski zmiany w każdej godzinie).
@@ -25,7 +25,7 @@ export const DEFAULT_HOUR_TO = 21;
  * kończy się o północy: część po 24:00 nie mieści się na osi tego dnia.
  */
 export function shiftPieces(shift: ShiftType | undefined): TimelinePiece[] {
-  if (!shift || shift.kind === "absence") return [];
+  if (!shift || !isWorkType(shift)) return [];
   const span = shiftSpan(shift);
   if (!span) return [];
   const off = breakOffset(shift);

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Eraser, LayoutTemplate, MousePointerClick, Pencil, Plus, Repeat } from "lucide-react";
-import { shiftInk, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
+import { shiftInk, shiftTextOnCard, type ShiftType, isWorkType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 /** Co robi stuknięcie w dzień: nanosi zmianę, czyści dzień albo otwiera jego szczegóły. */
@@ -112,7 +112,7 @@ function ToolButton({ active, radio, onClick, Icon, label }: { active: boolean; 
 }
 
 function BrushChip({ type, active, radio, onClick, onEdit }: { type: ShiftType; active: boolean; radio: RadioProps; onClick: () => void; onEdit: () => void }) {
-  const absence = type.kind === "absence";
+  const absence = !isWorkType(type);
   return (
     <div className={cn("shrink-0 flex items-center rounded-card border transition-colors",
       active ? "border-transparent ring-2 ring-offset-2 ring-offset-background" : "border-border/60 bg-card")}

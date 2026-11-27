@@ -3,7 +3,7 @@ import { format, formatDistanceStrict } from "date-fns";
 import { pl } from "date-fns/locale";
 import { localDayKey } from "@/lib/dayDone";
 import { useShifts, useShiftsReady } from "@/lib/shifts";
-import { dayType } from "@/lib/shifts/model";
+import { dayType, isWorkType } from "@/lib/shifts/model";
 import { useShiftNow } from "@/lib/shifts/useShiftNow";
 
 /**
@@ -21,7 +21,7 @@ export default function WidgetShiftLine() {
   let shift = "Dziś nie ma zmiany";
   if (entry && type) {
     const t = dayType(type, entry);
-    shift = t.kind === "absence" ? t.name : `${t.name} ${t.start}–${t.end}`;
+    shift = !isWorkType(t) ? t.name : `${t.name} ${t.start}–${t.end}`;
   } else if (entry) {
     shift = "Zaplanowana zmiana";
   }

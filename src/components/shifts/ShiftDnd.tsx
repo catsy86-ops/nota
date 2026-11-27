@@ -3,7 +3,7 @@ import {
   DndContext, DragOverlay, MouseSensor, TouchSensor, pointerWithin, useDraggable, useDroppable, useSensor, useSensors,
   type DragEndEvent, type DragStartEvent,
 } from "@dnd-kit/core";
-import { dayType, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType, type TransferMode } from "@/lib/shifts";
+import { dayType, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType, type TransferMode, isWorkType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 /** `ask` — dotyk: palec nie ma Alta, więc o przeniesieniu/skopiowaniu pyta małe menu. */
@@ -86,7 +86,7 @@ export function ShiftDnd({ days, typesById, onTransfer, children }: ShiftDndProp
           <span
             aria-hidden
             className="inline-flex items-center gap-1 rounded-field px-2 py-1 font-display font-bold text-sm shadow-elevation-3 ring-2 ring-primary/50"
-            style={type.kind === "absence"
+            style={!isWorkType(type)
               ? { backgroundColor: `color-mix(in srgb, ${type.color} 30%, var(--card))`, color: shiftTextOnCard(type.color) }
               : { backgroundColor: type.color, color: shiftInk(type.color) }}
           >

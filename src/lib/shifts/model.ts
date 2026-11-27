@@ -49,6 +49,12 @@ export interface ShiftType {
    * po nazwie (`absenceKindOf`) — dane sprzed wprowadzenia pola.
    */
   absenceKind?: AbsenceKind;
+  /**
+   * Dzień wolny (tylko przy `kind: "work"`): znacznik w grafiku bez godzin pracy — nie liczy się do
+   * godzin, odpoczynku, alarmów ani eksportu i nie obniża normy. Osobne pole zamiast nowej wartości
+   * `kind`, bo starsza wersja zamienia nieznany `kind` na pracę przy zapisie, a nieznane pole zachowuje.
+   */
+  dayOff?: true;
   /** Pozycja na pasku — kolejność kluczy Y.Map nie jest wspólna dla urządzeń. */
   order?: number;
 }
@@ -259,6 +265,10 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
 export const DEFAULT_LEAVE_DAYS = 20;
 
 export const isAbsence = (t: Pick<ShiftType, "kind">) => t.kind === "absence";
+/** Dzień wolny (`dayOff`): ani praca, ani nieobecność. */
+export const isDayOff = (t: Pick<ShiftType, "kind" | "dayOff">) => t.kind !== "absence" && t.dayOff === true;
+/** Rodzaj, który jest pracą: liczy godziny, odpoczynek, alarmy i eksport. */
+export const isWorkType = (t: Pick<ShiftType, "kind" | "dayOff">) => !isAbsence(t) && !isDayOff(t);
 
 /** Urlopy, które nie są wypoczynkowym i nie ubywają z rocznej puli. */
 const NOT_ANNUAL_LEAVE = /bezp[łl]atn|wychowaw|okoliczno|macierzy|rodzicielsk|ojcowsk|szkoleniow/i;
@@ -296,7 +306,8 @@ function cleanType(t: ShiftType): ShiftType {
   if (out.kind === "absence") out.absenceKind = absenceKindOf({ kind: "absence", name: t.name, absenceKind: ABSENCE_KINDS.includes(t.absenceKind as AbsenceKind) ? t.absenceKind : undefined });
   else delete out.absenceKind;
   if (!(typeof t.breakAt === "string" && HM.test(t.breakAt))) delete out.breakAt;
-  if (!(Number.isInteger(t.alarmMin) && (t.alarmMin as number) >= 0 && (t.alarmMin as number) <= 1440) || out.kind === "absence") delete out.alarmMin;
+  if (out.kind === "absence" || t.dayOff !== true) delete out.dayOff;
+  if (!(Number.isInteger(t.alarmMin) && (t.alarmMin as number) >= 0 && (t.alarmMin as number) <= 1440) || !isWorkType(out)) delete out.alarmMin;
   return out;
 }
 

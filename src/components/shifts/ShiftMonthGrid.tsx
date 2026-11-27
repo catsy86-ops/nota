@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
 import { pl } from "date-fns/locale";
 import { dayKey } from "@/lib/reminderOccurrences";
-import { dayKeyCommand, dayType, entryMinutesOn, formatHoursShort, holidayName, nightMinutes, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { dayKeyCommand, dayType, entryMinutesOn, formatHoursShort, holidayName, nightMinutes, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType, isWorkType } from "@/lib/shifts";
 import { addDaysToKey } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { useToday } from "@/hooks/useToday";
@@ -135,7 +135,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
               const holiday = holidayName(key);
               const inMonth = isSameMonth(day, month);
               const isToday = isSameDay(day, today);
-              const absence = type?.kind === "absence";
+              const absence = (!!type && !isWorkType(type));
               const label = dayAriaLabel({ day, today: isToday, holiday, type, entry });
               // Fala po nałożeniu cyklu: opóźnienie pieczątki według kolejności dnia (bez tego przy ograniczonym ruchu).
               const waveIdx = wave.get(key);

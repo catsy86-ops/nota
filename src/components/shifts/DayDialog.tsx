@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { dayType, entryMinutesOn, formatDuration, holidayName, isAbsence, setDayEntry, shiftHours, shiftInk, shiftMinutes, type DayEntry, type ShiftHours, type ShiftType } from "@/lib/shifts";
+import { dayType, entryMinutesOn, formatDuration, holidayName, isAbsence, setDayEntry, shiftHours, shiftInk, shiftMinutes, type DayEntry, type ShiftHours, type ShiftType, isWorkType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { TimeStepper } from "./TimeStepper";
 
@@ -74,7 +74,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
     ? { start: custom.start, end: custom.end, breakMin: Number(custom.breakMin) } : null;
   // Przerwa „od” dotyczy godzin rodzaju; przy ręcznych godzinach nie ma sensu.
   const type = stored && (customHours ? { ...stored, ...customHours, breakAt: undefined } : stored);
-  const isWork = !!type && !isAbsence(type);
+  const isWork = !!type && isWorkType(type);
   // W niedzielę i święto „poza grafikiem” zmienia dodatek za nadgodziny, w pozostałe dni — wolne za niedzielę.
   const askOffSchedule = isWork && (date.getDay() === 0 || !!holiday);
   const askInLieu = isWork && !askOffSchedule;
@@ -153,7 +153,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
             </div>
           </fieldset>
 
-          {type && type.kind !== "absence" && (
+          {type && isWorkType(type) && (
             <div className="space-y-1.5">
               <Label id="extra-label">Dłużej / krócej niż w planie</Label>
               <div className="flex items-center gap-2" role="group" aria-labelledby="extra-label">
@@ -173,7 +173,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
             </div>
           )}
 
-          {type && stored && type.kind !== "absence" && (
+          {type && stored && isWorkType(type) && (
             <fieldset className="space-y-1.5">
               <legend className="text-sm font-medium mb-1.5">Godziny tego dnia</legend>
               <div className="grid grid-cols-2 gap-x-2 gap-y-2">

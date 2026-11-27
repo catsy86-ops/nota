@@ -12,7 +12,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, useScheduleData, useSchedules, monthSummaryToDate, shortRests, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, planWeekCopy, restoreDays, shiftStore, subscribeShiftDay, takeShiftDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, useScheduleData, useSchedules, monthSummaryToDate, shortRests, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, planWeekCopy, restoreDays, shiftStore, subscribeShiftDay, takeShiftDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type WeekCopyPlan, isWorkType } from "@/lib/shifts";
 import { download } from "@/lib/downloadBlob";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -511,7 +511,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
             onTemplate={() => setTemplateOpen(true)}
           />
         </div>
-        {brush.kind === "type" && typesById.get(brush.id)?.kind !== "absence" && typesById.has(brush.id) && (
+        {brush.kind === "type" && isWorkType(typesById.get(brush.id)!) && typesById.has(brush.id) && (
           <div className="order-4 short:col-span-full">
             <BrushHours key={brush.id} type={typesById.get(brush.id)!} hours={activeHours}
               onChange={(hours) => setBrushHours(hours ? { typeId: brush.id, hours } : null)} />

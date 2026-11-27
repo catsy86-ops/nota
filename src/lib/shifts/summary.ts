@@ -1,4 +1,4 @@
-import { dayType, isAbsence, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftType } from "./model";
+import { dayType, isAbsence, isDayOff, isWorkType, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftType } from "./model";
 import { settlementPeriod } from "./settlement";
 export { settlementPeriod };
 import { dstShiftMinutes, entryMinutesOn, isNightHour, nightMinutes, shiftMinutes, shiftSpan, wallToWork, workToWall } from "./time";
@@ -112,7 +112,7 @@ export function dailyOvertimeSpans(data: ShiftData): OvertimeSpan[] {
   const spans: (WorkSpan & { rate: number })[] = [];
   for (const [key, entry] of Object.entries(data.days)) {
     const base = typesById.get(entry.type);
-    if (!base || isAbsence(base)) continue;
+    if (!base || !isWorkType(base)) continue;
     const type = dayType(base, entry);
     const span = shiftSpan(type);
     if (!span) continue;
@@ -185,7 +185,7 @@ export function premiumRules(data: ShiftData): PremiumRules {
   const inLieu = new Set<string>();
   for (const [key, entry] of Object.entries(data.days)) {
     const type = typesById.get(entry.type);
-    if (!type || isAbsence(type)) continue;
+    if (!type || !isWorkType(type)) continue;
     if (entry.inLieu) inLieu.add(key);
     else if (!entry.offSchedule) scheduled.add(key);
   }
@@ -226,7 +226,7 @@ export function shiftSpansMs(data: ShiftData): { key: string; start: number; end
   const spans: { key: string; start: number; end: number }[] = [];
   for (const [key, entry] of Object.entries(data.days)) {
     const base = typesById.get(entry.type);
-    if (!base || isAbsence(base)) continue;
+    if (!base || !isWorkType(base)) continue;
     const type = dayType(base, entry);
     const span = shiftSpan(type);
     if (!span) continue;
@@ -275,7 +275,8 @@ function monthCore(data: ShiftData, year: number, month: number, otSpans: Overti
   for (const [key, entry] of Object.entries(data.days)) {
     if (!key.startsWith(prefix)) continue;
     const base = typesById.get(entry.type);
-    if (!base) continue;
+    // Dzień wolny to tylko znacznik w grafiku: bez godzin, bez dnia pracy, bez zmiany normy.
+    if (!base || isDayOff(base)) continue;
     const type = dayType(base, entry);
     const m = entryMinutesOn(type, entry, key);
     const t = c.totals.get(base.id) ?? { type: base, count: 0, minutes: 0 };
@@ -426,7 +427,7 @@ export function shiftOccurrenceOn(data: ShiftData, dayKey: string): ShiftOccurre
 function occurrence(data: ShiftData, dayKey: string, typesById: Map<string, ShiftType>): ShiftOccurrence | null {
   const entry = data.days[dayKey];
   const base = entry && typesById.get(entry.type);
-  if (!base || isAbsence(base)) return null;
+  if (!base || !isWorkType(base)) return null;
   const type = dayType(base, entry);
   const span = shiftSpan(type);
   if (!span) return null;

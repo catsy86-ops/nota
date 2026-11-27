@@ -51,11 +51,16 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
 
   const patch = (p: Partial<ShiftType>) => setDraft((d) => ({ ...d, ...p }));
   // Godzina przerwy liczy się tylko przy przerwie dłuższej niż 0 i musi mieścić się w zmianie.
-  const placedBreak = draft.kind !== "absence" && draft.breakMin > 0 && !!draft.breakAt;
+  // Dzień wolny (`dayOff`) to trzecia pozycja przełącznika: bez godzin, przerwy, alarmu i stawki.
+  const dayOff = draft.kind !== "absence" && draft.dayOff === true;
+  const noHours = draft.kind === "absence" || dayOff;
+  const placedBreak = !noHours && draft.breakMin > 0 && !!draft.breakAt;
   const breakOutside = placedBreak && breakOffset(draft) === null;
   // Ta sama godzina na początku i końcu to nie zmiana 24 h — zapis wymaga różnych godzin.
-  const sameHours = draft.kind !== "absence" && draft.start === draft.end;
-  const valid = draft.name.trim() !== "" && shiftSpan(draft) !== null && !breakOutside && !sameHours;
+  const sameHours = !noHours && draft.start === draft.end;
+  const valid = draft.name.trim() !== "" && (dayOff || shiftSpan(draft) !== null) && !breakOutside && !sameHours;
+  // Rodzaj nazwany „Wolne” zapisany jako praca liczył się do godzin i odpoczynku — podpowiedź przełączenia.
+  const looksOff = !noHours && /^(dzień )?woln[ey]\b/i.test(draft.name.trim());
   const parsedRate = parseFloat(rate.replace(",", "."));
   const absence = draft.kind === "absence";
   // Nowy rodzaj: gotowe rodzaje startowe, których nie ma w grafiku (np. usunięte albo „Budowa” z nowszej wersji).
@@ -86,9 +91,10 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
       breakMin: Math.max(0, Math.round(draft.breakMin) || 0),
       breakAt: placedBreak ? draft.breakAt : undefined,
       kind: draft.kind ?? "work",
+      dayOff: dayOff ? true : undefined,
       absenceKind: absence ? absenceKindOf({ ...draft, kind: "absence" }) : undefined,
-      rate: !absence && Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : undefined,
-      alarmMin: !absence && draft.alarmMin !== undefined ? draft.alarmMin : undefined,
+      rate: !noHours && Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : undefined,
+      alarmMin: !noHours && draft.alarmMin !== undefined ? draft.alarmMin : undefined,
     };
     saveShiftType(saved);
     onSaved(saved);
@@ -111,7 +117,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
                   className="h-8 gap-1.5 px-2.5 text-xs coarse:h-11">
                   <span aria-hidden className="size-2.5 rounded-full" style={{ backgroundColor: p.color }} />
                   {p.name}
-                  <span className="text-muted-foreground tabular-nums">{p.kind === "absence" ? "nieobecność" : `${p.start}–${p.end}`}</span>
+                  <span className="text-muted-foreground tabular-nums">{p.kind === "absence" ? "nieobecność" : p.dayOff ? "wolne" : `${p.start}–${p.end}`}</span>
                 </Button>
               ))}
             </div>
@@ -127,10 +133,20 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             <Input id="shift-short" value={draft.short} maxLength={3} onChange={(e) => patch({ short: e.target.value })} placeholder="R" />
           </div>
         </div>
-        <ToggleGroup aria-label="Rodzaj" value={draft.kind ?? "work"} onValueChange={(v) => patch({ kind: v as "work" | "absence" })}>
+        <ToggleGroup aria-label="Rodzaj" value={dayOff ? "off" : draft.kind ?? "work"}
+          onValueChange={(v) => { if (v) patch(v === "off" ? { kind: "work", dayOff: true } : { kind: v as "work" | "absence", dayOff: undefined }); }}>
           <ToggleGroupItem value="work">Praca</ToggleGroupItem>
+          <ToggleGroupItem value="off">Wolne</ToggleGroupItem>
           <ToggleGroupItem value="absence">Nieobecność</ToggleGroupItem>
         </ToggleGroup>
+        {dayOff && (
+          <p className="ui-hint">Znacznik w grafiku: nie liczy się do godzin ani odpoczynku, nie obniża normy i nie ma alarmu.</p>
+        )}
+        {looksOff && (
+          <p className="ui-hint" data-testid="shift-looks-off">
+            To dzień wolny? Wybierz „Wolne” — jako praca liczy się do godzin i ostrzeżeń o odpoczynku.
+          </p>
+        )}
         {absence && (
           <ToggleGroup
             aria-label="Rodzaj nieobecności"
@@ -147,7 +163,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             Nie liczy się do przepracowanych godzin, ale obniża normę miesiąca o czas poniżej. Urlop trafia też do licznika urlopu.
           </p>
         )}
-        <div className="grid grid-cols-3 gap-3">
+        {!dayOff && <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="shift-start">Od</Label>
             <Input id="shift-start" type="time" value={draft.start} onChange={(e) => patch({ start: e.target.value })} />
@@ -162,7 +178,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
               onChange={(e) => patch({ breakMin: Number(e.target.value) })} aria-describedby="shift-break-unit" />
             <span id="shift-break-unit" className="sr-only">minut</span>
           </div>
-        </div>
+        </div>}
         {!absence && draft.breakMin > 0 && (
           <div className="space-y-1.5">
             <Label htmlFor="shift-break-at">Przerwa od (opcjonalnie)</Label>
@@ -176,17 +192,17 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             </p>
           </div>
         )}
-        <p className="text-sm text-muted-foreground">
+        {!dayOff && <p className="text-sm text-muted-foreground">
           {absence ? "Obniża normę o:" : "Czas pracy:"} <span className="font-semibold text-foreground">{formatDuration(shiftMinutes(draft))}</span>
           {!absence && draft.end < draft.start && <span className="text-foreground"> · koniec następnego dnia (+1 dzień)</span>}
-        </p>
-        {!absence && shiftMinutes(draft) > LONG_SHIFT_MINUTES && (
+        </p>}
+        {!noHours && shiftMinutes(draft) > LONG_SHIFT_MINUTES && (
           <p className="text-xs text-destructive-ink">Zmiana dłuższa niż 16 h — sprawdź godziny (koniec mógł być wpisany tego samego dnia zamiast następnego).</p>
         )}
-        {type && (type.start !== draft.start || type.end !== draft.end || type.breakMin !== draft.breakMin || (type.breakAt ?? "") !== (placedBreak ? draft.breakAt : "")) && (
+        {type && !dayOff && (type.start !== draft.start || type.end !== draft.end || type.breakMin !== draft.breakMin || (type.breakAt ?? "") !== (placedBreak ? draft.breakAt : "")) && (
           <p className="ui-hint">Nowe godziny od dziś — dni wcześniejsze zachowają dotychczasowe.</p>
         )}
-        {!absence && <div className="space-y-1.5">
+        {!noHours && <div className="space-y-1.5">
           <Label htmlFor="shift-alarm">Alarm w kalendarzu (.ics)</Label>
           <select id="shift-alarm" value={draft.alarmMin ?? ""} onChange={(e) => patch({ alarmMin: e.target.value === "" ? undefined : Number(e.target.value) })}
             className="w-full h-10 coarse:h-11 rounded-field border border-input bg-background px-3 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
@@ -197,7 +213,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             ))}
           </select>
         </div>}
-        {!absence && <div className="space-y-1.5">
+        {!noHours && <div className="space-y-1.5">
           <Label htmlFor="shift-rate">Stawka za godzinę (opcjonalnie)</Label>
           <Input id="shift-rate" inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="jak domyślna" />
         </div>}

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
-import { applyShiftImport, restoreDays, useShifts } from "@/lib/shifts";
+import { applyShiftImport, isWorkType, restoreDays, useShifts } from "@/lib/shifts";
 import { planShiftsFromIcs, previewDayLabel, type ShiftImportPlan } from "@/lib/shifts/icsShifts";
 import { planShiftsFromCsv } from "@/lib/shifts/csvShifts";
 
@@ -16,7 +16,7 @@ const dni = (n: number) => `${n} ${pluralPl(n, ["dzień", "dni", "dni"])}`;
  */
 export function ShiftsIcsImport() {
   const data = useShifts();
-  const workTypes = data.types.filter((t) => t.kind === "work");
+  const workTypes = data.types.filter(isWorkType);
   const [typeId, setTypeId] = useState(workTypes[0]?.id ?? "");
   const [plan, setPlan] = useState<ShiftImportPlan | null>(null);
   const [fileName, setFileName] = useState("");

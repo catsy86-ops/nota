@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { type ShiftData } from "./model";
-import { weeklyRestShort } from "./summary";
+import { isWorkType, migrate, type ShiftData } from "./model";
+import { monthSummary, shortRests, weeklyRestShort } from "./summary";
 import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "./testShiftTypes";
 
 const withDays = (days: Record<string, { type: string; extraMin?: number }>, patch: Partial<ShiftData> = {}): ShiftData => ({ ...TEST_EMPTY_SHIFT_DATA, types: TEST_SHIFT_TYPES, days, ...patch });
@@ -40,5 +40,40 @@ describe("odpoczynek tygodniowy 35 h (art. 133 KP)", () => {
 
   it("tydzień bez zmian w tym miesiącu nie jest oznaczany", () => {
     expect(weeklyRestShort(withDays({ "2026-09-28": { type: "d" } }), "2026-10-")).toEqual([]);
+  });
+});
+
+describe("dzień wolny (dayOff) nie jest pracą", () => {
+  const OFF = { id: "w", name: "Wolne", short: "W", color: "#64748b", start: "08:00", end: "16:00", breakMin: 0, kind: "work" as const, dayOff: true as const };
+  const data = (days: Record<string, { type: string }>) => withDays(days, { types: [...TEST_SHIFT_TYPES, OFF] });
+
+  it("wolne wpisane między zmianami nie skraca odpoczynku tygodniowego ani dobowego", () => {
+    const days = { ...range("2026-10", 8, 12), "2026-10-13": { type: "w" }, "2026-10-14": { type: "w" } };
+    expect(weeklyRestShort(data(days), "2026-10-")).toEqual([]);
+    expect(shortRests(data(days))).toEqual([]);
+  });
+
+  it("wolne nie dodaje godzin ani dni pracy i nie obniża normy", () => {
+    const withOff = monthSummary(data({ "2026-10-05": { type: "d" }, "2026-10-06": { type: "w" } }), 2026, 9);
+    const without = monthSummary(data({ "2026-10-05": { type: "d" } }), 2026, 9);
+    expect(withOff.minutes).toBe(without.minutes);
+    expect(withOff.daysWorked).toBe(without.daysWorked);
+    expect(withOff.normMinutes).toBe(without.normMinutes);
+  });
+
+  it("isWorkType: praca tak, wolne i nieobecność nie", () => {
+    expect(isWorkType(OFF)).toBe(false);
+    expect(isWorkType({ kind: "absence", dayOff: true })).toBe(false);
+    expect(isWorkType({ kind: "work" })).toBe(true);
+  });
+});
+
+describe("dayOff w zapisie", () => {
+  it("migrate zachowuje dayOff przy pracy, a zdejmuje przy nieobecności i alarm przy wolnym", () => {
+    const t = (over: object) => ({ id: "w", name: "Wolne", short: "W", color: "#64748b", start: "08:00", end: "16:00", breakMin: 0, ...over });
+    const out = migrate({ types: [t({ kind: "work", dayOff: true, alarmMin: 30 }), t({ id: "u", kind: "absence", dayOff: true })] }).types;
+    expect(out.find((x) => x.id === "w")).toMatchObject({ kind: "work", dayOff: true });
+    expect(out.find((x) => x.id === "w")?.alarmMin).toBeUndefined();
+    expect(out.find((x) => x.id === "u")?.dayOff).toBeUndefined();
   });
 });

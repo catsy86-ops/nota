@@ -3,7 +3,7 @@ import { format, isSameDay } from "date-fns";
 import { pl } from "date-fns/locale";
 import { StickyNote } from "lucide-react";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
-import { dayKeyCommand, dayType, entryMinutesOn, formatDuration, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { dayKeyCommand, dayType, entryMinutesOn, formatDuration, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType, isWorkType } from "@/lib/shifts";
 import { addDaysToKey, parseDayKey, weekKeys } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { useToday } from "@/hooks/useToday";
@@ -115,7 +115,7 @@ export const ShiftWeekView = memo(function ShiftWeekView({
           const type = base && dayType(base, entry);
           const holiday = holidayName(key);
           const isToday = isSameDay(day, today);
-          const absence = type?.kind === "absence";
+          const absence = (!!type && !isWorkType(type));
           const occs = remindersByDay.get(key) ?? [];
           const shown = occs.slice(0, MAX_REMINDERS);
           const reminderLabel = occs.length

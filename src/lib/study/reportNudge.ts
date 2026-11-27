@@ -1,4 +1,4 @@
-import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
+import { dayType, isWorkType, type ShiftData } from "@/lib/shifts/model";
 import { dayKeyOf, shiftKey } from "./report";
 import { entrySiteId } from "./sites";
 import type { JournalEntry } from "./journalEntry";
@@ -31,7 +31,7 @@ export function reportDueMinute(shifts: ShiftData | null | undefined, key: strin
   const base = entry && shifts.types.find((t) => t.id === entry.type);
   if (base) {
     const t = dayType(base, entry);
-    if (!isAbsence(t)) {
+    if (isWorkType(t)) {
       const start = toMinutes(t.start);
       const end = toMinutes(t.end);
       if (end > start) return end;

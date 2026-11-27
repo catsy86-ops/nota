@@ -13,7 +13,7 @@ import { DayTimeline } from "./DayTimeline";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import { REPEAT_KIND_LABELS } from "@/lib/reminderRepeat";
-import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
+import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType, isWorkType } from "@/lib/shifts";
 import { DZIEN } from "@/lib/storage/names";
 
 /**
@@ -124,8 +124,8 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
         <p className="flex items-center gap-2 text-sm mb-3">
           <span
             aria-hidden
-            className={`rounded px-1.5 font-display font-bold text-xs leading-5 ${shift.kind === "absence" ? "border" : ""}`}
-            style={shift.kind === "absence"
+            className={`rounded px-1.5 font-display font-bold text-xs leading-5 ${!isWorkType(shift) ? "border" : ""}`}
+            style={!isWorkType(shift)
               ? { borderColor: shift.color, backgroundColor: `color-mix(in srgb, ${shift.color} 16%, transparent)`, color: shiftTextOnCard(shift.color) }
               : { backgroundColor: shift.color, color: shiftInk(shift.color) }}
           >

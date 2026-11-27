@@ -1,5 +1,5 @@
 import { escapeText, foldLine, formatLocal } from "@/lib/icsExport";
-import { dayType, isAbsence, type ShiftData } from "./model";
+import { dayType, isAbsence, isDayOff, type ShiftData } from "./model";
 import { shiftSpan } from "./time";
 import { MAIN_SCHEDULE_ID } from "./yShifts";
 import { GRAFIK } from "@/lib/storage/names";
@@ -70,6 +70,8 @@ export function buildShiftsIcs(data: ShiftData, dayKeys: string[], { alarmMinute
     const base = entry && typesById.get(entry.type);
     if (!base) continue;
     const type = dayType(base, entry);
+    // Dzień wolny to znacznik w grafiku, nie wydarzenie — kalendarz telefonu go nie dostaje.
+    if (isDayOff(type)) continue;
     // SEQUENCE rośnie z każdym eksportem — kalendarze, które znają już ten UID,
     // traktują wpis jako nowszą wersję zamiast go pomijać.
     const lines = ["BEGIN:VEVENT", `UID:${uidPrefix}${key}@notatnik`, `DTSTAMP:${utcStamp(now)}`, `LAST-MODIFIED:${utcStamp(now)}`, `SEQUENCE:${sequence}`];

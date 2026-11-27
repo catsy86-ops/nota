@@ -18,7 +18,7 @@ import { parseMoney } from "@/lib/shifts/money";
 import { SICK_RATE, type AbsenceEstimate } from "@/lib/shifts/absenceEstimate";
 import type { TimeOffBalance } from "@/lib/shifts/timeOff";
 import { useDayClock } from "@/lib/dayClock";
-import { deleteBonus, FTE_OPTIONS, setPaidGross, formatDuration, formatHoursShort, formatMoney, leaveBalance, nightAllowance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
+import { deleteBonus, FTE_OPTIONS, setPaidGross, formatDuration, formatHoursShort, formatMoney, leaveBalance, nightAllowance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem, isWorkType } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { LeaveMeter, YearSummaryDialog } from "./YearSummaryDialog";
@@ -306,7 +306,7 @@ function Receipt({ summary, hourlyRate, monthLabel, estimate, includeEstimate, o
 }) {
   const paid = summary.earnings > 0;
   const lines = summary.byType.map(({ type, count, minutes }) => {
-    const absence = type.kind === "absence";
+    const absence = !isWorkType(type);
     return {
       key: type.id, type, absence,
       qty: absence ? `${count} ${pluralPl(count, ["dzień", "dni", "dni"])}` : `${count} ${pluralPl(count, ["zmiana", "zmiany", "zmian"])}`,

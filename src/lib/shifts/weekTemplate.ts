@@ -1,5 +1,5 @@
 import { startOfWeekKey } from "../week";
-import { isAbsence, type DayEntry, type ShiftPattern, type ShiftType } from "./model";
+import { isWorkType, type DayEntry, type ShiftPattern, type ShiftType } from "./model";
 import { addDaysKey } from "./pattern";
 
 /** Liczba kroków szablonu tygodnia — po jednym na dzień od poniedziałku. */
@@ -11,7 +11,7 @@ export const WEEK_TEMPLATE_LENGTH = 7;
  * ich nie niesie, bo nieobecności są chronione przy nakładaniu.
  */
 export function weekTemplateSteps(days: Record<string, DayEntry>, weekStart: string, types: ShiftType[]): (string | null)[] {
-  const work = new Set(types.filter((t) => !isAbsence(t)).map((t) => t.id));
+  const work = new Set(types.filter(isWorkType).map((t) => t.id));
   return Array.from({ length: WEEK_TEMPLATE_LENGTH }, (_, i) => {
     const entry = days[addDaysKey(weekStart, i)];
     return entry && work.has(entry.type) ? entry.type : null;

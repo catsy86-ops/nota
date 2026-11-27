@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
 import { holidayName } from "@/lib/shifts/holidays";
-import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
+import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType, isWorkType } from "@/lib/shifts";
 import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass } from "./dayCellStyles";
 import { dayDots } from "./dayDots";
 import { pluralPl } from "@/lib/plural";
@@ -180,8 +180,8 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
           {shift && (
             <span
               aria-hidden
-              className={cn("rounded px-1 font-display font-bold text-2xs leading-4", shift.kind === "absence" && "border", !inMonth && "opacity-50")}
-              style={shift.kind === "absence"
+              className={cn("rounded px-1 font-display font-bold text-2xs leading-4", !isWorkType(shift) && "border", !inMonth && "opacity-50")}
+              style={!isWorkType(shift)
                 ? { borderColor: shift.color, backgroundColor: `color-mix(in srgb, ${shift.color} 16%, transparent)`, color: shiftTextOnCard(shift.color) }
                 : { backgroundColor: shift.color, color: shiftInk(shift.color) }}
             >

@@ -5,7 +5,7 @@ import { pl } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, HardHat } from "lucide-react";
 import { studySummary, type StudyDayMarks } from "@/lib/study/calendarMarks";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
-import { holidayName, shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
+import { holidayName, shiftInk, shiftLabel, shiftTextOnCard, type ShiftType, isWorkType } from "@/lib/shifts";
 import { addDaysToKey, parseDayKey, weekKeys, weekRangeLabel } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { dayCellClass, dayNumberClass } from "./dayCellStyles";
@@ -75,7 +75,7 @@ export function WeekStrip({ day, byDay, shiftOf, titleOf, studyOf, onSelectDay }
           const isToday = isSameDay(d, today);
           const selected = key === selectedKey;
           const holiday = holidayName(key);
-          const absence = shift?.kind === "absence";
+          const absence = (!!shift && !isWorkType(shift));
           const label = [
             format(d, "d MMMM", { locale: pl }),
             format(d, "EEEE", { locale: pl }),

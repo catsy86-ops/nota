@@ -5,7 +5,7 @@ import { addDays, format, startOfDay } from "date-fns";
 import { pl } from "date-fns/locale";
 import { ReminderChip } from "./ReminderChip";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
-import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
+import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType, isWorkType } from "@/lib/shifts";
 import { HardHat } from "lucide-react";
 import { studySummary, type StudyDayMarks } from "@/lib/study/calendarMarks";
 import type { Note } from "@/hooks/useNotes";
@@ -44,7 +44,7 @@ export function UpcomingDays({ notes, titleOf, shiftOf, studyOf, onSelectDay }: 
         const shift = shiftOf(key);
         const items = byDay.get(key) ?? [];
         const shown = items.slice(0, MAX_ITEMS);
-        const absence = shift?.kind === "absence";
+        const absence = (!!shift && !isWorkType(shift));
         return (
           <button
             key={key}

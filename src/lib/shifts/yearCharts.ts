@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { monthSummary } from "./summary";
-import { dayType, type ShiftData } from "./model";
+import { dayType, isWorkType, type ShiftData } from "./model";
 import { entryMinutesOn } from "./time";
 
 /** Jeden miesiąc na wykresie roku (G4.3). Godziny są w godzinach dziesiętnych; zarobek w złotych. */
@@ -52,7 +52,7 @@ function workMinutes(data: ShiftData, key: string, typesById: Map<string, ShiftD
   const base = entry && typesById.get(entry.type);
   if (!base) return 0;
   const t = dayType(base, entry);
-  return t.kind === "work" ? entryMinutesOn(t, entry, key) : 0;
+  return isWorkType(t) ? entryMinutesOn(t, entry, key) : 0;
 }
 
 /** W5.3: minuty pracy pon–nd tygodnia, w którym leży `day` — do paska tygodnia na karcie Dziś. */

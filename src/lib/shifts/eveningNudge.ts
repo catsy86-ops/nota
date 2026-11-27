@@ -1,5 +1,5 @@
 import { addDays } from "date-fns";
-import { dayType, type DayEntry, type ShiftType } from "./model";
+import { dayType, isWorkType, type DayEntry, type ShiftType } from "./model";
 import { GRAFIK } from "@/lib/storage/names";
 
 /**
@@ -18,9 +18,9 @@ const TIME = /^(\d{1,2}):(\d{2})$/;
 const pad = (n: number) => String(n).padStart(2, "0");
 const keyOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-/** Zmiana jako tekst: nazwa nieobecności albo nazwa z godzinami. */
-export function shiftLabel(shift: Pick<ShiftType, "kind" | "name" | "start" | "end">): string {
-  return shift.kind === "absence" ? shift.name : `${shift.name} ${shift.start}–${shift.end}`;
+/** Zmiana jako tekst: nazwa nieobecności lub dnia wolnego albo nazwa z godzinami. */
+export function shiftLabel(shift: Pick<ShiftType, "kind" | "dayOff" | "name" | "start" | "end">): string {
+  return !isWorkType(shift) ? shift.name : `${shift.name} ${shift.start}–${shift.end}`;
 }
 
 export function readEveningNudgeTime(): string | null {
