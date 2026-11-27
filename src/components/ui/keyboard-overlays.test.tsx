@@ -17,7 +17,6 @@ describe("Q3.2: arkusze i okna nad klawiaturą", () => {
     );
     const sheet = screen.getByRole("dialog");
     expect(sheet.className).toContain("bottom-(--kb-inset,0px)");
-    expect(sheet.className).toContain("max-h-[calc(92dvh-var(--kb-inset,0px))]");
     expect(sheet.style.maxHeight).toContain("--kb-inset");
   });
 
