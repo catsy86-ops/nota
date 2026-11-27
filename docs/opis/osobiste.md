@@ -788,5 +788,5 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Koniec przerwy wchodzi do harmonogramu tylko przy chowaniu aplikacji (`send(true)`), więc przy otwartej nie ma dwóch sygnałów; po powrocie lista idzie od nowa bez przerwy i alarm znika. Przerwa nie jest zapisywana na dysk — zamknięta aplikacja ma alarm postawiony przy chowaniu.
 - **Ograniczenia.** Działa tylko przy włączonych powiadomieniach przy zamkniętej aplikacji (serwer push albo alarmy APK). „+30 s” przy schowanej aplikacji niemożliwe, więc koniec się nie przesuwa. Kanał APK „przerwa” tworzy się przy pierwszym uruchomieniu nowej wersji.
 - **Testy.** `src/lib/push/schedule.test.ts` („C2.6”). Na telefonie — w QA.
-- **Commit.** zob. historię (2026-11-27).
+- **Commit.** `56effe10` — 2026-11-27.
 
