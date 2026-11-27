@@ -44,3 +44,27 @@ test("kod parowania ma 12 znaków, krótsze nie są przyjmowane, bez znaków spo
   await expect(field).toHaveValue("ABCDEFGHJKMN");
   await expect(join).toBeEnabled();
 });
+
+test("U2.4: bez grupy dwa wybory; w grupie dołączenie zwinięte, „Odłącz” na samym dole", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?settings=sync");
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("heading", { name: "Mam już grupę" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Zacznij nową grupę" })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Urządzenia w grupie" })).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Odłącz to urządzenie" })).toHaveCount(0);
+
+  await page.evaluate(() => {
+    localStorage.setItem("kaczy.sync.v1", JSON.stringify({ enabled: false, code: "ABCD2345EFGH", signaling: [], legacyRoom: false, shortCodeDropped: false }));
+  });
+  await page.goto("/?settings=sync");
+  await expect(dialog.getByRole("heading", { name: "Urządzenia w grupie" })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Mam już grupę" })).toHaveCount(0);
+  await expect(dialog.getByLabel("Kod z innego urządzenia")).toBeHidden();
+  await dialog.getByText("Dołącz do innej grupy").click();
+  await expect(dialog.getByLabel("Kod z innego urządzenia")).toBeVisible();
+  // „Odłącz” jest pod całą kartą synchronizacji (niżej niż „Jak to działa”).
+  const how = await dialog.getByRole("heading", { name: "Jak to działa" }).boundingBox();
+  const forget = await dialog.getByRole("button", { name: "Odłącz to urządzenie" }).boundingBox();
+  expect(forget!.y).toBeGreaterThan(how!.y);
+});

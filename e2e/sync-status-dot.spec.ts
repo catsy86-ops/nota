@@ -19,5 +19,5 @@ test("w grupie jest kropka; stuknięcie otwiera Ustawienia na karcie Synchroniza
   const dot = page.getByRole("button", { name: /^Synchronizacja:/ });
   await expect(dot).toBeVisible();
   await dot.click();
-  await expect(page.getByRole("dialog").getByText("Dołącz do istniejącej grupy")).toBeVisible();
+  await expect(page.getByRole("dialog").getByRole("heading", { name: "Urządzenia w grupie" })).toBeVisible();
 });

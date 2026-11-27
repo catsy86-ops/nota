@@ -94,8 +94,13 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
     setV3For(v3 ? code : null);
   }
 
+  // U2.4: w grupie dołączenie do innej jest zwinięte; rozwija je link parowania i „Sparuj ponownie”.
+  const [joinOpen, setJoinOpen] = useState(() => !!prefillCode);
   useEffect(() => {
-    if (prefillCode) fillJoin(codeFromPaste(prefillCode), prefillV3 === true);
+    if (prefillCode) {
+      fillJoin(codeFromPaste(prefillCode), prefillV3 === true);
+      setJoinOpen(true);
+    }
   }, [prefillCode, prefillV3]);
 
   function handleRename() {
@@ -138,9 +143,18 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
   }
 
   function focusJoin() {
-    const el = document.getElementById(JOIN_CODE_INPUT_ID);
-    el?.scrollIntoView({ block: "center" });
-    el?.focus();
+    setJoinOpen(true);
+    // Rozwinięcie „Dołącz do innej grupy” renderuje pole dopiero w następnej klatce.
+    requestAnimationFrame(() => {
+      const el = document.getElementById(JOIN_CODE_INPUT_ID);
+      el?.scrollIntoView({ block: "center" });
+      el?.focus();
+    });
+  }
+
+  function handleNewGroup() {
+    startPairing();
+    toast.success("Nowa grupa gotowa — pokaż kod i zeskanuj go na drugim urządzeniu");
   }
 
   /** „Kod do przepisania ręcznie” (S2.2): krótki kod zastępuje obecny. */
@@ -190,11 +204,81 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
         ? "Aktywna — szukanie urządzeń…"
         : "Wyłączona";
 
+  const inGroup = !!syncState.code;
+  const rekeyed = syncState.status === "rekeyed";
+
+  const joinForm = (
+    <>
+      <Suspense fallback={null}>
+        {scanOpen && <QrScanDialog open={scanOpen} onOpenChange={setScanOpen} onCode={(c, raw) => { fillJoin(c, pairTextIsV3(raw)); toast.success("Kod odczytany — kliknij Dołącz"); }} />}
+      </Suspense>
+      <form
+        className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center"
+        onSubmit={(e) => { e.preventDefault(); handleJoin(); }}
+      >
+        <JoinCodeField
+          value={joinInput}
+          long={joinLong}
+          onChange={(code, long) => { setJoinInput(code); setJoinLong(long); }}
+          onPasteText={(text) => { const code = codeFromPaste(text); setV3For(pairTextIsV3(text) ? code : null); }}
+        />
+        <Button type="button" variant="outline" onClick={() => setScanOpen(true)} className="coarse:h-11">Zeskanuj kod</Button>
+        <Button type="submit" disabled={!joinReady} className="coarse:h-11">Dołącz</Button>
+      </form>
+      <label className="flex items-start gap-2 text-xs">
+        <Checkbox className="mt-0.5" checked={replaceLocal} onCheckedChange={(v) => setReplaceLocal(v === true)} />
+        <span>
+          Zastąp dane na tym urządzeniu danymi grupy
+          <span className="block text-2xs text-muted-foreground">Gdy na innym urządzeniu przywrócono cały dokument z kopii. Bez tego dane tego urządzenia scalą się z grupą i cofną przywrócenie.</span>
+        </span>
+      </label>
+      <AlertDialog open={confirmReplace} onOpenChange={(o) => { if (!replacing) setConfirmReplace(o); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Zastąpić dane na tym urządzeniu?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Wszystkie dane w aplikacji na tym urządzeniu zostaną usunięte i zastąpione danymi grupy (zostanie ich kopia na 30 dni w Ustawieniach → Kopia i dane). Aplikacja przeładuje się, także w innych otwartych kartach.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={replacing}>Anuluj</AlertDialogCancel>
+            <AlertDialogAction disabled={replacing} onClick={(e) => { e.preventDefault(); void joinReplacing(); }}>
+              {replacing ? "Zapisuję kopię obecnych danych…" : "Zastąp i dołącz"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <p id="sync-join-hint" className="text-2xs text-muted-foreground">
+        Kod z drugiego urządzenia (12 albo 28 znaków) — możesz wkleić cały link. Starszy, 8-znakowy kod już nie zadziała — wygeneruj nowy.{" "}
+        <button
+          type="button"
+          className="underline underline-offset-2 hover:text-foreground"
+          onClick={() => { setJoinLong(!joinLong); setJoinInput(""); setV3For(null); }}
+        >
+          {joinLong ? "Mam kod 12-znakowy" : "Mam kod 28-znakowy"}
+        </button>
+      </p>
+    </>
+  );
+
+  const deviceNameForm = (
+    <form
+      className="flex items-end gap-2"
+      onSubmit={(e) => { e.preventDefault(); handleRename(); }}
+    >
+      <div className="flex-1 min-w-0 space-y-1">
+        <label htmlFor="sync-device-name" className="text-xs text-muted-foreground">Nazwa tego urządzenia</label>
+        <Input id="sync-device-name" value={deviceName} maxLength={40} onChange={(e) => setDeviceNameDraft(e.target.value)} />
+      </div>
+      <Button type="submit" variant="outline" className="coarse:h-11">Zapisz</Button>
+    </form>
+  );
+
   return (
     <div className="space-y-4">
       <div className={cn(cardVariant("inset"), "flex items-center justify-between gap-4 px-4 py-3")}>
         <div className="flex items-start gap-3 min-w-0">
-          {syncState.status === "rekeyed" ? (
+          {rekeyed ? (
             <WifiOff className="size-5 text-warning-ink shrink-0 mt-0.5" />
           ) : syncState.status !== "disabled" ? (
             <Wifi className="size-5 text-primary-ink shrink-0 mt-0.5" />
@@ -204,10 +288,10 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
           <div className="min-w-0">
             <p className="text-sm font-semibold">Synchronizacja między urządzeniami</p>
             <p className="ui-hint mt-0.5" role="status" aria-live="polite">{statusLabel}</p>
-            {syncState.status !== "disabled" && syncState.status !== "rekeyed" && (
+            {syncState.status !== "disabled" && !rekeyed && (
               <p className="ui-hint mt-1" data-testid="sync-diagnosis">{diagnosis(syncState)}</p>
             )}
-            {syncState.status !== "disabled" && syncState.status !== "rekeyed" && (
+            {syncState.status !== "disabled" && !rekeyed && (
               <p className="text-2xs text-muted-foreground mt-0.5">
                 {syncState.lastSyncedAt
                   ? `Ostatnia zmiana z innego urządzenia: ${formatDistanceToNow(syncState.lastSyncedAt, { addSuffix: true, locale: pl })}`
@@ -226,141 +310,11 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
         <Switch checked={syncState.status !== "disabled"} onCheckedChange={handleToggle} aria-label="Synchronizacja między urządzeniami" />
       </div>
 
-      {syncState.status === "rekeyed" && <RekeyedCard onPairAgain={focusJoin} />}
-      {syncState.status !== "rekeyed" && proposal.kind && <NewCodeCard kind={proposal.kind} />}
-      {syncState.status !== "disabled" && syncState.status !== "rekeyed" && syncState.p2pPausedUntil > 0 && (
+      {rekeyed && <RekeyedCard onPairAgain={focusJoin} />}
+      {!rekeyed && proposal.kind && <NewCodeCard kind={proposal.kind} />}
+      {syncState.status !== "disabled" && !rekeyed && syncState.p2pPausedUntil > 0 && (
         <PeerPausedCard until={syncState.p2pPausedUntil} pausesToday={syncState.p2pPausesToday} />
       )}
-
-      <div className={cn(cardVariant("inset"), "p-4 space-y-3")}>
-        <h3 className="section-caps">Urządzenia w grupie</h3>
-        <V2OnlyNotices />
-        {olderDevices(syncState.devices).length > 0 && (
-          <p role="status" className="rounded-control border border-warning/50 bg-warning/10 px-3 py-2 text-xs text-foreground">
-            {olderDevices(syncState.devices).map((d) => d.name).join(", ")} ma starszą wersję aplikacji — część danych może być na nim niewidoczna. Zaktualizuj go.
-          </p>
-        )}
-        {syncState.devices.length > 0 ? (
-          <ul className="space-y-1 text-sm" aria-label="Połączone urządzenia">
-            {syncState.devices.map((d) => (
-              <li key={d.id} className="flex items-center gap-2">
-                <span className="size-2 rounded-full bg-success shrink-0" aria-hidden="true" />
-                {d.name}
-                {d.version && <span className="text-xs text-muted-foreground">· wersja {d.version}</span>}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="ui-hint">Żadne inne urządzenie nie jest teraz połączone.</p>
-        )}
-        {offline.length > 0 && (
-          <div data-testid="sync-seen">
-            <p className="ui-hint">Ostatnio widziane</p>
-            <ul className="mt-1 space-y-1 text-sm" aria-label="Ostatnio widziane urządzenia">
-              {offline.slice(0, 6).map((d) => (
-                <li key={d.name} className="flex items-center gap-2">
-                  <span className="size-2 rounded-full bg-muted-foreground/40 shrink-0" aria-hidden="true" />
-                  {d.name}
-                  <span className="text-xs text-muted-foreground">· {formatDistanceToNow(d.at, { addSuffix: true, locale: pl })}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <DeviceRegistryList />
-        <form
-          className="flex items-end gap-2"
-          onSubmit={(e) => { e.preventDefault(); handleRename(); }}
-        >
-          <div className="flex-1 min-w-0 space-y-1">
-            <label htmlFor="sync-device-name" className="text-xs text-muted-foreground">Nazwa tego urządzenia</label>
-            <Input id="sync-device-name" value={deviceName} maxLength={40} onChange={(e) => setDeviceNameDraft(e.target.value)} />
-          </div>
-          <Button type="submit" variant="outline" className="coarse:h-11">Zapisz</Button>
-        </form>
-      </div>
-
-      {syncState.code && (
-        <div className={cn(cardVariant("inset"), "p-4 space-y-3 text-center")}>
-          <h3 className="section-caps">Dodaj urządzenie</h3>
-          <p className="ui-hint">
-            Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
-            {codeIsLong && " Oba urządzenia muszą mieć aktualną wersję aplikacji."}
-          </p>
-          {revealed ? (
-            <>
-              <div className="flex justify-center">
-                <div className="bg-white p-2 rounded-field">
-                  <QRCodeSVG value={pairUrl} size={140} title="Kod QR do sparowania urządzenia" />
-                </div>
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <GroupedCode code={syncState.code} />
-                <Button type="button" size="sm" variant="ghost" onClick={handleCopy} aria-label="Kopiuj kod" className="h-7 px-2 coarse:h-11 coarse:px-3">
-                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                </Button>
-              </div>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setRevealed(false)} className="text-muted-foreground gap-1.5 coarse:h-11">
-                <EyeOff className="size-3.5" /> Ukryj kod
-              </Button>
-              <p className="ui-hint">Kod ukryje się sam po minucie.</p>
-            </>
-          ) : (
-            <Button type="button" variant="outline" onClick={() => setRevealed(true)} className="gap-1.5 coarse:h-11">
-              <Eye className="size-4" /> Pokaż kod i QR
-            </Button>
-          )}
-          <div className="flex flex-wrap justify-center gap-x-2">
-            {codeIsLong && (
-              <Button type="button" variant="ghost" size="sm" onClick={() => setShortOpen(true)} className="text-muted-foreground coarse:h-11">
-                Kod do przepisania ręcznie
-              </Button>
-            )}
-            <Button type="button" variant="ghost" size="sm" onClick={() => setForgetOpen(true)} className="text-muted-foreground hover:text-destructive-ink gap-1.5 coarse:h-11">
-              <LogOut className="size-3.5" /> Odłącz to urządzenie
-            </Button>
-          </div>
-          <AlertDialog open={shortOpen} onOpenChange={setShortOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Utworzyć krótki kod?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Krótki kod łatwiej przepisać, ale słabiej chroni przed zgadywaniem przez operatora serwera pośredniczącego.
-                  Jeśli możesz, zeskanuj kod QR. Krótki kod zastąpi obecny — urządzenia, które już go użyły, trzeba będzie sparować ponownie.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                <AlertDialogAction onClick={() => { setShortOpen(false); handleShortCode(); }}>Utwórz krótki kod</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          {/* Odłączenie działa tylko na tym urządzeniu; bez potwierdzenia łatwo to kliknąć przez pomyłkę. */}
-          <AlertDialog open={forgetOpen} onOpenChange={setForgetOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Odłączyć to urządzenie?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Pozostałe urządzenia zostaną w grupie i dalej się ze sobą synchronizują. Ta przeglądarka przestanie się synchronizować
-                  i dostanie nowy kod. Dane w niej zostaną. Żeby wrócić, trzeba wpisać kod z innego urządzenia.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                {getRelayUrl() && (
-                  <AlertDialogAction className={buttonVariants({ variant: "outline" })} onClick={() => { setForgetOpen(false); void handleForgetAndDelete(); }} data-testid="forget-and-delete-relay">
-                    Odłącz i usuń z przekaźnika (wszystkie urządzenia)
-                  </AlertDialogAction>
-                )}
-                <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => { setForgetOpen(false); handleForget(); }}>Odłącz</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      )}
-
-      {/* Wymiana kodu (Z-15.3): przy działającej grupie albo gdy wymiana już trwa (także w kroku po przełączeniu). */}
-      {((syncState.code && syncState.status !== "rekeyed") || rekeyRecord) && <CodeChangePanel />}
 
       {wasShortCodeDropped() && (
         <div role="alert" className={cn(cardVariant("status", "warning"), "bg-warning/10 p-3 text-xs space-y-2")}>
@@ -380,58 +334,136 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
         </div>
       )}
 
-      <div className={cn(cardVariant("inset"), "p-4 space-y-2")}>
-        <h3 className="section-caps">Dołącz do istniejącej grupy</h3>
-        <Suspense fallback={null}>
-          {scanOpen && <QrScanDialog open={scanOpen} onOpenChange={setScanOpen} onCode={(c, raw) => { fillJoin(c, pairTextIsV3(raw)); toast.success("Kod odczytany — kliknij Dołącz"); }} />}
-        </Suspense>
-        <form
-          className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center"
-          onSubmit={(e) => { e.preventDefault(); handleJoin(); }}
+      {/* U2.4: bez grupy — dwa wybory zamiast listy kart; dołączenie jest pierwsze, bo drugie urządzenie to częstszy przypadek. */}
+      {!inGroup && (
+        <div className="space-y-3" data-testid="sync-no-group">
+          <section className={cn(cardVariant("inset"), "p-4 space-y-3")} aria-labelledby="sync-have-group">
+            <div>
+              <h3 id="sync-have-group" className="text-sm font-semibold">Mam już grupę</h3>
+              <p className="ui-hint mt-0.5">Wpisz albo zeskanuj kod z urządzenia, które już synchronizuje.</p>
+            </div>
+            {joinForm}
+          </section>
+          <section className={cn(cardVariant("inset"), "p-4 space-y-3")} aria-labelledby="sync-new-group">
+            <div>
+              <h3 id="sync-new-group" className="text-sm font-semibold">Zacznij nową grupę</h3>
+              <p className="ui-hint mt-0.5">To pierwsze urządzenie. Dostaniesz kod i QR do zeskanowania na następnych.</p>
+            </div>
+            <Button type="button" variant="outline" onClick={handleNewGroup} className="w-full sm:w-auto coarse:h-11">Zacznij nową grupę</Button>
+          </section>
+          <div className={cn(cardVariant("inset"), "p-4")}>{deviceNameForm}</div>
+        </div>
+      )}
+
+      {inGroup && (
+        <div className={cn(cardVariant("inset"), "p-4 space-y-3")}>
+          <h3 className="section-caps">Urządzenia w grupie</h3>
+          <V2OnlyNotices />
+          {olderDevices(syncState.devices).length > 0 && (
+            <p role="status" className="rounded-control border border-warning/50 bg-warning/10 px-3 py-2 text-xs text-foreground">
+              {olderDevices(syncState.devices).map((d) => d.name).join(", ")} ma starszą wersję aplikacji — część danych może być na nim niewidoczna. Zaktualizuj go.
+            </p>
+          )}
+          {syncState.devices.length > 0 ? (
+            <ul className="space-y-1 text-sm" aria-label="Połączone urządzenia">
+              {syncState.devices.map((d) => (
+                <li key={d.id} className="flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-success shrink-0" aria-hidden="true" />
+                  {d.name}
+                  {d.version && <span className="text-xs text-muted-foreground">· wersja {d.version}</span>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="ui-hint">Żadne inne urządzenie nie jest teraz połączone.</p>
+          )}
+          {offline.length > 0 && (
+            <div data-testid="sync-seen">
+              <p className="ui-hint">Ostatnio widziane</p>
+              <ul className="mt-1 space-y-1 text-sm" aria-label="Ostatnio widziane urządzenia">
+                {offline.slice(0, 6).map((d) => (
+                  <li key={d.name} className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-muted-foreground/40 shrink-0" aria-hidden="true" />
+                    {d.name}
+                    <span className="text-xs text-muted-foreground">· {formatDistanceToNow(d.at, { addSuffix: true, locale: pl })}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <DeviceRegistryList />
+          {deviceNameForm}
+        </div>
+      )}
+
+      {inGroup && (
+        <div className={cn(cardVariant("inset"), "p-4 space-y-3 text-center")}>
+          <h3 className="section-caps">Dodaj urządzenie</h3>
+          <p className="ui-hint">
+            Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
+            {codeIsLong && " Oba urządzenia muszą mieć aktualną wersję aplikacji."}
+          </p>
+          {revealed ? (
+            <>
+              <div className="flex justify-center">
+                <div className="bg-white p-2 rounded-field">
+                  <QRCodeSVG value={pairUrl} size={140} title="Kod QR do sparowania urządzenia" />
+                </div>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <GroupedCode code={syncState.code!} />
+                <Button type="button" size="sm" variant="ghost" onClick={handleCopy} aria-label="Kopiuj kod" className="h-7 px-2 coarse:h-11 coarse:px-3">
+                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                </Button>
+              </div>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setRevealed(false)} className="text-muted-foreground gap-1.5 coarse:h-11">
+                <EyeOff className="size-3.5" /> Ukryj kod
+              </Button>
+              <p className="ui-hint">Kod ukryje się sam po minucie.</p>
+            </>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => setRevealed(true)} className="gap-1.5 coarse:h-11">
+              <Eye className="size-4" /> Pokaż kod i QR
+            </Button>
+          )}
+          {codeIsLong && (
+            <div className="flex justify-center">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setShortOpen(true)} className="text-muted-foreground coarse:h-11">
+                Kod do przepisania ręcznie
+              </Button>
+            </div>
+          )}
+          <AlertDialog open={shortOpen} onOpenChange={setShortOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Utworzyć krótki kod?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Krótki kod łatwiej przepisać, ale słabiej chroni przed zgadywaniem przez operatora serwera pośredniczącego.
+                  Jeśli możesz, zeskanuj kod QR. Krótki kod zastąpi obecny — urządzenia, które już go użyły, trzeba będzie sparować ponownie.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { setShortOpen(false); handleShortCode(); }}>Utwórz krótki kod</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
+
+      {/* Wymiana kodu (Z-15.3): przy działającej grupie albo gdy wymiana już trwa (także w kroku po przełączeniu). */}
+      {((inGroup && !rekeyed) || rekeyRecord) && <CodeChangePanel />}
+
+      {inGroup && (
+        <details
+          className={cn(cardVariant("inset"), "disclosure group p-4 space-y-2")}
+          open={joinOpen || rekeyed}
+          onToggle={(e) => setJoinOpen((e.currentTarget as HTMLDetailsElement).open)}
         >
-          <JoinCodeField
-            value={joinInput}
-            long={joinLong}
-            onChange={(code, long) => { setJoinInput(code); setJoinLong(long); }}
-            onPasteText={(text) => { const code = codeFromPaste(text); setV3For(pairTextIsV3(text) ? code : null); }}
-          />
-          <Button type="button" variant="outline" onClick={() => setScanOpen(true)} className="coarse:h-11">Zeskanuj kod</Button>
-          <Button type="submit" disabled={!joinReady} className="coarse:h-11">Dołącz</Button>
-        </form>
-        <label className="flex items-start gap-2 text-xs">
-          <Checkbox className="mt-0.5" checked={replaceLocal} onCheckedChange={(v) => setReplaceLocal(v === true)} />
-          <span>
-            Zastąp dane na tym urządzeniu danymi grupy
-            <span className="block text-2xs text-muted-foreground">Gdy na innym urządzeniu przywrócono cały dokument z kopii. Bez tego dane tego urządzenia scalą się z grupą i cofną przywrócenie.</span>
-          </span>
-        </label>
-        <AlertDialog open={confirmReplace} onOpenChange={(o) => { if (!replacing) setConfirmReplace(o); }}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Zastąpić dane na tym urządzeniu?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Wszystkie dane w aplikacji na tym urządzeniu zostaną usunięte i zastąpione danymi grupy (zostanie ich kopia na 30 dni w Ustawieniach → Kopia i dane). Aplikacja przeładuje się, także w innych otwartych kartach.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={replacing}>Anuluj</AlertDialogCancel>
-              <AlertDialogAction disabled={replacing} onClick={(e) => { e.preventDefault(); void joinReplacing(); }}>
-                {replacing ? "Zapisuję kopię obecnych danych…" : "Zastąp i dołącz"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        <p id="sync-join-hint" className="text-2xs text-muted-foreground">
-          Kod z drugiego urządzenia (12 albo 28 znaków) — możesz wkleić cały link. Starszy, 8-znakowy kod już nie zadziała — wygeneruj nowy.{" "}
-          <button
-            type="button"
-            className="underline underline-offset-2 hover:text-foreground"
-            onClick={() => { setJoinLong(!joinLong); setJoinInput(""); setV3For(null); }}
-          >
-            {joinLong ? "Mam kod 12-znakowy" : "Mam kod 28-znakowy"}
-          </button>
-        </p>
-      </div>
+          <summary className="cursor-pointer text-sm font-semibold text-foreground select-none">Dołącz do innej grupy</summary>
+          <div className="mt-3 space-y-2">{joinForm}</div>
+        </details>
+      )}
 
       <SignalingServers />
 
@@ -463,6 +495,36 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
           <li>Obrazy idą osobnym kanałem: nowy obrazek trafia na drugie urządzenie, gdy oba są online przy dodaniu albo przy kolejnym połączeniu.</li>
         </ul>
       </div>
+
+      {/* U2.4: odłączenie na samym dole — rzadkie i nieodwracalne bez kodu z innego urządzenia. */}
+      {inGroup && (
+        <div className="flex justify-center">
+          <Button type="button" variant="ghost" size="sm" onClick={() => setForgetOpen(true)} className="text-muted-foreground hover:text-destructive-ink gap-1.5 coarse:h-11">
+            <LogOut className="size-3.5" /> Odłącz to urządzenie
+          </Button>
+          {/* Odłączenie działa tylko na tym urządzeniu; bez potwierdzenia łatwo to kliknąć przez pomyłkę. */}
+          <AlertDialog open={forgetOpen} onOpenChange={setForgetOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Odłączyć to urządzenie?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Pozostałe urządzenia zostaną w grupie i dalej się ze sobą synchronizują. Ta przeglądarka przestanie się synchronizować
+                  i dostanie nowy kod. Dane w niej zostaną. Żeby wrócić, trzeba wpisać kod z innego urządzenia.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                {getRelayUrl() && (
+                  <AlertDialogAction className={buttonVariants({ variant: "outline" })} onClick={() => { setForgetOpen(false); void handleForgetAndDelete(); }} data-testid="forget-and-delete-relay">
+                    Odłącz i usuń z przekaźnika (wszystkie urządzenia)
+                  </AlertDialogAction>
+                )}
+                <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => { setForgetOpen(false); handleForget(); }}>Odłącz</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
     </div>
   );
 }
