@@ -2,6 +2,7 @@ import { useCallback, useSyncExternalStore } from "react";
 import { cleanSchemaClaim, SCHEMA_VERSION } from "@/lib/formatSchema";
 import { logSecurity } from "@/lib/diagnostics";
 import { DANE } from "@/lib/storage/names";
+import { readDevices } from "@/lib/deviceRegistry";
 
 /**
  * Wymaganie wersji zapisane w dokumencie (D1.3, `docs/plan-migracje-yjs-2026-11-15.md`). Mapa `docFormat`: klucz =
@@ -14,8 +15,8 @@ import { DANE } from "@/lib/storage/names";
  * dostaje każdy magazyn osobno, razem z cechą, która jej wymaga — pierwsze wydanie tylko zapisuje, czyta i pokazuje baner.
  *
  * Wartości z dokumentu są niezaufane: znający kod synchronizacji mógłby wpisać wysokie wymaganie i zablokować zapis
- * wszystkim. Stąd czyszczenie (`cleanSchemaClaim`), wpis bezpieczeństwa przy wymaganiu ponad `SCHEMA_VERSION + 1`
- * (do czasu rejestru urządzeń z D4.1) i ręczne „Ignoruj i pisz” (`ignoreDocFormat`).
+ * wszystkim. Stąd czyszczenie (`cleanSchemaClaim`), wpis bezpieczeństwa przy wymaganiu ponad najwyższą wersję z rejestru
+ * urządzeń (D4.1, `claimCeiling`; pusty rejestr — ponad `SCHEMA_VERSION + 1`) i ręczne „Ignoruj i pisz” (`ignoreDocFormat`).
  *
  * D1.4 — granica: wersje wydane przed 2026-11-18 tej mapy nie znają. Zmiany niszczące dla starszych klientów dopiero
  * po D4 (rejestr urządzeń).
@@ -96,14 +97,26 @@ export interface DocFormatStatus {
 
 const reported = new Set<string>();
 
+/**
+ * Najwyższe wymaganie, które nie jest podejrzane: najnowsza wersja formatu wśród urządzeń w rejestrze (i ta aplikacja).
+ * Bez rejestru (jedno urządzenie, grupa sprzed D4.1) — o jedną wersję więcej niż ta aplikacja, jak przed D4.1.
+ * Rejestr też jest w dokumencie, więc to tylko próg wpisu bezpieczeństwa, nie zabezpieczenie.
+ */
+export function claimCeiling(doc: DocLike, current: number = SCHEMA_VERSION): number {
+  const schemas = readDevices(doc as Parameters<typeof readDevices>[0]).map((d) => d.schema).filter((s): s is number => s !== undefined);
+  return schemas.length ? Math.max(current, ...schemas) : current + 1;
+}
+
 /** Stan dla banera; przy wymaganiu podejrzanie wysokim — jeden wpis bezpieczeństwa na cechę i wartość. */
 export function docFormatStatus(doc: DocLike, current: number = SCHEMA_VERSION): DocFormatStatus {
   const tooNew: DocFormatStatus["tooNew"] = [];
+  let ceiling: number | undefined;
   for (const [feature, required] of readDocFormat(doc)) {
     if (required <= current) continue;
     tooNew.push({ feature, required, known: feature in KNOWN_FEATURES });
     const tag = `${feature}:${required}`;
-    if (required > current + 1 && !reported.has(tag)) {
+    ceiling ??= claimCeiling(doc, current);
+    if (required > ceiling && !reported.has(tag)) {
       reported.add(tag);
       logSecurity("doc-format-claim", `${feature} wymaga wersji ${required}, ta aplikacja ma ${current}`);
     }

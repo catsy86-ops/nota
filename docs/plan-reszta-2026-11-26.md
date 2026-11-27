@@ -86,8 +86,8 @@ A3.4 (`src/lib/commands/` — źródła poleceń palety) → Powłoka 2.5 (więc
 | Q3.2 ✅ 2026-11-27 (wspólne `sheet.tsx`/`dialog.tsx`, `docs/opis/wspolne.md`) | `keyboardInset.ts` podpięty we wszystkich arkuszach z polami | M |
 | Q3.6 ✅ 2026-11-27 (`docs/opis/notatki.md`) | schowek z sensem (link na zaznaczeniu, lista → zadania, obraz) | M |
 | Q5.1 ✅ 2026-11-27 (lista i tablica notatek; Kalendarz i Grafik były — `docs/opis/notatki.md`) | roving tabindex: lista notatek, Kalendarz, Grafik, tablica | M |
-| Q1.4 | rotacja 7 kopii w OPFS (szyfrowanie: decyzja przy SE) | M |
-| D1.3 | mapa `docFormat` — wymaganie wersji czytnika per cecha | M |
+| Q1.4 ✅ 2026-11-17 (`lib/dailySnapshot.ts`, `SNAPSHOT_KEEP = 7`, „Przywróć z dnia…”; QL-1: bez szyfrowania) | rotacja 7 kopii w OPFS (szyfrowanie: decyzja przy SE) | M |
+| D1.3 ✅ 2026-11-27 (mapa, baner i `docWritable` były od 18.11; dziś próg z rejestru urządzeń — `docs/opis/dane.md`; blokady w magazynach dochodzą z pierwszą cechą) | mapa `docFormat` — wymaganie wersji czytnika per cecha | M |
 | A4.7, A5.5 | Stryker i `knip` — **uruchamia właściciel** (`npx -y` blokowane), potem raport i usunięcia | S |
 
 ## Fala 6 — duże i ryzykowne (każda osobno, z przeglądem przed kodem)

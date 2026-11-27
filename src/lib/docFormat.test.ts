@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import * as Y from "yjs";
 import { clearSecurityForTests, getSecurityEvents } from "@/lib/diagnostics";
 import { SCHEMA_VERSION } from "@/lib/formatSchema";
-import { DOC_FORMAT_MAP, docFormatStatus, docWritable, ignoreDocFormat, readDocFormat, requireFeature, resetDocFormatForTests } from "./docFormat";
+import { recordLocalDevice } from "@/lib/deviceRegistry";
+import { claimCeiling, DOC_FORMAT_MAP, docFormatStatus, docWritable, ignoreDocFormat, readDocFormat, requireFeature, resetDocFormatForTests } from "./docFormat";
 
 beforeEach(() => {
   resetDocFormatForTests();
@@ -64,4 +65,18 @@ describe("docFormat (D1.3)", () => {
     ignoreDocFormat(false);
     expect(docWritable(d, "atak")).toBe(false);
   });
+
+  it("próg wpisu bezpieczeństwa: najnowsza wersja z rejestru urządzeń; bez rejestru — o jedną więcej niż ta aplikacja", () => {
+    const d = new Y.Doc();
+    expect(claimCeiling(d)).toBe(SCHEMA_VERSION + 1);
+    recordLocalDevice(d, "Tablet", Date.now(), "tablet0001", { version: "9.9.9", schema: SCHEMA_VERSION + 2 });
+    expect(claimCeiling(d)).toBe(SCHEMA_VERSION + 2);
+    requireFeature(d, "nowa", SCHEMA_VERSION + 2);
+    docFormatStatus(d);
+    expect(getSecurityEvents().filter((e) => e.kind === "doc-format-claim")).toHaveLength(0);
+    requireFeature(d, "za-wysoka", SCHEMA_VERSION + 3);
+    docFormatStatus(d);
+    expect(getSecurityEvents().filter((e) => e.kind === "doc-format-claim")).toHaveLength(1);
+  });
 });
+
