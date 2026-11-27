@@ -857,5 +857,5 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 - **Jak działa.** Punkt `Tab` = kafel z fokusem siatki, a bez niego pierwszy kafel wszystkich sekcji; kafel spoza siatki zostaje zwykłym punktem `Tab`. `suppressTabStops` ustawia `tabindex="-1"` tylko elementom bez własnego `tabindex` (te z własnym ustawia React — przywrócenie starej wartości nadpisałoby nową) i oznacza je `data-roving-off`; nowo dorysowane łapie `MutationObserver`; otwarty edytor kafla (`data-tile-editing`) zostaje w spokoju. Fokus przeglądarki idzie za strzałką tylko wtedy, gdy już był w siatce — strzałki z pola szukania nie wciągają do kafli.
 - **Ograniczenia.** Elementy z własnym `tabindex="0"` wewnątrz kafla (poza treścią, obrazami i uchwytem) zostają w kolejce. Tablica Pracy (tematy nauki) ma przyciski przenoszenia, bez strzałek między kartami. Czytniki ekranu dalej słyszą kafel jako przycisk w liście (bez `role="grid"`).
 - **Testy.** `src/lib/gridKeyboardNav.test.ts` („Q5.1”: punkt Tab, przeniesienie fokusu, fokus poza siatką, kolumny tablicy). Sprawdzone w przeglądarce: `Tab` → pierwszy kafel, strzałki przenoszą fokus, `Tab` z aktywnego kafla wychodzi z siatki.
-- **Commit.** zob. historię (2026-11-27).
+- **Commit.** `a83173e5` — 2026-11-27.
 
