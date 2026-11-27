@@ -848,4 +848,4 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 - **Jak działa.** Link tylko gdy schowek to sam adres, zaznaczenie jest jednolinijkowe i samo nie jest adresem (adres na adresie = zwykła podmiana). Nawiasy kwadratowe w tekście są poprzedzane `\`, okrągłe w adresie zamieniane na `%28`/`%29`. Tylko `http:`/`https:` (`parsePastedUrl`), więc `javascript:` nie zrobi linku. W CodeMirror wstawienie idzie jedną transakcją `input.paste` (jedno „Cofnij”), także przy wiązaniu Yjs. `o` jako punktor tylko z tabulatorem — „okno”, „odpływ” zostają całe.
 - **Ograniczenia.** Wiele zaznaczeń naraz w CodeMirror — zwykłe wklejenie. Arkusze ze zdjęciami poza wpisem z budowy (punkty, usterki, karta budowy, dowód długu) dalej biorą zdjęcia tylko z przycisku. Edytor otwartej notatki nie zamienia HTML na Markdown (robi to tylko kompozytor).
 - **Testy.** `src/lib/clipboardPaste.test.ts` (link, nawiasy, przypadki bez linku, obrazy; fragmenty z Worda, Keepa i WhatsAppa), `src/components/editor/CmEditor.test.tsx` (wklejenie na zaznaczenie).
-- **Commit.** zob. historię (2026-11-27).
+- **Commit.** `741ee904` — 2026-11-27.
