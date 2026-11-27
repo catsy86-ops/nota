@@ -64,5 +64,5 @@ export const SKIN_THEME_COLOR_ALT: Record<Exclude<Skin, "zeszyt">, string> = {
   hydraulika: "#f2f6f9",
   odblask: "#1a1a1a",
   kafle: "#2b2e33",
-  tablica: "#f6f7f8",
+  tablica: "#eef8f3",
 };

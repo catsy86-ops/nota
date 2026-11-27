@@ -107,7 +107,7 @@ A3.4 (`src/lib/commands/` — źródła poleceń palety) → Powłoka 2.5 (więc
 |---|---|---|
 | SE-1 | serwerów nadal nie wdrażać; F1.0 przeszła, więc sesje E z kolejki odpadają (alarmy lokalne w APK) | S4.x czekają tylko na hosting |
 | Q3.3 | **tak** — motyw według pory (7–19) obok „jak system” | ✅ 2026-11-27 (`docs/opis/wyglad.md`) |
-| WZ-2 | stylów nie łączyć; rozsunąć jasną Tablicę od jasnych Kafli (zieleń w tle i akcencie) | do zrobienia |
+| WZ-2 | stylów nie łączyć; rozsunąć jasną Tablicę od jasnych Kafli (zieleń w tle i akcencie) | ✅ 2026-11-27 (`docs/karty-stylow.md`, `docs/opis/wyglad.md`) |
 | DL-3, D-3 | **bez** waluty | L5.1, L5.3 wypadają |
 | DL-2 | — | **pytanie do właściciela:** czy dzielisz rachunki z kimś? (tak → Etap 3 Długów, nie → wypada) |
 | QL-1 | kopie OPFS bez szyfrowania — potwierdzone | Q1.4 bez zmian |

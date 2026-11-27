@@ -1,35 +1,37 @@
 /* ─────────────────────── TABLICA — biuro budowy i sala szkoleń (plan motywów 4.5) ───────────────────────
    Domyślnie ciemny (plan motywów 3.5, T-3): zielona tablica szkolna, kreda i smugi po gąbce. Jasny: biała
    tablica suchościeralna w aluminiowej ramie, tekst i akcenty w kolorach markerów, ślady niedokładnie
-   startego pisma. Notatki trzymają się na magnesach. */
+   startego pisma. Notatki trzymają się na magnesach.
+   WZ-2 (2026-11-27): jasna tablica ma emalię z odcieniem zieleni szkolnej (H 162) i zielony marker jako akcent —
+   wcześniej tło, karta i kobaltowy akcent były prawie takie jak w jasnych Kaflach (`docs/karty-stylow.md`). */
 html[data-skin="tablica"]:not(.dark) {
-  --background: oklch(0.9750 0.0020 250.00);
-  --foreground: oklch(0.2200 0.0100 260.00);
+  --background: oklch(0.9700 0.0120 162.00);
+  --foreground: oklch(0.2200 0.0120 170.00);
   --card: oklch(1.0000 0.0000 0.00);
-  --card-foreground: oklch(0.2200 0.0100 260.00);
+  --card-foreground: oklch(0.2200 0.0120 170.00);
   --popover: oklch(1.0000 0.0000 0.00);
-  --popover-foreground: oklch(0.2200 0.0100 260.00);
-  /* Niebieski marker. */
-  --primary: oklch(0.4700 0.1700 262.00);
+  --popover-foreground: oklch(0.2200 0.0120 170.00);
+  /* Zielony marker. */
+  --primary: oklch(0.4600 0.1200 155.00);
   --ink-mix: 62%;
   /* Ostrzeżenie na białej tablicy: ciemniejsza baza niż w zielonej (bez tego dziedziczy jasny żółty). */
   --warning-ink-base: oklch(0.7697 0.1645 70.61);
   --primary-foreground: oklch(1.0000 0.0000 0.00);
-  --secondary: oklch(0.9250 0.0030 250.00);
-  --secondary-foreground: oklch(0.2200 0.0100 260.00);
-  --muted: oklch(0.9450 0.0030 250.00);
-  --muted-foreground: oklch(0.4700 0.0100 260.00);
-  /* Zielony marker — linki. */
-  --accent: oklch(0.4800 0.1200 152.00);
+  --secondary: oklch(0.9250 0.0140 162.00);
+  --secondary-foreground: oklch(0.2200 0.0120 170.00);
+  --muted: oklch(0.9450 0.0120 162.00);
+  --muted-foreground: oklch(0.4700 0.0150 165.00);
+  /* Niebieski marker — linki. */
+  --accent: oklch(0.4700 0.1500 255.00);
   --accent-foreground: oklch(1.0000 0.0000 0.00);
   --destructive: oklch(0.5786 0.2137 27.17);
   --destructive-ink: oklch(0.5314 0.1989 27.39);
   --destructive-foreground: oklch(1.0000 0.0000 0.00);
-  --border: color-mix(in oklab, oklch(0.8700 0.0040 250.00) var(--frame-mix), transparent);
-  --input: oklch(0.6000 0.0100 255.00);
-  --ring: oklch(0.4700 0.1700 262.00);
+  --border: color-mix(in oklab, oklch(0.8700 0.0140 162.00) var(--frame-mix), transparent);
+  --input: oklch(0.6000 0.0200 162.00);
+  --ring: oklch(0.4600 0.1200 155.00);
   /* Kolor śladów po starym piśmie. */
-  --grid: oklch(0.6000 0.0100 260.00);
+  --grid: oklch(0.6000 0.0150 165.00);
   /* Czerwony marker. */
   --margin: oklch(0.5500 0.2000 27.00);
 
@@ -43,7 +45,7 @@ html[data-skin="tablica"]:not(.dark) {
   --note-lavender: oklch(0.9614 0.0171 301.21);
   --note-rose: oklch(0.9650 0.0155 355.05);
 
-  --shadow-tint: oklch(0.354 0.032 264.0);
+  --shadow-tint: oklch(0.354 0.032 165.0);
   --shadow-strength: 1.12;
   --elevation-1: var(--elev-light-1);
   --elevation-2: var(--elev-light-2);

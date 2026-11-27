@@ -1266,3 +1266,11 @@ Grafik — 8b786ae3; Dziś i Kalendarz — zob. commit „W4.5 Dziś, Kalendarz�
 - **Ograniczenia i zgodność.** Starsza wersja nie zna `time`: `readStored` i `prepaint.js` biorą wtedy „system”, a mapa stylów pomija wpis (schemat stylu) — bez błędu, tylko inna jasność. Te same godziny początku i końca = zawsze jasno. „Styl na noc” to osobny harmonogram (zmienia styl, nie jasność).
 - **Testy.** `src/lib/themeHours.test.ts` (granice 7:00 i 19:00, przez północ, `resolveDark` w Zeszycie i w stylu), `src/lib/prepaint.test.ts` (`time` w każdym stylu, godziny przez północ, uszkodzony zapis), `src/lib/commands/registry.test.ts` (cztery tryby jasności).
 - **Commit.** `30c8d872` — 2026-11-27.
+
+## Wygląd: jasna Tablica odróżniona od jasnych Kafli (WZ-2, 2026-11-27)
+
+- **Co robi.** Jasny schemat Tablicy ma emalię z lekką zielenią szkolnej tablicy i zielony marker jako kolor główny (przyciski, „+”, zaznaczenie, pierścień fokusu); linki piszą się niebieskim markerem. Wcześniej tło, białe karty i kobaltowy akcent były prawie takie jak w jasnych Kaflach.
+- **Gdzie.** `src/styles/skins/tablica.css` (blok `:not(.dark)`), kolor paska telefonu `SKIN_THEME_COLOR_ALT.tablica` w `src/lib/skinList.ts` i w `public/prepaint.js` (`#eef8f3`), tabela w `docs/karty-stylow.md`.
+- **Jak działa.** Tylko tokeny: `--background` 0.97 0.012 162, `--primary`/`--ring` 0.46 0.12 155, `--accent` 0.47 0.15 255, `--secondary`, `--muted`, `--border`, `--input`, `--grid`, tekst i `--shadow-tint` w odcieniu 162–170. Kontrast: akcent z białym tekstem 6,7:1, linki 6,9:1, tekst pomocniczy 6,8:1, obramowanie pola 3,9:1. Ciemna Tablica bez zmian.
+- **Ograniczenia.** Wzorce `@visual` (`e2e/visual.spec.ts`) robią Tablicę w jej domyślnym, ciemnym schemacie, więc jasnej nie pilnują i się nie zmieniły. Własny akcent użytkownika dalej nadpisuje `--primary`.
+- **Testy.** `src/lib/skinContrast.test.ts`, `src/lib/skinContrastReport.test.ts`, `src/lib/prepaint.test.ts` (kolor paska).

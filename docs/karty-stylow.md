@@ -31,7 +31,7 @@ Wspólne dla wszystkich stylów, więc w tabeli ich nie ma:
 | Kafle | jasny | 0.97 0 240 | 1.00 0 — | 0.45 0.17 262 (kobalt) | 0.46 0.10 222 | Nunito | 1,75 | 2,4 | 0,5 rem |
 | Kafle | ciemny | 0.23 0.01 250 | 0.28 0.01 250 | 0.74 0.12 258 | 0.78 0.09 210 | Nunito | 1,75 | 2,4 | 0,5 rem |
 | Tablica | ciemny | 0.32 0.04 162 (zieleń tablicy) | 0.36 0.04 162 | 0.88 0.13 96 (kreda) | 0.86 0.08 350 | Lexend | 1,75 | 2,4 | koło |
-| Tablica | jasny | 0.97 0 250 | 1.00 0 — | 0.47 0.17 262 | 0.48 0.12 152 | Lexend | 1,75 | 2,4 | koło |
+| Tablica | jasny | 0.97 0.012 162 | 1.00 0 — | 0.46 0.12 155 (zielony marker) | 0.47 0.15 255 (niebieski marker, linki) | Lexend | 1,75 | 2,4 | koło |
 
 ## Sygnatury
 
@@ -60,7 +60,7 @@ Kryterium z planu: dwa style różnią się **tylko barwą**, gdy mają ten sam 
 
 Propozycje do decyzji właściciela:
 
-1. **Kafle i Tablica (jasne):** nie łączyć stylów, tylko rozsunąć jasną Tablicę. Na przykład tło z lekką zielenią tablicy (H 162, C 0.01–0.02) i akcent główny w zieleni zamiast kobaltu. Ciemna Tablica już ma zieleń, więc jasna będzie bliżej swojego stylu.
+1. **Kafle i Tablica (jasne):** nie łączyć stylów, tylko rozsunąć jasną Tablicę. **Zrobione 2026-11-27:** tło 0.97 0.012 162, akcent główny zielony marker 0.46 0.12 155, linki niebieskim markerem; obramowania, tekst i cień w odcieniu 162. Na przykład tło z lekką zielenią tablicy (H 162, C 0.01–0.02) i akcent główny w zieleni zamiast kobaltu. Ciemna Tablica już ma zieleń, więc jasna będzie bliżej swojego stylu.
 2. **Jasne warianty stylów ciemnych:** zostawić. Mają być spokojną wersją dzienną, a tożsamość niesie krój i sygnatura.
 
 ## Jak odświeżyć tabelę
