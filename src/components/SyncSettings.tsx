@@ -1,4 +1,4 @@
-import { olderDevices } from "@/lib/formatSchema";
+import { olderDevices, SCHEMA_VERSION } from "@/lib/formatSchema";
 import { pairLink, pairTextIsV3 } from "@/lib/pairLink";
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
@@ -392,6 +392,8 @@ export function SyncSettings({ prefillCode, prefillV3 }: Props) {
             </div>
           )}
           <DeviceRegistryList />
+          {/* Q4.1: szczegóły ze wskaźnika w nagłówku — wersja formatu danych tego urządzenia obok wersji innych. */}
+          <p className="text-2xs text-muted-foreground" data-testid="sync-format">Format danych na tym urządzeniu: wersja {SCHEMA_VERSION}.</p>
           {deviceNameForm}
         </div>
       )}

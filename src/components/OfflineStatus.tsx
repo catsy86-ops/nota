@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { CloudOff, Wifi, Check, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
-import { useSyncState } from "@/lib/yjsSync";
 import { hasUnsavedWork, useSaveStatus } from "@/lib/saveStatus";
 import { DelayedSpinner } from "@/components/DelayedSpinner";
 
@@ -19,7 +18,6 @@ export function OfflineStatus() {
   const [panelOpen, setPanelOpen] = useState(false);
   // Montowany przy pierwszym otwarciu i zostaje — zamknięcie ma swoją animację.
   const [panelMounted, setPanelMounted] = useState(false);
-  const syncState = useSyncState();
 
   const wasOfflineRef = useRef(offline);
 
@@ -71,19 +69,18 @@ export function OfflineStatus() {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, []);
 
-  const syncing = syncState.status === "connecting";
+  // Q4.1: stan synchronizacji pokazuje jeden wskaźnik w nagłówku (`SyncStatusDot`) — pigułka mówi tylko o zapisie i sieci.
   const saveFailed = save.phase === "error";
   const saving = save.phase === "saving" && slowSave;
   const saved = save.phase === "saved";
-  const visible = saveFailed || offline || saving || saved || syncing;
+  const visible = saveFailed || offline || saving || saved;
   if (!visible) return null;
 
   const label = saveFailed
     ? "Nie zapisano — zrób kopię, zmiany są tylko w tej karcie"
     : saving ? "Zapisywanie…"
     : offline ? "Offline — zapisuję lokalnie"
-    : saved ? "Zapisano"
-    : "Łączenie z urządzeniami…";
+    : "Zapisano";
   // Sam komunikat o zapisie nie jest przyciskiem — nie może przesłaniać kliknięć pod sobą. W edytorze Planów na
   // telefonie (pełny ekran) bierny „Zapisano” leżał na panelu — tam znika; błąd i offline zostają.
   const passive = !saveFailed && !offline && (saving || saved);
