@@ -77,3 +77,33 @@ test("kod z innym pokojem nie widzi notatki z przekaźnika", async ({ browser })
   await expect(b.getByText(title)).toHaveCount(0);
   await ctxB.close();
 });
+
+test("Q4.2: po przerwie komunikat „1 notatka zmieniona na innym urządzeniu” i lista z przejściem do notatki", async ({ browser }) => {
+  const code = randomCode();
+  const title = `Gdy mnie nie było ${code.slice(0, 4)}`;
+  const ctxA = await browser.newContext();
+  const a = await ctxA.newPage();
+  await init(a, code);
+  await a.goto("/");
+  await a.getByText("Zapisz notatkę...").click();
+  await a.getByPlaceholder("Tytuł").fill(title);
+  const posted = a.waitForResponse(
+    (r) => r.url().startsWith(RELAY) && r.url().includes("/updates") && r.request().method() === "POST",
+    { timeout: 30_000 },
+  );
+  await a.getByRole("button", { name: "Zapisz", exact: true }).click();
+  expect((await posted).ok()).toBe(true);
+  await ctxA.close();
+
+  const ctxB = await browser.newContext();
+  const b = await ctxB.newPage();
+  await init(b, code);
+  await b.goto("/");
+  await expect(b.getByText("1 notatka zmieniona na innym urządzeniu")).toBeVisible({ timeout: 30_000 });
+  await b.getByRole("button", { name: "Pokaż" }).click();
+  const list = b.getByTestId("away-changes");
+  await list.getByRole("button", { name: new RegExp(title) }).click();
+  await expect(list).toBeHidden();
+  await expect(b.getByPlaceholder("Tytuł")).toHaveValue(title);
+  await ctxB.close();
+});

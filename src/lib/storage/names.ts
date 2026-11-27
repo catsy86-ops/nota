@@ -98,6 +98,8 @@ export const SIGNALS = {
   about: "kaczy:about",
   /** Otwórz Ustawienia na karcie (`detail` = `SettingsTab`) spoza `Index` — np. z samouczka (U3.4). */
   openSettings: "kaczy:open-settings",
+  /** Q4.2: lista notatek zmienionych na innym urządzeniu (`detail` = `AwayNote[]`, `AwayChangesHost`). */
+  awayChanges: "kaczy:away-changes",
   importExternal: "kaczy:import-external",
   launchFiles: "kaczy:launch-files",
   guide: "kaczy:guide",

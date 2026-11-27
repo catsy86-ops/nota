@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { awayBatchActive } from "@/lib/sync/awayChanges";
 import { mayLeaveDevice, sizeCappedRefsIn } from "@/lib/plans/planRefs";
 import { createStore, get as idbGet, set as idbSet, del as idbDel, clear as idbClear, type UseStore } from "idb-keyval";
 import { yjsStore } from "@/lib/yjsStore";
@@ -345,7 +346,7 @@ async function lead(code: string, url: string, token: number): Promise<void> {
         scheduleBlobs(0);
         // Jak w yjsSync: tylko na widocznej karcie i co 30 s, seria zmian to jedno powiadomienie.
         const now = Date.now();
-        if (document.visibilityState !== "visible" || now - lastRemoteToastAt < REMOTE_TOAST_GAP_MS) return;
+        if (document.visibilityState !== "visible" || now - lastRemoteToastAt < REMOTE_TOAST_GAP_MS || awayBatchActive()) return;
         lastRemoteToastAt = now;
         toast("Zmiana z innego urządzenia", { description: "Przyszła przez przekaźnik." });
       },

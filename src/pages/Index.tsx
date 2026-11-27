@@ -92,6 +92,7 @@ import { AppearanceLinkImport } from "@/components/settings/AppearanceLinkImport
 import { QuickPresetsHost } from "@/components/settings/QuickPresets";
 // Nasłuch „O aplikacji” od startu — leniwy host gubiłby kliknięcie sprzed doładowania; samo okno jest leniwe.
 import { AboutHost } from "@/components/about/AboutHost";
+import { AwayChangesHost } from "@/components/sync/AwayChangesHost";
 import { SiteArrivalPrompt, WidgetPanel, OnboardingTour, StudyView, DebtsView, CwiczeniaView, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, ShiftEveningNudge, StudyOverdueSync } from "./indexViews";
 import { IdleWarmup, MarkOpenedSync, ReaderHistoryKeys, SearchTermsSync, UndoHandlersSync } from "./IndexEffects";
 import { useShiftsUndo, useSidebarOpen } from "./indexHooks";
@@ -772,6 +773,7 @@ const Index = () => {
     />
     {/* Poza Suspense: leniwe sąsiedztwo (samouczek) odkładałoby montaż i gubiło kliknięcie „O aplikacji”. */}
     <AboutHost />
+    <AwayChangesHost onOpenNote={(id) => openNote(id, false, true)} />
     <Suspense fallback={null}>
       <OnboardingTour />
       <AppearanceLinkImport />

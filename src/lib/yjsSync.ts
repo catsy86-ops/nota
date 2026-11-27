@@ -22,6 +22,7 @@ import {
 import { loadRekeyRecord, notifyRekeyRecord, rekeyPorts, saveRekeyRecord } from "@/lib/sync/rekeyRuntime";
 import { logDiag, logSecurity } from "@/lib/diagnostics";
 import { toast } from "@/lib/notify";
+import { awayTitle, createAwayTracker, showAwayChanges } from "@/lib/sync/awayChanges";
 import { SYNC } from "@/lib/storage/names";
 import { allowedEndpoint } from "@/lib/net/endpoints";
 
@@ -770,10 +771,28 @@ function changedNoteTitle(): string | null {
   return best?.title.trim() || null;
 }
 
+// Q4.2: notatki zmienione na innym urządzeniu po przerwie — wzorzec od wczytania dokumentu, lista w `AwayChangesHost`.
+const away = createAwayTracker({
+  notes: () => yjsStore.projectNotes(),
+  report: (changed) => toast(awayTitle(changed.length), {
+    description: changed.slice(0, 3).map((n) => n.title || "Bez tytułu").join(", ") + (changed.length > 3 ? "…" : ""),
+    action: { label: "Pokaż", onClick: () => showAwayChanges(changed) },
+    duration: 12_000,
+  }),
+});
+void yjsStore.ready().then(() => away.start()).catch(() => {});
+
+/** Zdalne źródło: pokój y-webrtc albo przekaźnik (`relayProvider` nadaje `{ relay: true }`). */
+const isRemoteOrigin = (origin: unknown) =>
+  !!origin && (providers.some((p) => origin === p.room) || (typeof origin === "object" && (origin as { relay?: unknown }).relay === true));
+
 yjsStore.doc.on("update", (_update: Uint8Array, origin: unknown) => {
-  if (!origin || !providers.some((p) => origin === p.room)) return;
+  if (!isRemoteOrigin(origin)) { if (origin !== "migration" && !(typeof origin === "string" && origin.startsWith("migration:"))) away.onLocal(); return; }
+  const awayBatch = away.onRemote();
+  if (!origin || !providers.some((p) => origin === p.room)) { setState({ lastSyncedAt: Date.now() }); return; }
   const now = Date.now();
   const changed = changedNoteTitle();
+  if (awayBatch) { setState({ lastSyncedAt: now }); return; }
   if (state.lastSyncedAt && now - state.lastSyncedAt < SYNCED_AT_THROTTLE_MS) return;
   // Komunikat tylko na widocznej karcie i co najwyżej raz na 30 s — seria zmian to jedno powiadomienie.
   if (document.visibilityState === "visible" && now - lastRemoteToastAt > REMOTE_TOAST_GAP_MS) {
