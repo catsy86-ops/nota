@@ -556,6 +556,14 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 - **Testy:** `src/lib/snapshotRestore.test.ts` (grupy, kopie, pola usuwane z kopii, notatki prywatne: ten sam klucz, inny klucz, zablokowany skarbiec, `sealed`, blokada w trakcie, `vaultDiffers`), `src/lib/docReplace.test.ts` (wymiana bazy, zamiar przy starcie, porażka i wygaśnięcie, kolejność `requestDocReplace`, pokolenie między kartami), e2e `e2e/daily-snapshot.spec.ts` (przywrócenie usuniętej notatki; baza usunięta ręcznie → baner → przywrócenie całego dokumentu).
 - **Commit:** `5d86280a`, `0b12224d`, `7067443a`, `72e64cae` (2026-11-17/18).
 
+## Stan danych — co zajmuje miejsce (U3.3, 2026-11-27)
+
+- **Co robi:** w Ustawieniach → Kopia i dane, w „Trwałość danych w tej przeglądarce”, przycisk „Pokaż, co zajmuje miejsce” dopisuje do „Zajęte: …” podział: zdjęcia i pliki, notatki i pozostałe dane, pliki aplikacji (gdy przeglądarka je podaje). Trwałość (`persist()`) z wyjaśnieniem i przyciskiem „Poproś przeglądarkę o trwałe przechowywanie” była już wcześniej.
+- **Gdzie jest:** `StoragePersistenceStatus` w `src/components/settings/BackupSettings.tsx`; `storageBreakdown` i `cachesBytes` w `src/lib/storagePersistence.ts`; `imageStore.totalBytes()` w `src/lib/imageStore.ts`.
+- **Jak działa:** pliki = suma bajtów wszystkich wpisów magazynu plików; pliki aplikacji = `estimate().usageDetails.caches` (tylko Chromium); dane = całość − pliki − pamięć podręczna, nie mniej niż 0.
+- **Ograniczenia:** liczone na żądanie, nie przy otwarciu — `totalBytes` czyta każdy plik, przy setkach zdjęć na telefonie to chwila. Szacunek przeglądarki jest zaokrąglany, więc „pozostałe dane” są przybliżone.
+- **Testy:** `src/lib/storagePersistence.test.ts` („storageBreakdown”), `e2e/storage-split.spec.ts`.
+
 ## Kopia zapasowa — podgląd przed przywróceniem (U3.2, 2026-11-27)
 
 - **Co robi:** okno „Przywrócić tę kopię?” zaczyna się zdaniem: data kopii, wersja aplikacji, która ją zrobiła (gdy plik ją ma), i liczby — notatki, foldery, wpisy dziennika Pracy z liczbą budów, dni Grafiku, długi (`data-testid="restore-preview"`). Ostrzeżenie o nowszej wersji już było: nowsza koperta albo `schema` — odmowa przy wczytaniu, nieznane sekcje — `describeBackupIssues`.

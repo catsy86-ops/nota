@@ -327,6 +327,19 @@ export function createImageStore(dbName: string) {
     return { count, bytes };
   }
 
+  /** U3.3: bajty wszystkich plików w magazynie (do podziału zajętego miejsca). Czyta każdy wpis — tylko na żądanie. */
+  async function totalBytes(): Promise<{ count: number; bytes: number }> {
+    await load();
+    let count = 0, bytes = 0;
+    for (const hash of known) {
+      const rec = await getRecord(hash).catch(() => undefined);
+      if (!rec) continue;
+      count++;
+      bytes += rec.bytes.byteLength;
+    }
+    return { count, bytes };
+  }
+
   /**
    * Z-6.5: nowa data zapisu istniejących plików — karencja odśmiecania liczy się od teraz. Trwałe usunięcie notatki
    * z „Cofnij” przy starym pliku (> 7 dni) inaczej oddałoby notatkę bez obrazu, gdy odśmiecanie zdąży pobiec.
@@ -419,7 +432,7 @@ export function createImageStore(dbName: string) {
 
   return {
     load, has, putBytes, putDataUrl, putBlob, ingest, get: getRecord, getDataUrl, resolve,
-    acquireUrl, releaseUrl, acquireThumbUrl, releaseThumbUrl, onAdded, collectGarbage, unusedFiles, touch, resetForTests,
+    acquireUrl, releaseUrl, acquireThumbUrl, releaseThumbUrl, onAdded, collectGarbage, unusedFiles, totalBytes, touch, resetForTests,
   };
 }
 

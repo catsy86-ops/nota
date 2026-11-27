@@ -11,6 +11,7 @@ import { buildFullBackup, describeSkippedAttachments } from "@/lib/backup/build"
 import { backupIssues, describeBackupIssues } from "@/lib/backup/parse";
 import { restoreFullBackup, RestoreCheckError, restoreScope, type RestoreOptions } from "@/lib/backup/merge";
 import { backupPreview, describeBackupPreview } from "@/lib/backup/preview";
+import { imageStore } from "@/lib/imageStore";
 import { download, pickFullBackup } from "@/lib/backup/download";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import { dniPl, pluralPl } from "@/lib/plural";
@@ -18,7 +19,7 @@ import type { FullBackup } from "@/lib/noteSchema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { daysSinceBackup, LAST_AUTO_EXPORT_KEY } from "@/lib/backupReminder";
-import { requestPersistentStorage, getStorageInfo, storageWarning, type StorageInfo } from "@/lib/storagePersistence";
+import { requestPersistentStorage, getStorageInfo, storageBreakdown, storageWarning, type StorageBreakdown, type StorageInfo } from "@/lib/storagePersistence";
 import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName, readLastFileWrite } from "@/lib/backupFileHandle";
 import { toast } from "sonner";
 import { ResetSectionButton, Section } from "./SettingsShared";
@@ -48,10 +49,24 @@ function formatBytes(bytes: number | null): string {
 function StoragePersistenceStatus() {
   const [info, setInfo] = useState<StorageInfo | null>(null);
   const [requesting, setRequesting] = useState(false);
+  // U3.3: podział liczony na żądanie — czyta każdy plik z magazynu, na telefonie z setkami zdjęć to chwila.
+  const [split, setSplit] = useState<StorageBreakdown | "busy" | null>(null);
 
   useEffect(() => {
     getStorageInfo().then(setInfo);
   }, []);
+
+  async function handleSplit() {
+    setSplit("busy");
+    try {
+      const [files, fresh] = await Promise.all([imageStore.totalBytes(), getStorageInfo()]);
+      setInfo(fresh);
+      setSplit(storageBreakdown(fresh.usageBytes ?? files.bytes, files.bytes, fresh.cachesBytes));
+    } catch {
+      setSplit(null);
+      toast.error("Nie udało się policzyć zajętego miejsca");
+    }
+  }
 
   async function handleRequest() {
     setRequesting(true);
@@ -82,7 +97,18 @@ function StoragePersistenceStatus() {
         </div>
         <p className="text-muted-foreground">
           Zajęte: {formatBytes(info.usageBytes)} {info.quotaBytes !== null && `z ${formatBytes(info.quotaBytes)} dostępnych`}
+          {split && split !== "busy" && (
+            <span data-testid="storage-split">
+              {" "}(zdjęcia i pliki {formatBytes(split.files)}, notatki i pozostałe dane {formatBytes(split.data)}{split.app !== undefined && `, pliki aplikacji ${formatBytes(split.app)}`})
+            </span>
+          )}
         </p>
+        {split === null && (
+          <Button type="button" size="sm" variant="ghost" onClick={() => void handleSplit()} className="-ml-2 h-auto min-h-8 px-2 py-1 text-xs coarse:min-h-11">
+            Pokaż, co zajmuje miejsce
+          </Button>
+        )}
+        {split === "busy" && <p className="text-muted-foreground" role="status">Liczę zdjęcia i pliki…</p>}
         {storageWarning(info) && (
           <p role="alert" className="text-warning-ink">{storageWarning(info)}</p>
         )}
