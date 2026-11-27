@@ -75,7 +75,7 @@ const INTEREST_STEPS: Record<Interest, GuideStep[]> = {
 
 const SYNC_STEP: GuideStep = {
   id: "sync", art: "sync", chip: "offline", title: "Twoje dane, Twoje urządzenia",
-  desc: "Wszystko działa bez internetu i zostaje na tym urządzeniu. Kopię zrobisz w Ustawienia → Kopia i dane, a drugi telefon połączysz w synchronizacji.",
+  desc: "Wszystko działa bez internetu, ale Twoje dane są tylko na tym urządzeniu. Zrób kopię albo połącz drugie urządzenie — później znajdziesz to w Ustawienia → Kopia i dane oraz Sync.",
 };
 
 export const WELCOME_STEP: GuideStep = {

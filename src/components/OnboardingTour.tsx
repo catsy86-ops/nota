@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { INTERESTS, TOUR_SEEN_KEY, tourSteps, WELCOME_STEP, type Interest } from "@/lib/guides";
 import { GuideDialog } from "@/components/guide/GuideDialog";
 import { SIGNALS } from "@/lib/storage/names";
+import { Button } from "@/components/ui/button";
+import { openSettingsTab } from "@/lib/settingsDeepLink";
 
 /**
  * Samouczek na start (pierwsze uruchomienie i „Więcej → Samouczek”): karta powitalna z wyborem działów,
@@ -61,6 +63,19 @@ export function OnboardingTour() {
     </div>
   );
 
+  // U3.4: karta o danych — dwa wyjścia zamiast samego opisu, gdzie szukać kopii i synchronizacji.
+  const dataStep = steps[step]?.id === "sync" && (
+    <div className="flex flex-wrap justify-center gap-2" data-testid="tour-data-actions">
+      <Button type="button" variant="outline" className="coarse:h-11" onClick={() => {
+        close();
+        void import("@/lib/backup/actions").then((m) => m.exportNow(async () => { openSettingsTab("backup"); return false; }));
+      }}>Zrób kopię teraz</Button>
+      <Button type="button" variant="outline" className="coarse:h-11" onClick={() => { close(); openSettingsTab("sync"); }}>
+        Połącz drugie urządzenie
+      </Button>
+    </div>
+  );
+
   return (
     <GuideDialog
       open={open}
@@ -69,7 +84,7 @@ export function OnboardingTour() {
       step={step}
       onStep={setStep}
       onClose={close}
-      extra={choose || undefined}
+      extra={choose || dataStep || undefined}
       doneLabel="Zaczynamy"
       testId="onboarding-tour"
     />

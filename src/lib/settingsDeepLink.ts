@@ -1,3 +1,4 @@
+import { SIGNALS } from "@/lib/storage/names";
 /**
  * Link do karty Ustawień: `?settings=<nazwa>` (faza 3c). Otwiera okno na wskazanej karcie, potem parametr
  * znika z adresu (jak `?pair=`). Nazwy po polsku, bez znaków spoza ASCII, żeby dały się wkleić w wiadomości.
@@ -24,6 +25,11 @@ let requestedTab: SettingsTab | null = null;
 
 export function requestSettingsTab(tab: SettingsTab): void {
   requestedTab = tab;
+}
+
+/** Otwiera Ustawienia na karcie z dowolnego miejsca aplikacji (sygnał słucha `useAppDialogs`). */
+export function openSettingsTab(tab: SettingsTab): void {
+  window.dispatchEvent(new CustomEvent(SIGNALS.openSettings, { detail: tab }));
 }
 
 /**

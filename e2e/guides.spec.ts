@@ -32,6 +32,18 @@ test("samouczek na start: wybór działów zmienia karty, Wstecz, strzałki, zam
   await expect(page.getByTestId("onboarding-tour")).toHaveCount(0);
 });
 
+test("U3.4: karta o danych w samouczku — „Połącz drugie urządzenie” otwiera Ustawienia na Sync i zamyka samouczek @mobile", async ({ page }) => {
+  await page.goto("/");
+  const tour = page.getByTestId("onboarding-tour");
+  await expect(tour.getByRole("heading", { name: "Witaj w notkach" })).toBeVisible();
+  await tour.getByRole("button", { name: /^Karta 9:/ }).click();
+  await expect(tour.getByRole("heading", { name: "Twoje dane, Twoje urządzenia" })).toBeVisible();
+  await expect(tour.getByRole("button", { name: "Zrób kopię teraz" })).toBeVisible();
+  await tour.getByRole("button", { name: "Połącz drugie urządzenie" }).click();
+  await expect(tour).toBeHidden();
+  await expect(page.getByRole("dialog").getByRole("heading", { name: "Mam już grupę" })).toBeVisible();
+});
+
 test("przewodnik Pracy: sam przy pierwszym wejściu, raz; potem z „?” @mobile", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("kaczy.tour.seen.v1", "1");

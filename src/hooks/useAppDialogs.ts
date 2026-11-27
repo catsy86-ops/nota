@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useReducer, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useReducer, type SetStateAction } from "react";
 import { pairCodeFromLocation } from "@/lib/pairLink";
-import { settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
+import { requestSettingsTab, settingsTabFromParam, SETTINGS_PARAM, type SettingsTab } from "@/lib/settingsDeepLink";
+import { SIGNALS } from "@/lib/storage/names";
 
 /** Okna strony głównej przełączane „otwarte/zamknięte”. */
 export type DialogName = "palette" | "actions" | "settings" | "stats" | "quickInbox" | "shortcuts" | "propDefs" | "focusMode" | "triage" | "emptyTrash";
@@ -63,6 +64,16 @@ export function useAppDialogs() {
     setConfirmEmptyTrash: setter("emptyTrash"),
     setConfirmDeleteIds: (ids: string[] | null) => dispatch({ type: "confirmDelete", ids }),
   }), [setter]);
+  // U3.4: samouczek (i inne miejsca poza `Index`) otwierają Ustawienia na karcie sygnałem.
+  useEffect(() => {
+    function onOpen(e: Event) {
+      const tab = (e as CustomEvent<SettingsTab | undefined>).detail;
+      if (tab) requestSettingsTab(tab);
+      dispatch({ type: "set", name: "settings", open: true });
+    }
+    window.addEventListener(SIGNALS.openSettings, onOpen);
+    return () => window.removeEventListener(SIGNALS.openSettings, onOpen);
+  }, []);
   const { open } = state;
   return {
     ...setters,

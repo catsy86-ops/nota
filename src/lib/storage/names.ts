@@ -96,6 +96,8 @@ export const SIGNALS = {
   tour: "kaczy:tour",
   /** Okno „O aplikacji” (`components/about/AboutHost.tsx`). */
   about: "kaczy:about",
+  /** Otwórz Ustawienia na karcie (`detail` = `SettingsTab`) spoza `Index` — np. z samouczka (U3.4). */
+  openSettings: "kaczy:open-settings",
   importExternal: "kaczy:import-external",
   launchFiles: "kaczy:launch-files",
   guide: "kaczy:guide",
