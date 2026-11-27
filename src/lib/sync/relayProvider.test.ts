@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import * as Y from "yjs";
-import { RelayProvider, COMPACT_AFTER, KEEPALIVE_MS, MAX_ENTRY_CHARS, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
+import { RelayProvider, COMPACT_AFTER, KEEPALIVE_MS, MAX_ENTRY_CHARS, MAX_ENTRY_RAW_BYTES, packPending, splitByAuthor, takeBatch, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
 import { deriveRelayKeys, type RelayKeys } from "@/lib/sync/relayKeys";
 
 /** Atrapa serwera o tym samym protokole co `relay-server/server.js` (bez limitów rozmiaru). */
@@ -579,3 +579,65 @@ describe("Z-5.T: przerwania, błędy w połowie, kompaktowanie, 409, limit czasu
 });
 
 export type { RelayState };
+
+describe("U2.5: duże zaległości i schowana karta", () => {
+  it("takeBatch: kolejne zmiany do limitu, co najmniej jedna, kolejność zachowana", () => {
+    const p = (n: number) => new Uint8Array(n);
+    const parts = [p(4), p(4), p(4), p(10)];
+    expect(takeBatch(parts, 9).batch.map((x) => x.length)).toEqual([4, 4]);
+    expect(takeBatch(parts, 9).rest.map((x) => x.length)).toEqual([4, 10]);
+    expect(takeBatch([p(10)], 9).batch.map((x) => x.length)).toEqual([10]);
+    expect(takeBatch([], 9)).toEqual({ batch: [], rest: [] });
+  });
+
+  it("limit surowych bajtów po zaszyfrowaniu i base64 mieści się w limicie wpisu", () => {
+    expect(Math.ceil(((MAX_ENTRY_RAW_BYTES + 28) * 4) / 3)).toBeLessThanOrEqual(MAX_ENTRY_CHARS);
+  });
+
+  it("przy schowanej karcie mała wysyłka idzie z keepalive", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const seen: (boolean | undefined)[] = [];
+    const fetchSpy = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === "POST") seen.push(init.keepalive);
+      return server.fetchFn(input, init);
+    }) as typeof fetch;
+    const doc = new Y.Doc();
+    const provider = new RelayProvider({ baseUrl: "https://relay.test", keys, doc, store: new MemStore(), fetch: fetchSpy, flushMs: 5 });
+    await provider.start();
+    provider.setHidden(true);
+    doc.transact(() => doc.getText("t").insert(0, "przed zamknięciem"));
+    provider.flushNow();
+    await until(() => seen.includes(true));
+    provider.stop();
+  });
+});
+
+describe("U2.5: dzielenie zaległości (po przeglądzie)", () => {
+  function twoAuthors() {
+    const a = new Y.Doc(); const b = new Y.Doc();
+    a.getText("t").insert(0, "A".repeat(2000));
+    b.getText("u").insert(0, "B".repeat(2000));
+    b.getText("t").delete(0, 0);
+    return Y.mergeUpdates([Y.encodeStateAsUpdate(a), Y.encodeStateAsUpdate(b)]);
+  }
+
+  it("splitByAuthor: za duża aktualizacja dzieli się na autorów, a części odtwarzają ten sam dokument", () => {
+    const merged = twoAuthors();
+    const parts = splitByAuthor(merged, 1000);
+    expect(parts.length).toBe(2);
+    const doc = new Y.Doc();
+    for (const p of [...parts].reverse()) Y.applyUpdate(doc, p);
+    expect(doc.getText("t").toString()).toBe("A".repeat(2000));
+    expect(doc.getText("u").toString()).toBe("B".repeat(2000));
+    expect(splitByAuthor(merged, 1_000_000)).toEqual([merged]);
+  });
+
+  it("packPending: grupy pod limitem, a jedna scalona zaległość z dysku rozcina się na części", () => {
+    const small = Array.from({ length: 6 }, (_, i) => { const d = new Y.Doc(); d.getText("t").insert(0, String(i).repeat(300)); return Y.encodeStateAsUpdate(d); });
+    const packed = packPending(small, 700);
+    expect(packed.length).toBeGreaterThan(1);
+    expect(packed.every((p) => p.length <= 700)).toBe(true);
+    expect(packPending([twoAuthors()], 3000).length).toBe(2);
+  });
+});

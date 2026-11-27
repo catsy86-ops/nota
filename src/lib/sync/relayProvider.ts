@@ -105,6 +105,51 @@ export const KEEPALIVE_MS = 20_000;
 export const REQUEST_TIMEOUT_MS = 30_000;
 /** Limit wpisu serwera (`relay-server/core.js` `MAX_ENTRY_CHARS`, ~16 MB po odkodowaniu). */
 export const MAX_ENTRY_CHARS = 22_400_000;
+/** U2.5: surowe bajty, które po zaszyfrowaniu (IV 12 B + znacznik 16 B) i base64url zmieszczą się w `MAX_ENTRY_CHARS`. */
+export const MAX_ENTRY_RAW_BYTES = Math.floor(MAX_ENTRY_CHARS / 4) * 3 - 64;
+/** `fetch(..., { keepalive })` przyjmuje ciało do 64 KiB — większe idą zwykłą drogą. */
+const KEEPALIVE_MAX_BODY = 60_000;
+
+/**
+ * U2.5: zaległe zmiany w kolejności, tyle z początku, ile zmieści się w jednym wpisie (suma rozmiarów — scalenie
+ * Yjs nigdy nie jest większe). Co najmniej jedna zmiana: pojedyncza za duża zostaje błędem „za duże”, jak dotąd.
+ */
+export function takeBatch(parts: readonly Uint8Array[], maxBytes: number): { batch: Uint8Array[]; rest: Uint8Array[] } {
+  let size = 0;
+  let n = 0;
+  while (n < parts.length && (n === 0 || size + parts[n].length <= maxBytes)) size += parts[n++].length;
+  return { batch: parts.slice(0, n), rest: parts.slice(n) };
+}
+
+/**
+ * Za duża aktualizacja rozcięta na części według autora (urządzenia Yjs): `diffUpdate` względem wektora stanu,
+ * który ma pełne zegary wszystkich pozostałych autorów, zostawia zmiany jednego. Każda część niesie cały zbiór
+ * usunięć (jest mały). Część jednego autora większa niż limit zostaje w całości — wtedy „za duże”, jak dotąd.
+ */
+export function splitByAuthor(update: Uint8Array, maxBytes: number): Uint8Array[] {
+  if (update.length <= maxBytes) return [update];
+  const { from, to } = Y.parseUpdateMeta(update);
+  if (to.size <= 1) return [update];
+  const out: Uint8Array[] = [];
+  for (const client of to.keys()) {
+    const sv = new Map<number, number>();
+    for (const [other, clock] of to) sv.set(other, other === client ? (from.get(client) ?? 0) : clock);
+    out.push(Y.diffUpdate(update, Y.encodeStateVector(sv)));
+  }
+  return out;
+}
+
+/** Kolejka w pamięci: kolejne zmiany scalone w grupy mieszczące się w jednym wpisie (U2.5), za duże rozcięte. */
+export function packPending(parts: readonly Uint8Array[], maxBytes: number): Uint8Array[] {
+  let rest = parts.flatMap((p) => splitByAuthor(p, maxBytes));
+  const out: Uint8Array[] = [];
+  while (rest.length > 0) {
+    const next = takeBatch(rest, maxBytes);
+    out.push(next.batch.length === 1 ? next.batch[0] : Y.mergeUpdates(next.batch));
+    rest = next.rest;
+  }
+  return out;
+}
 const TOO_BIG = "Dane są za duże dla przekaźnika (limit 16 MB na wpis)";
 const ROOM_FULL = "Pokój na przekaźniku jest pełny — migawka nie zwolniła miejsca";
 const RETRY_MIN_MS = 2000;
@@ -161,6 +206,9 @@ export class RelayProvider {
   private persistChain: Promise<void> = Promise.resolve();
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private keepAliveTimer: ReturnType<typeof setInterval> | null = null;
+  /** Karta schowana (`setHidden`) — małe wysyłki idą z `keepalive`. */
+  private hidden = false;
+  private keepaliveBytes = 0;
   private socket: WebSocket | null = null;
   private retryMs = RETRY_MIN_MS;
   private started = false;
@@ -216,12 +264,13 @@ export class RelayProvider {
     this.started = true;
     const [pending, state] = await Promise.all([this.opts.store.loadPending(), this.opts.store.loadState()]);
     if (!this.started) return; // stop() w trakcie wczytywania: nie podłączamy niczego
-    if (pending) this.pending = [pending];
+    // Zapis z dysku to jedna scalona aktualizacja — za duża dzieli się tu na części, które przejdą przez przekaźnik.
     this.state = state;
     // Zmiany sprzed startu nie przeszły przez nasłuch `update`: dokładamy różnicę względem `sv`.
-    // Pusta różnica to dwa bajty (`[0,0]`) i jej nie wysyłamy.
+    // Pusta różnica to dwa bajty (`[0,0]`) i jej nie wysyłamy. Pakowane razem z zapisem — oba mogą być duże.
     const initial = Y.encodeStateAsUpdate(this.opts.doc, this.state.sv);
-    if (initial.length > 2) this.pending.push(initial);
+    const loaded = [...(pending ? [pending] : []), ...(initial.length > 2 ? [initial] : [])];
+    if (loaded.length > 0) this.pending = packPending(loaded, MAX_ENTRY_RAW_BYTES);
     this.setStatus("connecting");
     this.opts.doc.on("update", this.onLocalUpdate);
     this.connectSocket();
@@ -234,6 +283,7 @@ export class RelayProvider {
    */
   setHidden(hidden: boolean): void {
     if (!this.started) return;
+    this.hidden = hidden;
     if (hidden) {
       this.flushNow();
       if (!this.keepAliveTimer) {
@@ -261,6 +311,7 @@ export class RelayProvider {
     if (this.flushTimer) clearTimeout(this.flushTimer);
     if (this.retryTimer) clearTimeout(this.retryTimer);
     if (this.persistTimer) void this.persistPending(); // zaległy zapis nie może zginąć ze stopem
+    this.hidden = false;
     this.flushTimer = null;
     this.retryTimer = null;
     this.socket?.close();
@@ -362,13 +413,25 @@ export class RelayProvider {
   }
 
   private async request<T>(path: string, init: { method: "GET" | "POST" | "PUT"; body?: unknown }, signal: AbortSignal): Promise<T> {
-    const res = await this.fetchFn(`${this.base}${path}`, {
-      method: init.method,
-      headers: { Authorization: `Bearer ${this.opts.keys.token}`, "Content-Type": "application/json" },
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
-      cache: "no-store",
-      signal,
-    });
+    const body = init.body === undefined ? undefined : JSON.stringify(init.body);
+    // Limit 64 KiB dotyczy wszystkich żądań `keepalive` strony naraz — liczymy bajty w drodze.
+    const keepalive = this.hidden && init.method !== "GET" && body !== undefined && this.keepaliveBytes + body.length <= KEEPALIVE_MAX_BODY;
+    if (keepalive) this.keepaliveBytes += body!.length;
+    let res: Response;
+    // try/finally, nie `.finally`: atrapa `fetch` może rzucić od razu, a licznik musi wrócić.
+    try {
+      res = await this.fetchFn(`${this.base}${path}`, {
+        method: init.method,
+        headers: { Authorization: `Bearer ${this.opts.keys.token}`, "Content-Type": "application/json" },
+        body,
+        cache: "no-store",
+        // U2.5: przy schowanej karcie mała wysyłka przeżywa zamknięcie strony (limit przeglądarki: 64 KiB ciała).
+        ...(keepalive ? { keepalive: true } : {}),
+        signal,
+      });
+    } finally {
+      if (keepalive) this.keepaliveBytes -= body!.length;
+    }
     const json = await res.json().catch(() => ({}));
     if (!res.ok) throw new RelayHttpError(res.status, typeof json.error === "string" ? json.error : res.statusText);
     return json as T;
@@ -387,13 +450,18 @@ export class RelayProvider {
     }, PERSIST_MS);
   }
 
-  /** Zapis natychmiast, jedną kolejką (zapisy nie wyprzedzają się); `pending` zwija się do jednego elementu. */
+  /**
+   * Zapis natychmiast, jedną kolejką (zapisy nie wyprzedzają się). Na dysk idzie jedna scalona aktualizacja (kształt
+   * bez zmian), a w pamięci kolejka zwija się do grup mieszczących się we wpisie (U2.5) — scalenie wszystkiego w jedno
+   * wracałoby do błędu „za duże” przy dużej zaległości.
+   */
   private persistPending(): Promise<void> {
     if (this.persistTimer) clearTimeout(this.persistTimer);
     this.persistTimer = null;
     const task = async () => {
-      if (this.pending.length > 1) this.pending = [Y.mergeUpdates(this.pending)];
-      await this.opts.store.savePending(this.pending[0] ?? null);
+      if (this.pending.length > 1) this.pending = packPending(this.pending, MAX_ENTRY_RAW_BYTES);
+      const all = this.pending.length > 1 ? Y.mergeUpdates(this.pending) : this.pending[0] ?? null;
+      await this.opts.store.savePending(all);
     };
     const next = this.persistChain.then(task, task);
     this.persistChain = next.catch(() => undefined);
@@ -471,9 +539,12 @@ export class RelayProvider {
 
   private async flushTask(): Promise<void> {
     if (!this.started || this.pending.length === 0 || !this.maySend()) return;
+    // U2.5: duża zaległość idzie kilkoma wpisami; reszta czeka na początku kolejki i rusza zaraz po tym.
+    const { batch: parts, rest } = takeBatch(this.pending, MAX_ENTRY_RAW_BYTES);
+    // Wektor stanu jak dotąd: niewysłana reszta jest w `pending` (zapisywanym), więc po restarcie nie przepada,
+    // a start nie skleja jej z resztą dokumentu w jeden za duży wpis.
     const sv = Y.encodeStateVector(this.opts.doc);
-    const parts = this.pending;
-    this.pending = [];
+    this.pending = rest;
     const merged = Y.mergeUpdates(parts);
     let res: Written | undefined;
     for (let attempt = 0; !res; attempt++) {
@@ -531,6 +602,7 @@ export class RelayProvider {
     await this.persistState();
     this.retryMs = RETRY_MIN_MS;
     this.setStatus("online");
+    if (rest.length > 0) { this.run(() => this.flushTask()); return; }
     await this.compactTask();
   }
 

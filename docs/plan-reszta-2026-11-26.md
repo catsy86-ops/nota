@@ -76,7 +76,7 @@ A3.4 (`src/lib/commands/` — źródła poleceń palety) → Powłoka 2.5 (więc
 | U5.1, U5.3 ✅ 2026-11-27 | jeden `SettingsCard`; `Segmented` zamiast `<select>` ≤ 5 opcji | M | |
 | Q4.1 ✅ 2026-11-27 | jeden wskaźnik stanu synchronizacji w nagłówku | M | |
 | Q4.2 ✅ 2026-11-27 | „Co się zmieniło, gdy mnie nie było” | M | |
-| U2.5 | przekaźnik: dzielenie aktualizacji > 512 KB | M | `security-reviewer` |
+| U2.5 ◐ 2026-11-27 (zostaje: pakowanie `resetRoom`, migawka po wysyłce dzielonej — `docs/opis/dane.md`) | przekaźnik: dzielenie dużych zaległości (limit wpisu ~16 MB, nie 512 KB) | M | `security-reviewer` ✔︎ |
 | S3.2 | token push na urządzenie | M | `security-reviewer` |
 
 ## Fala 5 — platforma i dostępność
