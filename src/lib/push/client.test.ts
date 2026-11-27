@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { disablePush, enablePush, pushErrorText, sendTestPush, uploadSchedule } from "./client";
-import { pushPrefs, updatePushPrefs } from "./prefs";
+import { pushPrefs, pushToken, updatePushPrefs } from "./prefs";
 
 // Atrapa Web Push: subskrypcja, rejestracja Service Workera i serwer (fetch). T19 audytu: wcześniej klient miał 10% pokrycia.
 const KEY = "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U";
@@ -74,6 +74,29 @@ describe("push/client", () => {
     expect(pushPrefs.get()).toMatchObject({ enabled: true, server: "https://srv.example" });
   });
 
+  it("enablePush (S3.2): serwer z /register wydaje token urządzenia — token serwera nie zostaje, wyłączenie go zapomina", async () => {
+    setup();
+    const device = "d".repeat(43);
+    const fetchMock = vi.fn(async (url: string) => (String(url).endsWith("/vapid") ? json({ publicKey: KEY, enc: 1, reg: 1 }) : String(url).endsWith("/register") ? json({ token: device }) : json({ ok: true })));
+    vi.stubGlobal("fetch", fetchMock);
+    await enablePush("https://srv.example", "sekret-serwera");
+    const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>;
+    expect(calls.map((c) => c[0])).toEqual(["https://srv.example/vapid", "https://srv.example/register"]);
+    expect((calls[1]![1].headers as Record<string, string>).Authorization).toBe("Bearer sekret-serwera");
+    expect(pushToken.get()).toBe(device);
+    expect(pushPrefs.get()).toMatchObject({ enabled: true, tokenKind: "device" });
+    await disablePush();
+    expect(pushToken.get()).toBe("");
+    expect(pushPrefs.get().tokenKind).toBeUndefined();
+  });
+
+  it("enablePush (S3.2): odpowiedź /register bez tokenu nie włącza powiadomień", async () => {
+    setup();
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => (String(url).endsWith("/vapid") ? json({ publicKey: KEY, reg: 1 }) : json({ token: "krótki" }))));
+    await expect(enablePush("https://srv.example", "sekret")).rejects.toThrow(/tokenu urządzenia/);
+    expect(pushPrefs.get().enabled).toBe(false);
+  });
+
   it("enablePush: subskrypcja z innym kluczem serwera jest wymieniana", async () => {
     const { sub, pushManager } = setup({ sub: true });
     sub.options.applicationServerKey = new Uint8Array([1, 2, 3]).buffer; // inny niż KEY
@@ -113,6 +136,36 @@ describe("push/client", () => {
     await uploadSchedule([]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(pushPrefs.get().last).toMatchObject({ ok: true, count: 0 });
+  });
+
+  it("uploadSchedule (S3.2): serwer zapomniał urządzenie (401 dla tokenu urządzenia) — wyłącza i prosi o token serwera", async () => {
+    setup({ sub: true });
+    pushToken.set("d".repeat(43));
+    updatePushPrefs({ enabled: true, tokenKind: "device" });
+    const fetchMock = vi.fn(async () => json({ error: "unauthorized" }, 401));
+    vi.stubGlobal("fetch", fetchMock);
+    await uploadSchedule([]);
+    expect(pushPrefs.get()).toMatchObject({ enabled: false, last: { ok: false, error: expect.stringMatching(/nie zna już tego urządzenia/) } });
+    expect(pushPrefs.get().tokenKind).toBeUndefined();
+    expect(pushToken.get()).toBe("");
+    await uploadSchedule([]);
+    expect(fetchMock).toHaveBeenCalledTimes(1); // bez ponowień w tle
+  });
+
+  it("uploadSchedule (S3.2): włączone przed S3.2 wymienia raz token serwera na token urządzenia", async () => {
+    setup({ sub: true });
+    const device = "e".repeat(43);
+    pushToken.set("token-serwera-0123456789abcdef");
+    updatePushPrefs({ enabled: true, reg: true });
+    const fetchMock = vi.fn(async (url: string) => (String(url).endsWith("/register") ? json({ token: device }) : json({ ok: true })));
+    vi.stubGlobal("fetch", fetchMock);
+    await uploadSchedule([]);
+    const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>;
+    expect(calls.map((c) => c[0].replace("https://srv.example", ""))).toEqual(["/register", "/schedule"]);
+    expect((calls[0]![1].headers as Record<string, string>).Authorization).toBe("Bearer token-serwera-0123456789abcdef");
+    expect((calls[1]![1].headers as Record<string, string>).Authorization).toBe(`Bearer ${device}`);
+    expect(pushToken.get()).toBe(device);
+    expect(pushPrefs.get().tokenKind).toBe("device");
   });
 
   it("uploadSchedule: ta sama lista idzie znowu po 6 h — serwer, który stracił dane, odzyskuje harmonogram (S4.7)", async () => {

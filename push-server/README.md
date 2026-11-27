@@ -74,12 +74,17 @@ powiadomienia w aplikacji jeszcze raz.
 | Metoda i ścieżka | Treść | Odpowiedź |
 |---|---|---|
 | `GET /health` | — | `{ ok: true }` (jawny) |
-| `GET /vapid` | — | `{ publicKey, enc: 1 }` (`enc: 1` — przyjmuje terminy zaszyfrowane). **Wymaga tokenu** (sam klucz jest publiczny, ale nie zdradzamy, że to serwer powiadomień) |
+| `GET /vapid` | — | `{ publicKey, enc: 1, reg: 1 }` (`enc: 1` — przyjmuje terminy zaszyfrowane, `reg: 1` — wydaje tokeny urządzeń). **Wymaga tokenu** (sam klucz jest publiczny, ale nie zdradzamy, że to serwer powiadomień) |
+| `POST /register` | `{ subscription }` | `{ token }` — token urządzenia dla tej subskrypcji (S3.2). **Tylko z `PUSH_TOKEN`**; ponowna rejestracja unieważnia poprzedni token |
 | `PUT /schedule` | `{ subscription, items: [{ key, at, title, body?, url? }] }` albo zaszyfrowane `items: [{ v: 1, key, at, enc }]` (S3.1: serwer nie widzi treści; formaty można mieszać) | zastępuje listę terminów urządzenia. **Wymaga tokenu** |
 | `POST /test` | `{ subscription }` | wysyła od razu próbne powiadomienie. **Wymaga tokenu** |
 | `POST /unsubscribe` | `{ endpoint }` | usuwa urządzenie. **Wymaga tokenu** |
 
-Kody błędów: `401` zły albo brak tokenu, `429` za dużo żądań (z nagłówkiem `Retry-After`), `413` za duże
+Token urządzenia działa w `GET /vapid` i w `PUT /schedule`, `POST /test`, `POST /unsubscribe` — tylko dla własnej
+subskrypcji (cudza: `403`). `PUT /schedule` z nowym adresem subskrypcji (przeglądarka ją wymieniła) przenosi token
+na nowy adres i usuwa stary, o ile nowy nie należy już do innego urządzenia.
+
+Kody błędów: `401` zły albo brak tokenu, `403` token urządzenia użyty dla cudzej subskrypcji albo do `/register`, `429` za dużo żądań (z nagłówkiem `Retry-After`), `413` za duże
 ciało (limit 512 KB), `400` zła treść albo adres subskrypcji spoza serwisów push, `503` brak miejsca na urządzenia.
 
 ## Limity
@@ -96,9 +101,14 @@ ciało (limit 512 KB), `400` zła treść albo adres subskrypcji spoza serwisów
   token musi mieć co najmniej 24 znaki — losowy (`openssl rand -hex 24` = 192 bity), więc zgadywanie nie ma
   sensu. Bez tokenu każdy mógłby zająć miejsca na subskrypcje, kasować cudze i wysyłać powiadomienia
   podpisane Twoim kluczem VAPID.
-- **Token w aplikacji:** zapisany tylko na urządzeniu (`localStorage`, osobny klucz), nie ma go w kopii
-  zapasowej ani we wspólnych danych. Na nowym telefonie wpisujesz go od nowa. Kto ma dostęp do telefonu,
-  ma też token — zmiana `PUSH_TOKEN` na serwerze odcina wszystkie urządzenia (wpisz nowy w aplikacji).
+- **Token w aplikacji (S3.2):** `PUSH_TOKEN` wpisujesz przy włączaniu, a aplikacja wymienia go od razu na token
+  urządzenia (`POST /register`) i zapisuje tylko ten (`localStorage`, osobny klucz, poza kopią zapasową i wspólnymi
+  danymi). Serwer trzyma tylko skrót SHA-256 tokenu urządzenia. Kto ma dostęp do telefonu, może sterować tylko jego
+  subskrypcją — nie założy nowej i nie ruszy cudzych. Odcięcie jednego urządzenia: wypisz je w aplikacji albo — przy
+  **zatrzymanym** serwerze (działający nadpisze plik z pamięci) — usuń jego wpis z `store.json`.
+  Gdy serwer usunie subskrypcję (serwis push odpowie 410, 60 dni bez `PUT /schedule`), znika też jej token;
+  aplikacja pokaże wtedy prośbę o ponowne włączenie z `PUSH_TOKEN`. Zmiana `PUSH_TOKEN` nie unieważnia tokenów urządzeń. Starsza aplikacja (bez S3.2) dalej
+  używa `PUSH_TOKEN` — serwer przyjmuje oba.
 - **Brak otwartego przekaźnika (SSRF):** subskrypcja musi wskazywać serwis Web Push przeglądarki (Google FCM,
   Mozilla, Windows, Apple), `https`, port 443, bez danych logowania, spacji, znaków sterujących i `\` w
   adresie, a nazwa hosta musi składać się z poprawnych etykiet DNS (litery, cyfry, myślniki). Ostatnie ma

@@ -1,6 +1,6 @@
 // Czysta logika serwera powiadomień: walidacja tego, co przysyła aplikacja,
 // i wybór terminów do wysłania. Bez sieci i bez dysku — testy w core.test.js.
-import { createHash, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { parse as legacyParse } from "node:url";
 
 export const LIMITS = {
@@ -166,7 +166,11 @@ export function cleanStore(raw, now) {
     if (!subscription) continue;
     // Spóźnione o mniej niż `lateMs` zostają — wyśle je pierwszy obieg.
     const items = cleanItems(sub.items, now - LIMITS.lateMs);
-    store.subs[subKey(subscription.endpoint)] = { subscription, items, updated: Number(sub.updated) || now, ...(sub.nudged === true ? { nudged: true } : {}) };
+    store.subs[subKey(subscription.endpoint)] = {
+      subscription, items, updated: Number(sub.updated) || now,
+      ...(sub.nudged === true ? { nudged: true } : {}),
+      ...(isTokenHash(sub.tokenHash) ? { tokenHash: sub.tokenHash } : {}),
+    };
   }
   return store;
 }
@@ -179,6 +183,33 @@ export function tokenOk(provided, expected) {
   const a = createHash("sha256").update(provided).digest();
   const b = createHash("sha256").update(expected).digest();
   return timingSafeEqual(a, b);
+}
+
+// ── Token urządzenia (S3.2) ───────────────────────────────────────────────────────────────────────────
+// `PUSH_TOKEN` daje pełny dostęp do serwera, więc nie powinien leżeć na każdym telefonie. `POST /register` (z `PUSH_TOKEN`)
+// wydaje losowy token jednej subskrypcji; serwer trzyma tylko jego skrót. Token urządzenia zarządza wyłącznie swoją
+// subskrypcją (harmonogram, próbne, wypisanie) i odczytuje klucz VAPID — nie zakłada nowych i nie dotyka cudzych.
+
+const isTokenHash = (v) => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
+
+/** Nowy token urządzenia: 256 bitów, base64url (43 znaki — mieści się w `bearerOf`). */
+export const newDeviceToken = () => randomBytes(32).toString("base64url");
+
+export const deviceTokenHash = (token) => createHash("sha256").update(token).digest("hex");
+
+/**
+ * Subskrypcja, do której należy token urządzenia; `null` = żadna. Porównanie skrótów w stałym czasie przy każdej
+ * subskrypcji (bez wcześniejszego wyjścia), żeby czas odpowiedzi nie zdradzał, która pasuje.
+ */
+export function deviceSubOf(store, token) {
+  if (typeof token !== "string" || !token) return null;
+  const given = createHash("sha256").update(token).digest();
+  let found = null;
+  for (const [id, sub] of Object.entries(store.subs)) {
+    if (!isTokenHash(sub.tokenHash)) continue;
+    if (timingSafeEqual(given, Buffer.from(sub.tokenHash, "hex")) && found === null) found = id;
+  }
+  return found;
 }
 
 /** Token z nagłówka `Authorization: Bearer …`; pusty = brak albo zły format. */

@@ -43,7 +43,8 @@ export function PushSettings() {
 function WebPushSettings() {
   const prefs = pushPrefs.use();
   const [server, setServer] = useState(prefs.server);
-  const [token, setToken] = useState(() => pushToken.get());
+  // S3.2: token urządzenia nie trafia do pola — to nie token serwera i nie włączy powiadomień drugi raz.
+  const [token, setToken] = useState(() => (pushPrefs.get().tokenKind === "device" ? "" : pushToken.get()));
   const [busy, setBusy] = useState<null | "on" | "off" | "test">(null);
   // Wskaźnik dopiero po 300 ms (plan 3.3): szybkie włączenie/wyłączenie bez mignięcia.
   const spinOn = useDelayedFlag(busy === "on");
@@ -73,8 +74,9 @@ function WebPushSettings() {
 
   const last = prefs.last;
   const summary = readPushSummary(safeGet(PUSH_SUMMARY_KEY));
+  // Wyłączone z błędem tylko wtedy, gdy wyłączył je serwer (zapomniany token urządzenia, S3.2) — „Wyłącz” czyści `last`.
   const status = !prefs.enabled
-    ? "Wyłączone — przypomnienia działają tylko przy otwartej aplikacji."
+    ? last && !last.ok ? `Wyłączone: ${last.error ?? "błąd serwera"}` : "Wyłączone — przypomnienia działają tylko przy otwartej aplikacji."
     : !last
       ? "Włączone — harmonogram wyśle się za chwilę."
       : last.ok
@@ -117,7 +119,7 @@ function WebPushSettings() {
                 type="password"
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="Token serwera"
+                placeholder={prefs.enabled && prefs.tokenKind === "device" ? "Urządzenie ma własny token" : "Token serwera"}
                 maxLength={PUSH_TOKEN_MAX}
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
@@ -125,9 +127,12 @@ function WebPushSettings() {
                 className="font-mono text-sm"
                 data-testid="push-token"
               />
+              {prefs.enabled && prefs.tokenKind === "device" && (
+                <p className="ui-hint">Token serwera nie jest zapisany na tym urządzeniu — serwer wydał mu własny, ważny tylko dla tej subskrypcji.</p>
+              )}
               {prefs.enabled ? (
                 <Button type="button" variant="outline" className="pressable shrink-0 sm:self-start" disabled={busy !== null}
-                  onClick={() => void run("off", disablePush, "Powiadomienia przy zamkniętej aplikacji wyłączone")}>
+                  onClick={() => void run("off", async () => { await disablePush(); if (pushToken.get() === "") setToken(""); }, "Powiadomienia przy zamkniętej aplikacji wyłączone")}>
                   {spinOff && <Loader2 className="size-4 animate-spin" />}Wyłącz
                 </Button>
               ) : (
@@ -137,7 +142,7 @@ function WebPushSettings() {
               )}
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p role="status" className={cn("text-xs", prefs.enabled && last && !last.ok ? "text-destructive-ink" : "text-muted-foreground")}>{status}</p>
+              <p role="status" className={cn("text-xs", last && !last.ok ? "text-destructive-ink" : "text-muted-foreground")}>{status}</p>
               {prefs.enabled && summary && (
                 <p className={cn("text-xs", summary.dropped > 0 ? "text-warning-ink" : "text-muted-foreground")}>
                   Serwer przyjmuje do {summary.limit} przypomnień: wysłano {summary.sent} z {summary.total}.

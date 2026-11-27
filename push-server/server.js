@@ -6,8 +6,8 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { join } from "node:path";
 import webpush from "web-push";
 import {
-  bearerOf, cleanItems, cleanStore, cleanSubscription, clientIp, corsOrigin, createRateLimiter, emptyStore, LIMITS,
-  normalizeEndpoint, parseOrigins, payloadOf, subKey, tickStore, tokenOk,
+  bearerOf, cleanItems, cleanStore, cleanSubscription, clientIp, corsOrigin, createRateLimiter, deviceSubOf, deviceTokenHash,
+  emptyStore, LIMITS, newDeviceToken, normalizeEndpoint, parseOrigins, payloadOf, subKey, tickStore, tokenOk,
 } from "./core.js";
 
 const PORT = Number(process.env.PORT) || 4455;
@@ -110,6 +110,14 @@ function send(res, status, body, extra = {}) {
 }
 
 const tooMany = (res, retryAfterSec) => send(res, 429, { error: "rate-limited" }, { "Retry-After": String(retryAfterSec) });
+const forbidden = (res) => send(res, 403, { error: "forbidden" });
+const unauthorized = (res) => send(res, 401, { error: "unauthorized" }, { "WWW-Authenticate": "Bearer" });
+
+/**
+ * Token urządzenia sprawdzony przed wczytaniem treści (do 20 s) mógł w tym czasie przestać działać: wypisanie,
+ * 410 z serwisu push, ponowna rejestracja albo równoległe przeniesienie na nowy adres. Po `readJson` — jeszcze raz.
+ */
+const deviceStillValid = (access) => access.kind !== "device" || store.subs[access.id]?.tokenHash === access.hash;
 
 /** Połyka resztę zbyt dużego ciała (do `DRAIN_MAX`), żeby klient zdążył dostać 413; dalej — zrywa połączenie. */
 const DRAIN_MAX = 1024 * 1024;
@@ -164,18 +172,22 @@ async function tick() {
 }
 
 /**
- * Zwraca `true`, gdy żądanie ma poprawny token; inaczej sam odpowiada (401, a po zbyt wielu błędnych próbach 429).
+ * Dostęp żądania: `{ kind: "master" }` (`PUSH_TOKEN` albo tryb bez uwierzytelniania), `{ kind: "device", id }` (token
+ * urządzenia jednej subskrypcji, S3.2) albo `null` — wtedy sama odpowiada (401, a po zbyt wielu błędnych próbach 429).
  * Token sprawdzamy PRZED limitem: limit dotyczy tylko błędnych prób, więc osoba za tym samym adresem (wspólne proxy,
  * sieć komórkowa) nie zablokuje właściciela serią złych tokenów. Brute force nie ma szans przy tokenie z 96+ bitami.
  */
 function authorize(req, res, ip, now) {
-  if (!TOKEN) return true;
-  if (tokenOk(bearerOf(req.headers.authorization), TOKEN)) return true;
+  if (!TOKEN) return { kind: "master" };
+  const bearer = bearerOf(req.headers.authorization);
+  if (tokenOk(bearer, TOKEN)) return { kind: "master" };
+  const id = deviceSubOf(store, bearer);
+  if (id) return { kind: "device", id, hash: deviceTokenHash(bearer) };
   const state = authFails.check(ip, now);
   if (!state.ok) { tooMany(res, state.retryAfterSec); return false; }
   authFails.record(ip, now);
   send(res, 401, { error: "unauthorized" }, { "WWW-Authenticate": "Bearer" });
-  return false;
+  return null;
 }
 
 async function handle(req, res) {
@@ -196,42 +208,83 @@ async function handle(req, res) {
     if (req.method === "GET" && path === "/vapid") {
       if (!authorize(req, res, ip, now)) return;
       // `enc: 1` — serwer przyjmuje terminy zaszyfrowane (S3.1); bez tego klient wysyła stary format.
-      return send(res, 200, { publicKey: vapid.publicKey, enc: 1 });
+      // `reg: 1` — serwer wydaje tokeny urządzeń (`POST /register`, S3.2); bez tego klient zostaje przy `PUSH_TOKEN`.
+      return send(res, 200, { publicKey: vapid.publicKey, enc: 1, reg: 1 });
     }
 
-    if (req.method === "PUT" && path === "/schedule") {
-      if (!authorize(req, res, ip, now)) return;
+    // S3.2: token urządzenia dla jednej subskrypcji. Tylko z `PUSH_TOKEN`; ponowna rejestracja unieważnia poprzedni.
+    if (req.method === "POST" && path === "/register") {
+      const access = authorize(req, res, ip, now);
+      if (!access) return;
+      if (access.kind !== "master") return forbidden(res);
       const body = await readJson(req);
       const subscription = cleanSubscription(body.subscription);
       if (!subscription) return send(res, 400, { error: "subscription" });
       const id = subKey(subscription.endpoint);
       const sub = perSubSchedule.hit(id, now);
       if (!sub.ok) return tooMany(res, sub.retryAfterSec);
-      if (!store.subs[id] && Object.keys(store.subs).length >= LIMITS.subs) return send(res, 503, { error: "full" });
+      const prev = store.subs[id];
+      if (!prev && Object.keys(store.subs).length >= LIMITS.subs) return send(res, 503, { error: "full" });
+      const token = newDeviceToken();
+      store.subs[id] = { subscription, items: prev?.items ?? [], updated: Date.now(), tokenHash: deviceTokenHash(token) };
+      save();
+      return send(res, 200, { token });
+    }
+
+    if (req.method === "PUT" && path === "/schedule") {
+      const access = authorize(req, res, ip, now);
+      if (!access) return;
+      const body = await readJson(req);
+      if (!deviceStillValid(access)) return unauthorized(res);
+      const subscription = cleanSubscription(body.subscription);
+      if (!subscription) return send(res, 400, { error: "subscription" });
+      const id = subKey(subscription.endpoint);
+      const sub = perSubSchedule.hit(id, now);
+      if (!sub.ok) return tooMany(res, sub.retryAfterSec);
+      const prev = store.subs[id];
+      let tokenHash = prev?.tokenHash;
+      if (access.kind === "device" && access.id !== id) {
+        // Przeglądarka wymieniła subskrypcję (nowy endpoint): token przechodzi na nową, stara znika. Cudzej nie przejmie.
+        // Limit liczy też stary wpis — przenoszenie po zmyślonych adresach nie daje świeżego licznika.
+        if (prev) return forbidden(res);
+        const old = perSubSchedule.hit(access.id, now);
+        if (!old.ok) return tooMany(res, old.retryAfterSec);
+        tokenHash = access.hash;
+        delete store.subs[access.id];
+      } else if (!prev && Object.keys(store.subs).length >= LIMITS.subs) {
+        return send(res, 503, { error: "full" });
+      }
       const items = cleanItems(body.items, Date.now());
-      store.subs[id] = { subscription, items, updated: Date.now() };
+      store.subs[id] = { subscription, items, updated: Date.now(), ...(tokenHash ? { tokenHash } : {}) };
       save();
       return send(res, 200, { ok: true, items: items.length });
     }
 
     if (req.method === "POST" && path === "/unsubscribe") {
-      if (!authorize(req, res, ip, now)) return;
+      const access = authorize(req, res, ip, now);
+      if (!access) return;
       const body = await readJson(req);
+      if (!deviceStillValid(access)) return unauthorized(res);
       if (typeof body.endpoint === "string") {
         // Klucz liczymy ze znormalizowanego adresu, jak przy zapisie (`cleanSubscription`).
-        delete store.subs[subKey(normalizeEndpoint(body.endpoint) ?? body.endpoint)];
+        const id = subKey(normalizeEndpoint(body.endpoint) ?? body.endpoint);
+        if (access.kind === "device" && access.id !== id) return forbidden(res);
+        delete store.subs[id];
         save();
       }
       return send(res, 200, { ok: true });
     }
 
     if (req.method === "POST" && path === "/test") {
-      if (!authorize(req, res, ip, now)) return;
+      const access = authorize(req, res, ip, now);
+      if (!access) return;
       const body = await readJson(req);
+      if (!deviceStillValid(access)) return unauthorized(res);
       // `cleanSubscription` przepuszcza tylko adresy serwisów push przeglądarek — nie da się tym kierować żądań gdzie indziej.
       const subscription = cleanSubscription(body.subscription);
       if (!subscription) return send(res, 400, { error: "subscription" });
       const id = subKey(subscription.endpoint);
+      if (access.kind === "device" && access.id !== id) return forbidden(res);
       const sub = perSubTest.hit(id, now);
       if (!sub.ok) return tooMany(res, sub.retryAfterSec);
       const result = await sendOne(id, subscription, payloadOf({

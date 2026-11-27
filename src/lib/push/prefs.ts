@@ -45,6 +45,13 @@ export interface PushPrefs {
   encAt?: number;
   /** Serwer, który przyjmował szyfrogramy, przestał ogłaszać `enc: 1`: nic nie wysyłamy jawnie do ponownego włączenia. */
   encLost?: boolean;
+  /**
+   * S3.2: `"device"` — w `pushToken` leży token tej subskrypcji wydany przez `POST /register`, nie `PUSH_TOKEN` serwera.
+   * Brak = token serwera (stary serwer bez `/register` albo włączone przed S3.2).
+   */
+  tokenKind?: "device";
+  /** Serwer wydaje tokeny urządzeń (`GET /vapid` → `reg: 1`, S3.2); odświeżane razem z `enc`. */
+  reg?: boolean;
 }
 
 export const pushPrefs = createPersistedStore<PushPrefs>(PUSH_PREFS_KEY, { server: "", enabled: false, off: [] }, {

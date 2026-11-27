@@ -5,8 +5,11 @@ import { contentKey, sealItems, takeResendRequest } from "./seal";
 
 /**
  * Subskrypcja Web Push i wysyłka harmonogramu na serwer (`push-server/server.js`):
- * `GET /vapid`, `PUT /schedule`, `POST /test`, `POST /unsubscribe`.
+ * `GET /vapid`, `POST /register`, `PUT /schedule`, `POST /test`, `POST /unsubscribe`.
  */
+
+/** Kształt tokenu urządzenia z `POST /register` (base64url, serwer wydaje 43 znaki). */
+const DEVICE_TOKEN = /^[A-Za-z0-9_-]{32,200}$/;
 
 export type PushSupport = "ok" | "unsupported" | "ios-browser";
 
@@ -30,6 +33,7 @@ const sameKey = (a: ArrayBuffer | null | undefined, b: Uint8Array) =>
 /** Komunikat dla kodu odpowiedzi serwera (`push-server/server.js`): 401 zły token, 429 za dużo żądań. */
 export function pushErrorText(status: number): string {
   if (status === 401) return "Serwer odrzucił token. Sprawdź token serwera w Ustawieniach.";
+  if (status === 403) return "Ten token nie pozwala na tę operację — wpisz token serwera (PUSH_TOKEN).";
   if (status === 429) return "Serwer ogranicza liczbę żądań. Spróbuj za chwilę.";
   if (status === 413) return "Harmonogram jest za duży dla serwera.";
   return `Serwer odpowiedział ${status}`;
@@ -52,9 +56,24 @@ async function call(server: string, path: string, method: string, body?: unknown
   } catch {
     throw new Error("Brak połączenia z serwerem powiadomień.");
   }
-  if (!res.ok) throw new Error(pushErrorText(res.status));
+  if (!res.ok) throw new PushHttpError(res.status);
   return res;
 }
+
+class PushHttpError extends Error {
+  constructor(readonly status: number) {
+    super(pushErrorText(status));
+  }
+}
+
+/** S3.2: token urządzenia z `POST /register`; `null` = serwer go nie wydał. */
+async function registerDevice(server: string, subscription: PushSubscriptionJSON, token: string): Promise<string | null> {
+  const { token: device } = (await (await call(server, "/register", "POST", { subscription }, false, token)).json()) as { token?: unknown };
+  return typeof device === "string" && DEVICE_TOKEN.test(device) ? device : null;
+}
+
+/** Serwer zapomniał subskrypcję (410 z serwisu push, 60 dni ciszy) — a z nią token urządzenia. Bez ponowień w tle. */
+const LOST_DEVICE = "Serwer powiadomień nie zna już tego urządzenia — wpisz token serwera i włącz powiadomienia ponownie.";
 
 async function currentSubscription(): Promise<PushSubscription | null> {
   const reg = await navigator.serviceWorker.ready;
@@ -68,33 +87,49 @@ async function currentSubscription(): Promise<PushSubscription | null> {
 export async function enablePush(server: string, token = ""): Promise<void> {
   const permission = Notification.requestPermission();
   if ((await permission) !== "granted") throw new Error("Brak zgody na powiadomienia w przeglądarce.");
-  const { publicKey, enc } = (await (await call(server, "/vapid", "GET", undefined, false, token)).json()) as { publicKey?: string; enc?: number };
+  const { publicKey, enc, reg } = (await (await call(server, "/vapid", "GET", undefined, false, token)).json()) as { publicKey?: string; enc?: number; reg?: number };
   if (typeof publicKey !== "string") throw new Error("To nie jest serwer powiadomień G.");
   const key = keyBytes(publicKey);
-  const reg = await navigator.serviceWorker.ready;
-  let sub = await reg.pushManager.getSubscription();
+  const swReg = await navigator.serviceWorker.ready;
+  let sub = await swReg.pushManager.getSubscription();
   // Subskrypcja innego serwera (zmieniony adres albo klucze) — nowa.
   if (sub && !sameKey(sub.options.applicationServerKey, key)) {
     await sub.unsubscribe();
     sub = null;
   }
-  if (!sub) await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+  if (!sub) await swReg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
   // Token sprawdzamy żądaniem wymagającym uwierzytelnienia, zanim włączymy push: zły token od razu da czytelny błąd,
   // a nie „harmonogram nie wysłany” po chwili. Pusta lista terminów nic nie zmienia na serwerze poza subskrypcją.
-  const subscription = (await reg.pushManager.getSubscription())?.toJSON();
-  if (subscription) await call(server, "/schedule", "PUT", { subscription, items: [] }, false, token);
-  pushToken.set(token);
-  updatePushPrefs({ server, enabled: true, sentHash: undefined, last: undefined, enc: enc === 1, encAt: Date.now(), encLost: false });
+  const subscription = (await swReg.pushManager.getSubscription())?.toJSON();
+  let saved = token;
+  let tokenKind: "device" | undefined;
+  if (subscription && reg === 1) {
+    // S3.2: serwer wydaje token tej subskrypcji — `PUSH_TOKEN` nie zostaje na telefonie.
+    const device = await registerDevice(server, subscription, token);
+    if (!device) throw new Error("Serwer nie wydał tokenu urządzenia.");
+    saved = device;
+    tokenKind = "device";
+  } else if (subscription) {
+    await call(server, "/schedule", "PUT", { subscription, items: [] }, false, token);
+  }
+  pushToken.set(saved);
+  updatePushPrefs({ server, enabled: true, sentHash: undefined, last: undefined, enc: enc === 1, reg: reg === 1, encAt: Date.now(), encLost: false, tokenKind });
 }
 
 export async function disablePush(): Promise<void> {
-  const { server } = pushPrefs.get();
+  const { server, tokenKind } = pushPrefs.get();
   updatePushPrefs({ enabled: false, sentHash: undefined, last: undefined });
   const sub = await currentSubscription().catch(() => null);
-  if (!sub) return;
-  // Serwer może być niedostępny — subskrypcja i tak wygaśnie u niego przy pierwszej wysyłce (410).
-  await call(server, "/unsubscribe", "POST", { endpoint: sub.endpoint }).catch(() => undefined);
-  await sub.unsubscribe().catch(() => undefined);
+  if (sub) {
+    // Serwer może być niedostępny — subskrypcja i tak wygaśnie u niego przy pierwszej wysyłce (410).
+    await call(server, "/unsubscribe", "POST", { endpoint: sub.endpoint }).catch(() => undefined);
+    await sub.unsubscribe().catch(() => undefined);
+  }
+  // Token urządzenia należał do wypisanej subskrypcji — ponowne włączenie wymaga tokenu serwera.
+  if (tokenKind === "device") {
+    pushToken.set("");
+    updatePushPrefs({ tokenKind: undefined });
+  }
 }
 
 export async function sendTestPush(): Promise<void> {
@@ -148,14 +183,41 @@ async function refreshEnc(server: string): Promise<void> {
   const { encAt } = pushPrefs.get();
   if (encAt && Date.now() - encAt < RESEND_MS) return;
   try {
-    const { enc } = (await (await call(server, "/vapid", "GET")).json()) as { enc?: number };
+    const { enc, reg } = (await (await call(server, "/vapid", "GET")).json()) as { enc?: number; reg?: number };
     // Raz włączone szyfrowanie nie cofa się po cichu (podmieniony albo stary serwer): blokada do ponownego „Włącz”.
-    if (pushPrefs.get().enc && enc !== 1) updatePushPrefs({ encLost: true, encAt: Date.now() });
-    else updatePushPrefs({ enc: enc === 1, encAt: Date.now(), encLost: false });
-  } catch {
+    if (pushPrefs.get().enc && enc !== 1) updatePushPrefs({ encLost: true, encAt: Date.now(), reg: reg === 1 });
+    else updatePushPrefs({ enc: enc === 1, reg: reg === 1, encAt: Date.now(), encLost: false });
+  } catch (e) {
+    if (e instanceof PushHttpError && e.status === 401) throw e;
     /* sprawdzimy przy następnej wysyłce */
   }
 }
+
+/**
+ * S3.2 dla włączonych wcześniej: `PUSH_TOKEN` z telefonu wymieniany raz na token urządzenia, gdy serwer już to umie.
+ * Błąd zostawia token serwera — spróbujemy przy następnej zwykłej wysyłce.
+ */
+async function upgradeToDeviceToken(server: string, subscription: PushSubscriptionJSON): Promise<void> {
+  const prefs = pushPrefs.get();
+  const token = pushToken.get();
+  if (!prefs.reg || prefs.tokenKind === "device" || !token) return;
+  try {
+    const device = await registerDevice(server, subscription, token);
+    if (!device) return;
+    pushToken.set(device);
+    updatePushPrefs({ tokenKind: "device" });
+  } catch {
+    /* zostaje token serwera */
+  }
+}
+
+/** Token urządzenia odrzucony: zapominamy go i wyłączamy, zamiast pukać w tle z kodem 401. */
+function forgetLostDevice(): void {
+  pushToken.set("");
+  updatePushPrefs({ enabled: false, tokenKind: undefined, sentHash: undefined, last: { at: Date.now(), ok: false, error: LOST_DEVICE } });
+}
+
+const deviceRejected = (e: unknown) => e instanceof PushHttpError && e.status === 401 && pushPrefs.get().tokenKind === "device";
 
 /** `LIMITS.horizonMs` serwera. */
 const SERVER_HORIZON_MS = 35 * 24 * 60 * 60 * 1000;
@@ -166,7 +228,13 @@ async function uploadNow(items: PushItem[], keepalive: boolean): Promise<void> {
   if (!pushPrefs.get().enabled) return;
   // Worker nie odszyfrował powiadomienia (inny klucz) — serwer ma nieczytelne pozycje, wysyłamy listę od nowa.
   if (await takeResendRequest()) updatePushPrefs({ sentHash: undefined });
-  if (!keepalive) await refreshEnc(pushPrefs.get().server);
+  if (!keepalive) {
+    try {
+      await refreshEnc(pushPrefs.get().server);
+    } catch (e) {
+      if (deviceRejected(e)) { forgetLostDevice(); return; }
+    }
+  }
   const prefs = pushPrefs.get();
   if (prefs.encLost) {
     fail("Serwer przestał przyjmować szyfrowane przypomnienia — włącz powiadomienia jeszcze raz.");
@@ -178,6 +246,7 @@ async function uploadNow(items: PushItem[], keepalive: boolean): Promise<void> {
     return;
   }
   const subscription = sub.toJSON();
+  if (!keepalive) await upgradeToDeviceToken(prefs.server, subscription);
   const enc = prefs.enc === true;
   let sealed: unknown[] = items;
   let sentHash = prefs.sentHash;
@@ -217,6 +286,7 @@ async function uploadNow(items: PushItem[], keepalive: boolean): Promise<void> {
     // Obcięta wysyłka nie zapisuje skrótu — następna zwykła wyśle pełną listę.
     updatePushPrefs({ sentHash: sent.length === items.length ? hash : undefined, last: { at: now, ok: true, count: sent.length } });
   } catch (e) {
+    if (deviceRejected(e)) { forgetLostDevice(); return; }
     fail(e instanceof Error ? e.message : "Brak połączenia z serwerem.");
   }
 }

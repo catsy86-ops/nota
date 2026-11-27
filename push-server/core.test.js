@@ -156,3 +156,15 @@ test("D-A2: zostaje ostatni termin, a aplikacja dawno nie wysłała listy — ra
   await tickStore(fresh, TICK_NOW, async (_i, _s, payload) => { calls.push(payload); return "ok"; });
   assert.equal(calls.length, 1);
 });
+
+test("S3.2: token urządzenia — skrót na dysku przeżywa wczytanie, `deviceSubOf` znajduje właściciela", async () => {
+  const { deviceSubOf, deviceTokenHash, newDeviceToken } = await import("./core.js");
+  const token = newDeviceToken();
+  const store = cleanStore({ subs: { x: { subscription: sub, items: [], tokenHash: deviceTokenHash(token) }, y: { subscription: { ...sub, endpoint: `${sub.endpoint}-2` }, items: [], tokenHash: "zly" } } }, NOW);
+  const id = subKey(sub.endpoint);
+  assert.equal(store.subs[id].tokenHash, deviceTokenHash(token));
+  assert.equal(store.subs[subKey(`${sub.endpoint}-2`)].tokenHash, undefined);
+  assert.equal(deviceSubOf(store, token), id);
+  assert.equal(deviceSubOf(store, newDeviceToken()), null);
+  assert.equal(deviceSubOf(store, ""), null);
+});

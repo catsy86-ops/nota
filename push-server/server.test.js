@@ -224,3 +224,51 @@ test("/health zwraca tylko { ok: true } (S4.6)", async () => {
   const r = await fetch(`${srv.base}/health`);
   assert.deepEqual(await r.json(), { ok: true });
 });
+
+// ── S3.2: token urządzenia ──────────────────────────────────────────────────────────────────────────
+const post = (path, body, headers = {}) => fetch(`${srv.base}${path}`, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) });
+const subAt = (name) => ({ ...VALID_SUB, endpoint: `https://fcm.googleapis.com/fcm/send/${name}` });
+const bearer = (t) => ({ Authorization: `Bearer ${t}` });
+
+async function register(name) {
+  const r = await post("/register", { subscription: subAt(name) }, auth);
+  assert.equal(r.status, 200);
+  const { token } = await r.json();
+  assert.match(token, /^[A-Za-z0-9_-]{43}$/);
+  return token;
+}
+
+test("S3.2: /register wydaje token urządzenia, który obsługuje tylko swoją subskrypcję", async () => {
+  const dev = await register("dev-own");
+  assert.deepEqual(await (await fetch(`${srv.base}/vapid`, { headers: bearer(dev) })).json().then((b) => [b.enc, b.reg]), [1, 1]);
+  assert.equal((await fetch(`${srv.base}/schedule`, json({ subscription: subAt("dev-own"), items: [] }, bearer(dev)))).status, 200);
+  // Cudza subskrypcja: ani harmonogram, ani próbne, ani wypisanie.
+  assert.equal((await fetch(`${srv.base}/schedule`, json({ subscription: subAt("dev-other"), items: [] }, auth))).status, 200);
+  assert.equal((await fetch(`${srv.base}/schedule`, json({ subscription: subAt("dev-other"), items: [] }, bearer(dev)))).status, 403);
+  assert.equal((await post("/test", { subscription: subAt("dev-other") }, bearer(dev))).status, 403);
+  assert.equal((await post("/unsubscribe", { endpoint: subAt("dev-other").endpoint }, bearer(dev))).status, 403);
+  // Nowych tokenów nie wydaje.
+  assert.equal((await post("/register", { subscription: subAt("dev-new") }, bearer(dev))).status, 403);
+  // Na dysku tylko skrót.
+  const saved = readFileSync(join(srv.dir, "store.json"), "utf8");
+  assert.ok(!saved.includes(dev));
+  assert.match(saved, /"tokenHash":"[a-f0-9]{64}"/);
+  // Wypisanie własnej kończy token.
+  assert.equal((await post("/unsubscribe", { endpoint: subAt("dev-own").endpoint }, bearer(dev))).status, 200);
+  assert.equal((await fetch(`${srv.base}/vapid`, { headers: bearer(dev) })).status, 401);
+});
+
+test("S3.2: nowa subskrypcja przeglądarki przejmuje token, ponowna rejestracja unieważnia stary", async () => {
+  const dev = await register("dev-rot-a");
+  assert.equal((await fetch(`${srv.base}/schedule`, json({ subscription: subAt("dev-rot-b"), items: [] }, bearer(dev)))).status, 200);
+  const saved = JSON.parse(readFileSync(join(srv.dir, "store.json"), "utf8"));
+  const endpoints = Object.values(saved.subs).map((s) => s.subscription.endpoint);
+  assert.ok(endpoints.includes(subAt("dev-rot-b").endpoint));
+  assert.ok(!endpoints.includes(subAt("dev-rot-a").endpoint));
+  // Zapis z PUSH_TOKEN nie zdejmuje tokenu urządzenia.
+  assert.equal((await fetch(`${srv.base}/schedule`, json({ subscription: subAt("dev-rot-b"), items: [] }, auth))).status, 200);
+  assert.equal((await fetch(`${srv.base}/vapid`, { headers: bearer(dev) })).status, 200);
+  const next = await register("dev-rot-b");
+  assert.equal((await fetch(`${srv.base}/vapid`, { headers: bearer(dev) })).status, 401);
+  assert.equal((await fetch(`${srv.base}/vapid`, { headers: bearer(next) })).status, 200);
+});
