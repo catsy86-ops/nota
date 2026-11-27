@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast, Bell, BriefcaseBusiness, CalendarRange, CalendarDays, ChevronDown, Flower2, Highlighter, Inbox, Leaf, Minus, RotateCcw, Snowflake, Sparkles, Waves, Square, SquareRoundCorner, Squircle } from "lucide-react";
+import { Sun, Moon, Monitor, Clock, Zap, Accessibility, HardHat, CircleOff, Contrast, Bell, BriefcaseBusiness, CalendarRange, CalendarDays, ChevronDown, Flower2, Highlighter, Inbox, Leaf, Minus, RotateCcw, Snowflake, Sparkles, Waves, Square, SquareRoundCorner, Squircle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useViewPrefs, setViewPref, resetViewPrefs, changedViewPrefs, VIEW_PREF_LABELS, type Density, type Layout } from "@/lib/viewPrefs";
@@ -60,11 +60,32 @@ import { SKIN_META } from "@/lib/skinGallery";
 import { setSiteMode, useSiteMode, type SiteMode } from "@/lib/siteMode";
 import { cardVariant } from "@/components/ui/card";
 import { POWLOKA } from "@/lib/storage/names";
+import { themeHoursStore } from "@/lib/themeHours";
+
+const hoursField = "h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm text-foreground";
+
+/** Q3.3: godziny jasnego przy „Według pory” (domyślnie 7:00–19:00). */
+function ThemeHoursFields() {
+  const h = themeHoursStore.use();
+  return (
+    <div className="mt-2 grid grid-cols-2 gap-2">
+      <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+        Jasny od
+        <input type="time" value={h.from} onChange={(e) => e.target.value && themeHoursStore.set({ ...h, from: e.target.value })} className={hoursField} />
+      </label>
+      <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+        do
+        <input type="time" value={h.to} onChange={(e) => e.target.value && themeHoursStore.set({ ...h, to: e.target.value })} className={hoursField} />
+      </label>
+    </div>
+  );
+}
 
 const themeOptions: { value: ThemeMode; label: string; Icon: typeof Sun }[] = [
   { value: "light", label: "Jasny", Icon: Sun },
   { value: "dark", label: "Ciemny", Icon: Moon },
   { value: "system", label: "System", Icon: Monitor },
+  { value: "time", label: "Wg pory", Icon: Clock },
 ];
 
 const siteOptions: { value: SiteMode; label: string; Icon: typeof Sun }[] = [
@@ -204,8 +225,11 @@ export function AppearanceSettings() {
 
         <Section title="Jasność">
           <Segmented label="Jasność" options={themeOptions} value={schemeMode} onChange={setThemeMode} />
+          {schemeMode === "time" && <ThemeHoursFields />}
           <p className="ui-hint mt-1.5">
-            {skin !== "zeszyt"
+            {schemeMode === "time"
+              ? "Jasny w podanych godzinach, ciemny poza nimi — zmienia się sam, bez lokalizacji."
+              : skin !== "zeszyt"
               ? `Każdy styl pamięta własną jasność. ${SKIN_META[skin].label} powstał jako ${skinScheme === "dark" ? "ciemny" : "jasny"}.`
               : schemeMode === "system"
                 ? "Motyw dopasowuje się do ustawień Twojego systemu."

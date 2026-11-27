@@ -1,6 +1,7 @@
 import type { ElementType } from "react";
 import type { PeriodKind } from "@/lib/periodNote";
 import type { Skin } from "@/lib/skins";
+import type { SchemePref } from "@/lib/skinScheme";
 import type { AppFont } from "@/lib/appFont";
 
 /**
@@ -25,7 +26,7 @@ export interface CommandContext {
   openShortcuts: () => void;
   toggleTheme: () => void;
   /** Jasność: jasna, ciemna albo jak w systemie (`useTheme.ts` — warstwa hooks, więc przez kontekst). */
-  setThemeMode: (mode: "light" | "dark" | "system") => void;
+  setThemeMode: (mode: SchemePref) => void;
   /** Tylko przy bieżącej notatce. */
   copyNote?: (format: "markdown" | "text") => void;
   vaultPhase: "locked" | "unlocked" | string;

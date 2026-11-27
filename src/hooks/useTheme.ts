@@ -6,8 +6,10 @@ import { SKIN_SCHEME, SKIN_THEME_COLOR, SKIN_THEME_COLOR_ALT, setSkin, skinStore
 import { setSkinScheme, skinSchemeStore, type SkinSchemeMap } from "@/lib/skinScheme";
 import { applySkinFavicon } from "@/lib/skinFavicon";
 import { APPEARANCE } from "@/lib/storage/names";
+import { darkByHours, themeHoursStore, type ThemeHours } from "@/lib/themeHours";
 
-export type ThemeMode = "system" | "light" | "dark";
+/** `time` — jasny w dzień, ciemny po zmroku z godzin (Q3.3). Starsza wersja czyta go jak `system`. */
+export type ThemeMode = "system" | "light" | "dark" | "time";
 
 const THEME_KEY = APPEARANCE.theme; // stores ThemeMode ("system" | "light" | "dark") — legacy values also accepted
 const TRANSITION_CLASS = "theme-transition";
@@ -18,7 +20,7 @@ const REVEAL_MS = 620;
 function readStored(): ThemeMode {
   try {
     const raw = localStorage.getItem(THEME_KEY);
-    if (raw === "dark" || raw === "light" || raw === "system") return raw;
+    if (raw === "dark" || raw === "light" || raw === "system" || raw === "time") return raw;
   } catch { /* ignore */ }
   return "system";
 }
@@ -35,8 +37,12 @@ export function shouldUseViewTransition(o: { supported: boolean; reduced: boolea
  * Ciemno czy jasno. Zeszyt słucha wspólnego przełącznika (`mode`); każdy inny styl ma własny wybór
  * (`kaczy.skinScheme.v1`, plan motywów 4.1), a bez wyboru — schemat, w którym powstał (`SKIN_SCHEME`).
  */
-export function resolveDark(mode: ThemeMode, skin: Skin, systemDark: boolean, skinModes: SkinSchemeMap = skinSchemeStore.get()): boolean {
+export function resolveDark(
+  mode: ThemeMode, skin: Skin, systemDark: boolean, skinModes: SkinSchemeMap = skinSchemeStore.get(),
+  now: Date = new Date(), hours: ThemeHours = themeHoursStore.get(),
+): boolean {
   const pref = skin === "zeszyt" ? mode : skinModes[skin] ?? SKIN_SCHEME[skin]!;
+  if (pref === "time") return darkByHours(now, hours);
   return pref === "system" ? systemDark : pref === "dark";
 }
 
@@ -158,8 +164,22 @@ export function setThemeMode(next: ThemeMode) {
   emit();
 }
 
+/** Q3.3: „Według pory” przełącza się sam o godzinie granicznej — sprawdzane co minutę i po powrocie do karty. */
+let lastDark: boolean | null = null;
+function tickHours() {
+  const dark = resolveDark(mode, skinStore.get(), systemPrefersDark());
+  if (dark === lastDark) return;
+  lastDark = dark;
+  applyCurrent();
+  emit();
+}
+
 if (typeof window !== "undefined") {
   applyCurrent();
+  lastDark = resolveDark(mode, skinStore.get(), systemPrefersDark());
+  window.setInterval(tickHours, 60_000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") tickHours(); });
+  themeHoursStore.subscribe(() => { applyCurrent(); emit(); });
   skinStore.subscribe(applyCurrent);
   skinSchemeStore.subscribe(() => { applyCurrent(); emit(); });
   mql?.addEventListener?.("change", () => { applyCurrent(); emit(); });
@@ -176,7 +196,8 @@ export function useTheme() {
   const systemDark = useSyncExternalStore(subscribe, systemPrefersDark, () => false);
   const skin = useSkin();
   const skinModes = useSyncExternalStore(skinSchemeStore.subscribe, skinSchemeStore.get, skinSchemeStore.get);
-  const dark = resolveDark(currentMode, skin, systemDark, skinModes);
+  const hours = useSyncExternalStore(themeHoursStore.subscribe, themeHoursStore.get, themeHoursStore.get);
+  const dark = resolveDark(currentMode, skin, systemDark, skinModes, new Date(), hours);
   /** Wybór jasności bieżącego stylu (Zeszyt: wspólny przełącznik). */
   const schemeMode = schemePrefFor(skin, currentMode, skinModes);
 

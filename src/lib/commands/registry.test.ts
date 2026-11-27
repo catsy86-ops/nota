@@ -63,13 +63,13 @@ describe("więcej poleceń (Powłoka 2.5)", () => {
     expect(all.some((id) => id.startsWith("styl.") || id.startsWith("kroj.") || id.startsWith("jasnosc."))).toBe(false);
   });
 
-  it("z tekstem: style i kroje bez bieżącego, trzy tryby jasności", () => {
+  it("z tekstem: style i kroje bez bieżącego, cztery tryby jasności", () => {
     const all = ids(ctx({ hasQuery: true, skin: "neon", font: "inter" }));
     expect(all).toContain("styl.zeszyt");
     expect(all).not.toContain("styl.neon");
     expect(all).toContain("kroj.lexend");
     expect(all).not.toContain("kroj.inter");
-    expect(all.filter((id) => id.startsWith("jasnosc."))).toEqual(["jasnosc.light", "jasnosc.dark", "jasnosc.system"]);
+    expect(all.filter((id) => id.startsWith("jasnosc."))).toEqual(["jasnosc.light", "jasnosc.dark", "jasnosc.system", "jasnosc.time"]);
   });
 
   it("jasność idzie przez kontekst palety", () => {

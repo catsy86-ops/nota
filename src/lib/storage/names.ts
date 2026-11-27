@@ -10,6 +10,8 @@ export const APPEARANCE = {
   skin: "kaczy.skin.v1",
   theme: "kaczy-theme",
   skinScheme: "kaczy.skinScheme.v1",
+  // Q3.3: godziny jasnego przy jasności „Według pory”.
+  themeHours: "kaczy.themeHours.v1",
   accent: "kaczy.accent.v1",
   shape: "kaczy.shape.v1",
   backdrop: "kaczy.backdrop.v1",

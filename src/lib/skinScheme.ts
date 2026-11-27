@@ -8,10 +8,11 @@ import { APPEARANCE } from "@/lib/storage/names";
  * się nie zmienia bez akcji użytkownika. Zeszyt dalej używa wspólnego przełącznika (`kaczy-theme`).
  * Per urządzenie. Rozstrzyga `resolveDark` w `useTheme.ts`.
  */
-export type SchemePref = "system" | "light" | "dark";
+/** `time` — według pory (Q3.3, godziny w `themeHours.ts`); starsza wersja go nie zna i bierze schemat stylu. */
+export type SchemePref = "system" | "light" | "dark" | "time";
 export type SkinSchemeMap = Partial<Record<Exclude<Skin, "zeszyt">, SchemePref>>;
 
-const isPref = (v: unknown): v is SchemePref => v === "system" || v === "light" || v === "dark";
+const isPref = (v: unknown): v is SchemePref => v === "system" || v === "light" || v === "dark" || v === "time";
 
 export const skinSchemeStore = createPersistedStore<SkinSchemeMap>(APPEARANCE.skinScheme, {}, {
   merge: (defaults, stored) => {

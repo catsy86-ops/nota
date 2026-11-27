@@ -26,7 +26,7 @@ const expectedColor = (skin: Skin, dark: boolean) => skin === "zeszyt" ? (dark ?
   : dark === (SKIN_SCHEME[skin] === "dark") ? SKIN_THEME_COLOR[skin] : SKIN_THEME_COLOR_ALT[skin];
 
 describe("prepaint.js: ten sam wygląd co po starcie", () => {
-  const modes: (ThemeMode | undefined)[] = [undefined, "system", "light", "dark"];
+  const modes: (ThemeMode | undefined)[] = [undefined, "system", "light", "dark", "time"];
   for (const skin of SKINS) {
     it(`${skin}: każda jasność i tryb systemu`, () => {
       for (const pref of modes) for (const sys of [false, true]) {
@@ -43,5 +43,20 @@ describe("prepaint.js: ten sam wygląd co po starcie", () => {
     expect(run({}, true)).toMatchObject({ skin: "zeszyt", dark: true });
     expect(run({ "kaczy.skin.v1": "\"nieznany\"" }, false)).toMatchObject({ skin: "zeszyt", dark: false });
     expect(() => run({ "kaczy.skin.v1": "{zepsute" }, false)).not.toThrow();
+  });
+});
+
+describe("prepaint.js: jasność według pory (Q3.3)", () => {
+  it("te same godziny co aplikacja, także przez północ i z błędnym zapisem", () => {
+    const now = new Date();
+    const hm = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const inAnHour = hm(new Date(now.getTime() + 3_600_000));
+    const anHourAgo = hm(new Date(now.getTime() - 3_600_000));
+    for (const hours of [{ from: anHourAgo, to: inAnHour }, { from: inAnHour, to: anHourAgo }, { from: "zle", to: 5 }]) {
+      const store = { "kaczy.skin.v1": JSON.stringify("zeszyt"), "kaczy-theme": "time", "kaczy.themeHours.v1": JSON.stringify(hours) };
+      const valid = typeof hours.to === "string" && hours.from !== "zle";
+      const dark = resolveDark("time", "zeszyt", false, {}, now, valid ? (hours as { from: string; to: string }) : { from: "07:00", to: "19:00" });
+      expect(run(store, false).dark, JSON.stringify(hours)).toBe(dark);
+    }
   });
 });

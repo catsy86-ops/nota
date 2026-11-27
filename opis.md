@@ -13,7 +13,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 | Osobiste: Ćwiczenia, Długi, Skarbiec | [`docs/opis/osobiste.md`](docs/opis/osobiste.md) | 44 |
 | Dane, synchronizacja i kopie | [`docs/opis/dane.md`](docs/opis/dane.md) | 29 |
 | Powłoka, Ustawienia i telefon | [`docs/opis/powloka.md`](docs/opis/powloka.md) | 26 |
-| Wygląd i ruch | [`docs/opis/wyglad.md`](docs/opis/wyglad.md) | 57 |
+| Wygląd i ruch | [`docs/opis/wyglad.md`](docs/opis/wyglad.md) | 58 |
 | Wspólne | [`docs/opis/wspolne.md`](docs/opis/wspolne.md) | 27 |
 | Jakość, architektura i testy | [`docs/opis/jakosc.md`](docs/opis/jakosc.md) | 70 |
 
@@ -409,6 +409,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Wygląd — rozmycie, gradienty, obrazy (W3.5, W3.6, W5.6, 2026-11-19)
 - Wygląd — przyciski Grafiku, Dziś i Kalendarza na `Button` (W4.5, 2026-11-20)
 - Ruch — siatka notatek bez przypadkowego przejścia odstępów (2026-11-23)
+- Wygląd: jasność według pory (Q3.3, 2026-11-27)
 
 ### Wspólne — [`docs/opis/wspolne.md`](docs/opis/wspolne.md)
 

@@ -1,7 +1,7 @@
 /* Styl i jasność przed pierwszym malowaniem (plan motywów 2026-10-30, 0.5). Bez tego karta mignie jasnym
    Zeszytem, zanim moduł JS ustawi `data-skin`. Ta sama decyzja co `resolveDark` w src/hooks/useTheme.ts,
    kolory paska z src/lib/skinList.ts — zgodność pilnuje src/lib/prepaint.test.ts. Harmonogram „Styl na noc”
-   dochodzi dopiero w JS. */
+   dochodzi dopiero w JS. Jasność „Według pory” (`time`, Q3.3): godziny z src/lib/themeHours.ts. */
 (function () {
   try {
     var S = { zeszyt: [null, "#f0b429", "#15110e"], plan: ["dark", "#10304f", "#eef4fa"], neon: ["dark", "#130a1b", "#f5f0f5"],
@@ -14,7 +14,13 @@
     var pref;
     if (skin === "zeszyt") pref = ls.getItem("kaczy-theme");
     else { var map = JSON.parse(ls.getItem("kaczy.skinScheme.v1") || "{}") || {}; pref = map[skin] || S[skin][0]; }
-    var dark = pref === "dark" || (pref !== "light" && sys);
+    var dark;
+    if (pref === "time") {
+      var h = JSON.parse(ls.getItem("kaczy.themeHours.v1") || "null") || {};
+      var hm = function (v, d) { return /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? Number(v.slice(0, 2)) * 60 + Number(v.slice(3, 5)) : d; };
+      var a = hm(h.to, 19 * 60), b = hm(h.from, 7 * 60), d = new Date(), t = d.getHours() * 60 + d.getMinutes();
+      dark = a !== b && (a < b ? t >= a && t < b : t >= a || t < b);
+    } else dark = pref === "dark" || (pref !== "light" && sys);
     var root = document.documentElement;
     root.dataset.skin = skin;
     root.classList.toggle("dark", dark);

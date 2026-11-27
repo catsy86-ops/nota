@@ -163,6 +163,7 @@ Bez wersji schematu są wszystkie bazy `idb-keyval` (zawsze wersja 1). `docFile.
 | `kaczy.sync.v2only.v1` | `lib/sync/v2Window.ts` | — |
 | `kaczy.templates.v1` | `lib/customTemplates.ts`, `lib/storage/names.ts` | tak |
 | `kaczy.textSize.v1` | `lib/appearanceCode.ts`, `lib/appearancePresets.ts`, `lib/textSize.ts` | tak |
+| `kaczy.themeHours.v1` | `lib/themeHours.ts`, `lib/appearanceCode.ts`, `public/prepaint.js` | tak |
 | `kaczy.today.timeline.v1` | `components/review/TodayTimeline.tsx` | — |
 | `kaczy.todayCards.v1` | `lib/todayCards.ts` | — |
 | `kaczy.todayNudgeAt` | `hooks/useDailyWeeklyNudges.tsx` | — |

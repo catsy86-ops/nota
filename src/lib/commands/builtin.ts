@@ -1,4 +1,5 @@
 import { addDays } from "date-fns";
+import type { SchemePref } from "@/lib/skinScheme";
 import { BookOpen, Brain, Calendar, CalendarRange, Copy, Download, HardHat, Inbox, Keyboard, Lock, LockOpen, Moon, Network, Palette, Plus, RotateCcw, Settings, Share2, SunMoon, Trophy, Type, ZoomIn, ZoomOut } from "lucide-react";
 import { APP_FONTS, APP_FONT_META, setAppFont } from "@/lib/appFont";
 import { canShareBackupFile } from "@/lib/backup/canShare";
@@ -46,10 +47,11 @@ const confirmInSettings = (ctx: CommandContext) => async () => {
   return false;
 };
 
-const THEME_MODES: { mode: "light" | "dark" | "system"; label: string; keywords: string }[] = [
+const THEME_MODES: { mode: SchemePref; label: string; keywords: string }[] = [
   { mode: "light", label: "Jasność: jasna", keywords: "jasny tryb dzienny" },
   { mode: "dark", label: "Jasność: ciemna", keywords: "ciemny tryb nocny" },
   { mode: "system", label: "Jasność: jak w systemie", keywords: "systemowy automatyczny auto" },
+  { mode: "time", label: "Jasność: według pory", keywords: "godziny dzień noc zmrok automatyczny" },
 ];
 
 let registered = false;
