@@ -221,7 +221,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | R4.2 | Kolejka zdjęć w tle | ⏸ | — | Najpierw pomiar (Z-14.5) |
 | R4.3 | Raport dnia głosem | ✅ | `67d9758b` | `speak.ts` |
 | R4.4 | Wzorce budów | ✗ | — | |
-| R4.5 | Alarmy natywne próby i końca dnia | ⏸ | — | Po F1.0 (Z-14.6) |
+| R4.5 | Alarmy natywne próby i końca dnia | ✅ | — | 2026-11-27: koniec próby (`t:`) i raport dnia (`rd:`) są w harmonogramie, który w APK idzie do alarmów (F1.1, wspólne ujście); kanał „proby” głośny |
 | R5.1 | Pytanie z „Jak rozwiązane?” do „Moich pytań” | ✗ | — | Niesprawdzone, czy istniało wcześniej |
 
 ## 6. `plan-dlugi-2026-11-15.md`
@@ -254,12 +254,12 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | C1.4 | Odhaczenie = „Gotowe” | ✅ | `d2051d4c` | Z-17.7, `takeFlow.ts` |
 | C1.5 | Akceptacja katalogu | ⏸ | — | Właściciel (C-4) |
 | C2.1–C2.5 | Progresja, zapis jednym stuknięciem, RIR, rozgrzewka, tydzień lżej | ✗ (5) | — | Brak `suggestNext`; CW-1 dotyczy tylko domyślnego włączenia |
-| C2.6 | Koniec przerwy przy zgaszonym ekranie | ⏸ | — | Po F1.0 |
+| C2.6 | Koniec przerwy przy zgaszonym ekranie | ✅ | — | 2026-11-27: `lib/training/restRun.ts`, kategoria „przerwa” (`c:`), tylko przy schowanej aplikacji |
 | C3.1–C3.5 | Regularność, objętość, miesiąc, obwody, CSV | ✗ (5) | — | |
 | C4.1 | Ulubione posiłki | ✗ | — | |
 | C4.2 | Pełne makro | ⏸ | — | CW-2 |
 | C4.3–C4.5 | Cel białka, średnia 7 dni, OCR etykiety | ✗ (3) | — | |
-| C5.1 | Health Connect | ⏸ | — | Po F1 |
+| C5.1 | Health Connect | ⏸ | — | Po F1 — wymaga nowej wtyczki natywnej (Capacitor) i zgód Health Connect; osobne zadanie |
 | C5.2 | Ćwiczenia na czas | ⏸ | — | Osobny projekt |
 | C5.3 | Gotowe plany | ⏸ | — | CW-3 |
 
@@ -457,7 +457,7 @@ Rozstrzygnięte: D-G1, D-K1, D-K2, D-R1, D-R2, D-P1 (odłożyć), D-A1…D-A3, D
 | Z-16.4 | Q1.6 | ✗ | — | |
 | Z-16.5 | Reszta Q3–Q5 | ✗ | — | |
 | Z-14.5 | Zdjęcia w tle | ⏸ | — | Najpierw pomiar |
-| Z-14.6 | Alarmy próby i końca dnia | ⏸ | — | Po F1.0 |
+| Z-14.6 | Alarmy próby i końca dnia | ✅ | — | = R4.5 (2026-11-27) |
 | Sesja F | Wdrożenie, ADR-9 | ⏸ | — | SE-1 |
 | Sesja G | Przeglądy końcowe | ⏸ | — | Na kod z sesji C i D (gotowy) — do zaplanowania |
 

@@ -49,6 +49,7 @@ export const PUSH_CATEGORIES = [
   { id: "serwis", label: "Serwis dziś i zaległy", prefixes: ["v:"] },
   { id: "zamowienia", label: "Materiał zamówiony, a nie dojechał; dostawa dziś", prefixes: ["o:", "d:"] },
   { id: "proby", label: "Koniec próby szczelności", prefixes: ["t:"] },
+  { id: "przerwa", label: "Koniec przerwy w treningu (przy zgaszonym ekranie)", prefixes: ["c:"] },
 ] as const;
 export type PushCategoryId = (typeof PUSH_CATEGORIES)[number]["id"];
 
@@ -105,6 +106,8 @@ export interface PushInput {
   weekReportNudged?: string | null;
   /** B3.1: trwająca próba szczelności (z szkicu wpisu na tym urządzeniu) — powiadomienie na koniec czasu. */
   pressure?: { startedAt: number; endsAt: number } | null;
+  /** C2.6: trwająca przerwa w treningu — tylko przy schowanej aplikacji (`PushScheduleSync`). */
+  rest?: { startedAt: number; until: number } | null;
   /** Wyłączone kategorie (`PUSH_CATEGORIES`) — ich terminów nie planujemy wcale, więc nie zajmują limitu. */
   off?: readonly string[];
 }
@@ -316,6 +319,10 @@ function studyItems(input: PushInput, now: number, end: number): PushItem[] {
     // Bez godzin ciszy: koniec próby to umówiony moment, nie przypomnienie.
     out.push({ key: pushKey.pressure(run.startedAt), at: run.endsAt, title: "Próba szczelności: czas minął", body: "Odczytaj manometr i wpisz ciśnienie końcowe.", url: "/praca" });
   }
+  const rest = input.rest;
+  if (rest && rest.until > now && rest.until <= end) {
+    out.push({ key: pushKey.rest(rest.startedAt), at: rest.until, title: "Koniec przerwy", body: "Czas na następną serię.", url: "/cwiczenia" });
+  }
   for (const e of input.journal ?? []) {
     if (e.kind !== "problem" || e.resolved !== undefined) continue;
     const at = outsideQuietHours(e.at + REMINDER_PROBLEM_DAYS * DAY_MS);
@@ -401,8 +408,8 @@ export function buildPushSchedulePlan(input: PushInput): PushSchedulePlan {
     .filter(({ item }) => !isPushCategoryOff(item.key, input.off))
     .sort((a, b) => a.item.at - b.item.at || a.rank - b.rank)
     .map(({ item }) => item);
-  const fixed = ranked.filter((i) => i.key.startsWith(PRESSURE_PREFIX));
-  const rest = ranked.filter((i) => !i.key.startsWith(PRESSURE_PREFIX));
+  const fixed = ranked.filter((i) => FIXED_PREFIXES.some((p) => i.key.startsWith(p)));
+  const rest = ranked.filter((i) => !FIXED_PREFIXES.some((p) => i.key.startsWith(p)));
   const kept = rest.slice(0, Math.max(0, PUSH_MAX_ITEMS - fixed.length));
   const droppedBy: Partial<Record<PushCategoryId, number>> = {};
   for (const i of rest.slice(kept.length)) {
@@ -421,6 +428,8 @@ export function buildPushSchedulePlan(input: PushInput): PushSchedulePlan {
 }
 
 const PRESSURE_PREFIX = "t:";
+/** Umówione co do minuty i krótkie: koniec próby i koniec przerwy (C2.6) nie odpadają przy limicie. */
+const FIXED_PREFIXES = [PRESSURE_PREFIX, "c:"];
 const LEADS_PER_SERIES = 3;
 
 function categoryOf(key: string): PushCategoryId | null {

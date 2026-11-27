@@ -198,3 +198,17 @@ describe("buildPushSchedule — koniec próby szczelności (B3.1)", () => {
     expect(items[0].at).toBe(night + 30 * 60_000);
   });
 });
+
+describe("buildPushSchedule — koniec przerwy w treningu (C2.6)", () => {
+  const now = new Date(2026, 10, 27, 18, 0).getTime();
+
+  it("planuje koniec trwającej przerwy, także w nocy; wyłączona kategoria albo skończona przerwa — nic", () => {
+    const items = buildPushSchedule({ now, notes: [], rest: { startedAt: now - 30_000, until: now + 60_000 } });
+    expect(items).toEqual([expect.objectContaining({ key: `c:${now - 30_000}`, at: now + 60_000, title: "Koniec przerwy", url: "/cwiczenia" })]);
+    const night = new Date(2026, 10, 27, 23, 50).getTime();
+    expect(buildPushSchedule({ now: night, notes: [], rest: { startedAt: night, until: night + 90_000 } })[0].at).toBe(night + 90_000);
+    expect(buildPushSchedule({ now, notes: [], rest: { startedAt: now, until: now + 60_000 }, off: ["przerwa"] })).toEqual([]);
+    expect(buildPushSchedule({ now, notes: [], rest: { startedAt: now - 90_000, until: now - 1 } })).toEqual([]);
+  });
+});
+

@@ -25,6 +25,8 @@ export const pushKey = {
   service: (callId: string, due: string) => `v:${callId}:${due}`,
   /** Koniec próby szczelności (B3.1): klucz to moment startu próby. */
   pressure: (startedAt: number) => `t:${startedAt}`,
+  /** Koniec przerwy w treningu (C2.6): klucz to moment startu przerwy. */
+  rest: (startedAt: number) => `c:${startedAt}`,
 };
 
 async function readShown(): Promise<string[]> {

@@ -780,3 +780,13 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia i pułapki:** to tylko podpowiedź. Nie zmienia planu ani formularza i nie mierzy objętości, więc nie wie, czy tydzień faktycznie był lżejszy. Odrzucenie na jednym telefonie nie działa na drugim.
 - **Testy:** `src/lib/training/model.test.ts` (`trainingStreakWeeks`: seria, luka, bieżący tydzień), `src/components/cwiczenia/TrainingSection.test.tsx` (pokazanie po 6 tygodniach, „Nie teraz”, brak przy 5).
 - **Commit:** `c2794583`, 2026-11-25.
+
+## Ćwiczenia: koniec przerwy przy zgaszonym ekranie (C2.6, 2026-11-27)
+
+- **Co robi.** Gdy w trakcie przerwy między seriami zgasisz ekran albo schowasz aplikację, koniec przerwy przychodzi jako powiadomienie „Koniec przerwy — Czas na następną serię” (stuknięcie otwiera Ćwiczenia). W APK to alarm systemowy z dźwiękiem, w PWA — Web Push z serwera (opóźnienie do ~20 s, obieg serwera). Przy otwartej aplikacji jak dotąd tylko licznik i wibracja. W Ustawieniach → Powiadomienia jest nowa kategoria „Koniec przerwy w treningu (przy zgaszonym ekranie)”.
+- **Gdzie.** `src/lib/training/restRun.ts` (`restRun`: przerwa w pamięci), `src/components/cwiczenia/TrainingSection.tsx` (`setRest` ustawia też `restRun`), `src/lib/push/schedule.ts` (`input.rest`, kategoria `przerwa`, prefiks `c:` wśród `FIXED_PREFIXES` — nie odpada przy limicie), `src/lib/push/shown.ts` (`pushKey.rest`), `src/components/PushScheduleSync.tsx` (przerwa tylko przy `visibilityState === "hidden"`; powrót do aplikacji wysyła listę bez niej), `src/lib/reminders/nativeSink.ts` (kanał głośny).
+- **Jak działa.** Koniec przerwy wchodzi do harmonogramu tylko przy chowaniu aplikacji (`send(true)`), więc przy otwartej nie ma dwóch sygnałów; po powrocie lista idzie od nowa bez przerwy i alarm znika. Przerwa nie jest zapisywana na dysk — zamknięta aplikacja ma alarm postawiony przy chowaniu.
+- **Ograniczenia.** Działa tylko przy włączonych powiadomieniach przy zamkniętej aplikacji (serwer push albo alarmy APK). „+30 s” przy schowanej aplikacji niemożliwe, więc koniec się nie przesuwa. Kanał APK „przerwa” tworzy się przy pierwszym uruchomieniu nowej wersji.
+- **Testy.** `src/lib/push/schedule.test.ts` („C2.6”). Na telefonie — w QA.
+- **Commit.** zob. historię (2026-11-27).
+

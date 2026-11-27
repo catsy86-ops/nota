@@ -13,7 +13,7 @@ import { nativeAlarmPrefs, type ReminderSink, type ScheduleHorizon } from "./sin
  */
 
 /** Kanały ważne (dźwięk i dymek): terminy umówione co do minuty. Reszta przychodzi cicho na pasek. */
-const LOUD = new Set(["notatki", "grafik", "proby"]);
+const LOUD = new Set(["notatki", "grafik", "proby", "przerwa"]);
 
 let prepared: Promise<void> | null = null;
 

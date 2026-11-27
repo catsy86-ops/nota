@@ -1,5 +1,6 @@
 import { EXERCISE_LABEL } from "@/lib/exerciseLabel";
 import { useEffect, useMemo, useState } from "react";
+import { restRun } from "@/lib/training/restRun";
 import { SectionCard } from "@/components/ui/section-card";
 import { Dumbbell, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,14 @@ export function TrainingSection() {
   const weekStart = startOfWeekKey(today);
   const deloadDismissed = useDeloadDismissed();
   const showDeload = streak >= DELOAD_AFTER_WEEKS && deloadDismissed !== weekStart;
-  const [rest, setRest] = useState<{ until: number; total: number } | null>(null);
+  const [rest, setRestState] = useState<{ until: number; total: number; startedAt: number } | null>(null);
+  // C2.6: przerwa widoczna też dla harmonogramu alarmów (koniec przerwy przy zgaszonym ekranie).
+  const setRest = (next: { until: number; total: number; startedAt?: number } | null) => {
+    const run = next ? { ...next, startedAt: next.startedAt ?? Date.now() } : null;
+    setRestState(run);
+    restRun.set(run ? { startedAt: run.startedAt, until: run.until } : null);
+  };
+  useEffect(() => () => restRun.set(null), []);
   const restSeconds = useRestSeconds();
   // Q3.1: w przerwie między seriami telefon leży obok — ekran nie gaśnie, dopóki liczy się przerwa.
   useWakeLock(rest !== null);
@@ -46,7 +54,7 @@ export function TrainingSection() {
 
       <PlanList plans={plans} />
       <LogForm entries={entries} plans={plans} onSaved={() => setRest({ until: Date.now() + restSeconds * 1000, total: restSeconds })} />
-      {rest !== null && <RestTimer until={rest.until} total={rest.total} onExtend={() => setRest({ until: rest.until + 30_000, total: rest.total + 30 })} onStop={() => setRest(null)} />}
+      {rest !== null && <RestTimer until={rest.until} total={rest.total} onExtend={() => setRest({ until: rest.until + 30_000, total: rest.total + 30, startedAt: rest.startedAt })} onStop={() => setRest(null)} />}
 
       {todays.length > 0 && (
         <div>

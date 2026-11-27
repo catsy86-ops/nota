@@ -9,6 +9,7 @@ import { useStudyReady, yStudy } from "@/lib/study/data";
 import { getJournalDraft } from "@/lib/study/draft";
 import { runEndsAt } from "@/lib/study/pressureTest";
 import { REPORT_NUDGE_KEY, WEEK_REPORT_NUDGE_KEY } from "@/lib/study/reportNudge";
+import { restRun } from "@/lib/training/restRun";
 
 const read = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 const DEBOUNCE_MS = 3000;
@@ -39,9 +40,12 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
     const send = (keepalive = false) => {
       const test = getJournalDraft().test;
       const endsAt = test ? runEndsAt(test) : null;
+      // C2.6: koniec przerwy tylko przy schowanej aplikacji — przy otwartej wibruje licznik, bez drugiego sygnału.
+      const hidden = document.visibilityState === "hidden";
       const plan = buildPushSchedulePlan({
         now: Date.now(),
         pressure: test?.startedAt !== undefined && endsAt !== null ? { startedAt: test.startedAt, endsAt } : null,
+        rest: hidden ? restRun.get() : null,
         notes: notesRef.current,
         journal: studyRef.current.journal,
         sites: studyRef.current.sites,
@@ -63,7 +67,11 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
     };
     const timer = window.setTimeout(send, DEBOUNCE_MS);
     const hourly = window.setInterval(send, REFRESH_MS);
-    const onHide = () => { if (document.visibilityState === "hidden") send(true); };
+    // Powrót do aplikacji z trwającą przerwą zdejmuje jej alarm (lista bez niej).
+    const onHide = () => {
+      if (document.visibilityState === "hidden") send(true);
+      else if (restRun.get()) send();
+    };
     document.addEventListener("visibilitychange", onHide);
     return () => {
       clearTimeout(timer);
