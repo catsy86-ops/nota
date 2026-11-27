@@ -1274,3 +1274,4 @@ Grafik — 8b786ae3; Dziś i Kalendarz — zob. commit „W4.5 Dziś, Kalendarz�
 - **Jak działa.** Tylko tokeny: `--background` 0.97 0.012 162, `--primary`/`--ring` 0.46 0.12 155, `--accent` 0.47 0.15 255, `--secondary`, `--muted`, `--border`, `--input`, `--grid`, tekst i `--shadow-tint` w odcieniu 162–170. Kontrast: akcent z białym tekstem 6,7:1, linki 6,9:1, tekst pomocniczy 6,8:1, obramowanie pola 3,9:1. Ciemna Tablica bez zmian.
 - **Ograniczenia.** Wzorce `@visual` (`e2e/visual.spec.ts`) robią Tablicę w jej domyślnym, ciemnym schemacie, więc jasnej nie pilnują i się nie zmieniły. Własny akcent użytkownika dalej nadpisuje `--primary`.
 - **Testy.** `src/lib/skinContrast.test.ts`, `src/lib/skinContrastReport.test.ts`, `src/lib/prepaint.test.ts` (kolor paska).
+- **Commit.** `ce055f11` — 2026-11-27.
