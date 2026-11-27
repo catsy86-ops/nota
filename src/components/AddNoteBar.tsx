@@ -40,6 +40,7 @@ import { addParked, parkedLabel, removeParked, type Parked } from "@/lib/parkedD
 import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
 import { parsePastedUrl } from "@/lib/urlTitle";
+import { linkOverSelection } from "@/lib/clipboardPaste";
 import { handleEditorKey } from "@/lib/editorKeysDom";
 import { EditorStats } from "./EditorStats";
 import { ComposerChipsRow, ComposerImages, ComposerLabelPicker, ComposerParentPicker } from "./composer/ComposerPickers";
@@ -433,6 +434,19 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
       e.preventDefault();
       void addImageFiles(pastedImages);
       return;
+    }
+    // Q3.6: adres wklejony na zaznaczony tekst robi z niego link.
+    const el = textareaRef.current;
+    if (el && el.selectionStart !== el.selectionEnd) {
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      const link = linkOverSelection(e.clipboardData.getData("text/plain"), content.slice(start, end));
+      if (link) {
+        e.preventDefault();
+        setContent(content.slice(0, start) + link + content.slice(end));
+        requestAnimationFrame(() => { el.focus(); el.setSelectionRange(start + link.length, start + link.length); });
+        return;
+      }
     }
     // Pusty szkic: sam adres z tytułem strony (istniejąca obsługa). Inaczej — formatowanie z HTML.
     if (!title.trim() && !content.trim()) {

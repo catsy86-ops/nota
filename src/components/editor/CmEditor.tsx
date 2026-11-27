@@ -6,6 +6,7 @@ import type { TextControl } from "@/lib/textControl";
 import { newNoteUndoManager, type NoteYText as YText } from "@/hooks/useNotes";
 import { buildCmExtensions, type CmExtensionOptions } from "./cmExtensions";
 import { createCmTextControl } from "./cmTextControl";
+import { linkOverSelection } from "@/lib/clipboardPaste";
 
 /** Zmiany zewnętrzne (z `value`) nie wracają jako `onChange` — to tylko odzwierciedlenie stanu. */
 const External = Annotation.define<boolean>();
@@ -35,6 +36,16 @@ export interface CmEditorProps extends Omit<CmExtensionOptions, "onChange"> {
   /** Fokus na treści zaraz po montażu (np. Enter w tytule, zanim edytor się załadował). */
   autoFocus?: boolean;
   className?: string;
+}
+
+/** Q3.6: adres wklejony na zaznaczenie robi `[tekst](adres)` (jedno zaznaczenie, nie tylko do odczytu). */
+function pasteLinkOverSelection(view: EditorView | null, e: ClipboardEvent<HTMLDivElement>) {
+  if (!view || view.state.readOnly || view.state.selection.ranges.length !== 1) return;
+  const { from, to } = view.state.selection.main;
+  const link = linkOverSelection(e.clipboardData.getData("text/plain"), view.state.sliceDoc(from, to));
+  if (!link) return;
+  e.preventDefault();
+  view.dispatch({ changes: { from, to, insert: link }, selection: { anchor: from + link.length }, userEvent: "input.paste" });
 }
 
 export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, onWikiClick, textControlRef, autoFocus, yText, className, ...opts }: CmEditorProps) {
@@ -116,6 +127,7 @@ export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, onWiki
       }}
       onPasteCapture={(e) => {
         onPasteRef.current?.(e);
+        if (!e.defaultPrevented) pasteLinkOverSelection(viewRef.current, e);
         if (e.defaultPrevented) e.stopPropagation();
       }}
     />

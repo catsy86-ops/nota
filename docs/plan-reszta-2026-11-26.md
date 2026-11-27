@@ -84,7 +84,7 @@ A3.4 (`src/lib/commands/` — źródła poleceń palety) → Powłoka 2.5 (więc
 | Punkt | Co | Rozmiar |
 |---|---|---|
 | Q3.2 ✅ 2026-11-27 (wspólne `sheet.tsx`/`dialog.tsx`, `docs/opis/wspolne.md`) | `keyboardInset.ts` podpięty we wszystkich arkuszach z polami | M |
-| Q3.6 | schowek z sensem (link na zaznaczeniu, lista → zadania, obraz) | M |
+| Q3.6 ✅ 2026-11-27 (`docs/opis/notatki.md`) | schowek z sensem (link na zaznaczeniu, lista → zadania, obraz) | M |
 | Q5.1 | roving tabindex: lista notatek, Kalendarz, Grafik, tablica | M |
 | Q1.4 | rotacja 7 kopii w OPFS (szyfrowanie: decyzja przy SE) | M |
 | D1.3 | mapa `docFormat` — wymaganie wersji czytnika per cecha | M |

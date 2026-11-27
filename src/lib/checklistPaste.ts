@@ -2,7 +2,13 @@ import type { ChecklistItem } from "@/lib/types/note";
 
 /** Znaczniki list z Markdown/Keepa/Worda zdejmowane z początku linii. */
 const TASK_RE = /^[-*+•]?\s*\[([ xX])\]\s+/;
-const BULLET_RE = /^(?:[-*+•▪◦]|\d{1,3}[.)])\s+/;
+/**
+ * Q3.6: pola wyboru z Keepa i z czatów jako znaki (`☐ mleko`, `☑ chleb`) — odhaczone tylko te z ptaszkiem albo krzyżykiem.
+ */
+const BOX_RE = /^([☐□☑☒✓✔✅])\s*/u;
+const BOX_CHECKED = new Set(["☑", "☒", "✓", "✔", "✅"]);
+/** Punktory: Markdown, WhatsApp (`•`, `-`), Word w zwykłym tekście (`·`, `§`, `o` z tabulatorem), numery. */
+const BULLET_RE = /^(?:[-*+•▪◦·‣⁃§➢➤►–]\s+|o\t\s*|\d{1,3}[.)]\s+)/;
 
 /** Każda niepusta linia to jedna pozycja; znaczniki list zdejmowane, `- [x] coś` odhaczone. */
 export function parseChecklistLines(text: string): Omit<ChecklistItem, "id">[] {
@@ -11,9 +17,12 @@ export function parseChecklistLines(text: string): Omit<ChecklistItem, "id">[] {
     const indented = /^(?: {2,}|\t)/.test(raw);
     const line = raw.trim();
     const task = TASK_RE.exec(line);
+    const box = task ? null : BOX_RE.exec(line);
     const item = task
       ? { text: line.slice(task[0].length).trim(), checked: task[1] !== " " }
-      : { text: line.replace(BULLET_RE, "").trim(), checked: false };
+      : box
+        ? { text: line.slice(box[0].length).trim(), checked: BOX_CHECKED.has(box[1]) }
+        : { text: line.replace(BULLET_RE, "").trim(), checked: false };
     return indented ? { ...item, indent: 1 as const } : item;
   }).filter((i) => i.text);
   // Pierwsza pozycja nie ma nad czym się wcinać.

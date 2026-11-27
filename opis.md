@@ -5,7 +5,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 
 | Dział | Plik | Rozdziałów |
 | --- | --- | --- |
-| Notatki | [`docs/opis/notatki.md`](docs/opis/notatki.md) | 42 |
+| Notatki | [`docs/opis/notatki.md`](docs/opis/notatki.md) | 43 |
 | Dziś i Skrzynka | [`docs/opis/dzis.md`](docs/opis/dzis.md) | 14 |
 | Terminy, przypomnienia i powiadomienia | [`docs/opis/terminy.md`](docs/opis/terminy.md) | 21 |
 | Kalendarz i Grafik | [`docs/opis/kalendarz-grafik.md`](docs/opis/kalendarz-grafik.md) | 12 |
@@ -65,6 +65,7 @@ Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej o
 - Notatki — pasek akcji wąskiego kafla nie zakrywa tytułu (2026-11-23)
 - Notatki — krótka nazwa dostępna kafla (2026-11-23)
 - Notatki — szkic kompozytora: reduktor pól w `lib/noteDraft.ts` i części paska (A3.2, 2026-11-25)
+- Schowek z sensem (Q3.6, 2026-11-27)
 
 ### Dziś i Skrzynka — [`docs/opis/dzis.md`](docs/opis/dzis.md)
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { TriangleAlert, CircleCheck, NotebookPen, Trash } from "lucide-react";
 import { EntryPhotoSection } from "./entry/EntryPhotoSection";
+import { pastedImageFiles } from "@/lib/clipboardPaste";
 import { usePhotoUi } from "./entry/usePhotoUi";
 import { EntryStageSection } from "./entry/EntryStageSection";
 import { EntryTextField } from "./entry/EntryTextField";
@@ -245,6 +246,13 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         className={cn("flex flex-col gap-0 overflow-hidden p-0", isMobile ? "max-h-sheet rounded-t-3xl pb-0" : "w-full sm:max-w-md")}
         data-testid="journal-entry-sheet"
         onOpenAutoFocus={(e) => { e.preventDefault(); titleRef.current?.focus(); }}
+        // Q3.6: wklejony zrzut ekranu albo skopiowane zdjęcie trafia do zdjęć wpisu, nie do pola tekstu.
+        onPaste={(e) => {
+          const images = pastedImageFiles(e.clipboardData);
+          if (images.length === 0) return;
+          e.preventDefault();
+          void photos.addPhotos(images);
+        }}
       >
         <SheetHeader className="shrink-0 px-5 pb-2 pt-5 text-left">
           <SheetTitle ref={titleRef} tabIndex={-1} className="font-display outline-hidden">{isEdit ? "Edytuj wpis" : "Wpis z budowy"}</SheetTitle>
