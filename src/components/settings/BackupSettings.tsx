@@ -10,6 +10,7 @@ import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
 import { buildFullBackup, describeSkippedAttachments } from "@/lib/backup/build";
 import { backupIssues, describeBackupIssues } from "@/lib/backup/parse";
 import { restoreFullBackup, RestoreCheckError, restoreScope, type RestoreOptions } from "@/lib/backup/merge";
+import { backupPreview, describeBackupPreview } from "@/lib/backup/preview";
 import { download, pickFullBackup } from "@/lib/backup/download";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import { dniPl, pluralPl } from "@/lib/plural";
@@ -372,7 +373,9 @@ function RestoreBackup() {
           <AlertDialogHeader>
             <AlertDialogTitle>Przywrócić tę kopię?</AlertDialogTitle>
             <AlertDialogDescription>
-              {backup && <>Z {new Date(backup.exportedAt).toLocaleString("pl-PL")}: {backup.notes.length} notatek, {backup.folders.length} folderów. </>}
+              {backup && <span data-testid="restore-preview">
+                Z {new Date(backup.exportedAt).toLocaleString("pl-PL")}{backup.appVersion ? ` (wersja aplikacji ${backup.appVersion})` : ""}: {describeBackupPreview(backupPreview(backup))}.{" "}
+              </span>}
               {backup && (() => {
                 const { replaced, merged } = restoreScope(backup as never, opts);
                 return <>

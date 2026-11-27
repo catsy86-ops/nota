@@ -70,7 +70,7 @@ A3.4 (`src/lib/commands/` — źródła poleceń palety) → Powłoka 2.5 (więc
 | Punkt | Co | Rozmiar | Przegląd |
 |---|---|---|---|
 | U2.4 ✅ 2026-11-27 | kolejność karty Sync (dwa duże wybory bez grupy) | S | |
-| U3.2 | podgląd kopii przed przywróceniem | M | |
+| U3.2 ✅ 2026-11-27 | podgląd kopii przed przywróceniem | M | |
 | U3.3 | stan danych (zajęte miejsce, `persist()`) | M | |
 | U3.4 | krok samouczka o danych | S | |
 | U5.1, U5.3 | jeden `SettingsCard`; `Segmented` zamiast `<select>` ≤ 5 opcji | M | |

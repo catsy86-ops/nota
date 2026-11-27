@@ -556,6 +556,14 @@ Z-15.5, 2026-11-18 — commit po tym wpisie.
 - **Testy:** `src/lib/snapshotRestore.test.ts` (grupy, kopie, pola usuwane z kopii, notatki prywatne: ten sam klucz, inny klucz, zablokowany skarbiec, `sealed`, blokada w trakcie, `vaultDiffers`), `src/lib/docReplace.test.ts` (wymiana bazy, zamiar przy starcie, porażka i wygaśnięcie, kolejność `requestDocReplace`, pokolenie między kartami), e2e `e2e/daily-snapshot.spec.ts` (przywrócenie usuniętej notatki; baza usunięta ręcznie → baner → przywrócenie całego dokumentu).
 - **Commit:** `5d86280a`, `0b12224d`, `7067443a`, `72e64cae` (2026-11-17/18).
 
+## Kopia zapasowa — podgląd przed przywróceniem (U3.2, 2026-11-27)
+
+- **Co robi:** okno „Przywrócić tę kopię?” zaczyna się zdaniem: data kopii, wersja aplikacji, która ją zrobiła (gdy plik ją ma), i liczby — notatki, foldery, wpisy dziennika Pracy z liczbą budów, dni Grafiku, długi (`data-testid="restore-preview"`). Ostrzeżenie o nowszej wersji już było: nowsza koperta albo `schema` — odmowa przy wczytaniu, nieznane sekcje — `describeBackupIssues`.
+- **Gdzie jest:** `src/lib/backup/preview.ts` (`backupPreview`, `describeBackupPreview`), wywołanie w `RestoreBackup` (`src/components/settings/BackupSettings.tsx`).
+- **Jak działa:** sekcje `study`, `shifts`, `debts` to JSON w napisie — parsowane raz przy otwarciu okna; zły JSON pomija tylko tę liczbę (uszkodzenie zgłasza dalej przywracanie). Dni Grafiku liczone tylko z głównego grafiku (`shifts.days`).
+- **Ograniczenia:** bez nazwy urządzenia — nowe pole w kopercie starsze wersje (od 2026-11-23) zgłaszałyby jako „sekcję z nowszej wersji”.
+- **Testy:** `src/lib/backup/preview.test.ts`.
+
 ## Kopia zapasowa — kopia „przed przywróceniem” w OPFS i okno z zakresem (Z-18.3, P5/P6 audytu 2, 2026-11-18)
 
 - **Co robi:** przed przywróceniem pliku kopii obecne dane zapisują się w aplikacji (OPFS, `kopie-przed-przywroceniem/`, 30 dni) i są sprawdzane po zapisie; dopiero potem rusza wymiana. Plik `notki-przed-przywroceniem-<data>.json` nadal się pobiera, jako dodatek. Bez OPFS (albo przy błędzie zapisu) okno „Czy plik się zapisał?” — „Nie, wstrzymaj” niczego nie zmienia. Okno przywracania mówi, co zostanie **zastąpione** (notatki, foldery, etykiety, Grafik, Nauka i Praca — wg zaznaczeń i zawartości pliku), a co **uzupełnione o brakujące** (sekcje `MERGE_SECTIONS` obecne w pliku). Przy sparowanych urządzeniach osobne potwierdzenie „Zmiana obejmie wszystkie sparowane urządzenia” (decyzja D-A1).
