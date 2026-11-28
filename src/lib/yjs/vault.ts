@@ -2,6 +2,7 @@ import * as Y from "yjs";
 import type { Note } from "@/lib/types/note";
 import { type YChecklistItem, FUTURE_CONTENT_KEY, yChecklistFromPlain, PRIVATE_META, type PrivateFields, plainFromYNote } from "./codec";
 import type { StoreCtx } from "./context";
+import { RETIRED_PREFIX } from "@/lib/vault";
 import type { TextBase } from "../yTextEdit";
 
 /**
@@ -120,6 +121,13 @@ export function createVaultApi(ctx: StoreCtx, textBases: Map<string, TextBase>) 
     doc.transact(() => { vaultMap.set("meta", meta); });
   }
 
+  /** K2: surowe wpisy łańcucha wycofanych kluczy (`retired:*`) — niezaufane, waliduje `cleanRetired`. */
+  function getRetiredEntries(): [string, unknown][] {
+    const out: [string, unknown][] = [];
+    vaultMap.forEach((v, k) => { if (k.startsWith(RETIRED_PREFIX)) out.push([k, v]); });
+    return out.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  }
+
   function observeVaultMeta(listener: () => void): () => void {
     vaultMap.observe(listener);
     return () => vaultMap.unobserve(listener);
@@ -133,8 +141,21 @@ export function createVaultApi(ctx: StoreCtx, textBases: Map<string, TextBase>) 
    * albo gdy bieżące metadane skarbca nie spełniają `metaUnchanged` (inne
    * urządzenie zmieniło nagłówek w trakcie — nie nadpisujemy go).
    */
-  function rekeyVault(meta: unknown, next: Map<string, { expected: string; vault: string }>, metaUnchanged?: (current: unknown) => boolean, trash?: Map<string, string>): boolean {
+  function rekeyVault(
+    meta: unknown, next: Map<string, { expected: string; vault: string }>, metaUnchanged?: (current: unknown) => boolean, trash?: Map<string, string>,
+    /**
+     * K2: nowy łańcuch — każdy wpis pod swoim kluczem, klucze `retired:*` spoza zestawu usuwane. `expected` to
+     * `new Map(getRetiredEntries())` z chwili odczytu: łańcuch zmieniony w trakcie przerywa zapis jak metadane.
+     * Porównanie kluczy i referencji (Y.Map zwraca tę samą wartość, dopóki klucz nie zostanie nadpisany), bez
+     * `JSON.stringify` — wartość `bigint` z dokumentu rzuciłaby i zablokowała każdą zmianę hasła.
+     */
+    retired?: { expected: Map<string, unknown>; entries: Map<string, unknown> },
+  ): boolean {
     if (metaUnchanged && !metaUnchanged(vaultMap.get("meta"))) return false;
+    if (retired) {
+      const now = getRetiredEntries();
+      if (now.length !== retired.expected.size || now.some(([k, v]) => !retired.expected.has(k) || retired.expected.get(k) !== v)) return false;
+    }
     for (const [id, { expected }] of next) if (getVault(id) !== expected) return false;
     for (const [id, expected] of trash ?? []) if (getVault(id) !== expected) return false;
     doc.transact(() => {
@@ -146,6 +167,10 @@ export function createVaultApi(ctx: StoreCtx, textBases: Map<string, TextBase>) 
       }
       for (const [id, { vault }] of next) notesMap.get(id)!.set("vault", vault);
       vaultMap.set("meta", meta);
+      if (retired) {
+        for (const [k] of getRetiredEntries()) if (!retired.entries.has(k)) vaultMap.delete(k);
+        for (const [k, v] of retired.entries) vaultMap.set(k, v);
+      }
     });
     return true;
   }
@@ -154,5 +179,5 @@ export function createVaultApi(ctx: StoreCtx, textBases: Map<string, TextBase>) 
     lockedWriteSink = sink;
   }
 
-  return { writeLocked, readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote, getFutureContent, getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink };
+  return { writeLocked, readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote, getFutureContent, getVaultMeta, setVaultMeta, getRetiredEntries, observeVaultMeta, rekeyVault, setLockedWriteSink };
 }

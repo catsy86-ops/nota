@@ -21,6 +21,7 @@ describe("yjsStore — kształt API (F3)", () => {
         "foldersMap:object",
         "getFutureContent:function",
         "getNoteText:function",
+        "getRetiredEntries:function",
         "getVault:function",
         "getVaultMeta:function",
         "images:object",

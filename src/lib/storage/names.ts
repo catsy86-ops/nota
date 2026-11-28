@@ -72,6 +72,8 @@ export const SKARBIEC = {
   pin: "kaczy.vault.pin.v1",
   /** K1: poprzednie nagłówki skarbca sprzed werdyktu `changed` (odzysk drugiego skarbca, K4). */
   pinPrev: "kaczy.vault.pin.prev.v1",
+  /** K2: kopia lokalna łańcucha wycofanych kluczy (te same opakowane wpisy co w dokumencie). */
+  retired: "kaczy.vault.retired.v1",
   recoveryCheck: "kaczy.vault.recoveryCheck.v1",
 } as const;
 

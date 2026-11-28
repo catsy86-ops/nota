@@ -68,7 +68,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   } = createTextEditApi(ctx);
   const {
     writeLocked, readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote,
-    getFutureContent, getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink,
+    getFutureContent, getVaultMeta, setVaultMeta, getRetiredEntries, observeVaultMeta, rekeyVault, setLockedWriteSink,
   } = createVaultApi(ctx, textBases);
   const {
     projectFolders, projectLabels, projectPropDefs, upsertPropDef, deletePropDef, upsertFolder, patchFolder,
@@ -356,7 +356,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     referencedImages, referencedAttachments, syncableRefs, remapImageRefs,
     beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange, getNoteText,
     readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote, getFutureContent,
-    getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink, compactPersistence,
+    getVaultMeta, setVaultMeta, getRetiredEntries, observeVaultMeta, rekeyVault, setLockedWriteSink, compactPersistence,
   };
 }
 

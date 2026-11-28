@@ -431,3 +431,141 @@ export async function unlockWithPasskey(meta: VaultMeta, credentialId: string, p
   const raw = await decryptBytes(await derivePasskeyKek(prf), entry.wrapped, AAD_DK_PASSKEY);
   return finishUnlock(meta, raw);
 }
+
+/**
+ * Surowy klucz danych z kodu awaryjnego — tylko do resetu hasła, który zachowuje stary klucz w łańcuchu (K2, KR-6).
+ * Sprawdza `check`; wynik zeruje wołający. Zły kod → `bad-recovery`.
+ */
+export async function unwrapRawWithRecovery(meta: VaultMeta, recoveryCode: string): Promise<Uint8Array> {
+  if (!meta.recovery) throw new VaultError("bad-recovery", "Ten skarbiec nie ma kodu awaryjnego");
+  const code = decodeRecoveryCode(recoveryCode);
+  let raw: Uint8Array;
+  try { raw = await decryptBytes(await deriveRecoveryKek(code), meta.recovery, AAD_DK_RECOVERY); } catch (e) {
+    if (e instanceof VaultError && e.code === "decrypt-failed") throw new VaultError("bad-recovery");
+    throw e;
+  } finally { code.fill(0); }
+  let ok = false;
+  try {
+    if (raw.length === DK_BYTES) ok = (await decryptString(await importDataKey(raw), meta.check, AAD_CHECK)) === CHECK_PLAINTEXT;
+  } catch { ok = false; } finally { if (!ok) raw.fill(0); }
+  if (!ok) throw new VaultError("decrypt-failed");
+  return raw;
+}
+
+// ── Wycofane klucze (K2 planu Skarbca krypto, §3.1–3.2) ───────────────────────────────────────────────
+
+/**
+ * Wpis łańcucha: stary klucz danych opakowany BIEŻĄCYM kluczem danych. Każdy wpis pod własnym kluczem mapy skarbca
+ * `retired:<epoch>:<fp>` (nie jedna tablica — tablica przegrywa wyścig z równoległą zmianą i łańcuch odpada cały).
+ * `src`: `rekey` — klucz sprzed resetu hasła kodem awaryjnym; `foreign` — klucz drugiego skarbca (K4).
+ */
+export interface RetiredKey {
+  v: 1;
+  epoch: number;
+  fp: string;
+  src: "rekey" | "foreign";
+  iv: string;
+  wrapped: string;
+  retiredAt: number;
+}
+
+export const RETIRED_PREFIX = "retired:";
+export const RETIRED_MAX_RAW = 16;
+export const RETIRED_MAX_REKEY = 3;
+export const RETIRED_MAX_FOREIGN = 1;
+const RETIRED_FIELDS = ["epoch", "fp", "iv", "retiredAt", "src", "v", "wrapped"];
+const B64U_RE = /^[A-Za-z0-9_-]+$/;
+
+export const retiredMapKey = (epoch: number, fp: string) => `${RETIRED_PREFIX}${epoch}:${fp}`;
+/** `src` i `retiredAt` są w AAD: bez bieżącego klucza nie da się przerobić wpisu `rekey` na niewypieralny ani odmłodzić. */
+export const retiredAad = (e: Pick<RetiredKey, "epoch" | "fp" | "src" | "retiredAt">) => `notki:vault:retired:${e.epoch}:${e.fp}:${e.src}:${e.retiredAt}`;
+
+/**
+ * Odcisk metadanych skarbca do łańcucha: base64url pierwszych 16 bajtów SHA-256 z `epoch|salt|wrapped|check`
+ * (22 znaki). Bez `iter` — da się go policzyć także z nagłówka starego pinu.
+ */
+export async function metaFingerprint(m: { epoch: number; salt: string; wrapped: string; check: string }): Promise<string> {
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode([m.epoch, m.salt, m.wrapped, m.check].join("|"))));
+  return toB64u(digest.slice(0, 16));
+}
+
+/** Kształt wpisu z dokumentu (niezaufany): dokładnie znane pola, typy, długości, klucz mapy zgodny z wpisem. */
+export function parseRetired(mapKey: string, raw: unknown, currentFp: string): RetiredKey | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const x = raw as Record<string, unknown>;
+  if (Object.keys(x).sort().join(",") !== RETIRED_FIELDS.join(",")) return null;
+  if (x.v !== 1 || (x.src !== "rekey" && x.src !== "foreign")) return null;
+  if (!Number.isSafeInteger(x.epoch) || (x.epoch as number) < 1 || (x.epoch as number) > MAX_EPOCH) return null;
+  if (typeof x.fp !== "string" || x.fp.length !== 22 || !B64U_RE.test(x.fp) || x.fp === currentFp) return null;
+  if (typeof x.iv !== "string" || x.iv.length !== 16 || !B64U_RE.test(x.iv)) return null;
+  if (typeof x.wrapped !== "string" || x.wrapped.length !== 64 || !B64U_RE.test(x.wrapped)) return null;
+  if (!Number.isSafeInteger(x.retiredAt) || (x.retiredAt as number) < 0) return null;
+  if (mapKey !== retiredMapKey(x.epoch as number, x.fp)) return null;
+  return x as unknown as RetiredKey;
+}
+
+/** Opakowanie surowego starego klucza bieżącym kluczem danych (nowe `iv` przy każdym opakowaniu). */
+export async function wrapRetired(currentKey: CryptoKey, raw: Uint8Array, head: Pick<RetiredKey, "epoch" | "fp" | "src" | "retiredAt">): Promise<RetiredKey> {
+  if (raw.length !== DK_BYTES) throw new VaultError("bad-format");
+  const iv = randomBytes(IV_BYTES);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(retiredAad(head)) }, currentKey, raw));
+  return { v: 1, epoch: head.epoch, fp: head.fp, src: head.src, iv: toB64u(iv), wrapped: toB64u(ct), retiredAt: head.retiredAt };
+}
+
+/** Surowy stary klucz z wpisu (wynik zeruje wołający). Obcy klucz, zmienione pole AAD albo szyfrogram → `decrypt-failed`. */
+export async function unwrapRetired(currentKey: CryptoKey, e: RetiredKey): Promise<Uint8Array> {
+  let raw: Uint8Array;
+  try {
+    raw = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64u(e.iv), additionalData: enc.encode(retiredAad(e)) }, currentKey, fromB64u(e.wrapped)));
+  } catch {
+    throw new VaultError("decrypt-failed");
+  }
+  if (raw.length !== DK_BYTES) { raw.fill(0); throw new VaultError("decrypt-failed"); }
+  return raw;
+}
+
+export interface CleanedRetired {
+  /** Wpisy, które odpakowują się bieżącym kluczem, w limitach (najnowsze `retiredAt`), od najnowszego. */
+  valid: RetiredKey[];
+  /** Klucze mapy do sprzątnięcia: zły kształt, obcy klucz, nadmiar ponad limit. */
+  bad: string[];
+  /** Ponad `RETIRED_MAX_RAW` surowych wpisów — łańcuch odrzucony w całości. */
+  overflow: boolean;
+}
+
+/**
+ * Walidacja łańcucha (§3.2). Limity 3 `rekey` + 1 `foreign` liczone dopiero po wpisach, które odpakowały się bieżącym
+ * kluczem — jeden dopisany śmieć nie wyłącza łańcucha. Bez porównywania epoki z bieżącą (P2: oba skarbce mają epokę 1).
+ */
+export async function cleanRetired(entries: readonly (readonly [string, unknown])[], currentKey: CryptoKey, currentFp: string): Promise<CleanedRetired> {
+  if (entries.length > RETIRED_MAX_RAW) return { valid: [], bad: [], overflow: true };
+  const ok: RetiredKey[] = [];
+  const bad: string[] = [];
+  for (const [k, raw] of entries) {
+    const e = parseRetired(k, raw, currentFp);
+    if (!e) { bad.push(k); continue; }
+    try { (await unwrapRetired(currentKey, e)).fill(0); ok.push(e); } catch { bad.push(k); }
+  }
+  const { kept, dropped } = limitRetired(ok);
+  for (const e of dropped) bad.push(retiredMapKey(e.epoch, e.fp));
+  return { valid: kept, bad, overflow: false };
+}
+
+/** Limity łańcucha: 3 `rekey` + 1 `foreign`, najnowsze według `retiredAt`; `kept` od najnowszego. */
+export function limitRetired(entries: readonly RetiredKey[]): { kept: RetiredKey[]; dropped: RetiredKey[] } {
+  const kept: RetiredKey[] = [];
+  const dropped: RetiredKey[] = [];
+  let rekey = 0;
+  let foreign = 0;
+  for (const e of [...entries].sort((a, b) => b.retiredAt - a.retiredAt)) {
+    const fits = e.src === "rekey" ? rekey++ < RETIRED_MAX_REKEY : foreign++ < RETIRED_MAX_FOREIGN;
+    (fits ? kept : dropped).push(e);
+  }
+  return { kept, dropped };
+}
+
+/** Przepakowanie wpisu nowym kluczem danych: te same `epoch`, `fp`, `src`, `retiredAt` (ten sam klucz mapy), nowe `iv`. */
+export async function rewrapRetired(oldKey: CryptoKey, newKey: CryptoKey, e: RetiredKey): Promise<RetiredKey> {
+  const raw = await unwrapRetired(oldKey, e);
+  try { return await wrapRetired(newKey, raw, e); } finally { raw.fill(0); }
+}

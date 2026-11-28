@@ -61,6 +61,8 @@ export type SecurityEventKind =
   | "vault-recovery-failed"
   | "vault-throttled"
   | "vault-meta-rejected"
+  /** K2: wpis łańcucha wycofanych kluczy odrzucony (zły kształt, obcy klucz, nadmiar). Szczegół bez treści wpisu. */
+  | "vault-retired-rejected"
   | "rejected-peer-blob"
   | "rejected-share-link"
   | "rejected-import"

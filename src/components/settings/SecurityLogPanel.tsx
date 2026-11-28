@@ -9,6 +9,7 @@ export const SECURITY_KIND_TEXT: Record<SecurityEventKind, string> = {
   "vault-recovery-failed": "Nieudane użycie kodu awaryjnego skarbca",
   "vault-throttled": "Skarbiec wstrzymał próby po serii błędnych haseł",
   "vault-meta-rejected": "Odrzucone podejrzane dane skarbca",
+  "vault-retired-rejected": "Odrzucony wpis starych kluczy skarbca",
   "rejected-peer-blob": "Odrzucony plik od innego urządzenia",
   "rejected-share-link": "Odrzucony link udostępnienia",
   "rejected-import": "Odrzucony plik importu",

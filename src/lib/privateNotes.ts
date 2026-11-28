@@ -16,7 +16,10 @@ import { pluralPl } from "@/lib/plural";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, isValidMeta,
   unlockWithPassword, unlockWithRecovery, VAULT_VERSION, MAX_EPOCH, type VaultMeta,
+  cleanRetired, importDataKey, metaFingerprint, retiredMapKey, rewrapRetired, unwrapRawWithRecovery, wrapRetired,
+  limitRetired, type RetiredKey,
 } from "@/lib/vault";
+import { SKARBIEC } from "@/lib/storage/names";
 
 /**
  * Sesja skarbca i operacje na notatkach prywatnych.
@@ -70,6 +73,28 @@ export interface RekeyOptions {
   withRecovery?: boolean;
   /** Nieczytelne notatki do kosza (szyfrogram zostaje) zamiast przerwania. */
   dropUnreadable?: boolean;
+}
+
+/**
+ * K2 (wariant minimalny KR-5 z KR-6): co zmiana klucza robi z łańcuchem wycofanych kluczy. Zwykła zmiana hasła
+ * działa jak „hasło mogło wyciec”: bez nowego wpisu i bez wpisów `rekey`; zostaje tylko `foreign` (klucz drugiego
+ * skarbca, o który użytkownik sam poprosił — nie ma związku ze starym hasłem). Reset kodem awaryjnym (zapomniane
+ * hasło to nie wyciek) przepakowuje cały łańcuch i dopisuje stary klucz (`keepRaw`).
+ */
+interface ChainPolicy {
+  keepRekey: boolean;
+  /** Surowy stary klucz danych do dopisania; zeruje go wołający. */
+  keepRaw?: Uint8Array;
+}
+
+const RETIRED_LOCAL_KEY = SKARBIEC.retired;
+
+/** Kopia lokalna łańcucha (§3.1): opakowana bieżącym kluczem, więc po zmianie hasła na innym urządzeniu bezużyteczna. */
+function writeRetiredLocal(entries: readonly RetiredKey[]): void {
+  try {
+    if (entries.length) localStorage.setItem(RETIRED_LOCAL_KEY, JSON.stringify(entries));
+    else localStorage.removeItem(RETIRED_LOCAL_KEY);
+  } catch { /* bez kopii lokalnej łańcuch żyje tylko w dokumencie */ }
 }
 
 
@@ -656,12 +681,12 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
    * dokumentu. Błąd na dowolnym etapie nie zapisuje niczego. Notatki, których
    * i tak nie dało się odszyfrować (obcy szyfrogram), są zgłaszane w `skipped`.
    */
-  async function rekey(oldKey: CryptoKey, newPassword: string, opts: RekeyOptions, from: VaultMeta): Promise<{ recoveryCode: string | null; skipped: string[] }> {
+  async function rekey(oldKey: CryptoKey, newPassword: string, opts: RekeyOptions, from: VaultMeta, chain: ChainPolicy = { keepRekey: false }): Promise<{ recoveryCode: string | null; skipped: string[] }> {
     rekeying = true;
-    try { return await rekeyInner(oldKey, newPassword, opts, from); } finally { rekeying = false; }
+    try { return await rekeyInner(oldKey, newPassword, opts, from, chain); } finally { rekeying = false; }
   }
 
-  async function rekeyInner(oldKey: CryptoKey, newPassword: string, { withRecovery = true, dropUnreadable = false }: RekeyOptions, from: VaultMeta): Promise<{ recoveryCode: string | null; skipped: string[] }> {
+  async function rekeyInner(oldKey: CryptoKey, newPassword: string, { withRecovery = true, dropUnreadable = false }: RekeyOptions, from: VaultMeta, chain: ChainPolicy): Promise<{ recoveryCode: string | null; skipped: string[] }> {
     await flush();
     // Klucz wyprowadzono z `from`; nagłówek zmieniony w międzyczasie (synchronizacja) to nie „nieczytelne notatki”.
     const m = meta();
@@ -687,14 +712,30 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     const created = await createVault(newPassword, { iterations, withRecovery, epoch: m.epoch + 1 });
     const next = new Map<string, { expected: string; vault: string }>();
     for (const [id, p] of plain) next.set(id, { expected: p.expected, vault: await encryptNoteWrite(created.dataKey, p.json, id, created.meta.epoch) });
+    // K2: łańcuch wycofanych kluczy — walidacja starym kluczem, przepakowanie nowym (te same klucze mapy, nowe `iv`).
+    const retiredRaw = store.getRetiredEntries();
+    const fromFp = await metaFingerprint(m);
+    const cleaned = await cleanRetired(retiredRaw, oldKey, fromFp);
+    if (cleaned.overflow) logSecurity("vault-retired-rejected", `${retiredRaw.length} wpisów łańcucha — odrzucony w całości`);
+    else if (cleaned.bad.length) logSecurity("vault-retired-rejected", `pominięte wpisy łańcucha: ${cleaned.bad.length}`);
+    const chainNext: RetiredKey[] = [];
+    for (const e of cleaned.valid) if (chain.keepRekey || e.src === "foreign") chainNext.push(await rewrapRetired(oldKey, created.dataKey, e));
+    if (chain.keepRaw) {
+      // Zegar spóźniony względem urządzenia, które pisało starsze wpisy, nie może wypchnąć właśnie wycofanego klucza z limitu.
+      const retiredAt = Math.max(Date.now(), ...chainNext.map((e) => e.retiredAt + 1));
+      chainNext.push(await wrapRetired(created.dataKey, chain.keepRaw, { epoch: m.epoch, fp: fromFp, src: "rekey", retiredAt }));
+    }
+    const chainFinal = limitRetired(chainNext).kept;
+    const retired = { expected: new Map(retiredRaw), entries: new Map<string, unknown>(chainFinal.map((e) => [retiredMapKey(e.epoch, e.fp), e])) };
     // Zmiana w trakcie (np. edycja z innego urządzenia albo nowy nagłówek) — przerywamy bez zapisu.
     const fromPrint = fingerprint(from);
     const metaUnchanged = (cur: unknown): boolean => isValidMeta(cur) && fingerprint(cur) === fromPrint;
     ownMetaWrite = true;
     let written: boolean;
-    try { written = store.rekeyVault(created.meta, next, metaUnchanged, dropUnreadable ? unreadable : undefined); } finally { ownMetaWrite = false; }
+    try { written = store.rekeyVault(created.meta, next, metaUnchanged, dropUnreadable ? unreadable : undefined, retired); } finally { ownMetaWrite = false; }
     if (!written) throw new Error("Skarbiec lub notatki zmieniły się w trakcie zmiany hasła — spróbuj ponownie");
     writeVaultPin(created.meta);
+    writeRetiredLocal(chainFinal);
     key = created.dataKey;
     sessionEpoch = created.meta.epoch;
     sessionFingerprint = fingerprint(created.meta);
@@ -736,14 +777,22 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   async function resetPasswordLocked(recoveryCode: string, newPassword: string, opts: RekeyOptions = {}) {
     const m = meta();
     if (!m) throw new Error("Brak skarbca");
+    refuseEpochOnly(m);
     checkThrottle();
-    let oldKey: CryptoKey;
-    try { oldKey = await unlockWithRecovery(m, recoveryCode); } catch (err) {
+    // K2 (KR-6): reset kodem zachowuje stary klucz w łańcuchu — potrzebne surowe bajty, zerowane w `finally`.
+    let raw: Uint8Array;
+    try { raw = await unwrapRawWithRecovery(m, recoveryCode); } catch (err) {
       if (err instanceof VaultError && err.code === "bad-recovery") recordFailure();
       throw err;
     }
-    recordSuccess();
-    const result = await rekey(oldKey, newPassword, opts, m);
+    let result: Awaited<ReturnType<typeof rekey>>;
+    try {
+      const oldKey = await importDataKey(raw);
+      recordSuccess();
+      result = await rekey(oldKey, newPassword, opts, m, { keepRekey: true, keepRaw: raw });
+    } finally {
+      raw.fill(0);
+    }
     failed.clear();
     await decryptAll();
     emit();
